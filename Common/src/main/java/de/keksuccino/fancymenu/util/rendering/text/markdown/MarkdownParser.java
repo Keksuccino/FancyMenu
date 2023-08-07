@@ -22,6 +22,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class MarkdownParser {
 
@@ -141,21 +143,25 @@ public class MarkdownParser {
             }
 
             //Handle Italic Underscore
-            if ((c == '_') && !builder.italic && (builder.codeBlockContext == null)) {
-                String s = markdownText.substring(Math.min(markdownText.length(), index+1));
-                if (s.contains("_")) {
-                    fragments.add(builder.build(false, false));
-                    builder.italic = true;
-                    italicUnderscore = true;
-                    continue;
-                }
-            }
-            if ((c == '_') && builder.italic && italicUnderscore) {
-                fragments.add(builder.build(false, false));
-                builder.italic = false;
-                italicUnderscore = false;
-                continue;
-            }
+//            if ((c == '_') && !builder.italic && (builder.codeBlockContext == null)) {
+//                String s = markdownText.substring(Math.min(markdownText.length(), index+1));
+//                if (s.contains("_")) {
+//                    fragments.add(builder.build(false, false));
+//                    builder.italic = true;
+//                    italicUnderscore = true;
+//                    continue;
+//                }
+//            }
+//            if ((c == '_') && builder.italic && italicUnderscore) {
+//                fragments.add(builder.build(false, false));
+//                builder.italic = false;
+//                italicUnderscore = false;
+//                continue;
+//            }
+            SingleCharFormattingCallback italicUnderscoreCall = handleSingleCharFormatCode(fragments, builder, sub, '_', () -> builder.italic, aBoolean -> builder.italic = aBoolean);
+            charsToSkip = italicUnderscoreCall.charsToSkip;
+            queueNewLine = italicUnderscoreCall.queueNewLine;
+            if (italicUnderscoreCall.doContinue) continue;
 
             //Handle Italic Asterisk
             if ((c == '*') && !builder.italic && (builder.codeBlockContext == null)) {
@@ -198,6 +204,7 @@ public class MarkdownParser {
                 }
             }
             if ((c == '~') && builder.strikethrough) {
+                String s = markdownText.substring(Math.min(markdownText.length(), index+1));
                 fragments.add(builder.build(false, false));
                 builder.strikethrough = false;
                 continue;
@@ -388,6 +395,44 @@ public class MarkdownParser {
         
         return fragments;
         
+    }
+
+    protected static SingleCharFormattingCallback handleSingleCharFormatCode(List<MarkdownTextFragment> fragments, FragmentBuilder builder, String subText, char code, Supplier<Boolean> formattingStateGetter, Consumer<Boolean> formattingStateSetter) {
+        SingleCharFormattingCallback callback = new SingleCharFormattingCallback();
+        if (subText.startsWith("" + code) && !formattingStateGetter.get() && (builder.codeBlockContext == null)) {
+            String s = subText.substring(Math.min(subText.length(), 1));
+            if (s.contains("" + code)) {
+                fragments.add(builder.build(false, false));
+                formattingStateSetter.accept(true);
+                callback.doContinue = true;
+                return callback;
+            }
+        }
+        if (subText.startsWith("" + code) && formattingStateGetter.get()) {
+            String s = subText.substring(Math.min(subText.length(), 1));
+            if (s.startsWith("\n")) {
+                //TODO remove debug
+                LOGGER.info("############## NEW LINE AFTER ITALIC");
+                fragments.add(builder.build(true, true));
+                builder.headlineType = HeadlineType.NONE;
+                builder.separationLine = false;
+                builder.bulletListLevel = 0;
+                callback.charsToSkip = 1;
+                callback.queueNewLine = true;
+            } else if (s.startsWith(" ")) {
+                //TODO remove debug
+                LOGGER.info("############### END OF WORD AFTER ITALIC");
+                callback.charsToSkip = 1;
+                builder.text += " ";
+                fragments.add(builder.build(false, true));
+            } else {
+                fragments.add(builder.build(false, false));
+            }
+            formattingStateSetter.accept(false);
+            callback.doContinue = true;
+            return callback;
+        }
+        return callback;
     }
 
     protected static void setImageToBuilder(@NotNull FragmentBuilder builder, @NotNull String imageLink) {
@@ -584,7 +629,13 @@ public class MarkdownParser {
         }
         return null;
     }
-    
+
+    protected static class SingleCharFormattingCallback {
+        protected boolean doContinue = false;
+        protected Integer charsToSkip = 0;
+        protected boolean queueNewLine = false;
+    }
+
     protected static class FragmentBuilder {
 
         protected final MarkdownRenderer renderer;

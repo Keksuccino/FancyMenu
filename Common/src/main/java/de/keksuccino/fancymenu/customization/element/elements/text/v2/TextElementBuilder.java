@@ -172,7 +172,7 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
 
 //        element.markdownRenderer.skipRefresh = false;
 
-        element.markdownRenderer.refresh();
+        element.markdownRenderer.refreshRenderer();
 
         element.updateContent();
 

@@ -42,6 +42,8 @@ public class TextElement extends AbstractElement {
 
     //TODO FIXEN: multi-line code block background broke
 
+    //TODO add toggle to automatically remove all <br> from source
+
     @NotNull
     protected SourceMode sourceMode = SourceMode.DIRECT;
     protected String source; //direct text, file path, link

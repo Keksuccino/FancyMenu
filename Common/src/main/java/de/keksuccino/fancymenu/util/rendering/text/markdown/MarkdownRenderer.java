@@ -104,8 +104,6 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
 //            UIBase.renderBorder(pose, this.x + this.border, this.y + this.border, this.x + this.realWidth - this.border, this.y + this.realHeight - this.border, 1, this.hyperlinkColor.getColorInt(), true, true, true, true);
 //        }
 
-//        LOGGER.info("### TOTAL HEIGHT RENDER: " + lineOffsetY + " | REAL HEIGHT: " + this.getRealHeight());
-
     }
 
     public void tick() {
@@ -113,7 +111,7 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
         String newRenderText = this.buildRenderText();
         if ((this.renderText == null) || !this.renderText.equals(newRenderText)) {
             this.renderText = newRenderText;
-            this.refresh();
+            this.refreshRenderer();
         }
 
         this.updateSize();
@@ -122,19 +120,19 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
 
     public void updateSize() {
         this.realWidth = 0;
-        this.realHeight = this.border;
+        this.realHeight = 0;
         for (MarkdownTextLine l : this.lines) {
             float lw = l.getLineWidth();
             if (lw > this.realWidth) {
                 this.realWidth = lw;
             }
-            this.realHeight = this.realHeight + l.getLineHeight() + this.lineSpacing;
+            this.realHeight += l.getLineHeight() + this.lineSpacing;
         }
         this.realWidth += this.border + this.border;
-        this.realHeight = this.realHeight + this.border;
+        this.realHeight += this.border + this.border;
     }
 
-    public void refresh() {
+    public void refreshRenderer() {
         if (this.skipRefresh) return;
         if (this.renderText == null) {
             this.renderText = this.buildRenderText();
@@ -272,8 +270,11 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
     }
 
     public MarkdownRenderer setOptimalWidth(float width) {
+        float oldOptimalWidth = this.optimalWidth;
         this.optimalWidth = width;
-        this.refresh();
+        if (oldOptimalWidth != this.optimalWidth) {
+            this.refreshRenderer();
+        }
         return this;
     }
 
@@ -297,7 +298,7 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
 
     public MarkdownRenderer setParentRenderScale(@Nullable Float parentRenderScale) {
         this.parentRenderScale = parentRenderScale;
-        this.refresh();
+        this.refreshRenderer();
         return this;
     }
 
@@ -307,7 +308,7 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
 
     public MarkdownRenderer setAutoLineBreakingEnabled(boolean enabled) {
         this.autoLineBreaks = enabled;
-        this.refresh();
+        this.rebuildLines();
         return this;
     }
 
@@ -387,7 +388,7 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
 
     public MarkdownRenderer setTextBaseScale(float textBaseScale) {
         this.textBaseScale = textBaseScale;
-        this.refresh();
+        this.refreshRenderer();
         return this;
     }
 
@@ -417,7 +418,7 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
 
     public MarkdownRenderer setBulletListIndent(float bulletListIndent) {
         this.bulletListIndent = bulletListIndent;
-        this.refresh();
+        this.refreshRenderer();
         return this;
     }
 
@@ -427,7 +428,7 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
 
     public MarkdownRenderer setBulletListSpacing(float bulletListSpacing) {
         this.bulletListSpacing = bulletListSpacing;
-        this.refresh();
+        this.refreshRenderer();
         return this;
     }
 
@@ -446,7 +447,7 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
 
     public MarkdownRenderer setQuoteIndent(float quoteIndent) {
         this.quoteIndent = quoteIndent;
-        this.refresh();
+        this.refreshRenderer();
         return this;
     }
 
@@ -465,7 +466,7 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
 
     public MarkdownRenderer setLineSpacing(float lineSpacing) {
         this.lineSpacing = lineSpacing;
-        this.refresh();
+        this.refreshRenderer();
         return this;
     }
 
@@ -475,7 +476,7 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
 
     public MarkdownRenderer setBorder(float border) {
         this.border = border;
-        this.refresh();
+        this.refreshRenderer();
         return this;
     }
 

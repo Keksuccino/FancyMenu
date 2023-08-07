@@ -18,6 +18,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
@@ -94,9 +95,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             pose.pushPose();
             pose.scale(this.getScale(), this.getScale(), this.getScale());
             if (this.parent.textShadow && (this.codeBlockContext == null)) {
-                this.parent.font.drawShadow(pose, this.buildRenderComponent(), (int) this.getTextRenderX(), (int) this.getTextRenderY(), this.parent.textBaseColor.getColorInt());
+                this.parent.font.drawShadow(pose, this.buildRenderComponent(false), (int) this.getTextRenderX(), (int) this.getTextRenderY(), this.parent.textBaseColor.getColorInt());
             } else {
-                this.parent.font.draw(pose, this.buildRenderComponent(), (int) this.getTextRenderX(), (int) this.getTextRenderY(), this.parent.textBaseColor.getColorInt());
+                this.parent.font.draw(pose, this.buildRenderComponent(false), (int) this.getTextRenderX(), (int) this.getTextRenderY(), this.parent.textBaseColor.getColorInt());
             }
             pose.popPose();
             RenderingUtils.resetShaderColor();
@@ -168,11 +169,17 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     }
 
     @NotNull
-    protected Component buildRenderComponent() {
-        Style style = Style.EMPTY
-                .withBold(this.bold)
-                .withItalic(this.italic)
-                .withStrikethrough(this.strikethrough);
+    protected Component buildRenderComponent(boolean forWidthCalculation) {
+        Style style = Style.EMPTY;
+        if (this.italic) {
+            style = style.withItalic(true);
+        }
+        if (this.bold) {
+            style = style.withBold(true);
+        }
+        if (this.strikethrough && !forWidthCalculation) {
+            style = style.withStrikethrough(true);
+        }
         if (this.quoteContext != null) {
             style = style.withColor(this.parent.quoteColor.getColorInt());
             if (this.parent.quoteItalic) {
@@ -184,7 +191,10 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         }
         if (this.hyperlink != null) {
             style = style.withColor(this.parent.hyperlinkColor.getColorInt());
-            if (this.hyperlink.isHovered()) style = style.withUnderlined(true);
+            if (this.hyperlink.isHovered()) {
+//                LogManager.getLogger().info("############ HYPERLINK HOVERED: " + this.hyperlink + " | Fragments Count: " + this.hyperlink.hyperlinkFragments.size() + " | CODE BLOCK: " + this.codeBlockContext);
+                style = style.withUnderlined(true);
+            }
         }
         String t = this.text;
         if ((this.hyperlink != null) && (this.naturalLineBreakAfter || this.autoLineBreakAfter) && t.endsWith(" ")) {
@@ -203,7 +213,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     }
 
     protected void updateWidth() {
-        this.unscaledTextWidth = this.parent.font.width(this.buildRenderComponent());
+        this.unscaledTextWidth = this.parent.font.width(this.buildRenderComponent(true));
     }
 
     public float getTextRenderX() {
@@ -341,7 +351,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if ((this.hyperlink != null) && this.hyperlink.isHovered()) {
+        if ((this.hyperlink != null) && this.hovered) {
             WebUtils.openWebLink(this.hyperlink.link);
             return true;
         }
