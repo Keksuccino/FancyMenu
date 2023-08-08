@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -11,6 +12,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
@@ -18,7 +20,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
@@ -113,13 +114,22 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     }
 
     protected void renderCodeBlock(PoseStack pose) {
-        if (this.codeBlockContext != null) {
+        if ((this.codeBlockContext != null) && (this.parentLine != null)) {
             MarkdownTextFragment start = this.codeBlockContext.getBlockStart();
             MarkdownTextFragment end = this.codeBlockContext.getBlockEnd();
+            if (this.codeBlockContext.singleLine) {
+                MarkdownTextLine.SingleLineCodeBlockPart part = this.parentLine.singleLineCodeBlockStartEndPairs.get(this.codeBlockContext);
+                if (part == null) return;
+                start = part.start;
+                end = part.end;
+            }
             if (start != this) return;
             if (end == null) return;
             if (this.codeBlockContext.singleLine) {
                 float xEnd = end.x + end.getRenderWidth();
+                if (end.text.endsWith(" ")) {
+                    xEnd -= (this.parent.font.width(" ") * this.getScale());
+                }
                 renderCodeBlockBackground(pose, this.x, this.y - 2, xEnd, this.y + this.getTextRenderHeight(), this.parent.codeBlockSingleLineColor.getColorInt());
             } else {
                 renderCodeBlockBackground(pose, this.parent.x + this.parent.border, this.y, this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, end.y + end.getRenderHeight() - 1, this.parent.codeBlockMultiLineColor.getColorInt());
@@ -192,13 +202,18 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if (this.hyperlink != null) {
             style = style.withColor(this.parent.hyperlinkColor.getColorInt());
             if (this.hyperlink.isHovered()) {
-//                LogManager.getLogger().info("############ HYPERLINK HOVERED: " + this.hyperlink + " | Fragments Count: " + this.hyperlink.hyperlinkFragments.size() + " | CODE BLOCK: " + this.codeBlockContext);
                 style = style.withUnderlined(true);
             }
         }
+        boolean addSpaceComponentAtEnd = false;
         String t = this.text;
         if ((this.hyperlink != null) && (this.naturalLineBreakAfter || this.autoLineBreakAfter) && t.endsWith(" ")) {
+            //Remove spaces at line end that would look ugly when underlined
             t = t.substring(0, t.length()-1);
+        } else if ((this.hyperlink != null) && (ListUtils.getLast(this.hyperlink.hyperlinkFragments) == this) && t.endsWith(" ")) {
+            //Make space at the end not underlined without removing it completely
+            t = t.substring(0, t.length()-1);
+            addSpaceComponentAtEnd = true;
         }
         if (this.codeBlockContext != null) {
             style = Style.EMPTY;
@@ -209,7 +224,11 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if (this.parent.textCase == MarkdownRenderer.TextCase.ALL_LOWER) {
             t = t.toLowerCase();
         }
-        return Component.literal(t).setStyle(style);
+        MutableComponent comp = Component.literal(t).setStyle(style);
+        if (addSpaceComponentAtEnd) {
+            comp.append(Component.literal(" ").setStyle(Style.EMPTY.withUnderlined(false)));
+        }
+        return comp;
     }
 
     protected void updateWidth() {

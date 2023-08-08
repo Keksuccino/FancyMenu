@@ -106,6 +106,12 @@ public class TextEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("text_separator_1");
 
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "remove_html_breaks", TextEditorElement.class,
+                        consumes -> consumes.getTextElement().markdownRenderer.isRemoveHtmlBreaks(),
+                        (textEditorElement, aBoolean) -> textEditorElement.getTextElement().markdownRenderer.setRemoveHtmlBreaks(aBoolean),
+                        "fancymenu.customization.items.text.remove_html_breaks")
+                .setStackable(true);
+
         this.addGenericCycleContextMenuEntryTo(this.rightClickMenu, "set_case_mode",
                 ListUtils.build(MarkdownRenderer.TextCase.NORMAL, MarkdownRenderer.TextCase.ALL_UPPER, MarkdownRenderer.TextCase.ALL_LOWER),
                 consumes -> (consumes instanceof TextEditorElement),

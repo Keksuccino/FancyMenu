@@ -748,8 +748,8 @@
   "fancymenu.customization.items.text.status.unable_to_load": "§ä§lERROR: UNABLE TO LOAD!",
   "fancymenu.customization.items.text.scrolling": "Scrolling: %s",
   "fancymenu.customization.items.text.scrolling.desc": "If scrolling is disabled,\nthe scroll bar will be invisible\nand you are not able to scroll\nby using the mouse wheel or\nthe bar.",
-
   "fancymenu.customization.items.text.auto_line_wrapping": "Auto Line Wrapping: %s",
+  "fancymenu.customization.items.text.remove_html_breaks": "Remove HTML Line Breaks: %s",
   "fancymenu.customization.items.text.markdown": "Markdown",
   "fancymenu.customization.items.text.markdown.code_block.single.color": "Code Block Single-Line Color",
   "fancymenu.customization.items.text.markdown.code_block.multi.color": "Code Block Multi-Line Color",
@@ -762,7 +762,6 @@
   "fancymenu.customization.items.text.markdown.bullet_list.dot.color": "Bullet List Dot Color",
   "fancymenu.customization.items.text.markdown.bullet_list.indent": "Bullet List Indent",
   "fancymenu.customization.items.text.markdown.bullet_list.spacing": "Bullet List Spacing",
-
   "fancymenu.helper.placeholder.json": "JSON Parser",
   "fancymenu.helper.placeholder.json.desc": "Parse a JSON and get a\nvalue from it.\n\nReplace 'path_or_link_to_json' with\nthe path or link to the\nJSON file you want to parse.\n\nReplace '$.some.json.path' with the\nJSON path to the value you want\nto get.\n\n§üGo to §lbit.ly/jsonfm §r§üto learn\n§ümore about JSON paths.",
   "fancymenu.helper.placeholder.webtext": "Web Text",

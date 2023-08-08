@@ -119,6 +119,12 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
             if (autoLineWrapping.equals("false")) element.markdownRenderer.setAutoLineBreakingEnabled(false);
         }
 
+        String removeHtmlBreaks = serialized.getValue("remove_html_breaks");
+        if (removeHtmlBreaks != null) {
+            if (removeHtmlBreaks.equals("true")) element.markdownRenderer.setRemoveHtmlBreaks(true);
+            if (removeHtmlBreaks.equals("false")) element.markdownRenderer.setRemoveHtmlBreaks(false);
+        }
+
         String codeBlockSingleColor = serialized.getValue("code_block_single_color");
         if (codeBlockSingleColor != null) {
             element.markdownRenderer.setCodeBlockSingleLineColor(DrawableColor.of(codeBlockSingleColor));
@@ -220,6 +226,7 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
         }
         serializeTo.putProperty("enable_scrolling", "" + element.enableScrolling);
         serializeTo.putProperty("auto_line_wrapping", "" + element.markdownRenderer.isAutoLineBreakingEnabled());
+        serializeTo.putProperty("remove_html_breaks", "" + element.markdownRenderer.isRemoveHtmlBreaks());
         serializeTo.putProperty("code_block_single_color", element.markdownRenderer.getCodeBlockSingleLineColor().getHex());
         serializeTo.putProperty("code_block_multi_color", element.markdownRenderer.getCodeBlockMultiLineColor().getHex());
         serializeTo.putProperty("headline_line_color", element.markdownRenderer.getHeadlineUnderlineColor().getHex());

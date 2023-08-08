@@ -57,6 +57,7 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
     protected TextCase textCase = TextCase.NORMAL;
     protected float textBaseScale = 1.0f;
     protected boolean autoLineBreaks = true;
+    protected boolean removeHtmlBreaks = true;
     protected boolean textShadow = true;
     protected float lineSpacing = 2;
     protected float border = 2;
@@ -226,7 +227,9 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
 
     @NotNull
     protected String buildRenderText() {
-        return PlaceholderParser.replacePlaceholders(this.text).replace("%n%", "\n").replace("\r", "\n");
+        String t = PlaceholderParser.replacePlaceholders(this.text).replace("%n%", "\n").replace("\r", "\n");
+        if (this.removeHtmlBreaks) t = t.replace("<br>", "");
+        return t;
     }
 
     public MarkdownRenderer addLineRenderValidator(@NotNull ConsumingSupplier<MarkdownTextLine, Boolean> validator) {
@@ -309,6 +312,15 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
     public MarkdownRenderer setAutoLineBreakingEnabled(boolean enabled) {
         this.autoLineBreaks = enabled;
         this.rebuildLines();
+        return this;
+    }
+
+    public boolean isRemoveHtmlBreaks() {
+        return this.removeHtmlBreaks;
+    }
+
+    public MarkdownRenderer setRemoveHtmlBreaks(boolean removeHtmlBreaks) {
+        this.removeHtmlBreaks = removeHtmlBreaks;
         return this;
     }
 

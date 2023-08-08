@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,6 +10,12 @@ import java.util.Objects;
 
 @SuppressWarnings("unused")
 public class ListUtils {
+
+    @Nullable
+    public static <T> T getLast(@NotNull List<T> list) {
+        if (list.isEmpty()) return null;
+        return list.get(list.size()-1);
+    }
 
     @SafeVarargs
     public static <T> List<T> mergeLists(@NotNull List<T>... lists) {
