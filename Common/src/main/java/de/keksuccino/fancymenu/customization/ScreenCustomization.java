@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization;
 import java.io.File;
 import java.util.*;
 
+import de.keksuccino.fancymenu.Compat;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.widgets.LayoutEditorWidgets;
@@ -348,7 +349,7 @@ public class ScreenCustomization {
 		addScreenBlacklistRule((screen) -> screen.startsWith("net.mehvahdjukaar.supplementaries."));
 		addScreenBlacklistRule((screen) -> screen.startsWith("net.optifine"));
 		addScreenBlacklistRule((screen) -> screen.startsWith("slimeknights."));
-		addScreenBlacklistRule((screen) -> screen.equals(VideoSettingsScreen.class.getName()) && FancyMenu.isOptiFineLoaded());
+		addScreenBlacklistRule((screen) -> screen.equals(VideoSettingsScreen.class.getName()) && Compat.isOptiFineLoaded());
 		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.fancymenu.") && !screen.equals(CustomGuiBase.class.getName()));
 
 	}

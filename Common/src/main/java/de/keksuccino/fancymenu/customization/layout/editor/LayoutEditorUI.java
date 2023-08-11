@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
+import de.keksuccino.fancymenu.Compat;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.background.ChooseMenuBackgroundScreen;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
@@ -485,7 +486,7 @@ public class LayoutEditorUI {
 
 		ContextMenu menu = new ContextMenu();
 
-		if (!FancyMenu.isAudioExtensionLoaded()) {
+		if (!Compat.isAudioExtensionLoaded()) {
 			menu.addClickableEntry("dummy_audio_entry", Component.translatable("fancymenu.editor.add.audio"), (menu1, entry) -> {
 				WebUtils.openWebLink("https://www.curseforge.com/minecraft/mc-mods/audio-extension-for-fancymenu-" + FancyMenu.MOD_LOADER);
 			}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.extension.dummy.audio.btn.desc")));

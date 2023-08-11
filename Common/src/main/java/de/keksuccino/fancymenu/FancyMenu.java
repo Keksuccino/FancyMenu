@@ -116,13 +116,11 @@ public class FancyMenu {
 				//TODO remove debug
 				EventHandler.INSTANCE.registerListenersOf(new Test());
 
-				if (isOptiFineLoaded()) {
-					LOGGER.info("[FANCYMENU] OptiFine detected!");
-				}
-
 	    	} else {
 				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in server-side mode on " + MOD_LOADER.toUpperCase() + "!");
 	    	}
+
+			Compat.printInfoLog();
 	    	
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -154,22 +152,6 @@ public class FancyMenu {
 
 	public static void reloadOptions() {
 		options = new Options();
-	}
-
-	public static boolean isOptiFineLoaded() {
-		try {
-			Class.forName("optifine.Installer", false, FancyMenu.class.getClassLoader());
-			return true;
-		} catch (Exception ignored) {}
-		return false;
-	}
-
-	public static boolean isAudioExtensionLoaded() {
-		try {
-			Class.forName("de.keksuccino.fmaudio.FmAudio", false, FancyMenu.class.getClassLoader());
-			return true;
-		} catch (Exception ignored) {}
-		return false;
 	}
 
 	public static String getMinecraftVersion() {
