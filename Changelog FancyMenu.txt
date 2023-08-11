@@ -68,6 +68,12 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 --> There's a "Layer" widget now that lets you easily reorder elements (and it lets you rename elements!)
 --> Removed the delete confirmation for elements, because undo/redo exists
  
+- Reworked Text elements
+--> Text elements now have auto line wrapping/breaking (toggleable; enabled by default)
+--> There's now full markdown support for web and local text sources
+--> Special markdown formatting code to colorize text parts with HEX colors
+--> Special markdown formatting codes to make text parts centered or right-sided
+ 
 - Removed deprecated (old) text element and web text element (this does not affect the new text element added in FancyMenu v2.12.0)
 - Removed deprecated background audio feature of layouts, since the Audio Extension is a thing now (install the extension mod and add an Audio element to the layout)
 - Removed deprecated feature to use the localization key/label of a vanilla button to identify it (this was an _ancient_ thing and was probably unused zombie code for like 2-3 years)
@@ -87,6 +93,7 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - Fixed: Copyright button is deletable (you can't delete or resize it anymore, but moving still works as long as the button stays on-screen)
 - Fixed: Resizing not working correctly when using the "Element" anchor point
 - Fixed: Element-Info (X-pos, Y-pos, width, etc.) at the side of elements in the editor can go off-screen when the element is too far right or at the top
+- Fixed: Incompatibility with "Remove Reloading Screen" mod
  
 %changelog:end%
 
