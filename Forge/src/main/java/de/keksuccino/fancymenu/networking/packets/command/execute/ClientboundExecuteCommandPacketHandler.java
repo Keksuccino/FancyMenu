@@ -1,4 +1,3 @@
-
 package de.keksuccino.fancymenu.networking.packets.command.execute;
 
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
@@ -14,7 +13,6 @@ public class ClientboundExecuteCommandPacketHandler {
     public static void handle(ExecuteCommandPacketMessage msg) {
 
         MainThreadTaskExecutor.executeInMainThread(() -> {
-            //TODO Only 1.19+
             if ((msg.command != null) && msg.command.startsWith("/")) {
                 msg.command = msg.command.substring(1);
             }

@@ -9,7 +9,7 @@ public class Options {
 
     protected final Config config = new Config(FancyMenu.MOD_DIR.getAbsolutePath().replace("\\", "/") + "/config.txt");
 
-    public final Option<Boolean> playMenuMusic = new Option<>(config, "play_menu_music", true, "general");
+    public final Option<Boolean> playVanillaMenuMusic = new Option<>(config, "play_vanilla_menu_music", true, "general");
     public final Option<Integer> defaultGuiScale = new Option<>(config, "default_gui_scale", -1, "general");
     public final Option<Boolean> forceFullscreen = new Option<>(config, "force_fullscreen", false, "general");
 

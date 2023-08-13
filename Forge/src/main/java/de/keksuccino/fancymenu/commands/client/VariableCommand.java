@@ -34,34 +34,35 @@ public class VariableCommand {
             initialized = true;
         }
         d.register(Commands.literal("fmvariable")
-                .then(Commands.argument("action", StringArgumentType.string())
-                        .suggests(((context, builder) -> {
-                            return CommandUtils.getStringSuggestions(builder, "get", "set");
-                        }))
-                .then(Commands.argument("variable_name", StringArgumentType.string())
-                        .executes((stack) -> {
-                            return getVariable(stack.getSource(), StringArgumentType.getString(stack, "action"), StringArgumentType.getString(stack, "variable_name"));
-                        })
-                        .suggests(((context, builder) -> {
-                            return CommandUtils.getStringSuggestions(builder, getVariableNameSuggestions());
-                        }))
-                        .then(Commands.argument("set_to_value", StringArgumentType.string())
+                .then(Commands.literal("get")
+                        .then(Commands.argument("variable_name", StringArgumentType.string())
                                 .suggests(((context, builder) -> {
-                                    if (StringArgumentType.getString(context, "action").equalsIgnoreCase("set")) {
-                                        return CommandUtils.getStringSuggestions(builder, "<set_to_value>");
-                                    } else {
-                                        return CommandUtils.getStringSuggestions(builder, new String[0]);
-                                    }
+                                    return CommandUtils.getStringSuggestions(builder, getVariableNameSuggestions());
                                 }))
-                        .then(Commands.argument("send_chat_feedback", BoolArgumentType.bool())
                                 .executes((stack) -> {
-                                    return setVariable(stack.getSource(), StringArgumentType.getString(stack, "action"), StringArgumentType.getString(stack, "variable_name"), StringArgumentType.getString(stack, "set_to_value"), BoolArgumentType.getBool(stack, "send_chat_feedback"));
+                                    return getVariable(stack.getSource(), StringArgumentType.getString(stack, "variable_name"));
                                 })
                         )
+                )
+                .then(Commands.literal("set")
+                        .then(Commands.argument("variable_name", StringArgumentType.string())
+                                .suggests((context, builder) -> {
+                                    return CommandUtils.getStringSuggestions(builder, getVariableNameSuggestions());
+                                })
+                                .then(Commands.argument("send_chat_feedback", BoolArgumentType.bool())
+                                        .then(Commands.argument("set_to_value", StringArgumentType.greedyString())
+                                                .suggests(((context, builder) -> {
+                                                    return CommandUtils.getStringSuggestions(builder, "<set_to_value>");
+                                                }))
+                                                .executes((stack) -> {
+                                                    return setVariable(stack.getSource(), StringArgumentType.getString(stack, "variable_name"), StringArgumentType.getString(stack, "set_to_value"), BoolArgumentType.getBool(stack, "send_chat_feedback"));
+                                                })
+                                        )
+                                )
                         )
                 )
-                )
         );
+
     }
 
     private static String[] getVariableNameSuggestions() {
@@ -72,16 +73,14 @@ public class VariableCommand {
         return l.toArray(new String[0]);
     }
 
-    private static int getVariable(CommandSourceStack stack, String getOrSet, String variableName) {
+    private static int getVariable(CommandSourceStack stack, String variableName) {
         MainThreadTaskExecutor.executeInMainThread(() -> {
             try {
-                if (getOrSet.equalsIgnoreCase("get")) {
-                    String s = VariableHandler.variableExists(variableName) ? Objects.requireNonNull(VariableHandler.getVariable(variableName)).getValue() : null;
-                    if (s != null) {
-                        stack.sendSuccess(Component.literal(I18n.get("fancymenu.commands.variable.get.success", s)), false);
-                    } else {
-                        stack.sendFailure(Component.literal(I18n.get("fancymenu.commands.variable.not_found")));
-                    }
+                String s = VariableHandler.variableExists(variableName) ? Objects.requireNonNull(VariableHandler.getVariable(variableName)).getValue() : null;
+                if (s != null) {
+                    stack.sendSuccess(Component.literal(I18n.get("fancymenu.commands.variable.get.success", s)), false);
+                } else {
+                    stack.sendFailure(Component.literal(I18n.get("fancymenu.commands.variable.not_found")));
                 }
             } catch (Exception e) {
                 stack.sendFailure(Component.literal("Error while executing command!"));
@@ -91,14 +90,12 @@ public class VariableCommand {
         return 1;
     }
 
-    private static int setVariable(CommandSourceStack stack, String getOrSet, String variableName, String setToValue, boolean sendFeedback) {
+    private static int setVariable(CommandSourceStack stack, String variableName, String setToValue, boolean sendFeedback) {
         MainThreadTaskExecutor.executeInMainThread(() -> {
             try {
-                if (getOrSet.equalsIgnoreCase("set")) {
-                    VariableHandler.setVariable(variableName, setToValue);
-                    if (sendFeedback) {
-                        stack.sendSuccess(Component.literal(I18n.get("fancymenu.commands.variable.set.success", setToValue)), false);
-                    }
+                VariableHandler.setVariable(variableName, setToValue);
+                if (sendFeedback) {
+                    stack.sendSuccess(Component.literal(I18n.get("fancymenu.commands.variable.set.success", setToValue)), false);
                 }
             } catch (Exception e) {
                 stack.sendFailure(Component.literal("Error while executing command!"));

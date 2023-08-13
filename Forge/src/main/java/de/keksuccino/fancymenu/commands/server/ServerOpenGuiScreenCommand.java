@@ -7,31 +7,48 @@ import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.networking.packets.command.execute.ExecuteCommandPacketMessage;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.PacketDistributor;
+import org.jetbrains.annotations.Nullable;
+import java.util.Collection;
 
 public class ServerOpenGuiScreenCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> d) {
         d.register(Commands.literal("openguiscreen").then(Commands.argument("menu_identifier", StringArgumentType.string())
                 .executes((stack) -> {
-                    return openGui(stack.getSource(), StringArgumentType.getString(stack, "menu_identifier"));
+                    return openGui(stack.getSource(), StringArgumentType.getString(stack, "menu_identifier"), null);
                 })
                 .suggests((context, provider) -> {
                     return CommandUtils.getStringSuggestions(provider, "<menu_identifier>");
                 })
+                .then(Commands.argument("target_players", EntityArgument.players())
+                        .requires(stack -> stack.hasPermission(2))
+                        .executes(stack -> {
+                            return openGui(stack.getSource(), StringArgumentType.getString(stack, "menu_identifier"), EntityArgument.getPlayers(stack, "target_players"));
+                        }))
         ));
     }
 
-    private static int openGui(CommandSourceStack stack, String menuIdentifierOrCustomGuiName) {
+    private static int openGui(CommandSourceStack stack, String menuIdentifierOrCustomGuiName, @Nullable Collection<ServerPlayer> targets) {
         try {
-            //Send packet to sender, so the client can execute the real client-side command
-            ServerPlayer sender = stack.getPlayerOrException();
-            ExecuteCommandPacketMessage msg = new ExecuteCommandPacketMessage();
-            msg.direction = "client";
-            msg.command = "/openguiscreen " + menuIdentifierOrCustomGuiName;
-            PacketHandler.send(PacketDistributor.PLAYER.with(() -> sender), msg);
+            if (targets == null) {
+                //Send packet to sender, so the client can execute the real client-side command
+                ServerPlayer sender = stack.getPlayerOrException();
+                ExecuteCommandPacketMessage msg = new ExecuteCommandPacketMessage();
+                msg.direction = "client";
+                msg.command = "/openguiscreen " + menuIdentifierOrCustomGuiName;
+                PacketHandler.send(PacketDistributor.PLAYER.with(() -> sender), msg);
+            } else {
+                for (ServerPlayer target : targets) {
+                    ExecuteCommandPacketMessage msg = new ExecuteCommandPacketMessage();
+                    msg.direction = "client";
+                    msg.command = "/openguiscreen " + menuIdentifierOrCustomGuiName;
+                    PacketHandler.send(PacketDistributor.PLAYER.with(() -> target), msg);
+                }
+            }
         } catch (Exception e) {
             stack.sendFailure(Component.literal("Error while trying to execute command!"));
             e.printStackTrace();

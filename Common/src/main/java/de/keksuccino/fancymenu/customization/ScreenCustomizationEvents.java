@@ -82,7 +82,7 @@ public class ScreenCustomizationEvents {
 
 		//Stopping menu music when deactivated in config
 		if ((Minecraft.getInstance().level == null)) {
-			if (!FancyMenu.getOptions().playMenuMusic.getValue()) {
+			if (!FancyMenu.getOptions().playVanillaMenuMusic.getValue()) {
 				Minecraft.getInstance().getMusicManager().stopPlaying();
 			}
 		}

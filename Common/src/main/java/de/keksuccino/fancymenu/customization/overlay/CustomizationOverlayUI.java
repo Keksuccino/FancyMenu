@@ -187,9 +187,13 @@ public class CustomizationOverlayUI {
 
         customizationSettingsMenu.addSeparatorEntry("separator_after_advanced_mode");
 
-        customizationSettingsMenu.addValueCycleEntry("play_menu_music", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.play_menu_music", FancyMenu.getOptions().playMenuMusic.getValue())
+        customizationSettingsMenu.addValueCycleEntry("play_menu_music", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.play_menu_music", FancyMenu.getOptions().playVanillaMenuMusic.getValue())
                 .addCycleListener(cycle -> {
-                    FancyMenu.getOptions().playMenuMusic.setValue(cycle.getAsBoolean());
+                    FancyMenu.getOptions().playVanillaMenuMusic.setValue(cycle.getAsBoolean());
+                    Minecraft.getInstance().getMusicManager().stopPlaying();
+                    if (FancyMenu.getOptions().playVanillaMenuMusic.getValue()) {
+                        Minecraft.getInstance().getMusicManager().startPlaying(Minecraft.getInstance().getSituationalMusic());
+                    }
                 }));
 
         NonStackableOverlayUI.addIntegerInputContextMenuEntryTo(customizationSettingsMenu, "default_gui_scale",

@@ -18,7 +18,11 @@ public class FancyMenuForge {
 
         Packets.registerAll();
 
-        FancyMenuForgeEvents.registerAll();
+        if (Services.PLATFORM.isOnClient()) {
+            FancyMenuForgeClientEvents.registerAll();
+        }
+
+        FancyMenuForgeServerEvents.registerAll();
         
     }
 

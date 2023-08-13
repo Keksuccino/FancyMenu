@@ -13,14 +13,16 @@ public class FancyMenuFabric implements ModInitializer {
         FancyMenu.init();
 
         if (Services.PLATFORM.isOnClient()) {
-
             Konkrete.addPostLoadingEvent(FancyMenu.MOD_ID, FancyMenu::onClientSetup);
-
         }
 
         Packets.registerAll();
 
-        FancyMenuFabricEvents.registerAll();
+        if (Services.PLATFORM.isOnClient()) {
+            FancyMenuFabricClientEvents.registerAll();
+        }
+
+        FancyMenuFabricServerEvents.registerAll();
 
     }
 

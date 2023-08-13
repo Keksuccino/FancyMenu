@@ -1117,7 +1117,7 @@
   "fancymenu.overlay.menu_bar.customization.settings": "Settings",
   "fancymenu.overlay.menu_bar.customization.settings.advanced_customization_mode": "Advanced Customization Mode: %s",
   "fancymenu.overlay.menu_bar.customization.settings.advanced_customization_mode.tooltip": "This is only for advanced users!\n\n§äYou can break your game with that stuff!",
-  "fancymenu.overlay.menu_bar.customization.settings.play_menu_music": "Play Menu Music: %s",
+  "fancymenu.overlay.menu_bar.customization.settings.play_menu_music": "Play Vanilla Menu Music: %s",
   "fancymenu.overlay.menu_bar.customization.settings.set_default_gui_scale": "Default GUI Scale",
   "fancymenu.overlay.menu_bar.customization.settings.set_default_gui_scale.tooltip": "The default GUI scale gets set\nwhen the user starts the game for\nthe very first time.\n\nThis is useful for modpack developers.",
   "fancymenu.overlay.menu_bar.customization.settings.force_fullscreen": "Force Fullscreen on Launch: %s",
@@ -1208,5 +1208,6 @@
   "fancymenu.editor.widgets": "Editor Widgets",
   "fancymenu.editor.widgets.layers": "Layers",
   "fancymenu.editor.widgets.layers.vanilla_elements": "Vanilla Elements",
-  "fancymenu.markdown.missing_local_image": "[MISSING LOCAL IMAGE OR NOT IN CONFIG/FANCYMENU/ASSETS]"
+  "fancymenu.markdown.missing_local_image": "[MISSING LOCAL IMAGE OR NOT IN CONFIG/FANCYMENU/ASSETS]",
+  "fancymenu.commmands.openguiscreen.unable_to_open_gui": "Unable to open screen: %s"
 }

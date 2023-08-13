@@ -37,12 +37,6 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
  
 ------------------------------
  
-- Added a bunch of accessibility stuff
---> UI Themes to change the color scheme of FancyMenu's UI (dark and light themes included by default and you can make your own themes!)
---> Toggle the text shadow of all of FancyMenu's UI text
---> Toggle the click sound of all of FancyMenu's UI elements
---> FancyMenu's UI Scale is now "Auto" by default (automatically shows the UI at scale 2 instead of 1 if the window is bigger than 1920x1080)
- 
 - Button tooltips (custom and vanilla buttons) now look like Vanilla ones
 - Button tooltips will not jump to the complete opposite site of the mouse cursor anymore when hitting the edge of the screen
 - If "Preserve Background Aspect Ratio" is enabled, menu backgrounds will now always get rendered with the correct aspect ratio, no matter how big/small the screen is
@@ -55,10 +49,19 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - Custom window icon system now allows you to set your own icon paths (You will need to set your custom icons again and move them to /config/fancymenu/assets/)
 - You don't need to restart the game anymore after changing the custom window icon(s) (gets updated automatically)
 - You don't need to restart the game anymore after changing the custom window title (gets updated automatically)
- 
+- The "/openguiscreen" and "/closeguiscreen" commands now accept a player argument to remotely open/close GUIs for other players (OP permissions needed)
+- The "/openguiscreen" and "/closeguiscreen" commands can now be executed from console (as non-player) by setting a player argument
+- The "/fmvariable" command now supports setting values with spaces, quotation marks and backslashes
 - Completely reworked all APIs and registries (so if you've used these in an extension mod, this mod is broken now, sorry >.<)
 - Most UI stuff got a full rewrite (context menus, menu bars, screens, etc.)
 - FancyMenu's settings are now part of the menu bar at the top of menu screens and should be way easier to navigate through now
+ 
+- Added a bunch of accessibility stuff
+--> UI Themes to change the color scheme of FancyMenu's UI (dark and light themes included by default and you can make your own themes!)
+--> Toggle the text shadow of all of FancyMenu's UI text
+--> Toggle the click sound of all of FancyMenu's UI elements
+--> FancyMenu's UI Scale is now "Auto" by default (automatically shows the UI at scale 2 instead of 1 if the window is bigger than 1920x1080)
+ 
 - The Layout Editor got a full rewrite
 --> Better menu navigation
 --> Added an anchor point overlay that shows the anchor of elements and lets you set the anchor of elements by hovering over an anchor
@@ -94,6 +97,7 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - Fixed: Resizing not working correctly when using the "Element" anchor point
 - Fixed: Element-Info (X-pos, Y-pos, width, etc.) at the side of elements in the editor can go off-screen when the element is too far right or at the top
 - Fixed: Incompatibility with "Remove Reloading Screen" mod
+- Fixed: Minecraft's "/help" command doesn't work correctly for FancyMenu's "/fmvariable" command
  
 %changelog:end%
 
