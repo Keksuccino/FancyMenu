@@ -21,6 +21,11 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO Add custom click action for the "edit value" button of actions (add default method to action class that opens editor, but make it overridable)
+	// - Add "Wait For" action that waits for a loading requirement to be true/false (use the custom click action for that to open the Loading Req builder)
+	// - Add "IF" (start + end) actions, to wrap multiple actions in an IF-block that takes loading requirements (use custom click action like in "Wait For")
+	//   - Handle IF-blocks when executing actions in loop (if IF-block-start -> start checking for IF-block; if IF-block-end -> STOP checking)
+
 	//TODO Element Listeners
 	// - Jeder Element Typ hat eigene Listener
 	// - Per Rechtsklick auf element können Listener geadded werden, die dann Actions ausführen (jeder listener hat eigene Actions list)
@@ -69,10 +74,6 @@ public class FancyMenu {
 	//TODO Button Element: "Click On Key Press" option, um buttons per key press zu klicken
 
 	//TODO Layout Editor: Toast Notifications rechts oben nach verschiedenen Aktionen wie copy/paste, undo/redo, etc.
-
-	//TODO Text Element: auto line break (toggleable)
-
-	//TODO TextView class, die multi-line text rendern kann + full markdown support (eventuell formatting system von TextEditor nutzen)
 
 	//TODO placeholders und generic progress bar von Drippy porten (+ aus Drippy entfernen)
 

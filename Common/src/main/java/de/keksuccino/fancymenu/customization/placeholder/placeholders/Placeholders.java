@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.advanced.*;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.gui.*;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderRegistry;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.AbsolutePathPlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.realtime.*;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.server.*;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.client.LoadedModsPlaceholder;
@@ -51,11 +52,13 @@ public class Placeholders {
     public static final GetVariablePlaceholder GET_VARIABLE = new GetVariablePlaceholder();
     public static final LocalizationPlaceholder LOCALIZATION = new LocalizationPlaceholder();
     public static final CalculatorPlaceholder CALCULATOR = new CalculatorPlaceholder();
+    public static final RandomNumberPlaceholder RANDOM_NUMBER = new RandomNumberPlaceholder();
     public static final PercentRamPlaceholder PERCENT_RAM = new PercentRamPlaceholder();
     public static final UsedRamPlaceholder USED_RAM = new UsedRamPlaceholder();
     public static final MaxRamPlaceholder MAX_RAM = new MaxRamPlaceholder();
     public static final RandomTextPlaceholder RANDOM_TEXT = new RandomTextPlaceholder();
     public static final WebTextPlaceholder WEB_TEXT = new WebTextPlaceholder();
+    public static final AbsolutePathPlaceholder ABSOLUTE_PATH = new AbsolutePathPlaceholder();
 
     public static void registerAll() {
 
@@ -102,6 +105,7 @@ public class Placeholders {
         PlaceholderRegistry.register(GET_VARIABLE);
         PlaceholderRegistry.register(LOCALIZATION);
         PlaceholderRegistry.register(CALCULATOR);
+        PlaceholderRegistry.register(RANDOM_NUMBER);
 
         //Other
         PlaceholderRegistry.register(PERCENT_RAM);
@@ -109,6 +113,7 @@ public class Placeholders {
         PlaceholderRegistry.register(MAX_RAM);
         PlaceholderRegistry.register(RANDOM_TEXT);
         PlaceholderRegistry.register(WEB_TEXT);
+        PlaceholderRegistry.register(ABSOLUTE_PATH);
 
     }
 

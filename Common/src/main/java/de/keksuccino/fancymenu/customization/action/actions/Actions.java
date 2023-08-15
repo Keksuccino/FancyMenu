@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.action.actions.file.*;
 import de.keksuccino.fancymenu.customization.action.actions.layout.DisableLayoutAction;
 import de.keksuccino.fancymenu.customization.action.actions.layout.EnableLayoutAction;
 import de.keksuccino.fancymenu.customization.action.actions.layout.ToggleLayoutAction;
+import de.keksuccino.fancymenu.customization.action.actions.level.DisconnectAction;
 import de.keksuccino.fancymenu.customization.action.actions.level.EnterWorldAction;
 import de.keksuccino.fancymenu.customization.action.actions.level.JoinLastWorldServerAction;
 import de.keksuccino.fancymenu.customization.action.actions.level.JoinServerAction;
@@ -27,6 +28,7 @@ public class Actions {
     public static final JoinServerAction JOIN_SERVER = new JoinServerAction();
     public static final EnterWorldAction ENTER_WORLD = new EnterWorldAction();
     public static final JoinLastWorldServerAction JOIN_LAST_WORLD_SERVER = new JoinLastWorldServerAction();
+    public static final DisconnectAction DISCONNECT = new DisconnectAction();
     public static final OpenScreenAction OPEN_SCREEN = new OpenScreenAction();
     public static final CloseScreenAction CLOSE_SCREEN = new CloseScreenAction();
     public static final OpenLinkAction OPEN_LINK = new OpenLinkAction();
@@ -56,6 +58,7 @@ public class Actions {
         ActionRegistry.register(JOIN_SERVER);
         ActionRegistry.register(ENTER_WORLD);
         ActionRegistry.register(JOIN_LAST_WORLD_SERVER);
+        ActionRegistry.register(DISCONNECT);
         ActionRegistry.register(OPEN_SCREEN);
         ActionRegistry.register(CLOSE_SCREEN);
         ActionRegistry.register(OPEN_LINK);

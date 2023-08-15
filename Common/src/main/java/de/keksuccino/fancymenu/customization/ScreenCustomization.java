@@ -354,6 +354,15 @@ public class ScreenCustomization {
 
 	}
 
+	public static boolean isExistingGameDirectoryPath(@NotNull String path) {
+		Objects.requireNonNull(path);
+		String gameDir = FancyMenu.getGameDirectory().getAbsolutePath().replace("\\", "/");
+		if (!path.startsWith(gameDir)) {
+			path = gameDir + "/" + path;
+		}
+		return new File(path).exists();
+	}
+
 	public static String getAbsoluteGameDirectoryPath(@NotNull String path) {
 		try {
 			path = path.replace("\\", "/");
@@ -370,7 +379,7 @@ public class ScreenCustomization {
 	public static String getPathWithoutGameDirectory(@NotNull String path) {
 		Objects.requireNonNull(path, "Path cannot be NULL!");
 		File f = new File(getAbsoluteGameDirectoryPath(path));
-		String p = f.getAbsolutePath().replace(FancyMenu.getGameDirectory().getAbsolutePath(), "");
+		String p = f.getAbsolutePath().replace("\\", "/").replace(FancyMenu.getGameDirectory().getAbsolutePath().replace("\\", "/"), "");
 		if (p.startsWith("/")) p = p.substring(1);
 		return p;
 	}

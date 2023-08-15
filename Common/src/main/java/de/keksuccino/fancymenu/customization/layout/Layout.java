@@ -184,11 +184,24 @@ public class Layout extends LayoutBase {
             set.putContainer(ps);
         }
 
-        //Background Options Section
+        //Background Options Container
         PropertyContainer s = new PropertyContainer("customization");
         s.putProperty("action", "backgroundoptions");
-        s.putProperty("keepaspectratio", "" + this.keepBackgroundAspectRatio);
+        s.putProperty("keepaspectratio", "" + this.preserveBackgroundAspectRatio);
         set.putContainer(s);
+
+        //Scroll List Customizations Container
+        PropertyContainer scrollListContainer = new PropertyContainer("scroll_list_customization");
+        scrollListContainer.putProperty("preserve_scroll_list_header_footer_aspect_ratio", "" + this.preserveScrollListHeaderFooterAspectRatio);
+        if (this.scrollListHeaderTexture != null) {
+            scrollListContainer.putProperty("scroll_list_header_texture", this.scrollListHeaderTexture);
+        }
+        if (this.scrollListFooterTexture != null) {
+            scrollListContainer.putProperty("scroll_list_footer_texture", this.scrollListFooterTexture);
+        }
+        scrollListContainer.putProperty("render_scroll_list_header_shadow", "" + this.renderScrollListHeaderShadow);
+        scrollListContainer.putProperty("render_scroll_list_footer_shadow", "" + this.renderScrollListFooterShadow);
+        set.putContainer(scrollListContainer);
 
         this.layoutWideLoadingRequirementContainer.serializeContainerToExistingPropertiesSection(meta);
 
@@ -210,13 +223,11 @@ public class Layout extends LayoutBase {
             Layout layout = new Layout();
             layout.layoutFile = layoutFile;
 
-            List<PropertyContainer> metaList = serialized.getContainersOfType("layout-meta");
-            if (metaList.isEmpty()) {
-                metaList = serialized.getContainersOfType("customization-meta");
+            PropertyContainer meta = serialized.getFirstContainerOfType("layout-meta");
+            if (meta == null) {
+                meta = serialized.getFirstContainerOfType("customization-meta");
             }
-            if (!metaList.isEmpty()) {
-
-                PropertyContainer meta = metaList.get(0);
+            if (meta != null) {
 
                 layout.setMenuIdentifier(meta.getValue("identifier"));
 
@@ -345,6 +356,28 @@ public class Layout extends LayoutBase {
                 layout.menuBackground = legacyBackground;
             }
 
+            //Handle Scroll List Customizations
+            PropertyContainer scrollListCustomizations = serialized.getFirstContainerOfType("scroll_list_customization");
+            if (scrollListCustomizations != null) {
+                String preserveScrollHeaderFooterAspect = scrollListCustomizations.getValue("preserve_scroll_list_header_footer_aspect_ratio");
+                if (preserveScrollHeaderFooterAspect != null) {
+                    if (preserveScrollHeaderFooterAspect.equals("true")) layout.preserveScrollListHeaderFooterAspectRatio = true;
+                    if (preserveScrollHeaderFooterAspect.equals("false")) layout.preserveScrollListHeaderFooterAspectRatio = false;
+                }
+                layout.scrollListHeaderTexture = scrollListCustomizations.getValue("scroll_list_header_texture");
+                layout.scrollListFooterTexture = scrollListCustomizations.getValue("scroll_list_footer_texture");
+                String renderScrollHeaderShadow = scrollListCustomizations.getValue("render_scroll_list_header_shadow");
+                if (renderScrollHeaderShadow != null) {
+                    if (renderScrollHeaderShadow.equals("true")) layout.renderScrollListHeaderShadow = true;
+                    if (renderScrollHeaderShadow.equals("false")) layout.renderScrollListHeaderShadow = false;
+                }
+                String renderScrollFooterShadow = scrollListCustomizations.getValue("render_scroll_list_footer_shadow");
+                if (renderScrollFooterShadow != null) {
+                    if (renderScrollFooterShadow.equals("true")) layout.renderScrollListFooterShadow = true;
+                    if (renderScrollFooterShadow.equals("false")) layout.renderScrollListFooterShadow = false;
+                }
+            }
+
             //Handle everything else
             for (PropertyContainer sec : serialized.getContainersOfType("customization")) {
 
@@ -375,7 +408,7 @@ public class Layout extends LayoutBase {
                 if ((action != null) && action.equalsIgnoreCase("backgroundoptions")) {
                     String keepAspect = sec.getValue("keepaspectratio");
                     if ((keepAspect != null) && keepAspect.equalsIgnoreCase("true")) {
-                        layout.keepBackgroundAspectRatio = true;
+                        layout.preserveBackgroundAspectRatio = true;
                     }
                 }
 

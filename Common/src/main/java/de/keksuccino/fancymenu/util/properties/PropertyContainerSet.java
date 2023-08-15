@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.util.properties;
 
 import org.jetbrains.annotations.NotNull;
-
+import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +26,7 @@ public class PropertyContainerSet {
     }
 
     @NotNull
-    public List<PropertyContainer> getContainersOfType(String type) {
+    public List<PropertyContainer> getContainersOfType(@NotNull String type) {
         List<PropertyContainer> sections = new ArrayList<>();
         for (PropertyContainer sec : this.containers) {
             if (sec.getType().equals(type)) {
@@ -34,6 +34,16 @@ public class PropertyContainerSet {
             }
         }
         return sections;
+    }
+
+    @Nullable
+    public PropertyContainer getFirstContainerOfType(@NotNull String type) {
+        for (PropertyContainer sec : this.containers) {
+            if (sec.getType().equals(type)) {
+                return sec;
+            }
+        }
+        return null;
     }
 
     @NotNull

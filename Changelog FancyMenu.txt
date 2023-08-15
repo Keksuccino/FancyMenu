@@ -30,7 +30,7 @@ The following changelog only contains SOME of the changes in FancyMenu v3, but n
 It's just too much stuff to mention every change in detail.
 It's also very likely that I forgot some of the bigger changes, because I worked on v3 for over 4 months.
 In these 4+ months I rewrote like 75% of the code (some parts multiple times), shared progress updates with you all and got a lot of feedback
-from you to improve as many of the new/rewritten stuff as possible and I am very thankful for that!
+from you to polish as many of the new/rewritten stuff as possible and I am very thankful for that!
  
 But well, since SO MUCH stuff got rewritten in this update, there's like no chance it will not contain bugs and some of them could harm your layouts!
 So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updating to this version!
@@ -55,6 +55,12 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - Completely reworked all APIs and registries (so if you've used these in an extension mod, this mod is broken now, sorry >.<)
 - Most UI stuff got a full rewrite (context menus, menu bars, screens, etc.)
 - FancyMenu's settings are now part of the menu bar at the top of menu screens and should be way easier to navigate through now
+- The header and footer textures of scrollable screens (like Singleplayer, Multiplayer, Video Settings, etc.) are now customizable
+ 
+- Added loading requirement "File/Folder Exists" to check if a file/folder exists
+- Added action "Disconnect/Leave Server/World" to disconnect from/leave a server/world (allows you to set a screen that should open after disconnecting/leaving)
+- Added placeholder "Absolute File/Folder Path" to get the absolute path of a file/folder
+- Added placeholder "Random Number" to get a random number in the specified range
  
 - Added a bunch of accessibility stuff
 --> UI Themes to change the color scheme of FancyMenu's UI (dark and light themes included by default and you can make your own themes!)
@@ -98,6 +104,9 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - Fixed: Element-Info (X-pos, Y-pos, width, etc.) at the side of elements in the editor can go off-screen when the element is too far right or at the top
 - Fixed: Incompatibility with "Remove Reloading Screen" mod
 - Fixed: Minecraft's "/help" command doesn't work correctly for FancyMenu's "/fmvariable" command
+- Fixed: "&" formatting codes in "Paste to Chat" action get replaced with "§" formatting codes
+- Fixed: "&" formatting codes in "Send Message" action get replaced with "§" formatting codes
+- Fixed: Crash when pressing DELETE on an empty line in the text editor
  
 %changelog:end%
 

@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinChatScreen;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinMinecraft;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -35,6 +36,7 @@ public class PasteToChatAction extends Action {
             } else {
                 msg = value;
             }
+            msg = StringUtils.convertFormatCodes(msg, "§", "&");
             if (Minecraft.getInstance().level != null) {
                 if (Minecraft.getInstance().player != null) {
                     Screen s = Minecraft.getInstance().screen;

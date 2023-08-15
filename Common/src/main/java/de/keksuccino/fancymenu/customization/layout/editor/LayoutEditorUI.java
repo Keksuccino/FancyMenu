@@ -327,9 +327,9 @@ public class LayoutEditorUI {
 			Minecraft.getInstance().setScreen(s);
 		}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground.btn.desc")));
 
-		menu.addValueCycleEntry("keep_background_aspect_ratio", CommonCycles.cycleEnabledDisabled("fancymenu.helper.editor.layoutoptions.backgroundoptions.keepaspect", editor.layout.keepBackgroundAspectRatio).addCycleListener(cycle -> {
+		menu.addValueCycleEntry("keep_background_aspect_ratio", CommonCycles.cycleEnabledDisabled("fancymenu.helper.editor.layoutoptions.backgroundoptions.keepaspect", editor.layout.preserveBackgroundAspectRatio).addCycleListener(cycle -> {
 			editor.history.saveSnapshot();
-			editor.layout.keepBackgroundAspectRatio = cycle.getAsBoolean();
+			editor.layout.preserveBackgroundAspectRatio = cycle.getAsBoolean();
 		}));
 
 		menu.addSeparatorEntry("separator_after_keep_background_aspect");
@@ -350,6 +350,10 @@ public class LayoutEditorUI {
 			menu.addSeparatorEntry("separator_after_edit_menu_title");
 
 		}
+
+		menu.addSubMenuEntry("scroll_list_customizations", Component.translatable("fancymenu.customization.scroll_lists"), buildScrollListCustomizationsContextMenu(editor));
+
+		menu.addSeparatorEntry("separator_after_scroll_list_customizations");
 
 		menu.addValueCycleEntry("random_mode", CommonCycles.cycleEnabledDisabled("fancymenu.fancymenu.editor.layoutoptions.randommode", editor.layout.randomMode).addCycleListener(cycle -> {
 			editor.history.saveSnapshot();
@@ -476,6 +480,44 @@ public class LayoutEditorUI {
 		menu.addSeparatorEntry("separator_after_paste_elements");
 
 		menu.addSubMenuEntry("add_element", Component.translatable("fancymenu.editor.layoutproperties.newelement"), buildElementContextMenu(editor));
+
+		return menu;
+
+	}
+
+	@NotNull
+	public static ContextMenu buildScrollListCustomizationsContextMenu(@NotNull LayoutEditorScreen editor) {
+
+		ContextMenu menu = new ContextMenu();
+
+		menu.addValueCycleEntry("preserve_header_footer_aspect_ratio", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.preserve_header_footer_aspect_ratio", editor.layout.preserveScrollListHeaderFooterAspectRatio).addCycleListener(cycle -> {
+			editor.history.saveSnapshot();
+			editor.layout.preserveScrollListHeaderFooterAspectRatio = cycle.getAsBoolean();
+		}));
+
+		NonStackableOverlayUI.addFileChooserContextMenuEntryTo(menu, "header_texture", Component.translatable("fancymenu.customization.scroll_lists.header_texture"),
+				() -> editor.layout.scrollListHeaderTexture,
+				s -> {
+					editor.history.saveSnapshot();
+					editor.layout.scrollListHeaderTexture = s;
+				}, true, null, FileFilter.IMAGE_FILE_FILTER);
+
+		NonStackableOverlayUI.addFileChooserContextMenuEntryTo(menu, "footer_texture", Component.translatable("fancymenu.customization.scroll_lists.footer_texture"),
+				() -> editor.layout.scrollListFooterTexture,
+				s -> {
+					editor.history.saveSnapshot();
+					editor.layout.scrollListFooterTexture = s;
+				}, true, null, FileFilter.IMAGE_FILE_FILTER);
+
+		menu.addValueCycleEntry("header_shadow", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.render_header_shadow", editor.layout.renderScrollListHeaderShadow).addCycleListener(cycle -> {
+			editor.history.saveSnapshot();
+			editor.layout.renderScrollListHeaderShadow = cycle.getAsBoolean();
+		}));
+
+		menu.addValueCycleEntry("footer_shadow", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.render_footer_shadow", editor.layout.renderScrollListFooterShadow).addCycleListener(cycle -> {
+			editor.history.saveSnapshot();
+			editor.layout.renderScrollListFooterShadow = cycle.getAsBoolean();
+		}));
 
 		return menu;
 

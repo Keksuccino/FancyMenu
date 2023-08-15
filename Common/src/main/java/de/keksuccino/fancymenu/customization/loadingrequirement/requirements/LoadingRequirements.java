@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequireme
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.gui.IsElementHoveredRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.gui.IsLayoutEnabledRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.realtime.*;
+import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.system.FileExistsRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.system.IsOsLinuxRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.system.IsOsMacOSRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.system.IsOsWindowsRequirement;
@@ -30,6 +31,7 @@ public class LoadingRequirements {
     public static final IsRealTimeSecondRequirement IS_REAL_TIME_SECOND = new IsRealTimeSecondRequirement();
     public static final IsRealTimeWeekDayRequirement IS_REAL_TIME_WEEK_DAY = new IsRealTimeWeekDayRequirement();
     public static final IsRealTimeYearRequirement IS_REAL_TIME_YEAR = new IsRealTimeYearRequirement();
+    public static final FileExistsRequirement FILE_EXISTS = new FileExistsRequirement();
     public static final IsOsLinuxRequirement IS_OS_LINUX = new IsOsLinuxRequirement();
     public static final IsOsMacOSRequirement IS_OS_MAC_OS = new IsOsMacOSRequirement();
     public static final IsOsWindowsRequirement IS_OS_WINDOWS = new IsOsWindowsRequirement();
@@ -67,6 +69,7 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(IS_REAL_TIME_WEEK_DAY);
         LoadingRequirementRegistry.register(IS_REAL_TIME_YEAR);
 
+        LoadingRequirementRegistry.register(FILE_EXISTS);
         LoadingRequirementRegistry.register(IS_OS_LINUX);
         LoadingRequirementRegistry.register(IS_OS_MAC_OS);
         LoadingRequirementRegistry.register(IS_OS_WINDOWS);

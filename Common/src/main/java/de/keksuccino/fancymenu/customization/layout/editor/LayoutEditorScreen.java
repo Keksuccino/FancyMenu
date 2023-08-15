@@ -266,7 +266,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
 
 		if (this.layout.menuBackground != null) {
-			this.layout.menuBackground.keepBackgroundAspectRatio = this.layout.keepBackgroundAspectRatio;
+			this.layout.menuBackground.keepBackgroundAspectRatio = this.layout.preserveBackgroundAspectRatio;
 			this.layout.menuBackground.opacity = 1.0F;
 			this.layout.menuBackground.render(pose, mouseX, mouseY, partial);
 		}

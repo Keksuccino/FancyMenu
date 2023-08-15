@@ -225,8 +225,6 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
     protected File getSaveFile() {
         AbstractFileScrollAreaEntry e = this.getSelectedEntry();
         if ((e != null) && e.file.isDirectory()) return null;
-//        if ((e != null) && e.resourceUnfriendlyFileName) return null;
-//        if ((e != null) && e.file.isFile()) return e.file;
         if (!this.fileNameEditBox.getValue().replace(" ", "").isEmpty()) {
             File f = new File(this.currentDir, "/" + this.fileNameEditBox.getValue());
             if ((this.fileFilter != null) && !this.fileFilter.checkFile(f)) return null;

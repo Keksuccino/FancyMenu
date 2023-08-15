@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.action.actions.other;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.util.LocalPlayerUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -24,6 +23,7 @@ public class SendMessageAction extends Action {
     @Override
     public void execute(@Nullable String value) {
         if (value != null) {
+            value = StringUtils.convertFormatCodes(value, "§", "&");
             if ((Minecraft.getInstance().level != null) && (Minecraft.getInstance().player != null)) {
                 if (value.startsWith("/")) {
                     value = value.substring(1);

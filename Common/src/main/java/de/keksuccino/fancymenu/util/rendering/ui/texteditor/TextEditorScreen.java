@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -19,6 +20,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.ExtendedButton;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -1192,6 +1194,13 @@ public class TextEditorScreen extends Screen {
         return s.toString();
     }
 
+//    if (value != null) {
+//        value = StringUtils.convertFormatCodes(value, "§", "&");
+//        if (ScreenCustomization.isExistingGameDirectoryPath(value)) {
+//            return ScreenCustomization.getAbsoluteGameDirectoryPath(value);
+//        }
+//    }
+
     @Override
     public boolean charTyped(char character, int modifiers) {
 
@@ -1207,7 +1216,7 @@ public class TextEditorScreen extends Screen {
     @Override
     public boolean keyPressed(int keycode, int i1, int i2) {
 
-        for (TextEditorLine l : this.textFieldLines) {
+        for (TextEditorLine l : new ArrayList<>(this.textFieldLines)) {
             l.keyPressed(keycode, i1, i2);
         }
 
@@ -1273,7 +1282,7 @@ public class TextEditorScreen extends Screen {
         }
         //CTRL + A
         if (Screen.isSelectAll(keycode)) {
-            for (TextEditorLine t : this.textFieldLines) {
+            for (TextEditorLine t : new ArrayList<>(this.textFieldLines)) {
                 t.setHighlightPos(0);
                 t.setCursorPosition(t.getValue().length());
             }

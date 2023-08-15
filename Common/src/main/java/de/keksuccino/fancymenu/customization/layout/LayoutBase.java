@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.customization.background.SerializedMenuBackground
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.Map;
 
 /**
@@ -15,13 +14,18 @@ public class LayoutBase {
 
     public String overrideMenuWith;
     public MenuBackground menuBackground;
-    public boolean keepBackgroundAspectRatio = false;
+    public boolean preserveBackgroundAspectRatio = false;
     public String openAudio;
     public String closeAudio;
     public float forcedScale = 0;
     public int autoScalingWidth = 0;
     public int autoScalingHeight = 0;
     public String customMenuTitle;
+    public boolean preserveScrollListHeaderFooterAspectRatio = true;
+    public String scrollListHeaderTexture;
+    public String scrollListFooterTexture;
+    public boolean renderScrollListHeaderShadow = true;
+    public boolean renderScrollListFooterShadow = true;
 
     @NotNull
     public static LayoutBase stackLayoutBases(LayoutBase... layouts) {
@@ -35,8 +39,8 @@ public class LayoutBase {
                 if (l.menuBackground != null) {
                     layout.menuBackground = l.menuBackground;
                 }
-                if (l.keepBackgroundAspectRatio) {
-                    layout.keepBackgroundAspectRatio = true;
+                if (l.preserveBackgroundAspectRatio) {
+                    layout.preserveBackgroundAspectRatio = true;
                 }
                 if (l.openAudio != null) {
                     layout.openAudio = l.openAudio;
@@ -55,6 +59,21 @@ public class LayoutBase {
                 }
                 if (l.customMenuTitle != null) {
                     layout.customMenuTitle = l.customMenuTitle;
+                }
+                if (l.scrollListHeaderTexture != null) {
+                    layout.scrollListHeaderTexture = l.scrollListHeaderTexture;
+                }
+                if (l.scrollListFooterTexture != null) {
+                    layout.scrollListFooterTexture = l.scrollListFooterTexture;
+                }
+                if (!l.renderScrollListHeaderShadow) {
+                    layout.renderScrollListHeaderShadow = false;
+                }
+                if (!l.renderScrollListFooterShadow) {
+                    layout.renderScrollListFooterShadow = false;
+                }
+                if (!l.preserveScrollListHeaderFooterAspectRatio) {
+                    layout.preserveScrollListHeaderFooterAspectRatio = false;
                 }
 
             }

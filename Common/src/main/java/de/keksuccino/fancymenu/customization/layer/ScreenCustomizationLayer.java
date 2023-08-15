@@ -5,7 +5,10 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.events.widget.RenderGuiListHeaderFooterEvent;
+import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractSelectionList;
 import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElement;
@@ -29,6 +32,9 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.internal.Loading
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.ScreenTitleUtils;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -401,12 +407,83 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 		}
 	}
 
+	@EventListener
+	public void onRenderListHeaderFooterPre(RenderGuiListHeaderFooterEvent.Pre e) {
+
+		if (this.shouldCustomize(Minecraft.getInstance().screen)) {
+
+			e.setCanceled(true);
+
+			IMixinAbstractSelectionList access = e.getAccessor();
+
+			ITexture headerTexture = (this.layoutBase.scrollListHeaderTexture != null) ? TextureHandler.INSTANCE.getTexture(ScreenCustomization.getAbsoluteGameDirectoryPath(this.layoutBase.scrollListHeaderTexture)) : null;
+			ITexture footerTexture = (this.layoutBase.scrollListFooterTexture != null) ? TextureHandler.INSTANCE.getTexture(ScreenCustomization.getAbsoluteGameDirectoryPath(this.layoutBase.scrollListFooterTexture)) : null;
+
+			if ((headerTexture != null) && (headerTexture.getResourceLocation() != null)) {
+				RenderingUtils.bindTexture(headerTexture.getResourceLocation());
+				RenderingUtils.resetShaderColor();
+				if (this.layoutBase.preserveScrollListHeaderFooterAspectRatio) {
+					int[] headerSize = headerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(access.getWidthFancyMenu(), access.getY0FancyMenu());
+					int headerWidth = headerSize[0];
+					int headerHeight = headerSize[1];
+					int headerX = access.getX0FancyMenu() + (access.getWidthFancyMenu() / 2) - (headerWidth / 2);
+					int headerY = (access.getY0FancyMenu() / 2) - (headerHeight / 2);
+					enableScissor(access.getX0FancyMenu(), 0, access.getX0FancyMenu() + access.getWidthFancyMenu(), access.getY0FancyMenu());
+					blit(e.getPoseStack(), headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
+					disableScissor();
+				} else {
+					blit(e.getPoseStack(), access.getX0FancyMenu(), 0, 0.0F, 0.0F, access.getWidthFancyMenu(), access.getY0FancyMenu(), access.getWidthFancyMenu(), access.getY0FancyMenu());
+				}
+			} else {
+				RenderSystem.setShaderTexture(0, GuiComponent.BACKGROUND_LOCATION);
+				RenderSystem.setShaderColor(0.25F, 0.25F, 0.25F, 1.0F);
+				blit(e.getPoseStack(), access.getX0FancyMenu(), 0, 0.0F, 0.0F, access.getWidthFancyMenu(), access.getY0FancyMenu(), 32, 32);
+			}
+
+			if ((footerTexture != null) && (footerTexture.getResourceLocation() != null)) {
+				RenderingUtils.bindTexture(footerTexture.getResourceLocation());
+				RenderingUtils.resetShaderColor();
+				if (this.layoutBase.preserveScrollListHeaderFooterAspectRatio) {
+					int footerOriginalHeight = access.getHeightFancyMenu() - access.getY1FancyMenu();
+					int[] footerSize = footerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(access.getWidthFancyMenu(), footerOriginalHeight);
+					int footerWidth = footerSize[0];
+					int footerHeight = footerSize[1];
+					int footerX = access.getX0FancyMenu() + (access.getWidthFancyMenu() / 2) - (footerWidth / 2);
+					int footerY = access.getY1FancyMenu() + (footerOriginalHeight / 2) - (footerHeight / 2);
+					enableScissor(access.getX0FancyMenu(), access.getY1FancyMenu(), access.getX0FancyMenu() + access.getWidthFancyMenu(), access.getY1FancyMenu() + footerOriginalHeight);
+					blit(e.getPoseStack(), footerX, footerY, 0.0F, 0.0F, footerWidth, footerHeight, footerWidth, footerHeight);
+					disableScissor();
+				} else {
+					int footerHeight = access.getHeightFancyMenu() - access.getY1FancyMenu();
+					blit(e.getPoseStack(), access.getX0FancyMenu(), access.getY1FancyMenu(), 0.0F, 0.0F, access.getWidthFancyMenu(), footerHeight, access.getWidthFancyMenu(), footerHeight);
+				}
+			} else {
+				RenderSystem.setShaderTexture(0, GuiComponent.BACKGROUND_LOCATION);
+				RenderSystem.setShaderColor(0.25F, 0.25F, 0.25F, 1.0F);
+				blit(e.getPoseStack(), access.getX0FancyMenu(), access.getY1FancyMenu(), 0.0F, (float)access.getY1FancyMenu(), access.getWidthFancyMenu(), access.getHeightFancyMenu() - access.getY1FancyMenu(), 32, 32);
+			}
+
+			RenderingUtils.resetShaderColor();
+
+			if (this.layoutBase.renderScrollListHeaderShadow) {
+				fillGradient(e.getPoseStack(), access.getX0FancyMenu(), access.getY0FancyMenu(), access.getX1FancyMenu(), access.getY0FancyMenu() + 4, -16777216, 0);
+			}
+			if (this.layoutBase.renderScrollListFooterShadow) {
+				fillGradient(e.getPoseStack(), access.getX0FancyMenu(), access.getY1FancyMenu() - 4, access.getX1FancyMenu(), access.getY1FancyMenu(), 0, -16777216);
+			}
+
+			RenderingUtils.resetShaderColor();
+
+		}
+
+	}
+
 	protected void renderBackground(PoseStack pose, int mouseX, int mouseY, float partial, Screen screen) {
 
 		if (!this.shouldCustomize(screen)) return;
 
 		if (this.layoutBase.menuBackground != null) {
-			this.layoutBase.menuBackground.keepBackgroundAspectRatio = this.layoutBase.keepBackgroundAspectRatio;
+			this.layoutBase.menuBackground.keepBackgroundAspectRatio = this.layoutBase.preserveBackgroundAspectRatio;
 			this.layoutBase.menuBackground.opacity = this.backgroundOpacity;
 			this.layoutBase.menuBackground.render(pose, mouseX, mouseY, partial);
 			this.layoutBase.menuBackground.opacity = 1.0F;

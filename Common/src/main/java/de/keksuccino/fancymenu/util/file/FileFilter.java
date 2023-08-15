@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.util.file;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import org.jetbrains.annotations.NotNull;
-
 import java.io.File;
 
 @FunctionalInterface
