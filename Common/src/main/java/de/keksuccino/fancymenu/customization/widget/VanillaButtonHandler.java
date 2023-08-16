@@ -17,7 +17,6 @@ import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
-
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;

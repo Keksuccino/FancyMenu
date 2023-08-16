@@ -110,6 +110,8 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
 
         element.backgroundTextureHover = serialized.getValue("backgroundhovered");
 
+        element.backgroundTextureInactive = serialized.getValue("background_texture_inactive");
+
         String loopBackAnimations = serialized.getValue("loopbackgroundanimations");
         if ((loopBackAnimations != null) && loopBackAnimations.equalsIgnoreCase("false")) {
             element.loopBackgroundAnimations = false;
@@ -123,6 +125,8 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         element.backgroundAnimationNormal = serialized.getValue("backgroundanimationnormal");
 
         element.backgroundAnimationHover = serialized.getValue("backgroundanimationhovered");
+
+        element.backgroundAnimationInactive = serialized.getValue("background_animation_inactive");
 
         return element;
 
@@ -154,6 +158,12 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         }
         if (element.backgroundAnimationHover != null) {
             serializeTo.putProperty("backgroundanimationhovered", element.backgroundAnimationHover);
+        }
+        if (element.backgroundTextureInactive != null) {
+            serializeTo.putProperty("background_texture_inactive", element.backgroundTextureInactive);
+        }
+        if (element.backgroundAnimationInactive != null) {
+            serializeTo.putProperty("background_animation_inactive", element.backgroundAnimationInactive);
         }
         serializeTo.putProperty("restartbackgroundanimations", "" + element.restartBackgroundAnimationsOnHover);
         serializeTo.putProperty("loopbackgroundanimations", "" + element.loopBackgroundAnimations);

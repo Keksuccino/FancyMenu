@@ -122,11 +122,17 @@ public class VanillaButtonElementBuilder extends ButtonElementBuilder implements
         if (e.backgroundTextureHover != null) {
             stack.backgroundTextureHover = e.backgroundTextureHover;
         }
+        if (e.backgroundTextureInactive != null) {
+            stack.backgroundTextureInactive = e.backgroundTextureInactive;
+        }
         if (e.backgroundAnimationNormal != null) {
             stack.backgroundAnimationNormal = e.backgroundAnimationNormal;
         }
         if (e.backgroundAnimationHover != null) {
             stack.backgroundAnimationHover = e.backgroundAnimationHover;
+        }
+        if (e.backgroundAnimationInactive != null) {
+            stack.backgroundAnimationInactive = e.backgroundAnimationInactive;
         }
         if (!e.loopBackgroundAnimations) {
             stack.loopBackgroundAnimations = false;

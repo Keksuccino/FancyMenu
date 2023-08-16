@@ -95,7 +95,7 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                     return Tooltip.of("");
                 });
 
-        this.addFileChooserContextMenuEntryTo(setSkinMenu, "set_local_skin",
+        this.addGenericFileChooserContextMenuEntryTo(setSkinMenu, "set_local_skin",
                 consumes -> (consumes instanceof PlayerEntityEditorElement),
                 null,
                 consumes -> ((PlayerEntityElement) consumes.element).skinPath,
@@ -170,7 +170,7 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                     return Tooltip.of("");
                 });
 
-        this.addFileChooserContextMenuEntryTo(setCapeMenu, "set_local_cape",
+        this.addGenericFileChooserContextMenuEntryTo(setCapeMenu, "set_local_cape",
                 consumes -> (consumes instanceof PlayerEntityEditorElement),
                 null,
                 consumes -> ((PlayerEntityElement) consumes.element).capePath,

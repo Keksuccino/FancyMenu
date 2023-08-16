@@ -219,7 +219,7 @@ public class TextEditorElementOLD extends AbstractEditorElement {
         this.rightClickMenu.addSubMenuEntry("grabber_texture", Component.translatable("fancymenu.customization.items.text.scroll_grabber_texture"), grabberTextureMenu)
                 .setStackable(true);
 
-        this.addFileChooserContextMenuEntryTo(grabberTextureMenu, "normal_grabber_texture",
+        this.addGenericFileChooserContextMenuEntryTo(grabberTextureMenu, "normal_grabber_texture",
                         consumes -> (consumes instanceof TextEditorElementOLD),
                         null,
                         consumes -> ((TextElementOLD)consumes.element).scrollGrabberTextureNormal,
@@ -232,7 +232,7 @@ public class TextEditorElementOLD extends AbstractEditorElement {
                         FileFilter.IMAGE_FILE_FILTER)
                 .setStackable(true);
 
-        this.addFileChooserContextMenuEntryTo(grabberTextureMenu, "hover_grabber_texture",
+        this.addGenericFileChooserContextMenuEntryTo(grabberTextureMenu, "hover_grabber_texture",
                         consumes -> (consumes instanceof TextEditorElementOLD),
                         null,
                         consumes -> ((TextElementOLD)consumes.element).scrollGrabberTextureHover,

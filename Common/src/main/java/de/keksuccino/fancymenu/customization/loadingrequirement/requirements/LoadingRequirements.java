@@ -1,7 +1,7 @@
-
 package de.keksuccino.fancymenu.customization.loadingrequirement.requirements;
 
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirementRegistry;
+import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.gui.IsButtonActiveRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.gui.IsElementHoveredRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.gui.IsLayoutEnabledRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.realtime.*;
@@ -24,6 +24,7 @@ public class LoadingRequirements {
     public static final IsElementHoveredRequirement IS_ELEMENT_HOVERED = new IsElementHoveredRequirement();
     public static final IsLayoutEnabledRequirement IS_LAYOUT_ENABLED = new IsLayoutEnabledRequirement();
     public static final IsGuiScaleRequirement IS_GUI_SCALE = new IsGuiScaleRequirement();
+    public static final IsButtonActiveRequirement IS_BUTTON_ACTIVE = new IsButtonActiveRequirement();
     public static final IsRealTimeDayRequirement IS_REAL_TIME_DAY = new IsRealTimeDayRequirement();
     public static final IsRealTimeHourRequirement IS_REAL_TIME_HOUR = new IsRealTimeHourRequirement();
     public static final IsRealTimeMinuteRequirement IS_REAL_TIME_MINUTE = new IsRealTimeMinuteRequirement();
@@ -60,6 +61,7 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(IS_ELEMENT_HOVERED);
         LoadingRequirementRegistry.register(IS_LAYOUT_ENABLED);
         LoadingRequirementRegistry.register(IS_GUI_SCALE);
+        LoadingRequirementRegistry.register(IS_BUTTON_ACTIVE);
 
         LoadingRequirementRegistry.register(IS_REAL_TIME_DAY);
         LoadingRequirementRegistry.register(IS_REAL_TIME_HOUR);

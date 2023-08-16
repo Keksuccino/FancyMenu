@@ -30,7 +30,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,12 +50,15 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
     public String backgroundTextureHover;
     public String backgroundAnimationNormal;
     public String backgroundAnimationHover;
+    public String backgroundTextureInactive;
+    public String backgroundAnimationInactive;
     public boolean loopBackgroundAnimations = true;
     public boolean restartBackgroundAnimationsOnHover = true;
     public List<ExecutableAction> actions = new ArrayList<>();
 
     protected Object lastBackgroundNormal;
     protected Object lastBackgroundHover;
+    protected Object lastBackgroundInactive;
     protected boolean lastLoopBackgroundAnimations = true;
     protected boolean lastRestartBackgroundAnimationsOnHover = true;
 
@@ -141,6 +143,7 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
         if (this.button != null) {
             Object backgroundNormal = null;
             Object backgroundHover = null;
+            Object backgroundInactive = null;
             if (this.backgroundTextureNormal != null) {
                 File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(this.backgroundTextureNormal));
                 if (f.isFile()) {
@@ -235,9 +238,54 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
                     }
                 }
             }
+            if (this.backgroundTextureInactive != null) {
+                File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(this.backgroundTextureInactive));
+                if (f.isFile()) {
+                    if (f.getPath().toLowerCase().endsWith(".gif")) {
+                        IAnimationRenderer ani = TextureHandler.INSTANCE.getGifTexture(f.getPath());
+                        if (ani != null) {
+                            if (this.button instanceof ExtendedButton) {
+                                backgroundInactive = ani;
+                            } else if (!this.button.active) {
+                                if (this.restartBackgroundAnimationsOnHover && this.button.isHoveredOrFocused() && !this.hovered) {
+                                    ani.resetAnimation();
+                                }
+                                VanillaButtonHandler.setRenderTickBackgroundAnimation(this.button, ani, this.loopBackgroundAnimations, this.opacity);
+                            }
+                        }
+                    } else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
+                        LocalTexture back = TextureHandler.INSTANCE.getTexture(f.getPath());
+                        if (back != null) {
+                            if (this.button instanceof ExtendedButton) {
+                                backgroundInactive = back.getResourceLocation();
+                            } else if (!this.button.active) {
+                                VanillaButtonHandler.setRenderTickBackgroundTexture(this.button, back.getResourceLocation());
+                            }
+                        }
+                    }
+                }
+            } else if (this.backgroundAnimationInactive != null) {
+                if (AnimationHandler.animationExists(this.backgroundAnimationInactive)) {
+                    IAnimationRenderer ani = AnimationHandler.getAnimation(this.backgroundAnimationInactive);
+                    if (ani != null) {
+                        if (this.button instanceof ExtendedButton) {
+                            backgroundInactive = ani;
+                        } else if (!this.button.active) {
+                            if (this.restartBackgroundAnimationsOnHover && this.button.isHoveredOrFocused() && !this.hovered) {
+                                if (ani instanceof AdvancedAnimation) {
+                                    ((AdvancedAnimation)ani).stopAudio();
+                                    ((AdvancedAnimation)ani).resetAudio();
+                                }
+                                ani.resetAnimation();
+                            }
+                            VanillaButtonHandler.setRenderTickBackgroundAnimation(this.button, ani, this.loopBackgroundAnimations, this.opacity);
+                        }
+                    }
+                }
+            }
             if (this.button instanceof ExtendedButton e) {
-                if (!Objects.equals(backgroundNormal, this.lastBackgroundNormal) || !Objects.equals(backgroundHover, this.lastBackgroundHover) || (this.lastLoopBackgroundAnimations != this.loopBackgroundAnimations) || (this.lastRestartBackgroundAnimationsOnHover != this.restartBackgroundAnimationsOnHover)) {
-                    e.setBackground(ExtendedButton.MultiTypeButtonBackground.build(backgroundNormal, backgroundHover));
+                if (!Objects.equals(backgroundNormal, this.lastBackgroundNormal) || !Objects.equals(backgroundHover, this.lastBackgroundHover) || !Objects.equals(backgroundInactive, this.lastBackgroundInactive) || (this.lastLoopBackgroundAnimations != this.loopBackgroundAnimations) || (this.lastRestartBackgroundAnimationsOnHover != this.restartBackgroundAnimationsOnHover)) {
+                    e.setBackground(ExtendedButton.MultiTypeButtonBackground.build(backgroundNormal, backgroundHover, backgroundInactive));
                     if (e.getBackground() instanceof ExtendedButton.MultiTypeButtonBackground b) {
                         if (b.getBackgroundNormal() instanceof ExtendedButton.AnimationButtonBackground a) {
                             a.getBackgroundAnimationNormal().resetAnimation();
@@ -257,11 +305,21 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
                             a.setLooped(this.loopBackgroundAnimations);
                             a.setRestartOnHover(this.restartBackgroundAnimationsOnHover);
                         }
+                        if (b.getBackgroundInactive() instanceof ExtendedButton.AnimationButtonBackground a) {
+                            a.getBackgroundAnimationNormal().resetAnimation();
+                            if (a.getBackgroundAnimationNormal() instanceof AdvancedAnimation aa) {
+                                aa.stopAudio();
+                                aa.resetAudio();
+                            }
+                            a.setLooped(this.loopBackgroundAnimations);
+                            a.setRestartOnHover(this.restartBackgroundAnimationsOnHover);
+                        }
                     }
                 }
             }
             this.lastBackgroundNormal = backgroundNormal;
             this.lastBackgroundHover = backgroundHover;
+            this.lastBackgroundInactive = backgroundInactive;
             this.lastLoopBackgroundAnimations = this.loopBackgroundAnimations;
             this.lastRestartBackgroundAnimationsOnHover = this.restartBackgroundAnimationsOnHover;
         }

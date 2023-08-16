@@ -54,7 +54,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
         setBackMenu.addSubMenuEntry("set_normal_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.normal"), normalBackMenu)
                 .setStackable(true);
 
-        this.addFileChooserContextMenuEntryTo(normalBackMenu, "normal_background_texture",
+        this.addGenericFileChooserContextMenuEntryTo(normalBackMenu, "normal_background_texture",
                         consumes -> (consumes instanceof ButtonEditorElement),
                         null,
                         consumes -> ((ButtonElement)consumes.element).backgroundTextureNormal,
@@ -102,7 +102,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
         setBackMenu.addSubMenuEntry("set_hover_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.hover"), hoverBackMenu)
                 .setStackable(true);
 
-        this.addFileChooserContextMenuEntryTo(hoverBackMenu, "hover_background_texture",
+        this.addGenericFileChooserContextMenuEntryTo(hoverBackMenu, "hover_background_texture",
                         consumes -> (consumes instanceof ButtonEditorElement),
                         null,
                         consumes -> ((ButtonElement)consumes.element).backgroundTextureHover,
@@ -146,6 +146,54 @@ public class ButtonEditorElement extends AbstractEditorElement {
             }
         }).setStackable(true);
 
+        ContextMenu inactiveBackMenu = new ContextMenu();
+        setBackMenu.addSubMenuEntry("set_inactive_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.inactive"), inactiveBackMenu)
+                .setStackable(true);
+
+        this.addGenericFileChooserContextMenuEntryTo(inactiveBackMenu, "inactive_background_texture",
+                        consumes -> (consumes instanceof ButtonEditorElement),
+                        null,
+                        consumes -> ((ButtonElement)consumes.element).backgroundTextureInactive,
+                        (element1, s) -> {
+                            ((ButtonElement)element1.element).backgroundTextureInactive = s;
+                            ((ButtonElement)element1.element).backgroundAnimationInactive = null;
+                        },
+                        Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"),
+                        false,
+                        FileFilter.IMAGE_AND_GIF_FILE_FILTER)
+                .setStackable(true);
+
+        inactiveBackMenu.addClickableEntry("inactive_background_animation", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation"), (menu, entry) -> {
+            List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof ButtonEditorElement));
+            String preSelectedAnimation = null;
+            List<String> allAnimations = ObjectUtils.getOfAll(String.class, selectedElements, consumes -> ((ButtonElement)consumes.element).backgroundAnimationInactive);
+            if (!allAnimations.isEmpty() && ListUtils.allInListEqual(allAnimations)) {
+                preSelectedAnimation = allAnimations.get(0);
+            }
+            ChooseAnimationScreen s = new ChooseAnimationScreen(preSelectedAnimation, (call) -> {
+                if (call != null) {
+                    this.editor.history.saveSnapshot();
+                    for (AbstractEditorElement e : selectedElements) {
+                        ((ButtonElement)e.element).backgroundAnimationInactive = call;
+                        ((ButtonElement)e.element).backgroundTextureInactive = null;
+                    }
+                }
+                Minecraft.getInstance().setScreen(this.editor);
+            });
+            Minecraft.getInstance().setScreen(s);
+        }).setStackable(true);
+
+        inactiveBackMenu.addSeparatorEntry("separator_after_inactive_back_animation").setStackable(true);
+
+        inactiveBackMenu.addClickableEntry("reset_inactive_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.reset"), (menu, entry) -> {
+            this.editor.history.saveSnapshot();
+            List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof ButtonEditorElement));
+            for (AbstractEditorElement e : selectedElements) {
+                ((ButtonElement)e.element).backgroundTextureInactive = null;
+                ((ButtonElement)e.element).backgroundAnimationInactive = null;
+            }
+        }).setStackable(true);
+
         buttonBackgroundMenu.addSeparatorEntry("separator_1").setStackable(true);
 
         this.addGenericBooleanSwitcherContextMenuEntryTo(buttonBackgroundMenu, "loop_animation",
@@ -184,7 +232,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("button_separator_3").setStackable(true);
 
-        this.addFileChooserContextMenuEntryTo(this.rightClickMenu, "edit_hover_sound",
+        this.addGenericFileChooserContextMenuEntryTo(this.rightClickMenu, "edit_hover_sound",
                         consumes -> (consumes instanceof ButtonEditorElement),
                         null,
                         consumes -> ((ButtonElement)consumes.element).hoverSound,
@@ -194,7 +242,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
                 .setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
-        this.addFileChooserContextMenuEntryTo(this.rightClickMenu, "edit_click_sound",
+        this.addGenericFileChooserContextMenuEntryTo(this.rightClickMenu, "edit_click_sound",
                         consumes -> (consumes instanceof ButtonEditorElement),
                         null,
                         consumes -> ((ButtonElement)consumes.element).clickSound,

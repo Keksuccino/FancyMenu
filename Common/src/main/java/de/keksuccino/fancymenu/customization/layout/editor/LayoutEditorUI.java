@@ -495,6 +495,8 @@ public class LayoutEditorUI {
 			editor.layout.preserveScrollListHeaderFooterAspectRatio = cycle.getAsBoolean();
 		}));
 
+		menu.addSeparatorEntry("separator_after_preserve_aspect_ratio");
+
 		NonStackableOverlayUI.addFileChooserContextMenuEntryTo(menu, "header_texture", Component.translatable("fancymenu.customization.scroll_lists.header_texture"),
 				() -> editor.layout.scrollListHeaderTexture,
 				s -> {
@@ -508,6 +510,8 @@ public class LayoutEditorUI {
 					editor.history.saveSnapshot();
 					editor.layout.scrollListFooterTexture = s;
 				}, true, null, FileFilter.IMAGE_FILE_FILTER);
+
+		menu.addSeparatorEntry("separator_after_footer_texture");
 
 		menu.addValueCycleEntry("header_shadow", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.render_header_shadow", editor.layout.renderScrollListHeaderShadow).addCycleListener(cycle -> {
 			editor.history.saveSnapshot();
@@ -667,7 +671,7 @@ public class LayoutEditorUI {
 
 			menu.addSeparatorEntry("separator_after_recent_layouts");
 
-			menu.addClickableEntry("all_layouts", Component.translatable("fancymenu.overlay.menu_bar.layout.manage.all"), (menu1, entry) -> {
+			menu.addClickableEntry("all_layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.all"), (menu1, entry) -> {
 				displayUnsavedWarning(call -> {
 					if (call) {
 						editor.saveWidgetSettings();

@@ -841,7 +841,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 	}
 
-	protected ContextMenu.ClickableContextMenuEntry<?> addFileChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, String defaultValue, @NotNull ConsumingSupplier<AbstractEditorElement, String> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, String> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter) {
+	protected ContextMenu.ClickableContextMenuEntry<?> addGenericFileChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, String defaultValue, @NotNull ConsumingSupplier<AbstractEditorElement, String> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, String> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter) {
 		ContextMenu subMenu = new ContextMenu();
 		ContextMenu addToFinal = addResetOption ? subMenu : addTo;
 		ContextMenu.ClickableContextMenuEntry<?> chooseEntry = addToFinal.addClickableEntry(addResetOption ? "choose_file" : entryIdentifier, addResetOption ? Component.translatable("fancymenu.ui.filechooser.choose.file") : label, (menu, entry) ->
@@ -885,6 +885,13 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			return addTo.addSubMenuEntry(entryIdentifier, label, subMenu).setStackable(true);
 		}
 		return chooseEntry;
+	}
+
+	@SuppressWarnings("all")
+	protected <E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addFileChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, String defaultValue, @NotNull ConsumingSupplier<E, String> targetFieldGetter, @NotNull BiConsumer<E, String> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter) {
+		ConsumingSupplier<AbstractEditorElement, String> getter = (ConsumingSupplier<AbstractEditorElement, String>) targetFieldGetter;
+		BiConsumer<AbstractEditorElement, String> setter = (BiConsumer<AbstractEditorElement, String>) targetFieldSetter;
+		return addGenericFileChooserContextMenuEntryTo(addTo, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), defaultValue, getter, setter, label, addResetOption, fileFilter);
 	}
 
 	protected ContextMenu.ClickableContextMenuEntry<?> addInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, String> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {

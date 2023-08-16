@@ -88,6 +88,19 @@ public class LocalTexture implements ITexture {
     }
 
     @Nullable
+    public InputStream tryOpen() {
+        if (this.path == null) return null;
+        try {
+            File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(this.path));
+            if (!f.isFile()) return null;
+            return new FileInputStream(f);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    @Nullable
     public String getPath() {
         return this.path;
     }

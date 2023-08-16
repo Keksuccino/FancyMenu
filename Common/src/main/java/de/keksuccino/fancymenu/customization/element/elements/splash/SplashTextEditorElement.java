@@ -42,7 +42,7 @@ public class SplashTextEditorElement extends AbstractEditorElement {
                     return Component.translatable("fancymenu.elements.splash.source_mode.text_file");
                 });
 
-        this.addFileChooserContextMenuEntryTo(this.rightClickMenu, "set_source_file",
+        this.addGenericFileChooserContextMenuEntryTo(this.rightClickMenu, "set_source_file",
                         consumes -> (consumes instanceof SplashTextEditorElement),
                         null,
                         consumes -> ((SplashTextElement)consumes.element).source,

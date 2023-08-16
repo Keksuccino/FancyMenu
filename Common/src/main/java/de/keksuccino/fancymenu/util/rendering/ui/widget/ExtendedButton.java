@@ -354,28 +354,42 @@ public class ExtendedButton extends Button {
         @Nullable
         protected DrawableColor backgroundColorHover;
         @Nullable
+        protected DrawableColor backgroundColorInactive;
+        @Nullable
         protected DrawableColor backgroundColorBorderNormal;
         @Nullable
         protected DrawableColor backgroundColorBorderHover;
+        @Nullable
+        protected DrawableColor backgroundColorBorderInactive;
         protected int borderThickness;
 
         public static ColorButtonBackground create(@NotNull DrawableColor backgroundColorNormal) {
-            return new ColorButtonBackground(backgroundColorNormal, null, null, null, 1);
+            return new ColorButtonBackground(backgroundColorNormal, null, null, null, null, null, 1);
         }
 
         public static ColorButtonBackground create(@NotNull DrawableColor backgroundColorNormal, @Nullable DrawableColor backgroundColorHover, @Nullable DrawableColor backgroundColorBorderNormal, @Nullable DrawableColor backgroundColorBorderHover) {
-            return new ColorButtonBackground(backgroundColorNormal, backgroundColorHover, backgroundColorBorderNormal, backgroundColorBorderHover, 1);
+            return new ColorButtonBackground(backgroundColorNormal, backgroundColorHover, null, backgroundColorBorderNormal, backgroundColorBorderHover, null, 1);
         }
 
         public static ColorButtonBackground create(@NotNull DrawableColor backgroundColorNormal, @Nullable DrawableColor backgroundColorHover, @Nullable DrawableColor backgroundColorBorderNormal, @Nullable DrawableColor backgroundColorBorderHover, int borderThickness) {
-            return new ColorButtonBackground(backgroundColorNormal, backgroundColorHover, backgroundColorBorderNormal, backgroundColorBorderHover, borderThickness);
+            return new ColorButtonBackground(backgroundColorNormal, backgroundColorHover, null, backgroundColorBorderNormal, backgroundColorBorderHover, null, borderThickness);
         }
 
-        public ColorButtonBackground(@NotNull DrawableColor backgroundColorNormal, @Nullable DrawableColor backgroundColorHover, @Nullable DrawableColor backgroundColorBorderNormal, @Nullable DrawableColor backgroundColorBorderHover, int borderThickness) {
+        public static ColorButtonBackground create(@NotNull DrawableColor backgroundColorNormal, @Nullable DrawableColor backgroundColorHover, @Nullable DrawableColor backgroundColorInactive, @Nullable DrawableColor backgroundColorBorderNormal, @Nullable DrawableColor backgroundColorBorderHover, @Nullable DrawableColor backgroundColorBorderInactive) {
+            return new ColorButtonBackground(backgroundColorNormal, backgroundColorHover, backgroundColorInactive, backgroundColorBorderNormal, backgroundColorBorderHover, backgroundColorBorderInactive, 1);
+        }
+
+        public static ColorButtonBackground create(@NotNull DrawableColor backgroundColorNormal, @Nullable DrawableColor backgroundColorHover, @Nullable DrawableColor backgroundColorInactive, @Nullable DrawableColor backgroundColorBorderNormal, @Nullable DrawableColor backgroundColorBorderHover, @Nullable DrawableColor backgroundColorBorderInactive, int borderThickness) {
+            return new ColorButtonBackground(backgroundColorNormal, backgroundColorHover, backgroundColorInactive, backgroundColorBorderNormal, backgroundColorBorderHover, backgroundColorBorderInactive, borderThickness);
+        }
+
+        public ColorButtonBackground(@NotNull DrawableColor backgroundColorNormal, @Nullable DrawableColor backgroundColorHover, @Nullable DrawableColor backgroundColorInactive, @Nullable DrawableColor backgroundColorBorderNormal, @Nullable DrawableColor backgroundColorBorderHover, @Nullable DrawableColor backgroundColorBorderInactive, int borderThickness) {
             this.backgroundColorNormal = backgroundColorNormal;
             this.backgroundColorHover = backgroundColorHover;
+            this.backgroundColorInactive = backgroundColorInactive;
             this.backgroundColorBorderNormal = backgroundColorBorderNormal;
             this.backgroundColorBorderHover = backgroundColorBorderHover;
+            this.backgroundColorBorderInactive = backgroundColorBorderInactive;
             this.borderThickness = borderThickness;
         }
 
@@ -405,6 +419,9 @@ public class ExtendedButton extends Button {
 
         @NotNull
         protected DrawableColor getBorderColor() {
+            if (!this.parent.active && (this.backgroundColorBorderInactive != null)) {
+                return this.backgroundColorBorderInactive;
+            }
             if (this.parent.isHovered && this.parent.isActive()) {
                 if (this.backgroundColorBorderHover != null) return this.backgroundColorBorderHover;
                 if (this.backgroundColorBorderNormal != null) return this.backgroundColorBorderNormal;
@@ -416,6 +433,9 @@ public class ExtendedButton extends Button {
 
         @NotNull
         protected DrawableColor getBackgroundColor() {
+            if (!this.parent.active && (this.backgroundColorInactive != null)) {
+                return this.backgroundColorInactive;
+            }
             if (this.parent.isHovered && this.parent.isActive()) {
                 if (this.backgroundColorHover != null) return this.backgroundColorHover;
             }
@@ -430,6 +450,26 @@ public class ExtendedButton extends Button {
         public ColorButtonBackground setBackgroundColorNormal(@NotNull DrawableColor backgroundColorNormal) {
             Objects.requireNonNull(backgroundColorNormal);
             this.backgroundColorNormal = backgroundColorNormal;
+            return this;
+        }
+
+        @Nullable
+        public DrawableColor getBackgroundColorInactive() {
+            return this.backgroundColorInactive;
+        }
+
+        public ColorButtonBackground setBackgroundColorInactive(@Nullable DrawableColor backgroundColorInactive) {
+            this.backgroundColorInactive = backgroundColorInactive;
+            return this;
+        }
+
+        @Nullable
+        public DrawableColor getBackgroundColorBorderInactive() {
+            return this.backgroundColorBorderInactive;
+        }
+
+        public ColorButtonBackground setBackgroundColorBorderInactive(@Nullable DrawableColor backgroundColorBorderInactive) {
+            this.backgroundColorBorderInactive = backgroundColorBorderInactive;
             return this;
         }
 
@@ -480,18 +520,25 @@ public class ExtendedButton extends Button {
         protected ResourceLocation backgroundTextureNormal;
         @Nullable
         protected ResourceLocation backgroundTextureHover;
+        @Nullable
+        protected ResourceLocation backgroundTextureInactive;
 
         public static ImageButtonBackground create(@NotNull ResourceLocation backgroundTextureNormal) {
-            return new ImageButtonBackground(backgroundTextureNormal, null);
+            return new ImageButtonBackground(backgroundTextureNormal, null, null);
         }
 
         public static ImageButtonBackground create(@NotNull ResourceLocation backgroundTextureNormal, @Nullable ResourceLocation backgroundTextureHover) {
-            return new ImageButtonBackground(backgroundTextureNormal, backgroundTextureHover);
+            return new ImageButtonBackground(backgroundTextureNormal, backgroundTextureHover, null);
         }
 
-        public ImageButtonBackground(@NotNull ResourceLocation backgroundTextureNormal, @Nullable ResourceLocation backgroundTextureHover) {
+        public static ImageButtonBackground create(@NotNull ResourceLocation backgroundTextureNormal, @Nullable ResourceLocation backgroundTextureHover, @Nullable ResourceLocation backgroundTextureInactive) {
+            return new ImageButtonBackground(backgroundTextureNormal, backgroundTextureHover, backgroundTextureInactive);
+        }
+
+        public ImageButtonBackground(@NotNull ResourceLocation backgroundTextureNormal, @Nullable ResourceLocation backgroundTextureHover, @Nullable ResourceLocation backgroundTextureInactive) {
             this.backgroundTextureNormal = backgroundTextureNormal;
             this.backgroundTextureHover = backgroundTextureHover;
+            this.backgroundTextureInactive = backgroundTextureInactive;
         }
 
         @Override
@@ -514,10 +561,23 @@ public class ExtendedButton extends Button {
 
         @NotNull
         protected ResourceLocation getBackgroundTexture() {
+            if (!this.parent.active && (this.backgroundTextureInactive != null)) {
+                return this.backgroundTextureInactive;
+            }
             if (this.parent.isHovered && this.parent.isActive()) {
                 if (this.backgroundTextureHover != null) return this.backgroundTextureHover;
             }
             return this.backgroundTextureNormal;
+        }
+
+        @Nullable
+        public ResourceLocation getBackgroundTextureInactive() {
+            return this.backgroundTextureInactive;
+        }
+
+        public ImageButtonBackground setBackgroundTextureInactive(@Nullable ResourceLocation backgroundTextureInactive) {
+            this.backgroundTextureInactive = backgroundTextureInactive;
+            return this;
         }
 
         @NotNull
@@ -548,20 +608,27 @@ public class ExtendedButton extends Button {
         protected IAnimationRenderer backgroundAnimationNormal;
         @Nullable
         protected IAnimationRenderer backgroundAnimationHover;
+        @Nullable
+        protected IAnimationRenderer backgroundAnimationInactive;
         protected boolean loop = true;
         protected boolean restartOnHover = true;
 
         public static AnimationButtonBackground create(@NotNull IAnimationRenderer backgroundAnimationNormal) {
-            return new AnimationButtonBackground(backgroundAnimationNormal, null);
+            return new AnimationButtonBackground(backgroundAnimationNormal, null, null);
         }
 
         public static AnimationButtonBackground create(@NotNull IAnimationRenderer backgroundAnimationNormal, @Nullable IAnimationRenderer backgroundAnimationHover) {
-            return new AnimationButtonBackground(backgroundAnimationNormal, backgroundAnimationHover);
+            return new AnimationButtonBackground(backgroundAnimationNormal, backgroundAnimationHover, null);
         }
 
-        public AnimationButtonBackground(@NotNull IAnimationRenderer backgroundAnimationNormal, @Nullable IAnimationRenderer backgroundAnimationHover) {
+        public static AnimationButtonBackground create(@NotNull IAnimationRenderer backgroundAnimationNormal, @Nullable IAnimationRenderer backgroundAnimationHover, @Nullable IAnimationRenderer backgroundAnimationInactive) {
+            return new AnimationButtonBackground(backgroundAnimationNormal, backgroundAnimationHover, backgroundAnimationInactive);
+        }
+
+        public AnimationButtonBackground(@NotNull IAnimationRenderer backgroundAnimationNormal, @Nullable IAnimationRenderer backgroundAnimationHover, @Nullable IAnimationRenderer backgroundAnimationInactive) {
             this.backgroundAnimationNormal = backgroundAnimationNormal;
             this.backgroundAnimationHover = backgroundAnimationHover;
+            this.backgroundAnimationInactive = backgroundAnimationInactive;
         }
 
         @Override
@@ -630,10 +697,23 @@ public class ExtendedButton extends Button {
 
         @NotNull
         protected IAnimationRenderer getBackgroundAnimation() {
+            if (!this.parent.active && (this.backgroundAnimationInactive != null)) {
+                return this.backgroundAnimationInactive;
+            }
             if (this.parent.isHovered && this.parent.isActive()) {
                 if (this.backgroundAnimationHover != null) return this.backgroundAnimationHover;
             }
             return this.backgroundAnimationNormal;
+        }
+
+        @Nullable
+        public IAnimationRenderer getBackgroundAnimationInactive() {
+            return this.backgroundAnimationInactive;
+        }
+
+        public AnimationButtonBackground setBackgroundAnimationInactive(@Nullable IAnimationRenderer backgroundAnimationInactive) {
+            this.backgroundAnimationInactive = backgroundAnimationInactive;
+            return this;
         }
 
         @NotNull
@@ -682,10 +762,12 @@ public class ExtendedButton extends Button {
         protected ButtonBackground backgroundNormal;
         @Nullable
         protected ButtonBackground backgroundHover;
+        @Nullable
+        protected ButtonBackground backgroundInactive;
 
         @SuppressWarnings("all")
-        public static MultiTypeButtonBackground build(@Nullable Object backgroundNormal, @Nullable Object backgroundHover) {
-            MultiTypeButtonBackground b = new MultiTypeButtonBackground(null, null);
+        public static MultiTypeButtonBackground build(@Nullable Object backgroundNormal, @Nullable Object backgroundHover, @Nullable Object backgroundInactive) {
+            MultiTypeButtonBackground b = new MultiTypeButtonBackground(null, null, null);
             if (backgroundNormal == null) {
                 b.setBackgroundNormal(VanillaButtonBackground.create());
             } else {
@@ -708,21 +790,37 @@ public class ExtendedButton extends Button {
                     b.setBackgroundHover(VanillaButtonBackground.create());
                 }
             }
+            if (backgroundInactive == null) {
+                b.setBackgroundInactive(VanillaButtonBackground.create());
+            } else {
+                if (backgroundInactive instanceof ResourceLocation r) {
+                    b.setBackgroundInactive(ImageButtonBackground.create(r, r));
+                } else if (backgroundInactive instanceof IAnimationRenderer a) {
+                    b.setBackgroundInactive(AnimationButtonBackground.create(a, a));
+                } else {
+                    b.setBackgroundInactive(VanillaButtonBackground.create());
+                }
+            }
             return b;
         }
 
         public static MultiTypeButtonBackground create(@NotNull ButtonBackground backgroundNormal) {
-            return new MultiTypeButtonBackground(backgroundNormal, null);
+            return new MultiTypeButtonBackground(backgroundNormal, null, null);
         }
 
         public static MultiTypeButtonBackground create(@NotNull ButtonBackground backgroundNormal, @Nullable ButtonBackground backgroundHover) {
-            return new MultiTypeButtonBackground(backgroundNormal, backgroundHover);
+            return new MultiTypeButtonBackground(backgroundNormal, backgroundHover, null);
+        }
+
+        public static MultiTypeButtonBackground create(@NotNull ButtonBackground backgroundNormal, @Nullable ButtonBackground backgroundHover, @Nullable ButtonBackground backgroundInactive) {
+            return new MultiTypeButtonBackground(backgroundNormal, backgroundHover, backgroundInactive);
         }
 
         @SuppressWarnings("all")
-        public MultiTypeButtonBackground(@NotNull ButtonBackground backgroundNormal, @Nullable ButtonBackground backgroundHover) {
+        public MultiTypeButtonBackground(@NotNull ButtonBackground backgroundNormal, @Nullable ButtonBackground backgroundHover, @Nullable ButtonBackground backgroundInactive) {
             this.backgroundNormal = backgroundNormal;
             this.backgroundHover = backgroundHover;
+            this.backgroundInactive = backgroundInactive;
         }
 
         @Override
@@ -744,10 +842,23 @@ public class ExtendedButton extends Button {
 
         @NotNull
         protected ButtonBackground getBackground() {
+            if (!this.parent.active && (this.backgroundInactive != null)) {
+                return this.backgroundInactive;
+            }
             if (this.parent.isHovered && this.parent.isActive()) {
                 if (this.backgroundHover != null) return this.backgroundHover;
             }
             return this.backgroundNormal;
+        }
+
+        @Nullable
+        public ButtonBackground getBackgroundInactive() {
+            return this.backgroundInactive;
+        }
+
+        public MultiTypeButtonBackground setBackgroundInactive(@Nullable ButtonBackground backgroundInactive) {
+            this.backgroundInactive = backgroundInactive;
+            return this;
         }
 
         @NotNull

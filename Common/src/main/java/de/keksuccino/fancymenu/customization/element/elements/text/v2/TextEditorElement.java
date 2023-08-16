@@ -296,7 +296,7 @@ public class TextEditorElement extends AbstractEditorElement {
         this.rightClickMenu.addSubMenuEntry("grabber_texture", Component.translatable("fancymenu.customization.items.text.scroll_grabber_texture"), grabberTextureMenu)
                 .setStackable(true);
 
-        this.addFileChooserContextMenuEntryTo(grabberTextureMenu, "vertical_normal_grabber_texture",
+        this.addGenericFileChooserContextMenuEntryTo(grabberTextureMenu, "vertical_normal_grabber_texture",
                         consumes -> (consumes instanceof TextEditorElement),
                         null,
                         consumes -> ((TextElement)consumes.element).verticalScrollGrabberTextureNormal,
@@ -306,7 +306,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         FileFilter.IMAGE_FILE_FILTER)
                 .setStackable(true);
 
-        this.addFileChooserContextMenuEntryTo(grabberTextureMenu, "vertical_hover_grabber_texture",
+        this.addGenericFileChooserContextMenuEntryTo(grabberTextureMenu, "vertical_hover_grabber_texture",
                         consumes -> (consumes instanceof TextEditorElement),
                         null,
                         consumes -> ((TextElement)consumes.element).verticalScrollGrabberTextureHover,
@@ -318,7 +318,7 @@ public class TextEditorElement extends AbstractEditorElement {
 
         grabberTextureMenu.addSeparatorEntry("separator_after_vertical_textures");
 
-        this.addFileChooserContextMenuEntryTo(grabberTextureMenu, "horizontal_normal_grabber_texture",
+        this.addGenericFileChooserContextMenuEntryTo(grabberTextureMenu, "horizontal_normal_grabber_texture",
                         consumes -> (consumes instanceof TextEditorElement),
                         null,
                         consumes -> ((TextElement)consumes.element).horizontalScrollGrabberTextureNormal,
@@ -328,7 +328,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         FileFilter.IMAGE_FILE_FILTER)
                 .setStackable(true);
 
-        this.addFileChooserContextMenuEntryTo(grabberTextureMenu, "horizontal_hover_grabber_texture",
+        this.addGenericFileChooserContextMenuEntryTo(grabberTextureMenu, "horizontal_hover_grabber_texture",
                         consumes -> (consumes instanceof TextEditorElement),
                         null,
                         consumes -> ((TextElement)consumes.element).horizontalScrollGrabberTextureHover,

@@ -56,8 +56,10 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - Most UI stuff got a full rewrite (context menus, menu bars, screens, etc.)
 - FancyMenu's settings are now part of the menu bar at the top of menu screens and should be way easier to navigate through now
 - The header and footer textures of scrollable screens (like Singleplayer, Multiplayer, Video Settings, etc.) are now customizable
+- It's now possible to set an inactive background for buttons (inactive means greyed out and not clickable)
  
 - Added loading requirement "File/Folder Exists" to check if a file/folder exists
+- Added loading requirement "Is Button Active" to check if a button is active (clickable/not greyed out)
 - Added action "Disconnect/Leave Server/World" to disconnect from/leave a server/world (allows you to set a screen that should open after disconnecting/leaving)
 - Added placeholder "Absolute File/Folder Path" to get the absolute path of a file/folder
 - Added placeholder "Random Number" to get a random number in the specified range
