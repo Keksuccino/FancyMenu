@@ -60,9 +60,12 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
  
 - Added loading requirement "File/Folder Exists" to check if a file/folder exists
 - Added loading requirement "Is Button Active" to check if a button is active (clickable/not greyed out)
+- Added loading requirement "Is ANY Element Hovered" to check if any element is hovered (takes no value and checks for ALL elements in the layout, not just buttons)
+- Added loading requirement "Is ANY Button Hovered" to check if any button is hovered (takes no value and checks for both vanilla and custom buttons)
 - Added action "Disconnect/Leave Server/World" to disconnect from/leave a server/world (allows you to set a screen that should open after disconnecting/leaving)
 - Added placeholder "Absolute File/Folder Path" to get the absolute path of a file/folder
 - Added placeholder "Random Number" to get a random number in the specified range
+- Added "Cursor" element that allows you to set a custom cursor texture (supports loading requirements)
  
 - Added a bunch of accessibility stuff
 --> UI Themes to change the color scheme of FancyMenu's UI (dark and light themes included by default and you can make your own themes!)
