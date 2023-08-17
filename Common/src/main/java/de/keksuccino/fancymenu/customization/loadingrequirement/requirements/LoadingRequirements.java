@@ -1,9 +1,7 @@
 package de.keksuccino.fancymenu.customization.loadingrequirement.requirements;
 
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirementRegistry;
-import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.gui.IsButtonActiveRequirement;
-import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.gui.IsElementHoveredRequirement;
-import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.gui.IsLayoutEnabledRequirement;
+import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.gui.*;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.realtime.*;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.system.FileExistsRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.system.IsOsLinuxRequirement;
@@ -15,13 +13,14 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.wor
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.gamemode.IsCreativeRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.gamemode.IsSpectatorRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.gamemode.IsSurvivalRequirement;
-import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.gui.IsGuiScaleRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.IsMultiplayerRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.IsSingleplayerRequirement;
 
 public class LoadingRequirements {
 
     public static final IsElementHoveredRequirement IS_ELEMENT_HOVERED = new IsElementHoveredRequirement();
+    public static final IsAnyElementHoveredRequirement IS_ANY_ELEMENT_HOVERED = new IsAnyElementHoveredRequirement();
+    public static final IsAnyButtonHoveredRequirement IS_ANY_BUTTON_HOVERED = new IsAnyButtonHoveredRequirement();
     public static final IsLayoutEnabledRequirement IS_LAYOUT_ENABLED = new IsLayoutEnabledRequirement();
     public static final IsGuiScaleRequirement IS_GUI_SCALE = new IsGuiScaleRequirement();
     public static final IsButtonActiveRequirement IS_BUTTON_ACTIVE = new IsButtonActiveRequirement();
@@ -59,6 +58,8 @@ public class LoadingRequirements {
     public static void registerAll() {
 
         LoadingRequirementRegistry.register(IS_ELEMENT_HOVERED);
+        LoadingRequirementRegistry.register(IS_ANY_ELEMENT_HOVERED);
+        LoadingRequirementRegistry.register(IS_ANY_BUTTON_HOVERED);
         LoadingRequirementRegistry.register(IS_LAYOUT_ENABLED);
         LoadingRequirementRegistry.register(IS_GUI_SCALE);
         LoadingRequirementRegistry.register(IS_BUTTON_ACTIVE);

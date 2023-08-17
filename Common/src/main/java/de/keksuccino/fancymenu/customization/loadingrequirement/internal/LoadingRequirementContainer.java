@@ -6,7 +6,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -17,8 +16,8 @@ public class LoadingRequirementContainer {
 
     protected final List<LoadingRequirementGroup> groups = new ArrayList<>();
     protected final List<LoadingRequirementInstance> instances = new ArrayList<>();
-    public boolean forceRequirementsMet = false;
-    public boolean forceRequirementsNotMet = false;
+    protected boolean forceRequirementsMet = false;
+    protected boolean forceRequirementsNotMet = false;
 
     public boolean requirementsMet() {
         if (this.forceRequirementsMet) {
@@ -145,6 +144,18 @@ public class LoadingRequirementContainer {
             c.instances.add(i);
         });
         return c;
+    }
+
+    public LoadingRequirementContainer forceRequirementsMet(boolean forceMet) {
+        this.forceRequirementsMet = forceMet;
+        this.forceRequirementsNotMet = false;
+        return this;
+    }
+
+    public LoadingRequirementContainer forceRequirementsNotMet(boolean forceNotMet) {
+        this.forceRequirementsNotMet = forceNotMet;
+        this.forceRequirementsMet = false;
+        return this;
     }
 
     public static LoadingRequirementContainer stackContainers(@NotNull LoadingRequirementContainer... containers) {

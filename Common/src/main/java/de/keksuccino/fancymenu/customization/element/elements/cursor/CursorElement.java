@@ -75,16 +75,15 @@ public class CursorElement extends AbstractElement {
                 this.texture = TextureHandler.INSTANCE.getTexture(ScreenCustomization.getAbsoluteGameDirectoryPath(this.source));
                 this.cursorReady = false;
                 if (!isEditor() || this.editorPreviewMode) {
-                    CursorHandler.CustomCursor cursor = null;
-                    if (this.lastSource == null) {
-                        cursor = CursorHandler.getCustomCursor(this.getCursorName());
-                    }
+                    CursorHandler.CustomCursor cursor = CursorHandler.getCustomCursor(this.getCursorName());
                     if (this.texture != null) {
                         if ((cursor == null) || (cursor.texture != this.texture) || (cursor.hotspotX != this.hotspotX) || (cursor.hotspotY != this.hotspotY)) {
                             cursor = CursorHandler.CustomCursor.create(this.texture, this.hotspotX, this.hotspotY);
-                        }
-                        if (cursor != null) {
-                            CursorHandler.registerCustomCursor(this.getCursorName(), cursor);
+                            if (cursor != null) {
+                                CursorHandler.registerCustomCursor(this.getCursorName(), cursor);
+                                this.cursorReady = true;
+                            }
+                        } else {
                             this.cursorReady = true;
                         }
                     }

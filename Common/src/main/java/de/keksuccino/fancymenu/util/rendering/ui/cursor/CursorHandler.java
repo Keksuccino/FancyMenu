@@ -1,25 +1,33 @@
 package de.keksuccino.fancymenu.util.rendering.ui.cursor;
 
-import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.platform.TextureUtil;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
+import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.util.resources.texture.LocalTexture;
 import net.minecraft.client.Minecraft;
-import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWImage;
+import org.lwjgl.stb.STBImage;
+import org.lwjgl.system.MemoryStack;
+import org.lwjgl.system.MemoryUtil;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 @SuppressWarnings("unused")
 public class CursorHandler {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public static final long CURSOR_RESIZE_HORIZONTAL = GLFW.glfwCreateStandardCursor(GLFW.GLFW_RESIZE_EW_CURSOR);
     public static final long CURSOR_RESIZE_VERTICAL = GLFW.glfwCreateStandardCursor(GLFW.GLFW_RESIZE_NS_CURSOR);
@@ -40,8 +48,8 @@ public class CursorHandler {
     }
 
     public static void registerCustomCursor(@NotNull String uniqueCursorName, @NotNull CustomCursor cursor) {
-        unregisterCustomCursor(Objects.requireNonNull(uniqueCursorName));
-        CUSTOM_CURSORS.put(uniqueCursorName, Objects.requireNonNull(cursor));
+        LOGGER.info("[FANCYMENU] Registering GLFW custom cursor: NAME: " + uniqueCursorName + " | TEXTURE PATH: " + cursor.texturePath);
+        CUSTOM_CURSORS.put(Objects.requireNonNull(uniqueCursorName), Objects.requireNonNull(cursor));
     }
 
     public static void unregisterCustomCursor(@NotNull String cursorName) {
@@ -96,112 +104,81 @@ public class CursorHandler {
         public final int hotspotY;
         @NotNull
         public final LocalTexture texture;
-
-//        @Nullable
-//        public static CustomCursor create(@NotNull LocalTexture texture, int hotspotX, int hotspotY) {
-//            CustomCursor customCursor = null;
-//            InputStream in = null;
-//            GLFWImage image = null;
-//            try {
-//                ResourceLocation loc = Objects.requireNonNull(texture).getResourceLocation();
-//                if (loc != null) {
-//                    image = GLFWImage.create();
-//                    in = Objects.requireNonNull(texture.tryOpen());
-//                    byte[] byteArray = IOUtils.toByteArray(in);
-//                    STBImage.load
-//                    image.set(texture.getWidth(), texture.getHeight(), ByteBuffer.wrap(byteArray));
-//                    long lid = GLFW.glfwCreateCursor(image, hotspotX, hotspotY);
-//                    customCursor = new CustomCursor(lid, hotspotX, hotspotY, texture);
-//                }
-//            } catch (Exception ex) {
-//                ex.printStackTrace();
-//            }
-//            IOUtils.closeQuietly(in);
-//            try {
-//                if (image != null) image.close();
-//            } catch (Exception ignore) {}
-//            return customCursor;
-//        }
-
-//        @Nullable
-//        public static CustomCursor create(@NotNull LocalTexture texture, int hotspotX, int hotspotY) {
-//            CustomCursor customCursor = null;
-//            InputStream in = null;
-//            GLFWImage image = null;
-//            try {
-//                if (Objects.requireNonNull(texture).getResourceLocation() != null) {
-//                    image = GLFWImage.create();
-//                    in = Objects.requireNonNull(texture.tryOpen());
-//                    NativeImage nat = NativeImage.read(in);
-//                    nat.asByteArray()
-//                    ByteBuffer buffer = toByteBuffer(in);
-//                    if (buffer != null) {
-//                        IntBuffer width = BufferUtils.createIntBuffer(1);
-//                        IntBuffer height = BufferUtils.createIntBuffer(1);
-//                        IntBuffer components = BufferUtils.createIntBuffer(1);
-//                        ByteBuffer img = STBImage.stbi_load_from_memory(buffer, width, height, components, 0);
-//                        if (img != null) {
-//                            image = GLFWImage.createSafe();
-//                            image = image.set(texture.getWidth(), texture.getHeight(), );
-//                            long lid = GLFW.glfwCreateCursor();
-//                            customCursor = new CustomCursor(lid, hotspotX, hotspotY, texture);
-//                            STBImage.stbi_image_free(img);
-//                        }
-//                    }
-//                }
-//            } catch (Exception ex) {
-//                ex.printStackTrace();
-//            }
-//            IOUtils.closeQuietly(in);
-////            try {
-////                if (image != null) image.close();
-////            } catch (Exception ignore) {}
-//            return customCursor;
-//        }
+        @NotNull
+        public final String texturePath;
 
         @Nullable
         public static CustomCursor create(@NotNull LocalTexture texture, int hotspotX, int hotspotY) {
             CustomCursor customCursor = null;
             InputStream in = null;
+            MemoryStack memStack = null;
+            ByteBuffer texResourceBuffer = null;
+            ByteBuffer stbBuffer = null;
             try {
-                if (Objects.requireNonNull(texture).getResourceLocation() != null) {
+                if ((Objects.requireNonNull(texture).getResourceLocation() != null) && (texture.getPath() != null)) {
                     in = Objects.requireNonNull(texture.tryOpen());
-                    NativeImage nat = NativeImage.read(in);
-                    GLFWImage image = GLFWImage.createSafe(nat.pixels);
-                    if (image != null) {
-                        long lid = GLFW.glfwCreateCursor(image, hotspotX, hotspotY);
-                        customCursor = new CustomCursor(lid, hotspotX, hotspotY, texture);
+                    texResourceBuffer = TextureUtil.readResource(in);
+                    texResourceBuffer.rewind();
+                    if (MemoryUtil.memAddress(texResourceBuffer) != 0L) {
+                        memStack = MemoryStack.stackPush();
+                        IntBuffer width = memStack.mallocInt(1);
+                        IntBuffer height = memStack.mallocInt(1);
+                        IntBuffer components = memStack.mallocInt(1);
+                        stbBuffer = STBImage.stbi_load_from_memory(texResourceBuffer, width, height, components, 0);
+                        if (stbBuffer != null) {
+                            GLFWImage image = GLFWImage.create();
+                            image = image.set(texture.getWidth(), texture.getHeight(), stbBuffer);
+                            long lid = GLFW.glfwCreateCursor(image, hotspotX, hotspotY);
+                            if (lid != 0L) {
+                                customCursor = new CustomCursor(lid, hotspotX, hotspotY, texture, texture.getPath());
+                            } else {
+                                throw new IllegalArgumentException("Failed to create custom cursor! Cursor handle was NULL!");
+                            }
+                        } else {
+                            throw new IOException("Could not load image: " + STBImage.stbi_failure_reason());
+                        }
+                    } else {
+                        throw new IllegalArgumentException("Invalid buffer! Memory address was NULL!");
                     }
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
-            IOUtils.closeQuietly(in);
+            if (texResourceBuffer != null) {
+                try {
+                    MemoryUtil.memFree(texResourceBuffer);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+            if (stbBuffer != null) {
+                try {
+                    STBImage.stbi_image_free(stbBuffer);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+            CloseableUtils.closeQuietly(in);
+            CloseableUtils.closeQuietly(memStack);
             return customCursor;
         }
 
-        @Nullable
-        private static ByteBuffer toByteBuffer(@NotNull InputStream in) {
-            try{
-                byte[] bytes = IOUtils.toByteArray(in);
-                ByteBuffer bb = BufferUtils.createByteBuffer(bytes.length);
-                bb.put(bytes).flip();
-                return bb;
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-            return null;
-        }
-
-        protected CustomCursor(long id_long, int hotspotX, int hotspotY, @NotNull LocalTexture texture) {
+        protected CustomCursor(long id_long, int hotspotX, int hotspotY, @NotNull LocalTexture texture, @NotNull String texturePath) {
             this.id_long = id_long;
             this.hotspotX = hotspotX;
             this.hotspotY = hotspotY;
             this.texture = texture;
+            this.texturePath = texturePath;
         }
 
+        /** Does nothing. **/
         public void destroy() {
-            GLFW.glfwDestroyCursor(this.id_long);
+            //TODO unstable! fix this later!
+//            try {
+//                GLFW.glfwDestroyCursor(this.id_long);
+//            } catch (Exception ex) {
+//                ex.printStackTrace();
+//            }
         }
 
     }
