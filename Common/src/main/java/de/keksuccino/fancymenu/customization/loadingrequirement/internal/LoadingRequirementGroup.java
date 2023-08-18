@@ -1,10 +1,10 @@
 package de.keksuccino.fancymenu.customization.loadingrequirement.internal;
 
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.ListUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -71,10 +71,10 @@ public class LoadingRequirementGroup {
         return false;
     }
 
-    public LoadingRequirementGroup copy(boolean copyRequirementInstanceIdentifiers) {
-        LoadingRequirementGroup g = new LoadingRequirementGroup(this.identifier, this.mode, null);
+    public LoadingRequirementGroup copy(boolean unique) {
+        LoadingRequirementGroup g = new LoadingRequirementGroup(unique ? ScreenCustomization.generateUniqueIdentifier() : this.identifier, this.mode, null);
         this.instances.forEach((instance) -> {
-            LoadingRequirementInstance i = instance.copy(copyRequirementInstanceIdentifiers);
+            LoadingRequirementInstance i = instance.copy(unique);
             i.group = g;
             g.instances.add(i);
         });

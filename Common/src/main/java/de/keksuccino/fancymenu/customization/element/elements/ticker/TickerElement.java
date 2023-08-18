@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.element.elements.ticker;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.action.ExecutableAction;
+import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.IActionExecutorElement;
@@ -16,7 +16,7 @@ import java.util.List;
 
 public class TickerElement extends AbstractElement implements IActionExecutorElement {
 
-    public volatile List<ExecutableAction> actions = new ArrayList<>();
+    public volatile List<ActionInstance> actions = new ArrayList<>();
     public volatile long tickDelayMs = 0;
     public volatile boolean isAsync = false;
     public volatile TickMode tickMode = TickMode.NORMAL;
@@ -46,7 +46,7 @@ public class TickerElement extends AbstractElement implements IActionExecutorEle
             if ((this.tickDelayMs <= 0) || ((this.lastTick + this.tickDelayMs) <= now)) {
                 this.lastTick = now;
                 this.ticked = true;
-                for (ExecutableAction a : this.actions) {
+                for (ActionInstance a : this.actions) {
                     a.execute();
                 }
             }
@@ -96,7 +96,7 @@ public class TickerElement extends AbstractElement implements IActionExecutorEle
 
     
     @Override
-    public @NotNull List<ExecutableAction> getActionList() {
+    public @NotNull List<ActionInstance> getActionList() {
         return this.actions;
     }
 

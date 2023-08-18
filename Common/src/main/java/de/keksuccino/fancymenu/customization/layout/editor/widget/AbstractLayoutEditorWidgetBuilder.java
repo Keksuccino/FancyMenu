@@ -127,7 +127,7 @@ public abstract class AbstractLayoutEditorWidgetBuilder<T extends AbstractLayout
             PropertyContainerSet set = new PropertyContainerSet("layout_editor_widget_settings");
             set.putContainer(settings);
 
-            PropertiesSerializer.serializePropertyContainerSet(set, this.getSettingsFile().getAbsolutePath());
+            PropertiesSerializer.serializeSetToFile(set, this.getSettingsFile().getAbsolutePath());
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -141,7 +141,7 @@ public abstract class AbstractLayoutEditorWidgetBuilder<T extends AbstractLayout
             if (!savedSettingsFile.isFile()) {
                 this.writeSettingsInternal(Objects.requireNonNull(this.buildDefaultInstance(DUMMY_LAYOUT_EDITOR)));
             }
-            PropertyContainerSet set = PropertiesSerializer.deserializePropertyContainerSet(savedSettingsFile.getAbsolutePath());
+            PropertyContainerSet set = PropertiesSerializer.deserializeSetFromFile(savedSettingsFile.getAbsolutePath());
             if (set != null) {
                 List<PropertyContainer> containers = set.getContainersOfType("settings");
                 if (!containers.isEmpty()) {

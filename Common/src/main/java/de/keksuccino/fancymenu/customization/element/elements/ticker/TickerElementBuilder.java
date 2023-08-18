@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.element.elements.ticker;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionRegistry;
-import de.keksuccino.fancymenu.customization.action.ExecutableAction;
+import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.events.ModReloadEvent;
@@ -84,7 +84,7 @@ public class TickerElementBuilder extends ElementBuilder<TickerElement, TickerEd
 
         TickerElement element = this.buildDefaultInstance();
 
-        Map<Integer, ExecutableAction> tempActions = new HashMap<>();
+        Map<Integer, ActionInstance> tempActions = new HashMap<>();
         for (Map.Entry<String, String> m : serialized.getProperties().entrySet()) {
             //tickeraction_<index>_ACTION
             if (m.getKey().startsWith("tickeraction_")) {
@@ -94,7 +94,7 @@ public class TickerElementBuilder extends ElementBuilder<TickerElement, TickerEd
                 if (MathUtils.isInteger(index)) {
                     Action a = ActionRegistry.getAction(tickerAction);
                     if (a != null) {
-                        tempActions.put(Integer.parseInt(index), new ExecutableAction(a, actionValue));
+                        tempActions.put(Integer.parseInt(index), new ActionInstance(a, actionValue));
                     }
                 }
             }
@@ -135,7 +135,7 @@ public class TickerElementBuilder extends ElementBuilder<TickerElement, TickerEd
         serializeTo.putProperty("tick_delay", "" + element.tickDelayMs);
         serializeTo.putProperty("tick_mode", "" + element.tickMode.name);
         int index = 0;
-        for (ExecutableAction c : element.actions) {
+        for (ActionInstance c : element.actions) {
             String v = c.value;
             if (v == null) {
                 v = "";

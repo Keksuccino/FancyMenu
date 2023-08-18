@@ -93,7 +93,7 @@ public class AnimationHandler {
 					continue;
 				}
 
-				PropertyContainerSet props = PropertiesSerializer.deserializePropertyContainerSet(p.getPath());
+				PropertyContainerSet props = PropertiesSerializer.deserializeSetFromFile(p.getPath());
 				if (props == null) {
 					continue;
 				}

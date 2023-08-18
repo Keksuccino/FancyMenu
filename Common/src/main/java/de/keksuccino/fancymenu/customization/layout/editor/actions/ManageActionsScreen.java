@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.layout.editor.actions;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.action.ExecutableAction;
+import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
@@ -25,8 +25,8 @@ import java.util.function.Consumer;
 
 public class ManageActionsScreen extends Screen {
 
-    protected List<ExecutableAction> actions = new ArrayList<>();
-    protected Consumer<List<ExecutableAction>> callback;
+    protected List<ActionInstance> actions = new ArrayList<>();
+    protected Consumer<List<ActionInstance>> callback;
 
     protected ScrollArea actionsScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ExtendedButton addActionButton;
@@ -37,11 +37,11 @@ public class ManageActionsScreen extends Screen {
     protected ExtendedButton doneButton;
     protected ExtendedButton cancelButton;
 
-    public ManageActionsScreen(@NotNull List<ExecutableAction> actions, @NotNull Consumer<List<ExecutableAction>> callback) {
+    public ManageActionsScreen(@NotNull List<ActionInstance> actions, @NotNull Consumer<List<ActionInstance>> callback) {
 
         super(Component.translatable("fancymenu.editor.action.screens.manage_screen.manage"));
 
-        for (ExecutableAction a : actions) {
+        for (ActionInstance a : actions) {
             this.actions.add(a.copy());
         }
         this.callback = callback;
@@ -75,7 +75,7 @@ public class ManageActionsScreen extends Screen {
 
         this.moveUpButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.move_action_up"), (button) -> {
             if (this.isInstanceSelected()) {
-                ExecutableAction selected = this.getSelectedInstance();
+                ActionInstance selected = this.getSelectedInstance();
                 int index = this.actions.indexOf(selected);
                 if (index > 0) {
                     this.actions.remove(selected);
@@ -108,7 +108,7 @@ public class ManageActionsScreen extends Screen {
 
         this.moveDownButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.move_action_down"), (button) -> {
             if (this.isInstanceSelected()) {
-                ExecutableAction selected = this.getSelectedInstance();
+                ActionInstance selected = this.getSelectedInstance();
                 int index = this.actions.indexOf(selected);
                 if ((index >= 0) && (index <= this.actions.size()-2)) {
                     this.actions.remove(selected);
@@ -140,7 +140,7 @@ public class ManageActionsScreen extends Screen {
         UIBase.applyDefaultWidgetSkinTo(this.moveDownButton);
 
         this.editButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.edit_action"), (button) -> {
-            ExecutableAction a = this.getSelectedInstance();
+            ActionInstance a = this.getSelectedInstance();
             if (a != null) {
                 BuildActionScreen s = new BuildActionScreen(a.copy(), (call) -> {
                     if (call != null) {
@@ -176,7 +176,7 @@ public class ManageActionsScreen extends Screen {
 
         this.removeButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.remove_action"), (button) -> {
             if (this.isInstanceSelected()) {
-                ExecutableAction i = this.getSelectedInstance();
+                ActionInstance i = this.getSelectedInstance();
                 Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call) -> {
                     if (call) {
                         this.actions.remove(i);
@@ -270,7 +270,7 @@ public class ManageActionsScreen extends Screen {
     }
 
     @Nullable
-    protected ExecutableAction getSelectedInstance() {
+    protected ActionInstance getSelectedInstance() {
         ScrollAreaEntry e = this.actionsScrollArea.getFocusedEntry();
         if (e instanceof ExecutableActionEntry) {
             return ((ExecutableActionEntry)e).action;
@@ -289,7 +289,7 @@ public class ManageActionsScreen extends Screen {
 
         this.actionsScrollArea.clearEntries();
 
-        for (ExecutableAction i : this.actions) {
+        for (ActionInstance i : this.actions) {
             ExecutableActionEntry e = new ExecutableActionEntry(this.actionsScrollArea, i, 14);
             this.actionsScrollArea.addEntry(e);
         }
@@ -305,14 +305,14 @@ public class ManageActionsScreen extends Screen {
 
         public static final int HEADER_FOOTER_HEIGHT = 3;
 
-        public ExecutableAction action;
+        public ActionInstance action;
         public final int lineHeight;
         public Font font = Minecraft.getInstance().font;
 
         private final MutableComponent displayNameComponent;
         private final MutableComponent valueComponent;
 
-        public ExecutableActionEntry(ScrollArea parent, ExecutableAction action, int lineHeight) {
+        public ExecutableActionEntry(ScrollArea parent, ActionInstance action, int lineHeight) {
 
             super(parent, 100, 30);
             this.action = action;

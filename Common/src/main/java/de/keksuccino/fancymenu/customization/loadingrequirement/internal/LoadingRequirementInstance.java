@@ -6,7 +6,6 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequireme
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -21,8 +20,7 @@ public class LoadingRequirementInstance {
     @Nullable
     public LoadingRequirementGroup group;
     public RequirementMode mode;
-    /** This identifier should NOT get used to actually identify the instance. It is mainly used to make the serialized instance unique. **/
-    protected String requirementId = ScreenCustomization.generateUniqueIdentifier();
+    public String instanceIdentifier = ScreenCustomization.generateUniqueIdentifier();
 
     public LoadingRequirementInstance(LoadingRequirement requirement, @Nullable String value, RequirementMode mode, LoadingRequirementContainer parent) {
         this.parent = parent;
@@ -52,11 +50,9 @@ public class LoadingRequirementInstance {
         return false;
     }
 
-    public LoadingRequirementInstance copy(boolean copyIdentifier) {
+    public LoadingRequirementInstance copy(boolean unique) {
         LoadingRequirementInstance i = new LoadingRequirementInstance(this.requirement, this.value, this.mode, null);
-        if (copyIdentifier) {
-            i.requirementId = this.requirementId;
-        }
+        if (!unique) i.instanceIdentifier = this.instanceIdentifier;
         return i;
     }
 
@@ -67,7 +63,7 @@ public class LoadingRequirementInstance {
         if (instance.group != null) {
             key += "[group:" + instance.group.identifier + "]";
         }
-        key += "[req_id:" + instance.requirementId + "]";
+        key += "[req_id:" + instance.instanceIdentifier + "]";
         l.add(key);
         if (instance.requirement.hasValue() && (instance.value != null)) {
             l.add(instance.value);
@@ -98,7 +94,7 @@ public class LoadingRequirementInstance {
                         String id = key.split("\\[req_id:", 2)[1].split("\\]", 2)[0];
                         LoadingRequirementInstance instance = new LoadingRequirementInstance(req, value, mode, parent);
                         if (!req.hasValue()) instance.value = null;
-                        instance.requirementId = id;
+                        instance.instanceIdentifier = id;
                         instance.group = group;
                         return instance;
                     }

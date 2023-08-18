@@ -76,7 +76,7 @@ public class VariableHandler {
             for (Variable v : VARIABLES.values()) {
                 set.putContainer(v.serialize());
             }
-            PropertiesSerializer.serializePropertyContainerSet(set, VARIABLES_FILE.getPath());
+            PropertiesSerializer.serializeSetToFile(set, VARIABLES_FILE.getPath());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -88,7 +88,7 @@ public class VariableHandler {
                 writeToFile();
             }
             VARIABLES.clear();
-            PropertyContainerSet set = PropertiesSerializer.deserializePropertyContainerSet(VARIABLES_FILE.getPath());
+            PropertyContainerSet set = PropertiesSerializer.deserializeSetFromFile(VARIABLES_FILE.getPath());
             if (set != null) {
                 if (set.getType().equals("cached_variables")) {
                     readFromLegacyFile();
@@ -114,7 +114,7 @@ public class VariableHandler {
                 writeToFile();
             }
             VARIABLES.clear();
-            PropertyContainerSet set = PropertiesSerializer.deserializePropertyContainerSet(VARIABLES_FILE.getPath());
+            PropertyContainerSet set = PropertiesSerializer.deserializeSetFromFile(VARIABLES_FILE.getPath());
             if (set != null) {
                 List<PropertyContainer> secs = set.getContainersOfType("variables");
                 if (!secs.isEmpty()) {

@@ -203,7 +203,7 @@ public class Layout extends LayoutBase {
         scrollListContainer.putProperty("render_scroll_list_footer_shadow", "" + this.renderScrollListFooterShadow);
         set.putContainer(scrollListContainer);
 
-        this.layoutWideLoadingRequirementContainer.serializeContainerToExistingPropertiesSection(meta);
+        this.layoutWideLoadingRequirementContainer.serializeToExistingPropertyContainer(meta);
 
         this.serializedElements.forEach(set::putContainer);
         if (!this.isUniversalLayout()) {
@@ -257,7 +257,7 @@ public class Layout extends LayoutBase {
 
                 layout.customMenuTitle = meta.getValue("custom_menu_title");
 
-                layout.layoutWideLoadingRequirementContainer = LoadingRequirementContainer.deserializeRequirementContainer(meta);
+                layout.layoutWideLoadingRequirementContainer = LoadingRequirementContainer.deserialize(meta);
 
                 String renderBehindVanilla = meta.getValue("render_custom_elements_behind_vanilla");
                 if (renderBehindVanilla == null) {
@@ -903,7 +903,7 @@ public class Layout extends LayoutBase {
                 }
 
                 if (action.equalsIgnoreCase("vanilla_button_visibility_requirements")) {
-                    element.loadingRequirementContainer = LoadingRequirementContainer.deserializeRequirementContainer(sec);
+                    element.loadingRequirementContainer = LoadingRequirementContainer.deserialize(sec);
                     addElement = true;
                 }
 

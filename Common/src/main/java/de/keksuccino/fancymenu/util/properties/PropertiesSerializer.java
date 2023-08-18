@@ -4,73 +4,30 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Objects;
 import de.keksuccino.fancymenu.util.Legacy;
-import de.keksuccino.konkrete.file.FileUtils;
+import de.keksuccino.fancymenu.util.file.FileUtils;
+import de.keksuccino.konkrete.input.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-@Legacy("This is basically the Konkrete serializer class and is _very_ outdated, so better rewrite this at some point.")
+@SuppressWarnings("all")
 public class PropertiesSerializer {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    /**
-     * Returns a new {@link PropertyContainer} instance or NULL if the given file wasn't a valid properties file.
-     */
     @Nullable
-    public static PropertyContainerSet deserializePropertyContainerSet(String filePath) {
+    public static PropertyContainerSet deserializeSetFromFile(@NotNull String filePath) {
         try {
-            File f = new File(filePath);
+            File f = new File(Objects.requireNonNull(filePath));
             if (f.exists() && f.isFile()) {
-                List<String> lines = FileUtils.getFileLines(f);
-                List<PropertyContainer> data = new ArrayList<>();
-                String propertiesType = null;
-                PropertyContainer currentData = null;
-                boolean insideData = false;
-                for (String s : lines) {
-                    String comp = s.replace(" ", "");
-                    //Set type of container set
-                    if (comp.startsWith("type=") && !insideData) {
-                        propertiesType = comp.split("=", 2)[1];
-                        continue;
-                    }
-                    //Start new container
-                    if (comp.endsWith("{")) {
-                        if (!insideData) {
-                            insideData = true;
-                        } else {
-                            LOGGER.warn("[FANCYMENU] Invalid PropertyContainer found in '" + filePath + "'! (Leaking container; Missing '}')");
-                            data.add(currentData);
-                        }
-                        currentData = new PropertyContainer(comp.split("[{]")[0]);
-                        continue;
-                    }
-                    //Finish container
-                    if (comp.startsWith("}") && insideData) {
-                        data.add(currentData);
-                        insideData = false;
-                        continue;
-                    }
-                    //Collect all properties of container
-                    if (insideData && comp.contains("=")) {
-                        String value = s.split("=", 2)[1];
-                        if (value.startsWith(" ")) {
-                            value = value.substring(1);
-                        }
-                        currentData.putProperty(comp.split("=", 2)[0], value);
-                    }
+                String content = "";
+                for (String s : FileUtils.getFileLines(f)) {
+                    content += s + "\n";
                 }
-                if (propertiesType != null) {
-                    PropertyContainerSet set = new PropertyContainerSet(propertiesType);
-                    for (PropertyContainer d : data) {
-                        set.putContainer(d);
-                    }
-                    return set;
-                } else {
-                    LOGGER.error("[FANCYMENU] Failed to deserialize PropertyContainerSet! Invalid properties file found: " + filePath + " (Missing type)");
-                }
+                return deserializeSetFromFancyString(content);
             } else {
                 LOGGER.error("[FANCYMENU] Failed to deserialize PropertyContainerSet! File not found!");
             }
@@ -80,33 +37,115 @@ public class PropertiesSerializer {
         return null;
     }
 
-    public static void serializePropertyContainerSet(PropertyContainerSet set, String path) {
+    /**
+     * Returns the deserialized {@link PropertyContainerSet} or NULL if the given String was not a valid serialized set.
+     */
+    @Legacy("This is basically the Konkrete deserializer and is _very_ outdated, so better rewrite this at some point.")
+    @Nullable
+    public static PropertyContainerSet deserializeSetFromFancyString(@NotNull String serializedFancyString) {
         try {
-            List<PropertyContainer> l = set.getContainers();
-            File f = new File(path);
-            //Check if path has valid name
-            if (f.getName().contains(".") && !f.getName().startsWith(".")) {
-                File parent = f.getParentFile();
-                if ((parent != null) && parent.isDirectory() && !parent.exists()) {
-                    parent.mkdirs();
+            String[] lines = StringUtils.splitLines(Objects.requireNonNull(serializedFancyString).replace("\r", "\n"), "\n");
+            List<PropertyContainer> data = new ArrayList<>();
+            String propertiesType = null;
+            PropertyContainer currentContainer = null;
+            boolean insideData = false;
+            for (String line : lines) {
+                String compactLine = line.replace(" ", "");
+                //Set type of container set
+                if (compactLine.startsWith("type=") && !insideData) {
+                    propertiesType = compactLine.split("=", 2)[1];
+                    continue;
                 }
-                f.createNewFile();
-                String data = "";
-                data += "type = " + set.getType() + "\n\n";
-                for (PropertyContainer ps : l) {
-                    data += ps.getType() + " {\n";
-                    for (Map.Entry<String, String> e : ps.getProperties().entrySet()) {
-                        data += "  " + e.getKey() + " = " + e.getValue() + "\n";
+                //Start new container
+                if (compactLine.endsWith("{")) {
+                    if (!insideData) {
+                        insideData = true;
+                    } else {
+                        LOGGER.warn("[FANCYMENU] Broken PropertyContainer found! Leaking container, missing '}': " + ((currentContainer != null) ? serializeContainerToFancyString(currentContainer).replace("\n", "").replace("\r", "") : "null"));
+                        data.add(currentContainer);
                     }
-                    data += "}\n\n";
+                    currentContainer = new PropertyContainer(compactLine.split("[{]")[0]);
+                    continue;
                 }
-                FileUtils.writeTextToFile(f, false, data);
-            } else {
-                LOGGER.error("[FANCYMENU] Failed to serialize PropertyContainerSet! Invalid file name: " + path + " (File name should look like 'some_name.extension')");
+                //Finish container
+                if (compactLine.startsWith("}") && insideData) {
+                    data.add(currentContainer);
+                    insideData = false;
+                    continue;
+                }
+                //Collect all properties of container
+                if (insideData && compactLine.contains("=")) {
+                    String value = line.split("=", 2)[1];
+                    if (value.startsWith(" ")) {
+                        value = value.substring(1);
+                    }
+                    currentContainer.putProperty(compactLine.split("=", 2)[0], value);
+                }
             }
+            if (propertiesType != null) {
+                PropertyContainerSet set = new PropertyContainerSet(propertiesType);
+                for (PropertyContainer d : data) {
+                    set.putContainer(d);
+                }
+                return set;
+            } else {
+                LOGGER.error("[FANCYMENU] Failed to deserialize PropertyContainerSet! Missing type: " + serializedFancyString.replace("\n", "").replace("\r", ""));
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    public static void serializeSetToFile(@NotNull PropertyContainerSet set, @NotNull String filePath) {
+        try {
+            File f = new File(filePath);
+            File parentDir = f.getParentFile();
+            if ((parentDir != null) && !parentDir.isDirectory()) {
+                parentDir.mkdirs();
+            }
+            f.createNewFile();
+            FileUtils.writeTextToFile(f, false, serializeSetToFancyString(set));
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @NotNull
+    public static String serializeContainerToFancyString(@NotNull PropertyContainer container) {
+        String s = Objects.requireNonNull(container).getType() + " {\n";
+        for (Map.Entry<String, String> e : container.getProperties().entrySet()) {
+            s += "  " + e.getKey() + " = " + e.getValue() + "\n";
+        }
+        s += "}";
+        return s;
+    }
+
+    @NotNull
+    public static String serializeSetToFancyString(@NotNull PropertyContainerSet set) {
+        String s = "type = " + Objects.requireNonNull(set).getType() + "\n\n";
+        for (PropertyContainer c : set.getContainers()) {
+            s += serializeContainerToFancyString(c);
+            s += "\n\n";
+        }
+        return s;
+    }
+
+    @NotNull
+    public static String stringifyFancyString(@NotNull String fancyString) {
+        return Objects.requireNonNull(fancyString)
+                .replace("\n", "$prop_line_break$")
+                .replace("\r", "$prop_line_break$")
+                .replace("{", "$prop_brackets_open$")
+                .replace("}", "$prop_brackets_close$");
+    }
+
+    @NotNull
+    public static String unstringify(@NotNull String stringified) {
+        return Objects.requireNonNull(stringified)
+                .replace("$prop_line_break$", "\n")
+                .replace("$prop_brackets_open$", "{")
+                .replace("$prop_brackets_close$", "}");
     }
 
 }

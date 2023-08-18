@@ -317,7 +317,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			this.rightClickMenu.addClickableEntry("loading_requirements", Component.translatable("fancymenu.editor.loading_requirement.elements.loading_requirements"), (menu, entry) ->
 					{
 						if (!entry.getStackMeta().isPartOfStack()) {
-							ManageRequirementsScreen s = new ManageRequirementsScreen(this.element.loadingRequirementContainer.copy(true), (call) -> {
+							ManageRequirementsScreen s = new ManageRequirementsScreen(this.element.loadingRequirementContainer.copy(false), (call) -> {
 								if (call != null) {
 									this.editor.history.saveSnapshot();
 									this.element.loadingRequirementContainer = call;
@@ -331,13 +331,13 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							LoadingRequirementContainer containerToUseInManager = new LoadingRequirementContainer();
 							boolean allEqual = ListUtils.allInListEqual(containers);
 							if (allEqual) {
-								containerToUseInManager = containers.get(0).copy(false);
+								containerToUseInManager = containers.get(0).copy(true);
 							}
 							ManageRequirementsScreen s = new ManageRequirementsScreen(containerToUseInManager, (call) -> {
 								if (call != null) {
 									this.editor.history.saveSnapshot();
 									for (AbstractEditorElement e : selectedElements) {
-										e.element.loadingRequirementContainer = call.copy(false);
+										e.element.loadingRequirementContainer = call.copy(true);
 									}
 								}
 								Minecraft.getInstance().setScreen(this.editor);

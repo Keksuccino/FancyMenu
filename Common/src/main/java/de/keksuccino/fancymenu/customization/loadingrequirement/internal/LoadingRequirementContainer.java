@@ -1,14 +1,13 @@
 package de.keksuccino.fancymenu.customization.loadingrequirement.internal;
 
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.ListUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class LoadingRequirementContainer {
 
@@ -16,6 +15,8 @@ public class LoadingRequirementContainer {
 
     protected final List<LoadingRequirementGroup> groups = new ArrayList<>();
     protected final List<LoadingRequirementInstance> instances = new ArrayList<>();
+    @NotNull
+    public String identifier = ScreenCustomization.generateUniqueIdentifier();
     protected boolean forceRequirementsMet = false;
     protected boolean forceRequirementsNotMet = false;
 
@@ -55,7 +56,7 @@ public class LoadingRequirementContainer {
         return null;
     }
 
-    public boolean addGroup(LoadingRequirementGroup group) {
+    public boolean addGroup(@NotNull LoadingRequirementGroup group) {
         if (!this.groupExists(group.identifier)) {
             this.groups.add(group);
             return true;
@@ -68,7 +69,7 @@ public class LoadingRequirementContainer {
     }
 
     @Nullable
-    public LoadingRequirementGroup getGroup(String identifier) {
+    public LoadingRequirementGroup getGroup(@NotNull String identifier) {
         for (LoadingRequirementGroup g : this.groups) {
             if (g.identifier.equals(identifier)) {
                 return g;
@@ -77,15 +78,15 @@ public class LoadingRequirementContainer {
         return null;
     }
 
-    public boolean groupExists(String identifier) {
+    public boolean groupExists(@NotNull String identifier) {
         return this.getGroup(identifier) != null;
     }
 
-    public boolean removeGroup(LoadingRequirementGroup group) {
-        return this.groups.remove(group);
+    public boolean removeGroup(@NotNull LoadingRequirementGroup group) {
+        return this.groups.remove(Objects.requireNonNull(group));
     }
 
-    public boolean removeGroupByIdentifier(String identifier) {
+    public boolean removeGroupByIdentifier(@NotNull String identifier) {
         LoadingRequirementGroup g = this.getGroup(identifier);
         if (g != null) {
             return this.groups.remove(g);
@@ -93,7 +94,7 @@ public class LoadingRequirementContainer {
         return false;
     }
 
-    public boolean addInstance(LoadingRequirementInstance instance) {
+    public boolean addInstance(@NotNull LoadingRequirementInstance instance) {
         if (!this.instances.contains(instance)) {
             this.instances.add(instance);
             return true;
@@ -101,19 +102,12 @@ public class LoadingRequirementContainer {
         return false;
     }
 
-    public boolean removeInstance(LoadingRequirementInstance instance) {
+    public boolean removeInstance(@NotNull LoadingRequirementInstance instance) {
         return this.instances.remove(instance);
     }
 
     public List<LoadingRequirementInstance> getInstances() {
         return new ArrayList<>(this.instances);
-    }
-
-    public void serializeContainerToExistingPropertiesSection(@NotNull PropertyContainer target) {
-        PropertyContainer sec = serializeRequirementContainer(this);
-        for (Map.Entry<String, String> m : sec.getProperties().entrySet()) {
-            target.putProperty(m.getKey(), m.getValue());
-        }
     }
 
     @Override
@@ -128,10 +122,11 @@ public class LoadingRequirementContainer {
         return false;
     }
 
-    public LoadingRequirementContainer copy(boolean copyRequirementInstanceIdentifiers) {
+    public LoadingRequirementContainer copy(boolean unique) {
         LoadingRequirementContainer c = new LoadingRequirementContainer();
+        if (!unique) c.identifier = this.identifier;
         this.groups.forEach((group) -> {
-            LoadingRequirementGroup g = group.copy(copyRequirementInstanceIdentifiers);
+            LoadingRequirementGroup g = group.copy(unique);
             g.parent = c;
             for (LoadingRequirementInstance i : g.instances) {
                 i.parent = c;
@@ -139,7 +134,7 @@ public class LoadingRequirementContainer {
             c.groups.add(g);
         });
         this.instances.forEach((instance) -> {
-            LoadingRequirementInstance i = instance.copy(copyRequirementInstanceIdentifiers);
+            LoadingRequirementInstance i = instance.copy(unique);
             i.parent = c;
             c.instances.add(i);
         });
@@ -158,10 +153,147 @@ public class LoadingRequirementContainer {
         return this;
     }
 
+    public void serializeToExistingPropertyContainer(@NotNull PropertyContainer target) {
+        PropertyContainer sec = serialize();
+        for (Map.Entry<String, String> m : sec.getProperties().entrySet()) {
+            target.putProperty(m.getKey(), m.getValue());
+        }
+    }
+
+    @NotNull
+    public PropertyContainer serialize() {
+        PropertyContainer container = new PropertyContainer("loading_requirement_container");
+        //Serialize container meta
+        String containerMetaKey = "[loading_requirement_container_meta:" + this.identifier + "]";
+        String containerMetaValue = "[groups:";
+        for (LoadingRequirementGroup g : this.groups) {
+            containerMetaValue += g.identifier + ";";
+        }
+        containerMetaValue += "][instances:";
+        for (LoadingRequirementInstance i : this.instances) {
+            containerMetaValue += i.instanceIdentifier + ";";
+        }
+        containerMetaValue += "]";
+        container.putProperty(containerMetaKey, containerMetaValue);
+        //Serialize groups
+        for (LoadingRequirementGroup g : this.groups) {
+            PropertyContainer sg = LoadingRequirementGroup.serializeRequirementGroup(g);
+            for (Map.Entry<String, String> m : sg.getProperties().entrySet()) {
+                container.putProperty(m.getKey(), m.getValue());
+            }
+        }
+        //Serialize instances
+        for (LoadingRequirementInstance i : this.instances) {
+            List<String> l = LoadingRequirementInstance.serializeRequirementInstance(i);
+            container.putProperty(l.get(0), l.get(1));
+        }
+        return container;
+    }
+
+    @Nullable
+    public static LoadingRequirementContainer deserializeWithIdentifier(@NotNull String identifier, @NotNull PropertyContainer serialized) {
+        for (LoadingRequirementContainer c : deserializeAll(serialized)) {
+            if (c.identifier.equals(Objects.requireNonNull(identifier))) return c;
+        }
+        return null;
+    }
+
+    @NotNull
+    public static List<LoadingRequirementContainer> deserializeAll(@NotNull PropertyContainer serialized) {
+        List<LoadingRequirementContainer> containers = new ArrayList<>();
+        List<List<String>> containerMetas = new ArrayList<>();
+        for (Map.Entry<String, String> m : Objects.requireNonNull(serialized).getProperties().entrySet()) {
+            if (m.getKey().startsWith("[loading_requirement_container_meta:")) {
+                containerMetas.add(ListUtils.build(m.getKey(), m.getValue()));
+            }
+        }
+        LoadingRequirementContainer combined = deserializeToSingleContainer(serialized);
+        if (containerMetas.isEmpty()) {
+            //Legacy support for when requirement containers had no meta and there was only one requirement container per PropertyContainer
+            containers.add(combined);
+        } else {
+            for (List<String> meta : containerMetas) {
+                String key = meta.get(0);
+                String value = meta.get(1);
+                String identifier = key.split(":", 2)[1].replace("]", "");
+                List<String> groupIdentifiers = new ArrayList<>();
+                List<String> instanceIdentifiers = new ArrayList<>();
+                if (value.contains("[groups:")) {
+                    String groupsRaw = value.split("\\[groups:", 2)[1];
+                    if (groupsRaw.contains("]")) {
+                        groupsRaw = groupsRaw.split("]", 2)[0];
+                        if (groupsRaw.contains(";")) {
+                            groupIdentifiers = Arrays.asList(groupsRaw.split(";"));
+                        }
+                    }
+                }
+                if (value.contains("[instances:")) {
+                    String instancesRaw = value.split("\\[instances:", 2)[1];
+                    if (instancesRaw.contains("]")) {
+                        instancesRaw = instancesRaw.split("]", 2)[0];
+                        if (instancesRaw.contains(";")) {
+                            instanceIdentifiers = Arrays.asList(instancesRaw.split(";"));
+                        }
+                    }
+                }
+                if (!identifier.replace(" ", "").isEmpty()) {
+                    LoadingRequirementContainer container = new LoadingRequirementContainer();
+                    container.identifier = identifier;
+                    //Find groups of container
+                    for (String groupId : groupIdentifiers) {
+                        for (LoadingRequirementGroup g : combined.groups) {
+                            if (g.identifier.equals(groupId)) {
+                                container.groups.add(g);
+                                break;
+                            }
+                        }
+                    }
+                    //Find instances of container
+                    for (String instanceId : instanceIdentifiers) {
+                        for (LoadingRequirementInstance i : combined.instances) {
+                            if (i.instanceIdentifier.equals(instanceId)) {
+                                container.instances.add(i);
+                                break;
+                            }
+                        }
+                    }
+                    containers.add(container);
+                }
+            }
+        }
+        return containers;
+    }
+
+    @NotNull
+    public static LoadingRequirementContainer deserializeToSingleContainer(@NotNull PropertyContainer serialized) {
+        LoadingRequirementContainer c = new LoadingRequirementContainer();
+        for (Map.Entry<String, String> m : Objects.requireNonNull(serialized).getProperties().entrySet()) {
+            if (m.getKey().startsWith("[loading_requirement_group:")) {
+                LoadingRequirementGroup g = LoadingRequirementGroup.deserializeRequirementGroup(m.getKey(), m.getValue(), c);
+                if (g != null) {
+                    c.addGroup(g);
+                }
+            }
+        }
+        for (Map.Entry<String, String> m : serialized.getProperties().entrySet()) {
+            if (m.getKey().startsWith("[loading_requirement:")) {
+                LoadingRequirementInstance i = LoadingRequirementInstance.deserializeRequirementInstance(m.getKey(), m.getValue(), c);
+                if (i != null) {
+                    if (i.group != null) {
+                        i.group.addInstance(i);
+                    } else {
+                        c.addInstance(i);
+                    }
+                }
+            }
+        }
+        return c;
+    }
+
     public static LoadingRequirementContainer stackContainers(@NotNull LoadingRequirementContainer... containers) {
         LoadingRequirementContainer stack = new LoadingRequirementContainer();
         for (LoadingRequirementContainer c : containers) {
-            LoadingRequirementContainer copy = c.copy(false);
+            LoadingRequirementContainer copy = c.copy(true);
             stack.instances.addAll(copy.instances);
             stack.groups.addAll(copy.groups);
         }
@@ -175,48 +307,6 @@ public class LoadingRequirementContainer {
             }
         }
         return stack;
-    }
-
-    @NotNull
-    public static PropertyContainer serializeRequirementContainer(LoadingRequirementContainer container) {
-        PropertyContainer sec = new PropertyContainer("loading_requirement_container");
-        for (LoadingRequirementGroup g : container.groups) {
-            PropertyContainer sg = LoadingRequirementGroup.serializeRequirementGroup(g);
-            for (Map.Entry<String, String> m : sg.getProperties().entrySet()) {
-                sec.putProperty(m.getKey(), m.getValue());
-            }
-        }
-        for (LoadingRequirementInstance i : container.instances) {
-            List<String> l = LoadingRequirementInstance.serializeRequirementInstance(i);
-            sec.putProperty(l.get(0), l.get(1));
-        }
-        return sec;
-    }
-
-    @NotNull
-    public static LoadingRequirementContainer deserializeRequirementContainer(PropertyContainer sec) {
-        LoadingRequirementContainer c = new LoadingRequirementContainer();
-        for (Map.Entry<String, String> m : sec.getProperties().entrySet()) {
-            if (m.getKey().startsWith("[loading_requirement_group:")) {
-                LoadingRequirementGroup g = LoadingRequirementGroup.deserializeRequirementGroup(m.getKey(), m.getValue(), c);
-                if (g != null) {
-                    c.addGroup(g);
-                }
-            }
-        }
-        for (Map.Entry<String, String> m : sec.getProperties().entrySet()) {
-            if (m.getKey().startsWith("[loading_requirement:")) {
-                LoadingRequirementInstance i = LoadingRequirementInstance.deserializeRequirementInstance(m.getKey(), m.getValue(), c);
-                if (i != null) {
-                    if (i.group != null) {
-                        i.group.addInstance(i);
-                    } else {
-                        c.addInstance(i);
-                    }
-                }
-            }
-        }
-        return c;
     }
 
 }

@@ -51,7 +51,7 @@ public class LayoutHandler {
 		if (filesArray != null) {
 			for (File f : filesArray) {
 				if (f.getPath().toLowerCase().endsWith(".txt")) {
-					PropertyContainerSet s = PropertiesSerializer.deserializePropertyContainerSet(f.getAbsolutePath().replace("\\", "/"));
+					PropertyContainerSet s = PropertiesSerializer.deserializeSetFromFile(f.getAbsolutePath().replace("\\", "/"));
 					if (s != null) {
 						Layout layout = deserializeLayout(s, f);
 						if (layout != null) {
@@ -231,7 +231,7 @@ public class LayoutHandler {
 		}
 		PropertyContainerSet set = layout.serialize();
 		if (set != null) {
-			PropertiesSerializer.serializePropertyContainerSet(set, f.getPath());
+			PropertiesSerializer.serializeSetToFile(set, f.getPath());
 			return true;
 		}
 		return false;

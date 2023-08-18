@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.properties;
 
 import org.jetbrains.annotations.NotNull;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 

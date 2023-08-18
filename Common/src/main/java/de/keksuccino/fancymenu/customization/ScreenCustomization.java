@@ -201,19 +201,19 @@ public class ScreenCustomization {
 	}
 
 	private static void writeCustomizableScreensToFile() {
-		PropertiesSerializer.serializePropertyContainerSet(customizableScreens, CUSTOMIZABLE_MENUS_FILE.getPath());
+		PropertiesSerializer.serializeSetToFile(customizableScreens, CUSTOMIZABLE_MENUS_FILE.getPath());
 	}
 
 	public static void readCustomizableScreensFromFile() {
 		try {
 			if (!CUSTOMIZABLE_MENUS_FILE.exists()) {
 				CUSTOMIZABLE_MENUS_FILE.createNewFile();
-				PropertiesSerializer.serializePropertyContainerSet(new PropertyContainerSet("customizablemenus"), CUSTOMIZABLE_MENUS_FILE.getPath());
+				PropertiesSerializer.serializeSetToFile(new PropertyContainerSet("customizablemenus"), CUSTOMIZABLE_MENUS_FILE.getPath());
 			}
-			PropertyContainerSet s = PropertiesSerializer.deserializePropertyContainerSet(CUSTOMIZABLE_MENUS_FILE.getPath());
+			PropertyContainerSet s = PropertiesSerializer.deserializeSetFromFile(CUSTOMIZABLE_MENUS_FILE.getPath());
 			if (s == null) {
-				PropertiesSerializer.serializePropertyContainerSet(new PropertyContainerSet("customizablemenus"), CUSTOMIZABLE_MENUS_FILE.getPath());
-				s = PropertiesSerializer.deserializePropertyContainerSet(CUSTOMIZABLE_MENUS_FILE.getPath());
+				PropertiesSerializer.serializeSetToFile(new PropertyContainerSet("customizablemenus"), CUSTOMIZABLE_MENUS_FILE.getPath());
+				s = PropertiesSerializer.deserializeSetFromFile(CUSTOMIZABLE_MENUS_FILE.getPath());
 			}
 			Objects.requireNonNull(s, "[FANCYMENU] Unable to read customizable menus file! PropertyContainer was NULL!");
 			PropertyContainerSet s2 = new PropertyContainerSet("customizablemenus");

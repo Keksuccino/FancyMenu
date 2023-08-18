@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.element.elements.button.custom;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionRegistry;
-import de.keksuccino.fancymenu.customization.action.ExecutableAction;
+import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
@@ -32,7 +32,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         element.label = "New Button";
         element.button = new ExtendedButton(0, 0, 0, 0, Component.literal(""), (press) -> {
             if ((CustomizationOverlay.getCurrentMenuBarInstance() == null) || !CustomizationOverlay.getCurrentMenuBarInstance().isUserNavigatingInMenuBar()) {
-                for (ExecutableAction c : element.getActionList()) {
+                for (ActionInstance c : element.getActionList()) {
                     c.execute();
                 }
             }
@@ -64,14 +64,14 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
                         }
                         Action a = ActionRegistry.getAction(actionIdentifier);
                         if (a != null) {
-                            element.actions.add(new ExecutableAction(a, value));
+                            element.actions.add(new ActionInstance(a, value));
                         }
                     }
                 }
             } else {
                 Action a = ActionRegistry.getAction(buttonAction);
                 if (a != null) {
-                    element.actions.add(new ExecutableAction(a, actionValue));
+                    element.actions.add(new ActionInstance(a, actionValue));
                 }
             }
         }
@@ -91,7 +91,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         element.tooltip = serialized.getValue("description");
 
         element.button = new ExtendedButton(0, 0, 0, 0, Component.literal(""), (press) -> {
-            for (ExecutableAction c : element.getActionList()) {
+            for (ActionInstance c : element.getActionList()) {
                 c.execute();
             }
         });
@@ -137,7 +137,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
 
         if (!element.actions.isEmpty()) {
             String buttonaction = "";
-            for (ExecutableAction c : element.actions) {
+            for (ActionInstance c : element.actions) {
                 String s2 = c.action.getIdentifier();
                 if (c.value != null) {
                     s2 += ";" + c.value;

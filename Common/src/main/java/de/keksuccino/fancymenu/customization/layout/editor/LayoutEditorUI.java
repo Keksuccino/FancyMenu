@@ -462,7 +462,7 @@ public class LayoutEditorUI {
 		menu.addSeparatorEntry("separator_after_close_audio");
 
 		menu.addClickableEntry("layout_wide_requirements", Component.translatable("fancymenu.editor.loading_requirement.layouts.loading_requirements"), (menu1, entry) -> {
-			Minecraft.getInstance().setScreen(new ManageRequirementsScreen(editor.layout.layoutWideLoadingRequirementContainer.copy(true), (call) -> {
+			Minecraft.getInstance().setScreen(new ManageRequirementsScreen(editor.layout.layoutWideLoadingRequirementContainer.copy(false), (call) -> {
 				if (call != null) {
 					editor.layout.layoutWideLoadingRequirementContainer = call;
 				}

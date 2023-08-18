@@ -545,7 +545,7 @@ public class SetupSharingHandler {
             }
             set.putContainer(mods);
 
-            PropertiesSerializer.serializePropertyContainerSet(set, saveToPathWithFileName);
+            PropertiesSerializer.serializeSetToFile(set, saveToPathWithFileName);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -558,7 +558,7 @@ public class SetupSharingHandler {
 
         try {
 
-            PropertyContainerSet set = PropertiesSerializer.deserializePropertyContainerSet(propsFilePath);
+            PropertyContainerSet set = PropertiesSerializer.deserializeSetFromFile(propsFilePath);
             if (set != null) {
                 List<PropertyContainer> metas = set.getContainersOfType("setup-meta");
                 if (!metas.isEmpty()) {
@@ -964,7 +964,7 @@ public class SetupSharingHandler {
                 }
                 File customizableMenusFile = new File(this.setupInstancePath.getPath() + "/config/fancymenu/customizablemenus.txt");
                 if (customizableMenusFile.isFile()) {
-                    PropertyContainerSet menus = PropertiesSerializer.deserializePropertyContainerSet(customizableMenusFile.getPath());
+                    PropertyContainerSet menus = PropertiesSerializer.deserializeSetFromFile(customizableMenusFile.getPath());
                     if (menus != null) {
                         for (PropertyContainer sec : menus.getContainers()) {
                             if (!isValidMenuIdentifier(sec.getType())) {
@@ -995,7 +995,7 @@ public class SetupSharingHandler {
                                 if (fixedIdentifier != null) {
                                     meta.removeProperty("identifier");
                                     meta.putProperty("identifier", fixedIdentifier);
-                                    PropertiesSerializer.serializePropertyContainerSet(m.getValue(), m.getKey());
+                                    PropertiesSerializer.serializeSetToFile(m.getValue(), m.getKey());
                                     LOGGER.info("[FANCYMENU] SETUP IMPORT: Identifier fixed: " + identifier + " -> " + fixedIdentifier);
                                 } else {
                                     LOGGER.warn("[FANCYMENU] SETUP IMPORT: Unable to fix identifier: " + identifier);
@@ -1006,7 +1006,7 @@ public class SetupSharingHandler {
                 }
                 File customizableMenusFile = new File(this.setupInstancePath.getPath() + "/config/fancymenu/customizablemenus.txt");
                 if (customizableMenusFile.isFile()) {
-                    PropertyContainerSet menus = PropertiesSerializer.deserializePropertyContainerSet(customizableMenusFile.getPath());
+                    PropertyContainerSet menus = PropertiesSerializer.deserializeSetFromFile(customizableMenusFile.getPath());
                     if (menus != null) {
                         int fixed = 0;
                         PropertyContainerSet newMenus = new PropertyContainerSet("customizablemenus");
@@ -1027,7 +1027,7 @@ public class SetupSharingHandler {
                             }
                         }
                         if (fixed > 0) {
-                            PropertiesSerializer.serializePropertyContainerSet(newMenus, customizableMenusFile.getPath());
+                            PropertiesSerializer.serializeSetToFile(newMenus, customizableMenusFile.getPath());
                             LOGGER.warn("[FANCYMENU] SETUP IMPORT: CUSTOMIZABLE MENUS FILE: Fixed identifiers successfully written to file!");
                         }
                     }
@@ -1050,7 +1050,7 @@ public class SetupSharingHandler {
                         }
                         for (File f : layouts) {
                             if (f.isFile() && f.getName().toLowerCase().endsWith(".txt")) {
-                                PropertyContainerSet set = PropertiesSerializer.deserializePropertyContainerSet(f.getPath());
+                                PropertyContainerSet set = PropertiesSerializer.deserializeSetFromFile(f.getPath());
                                 if (set != null) {
                                     m.put(f.getPath(), set);
                                 }
@@ -1108,7 +1108,7 @@ public class SetupSharingHandler {
 
         public MenuIdentifierDatabase(File dbFile) {
             try {
-                PropertyContainerSet set = PropertiesSerializer.deserializePropertyContainerSet(dbFile.getPath());
+                PropertyContainerSet set = PropertiesSerializer.deserializeSetFromFile(dbFile.getPath());
                 if (set != null) {
                     for (PropertyContainer s : set.getContainersOfType("identifier-group")) {
                         List<String> l = new ArrayList<>();

@@ -192,7 +192,16 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                 element.stayOnScreen = false;
             }
 
-            element.loadingRequirementContainer = LoadingRequirementContainer.deserializeRequirementContainer(serialized);
+            String loadingRequirementContainerIdentifier = serialized.getValue("element_loading_requirement_container_identifier");
+            if (loadingRequirementContainerIdentifier != null) {
+                LoadingRequirementContainer c = LoadingRequirementContainer.deserializeWithIdentifier(loadingRequirementContainerIdentifier, serialized);
+                if (c != null) {
+                    element.loadingRequirementContainer = c;
+                }
+            } else {
+                //Legacy support for when only one container per element existed
+                element.loadingRequirementContainer = LoadingRequirementContainer.deserializeToSingleContainer(serialized);
+            }
 
             return element;
 
@@ -265,7 +274,7 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
             sec.putProperty("stay_on_screen", "" + element.stayOnScreen);
 
-            element.loadingRequirementContainer.serializeContainerToExistingPropertiesSection(sec);
+            element.loadingRequirementContainer.serializeToExistingPropertyContainer(sec);
 
             return sec;
 

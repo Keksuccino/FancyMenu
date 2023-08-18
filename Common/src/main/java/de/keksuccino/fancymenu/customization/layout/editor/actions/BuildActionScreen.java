@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.layout.editor.actions;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionRegistry;
-import de.keksuccino.fancymenu.customization.action.ExecutableAction;
+import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
@@ -26,8 +26,8 @@ import java.util.function.Consumer;
 
 public class BuildActionScreen extends Screen {
 
-    protected final ExecutableAction instance;
-    protected Consumer<ExecutableAction> callback;
+    protected final ActionInstance instance;
+    protected Consumer<ActionInstance> callback;
     protected Action originalAction = null;
     protected String originalActionValue = null;
 
@@ -37,7 +37,7 @@ public class BuildActionScreen extends Screen {
     protected ExtendedButton doneButton;
     protected ExtendedButton cancelButton;
 
-    public BuildActionScreen(@Nullable ExecutableAction instanceToEdit, @NotNull Consumer<ExecutableAction> callback) {
+    public BuildActionScreen(@Nullable ActionInstance instanceToEdit, @NotNull Consumer<ActionInstance> callback) {
 
         super((instanceToEdit != null) ? Component.translatable("fancymenu.editor.action.screens.edit_action") : Component.translatable("fancymenu.editor.action.screens.add_action"));
 
@@ -45,7 +45,7 @@ public class BuildActionScreen extends Screen {
             this.originalAction = instanceToEdit.action;
             this.originalActionValue = instanceToEdit.value;
         }
-        this.instance = (instanceToEdit != null) ? instanceToEdit : new ExecutableAction(Action.EMPTY, null);
+        this.instance = (instanceToEdit != null) ? instanceToEdit : new ActionInstance(Action.EMPTY, null);
         this.callback = callback;
         this.setContentOfActionsList();
 

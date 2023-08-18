@@ -60,7 +60,7 @@ public class ButtonScriptHandler {
 	public static class ButtonScript {
 
 		public final File scriptFile;
-		public final List<ExecutableAction> actions = new ArrayList<>();
+		public final List<ActionInstance> actions = new ArrayList<>();
 
 		public ButtonScript(File scriptFile) {
 			this.scriptFile = scriptFile;
@@ -75,13 +75,13 @@ public class ButtonScriptHandler {
 				}
 				Action a = ActionRegistry.getAction(identifier);
 				if (a != null) {
-					this.actions.add(new ExecutableAction(a, value));
+					this.actions.add(new ActionInstance(a, value));
 				}
 			}
 		}
 
 		public void runScript() {
-			for (ExecutableAction a : this.actions) {
+			for (ActionInstance a : this.actions) {
 				a.execute();
 			}
 		}

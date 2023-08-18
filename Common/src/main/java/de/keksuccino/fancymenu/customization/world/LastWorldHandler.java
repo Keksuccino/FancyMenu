@@ -43,7 +43,7 @@ public class LastWorldHandler {
             if (!LAST_WORLD_SAVE_FILE.isFile()) {
                 writeFile();
             }
-            PropertyContainerSet set = PropertiesSerializer.deserializePropertyContainerSet(LAST_WORLD_SAVE_FILE.getPath());
+            PropertyContainerSet set = PropertiesSerializer.deserializeSetFromFile(LAST_WORLD_SAVE_FILE.getPath());
             if (set != null) {
                 List<PropertyContainer> secs = set.getContainersOfType("last_world");
                 if (!secs.isEmpty()) {
@@ -73,7 +73,7 @@ public class LastWorldHandler {
             sec.putProperty("is_server", "" + isServer);
             sec.putProperty("world", lastWorld);
             set.putContainer(sec);
-            PropertiesSerializer.serializePropertyContainerSet(set, LAST_WORLD_SAVE_FILE.getPath());
+            PropertiesSerializer.serializeSetToFile(set, LAST_WORLD_SAVE_FILE.getPath());
         } catch (Exception e) {
             e.printStackTrace();
         }
