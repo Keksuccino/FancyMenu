@@ -3,13 +3,13 @@ package de.keksuccino.fancymenu.customization.element.elements.button.custom;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.action.ActionInstance;
+import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.widget.VanillaButtonHandler;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.element.IActionExecutorElement;
+import de.keksuccino.fancymenu.customization.element.IExecutableElement;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinButton;
@@ -31,11 +31,10 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class ButtonElement extends AbstractElement implements IActionExecutorElement {
+public class ButtonElement extends AbstractElement implements IExecutableElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -54,7 +53,8 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
     public String backgroundAnimationInactive;
     public boolean loopBackgroundAnimations = true;
     public boolean restartBackgroundAnimationsOnHover = true;
-    public List<ActionInstance> actions = new ArrayList<>();
+    @NotNull
+    public GenericExecutableBlock actionExecutor = new GenericExecutableBlock();
 
     protected Object lastBackgroundNormal;
     protected Object lastBackgroundHover;
@@ -330,8 +330,8 @@ public class ButtonElement extends AbstractElement implements IActionExecutorEle
     }
 
     @Override
-    public @NotNull List<ActionInstance> getActionList() {
-        return this.actions;
+    public @NotNull GenericExecutableBlock getExecutableBlock() {
+        return this.actionExecutor;
     }
 
 }

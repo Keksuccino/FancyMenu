@@ -14,6 +14,10 @@ import java.util.*;
 
 public class ActionInstance implements Executable {
 
+    //TODO add ELSE and ELSE-IF block and think about how to handle that sh!t
+
+    //TODO update the action builder screen to support blocks
+
     private static final Logger LOGGER = LogManager.getLogger();
 
     @NotNull
@@ -26,6 +30,11 @@ public class ActionInstance implements Executable {
     public ActionInstance(@NotNull Action action, @Nullable String value) {
         this.action = Objects.requireNonNull(action);
         this.value = value;
+    }
+
+    @Override
+    public @NotNull String getIdentifier() {
+        return this.identifier;
     }
 
     public void execute() {
@@ -64,13 +73,6 @@ public class ActionInstance implements Executable {
         String val = this.value;
         c.putProperty(key, (val != null) ? val : "");
         return c;
-    }
-
-    public void serializeToExistingPropertyContainer(@NotNull PropertyContainer container) {
-        PropertyContainer c = this.serialize();
-        for (Map.Entry<String, String> m : c.getProperties().entrySet()) {
-            container.putProperty(m.getKey(), m.getValue());
-        }
     }
 
     @NotNull

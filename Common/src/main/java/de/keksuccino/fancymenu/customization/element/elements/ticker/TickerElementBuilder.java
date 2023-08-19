@@ -1,8 +1,9 @@
 package de.keksuccino.fancymenu.customization.element.elements.ticker;
 
-import de.keksuccino.fancymenu.customization.action.Action;
-import de.keksuccino.fancymenu.customization.action.ActionRegistry;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
+import de.keksuccino.fancymenu.customization.action.ExecutableBlockDeserializer;
+import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.events.ModReloadEvent;
@@ -84,26 +85,16 @@ public class TickerElementBuilder extends ElementBuilder<TickerElement, TickerEd
 
         TickerElement element = this.buildDefaultInstance();
 
-        Map<Integer, ActionInstance> tempActions = new HashMap<>();
-        for (Map.Entry<String, String> m : serialized.getProperties().entrySet()) {
-            //tickeraction_<index>_ACTION
-            if (m.getKey().startsWith("tickeraction_")) {
-                String index = m.getKey().split("_", 3)[1];
-                String tickerAction = m.getKey().split("_", 3)[2];
-                String actionValue = m.getValue();
-                if (MathUtils.isInteger(index)) {
-                    Action a = ActionRegistry.getAction(tickerAction);
-                    if (a != null) {
-                        tempActions.put(Integer.parseInt(index), new ActionInstance(a, actionValue));
-                    }
-                }
+        String tickerExecutableBlockId = serialized.getValue("ticker_element_executable_block_identifier");
+        if (tickerExecutableBlockId != null) {
+            AbstractExecutableBlock b = ExecutableBlockDeserializer.deserializeWithIdentifier(serialized, tickerExecutableBlockId);
+            if (b instanceof GenericExecutableBlock g) {
+                element.actionExecutor = g;
             }
-        }
-        List<Integer> indexes = new ArrayList<>(tempActions.keySet());
-        Collections.sort(indexes);
-        element.actions.clear();
-        for (int i : indexes) {
-            element.actions.add(tempActions.get(i));
+        } else {
+            //Legacy support for old ticker action format
+            GenericExecutableBlock g = new GenericExecutableBlock();
+            g.getExecutables().addAll(ActionInstance.deserializeAll(serialized));
         }
 
         String tickDelayMsString = serialized.getValue("tick_delay");
@@ -134,15 +125,9 @@ public class TickerElementBuilder extends ElementBuilder<TickerElement, TickerEd
         serializeTo.putProperty("is_async", "" + element.isAsync);
         serializeTo.putProperty("tick_delay", "" + element.tickDelayMs);
         serializeTo.putProperty("tick_mode", "" + element.tickMode.name);
-        int index = 0;
-        for (ActionInstance c : element.actions) {
-            String v = c.value;
-            if (v == null) {
-                v = "";
-            }
-            serializeTo.putProperty("tickeraction_" + index + "_" + c.action.getIdentifier(), v);
-            index++;
-        }
+
+        serializeTo.putProperty("ticker_element_executable_block_identifier", element.actionExecutor.identifier);
+        element.actionExecutor.serializeToExistingPropertyContainer(serializeTo);
 
         return serializeTo;
         

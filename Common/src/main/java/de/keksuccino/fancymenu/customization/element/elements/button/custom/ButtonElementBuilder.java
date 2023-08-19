@@ -1,8 +1,9 @@
 package de.keksuccino.fancymenu.customization.element.elements.button.custom;
 
-import de.keksuccino.fancymenu.customization.action.Action;
-import de.keksuccino.fancymenu.customization.action.ActionRegistry;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
+import de.keksuccino.fancymenu.customization.action.ExecutableBlockDeserializer;
+import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
@@ -11,7 +12,6 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.ExtendedButton;
-import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -32,9 +32,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         element.label = "New Button";
         element.button = new ExtendedButton(0, 0, 0, 0, Component.literal(""), (press) -> {
             if ((CustomizationOverlay.getCurrentMenuBarInstance() == null) || !CustomizationOverlay.getCurrentMenuBarInstance().isUserNavigatingInMenuBar()) {
-                for (ActionInstance c : element.getActionList()) {
-                    c.execute();
-                }
+                element.getExecutableBlock().execute();
             }
         });
         return element;
@@ -47,33 +45,16 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
 
         element.label = serialized.getValue("label");
 
-        String buttonAction = serialized.getValue("buttonaction");
-        String actionValue = serialized.getValue("value");
-        if (actionValue == null) {
-            actionValue = "";
-        }
-        if (buttonAction != null) {
-            if (buttonAction.contains("%btnaction_splitter_fm%")) {
-                for (String s : StringUtils.splitLines(buttonAction, "%btnaction_splitter_fm%")) {
-                    if (s.length() > 0) {
-                        String actionIdentifier = s;
-                        String value = null;
-                        if (s.contains(";")) {
-                            actionIdentifier = s.split(";", 2)[0];
-                            value = s.split(";", 2)[1];
-                        }
-                        Action a = ActionRegistry.getAction(actionIdentifier);
-                        if (a != null) {
-                            element.actions.add(new ActionInstance(a, value));
-                        }
-                    }
-                }
-            } else {
-                Action a = ActionRegistry.getAction(buttonAction);
-                if (a != null) {
-                    element.actions.add(new ActionInstance(a, actionValue));
-                }
+        String buttonExecutableBlockId = serialized.getValue("button_element_executable_block_identifier");
+        if (buttonExecutableBlockId != null) {
+            AbstractExecutableBlock b = ExecutableBlockDeserializer.deserializeWithIdentifier(serialized, buttonExecutableBlockId);
+            if (b instanceof GenericExecutableBlock g) {
+                element.actionExecutor = g;
             }
+        } else {
+            //Legacy support for old button action format
+            GenericExecutableBlock g = new GenericExecutableBlock();
+            g.getExecutables().addAll(ActionInstance.deserializeAll(serialized));
         }
 
         element.hoverSound = serialized.getValue("hoversound");
@@ -91,9 +72,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         element.tooltip = serialized.getValue("description");
 
         element.button = new ExtendedButton(0, 0, 0, 0, Component.literal(""), (press) -> {
-            for (ActionInstance c : element.getActionList()) {
-                c.execute();
-            }
+            element.getExecutableBlock().execute();
         });
 
         element.clickSound = serialized.getValue("clicksound");
@@ -135,17 +114,8 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
     @Override
     protected @NotNull SerializedElement serializeElement(@NotNull ButtonElement element, @NotNull SerializedElement serializeTo) {
 
-        if (!element.actions.isEmpty()) {
-            String buttonaction = "";
-            for (ActionInstance c : element.actions) {
-                String s2 = c.action.getIdentifier();
-                if (c.value != null) {
-                    s2 += ";" + c.value;
-                }
-                buttonaction += s2 + "%btnaction_splitter_fm%";
-            }
-            serializeTo.putProperty("buttonaction", buttonaction);
-        }
+        serializeTo.putProperty("button_element_executable_block_identifier", element.actionExecutor.identifier);
+        element.actionExecutor.serializeToExistingPropertyContainer(serializeTo);
 
         if (element.backgroundTextureNormal != null) {
             serializeTo.putProperty("backgroundnormal", element.backgroundTextureNormal);

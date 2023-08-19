@@ -2,21 +2,20 @@ package de.keksuccino.fancymenu.customization.element.elements.ticker;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.action.ActionInstance;
+import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.element.IActionExecutorElement;
+import de.keksuccino.fancymenu.customization.element.IExecutableElement;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
-import java.util.*;
-import java.util.List;
 
-public class TickerElement extends AbstractElement implements IActionExecutorElement {
+public class TickerElement extends AbstractElement implements IExecutableElement {
 
-    public volatile List<ActionInstance> actions = new ArrayList<>();
+    @NotNull
+    public volatile GenericExecutableBlock actionExecutor = new GenericExecutableBlock();
     public volatile long tickDelayMs = 0;
     public volatile boolean isAsync = false;
     public volatile TickMode tickMode = TickMode.NORMAL;
@@ -46,9 +45,7 @@ public class TickerElement extends AbstractElement implements IActionExecutorEle
             if ((this.tickDelayMs <= 0) || ((this.lastTick + this.tickDelayMs) <= now)) {
                 this.lastTick = now;
                 this.ticked = true;
-                for (ActionInstance a : this.actions) {
-                    a.execute();
-                }
+                this.actionExecutor.execute();
             }
         }
     }
@@ -96,8 +93,8 @@ public class TickerElement extends AbstractElement implements IActionExecutorEle
 
     
     @Override
-    public @NotNull List<ActionInstance> getActionList() {
-        return this.actions;
+    public @NotNull GenericExecutableBlock getExecutableBlock() {
+        return this.actionExecutor;
     }
 
     public static class TickerElementThreadController {

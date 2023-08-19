@@ -1,6 +1,7 @@
-package de.keksuccino.fancymenu.customization.action;
+package de.keksuccino.fancymenu.customization.action.blocks;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.action.Executable;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -14,6 +15,14 @@ public abstract class AbstractExecutableBlock implements Executable {
     protected final List<Executable> executables = new ArrayList<>();
     @NotNull
     public String identifier = ScreenCustomization.generateUniqueIdentifier();
+
+    @NotNull
+    @Override
+    public String getIdentifier() {
+        return this.identifier;
+    }
+
+    public abstract String getBlockType();
 
     public void execute() {
         for (Executable e : this.executables) {
@@ -40,26 +49,19 @@ public abstract class AbstractExecutableBlock implements Executable {
         return this;
     }
 
-    //TODO Make button elements and ticker elements use an ExecutableBlock instance instead of lists with action instances
-
+    @Override
     @NotNull
     public PropertyContainer serialize() {
-
-    }
-
-    public void serializeToExistingPropertiesContainer(@NotNull PropertyContainer container) {
-
-    }
-
-    //TODO remove the following two methods and only add them to all sub classes of AbstractExecutableBlock, to be able to deserialize them
-    @Nullable
-    public static AbstractExecutableBlock deserializeWithIdentifier(@NotNull String identifier, @NotNull PropertyContainer serialized) {
-
-    }
-
-    @NotNull
-    public static List<AbstractExecutableBlock> deserializeAll(@NotNull PropertyContainer serialized) {
-
+        PropertyContainer container = new PropertyContainer("executable_block");
+        String key = "[executable_block:" + this.identifier + "][type:" + this.getBlockType() + "]";
+        String value = "[executables:";
+        for (Executable e : this.executables) {
+            value += e.getIdentifier() + ";";
+            e.serializeToExistingPropertyContainer(container);
+        }
+        value += "]";
+        container.putProperty(key, value);
+        return container;
     }
 
 }
