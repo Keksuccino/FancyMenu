@@ -257,7 +257,7 @@ public class Layout extends LayoutBase {
 
                 layout.customMenuTitle = meta.getValue("custom_menu_title");
 
-                layout.layoutWideLoadingRequirementContainer = LoadingRequirementContainer.deserialize(meta);
+                layout.layoutWideLoadingRequirementContainer = LoadingRequirementContainer.deserializeToSingleContainer(meta);
 
                 String renderBehindVanilla = meta.getValue("render_custom_elements_behind_vanilla");
                 if (renderBehindVanilla == null) {
@@ -903,7 +903,7 @@ public class Layout extends LayoutBase {
                 }
 
                 if (action.equalsIgnoreCase("vanilla_button_visibility_requirements")) {
-                    element.loadingRequirementContainer = LoadingRequirementContainer.deserialize(sec);
+                    element.loadingRequirementContainer = LoadingRequirementContainer.deserializeToSingleContainer(sec);
                     addElement = true;
                 }
 

@@ -1,8 +1,10 @@
-package de.keksuccino.fancymenu.customization.action;
+package de.keksuccino.fancymenu.customization.action.blocks;
 
-import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
-import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
-import de.keksuccino.fancymenu.customization.action.blocks.IfExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.ActionInstance;
+import de.keksuccino.fancymenu.customization.action.Executable;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseIfExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.konkrete.input.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -17,7 +19,7 @@ public class ExecutableBlockDeserializer {
     @NotNull
     public static List<AbstractExecutableBlock> deserializeAll(@NotNull PropertyContainer serialized) {
 
-        Map<AbstractExecutableBlock, List<String>> executableBlocks = new LinkedHashMap<>();
+        Map<AbstractExecutableBlock, BlockMeta> executableBlocks = new LinkedHashMap<>();
 
         for (Map.Entry<String, String> m : serialized.getProperties().entrySet()) {
             if (m.getKey().startsWith("[executable_block:") && m.getKey().contains("]")) {
@@ -30,14 +32,21 @@ public class ExecutableBlockDeserializer {
                         if (b != null) {
                             String contentRaw = m.getValue();
                             if (contentRaw.contains("[executables:") && contentRaw.contains("]")) {
-                                List<String> content = new ArrayList<>();
+                                BlockMeta meta = new BlockMeta();
                                 contentRaw = contentRaw.split("\\[executables:", 2)[1].split("]", 2)[0];
                                 if (contentRaw.contains(";")) {
-                                    content = Arrays.asList(StringUtils.splitLines(contentRaw, ";"));
+                                    meta.content = Arrays.asList(StringUtils.splitLines(contentRaw, ";"));
                                 } else {
-                                    content.add(contentRaw);
+                                    meta.content.add(contentRaw);
                                 }
-                                executableBlocks.put(b, content);
+                                if (m.getValue().contains("[child:")) {
+                                    String childIdentifier = m.getValue().split("\\[child:", 2)[1];
+                                    if (childIdentifier.contains("]")) {
+                                        childIdentifier = childIdentifier.split("]", 2)[0];
+                                        meta.childIdentifier = childIdentifier;
+                                    }
+                                }
+                                executableBlocks.put(b, meta);
                             }
                         }
                     }
@@ -49,14 +58,22 @@ public class ExecutableBlockDeserializer {
         possibleContent.addAll(executableBlocks.keySet());
         possibleContent.addAll(ActionInstance.deserializeAll(serialized));
 
-        //Add contents to all blocks
-        for (Map.Entry<AbstractExecutableBlock, List<String>> m : executableBlocks.entrySet()) {
+        //Add contents and children to all blocks
+        for (Map.Entry<AbstractExecutableBlock, BlockMeta> m : executableBlocks.entrySet()) {
             AbstractExecutableBlock b = m.getKey();
-            List<String> content = m.getValue();
+            List<String> content = m.getValue().content;
             for (String executableId : content) {
                 for (Executable executable : possibleContent) {
                     if (executable.getIdentifier().equals(executableId)) {
                         b.addExecutable(executable);
+                        break;
+                    }
+                }
+            }
+            if (m.getValue().childIdentifier != null) {
+                for (Executable executable : possibleContent) {
+                    if (executable.getIdentifier().equals(m.getValue().childIdentifier) && (executable instanceof AbstractExecutableBlock aeb)) {
+                        b.setChild(aeb);
                         break;
                     }
                 }
@@ -85,7 +102,16 @@ public class ExecutableBlockDeserializer {
     public static AbstractExecutableBlock deserializeEmptyWithTypeAndIdentifier(@NotNull PropertyContainer serialized, @NotNull String type, @NotNull String identifier) {
         if (type.equals("generic")) return GenericExecutableBlock.deserializeEmptyWithIdentifier(serialized, identifier);
         if (type.equals("if")) return IfExecutableBlock.deserializeEmptyWithIdentifier(serialized, identifier);
+        if (type.equals("else-if")) return ElseIfExecutableBlock.deserializeEmptyWithIdentifier(serialized, identifier);
+        if (type.equals("else")) return ElseExecutableBlock.deserializeEmptyWithIdentifier(serialized, identifier);
         return null;
+    }
+
+    protected static class BlockMeta {
+        @NotNull
+        protected List<String> content = new ArrayList<>();
+        @Nullable
+        protected String childIdentifier;
     }
 
 }

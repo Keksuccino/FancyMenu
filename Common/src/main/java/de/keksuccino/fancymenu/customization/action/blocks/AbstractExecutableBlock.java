@@ -10,8 +10,11 @@ import java.util.List;
 
 public abstract class AbstractExecutableBlock implements Executable {
 
-    @Nullable
-    public AbstractExecutableBlock parent;
+    //TODO Blocks sollten soweit fertig sein, also als nächstes Action Builder UI rewriten und if/else-if/else support adden
+    //TODO Blocks sollten soweit fertig sein, also als nächstes Action Builder UI rewriten und if/else-if/else support adden
+    //TODO Blocks sollten soweit fertig sein, also als nächstes Action Builder UI rewriten und if/else-if/else support adden
+    //TODO Blocks sollten soweit fertig sein, also als nächstes Action Builder UI rewriten und if/else-if/else support adden
+
     protected final List<Executable> executables = new ArrayList<>();
     @NotNull
     public String identifier = ScreenCustomization.generateUniqueIdentifier();
@@ -49,6 +52,14 @@ public abstract class AbstractExecutableBlock implements Executable {
         return this;
     }
 
+    @Nullable
+    public AbstractExecutableBlock getChild() {
+        return null;
+    }
+
+    public void setChild(@Nullable AbstractExecutableBlock child) {
+    }
+
     @Override
     @NotNull
     public PropertyContainer serialize() {
@@ -60,7 +71,13 @@ public abstract class AbstractExecutableBlock implements Executable {
             e.serializeToExistingPropertyContainer(container);
         }
         value += "]";
+        if (this.getChild() != null) {
+            value += "[child:" + this.getChild().getIdentifier() + "]";
+        }
         container.putProperty(key, value);
+        if (this.getChild() != null) {
+            this.getChild().serializeToExistingPropertyContainer(container);
+        }
         return container;
     }
 

@@ -17,7 +17,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -70,7 +69,7 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
 
         this.updateCachedElements();
 
-        if (!FancyMenu.getOptions().alwaysShowAnchorOverlay.getValue() && !this.isElementPressed()) return;
+        if (!FancyMenu.getOptions().alwaysShowAnchorOverlay.getValue() && (!this.isElementPressed() || !this.allSelectedElementsMovable())) return;
 
         if ((this.initialHoverArea != null) && (!this.initialHoverArea.isMouseOver(mouseX, mouseY))) {
             this.initialHoverArea = null;
@@ -184,7 +183,7 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
     }
 
     protected void handleAreaMouseOver(int mouseX, int mouseY) {
-        if (this.leftMouseDown && (this.initialHoverArea == null) && this.mouseDragged) {
+        if (this.leftMouseDown && (this.initialHoverArea == null) && this.mouseDragged && this.allSelectedElementsMovable()) {
             this.currentMouseOverArea = this.getMouseOverArea(mouseX, mouseY);
             if (!FancyMenu.getOptions().changeAnchorOnHover.getValue()) this.currentMouseOverArea = null;
             if (this.isElementGettingResized()) this.currentMouseOverArea = null;
@@ -209,6 +208,13 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
             this.lastTickMouseOverArea = null;
             this.areaMouseOverStartTime = -1;
         }
+    }
+
+    public boolean allSelectedElementsMovable() {
+        for (AbstractEditorElement e : this.elements) {
+            if ((e.isSelected() || e.isMultiSelected()) && !e.settings.isMovable()) return false;
+        }
+        return true;
     }
 
     protected boolean isAlreadyAttachedToAnchor(@NotNull AbstractEditorElement element, @NotNull AnchorPointArea area) {

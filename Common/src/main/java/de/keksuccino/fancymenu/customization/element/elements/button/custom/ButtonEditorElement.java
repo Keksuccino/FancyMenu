@@ -29,14 +29,15 @@ public class ButtonEditorElement extends AbstractEditorElement {
         super.init();
 
         this.rightClickMenu.addClickableEntry("manage_actions", Component.translatable("fancymenu.editor.action.screens.manage_screen.manage"), (menu, entry) -> {
-            ManageActionsScreen s = new ManageActionsScreen(this.getButtonElement().actions, (call) -> {
-                if (call != null) {
-                    this.editor.history.saveSnapshot();
-                    this.getButtonElement().actions = call;
-                }
-                Minecraft.getInstance().setScreen(this.editor);
-            });
-            Minecraft.getInstance().setScreen(s);
+            //TODO MAKE THIS WORK AGAIN!!!!
+//            ManageActionsScreen s = new ManageActionsScreen(this.getButtonElement().actions, (call) -> {
+//                if (call != null) {
+//                    this.editor.history.saveSnapshot();
+//                    this.getButtonElement().actions = call;
+//                }
+//                Minecraft.getInstance().setScreen(this.editor);
+//            });
+//            Minecraft.getInstance().setScreen(s);
         }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.elements.button.manage_actions.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"));
 

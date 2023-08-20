@@ -41,11 +41,12 @@ public class ManageActionsScreen extends Screen {
 
         super(Component.translatable("fancymenu.editor.action.screens.manage_screen.manage"));
 
-        for (ActionInstance a : actions) {
-            this.actions.add(a.copy());
-        }
-        this.callback = callback;
-        this.updateActionInstanceScrollArea(false);
+        //TODO MAKE THIS WORK AGAIN!!!
+//        for (ActionInstance a : actions) {
+//            this.actions.add(a.copy());
+//        }
+//        this.callback = callback;
+//        this.updateActionInstanceScrollArea(false);
 
     }
 
@@ -140,23 +141,24 @@ public class ManageActionsScreen extends Screen {
         UIBase.applyDefaultWidgetSkinTo(this.moveDownButton);
 
         this.editButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.edit_action"), (button) -> {
-            ActionInstance a = this.getSelectedInstance();
-            if (a != null) {
-                BuildActionScreen s = new BuildActionScreen(a.copy(), (call) -> {
-                    if (call != null) {
-                        int index = this.actions.indexOf(a);
-                        this.actions.remove(a);
-                        if (index != -1) {
-                            this.actions.add(index, call);
-                        } else {
-                            this.actions.add(call);
-                        }
-                        this.updateActionInstanceScrollArea(false);
-                    }
-                    Minecraft.getInstance().setScreen(this);
-                });
-                Minecraft.getInstance().setScreen(s);
-            }
+            //TODO MAKE THIS WORK AGAIN!!!
+//            ActionInstance a = this.getSelectedInstance();
+//            if (a != null) {
+//                BuildActionScreen s = new BuildActionScreen(a.copy(), (call) -> {
+//                    if (call != null) {
+//                        int index = this.actions.indexOf(a);
+//                        this.actions.remove(a);
+//                        if (index != -1) {
+//                            this.actions.add(index, call);
+//                        } else {
+//                            this.actions.add(call);
+//                        }
+//                        this.updateActionInstanceScrollArea(false);
+//                    }
+//                    Minecraft.getInstance().setScreen(this);
+//                });
+//                Minecraft.getInstance().setScreen(s);
+//            }
         }) {
             @Override
             public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {

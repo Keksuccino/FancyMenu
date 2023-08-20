@@ -27,14 +27,15 @@ public class TickerEditorElement extends AbstractEditorElement {
         super.init();
 
         this.rightClickMenu.addClickableEntry("manage_actions", Component.translatable("fancymenu.editor.action.screens.manage_screen.manage"), (menu, entry) -> {
-            ManageActionsScreen s = new ManageActionsScreen(this.getTickerElement().actions, (call) -> {
-                if (call != null) {
-                    this.editor.history.saveSnapshot();
-                    this.getTickerElement().actions = call;
-                }
-                Minecraft.getInstance().setScreen(this.editor);
-            });
-            Minecraft.getInstance().setScreen(s);
+            //TODO MAKE THIS WORK AGAIN!!!!
+//            ManageActionsScreen s = new ManageActionsScreen(this.getTickerElement().actions, (call) -> {
+//                if (call != null) {
+//                    this.editor.history.saveSnapshot();
+//                    this.getTickerElement().actions = call;
+//                }
+//                Minecraft.getInstance().setScreen(this.editor);
+//            });
+//            Minecraft.getInstance().setScreen(s);
         }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.elements.ticker.manage_actions.desc")));
 
         this.rightClickMenu.addSeparatorEntry("ticker_separator_1");
