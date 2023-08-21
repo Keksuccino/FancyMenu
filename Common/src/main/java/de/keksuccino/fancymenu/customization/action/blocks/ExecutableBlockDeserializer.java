@@ -39,8 +39,8 @@ public class ExecutableBlockDeserializer {
                                 } else {
                                     meta.content.add(contentRaw);
                                 }
-                                if (m.getValue().contains("[child:")) {
-                                    String childIdentifier = m.getValue().split("\\[child:", 2)[1];
+                                if (m.getValue().contains("[appended:")) {
+                                    String childIdentifier = m.getValue().split("\\[appended:", 2)[1];
                                     if (childIdentifier.contains("]")) {
                                         childIdentifier = childIdentifier.split("]", 2)[0];
                                         meta.childIdentifier = childIdentifier;
@@ -73,7 +73,7 @@ public class ExecutableBlockDeserializer {
             if (m.getValue().childIdentifier != null) {
                 for (Executable executable : possibleContent) {
                     if (executable.getIdentifier().equals(m.getValue().childIdentifier) && (executable instanceof AbstractExecutableBlock aeb)) {
-                        b.setChild(aeb);
+                        b.setAppendedBlock(aeb);
                         break;
                     }
                 }

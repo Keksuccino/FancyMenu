@@ -53,11 +53,11 @@ public abstract class AbstractExecutableBlock implements Executable {
     }
 
     @Nullable
-    public AbstractExecutableBlock getChild() {
+    public AbstractExecutableBlock getAppendedBlock() {
         return null;
     }
 
-    public void setChild(@Nullable AbstractExecutableBlock child) {
+    public void setAppendedBlock(@Nullable AbstractExecutableBlock appended) {
     }
 
     @Override
@@ -71,12 +71,12 @@ public abstract class AbstractExecutableBlock implements Executable {
             e.serializeToExistingPropertyContainer(container);
         }
         value += "]";
-        if (this.getChild() != null) {
-            value += "[child:" + this.getChild().getIdentifier() + "]";
+        if (this.getAppendedBlock() != null) {
+            value += "[appended:" + this.getAppendedBlock().getIdentifier() + "]";
         }
         container.putProperty(key, value);
-        if (this.getChild() != null) {
-            this.getChild().serializeToExistingPropertyContainer(container);
+        if (this.getAppendedBlock() != null) {
+            this.getAppendedBlock().serializeToExistingPropertyContainer(container);
         }
         return container;
     }

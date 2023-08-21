@@ -12,6 +12,9 @@ public interface Executable {
     String getIdentifier();
 
     @NotNull
+    Executable copy(boolean unique);
+
+    @NotNull
     PropertyContainer serialize();
 
     default void serializeToExistingPropertyContainer(@NotNull PropertyContainer container) {

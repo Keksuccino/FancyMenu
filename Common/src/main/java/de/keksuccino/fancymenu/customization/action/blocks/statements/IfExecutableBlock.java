@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.action.blocks.statements;
 
+import de.keksuccino.fancymenu.customization.action.Executable;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
@@ -37,14 +38,26 @@ public class IfExecutableBlock extends AbstractExecutableBlock {
     }
 
     @Override
-    public void setChild(@Nullable AbstractExecutableBlock child) {
-        this.child = child;
+    public void setAppendedBlock(@Nullable AbstractExecutableBlock appended) {
+        this.child = appended;
     }
 
     @Nullable
     @Override
-    public AbstractExecutableBlock getChild() {
+    public AbstractExecutableBlock getAppendedBlock() {
         return this.child;
+    }
+
+    @Override
+    public @NotNull IfExecutableBlock copy(boolean unique) {
+        IfExecutableBlock b = new IfExecutableBlock();
+        if (!unique) b.identifier = this.identifier;
+        if (this.getAppendedBlock() != null) b.setAppendedBlock((AbstractExecutableBlock)this.getAppendedBlock().copy(unique));
+        for (Executable e : this.executables) {
+            b.addExecutable(e.copy(unique));
+        }
+        b.body = this.body.copy(unique);
+        return b;
     }
 
     public boolean check() {

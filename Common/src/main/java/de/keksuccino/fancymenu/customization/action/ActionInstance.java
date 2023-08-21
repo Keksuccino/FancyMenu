@@ -14,10 +14,6 @@ import java.util.*;
 
 public class ActionInstance implements Executable {
 
-    //TODO add ELSE and ELSE-IF block and think about how to handle that sh!t
-
-    //TODO update the action builder screen to support blocks
-
     private static final Logger LOGGER = LogManager.getLogger();
 
     @NotNull

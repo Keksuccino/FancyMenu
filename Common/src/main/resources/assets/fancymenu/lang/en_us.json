@@ -990,10 +990,10 @@
   "fancymenu.editor.action.screens.manage_screen.info.value.none": "NONE",
   "fancymenu.editor.action.screens.manage_screen.manage": "Manage Actions",
   "fancymenu.editor.action.screens.manage_screen.actions": "Actions",
-  "fancymenu.editor.action.screens.move_action_up": "Move Action Up",
-  "fancymenu.editor.action.screens.move_action_up.desc": "Move this action up in the list,\nso it gets executed earlier.",
-  "fancymenu.editor.action.screens.move_action_down": "Move Action Down",
-  "fancymenu.editor.action.screens.move_action_down.desc": "Move this action down in the list,\nso it gets executed later.",
+  "fancymenu.editor.action.screens.move_action_up": "Move Up",
+  "fancymenu.editor.action.screens.move_action_up.desc": "Moves the selected entry up in the list,\nso it gets executed earlier.",
+  "fancymenu.editor.action.screens.move_action_down": "Move Down",
+  "fancymenu.editor.action.screens.move_action_down.desc": "Moves the selected entry down in the list,\nso it gets executed later.",
   "fancymenu.editor.elements.button.manage_actions.desc": "Manage the actions this button\nshould execute when clicked.",
   "fancymenu.editor.elements.ticker.manage_actions.desc": "Manage the actions this ticker\nshould execute.",
   "fancymenu.guicomponents.confirm": "Confirm",
@@ -1243,5 +1243,8 @@
   "fancymenu.customization.elements.cursor.hotspot_y": "Hotspot Y-Coordinate",
   "fancymenu.customization.elements.cursor.hotspot_y.desc": "The hotspot of a cursor is the\npixel of the cursor texture where\nclicks get registered.\nFor a normal arrow cursor, this\nwould be the tip of the arrow.\n\nThe X0 Y0 coordinate of a texture\nis at its top-left corner.",
   "fancymenu.customization.elements.cursor.editor_preview_mode": "Editor Preview Mode: %s",
-  "fancymenu.customization.elements.cursor.editor_preview_mode.desc": "Shows the custom cursor in the editor\nwhen hovering over the cursor element."
+  "fancymenu.customization.elements.cursor.editor_preview_mode.desc": "Shows the custom cursor in the editor\nwhen hovering over the cursor element.",
+  "fancymenu.editor.actions.blocks.if": "IF (%s)",
+  "fancymenu.editor.actions.blocks.else_if": "ELSE-IF (%s)",
+  "fancymenu.editor.actions.blocks.else": "ELSE"
 }

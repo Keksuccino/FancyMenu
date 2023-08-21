@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -27,16 +28,17 @@ public class TickerEditorElement extends AbstractEditorElement {
         super.init();
 
         this.rightClickMenu.addClickableEntry("manage_actions", Component.translatable("fancymenu.editor.action.screens.manage_screen.manage"), (menu, entry) -> {
-            //TODO MAKE THIS WORK AGAIN!!!!
-//            ManageActionsScreen s = new ManageActionsScreen(this.getTickerElement().actions, (call) -> {
-//                if (call != null) {
-//                    this.editor.history.saveSnapshot();
-//                    this.getTickerElement().actions = call;
-//                }
-//                Minecraft.getInstance().setScreen(this.editor);
-//            });
-//            Minecraft.getInstance().setScreen(s);
-        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.elements.ticker.manage_actions.desc")));
+            ManageActionsScreen s = new ManageActionsScreen(this.getTickerElement().actionExecutor, (call) -> {
+                if (call != null) {
+                    this.editor.history.saveSnapshot();
+                    this.getTickerElement().actionExecutor = call;
+                }
+                Minecraft.getInstance().setScreen(this.editor);
+            });
+            Minecraft.getInstance().setScreen(s);
+        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.elements.ticker.manage_actions.desc")))
+                .setIcon(ContextMenu.IconFactory.getIcon("script"))
+                .setStackable(false);
 
         this.rightClickMenu.addSeparatorEntry("ticker_separator_1");
 
@@ -47,6 +49,7 @@ public class TickerEditorElement extends AbstractEditorElement {
                         Component.translatable("fancymenu.customization.items.ticker.tick_delay"),
                         true, 0L, null, null)
                 .setStackable(true)
+                .setIcon(ContextMenu.IconFactory.getIcon("timer"))
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.ticker.tick_delay.desc")));
 
         this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "set_async",
