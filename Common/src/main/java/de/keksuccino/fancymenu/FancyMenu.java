@@ -21,6 +21,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO custom background support für slider adden (+ eventuell option zum changen von slider grabber textur)
+
 	//TODO Add custom click action for the "edit value" button of actions (add default method to action class that opens editor, but make it overridable)
 	// - Add "Wait For" action that waits for a loading requirement to be true/false (use the custom click action for that to open the Loading Req builder)
 	// - Add "IF" (start + end) actions, to wrap multiple actions in an IF-block that takes loading requirements (use custom click action like in "Wait For")
