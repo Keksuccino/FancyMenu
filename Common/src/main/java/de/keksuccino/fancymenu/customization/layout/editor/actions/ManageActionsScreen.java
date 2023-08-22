@@ -9,6 +9,8 @@ import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBloc
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseIfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
+import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
+import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementGroup;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
@@ -33,6 +35,10 @@ import java.util.function.Consumer;
 
 public class ManageActionsScreen extends Screen {
 
+    //TODO verhindern, dass man IF Statements in sich selbst oder dessen kinder ziehen kann
+
+    //TODO wenn executable direkt auf Statement gedroppt wird, immer an erste stelle packen
+
     protected GenericExecutableBlock executableBlock;
     protected Consumer<GenericExecutableBlock> callback;
 
@@ -56,12 +62,6 @@ public class ManageActionsScreen extends Screen {
     private final ExecutableEntry BEFORE_FIRST = new ExecutableEntry(this.actionsScrollArea, new GenericExecutableBlock(), 1, 0);
     private final ExecutableEntry AFTER_LAST = new ExecutableEntry(this.actionsScrollArea, new GenericExecutableBlock(), 1, 0);
 
-    //TODO add logic to the 3 new buttons
-    //TODO add logic to the 3 new buttons
-    //TODO add logic to the 3 new buttons
-    //TODO add logic to the 3 new buttons
-    //TODO add logic to the 3 new buttons
-
     public ManageActionsScreen(@NotNull GenericExecutableBlock executableBlock, @NotNull Consumer<GenericExecutableBlock> callback) {
 
         super(Component.translatable("fancymenu.editor.action.screens.manage_screen.manage"));
@@ -74,6 +74,58 @@ public class ManageActionsScreen extends Screen {
 
     @Override
     protected void init() {
+
+        this.addIfButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.editor.actions.blocks.add.if"), button -> {
+            ManageRequirementsScreen s = new ManageRequirementsScreen(new LoadingRequirementContainer(), container -> {
+                if (container != null) {
+                    this.executableBlock.addExecutable(new IfExecutableBlock(container));
+                    this.updateActionInstanceScrollArea(false);
+                    this.actionsScrollArea.verticalScrollBar.setScroll(1.0F);
+                }
+                Minecraft.getInstance().setScreen(this);
+            });
+            Minecraft.getInstance().setScreen(s);
+        });
+        this.addWidget(this.addIfButton);
+        UIBase.applyDefaultWidgetSkinTo(this.addIfButton);
+
+        this.appendElseIfButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.editor.actions.blocks.add.else_if"), button -> {
+            ExecutableEntry selected = this.getSelectedEntry();
+            if ((selected != null) && ((selected.executable instanceof IfExecutableBlock) || (selected.executable instanceof ElseIfExecutableBlock))) {
+                ManageRequirementsScreen s = new ManageRequirementsScreen(new LoadingRequirementContainer(), container -> {
+                    if (container != null) {
+                        ElseIfExecutableBlock b = new ElseIfExecutableBlock(container);
+                        b.setAppendedBlock(((AbstractExecutableBlock)selected.executable).getAppendedBlock());
+                        ((AbstractExecutableBlock)selected.executable).setAppendedBlock(b);
+                        this.updateActionInstanceScrollArea(true);
+                    }
+                    Minecraft.getInstance().setScreen(this);
+                });
+                Minecraft.getInstance().setScreen(s);
+            }
+        }).setIsActiveSupplier(consumes -> {
+            ExecutableEntry selected = this.getSelectedEntry();
+            if (selected == null) return false;
+            return (selected.executable instanceof IfExecutableBlock) || (selected.executable instanceof ElseIfExecutableBlock);
+        });
+        this.addWidget(this.appendElseIfButton);
+        UIBase.applyDefaultWidgetSkinTo(this.appendElseIfButton);
+
+        this.appendElseButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.editor.actions.blocks.add.else"), button -> {
+            ExecutableEntry selected = this.getSelectedEntry();
+            if ((selected != null) && ((selected.executable instanceof IfExecutableBlock) || (selected.executable instanceof ElseIfExecutableBlock))) {
+                ElseExecutableBlock b = new ElseExecutableBlock();
+                b.setAppendedBlock(((AbstractExecutableBlock)selected.executable).getAppendedBlock());
+                ((AbstractExecutableBlock)selected.executable).setAppendedBlock(b);
+                this.updateActionInstanceScrollArea(true);
+            }
+        }).setIsActiveSupplier(consumes -> {
+            ExecutableEntry selected = this.getSelectedEntry();
+            if (selected == null) return false;
+            return (selected.executable instanceof IfExecutableBlock) || (selected.executable instanceof ElseIfExecutableBlock);
+        });
+        this.addWidget(this.appendElseButton);
+        UIBase.applyDefaultWidgetSkinTo(this.appendElseButton);
 
         this.addActionButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.add_action"), (button) -> {
             BuildActionScreen s = new BuildActionScreen(null, (call) -> {
@@ -146,22 +198,35 @@ public class ManageActionsScreen extends Screen {
                         Minecraft.getInstance().setScreen(this);
                     });
                     Minecraft.getInstance().setScreen(s);
+                } else if (selected.executable instanceof IfExecutableBlock b) {
+                    ManageRequirementsScreen s = new ManageRequirementsScreen(b.body.copy(false), container -> {
+                        if (container != null) {
+                            b.body = container;
+                            this.updateActionInstanceScrollArea(true);
+                        }
+                        Minecraft.getInstance().setScreen(this);
+                    });
+                    Minecraft.getInstance().setScreen(s);
+                } else if (selected.executable instanceof ElseIfExecutableBlock b) {
+                    ManageRequirementsScreen s = new ManageRequirementsScreen(b.body.copy(false), container -> {
+                        if (container != null) {
+                            b.body = container;
+                            this.updateActionInstanceScrollArea(true);
+                        }
+                        Minecraft.getInstance().setScreen(this);
+                    });
+                    Minecraft.getInstance().setScreen(s);
                 }
             }
-        }) {
-            @Override
-            public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
-                ManageActionsScreen s = ManageActionsScreen.this;
-                if (!s.isAnyExecutableSelected()) {
-                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.finish.no_action_selected")));
-                    this.active = false;
-                } else {
-                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.edit_action.desc")));
-                    this.active = true;
-                }
-                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+        }).setIsActiveSupplier(consumes -> {
+            ExecutableEntry selected = this.getSelectedEntry();
+            if ((selected == null) || (selected.executable instanceof ElseExecutableBlock)) {
+                consumes.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.finish.no_action_selected")));
+                return false;
             }
-        };
+            consumes.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.edit_action.desc")));
+            return true;
+        });
         this.addWidget(this.editButton);
         UIBase.applyDefaultWidgetSkinTo(this.editButton);
 
@@ -281,8 +346,20 @@ public class ManageActionsScreen extends Screen {
         this.moveUpButton.setY(this.moveDownButton.getY() - 5 - 20);
         this.moveUpButton.render(pose, mouseX, mouseY, partial);
 
+        this.appendElseButton.setX(this.width - 20 - this.appendElseButton.getWidth());
+        this.appendElseButton.setY(this.moveUpButton.getY() - 15 - 20);
+        this.appendElseButton.render(pose, mouseX, mouseY, partial);
+
+        this.appendElseIfButton.setX(this.width - 20 - this.appendElseIfButton.getWidth());
+        this.appendElseIfButton.setY(this.appendElseButton.getY() - 5 - 20);
+        this.appendElseIfButton.render(pose, mouseX, mouseY, partial);
+
+        this.addIfButton.setX(this.width - 20 - this.addIfButton.getWidth());
+        this.addIfButton.setY(this.appendElseIfButton.getY() - 5 - 20);
+        this.addIfButton.render(pose, mouseX, mouseY, partial);
+
         this.addActionButton.setX(this.width - 20 - this.addActionButton.getWidth());
-        this.addActionButton.setY(this.moveUpButton.getY() - 5 - 20);
+        this.addActionButton.setY(this.addIfButton.getY() - 5 - 20);
         this.addActionButton.render(pose, mouseX, mouseY, partial);
 
         super.render(pose, mouseX, mouseY, partial);
@@ -490,7 +567,7 @@ public class ManageActionsScreen extends Screen {
 
         public ExecutableEntry(@NotNull ScrollArea parentScrollArea, @NotNull Executable executable, int lineHeight, int indentLevel) {
 
-            super(parentScrollArea, 100, 15);
+            super(parentScrollArea, 100, 30);
             this.executable = executable;
             this.lineHeight = lineHeight;
             this.indentLevel = indentLevel;
@@ -533,7 +610,11 @@ public class ManageActionsScreen extends Screen {
             }
 
             this.setWidth(this.calculateWidth());
-            this.setHeight((lineHeight * 2) + (HEADER_FOOTER_HEIGHT * 2));
+            if (this.executable instanceof AbstractExecutableBlock) {
+                this.setHeight(lineHeight + (HEADER_FOOTER_HEIGHT * 2));
+            } else {
+                this.setHeight((lineHeight * 2) + (HEADER_FOOTER_HEIGHT * 2));
+            }
 
         }
 

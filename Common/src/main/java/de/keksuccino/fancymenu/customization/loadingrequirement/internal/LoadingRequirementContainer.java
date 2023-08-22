@@ -215,49 +215,54 @@ public class LoadingRequirementContainer {
             for (List<String> meta : containerMetas) {
                 String key = meta.get(0);
                 String value = meta.get(1);
-                String identifier = key.split(":", 2)[1].replace("]", "");
-                List<String> groupIdentifiers = new ArrayList<>();
-                List<String> instanceIdentifiers = new ArrayList<>();
-                if (value.contains("[groups:")) {
-                    String groupsRaw = value.split("\\[groups:", 2)[1];
-                    if (groupsRaw.contains("]")) {
-                        groupsRaw = groupsRaw.split("]", 2)[0];
-                        if (groupsRaw.contains(";")) {
-                            groupIdentifiers = Arrays.asList(groupsRaw.split(";"));
-                        }
-                    }
-                }
-                if (value.contains("[instances:")) {
-                    String instancesRaw = value.split("\\[instances:", 2)[1];
-                    if (instancesRaw.contains("]")) {
-                        instancesRaw = instancesRaw.split("]", 2)[0];
-                        if (instancesRaw.contains(";")) {
-                            instanceIdentifiers = Arrays.asList(instancesRaw.split(";"));
-                        }
-                    }
-                }
-                if (!identifier.replace(" ", "").isEmpty()) {
-                    LoadingRequirementContainer container = new LoadingRequirementContainer();
-                    container.identifier = identifier;
-                    //Find groups of container
-                    for (String groupId : groupIdentifiers) {
-                        for (LoadingRequirementGroup g : combined.groups) {
-                            if (g.identifier.equals(groupId)) {
-                                container.groups.add(g);
-                                break;
+                if (key.contains("[loading_requirement_container_meta:")) {
+                    String identifier = key.split("\\[loading_requirement_container_meta:", 2)[1];
+                    if (identifier.contains("]")) {
+                        identifier = identifier.split("]",2)[0];
+                        List<String> groupIdentifiers = new ArrayList<>();
+                        List<String> instanceIdentifiers = new ArrayList<>();
+                        if (value.contains("[groups:")) {
+                            String groupsRaw = value.split("\\[groups:", 2)[1];
+                            if (groupsRaw.contains("]")) {
+                                groupsRaw = groupsRaw.split("]", 2)[0];
+                                if (groupsRaw.contains(";")) {
+                                    groupIdentifiers = Arrays.asList(groupsRaw.split(";"));
+                                }
                             }
                         }
-                    }
-                    //Find instances of container
-                    for (String instanceId : instanceIdentifiers) {
-                        for (LoadingRequirementInstance i : combined.instances) {
-                            if (i.instanceIdentifier.equals(instanceId)) {
-                                container.instances.add(i);
-                                break;
+                        if (value.contains("[instances:")) {
+                            String instancesRaw = value.split("\\[instances:", 2)[1];
+                            if (instancesRaw.contains("]")) {
+                                instancesRaw = instancesRaw.split("]", 2)[0];
+                                if (instancesRaw.contains(";")) {
+                                    instanceIdentifiers = Arrays.asList(instancesRaw.split(";"));
+                                }
                             }
                         }
+                        if (!identifier.replace(" ", "").isEmpty()) {
+                            LoadingRequirementContainer container = new LoadingRequirementContainer();
+                            container.identifier = identifier;
+                            //Find groups of container
+                            for (String groupId : groupIdentifiers) {
+                                for (LoadingRequirementGroup g : combined.groups) {
+                                    if (g.identifier.equals(groupId)) {
+                                        container.groups.add(g);
+                                        break;
+                                    }
+                                }
+                            }
+                            //Find instances of container
+                            for (String instanceId : instanceIdentifiers) {
+                                for (LoadingRequirementInstance i : combined.instances) {
+                                    if (i.instanceIdentifier.equals(instanceId)) {
+                                        container.instances.add(i);
+                                        break;
+                                    }
+                                }
+                            }
+                            containers.add(container);
+                        }
                     }
-                    containers.add(container);
                 }
             }
         }

@@ -274,6 +274,7 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
             sec.putProperty("stay_on_screen", "" + element.stayOnScreen);
 
+            sec.putProperty("element_loading_requirement_container_identifier", element.loadingRequirementContainer.identifier);
             element.loadingRequirementContainer.serializeToExistingPropertyContainer(sec);
 
             return sec;

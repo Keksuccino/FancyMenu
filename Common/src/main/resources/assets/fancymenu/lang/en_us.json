@@ -974,10 +974,10 @@
   "fancymenu.editor.loading_requirement.screens.manage_screen.requirements_and_groups": "Requirements & Groups",
   "fancymenu.editor.action.screens.add_action": "Add Action",
   "fancymenu.editor.action.screens.add_action.desc": "Add a new action.",
-  "fancymenu.editor.action.screens.edit_action": "Edit Action",
-  "fancymenu.editor.action.screens.edit_action.desc": "Edit the selected action.",
-  "fancymenu.editor.action.screens.remove_action": "Remove Action",
-  "fancymenu.editor.action.screens.remove_action.desc": "Remove the selected action.",
+  "fancymenu.editor.action.screens.edit_action": "Edit",
+  "fancymenu.editor.action.screens.edit_action.desc": "Edit the selected entry.",
+  "fancymenu.editor.action.screens.remove_action": "Remove",
+  "fancymenu.editor.action.screens.remove_action.desc": "Remove the selected entry.",
   "fancymenu.editor.action.screens.finish.no_action_selected": "§äYou need to select an action first!",
   "fancymenu.editor.action.screens.remove_action.confirm": "§ä§lAre you sure?\n\nDo you really want to §äremove §rthe selected action?\nThis cannot be undone!",
   "fancymenu.editor.action.screens.build_screen.edit_value": "Edit Action Value",
@@ -1246,5 +1246,8 @@
   "fancymenu.customization.elements.cursor.editor_preview_mode.desc": "Shows the custom cursor in the editor\nwhen hovering over the cursor element.",
   "fancymenu.editor.actions.blocks.if": "IF (%s)",
   "fancymenu.editor.actions.blocks.else_if": "ELSE-IF (%s)",
-  "fancymenu.editor.actions.blocks.else": "ELSE"
+  "fancymenu.editor.actions.blocks.else": "ELSE",
+  "fancymenu.editor.actions.blocks.add.if": "Add IF Statement",
+  "fancymenu.editor.actions.blocks.add.else": "Append ELSE Statement",
+  "fancymenu.editor.actions.blocks.add.else_if": "Append ELSE-IF Statement"
 }

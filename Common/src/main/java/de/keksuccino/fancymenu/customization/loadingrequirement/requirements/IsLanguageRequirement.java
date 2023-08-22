@@ -25,7 +25,7 @@ public class IsLanguageRequirement extends LoadingRequirement {
     public boolean isRequirementMet(@Nullable String value) {
 
         if (value != null) {
-            Minecraft.getInstance().options.languageCode.equals(value);
+            return Minecraft.getInstance().options.languageCode.equalsIgnoreCase(value);
         }
 
         return false;
