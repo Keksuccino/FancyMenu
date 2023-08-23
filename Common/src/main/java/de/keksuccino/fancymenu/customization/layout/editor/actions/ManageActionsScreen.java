@@ -30,7 +30,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -39,6 +38,8 @@ import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public class ManageActionsScreen extends Screen {
+
+    //TODO wenn entries per Move Up/Down aus block gemovt werden, erstmal direkt nach/vor block platzieren, anstatt nach/vor nächstes entry (einen schritt nach oben)
 
     protected GenericExecutableBlock executableBlock;
     protected Consumer<GenericExecutableBlock> callback;
