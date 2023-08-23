@@ -1,16 +1,17 @@
 
-//Copyright (c) 2022 Keksuccino.
+//Copyright (c) 2022-2023 Keksuccino.
 //This code is licensed under DSMSL.
 //For more information about the license, see this: https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md
 
 package de.keksuccino.fancymenu.customization.placeholder;
 
+import de.keksuccino.fancymenu.customization.variables.Variable;
+import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.konkrete.input.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.*;
 
 //PLACEHOLDER STRING EXAMPLES:
@@ -31,6 +32,7 @@ public class PlaceholderParser {
         }
         updateLogHandler();
         in = StringUtils.convertFormatCodes(in, "&", "§");
+        in = replaceVariableReferences(in);
         String original = in;
         String replaced = null;
         //Replace placeholders and cover placeholders added by other placeholders (like when getting content from elsewhere containing a placeholder that wasn't part of the original string)
@@ -48,6 +50,24 @@ public class PlaceholderParser {
             return replaced.replace("\\\"", "\"").replace("\\{", "{").replace("\\}", "}");
         }
         return in;
+    }
+
+    public static String replaceVariableReferences(@NotNull String in) {
+        String replaced = in;
+        int index = -1;
+        for (char ignored : in.toCharArray()) {
+            index++;
+            String sub = in.substring(index);
+            if (sub.startsWith("$$")) {
+                for (Variable variable : VariableHandler.getVariables()) {
+                    if (sub.startsWith("$$" + variable.getName())) {
+                        replaced = replaced.replace("$$" + variable.getName(), variable.getValue());
+                        break;
+                    }
+                }
+            }
+        }
+        return replaced;
     }
 
     @Nullable

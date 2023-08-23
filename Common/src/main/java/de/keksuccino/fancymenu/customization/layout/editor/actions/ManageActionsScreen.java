@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.layout.editor.actions;
 
+import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
@@ -29,15 +30,15 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
+@SuppressWarnings("unused")
 public class ManageActionsScreen extends Screen {
-
-    //TODO verhindern, dass man IF Statements in sich selbst oder dessen kinder ziehen kann
-
-    //TODO wenn executable direkt auf Statement gedroppt wird, immer an erste stelle packen
 
     protected GenericExecutableBlock executableBlock;
     protected Consumer<GenericExecutableBlock> callback;
@@ -366,6 +367,57 @@ public class ManageActionsScreen extends Screen {
 
     }
 
+    protected boolean isContentOfStatementChain(@NotNull ExecutableEntry entry, @NotNull List<ExecutableEntry> statementChain) {
+        List<ExecutableEntry> parentBlockHierarchy = this.getParentBlockHierarchyOf(entry);
+        for (ExecutableEntry parentBlock : parentBlockHierarchy) {
+            if (statementChain.contains(parentBlock)) return true;
+        }
+        return false;
+    }
+
+    @NotNull
+    protected List<ExecutableEntry> getParentBlockHierarchyOf(@NotNull ExecutableEntry entry) {
+        List<ExecutableEntry> blocks = new ArrayList<>();
+        ExecutableEntry e = entry;
+        while (e != null) {
+            e = (e.parentBlock != null) ? this.findEntryForExecutable(e.parentBlock) : null;
+            if (e != null) {
+                blocks.add(0, e);
+            }
+        }
+        return blocks;
+    }
+
+    @NotNull
+    protected List<ExecutableEntry> getStatementChainOf(@NotNull ExecutableEntry entry) {
+        List<ExecutableEntry> entries = new ArrayList<>();
+        if (entry.executable instanceof AbstractExecutableBlock) {
+            List<ExecutableEntry> beforeEntry = new ArrayList<>();
+            ExecutableEntry e1 = entry;
+            while (e1 != null) {
+                e1 = (e1.appendParent != null) ? this.findEntryForExecutable(e1.appendParent) : null;
+                if (e1 != null) {
+                    beforeEntry.add(0, e1);
+                }
+            }
+            List<ExecutableEntry> afterEntry = new ArrayList<>();
+            ExecutableEntry e2 = entry;
+            while (e2 != null) {
+                if (e2.executable instanceof AbstractExecutableBlock b) {
+                    AbstractExecutableBlock appendChild = b.getAppendedBlock();
+                    e2 = (appendChild != null) ? this.findEntryForExecutable(appendChild) : null;
+                    if (e2 != null) {
+                        afterEntry.add(e2);
+                    }
+                }
+            }
+            entries.addAll(beforeEntry);
+            entries.add(entry);
+            entries.addAll(afterEntry);
+        }
+        return entries;
+    }
+
     @Nullable
     protected ExecutableEntry getDragHoveredEntry() {
         ExecutableEntry draggedEntry = this.getDraggedEntry();
@@ -382,6 +434,22 @@ public class ManageActionsScreen extends Screen {
                         continue;
                     }
                     if ((ee != draggedEntry) && UIBase.isXYInArea(MouseInput.getMouseX(), MouseInput.getMouseY(), ee.getX(), ee.getY(), ee.getWidth(), ee.getHeight()) && this.actionsScrollArea.isMouseInsideArea()) {
+                        List<ExecutableEntry> statementChain = new ArrayList<>();
+                        if (draggedEntry.executable instanceof AbstractExecutableBlock) {
+                            statementChain = this.getStatementChainOf(draggedEntry);
+                        }
+                        if ((draggedEntry.executable instanceof AbstractExecutableBlock) && statementChain.contains(ee)) {
+                            return null;
+                        }
+                        if ((ee.parentBlock != null) && (ee.parentBlock != this.executableBlock)) {
+                            ExecutableEntry pb = this.findEntryForExecutable(ee.parentBlock);
+                            if ((pb != null) && statementChain.contains(pb)) {
+                                return null;
+                            }
+                        }
+                        if ((draggedEntry.executable instanceof AbstractExecutableBlock) && this.isContentOfStatementChain(ee, statementChain)) {
+                            return null;
+                        }
                         return ee;
                     }
                 }
@@ -402,9 +470,10 @@ public class ManageActionsScreen extends Screen {
 
     @Nullable
     protected ExecutableEntry findEntryForExecutable(Executable executable) {
-        ScrollAreaEntry e = this.actionsScrollArea.getFocusedEntry();
-        if (e instanceof ExecutableEntry ee) {
-            if (ee.executable == executable) return ee;
+        for (ScrollAreaEntry e : this.actionsScrollArea.getEntries()) {
+            if (e instanceof ExecutableEntry ee) {
+                if (ee.executable == executable) return ee;
+            }
         }
         return null;
     }
@@ -422,30 +491,145 @@ public class ManageActionsScreen extends Screen {
         return this.getSelectedEntry() != null;
     }
 
+    @Nullable
+    protected ExecutableEntry getValidMoveToEntryBefore(@NotNull ExecutableEntry entry, boolean ignoreValidityChecks) {
+        if (entry == BEFORE_FIRST) return BEFORE_FIRST;
+        int index = this.actionsScrollArea.getEntries().size();
+        boolean foundEntry = false;
+        boolean foundValidMoveTo = false;
+        for (ScrollAreaEntry e : Lists.reverse(this.actionsScrollArea.getEntries())) {
+            if (e instanceof ExecutableEntry ee) {
+                index--;
+                if (e == entry) {
+                    foundEntry = true;
+                    continue;
+                }
+                if (!ignoreValidityChecks) {
+                    List<ExecutableEntry> statementChain = new ArrayList<>();
+                    if (entry.executable instanceof AbstractExecutableBlock) {
+                        statementChain = this.getStatementChainOf(entry);
+                    }
+                    if ((entry.executable instanceof AbstractExecutableBlock) && statementChain.contains(ee)) {
+                        continue;
+                    }
+                    if ((ee.parentBlock != null) && (ee.parentBlock != this.executableBlock)) {
+                        ExecutableEntry pb = this.findEntryForExecutable(ee.parentBlock);
+                        if ((pb != null) && statementChain.contains(pb)) {
+                            continue;
+                        }
+                    }
+                    if ((entry.executable instanceof AbstractExecutableBlock) && this.isContentOfStatementChain(ee, statementChain)) {
+                        continue;
+                    }
+                }
+                if (foundEntry) {
+                    foundValidMoveTo = true;
+                    break;
+                }
+            }
+        }
+        if (!foundValidMoveTo) return null;
+        ScrollAreaEntry e = this.actionsScrollArea.getEntry(index);
+        if (e instanceof ExecutableEntry ee) return ee;
+        return null;
+    }
+
+    @Nullable
+    protected ExecutableEntry getValidMoveToEntryAfter(@NotNull ExecutableEntry entry, boolean ignoreValidityChecks) {
+        if (entry == AFTER_LAST) return AFTER_LAST;
+        int index = -1;
+        boolean foundEntry = false;
+        boolean foundValidMoveTo = false;
+        for (ScrollAreaEntry e : this.actionsScrollArea.getEntries()) {
+            if (e instanceof ExecutableEntry ee) {
+                index++;
+                if (e == entry) {
+                    foundEntry = true;
+                    continue;
+                }
+                if (!ignoreValidityChecks) {
+                    List<ExecutableEntry> statementChain = new ArrayList<>();
+                    if (entry.executable instanceof AbstractExecutableBlock) {
+                        statementChain = this.getStatementChainOf(entry);
+                    }
+                    if ((entry.executable instanceof AbstractExecutableBlock) && statementChain.contains(ee)) {
+                        continue;
+                    }
+                    if ((ee.parentBlock != null) && (ee.parentBlock != this.executableBlock)) {
+                        ExecutableEntry pb = this.findEntryForExecutable(ee.parentBlock);
+                        if ((pb != null) && statementChain.contains(pb)) {
+                            continue;
+                        }
+                    }
+                    if ((entry.executable instanceof AbstractExecutableBlock) && this.isContentOfStatementChain(ee, statementChain)) {
+                        continue;
+                    }
+                }
+                if (foundEntry) {
+                    foundValidMoveTo = true;
+                    break;
+                }
+            }
+        }
+        if (!foundValidMoveTo) return null;
+        ScrollAreaEntry e = this.actionsScrollArea.getEntry(index);
+        if (e instanceof ExecutableEntry ee) return ee;
+        return null;
+    }
+
+    protected void moveAfter(@NotNull ExecutableEntry entry, @NotNull ExecutableEntry moveAfter) {
+        entry.getParentBlock().getExecutables().remove(entry.executable);
+        int moveAfterIndex = Math.max(0, moveAfter.getParentBlock().getExecutables().indexOf(moveAfter.executable));
+        if (moveAfter == BEFORE_FIRST) {
+            this.executableBlock.getExecutables().add(0, entry.executable);
+        } else if (moveAfter == AFTER_LAST) {
+            this.executableBlock.getExecutables().add(entry.executable);
+        } else {
+            if (moveAfter.executable instanceof AbstractExecutableBlock b) {
+                b.getExecutables().add(0, entry.executable);
+            } else {
+                moveAfter.getParentBlock().getExecutables().add(moveAfterIndex+1, entry.executable);
+            }
+        }
+        this.updateActionInstanceScrollArea(true);
+        //Re-select entry after updating scroll area
+        ExecutableEntry newEntry = this.findEntryForExecutable(entry.executable);
+        if (newEntry != null) {
+            newEntry.setSelected(true);
+        }
+    }
+
     protected void moveUp(ExecutableEntry entry) {
         if (entry != null) {
             if ((entry.executable instanceof ActionInstance) || (entry.executable instanceof IfExecutableBlock)) {
-                AbstractExecutableBlock parentBlock = entry.getParentBlock();
-                int index = parentBlock.getExecutables().indexOf(entry.executable);
-                if (index > 0) {
-                    parentBlock.getExecutables().remove(entry.executable);
-                    parentBlock.getExecutables().add(index-1, entry.executable);
-                    this.updateActionInstanceScrollArea(true);
+                if (this.actionsScrollArea.getEntries().indexOf(entry) == 1) {
+                    this.moveAfter(entry, BEFORE_FIRST);
+                } else {
+                    ExecutableEntry before = this.getValidMoveToEntryBefore(entry, false);
+                    if (before != null) {
+                        ExecutableEntry beforeBefore = this.getValidMoveToEntryBefore(before, true);
+                        if (beforeBefore != null) {
+                            this.moveAfter(entry, beforeBefore);
+                        }
+                    }
                 }
+                return;
             }
             if (entry.executable instanceof ElseIfExecutableBlock ei) {
                 AbstractExecutableBlock entryAppendParent = entry.appendParent;
                 if (entryAppendParent != null) {
-                    ExecutableEntry appendParentEntry = this.findEntryForExecutable(entry.appendParent);
+                    ExecutableEntry appendParentEntry = this.findEntryForExecutable(entryAppendParent);
                     if (appendParentEntry != null) {
-                        AbstractExecutableBlock appendGrandParent = appendParentEntry.appendParent;
-                        if (appendGrandParent != null) {
+                        AbstractExecutableBlock parentOfParent = appendParentEntry.appendParent;
+                        if (parentOfParent != null) {
+                            entryAppendParent.setAppendedBlock(ei.getAppendedBlock());
                             ei.setAppendedBlock(entryAppendParent);
-                            appendGrandParent.setAppendedBlock(ei);
+                            parentOfParent.setAppendedBlock(ei);
                         }
                     }
                 }
             }
+            this.updateActionInstanceScrollArea(true);
             //Re-select entry after updating scroll area
             ExecutableEntry newEntry = this.findEntryForExecutable(entry.executable);
             if (newEntry != null) {
@@ -457,22 +641,22 @@ public class ManageActionsScreen extends Screen {
     protected void moveDown(ExecutableEntry entry) {
         if (entry != null) {
             if ((entry.executable instanceof ActionInstance) || (entry.executable instanceof IfExecutableBlock)) {
-                AbstractExecutableBlock parentBlock = entry.getParentBlock();
-                int index = parentBlock.getExecutables().indexOf(entry.executable);
-                if ((index >= 0) && (index <= parentBlock.getExecutables().size()-2)) {
-                    parentBlock.getExecutables().remove(entry.executable);
-                    parentBlock.getExecutables().add(index+1, entry.executable);
-                    this.updateActionInstanceScrollArea(true);
+                ExecutableEntry after = this.getValidMoveToEntryAfter(entry, false);
+                if (after != null) {
+                    this.moveAfter(entry, after);
                 }
+                return;
             }
             if (entry.executable instanceof ElseIfExecutableBlock ei) {
-                AbstractExecutableBlock entryAppendChild = ((AbstractExecutableBlock)entry.executable).getAppendedBlock();
+                AbstractExecutableBlock entryAppendChild = ei.getAppendedBlock();
                 AbstractExecutableBlock entryAppendParent = entry.appendParent;
                 if ((entryAppendChild instanceof ElseIfExecutableBlock) && (entryAppendParent != null)) {
+                    ei.setAppendedBlock(entryAppendChild.getAppendedBlock());
                     entryAppendChild.setAppendedBlock(ei);
                     entryAppendParent.setAppendedBlock(entryAppendChild);
                 }
             }
+            this.updateActionInstanceScrollArea(true);
             //Re-select entry after updating scroll area
             ExecutableEntry newEntry = this.findEntryForExecutable(entry.executable);
             if (newEntry != null) {
@@ -480,25 +664,6 @@ public class ManageActionsScreen extends Screen {
             }
         }
     }
-
-//    protected void updateActionInstanceScrollArea(boolean keepScroll) {
-//
-//        float oldScrollVertical = this.actionsScrollArea.verticalScrollBar.getScroll();
-//        float oldScrollHorizontal = this.actionsScrollArea.horizontalScrollBar.getScroll();
-//
-//        this.actionsScrollArea.clearEntries();
-//
-//        for (Executable i : this.executableBlock.getExecutables()) {
-//            ExecutableEntry e = new ExecutableEntry(this.actionsScrollArea, i, 14, 0);
-//            this.actionsScrollArea.addEntry(e);
-//        }
-//
-//        if (keepScroll) {
-//            this.actionsScrollArea.verticalScrollBar.setScroll(oldScrollVertical);
-//            this.actionsScrollArea.horizontalScrollBar.setScroll(oldScrollHorizontal);
-//        }
-//
-//    }
 
     protected void updateActionInstanceScrollArea(boolean keepScroll) {
 
@@ -662,7 +827,7 @@ public class ManageActionsScreen extends Screen {
                             ManageActionsScreen.this.executableBlock.getExecutables().add(this.executable);
                         } else {
                             if (hover.executable instanceof AbstractExecutableBlock b) {
-                                b.getExecutables().add(this.executable);
+                                b.getExecutables().add(0, this.executable);
                             } else {
                                 hover.getParentBlock().getExecutables().add(hoverIndex+1, this.executable);
                             }

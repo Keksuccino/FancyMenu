@@ -44,22 +44,22 @@ public class ScreenInstanceFactory {
 		DEFAULT_PARAMETERS.put(Double.class, 0D);
 		DEFAULT_PARAMETERS.put(Float.class, 0F);
 
-		registerScreenProvider(PackSelectionScreen.class.getName(), () -> {
-			return new PackSelectionScreen(Minecraft.getInstance().getResourcePackRepository(), (repo) -> {
-				Minecraft.getInstance().options.updateResourcePacks(repo);
-				Minecraft.getInstance().setScreen(Minecraft.getInstance().screen);
-			}, Minecraft.getInstance().getResourcePackDirectory(), Component.translatable("resourcePack.title"));
-		});
-		
+		ScreenInstanceFactory.registerScreenProvider(PackSelectionScreen.class.getName(),
+				() -> new PackSelectionScreen(Minecraft.getInstance().getResourcePackRepository(), (repo) -> {
+					Minecraft.getInstance().options.updateResourcePacks(repo);
+					Minecraft.getInstance().setScreen(Minecraft.getInstance().screen);
+				}, Minecraft.getInstance().getResourcePackDirectory(), Component.translatable("resourcePack.title"))
+		);
+
 	}
 
-	public static void registerScreenProvider(@NotNull String fullScreenClassName, @NotNull Supplier<? extends Screen> provider) {
-		SCREEN_INSTANCE_PROVIDERS.put(fullScreenClassName, provider);
+	public static void registerScreenProvider(@NotNull String fullScreenClassNameWithClassPath, @NotNull Supplier<? extends Screen> provider) {
+		SCREEN_INSTANCE_PROVIDERS.put(fullScreenClassNameWithClassPath, provider);
 	}
 
 	@Nullable
-	public static Supplier<? extends Screen> getScreenProvider(@NotNull String fullScreenClassName) {
-		return SCREEN_INSTANCE_PROVIDERS.get(fullScreenClassName);
+	public static Supplier<? extends Screen> getScreenProvider(@NotNull String fullScreenClassNameWithClassPath) {
+		return SCREEN_INSTANCE_PROVIDERS.get(fullScreenClassNameWithClassPath);
 	}
 
 	@Nullable
