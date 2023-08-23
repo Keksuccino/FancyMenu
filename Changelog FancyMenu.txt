@@ -57,6 +57,9 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - FancyMenu's settings are now part of the menu bar at the top of menu screens and should be way easier to navigate through now
 - The header and footer textures of scrollable screens (like Singleplayer, Multiplayer, Video Settings, etc.) are now customizable
 - It's now possible to set an inactive background for buttons (inactive means greyed out and not clickable)
+- There's a short placeholder format for variables now: $$variable_name
+- The action system now supports IF, ELSE-IF und ELSE statements (IF and ELSE-IF take loading requirements)
+- You can drag-&-drop actions (and statements) in the "Edit Actions" screen now (to move them)
  
 - Added loading requirement "File/Folder Exists" to check if a file/folder exists
 - Added loading requirement "Is Button Active" to check if a button is active (clickable/not greyed out)
