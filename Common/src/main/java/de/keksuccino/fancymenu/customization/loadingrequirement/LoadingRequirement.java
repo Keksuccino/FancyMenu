@@ -1,4 +1,3 @@
-
 package de.keksuccino.fancymenu.customization.loadingrequirement;
 
 import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorFormattingRule;
@@ -6,7 +5,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.List;
 import java.util.Objects;
@@ -17,6 +15,9 @@ import java.util.Objects;
  * Needs to be registered to the {@link LoadingRequirementRegistry} on mod init.
  */
 public abstract class LoadingRequirement {
+
+    //TODO Config Screens für Requirement Values adden
+    // - Basis Screen Class, die einen Consumer<String> nimmt, mit dem bei Schließen des Screens das Requirement Value mitgegeben wird
 
     protected final String identifier;
 
