@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util.rendering.ui.widget;
+package de.keksuccino.fancymenu.util.rendering.ui.widget.button;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -153,6 +153,10 @@ public class ExtendedButton extends Button {
             Boolean b = this.activeSupplier.get(this);
             if (b != null) this.active = b;
         }
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
     }
 
     protected int getHoverState() {

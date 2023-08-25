@@ -139,6 +139,10 @@ public class ExtendedEditBox extends EditBox {
 
     }
 
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
     public int getDisplayPosition() {
         return ((IMixinEditBox)this).getDisplayPosFancyMenu();
     }

@@ -1244,5 +1244,6 @@
   "fancymenu.editor.actions.blocks.else": "ELSE",
   "fancymenu.editor.actions.blocks.add.if": "Add IF Statement",
   "fancymenu.editor.actions.blocks.add.else": "Append ELSE Statement",
-  "fancymenu.editor.actions.blocks.add.else_if": "Append ELSE-IF Statement"
+  "fancymenu.editor.actions.blocks.add.else_if": "Append ELSE-IF Statement",
+  "fancymenu.ui.screens.string_builder_screen.edit_in_editor": "Open in Editor"
 }
