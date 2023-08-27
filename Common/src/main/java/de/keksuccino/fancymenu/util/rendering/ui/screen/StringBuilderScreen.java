@@ -6,11 +6,6 @@ import java.util.function.Consumer;
 
 public abstract class StringBuilderScreen extends ConfiguratorScreen {
 
-    //TODO nutzen, um builder screens für alle Loading Requirement values zu adden
-    //TODO nutzen, um builder screens für alle Loading Requirement values zu adden
-    //TODO nutzen, um builder screens für alle Loading Requirement values zu adden
-    //TODO nutzen, um builder screens für alle Loading Requirement values zu adden
-
     protected final Consumer<String> callback;
 
     protected StringBuilderScreen(@NotNull Component title, @NotNull Consumer<String> callback) {

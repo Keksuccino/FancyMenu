@@ -1,17 +1,25 @@
 package de.keksuccino.fancymenu.customization.loadingrequirement.requirements;
 
+import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
+import de.keksuccino.fancymenu.util.cycle.CommonCycles;
+import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.konkrete.math.MathUtils;
+import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class IsNumberRequirement extends LoadingRequirement {
 
@@ -136,7 +144,7 @@ public class IsNumberRequirement extends LoadingRequirement {
     }
 
     @Override
-    public String getDisplayName() {
+    public @NotNull String getDisplayName() {
         return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.is_number");
     }
 
@@ -163,6 +171,118 @@ public class IsNumberRequirement extends LoadingRequirement {
     @Override
     public List<TextEditorFormattingRule> getValueFormattingRules() {
         return null;
+    }
+
+    @Override
+    public void editValue(@NotNull Screen parentScreen, @NotNull LoadingRequirementInstance requirementInstance) {
+        IsNumberValueConfigScreen s = new IsNumberValueConfigScreen(requirementInstance.value, callback -> {
+            if (callback != null) {
+                requirementInstance.value = callback;
+            }
+            Minecraft.getInstance().setScreen(parentScreen);
+        });
+        Minecraft.getInstance().setScreen(s);
+    }
+
+    public static class IsNumberValueConfigScreen extends StringBuilderScreen {
+
+        @NotNull
+        protected NumberCompareMode mode = NumberCompareMode.EQUALS;
+        @NotNull
+        protected String firstNumber = "";
+        @NotNull
+        protected String secondNumber = "";
+
+        protected TextInputCell firstNumberCell;
+        protected TextInputCell secondNumberCell;
+
+        protected IsNumberValueConfigScreen(String value, @NotNull Consumer<String> callback) {
+            super(Component.translatable("fancymenu.editor.elements.visibilityrequirements.edit_value"), callback);
+            if (value == null) value = "";
+            List<String> sections = getSections(value);
+            if (!sections.isEmpty()) {
+                List<String> deserialized = parseSection(sections.get(0));
+                if (!deserialized.isEmpty()) {
+                    NumberCompareMode m = NumberCompareMode.getByKey(deserialized.get(0));
+                    if (m != null) mode = m;
+                    firstNumber = deserialized.get(1);
+                    secondNumber = deserialized.get(2);
+                }
+            }
+        }
+
+        @Override
+        protected void initCells() {
+
+            this.addSpacerCell(20);
+
+            ILocalizedValueCycle<NumberCompareMode> modeCycle = CommonCycles.cycleOrangeValue("fancymenu.loading_requirements.is_number.compare_mode", Arrays.asList(NumberCompareMode.values()), this.mode)
+                    .setValueNameSupplier(mode -> {
+                        if (mode == NumberCompareMode.BIGGER_THAN) return I18n.get("fancymenu.loading_requirements.is_number.compare_mode.bigger_than");
+                        if (mode == NumberCompareMode.SMALLER_THAN) return I18n.get("fancymenu.loading_requirements.is_number.compare_mode.smaller_than");
+                        if (mode == NumberCompareMode.BIGGER_THAN_OR_EQUALS) return I18n.get("fancymenu.loading_requirements.is_number.compare_mode.bigger_than_or_equals");
+                        if (mode == NumberCompareMode.SMALLER_THAN_OR_EQUALS) return I18n.get("fancymenu.loading_requirements.is_number.compare_mode.smaller_than_or_equals");
+                        return I18n.get("fancymenu.loading_requirements.is_number.compare_mode.equals");
+                    });
+            this.addCycleButtonCell(modeCycle, true, (value, button) -> {
+                this.mode = value;
+            });
+
+            String fNumber = this.getFirstNumberString();
+            this.addLabelCell(Component.translatable("fancymenu.loading_requirements.is_number.compare_mode.first_number"));
+            this.firstNumberCell = this.addTextInputCell(null, true, true).setText(fNumber);
+
+            String sNumber = this.getSecondNumberString();
+            this.addLabelCell(Component.translatable("fancymenu.loading_requirements.is_number.compare_mode.second_number"));
+            this.secondNumberCell = this.addTextInputCell(null, true, true).setText(sNumber);
+
+        }
+
+        @Override
+        public @NotNull String buildString() {
+            return "[\"mode\":\"" + this.mode.key + "\",\"number\":\"" + this.getFirstNumberString() + "\",\"compare_with\":\"" + this.getSecondNumberString() + "\"]$";
+        }
+
+        @NotNull
+        protected String getFirstNumberString() {
+            if (this.firstNumberCell != null) {
+                return this.firstNumberCell.getText();
+            }
+            return this.firstNumber;
+        }
+
+        @NotNull
+        protected String getSecondNumberString() {
+            if (this.secondNumberCell != null) {
+                return this.secondNumberCell.getText();
+            }
+            return this.secondNumber;
+        }
+
+    }
+
+    public enum NumberCompareMode {
+
+        EQUALS("equals"),
+        BIGGER_THAN("bigger-than"),
+        SMALLER_THAN("smaller-than-or-equals"),
+        BIGGER_THAN_OR_EQUALS("bigger-than-or-equals"),
+        SMALLER_THAN_OR_EQUALS("smaller-than-or-equals");
+
+        public final String key;
+
+        NumberCompareMode(String key) {
+            this.key = key;
+        }
+
+        @Nullable
+        public static NumberCompareMode getByKey(@NotNull String key) {
+            for (NumberCompareMode mode : NumberCompareMode.values()) {
+                if (mode.key.equals(key)) return mode;
+            }
+            return null;
+        }
+
     }
 
 }

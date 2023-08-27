@@ -1,4 +1,3 @@
-
 package de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -7,7 +6,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextListScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirementRegistry;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
@@ -22,7 +20,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.awt.*;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -71,30 +68,10 @@ public class BuildRequirementScreen extends Screen {
     @Override
     protected void init() {
 
-        //Reset the GUI scale in case the layout editor changed it
-        Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().isEnforceUnicode()));
-        this.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
-        this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
-
-        super.init();
-
         this.editValueButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.loading_requirement.screens.build_screen.edit_value"), (button) -> {
-            TextEditorScreen s = new TextEditorScreen(button.getMessage(), null, (call) -> {
-                if (call != null) {
-                    this.instance.value = call;
-                }
-                Minecraft.getInstance().setScreen(this);
-            });
-            if ((this.instance.requirement != null) && (this.instance.requirement.getValueFormattingRules() != null)) {
-                s.formattingRules.addAll(this.instance.requirement.getValueFormattingRules());
+            if (this.instance.requirement != null) {
+                this.instance.requirement.editValue(this, this.instance);
             }
-            s.setMultilineMode(false);
-            if (this.instance.value != null) {
-                s.setText(this.instance.value);
-            } else if (this.instance.requirement != null) {
-                s.setText(this.instance.requirement.getValuePreset());
-            }
-            Minecraft.getInstance().setScreen(s);
         }) {
             @Override
             public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {

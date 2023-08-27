@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
+import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
@@ -52,7 +53,7 @@ public abstract class ConfiguratorScreen extends Screen {
             oldScrollX = this.scrollArea.horizontalScrollBar.getScroll();
             oldScrollY = this.scrollArea.verticalScrollBar.getScroll();
         }
-        this.scrollArea = new ScrollArea(20, 50 + 15, (this.width / 2) - 40, this.height - 85);
+        this.scrollArea = new ScrollArea(20, 50 + 15, this.width - 40 - this.getRightSideButtonWidth() - 20, this.height - 85);
         this.scrollArea.makeEntriesWidthOfArea = true;
         this.scrollArea.minimumEntryWidthIsAreaWidth = true;
         this.initCells();
@@ -67,7 +68,7 @@ public abstract class ConfiguratorScreen extends Screen {
             }
         }
 
-        int buttonWidth = 150;
+        int buttonWidth = this.getRightSideButtonWidth();
         int buttonX = this.width - 20 - buttonWidth;
 
         this.doneButton = new ExtendedButton(buttonX, this.height - 20 - 20, buttonWidth, 20, Component.translatable("fancymenu.guicomponents.done"), button -> {
@@ -111,6 +112,19 @@ public abstract class ConfiguratorScreen extends Screen {
 
     }
 
+    @Override
+    public void tick() {
+        for (ScrollAreaEntry e : this.scrollArea.getEntries()) {
+            if (e instanceof CellScrollEntry c) {
+                c.cell.tick();
+            }
+        }
+    }
+
+    public int getRightSideButtonWidth() {
+        return 150;
+    }
+
     @NotNull
     protected TextInputCell addTextInputCell(@Nullable CharacterFilter characterFilter, boolean allowEditor, boolean allowEditorPlaceholders) {
         return this.addCell(new TextInputCell(characterFilter, allowEditor, allowEditorPlaceholders));
@@ -127,13 +141,13 @@ public abstract class ConfiguratorScreen extends Screen {
     }
 
     @NotNull
-    protected <T> ButtonCell addCycleButtonCell(@NotNull ILocalizedValueCycle<T> cycle, CycleButton.CycleButtonClickFeedback<T> clickFeedback) {
-        return this.addButtonCell(new CycleButton(0, 0, 20, 20, cycle, clickFeedback));
+    protected <T> ButtonCell addCycleButtonCell(@NotNull ILocalizedValueCycle<T> cycle, boolean applyDefaultButtonSkin, CycleButton.CycleButtonClickFeedback<T> clickFeedback) {
+        return this.addButtonCell(new CycleButton(0, 0, 20, 20, cycle, clickFeedback), applyDefaultButtonSkin);
     }
 
     @NotNull
-    protected ButtonCell addButtonCell(@NotNull ExtendedButton button) {
-        return this.addCell(new ButtonCell(button));
+    protected ButtonCell addButtonCell(@NotNull ExtendedButton button, boolean applyDefaultButtonSkin) {
+        return this.addCell(new ButtonCell(button, applyDefaultButtonSkin));
     }
 
     @NotNull
@@ -156,12 +170,15 @@ public abstract class ConfiguratorScreen extends Screen {
 
     protected static class CellScrollEntry extends ScrollAreaEntry {
 
-        protected final RenderCell cell;
+        public final RenderCell cell;
 
         public CellScrollEntry(@NotNull ScrollArea parent, @NotNull RenderCell cell) {
             super(parent, 10, 10);
+            this.clickable = false;
+            this.selectable = false;
             this.selectOnClick = false;
             this.playClickSound = false;
+            this.setBackgroundColorHover(this.getBackgroundColorNormal());
             this.cell = cell;
         }
 
@@ -169,8 +186,8 @@ public abstract class ConfiguratorScreen extends Screen {
         public void renderEntry(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
             this.cell.updateSize();
             this.setHeight(this.cell.getHeight());
-            this.cell.setY((int)this.getY());
             this.cell.setX((int)(this.getX() + (this.getWidth() / 2) - (this.cell.getWidth() / 2)));
+            this.cell.setY((int)this.getY());
             this.cell.render(pose, mouseX, mouseY, partial);
         }
 
@@ -180,11 +197,16 @@ public abstract class ConfiguratorScreen extends Screen {
 
     }
 
-    protected class SpacerCell extends RenderCell {
+    public class SpacerCell extends RenderCell {
 
         public SpacerCell(int height) {
             this.setHeight(height);
             this.setWidth(10);
+        }
+
+        @Override
+        public int getTopBottomSpace() {
+            return 0;
         }
 
         @Override
@@ -201,12 +223,13 @@ public abstract class ConfiguratorScreen extends Screen {
 
     }
 
-    protected class ButtonCell extends RenderCell {
+    public class ButtonCell extends RenderCell {
 
-        protected final ExtendedButton button;
+        public final ExtendedButton button;
 
-        public ButtonCell(@NotNull ExtendedButton button) {
+        public ButtonCell(@NotNull ExtendedButton button, boolean applyDefaultSkin) {
             this.button = button;
+            if (applyDefaultSkin) UIBase.applyDefaultWidgetSkinTo(this.button);
             this.children().add(this.button);
         }
 
@@ -215,15 +238,20 @@ public abstract class ConfiguratorScreen extends Screen {
             this.button.setX(this.getX());
             this.button.setY(this.getY());
             this.button.setWidth(this.getWidth());
-            this.button.setHeight(this.getHeight());
+        }
+
+        @Override
+        public void updateSize() {
+            this.setWidth((int)(ConfiguratorScreen.this.scrollArea.getInnerWidth() - 40));
+            this.setHeight(this.button.getHeight());
         }
 
     }
 
-    protected class LabelCell extends RenderCell {
+    public class LabelCell extends RenderCell {
 
         @NotNull
-        protected final Component text;
+        public final Component text;
 
         public LabelCell(@NotNull Component label) {
             this.text = label;
@@ -232,7 +260,7 @@ public abstract class ConfiguratorScreen extends Screen {
         @Override
         public void renderCell(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
             RenderingUtils.resetShaderColor();
-            UIBase.drawElementLabel(pose, Minecraft.getInstance().font, this.text, this.getX(), this.getY() + (this.getWidth() / 2) - (Minecraft.getInstance().font.lineHeight / 2));
+            UIBase.drawElementLabel(pose, Minecraft.getInstance().font, this.text, this.getX(), this.getY() + (this.getHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2));
             RenderingUtils.resetShaderColor();
         }
 
@@ -244,13 +272,15 @@ public abstract class ConfiguratorScreen extends Screen {
 
     }
 
-    protected class TextInputCell extends RenderCell {
+    public class TextInputCell extends RenderCell {
 
-        protected ExtendedEditBox editBox;
-        protected ExtendedButton openEditorButton;
-        protected final boolean allowEditor;
+        public ExtendedEditBox editBox;
+        public ExtendedButton openEditorButton;
+        public final boolean allowEditor;
 
-        protected TextInputCell(@Nullable CharacterFilter characterFilter, boolean allowEditor, boolean allowEditorPlaceholders) {
+        protected boolean widgetSizesSet = false;
+
+        public TextInputCell(@Nullable CharacterFilter characterFilter, boolean allowEditor, boolean allowEditorPlaceholders) {
 
             this.allowEditor = allowEditor;
 
@@ -281,31 +311,53 @@ public abstract class ConfiguratorScreen extends Screen {
 
         @Override
         public void renderCell(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+            if (!this.widgetSizesSet) {
+                this.setWidgetSizes();
+                this.widgetSizesSet = true;
+            }
+            if (MouseInput.isLeftMouseDown() && !this.editBox.isHovered()) {
+                this.editBox.setFocused(false);
+            }
+        }
 
-            int editorButtonWidth = (this.allowEditor ? Minecraft.getInstance().font.width(this.openEditorButton.getMessage()) : 0) + 6;
+        protected void setWidgetSizes() {
+
+            int editorButtonWidth = (this.allowEditor ? Minecraft.getInstance().font.width(this.openEditorButton.getLabelSupplier().get(this.openEditorButton)) : 0) + 6;
 
             this.editBox.setX(this.getX());
             this.editBox.setY(this.getY());
             this.editBox.setWidth(this.allowEditor ? this.getWidth() - editorButtonWidth - 5 : this.getWidth());
-            this.editBox.setHeight(this.getHeight());
 
             if (this.allowEditor) {
                 this.openEditorButton.setX(this.getX() + this.getWidth() - editorButtonWidth);
                 this.openEditorButton.setY(this.getY());
                 this.openEditorButton.setWidth(editorButtonWidth);
-                this.openEditorButton.setHeight(this.getHeight());
             }
 
         }
 
+        @Override
+        public void tick() {
+            this.editBox.tick();
+        }
+
         @NotNull
-        protected String getText() {
+        public String getText() {
             return this.editBox.getValue();
+        }
+
+        public TextInputCell setText(@Nullable String text) {
+            if (text == null) text = "";
+            this.editBox.setValue(text);
+            this.editBox.setCursorPosition(0);
+            this.editBox.setHighlightPos(0);
+            this.editBox.setDisplayPosition(0);
+            return this;
         }
 
     }
 
-    protected abstract class RenderCell extends AbstractContainerEventHandler implements Renderable, NarratableEntry {
+    public abstract class RenderCell extends AbstractContainerEventHandler implements Renderable, NarratableEntry {
 
         protected int x;
         protected int y;
@@ -328,9 +380,16 @@ public abstract class ConfiguratorScreen extends Screen {
 
         }
 
+        public void tick() {
+        }
+
         public void updateSize() {
             this.setWidth((int)(ConfiguratorScreen.this.scrollArea.getInnerWidth() - 40));
             this.setHeight(20);
+        }
+
+        public int getTopBottomSpace() {
+            return 3;
         }
 
         public int getX() {
@@ -342,7 +401,7 @@ public abstract class ConfiguratorScreen extends Screen {
         }
 
         public int getY() {
-            return y;
+            return y + this.getTopBottomSpace();
         }
 
         public void setY(int y) {
@@ -358,7 +417,7 @@ public abstract class ConfiguratorScreen extends Screen {
         }
 
         public int getHeight() {
-            return height;
+            return height + (this.getTopBottomSpace() * 2);
         }
 
         public void setHeight(int height) {

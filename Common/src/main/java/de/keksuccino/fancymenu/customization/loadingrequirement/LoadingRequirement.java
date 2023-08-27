@@ -1,13 +1,18 @@
 package de.keksuccino.fancymenu.customization.loadingrequirement;
 
+import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
 import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorScreen;
 import de.keksuccino.konkrete.input.CharacterFilter;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * A LoadingRequirement.<br><br>
@@ -104,6 +109,27 @@ public abstract class LoadingRequirement {
      */
     @Nullable
     public abstract List<TextEditorFormattingRule> getValueFormattingRules();
+
+    public void editValue(@NotNull Screen parentScreen, @NotNull LoadingRequirementInstance requirementInstance) {
+        if (this.hasValue()) {
+            TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.editor.loading_requirement.screens.build_screen.edit_value"), null, (call) -> {
+                if (call != null) {
+                    requirementInstance.value = call;
+                }
+                Minecraft.getInstance().setScreen(parentScreen);
+            });
+            if (this.getValueFormattingRules() != null) {
+                s.formattingRules.addAll(this.getValueFormattingRules());
+            }
+            s.setMultilineMode(false);
+            if (requirementInstance.value != null) {
+                s.setText(requirementInstance.value);
+            } else {
+                s.setText(this.getValuePreset());
+            }
+            Minecraft.getInstance().setScreen(s);
+        }
+    }
 
     /**
      * The identifier of the requirement.

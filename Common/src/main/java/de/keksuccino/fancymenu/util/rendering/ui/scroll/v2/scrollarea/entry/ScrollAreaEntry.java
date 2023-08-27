@@ -29,6 +29,7 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
     protected Tooltip tooltip;
     protected boolean selectable = true;
     protected boolean selected = false;
+    protected boolean clickable = true;
     protected boolean playClickSound = true;
     public boolean deselectOtherEntriesOnSelect = true;
     public boolean selectOnClick = true;
@@ -66,7 +67,7 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
     public abstract void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button);
 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (this.isHovered() && !this.parent.isMouseInteractingWithGrabbers() && this.parent.isInnerAreaHovered()) {
+        if (this.isClickable() && this.isHovered() && !this.parent.isMouseInteractingWithGrabbers() && this.parent.isInnerAreaHovered()) {
             if ((button == 0) && this.selectOnClick) {
                 this.setSelected(true);
             }
@@ -145,6 +146,14 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
         if (!selectable) {
             this.selected = false;
         }
+    }
+
+    public void setClickable(boolean clickable) {
+        this.clickable = true;
+    }
+
+    public boolean isClickable() {
+        return this.clickable;
     }
 
     public void setPlayClickSound(boolean playClickSound) {

@@ -1245,5 +1245,13 @@
   "fancymenu.editor.actions.blocks.add.if": "Add IF Statement",
   "fancymenu.editor.actions.blocks.add.else": "Append ELSE Statement",
   "fancymenu.editor.actions.blocks.add.else_if": "Append ELSE-IF Statement",
-  "fancymenu.ui.screens.string_builder_screen.edit_in_editor": "Open in Editor"
+  "fancymenu.ui.screens.string_builder_screen.edit_in_editor": "Open in Editor",
+  "fancymenu.loading_requirements.is_number.compare_mode": "Compare Mode: %s",
+  "fancymenu.loading_requirements.is_number.compare_mode.equals": "EQUALS",
+  "fancymenu.loading_requirements.is_number.compare_mode.bigger_than": "BIGGER THAN",
+  "fancymenu.loading_requirements.is_number.compare_mode.smaller_than": "SMALLER THAN",
+  "fancymenu.loading_requirements.is_number.compare_mode.bigger_than_or_equals": "BIGGER THAN OR EQUALS",
+  "fancymenu.loading_requirements.is_number.compare_mode.smaller_than_or_equals": "SMALLER THAN OR EQUALS",
+  "fancymenu.loading_requirements.is_number.compare_mode.first_number": "Number:",
+  "fancymenu.loading_requirements.is_number.compare_mode.second_number": "Compare to Number:"
 }
