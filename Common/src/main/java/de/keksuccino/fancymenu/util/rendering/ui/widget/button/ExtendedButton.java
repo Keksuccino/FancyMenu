@@ -216,6 +216,12 @@ public class ExtendedButton extends Button {
         this.setLabel(msg);
     }
 
+    @Deprecated
+    @Override
+    public @NotNull Component getMessage() {
+        return super.getMessage();
+    }
+
     public ExtendedButton setLabel(@NotNull Component label) {
         this.labelSupplier = (btn) -> label;
         return this;
@@ -234,6 +240,13 @@ public class ExtendedButton extends Button {
     @NotNull
     public ConsumingSupplier<ExtendedButton, Component> getLabelSupplier() {
         return this.labelSupplier;
+    }
+
+    @NotNull
+    public Component getLabel() {
+        Component c = this.getLabelSupplier().get(this);
+        if (c == null) c = Component.empty();
+        return c;
     }
 
     public boolean isLabelEnabled() {

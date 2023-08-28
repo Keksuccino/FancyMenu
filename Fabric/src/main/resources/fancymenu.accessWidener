@@ -8,3 +8,6 @@ accessible field net/minecraft/client/gui/components/AbstractWidget y I
 
 mutable field net/minecraft/client/gui/screens/TitleScreen fading Z
 accessible field net/minecraft/client/gui/screens/TitleScreen fading Z
+
+extendable method net/minecraft/client/gui/screens/Screen createArrowEvent (Lnet/minecraft/client/gui/navigation/ScreenDirection;)Lnet/minecraft/client/gui/navigation/FocusNavigationEvent$ArrowNavigation;
+extendable method net/minecraft/client/gui/screens/Screen createTabEvent ()Lnet/minecraft/client/gui/navigation/FocusNavigationEvent$TabNavigation;

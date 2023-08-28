@@ -9,7 +9,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.ExtendedEditBox;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -19,6 +20,8 @@ import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.navigation.FocusNavigationEvent;
+import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -110,6 +113,15 @@ public abstract class ConfiguratorScreen extends Screen {
 
         super.render(pose, mouseX, mouseY, partial);
 
+        //Render suggestions of TextInputCells
+        for (ScrollAreaEntry e : this.scrollArea.getEntries()) {
+            if (e instanceof CellScrollEntry ce) {
+                if (ce.cell instanceof TextInputCell t) {
+                    t.suggestions.render(pose, mouseX, mouseY);
+                }
+            }
+        }
+
     }
 
     @Override
@@ -166,6 +178,16 @@ public abstract class ConfiguratorScreen extends Screen {
 
         return super.keyPressed(keycode, scancode, modifiers);
 
+    }
+
+    @Override
+    public FocusNavigationEvent.ArrowNavigation createArrowEvent(ScreenDirection $$0) {
+        return null;
+    }
+
+    @Override
+    public FocusNavigationEvent.TabNavigation createTabEvent() {
+        return null;
     }
 
     protected static class CellScrollEntry extends ScrollAreaEntry {
@@ -277,6 +299,7 @@ public abstract class ConfiguratorScreen extends Screen {
         public ExtendedEditBox editBox;
         public ExtendedButton openEditorButton;
         public final boolean allowEditor;
+        public EditBoxSuggestions suggestions;
 
         protected boolean widgetSizesSet = false;
 
@@ -286,9 +309,12 @@ public abstract class ConfiguratorScreen extends Screen {
 
             this.editBox = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 20, 20, Component.empty());
             this.editBox.setMaxLength(100000);
+            this.editBox.setResponder(this::onEdited);
             this.editBox.setCharacterFilter(characterFilter);
             UIBase.applyDefaultWidgetSkinTo(this.editBox);
             this.children().add(this.editBox);
+
+            this.suggestions = new EditBoxSuggestions(Minecraft.getInstance(), ConfiguratorScreen.this, this.editBox, Minecraft.getInstance().font, false, true, 0, 7, false, Integer.MIN_VALUE);
 
             this.openEditorButton = new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.ui.screens.string_builder_screen.edit_in_editor"), button -> {
                 if (allowEditor) {
@@ -341,6 +367,10 @@ public abstract class ConfiguratorScreen extends Screen {
             this.editBox.tick();
         }
 
+        protected void onEdited(String s) {
+            this.suggestions.updateCommandInfo();
+        }
+
         @NotNull
         public String getText() {
             return this.editBox.getValue();
@@ -353,6 +383,32 @@ public abstract class ConfiguratorScreen extends Screen {
             this.editBox.setHighlightPos(0);
             this.editBox.setDisplayPosition(0);
             return this;
+        }
+
+        public void setCustomSuggestions(@Nullable List<String> suggestions) {
+            this.suggestions.setCustomSuggestions(suggestions);
+        }
+
+        public void enableOnlyCustomSuggestionsMode(boolean enabled) {
+            this.suggestions.enableOnlyCustomSuggestionsMode(enabled);
+        }
+
+        public void enableSuggestions(boolean enabled) {
+            this.suggestions.setAllowSuggestions(enabled);
+            this.suggestions.updateCommandInfo();
+        }
+
+        public boolean mouseScrolled(double $$0, double $$1, double $$2) {
+            return this.suggestions.mouseScrolled($$2) ? true : super.mouseScrolled($$0, $$1, $$2);
+        }
+
+        public boolean mouseClicked(double $$0, double $$1, int $$2) {
+            return this.suggestions.mouseClicked($$0, $$1, $$2) ? true : super.mouseClicked($$0, $$1, $$2);
+        }
+
+        public boolean keyPressed(int $$0, int $$1, int $$2) {
+            if (this.suggestions.keyPressed($$0, $$1, $$2)) return true;
+            return super.keyPressed($$0, $$1, $$2);
         }
 
     }

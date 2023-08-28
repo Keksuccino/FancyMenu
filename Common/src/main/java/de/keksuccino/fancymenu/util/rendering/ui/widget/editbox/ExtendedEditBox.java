@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util.rendering.ui.widget;
+package de.keksuccino.fancymenu.util.rendering.ui.widget.editbox;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinEditBox;

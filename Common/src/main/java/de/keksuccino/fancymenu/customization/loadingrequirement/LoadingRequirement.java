@@ -112,7 +112,8 @@ public abstract class LoadingRequirement {
 
     public void editValue(@NotNull Screen parentScreen, @NotNull LoadingRequirementInstance requirementInstance) {
         if (this.hasValue()) {
-            TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.editor.loading_requirement.screens.build_screen.edit_value"), null, (call) -> {
+            String displayName = this.getValueDisplayName();
+            TextEditorScreen s = new TextEditorScreen((displayName != null) ? Component.literal(displayName) : Component.translatable("fancymenu.editor.elements.visibilityrequirements.edit_value"), null, (call) -> {
                 if (call != null) {
                     requirementInstance.value = call;
                 }

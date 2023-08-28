@@ -7,6 +7,7 @@
     "client.IMixinAbstractWidget",
     "client.IMixinButton",
     "client.IMixinChatScreen",
+    "client.IMixinCommandSuggestions",
     "client.IMixinEditBox",
     "client.IMixinLevelLoadingScreen",
     "client.IMixinMinecraft",

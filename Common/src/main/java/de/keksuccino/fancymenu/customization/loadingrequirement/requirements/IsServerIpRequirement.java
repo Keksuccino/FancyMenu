@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequireme
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
@@ -32,7 +33,7 @@ public class IsServerIpRequirement extends LoadingRequirement {
                     } else {
                         String curIp = Minecraft.getInstance().getCurrentServer().ip;
                         if (curIp.contains(":")) {
-                            curIp = curIp.split("[:]", 2)[0];
+                            curIp = curIp.split(":", 2)[0];
                         }
                         return curIp.equals(value);
                     }
@@ -45,7 +46,7 @@ public class IsServerIpRequirement extends LoadingRequirement {
     }
 
     @Override
-    public String getDisplayName() {
+    public @NotNull String getDisplayName() {
         return I18n.get("fancymenu.helper.visibilityrequirement.is_server_ip");
     }
 
@@ -66,7 +67,7 @@ public class IsServerIpRequirement extends LoadingRequirement {
 
     @Override
     public String getValuePreset() {
-        return "mc.mycoolserver.com";
+        return "mc.exampleserver.com";
     }
 
     @Override
