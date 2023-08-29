@@ -2,9 +2,11 @@ package de.keksuccino.fancymenu.util.rendering.ui.widget.editbox;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.StringReader;
+import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinCommandSuggestions;
@@ -17,10 +19,15 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.util.Mth;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,6 +35,8 @@ import java.util.stream.Stream;
 
 @SuppressWarnings("unused")
 public class EditBoxSuggestions extends CommandSuggestions {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     protected static final Pattern WHITESPACE_PATTERN = Pattern.compile("(\\s+)");
     protected static final Style UNPARSED_STYLE = Style.EMPTY.withColor(ChatFormatting.RED);
@@ -46,6 +55,9 @@ public class EditBoxSuggestions extends CommandSuggestions {
     protected final int fillColor;
     protected final List<String> customSuggestionsList = new ArrayList<>();
     protected boolean onlyCustomSuggestions = false;
+    protected boolean allowRenderUsage = true;
+    @NotNull
+    protected SuggestionsRenderPosition renderPosition = SuggestionsRenderPosition.VANILLA;
 
     public EditBoxSuggestions(Minecraft mc, Screen parentScreen, EditBox targetEditBox, Font font, boolean commandsOnly, boolean onlyShowIfCursorPastError, int lineStartOffset, int suggestionLineLimit, boolean anchorToBottom, int fillColor) {
         super(mc, parentScreen, targetEditBox, font, commandsOnly, onlyShowIfCursorPastError, lineStartOffset, suggestionLineLimit, anchorToBottom, fillColor);
@@ -62,9 +74,24 @@ public class EditBoxSuggestions extends CommandSuggestions {
     }
 
     @Override
+    public void render(@NotNull PoseStack pose, int mouseX, int mouseY) {
+        if (!this.input.isFocused()) {
+            this.setSuggestions(null);
+        }
+        super.render(pose, mouseX, mouseY);
+    }
+
+    @Override
+    public void renderUsage(@NotNull PoseStack pose) {
+        if (!this.isAllowRenderUsage()) return;
+        super.renderUsage(pose);
+    }
+
+    @Override
     public void updateCommandInfo() {
 
         String editBoxValue = this.input.getValue();
+
         if ((this.getCurrentParse() != null) && !this.getCurrentParse().getReader().getString().equals(editBoxValue)) {
             this.setCurrentParse(null);
         }
@@ -112,8 +139,84 @@ public class EditBoxSuggestions extends CommandSuggestions {
 
     }
 
+    @Override
+    public void showSuggestions(boolean someNarratingRelatedBoolean) {
+        if ((this.getPendingSuggestions() != null) && this.getPendingSuggestions().isDone()) {
+
+            Suggestions suggestions = this.getPendingSuggestions().join();
+            if (!suggestions.isEmpty()) {
+
+                List<Suggestion> sortedSuggestions = this.sortSuggestions(suggestions);
+
+                int totalSuggestionsWidth = 0;
+                for(Suggestion suggestion : suggestions.getList()) {
+                    totalSuggestionsWidth = Math.max(totalSuggestionsWidth, this.font.width(suggestion.getText()));
+                }
+
+                int listX = Mth.clamp(this.input.getScreenX(suggestions.getRange().getStart()), 0, this.input.getScreenX(0) + this.input.getInnerWidth() - totalSuggestionsWidth);
+                int listY = this.anchorToBottom ? this.screen.height - 12 : 72;
+                int listHeight = Math.min(sortedSuggestions.size(), this.suggestionLineLimit) * 12;
+                if (this.renderPosition == SuggestionsRenderPosition.ABOVE_EDIT_BOX) {
+                    listY = this.input.getY() - listHeight - 2;
+                }
+                if (this.renderPosition == SuggestionsRenderPosition.BELOW_EDIT_BOX) {
+                    listY = this.input.getY() + this.input.getHeight() + 2;
+                }
+                this.setSuggestions(new SuggestionsList(listX, listY, totalSuggestionsWidth, sortedSuggestions, someNarratingRelatedBoolean));
+
+            }
+
+        }
+    }
+
+    @Override
+    public boolean keyPressed(int keycode, int scancode, int modifiers) {
+        if (!this.input.isFocused()) return false;
+        if ((this.getSuggestions() != null) && this.getSuggestions().keyPressed(keycode, scancode, modifiers)) {
+            return true;
+        } else if (keycode == 258) {
+            this.showSuggestions(true);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean mouseClicked(double $$0, double $$1, int $$2) {
+        if (!this.input.isFocused()) return false;
+        return super.mouseClicked($$0, $$1, $$2);
+    }
+
+    @Override
+    public boolean mouseScrolled(double $$0) {
+        if (!this.input.isFocused()) return false;
+        return super.mouseScrolled($$0);
+    }
+
     protected void updateUsageInfo() {
         this.getAccessor().invokeUpdateUsageInfoFancyMenu();
+    }
+
+    protected List<Suggestion> sortSuggestions(Suggestions suggestions) {
+        return this.getAccessor().invokeSortSuggestionsFancyMenu(suggestions);
+    }
+
+    public void setSuggestionsRenderPosition(@NotNull SuggestionsRenderPosition position) {
+        this.renderPosition = Objects.requireNonNull(position);
+    }
+
+    @NotNull
+    public SuggestionsRenderPosition getSuggestionsRenderPosition() {
+        return this.renderPosition;
+    }
+
+    public void setAllowRenderUsage(boolean allow) {
+        this.allowRenderUsage = allow;
+    }
+
+    public boolean isAllowRenderUsage() {
+        return this.allowRenderUsage;
     }
 
     public void enableOnlyCustomSuggestionsMode(boolean enable) {
@@ -177,6 +280,12 @@ public class EditBoxSuggestions extends CommandSuggestions {
             for(Matcher matcher = WHITESPACE_PATTERN.matcher(editBoxValue); matcher.find(); index = matcher.end()) {}
             return index;
         }
+    }
+
+    public enum SuggestionsRenderPosition {
+        VANILLA,
+        ABOVE_EDIT_BOX,
+        BELOW_EDIT_BOX
     }
 
 }

@@ -11,6 +11,8 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +55,7 @@ public class ServerVariableCommand {
 
     private static String[] getVariableNameSuggestions(ServerPlayer sender) {
         List<String> l = cachedVariableArguments.get(sender.getUUID().toString());
+        if (l == null) l = new ArrayList<>();
         if (l.isEmpty()) {
             l.add("<no_variables_found>");
         }

@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.client;
 
 import com.mojang.brigadier.ParseResults;
+import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import net.minecraft.client.gui.components.CommandSuggestions;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -9,7 +10,6 @@ import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
-
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -33,5 +33,7 @@ public interface IMixinCommandSuggestions {
     @Accessor("suggestions") void setSuggestionsFancyMenu(CommandSuggestions.SuggestionsList suggestions);
 
     @Invoker("updateUsageInfo") void invokeUpdateUsageInfoFancyMenu();
+
+    @Invoker("sortSuggestions") List<Suggestion> invokeSortSuggestionsFancyMenu(Suggestions suggestions);
 
 }

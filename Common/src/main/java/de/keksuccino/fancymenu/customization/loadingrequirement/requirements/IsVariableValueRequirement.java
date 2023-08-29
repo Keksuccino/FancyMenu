@@ -9,12 +9,10 @@ import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorFormatting
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.CommandSuggestions;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
-
 import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
@@ -120,11 +118,20 @@ public class IsVariableValueRequirement extends LoadingRequirement {
             this.addLabelCell(Component.translatable("fancymenu.loading_requirements.is_variable_value.var_name"));
             this.nameCell = this.addTextInputCell(null, true, true).setText(name);
 
+            //TODO support für custom background zu Suggestions class adden
+
+            //TODO farbe von selected suggestion ändern
+
+            //TODO wenn var name edit box leer und neu fokussiert -> Suggestions zeigen
+
+            //TODO suggestion instance von ExtendedEditBox entfernen, da nutzlos
+
             this.variableNameSuggestions = new EditBoxSuggestions(Minecraft.getInstance(), this, this.nameCell.editBox, Minecraft.getInstance().font, false, true, 0, 7, false, Integer.MIN_VALUE);
             this.variableNameSuggestions.setAllowSuggestions(true);
-            //TODO FIXEN: custom suggestions gehen nicht
-//            this.variableNameSuggestions.enableOnlyCustomSuggestionsMode(true);
-//            this.variableNameSuggestions.setCustomSuggestions(VariableHandler.getVariableNames());
+            this.variableNameSuggestions.enableOnlyCustomSuggestionsMode(true);
+            this.variableNameSuggestions.setSuggestionsRenderPosition(EditBoxSuggestions.SuggestionsRenderPosition.ABOVE_EDIT_BOX);
+            this.variableNameSuggestions.setAllowRenderUsage(false);
+            this.variableNameSuggestions.setCustomSuggestions(VariableHandler.getVariableNames());
             this.variableNameSuggestions.updateCommandInfo();
             this.nameCell.editBox.setResponder(s -> this.variableNameSuggestions.updateCommandInfo());
 
