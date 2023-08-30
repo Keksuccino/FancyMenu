@@ -635,7 +635,7 @@
   "fancymenu.helper.placeholder.get_variable.desc": "Gets the value of a stored variable.\n\nJust replace 'some_variable' with\nthe actual variable name.",
   "fancymenu.helper.visibilityrequirement.is_variable_value": "Is Variable Value",
   "fancymenu.helper.visibilityrequirement.is_variable_value.desc": "Check if the value of a stored\nvariable is X.\n\nThe requirement value is\na combination of the\nvariable name and the\nvalue to check if it matches\nthe stored one.\n\nThe example has variable name\nand variable value wrapped\nin <>, but you need to remove these!",
-  "fancymenu.helper.visibilityrequirement.is_variable_value.value.desc": "Variable Name & Value",
+  "fancymenu.helper.visibilityrequirement.is_variable_value.value.desc": "Variable Name & Value to Check For",
   "fancymenu.helper.visibilityrequirement.is_server_ip": "Is Server IP",
   "fancymenu.helper.visibilityrequirement.is_server_ip.desc": "Check if the current server IP is X.",
   "fancymenu.helper.visibilityrequirement.is_server_ip.value.desc": "Server IP",
@@ -1262,5 +1262,7 @@
   "fancymenu.loading_requirements.is_text.compare_mode.first_text": "Text:",
   "fancymenu.loading_requirements.is_text.compare_mode.second_text": "Compare to Text:",
   "fancymenu.loading_requirements.is_variable_value.var_name": "Variable Name:",
-  "fancymenu.loading_requirements.is_variable_value.var_value": "Variable Value to Check For:"
+  "fancymenu.loading_requirements.is_variable_value.var_value": "Variable Value to Check For:",
+  "fancymenu.loading_requirements.is_mod_loaded.mod_id": "Mod ID:",
+  "fancymenu.loading_requirements.is_language.lang_id": "Language ID:"
 }

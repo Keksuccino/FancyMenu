@@ -4,26 +4,35 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.Message;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinCommandSuggestions;
+import de.keksuccino.fancymenu.mixin.mixins.client.IMixinSuggestionsList;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.CommandSuggestions;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec2;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -34,7 +43,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 @SuppressWarnings("unused")
-public class EditBoxSuggestions extends CommandSuggestions {
+public class EditBoxSuggestions extends CommandSuggestions implements GuiEventListener {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -52,15 +61,31 @@ public class EditBoxSuggestions extends CommandSuggestions {
     protected final int lineStartOffset;
     protected final int suggestionLineLimit;
     protected final boolean anchorToBottom;
-    protected final int fillColor;
     protected final List<String> customSuggestionsList = new ArrayList<>();
     protected boolean onlyCustomSuggestions = false;
     protected boolean allowRenderUsage = true;
     @NotNull
     protected SuggestionsRenderPosition renderPosition = SuggestionsRenderPosition.VANILLA;
+    protected DrawableColor backgroundColor = DrawableColor.of(new Color(0,0,0));
+    protected DrawableColor normalTextColor = DrawableColor.of(new Color(-5592406));
+    protected DrawableColor selectedTextColor = DrawableColor.of(new Color(-256));
+    protected boolean textShadow = true;
+    protected boolean autoSuggestions = true;
 
-    public EditBoxSuggestions(Minecraft mc, Screen parentScreen, EditBox targetEditBox, Font font, boolean commandsOnly, boolean onlyShowIfCursorPastError, int lineStartOffset, int suggestionLineLimit, boolean anchorToBottom, int fillColor) {
-        super(mc, parentScreen, targetEditBox, font, commandsOnly, onlyShowIfCursorPastError, lineStartOffset, suggestionLineLimit, anchorToBottom, fillColor);
+    @NotNull
+    public static EditBoxSuggestions createWithCustomSuggestions(@NotNull Screen screen, @NotNull EditBox editBox, @NotNull SuggestionsRenderPosition renderPosition, @NotNull List<String> suggestions) {
+        EditBoxSuggestions variableNameSuggestions = new EditBoxSuggestions(Minecraft.getInstance(), screen, editBox, Minecraft.getInstance().font, false, true, 0, 7, false);
+        variableNameSuggestions.setAllowSuggestions(true);
+        variableNameSuggestions.enableOnlyCustomSuggestionsMode(true);
+        variableNameSuggestions.setSuggestionsRenderPosition(renderPosition);
+        variableNameSuggestions.setAllowRenderUsage(false);
+        variableNameSuggestions.setCustomSuggestions(suggestions);
+        variableNameSuggestions.updateCommandInfo();
+        return variableNameSuggestions;
+    }
+
+    public EditBoxSuggestions(@NotNull Minecraft mc, @NotNull Screen parentScreen, @NotNull EditBox targetEditBox, @NotNull Font font, boolean commandsOnly, boolean onlyShowIfCursorPastError, int lineStartOffset, int suggestionLineLimit, boolean anchorToBottom) {
+        super(mc, parentScreen, targetEditBox, font, commandsOnly, onlyShowIfCursorPastError, lineStartOffset, suggestionLineLimit, anchorToBottom, Integer.MIN_VALUE);
         this.minecraft = mc;
         this.screen = parentScreen;
         this.input = targetEditBox;
@@ -70,7 +95,6 @@ public class EditBoxSuggestions extends CommandSuggestions {
         this.lineStartOffset = lineStartOffset;
         this.suggestionLineLimit = suggestionLineLimit;
         this.anchorToBottom = anchorToBottom;
-        this.fillColor = fillColor;
     }
 
     @Override
@@ -135,6 +159,10 @@ public class EditBoxSuggestions extends CommandSuggestions {
                 suggestionStringList = this.minecraft.player.connection.getSuggestionsProvider().getCustomTabSugggestions();
             }
             this.setPendingSuggestions(SharedSuggestionProvider.suggest(suggestionStringList, new SuggestionsBuilder(editBoxSubValue, lastWordIndex)));
+            //Always show suggestions without pressing TAB
+            if (this.autoSuggestions && this.suggestionsAllowed() && this.minecraft.options.autoSuggestions().get()) {
+                this.showSuggestions(false);
+            }
         }
 
     }
@@ -162,7 +190,7 @@ public class EditBoxSuggestions extends CommandSuggestions {
                 if (this.renderPosition == SuggestionsRenderPosition.BELOW_EDIT_BOX) {
                     listY = this.input.getY() + this.input.getHeight() + 2;
                 }
-                this.setSuggestions(new SuggestionsList(listX, listY, totalSuggestionsWidth, sortedSuggestions, someNarratingRelatedBoolean));
+                this.setSuggestions(new EditBoxSuggestionsList(listX, listY, totalSuggestionsWidth, sortedSuggestions, someNarratingRelatedBoolean));
 
             }
 
@@ -183,6 +211,15 @@ public class EditBoxSuggestions extends CommandSuggestions {
     }
 
     @Override
+    public void setFocused(boolean var1) {
+    }
+
+    @Override
+    public boolean isFocused() {
+        return false;
+    }
+
+    @Override
     public boolean mouseClicked(double $$0, double $$1, int $$2) {
         if (!this.input.isFocused()) return false;
         return super.mouseClicked($$0, $$1, $$2);
@@ -200,6 +237,50 @@ public class EditBoxSuggestions extends CommandSuggestions {
 
     protected List<Suggestion> sortSuggestions(Suggestions suggestions) {
         return this.getAccessor().invokeSortSuggestionsFancyMenu(suggestions);
+    }
+
+    public boolean suggestionsAllowed() {
+        return this.getAccessor().getAllowSuggestionsFancyMenu();
+    }
+
+    public boolean autoSuggestionsEnabled() {
+        return this.autoSuggestions;
+    }
+
+    public void setAutoSuggestionsEnabled(boolean enabled) {
+        this.autoSuggestions = enabled;
+    }
+
+    public boolean isTextShadow() {
+        return this.textShadow;
+    }
+
+    public void setTextShadow(boolean textShadow) {
+        this.textShadow = textShadow;
+    }
+
+    public DrawableColor getBackgroundColor() {
+        return this.backgroundColor;
+    }
+
+    public void setBackgroundColor(@NotNull DrawableColor backgroundColor) {
+        this.backgroundColor = backgroundColor;
+    }
+
+    public DrawableColor getNormalTextColor() {
+        return this.normalTextColor;
+    }
+
+    public void setNormalTextColor(@NotNull DrawableColor normalTextColor) {
+        this.normalTextColor = normalTextColor;
+    }
+
+    public DrawableColor getSelectedTextColor() {
+        return this.selectedTextColor;
+    }
+
+    public void setSelectedTextColor(@NotNull DrawableColor selectedTextColor) {
+        this.selectedTextColor = selectedTextColor;
     }
 
     public void setSuggestionsRenderPosition(@NotNull SuggestionsRenderPosition position) {
@@ -286,6 +367,89 @@ public class EditBoxSuggestions extends CommandSuggestions {
         VANILLA,
         ABOVE_EDIT_BOX,
         BELOW_EDIT_BOX
+    }
+    
+    public class EditBoxSuggestionsList extends SuggestionsList {
+
+        protected List<Suggestion> suggestionList;
+
+        public EditBoxSuggestionsList(int x, int y, int width, List<Suggestion> suggestionList, boolean someNarratingRelatedBoolean) {
+            super(x, y, width, suggestionList, someNarratingRelatedBoolean);
+            this.suggestionList = suggestionList;
+        }
+
+        public void render(@NotNull PoseStack pose, int mouseX, int mouseY) {
+            Message message;
+            int suggestionLineCount = Math.min(this.suggestionList.size(), EditBoxSuggestions.this.suggestionLineLimit);
+            boolean bl = this.getOffset() > 0;
+            boolean bl2 = this.suggestionList.size() > this.getOffset() + suggestionLineCount;
+            boolean bl3 = bl || bl2;
+            boolean bl4 = (this.getLastMouse().x != (float)mouseX) || (this.getLastMouse().y != (float)mouseY);
+            if (bl4) {
+                this.setLastMouse(new Vec2(mouseX, mouseY));
+            }
+            if (bl3) {
+                int m;
+                GuiComponent.fill(pose, this.getRect().getX(), this.getRect().getY() - 1, this.getRect().getX() + this.getRect().getWidth(), this.getRect().getY(), EditBoxSuggestions.this.backgroundColor.getColorInt());
+                GuiComponent.fill(pose, this.getRect().getX(), this.getRect().getY() + this.getRect().getHeight(), this.getRect().getX() + this.getRect().getWidth(), this.getRect().getY() + this.getRect().getHeight() + 1, EditBoxSuggestions.this.backgroundColor.getColorInt());
+                if (bl) {
+                    for (m = 0; m < this.getRect().getWidth(); ++m) {
+                        if (m % 2 != 0) continue;
+                        GuiComponent.fill(pose, this.getRect().getX() + m, this.getRect().getY() - 1, this.getRect().getX() + m + 1, this.getRect().getY(), -1);
+                    }
+                }
+                if (bl2) {
+                    for (m = 0; m < this.getRect().getWidth(); ++m) {
+                        if (m % 2 != 0) continue;
+                        GuiComponent.fill(pose, this.getRect().getX() + m, this.getRect().getY() + this.getRect().getHeight(), this.getRect().getX() + m + 1, this.getRect().getY() + this.getRect().getHeight() + 1, -1);
+                    }
+                }
+            }
+            boolean bl52 = false;
+            for (int n = 0; n < suggestionLineCount; ++n) {
+                Suggestion suggestion = this.suggestionList.get(n + this.getOffset());
+                GuiComponent.fill(pose, this.getRect().getX(), this.getRect().getY() + 12 * n, this.getRect().getX() + this.getRect().getWidth(), this.getRect().getY() + 12 * n + 12, EditBoxSuggestions.this.backgroundColor.getColorInt());
+                if (mouseX > this.getRect().getX() && mouseX < this.getRect().getX() + this.getRect().getWidth() && mouseY > this.getRect().getY() + 12 * n && mouseY < this.getRect().getY() + 12 * n + 12) {
+                    if (bl4) {
+                        this.select(n + this.getOffset());
+                    }
+                    bl52 = true;
+                }
+                if (EditBoxSuggestions.this.textShadow) {
+                    EditBoxSuggestions.this.font.drawShadow(pose, suggestion.getText(), (float)(this.getRect().getX() + 1), (float)(this.getRect().getY() + 2 + 12 * n), ((n + this.getOffset()) == this.getCurrent()) ? EditBoxSuggestions.this.selectedTextColor.getColorInt() : EditBoxSuggestions.this.normalTextColor.getColorInt());
+                } else {
+                    EditBoxSuggestions.this.font.draw(pose, suggestion.getText(), (float)(this.getRect().getX() + 1), (float)(this.getRect().getY() + 2 + 12 * n), ((n + this.getOffset()) == this.getCurrent()) ? EditBoxSuggestions.this.selectedTextColor.getColorInt() : EditBoxSuggestions.this.normalTextColor.getColorInt());
+                }
+            }
+            if (bl52 && (message = this.suggestionList.get(this.getCurrent()).getTooltip()) != null) {
+                EditBoxSuggestions.this.screen.renderTooltip(pose, ComponentUtils.fromMessage(message), mouseX, mouseY);
+            }
+        }
+
+        public Rect2i getRect() {
+            return this.getAccessor().getRectFancyMenu();
+        }
+
+        public int getOffset() {
+            return this.getAccessor().getOffsetFancyMenu();
+        }
+
+        public int getCurrent() {
+            return this.getAccessor().getCurrentFancyMenu();
+        }
+        
+        public Vec2 getLastMouse() {
+            return this.getAccessor().getLastMouseFancyMenu();
+        }
+
+        public void setLastMouse(Vec2 lastMouse) {
+            this.getAccessor().setLastMouseFancyMenu(lastMouse);
+        }
+
+        public IMixinSuggestionsList getAccessor() {
+            return (IMixinSuggestionsList) this;
+        }
+        
     }
 
 }

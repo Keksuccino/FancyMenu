@@ -22,8 +22,6 @@ public class LightUIColorTheme extends UIColorTheme {
         scroll_grabber_color_hover = DrawableColor.of(new Color(102, 104, 104, 100));
         screen_background_color = DrawableColor.of(new Color(178, 178, 178));
         screen_background_color_darker = DrawableColor.of(new Color(173, 173, 173));
-//        element_border_color_normal = DrawableColor.of(new Color(56, 56, 56));
-//        element_border_color_hover = DrawableColor.of(new Color(68, 68, 68));
         element_border_color_normal = DrawableColor.of(new Color(119, 119, 119));
         element_border_color_hover = DrawableColor.of(new Color(119, 119, 119));
         element_background_color_normal = DrawableColor.of(new Color(203, 203, 203));
@@ -39,8 +37,9 @@ public class LightUIColorTheme extends UIColorTheme {
         listing_dot_color_1 = DrawableColor.of(new Color(67, 141, 208));
         listing_dot_color_2 = DrawableColor.of(new Color(171, 57, 80));
         listing_dot_color_3 = DrawableColor.of(new Color(178, 116, 12));
-//        context_menu_border_color = DrawableColor.of(new Color(119, 119, 119));
-//        tooltip_border_color = DrawableColor.of(new Color(119, 119, 119));
+        suggestions_background_color = DrawableColor.of(new Color(162, 162, 162));
+        suggestions_text_color_normal = DrawableColor.of(new Color(45, 45, 45));
+        suggestions_text_color_selected = DrawableColor.of(new Color(32, 94, 162));
 
         ui_texture_color = DrawableColor.of(new Color(45, 45, 45));
 
@@ -49,6 +48,7 @@ public class LightUIColorTheme extends UIColorTheme {
         element_label_color_inactive = DrawableColor.of(new Color(138, 137, 137));
         edit_box_text_color_normal = DrawableColor.of(new Color(45, 45, 45));
         edit_box_text_color_uneditable = DrawableColor.of(new Color(138, 137, 137));
+        edit_box_suggestion_text_color = DrawableColor.of(new Color(138, 137, 137));
         description_area_text_color = DrawableColor.of(new Color(45, 45, 45));
         text_editor_text_color = DrawableColor.of(new Color(72, 78, 83));
         success_text_color = DrawableColor.of(new Color(25, 126, 2));

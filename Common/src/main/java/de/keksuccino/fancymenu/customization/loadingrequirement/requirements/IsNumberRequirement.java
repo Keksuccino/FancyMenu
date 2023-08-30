@@ -19,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 public class IsNumberRequirement extends LoadingRequirement {
@@ -175,7 +176,7 @@ public class IsNumberRequirement extends LoadingRequirement {
 
     @Override
     public void editValue(@NotNull Screen parentScreen, @NotNull LoadingRequirementInstance requirementInstance) {
-        IsNumberValueConfigScreen s = new IsNumberValueConfigScreen(requirementInstance.value, callback -> {
+        IsNumberValueConfigScreen s = new IsNumberValueConfigScreen(Objects.requireNonNullElse(requirementInstance.value, ""), callback -> {
             if (callback != null) {
                 requirementInstance.value = callback;
             }
@@ -197,7 +198,7 @@ public class IsNumberRequirement extends LoadingRequirement {
         protected TextInputCell secondNumberCell;
 
         protected IsNumberValueConfigScreen(String value, @NotNull Consumer<String> callback) {
-            super(Component.translatable("fancymenu.editor.elements.visibilityrequirements.edit_value"), callback);
+            super(Component.translatable("fancymenu.helper.editor.items.visibilityrequirements.is_number.valuename"), callback);
             if (value == null) value = "";
             List<String> sections = getSections(value);
             if (!sections.isEmpty()) {

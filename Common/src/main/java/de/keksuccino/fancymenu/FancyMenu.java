@@ -21,23 +21,11 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO Custom Click Action für "Edit Value" Button von Actions adden (genau so wie bei Loading Requirements)
+
+	//TODO Neues Text Element richtig benennen ("V2 DEBUG" weg) und legacy support adden, damit alte elemente zu neuen konvertiert werden
+
 	//TODO custom background support für slider adden (+ eventuell option zum changen von slider grabber textur)
-
-	//TODO Add custom click action for the "edit value" button of actions (add default method to action class that opens editor, but make it overridable)
-	// - Add "Wait For" action that waits for a loading requirement to be true/false (use the custom click action for that to open the Loading Req builder)
-	// - Add "IF" (start + end) actions, to wrap multiple actions in an IF-block that takes loading requirements (use custom click action like in "Wait For")
-	//   - Handle IF-blocks when executing actions in loop (if IF-block-start -> start checking for IF-block; if IF-block-end -> STOP checking)
-
-	//TODO Element Listeners
-	// - Jeder Element Typ hat eigene Listener
-	// - Per Rechtsklick auf element können Listener geadded werden, die dann Actions ausführen (jeder listener hat eigene Actions list)
-	// - "Element Listeners" Option ist unter "Loading Requirements" in Context Menu
-	// - Default Listeners (Alle Elemente):
-	//   - On Load
-	//   - On Click
-	//   - On Hover Start
-	//   - On Hover End
-	//   - On Render (Jeden Render Tick)
 
 	//TODO FIXEN: Hover sound von vanilla + custom buttons geht nicht
 

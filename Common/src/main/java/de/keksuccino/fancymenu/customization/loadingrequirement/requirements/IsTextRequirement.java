@@ -18,6 +18,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 public class IsTextRequirement extends LoadingRequirement {
@@ -165,7 +166,7 @@ public class IsTextRequirement extends LoadingRequirement {
 
     @Override
     public void editValue(@NotNull Screen parentScreen, @NotNull LoadingRequirementInstance requirementInstance) {
-        IsTextValueConfigScreen s = new IsTextValueConfigScreen(requirementInstance.value, callback -> {
+        IsTextValueConfigScreen s = new IsTextValueConfigScreen(Objects.requireNonNullElse(requirementInstance.value, ""), callback -> {
             if (callback != null) {
                 requirementInstance.value = callback;
             }
@@ -187,7 +188,7 @@ public class IsTextRequirement extends LoadingRequirement {
         protected TextInputCell secondTextCell;
 
         protected IsTextValueConfigScreen(String value, @NotNull Consumer<String> callback) {
-            super(Component.translatable("fancymenu.editor.elements.visibilityrequirements.edit_value"), callback);
+            super(Component.translatable("fancymenu.helper.editor.items.visibilityrequirements.is_text.valuename"), callback);
             if (value == null) value = "";
             List<String> sections = getSections(value);
             if (!sections.isEmpty()) {

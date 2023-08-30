@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui;
 
 import java.awt.Color;
-
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.FancyMenu;
@@ -11,6 +10,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorThemeRegistry;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import de.keksuccino.fancymenu.util.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import net.minecraft.client.Minecraft;
@@ -38,7 +38,18 @@ public class UIBase extends RenderingUtils {
 		if (widget instanceof ExtendedEditBox e) {
 			return (T) applyDefaultEditBoxSkinTo(e);
 		}
+		if (widget instanceof EditBoxSuggestions s) {
+			return (T) applyDefaultEditBoxSuggestionsSkinTo(s);
+		}
 		return widget;
+	}
+
+	private static EditBoxSuggestions applyDefaultEditBoxSuggestionsSkinTo(EditBoxSuggestions editBoxSuggestions) {
+		editBoxSuggestions.setBackgroundColor(UIBase.getUIColorTheme().suggestions_background_color);
+		editBoxSuggestions.setNormalTextColor(UIBase.getUIColorTheme().suggestions_text_color_normal);
+		editBoxSuggestions.setSelectedTextColor(UIBase.getUIColorTheme().suggestions_text_color_selected);
+		editBoxSuggestions.setTextShadow(false);
+		return editBoxSuggestions;
 	}
 
 	private static ExtendedEditBox applyDefaultEditBoxSkinTo(ExtendedEditBox editBox) {
@@ -48,6 +59,7 @@ public class UIBase extends RenderingUtils {
 		editBox.setBackgroundColor(theme.edit_box_background_color);
 		editBox.setBorderNormalColor(theme.edit_box_border_color_normal);
 		editBox.setBorderFocusedColor(theme.edit_box_border_color_focused);
+		editBox.setSuggestionTextColor(theme.edit_box_suggestion_text_color);
 		editBox.setTextShadow(false);
 		return editBox;
 	}

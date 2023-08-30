@@ -15,6 +15,7 @@
     "client.IMixinPlayerModel",
     "client.IMixinScreen",
     "client.IMixinServerList",
+    "client.IMixinSuggestionsList",
     "client.IMixinTitleScreen",
     "client.MixinAbstractButton",
     "client.MixinAbstractSelectionList",

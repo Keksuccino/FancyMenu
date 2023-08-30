@@ -16,6 +16,8 @@ import java.util.concurrent.CompletableFuture;
 @Mixin(CommandSuggestions.class)
 public interface IMixinCommandSuggestions {
 
+    @Accessor("allowSuggestions") boolean getAllowSuggestionsFancyMenu();
+
     @Accessor("keepSuggestions") boolean getKeepSuggestionsFancyMenu();
 
     @Nullable

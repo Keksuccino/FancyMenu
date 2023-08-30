@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -80,7 +81,7 @@ public class IsVariableValueRequirement extends LoadingRequirement {
 
     @Override
     public void editValue(@NotNull Screen parentScreen, @NotNull LoadingRequirementInstance requirementInstance) {
-        IsVariableValueConfigScreen s = new IsVariableValueConfigScreen(requirementInstance.value, callback -> {
+        IsVariableValueConfigScreen s = new IsVariableValueConfigScreen(Objects.requireNonNullElse(requirementInstance.value, ""), callback -> {
             if (callback != null) {
                 requirementInstance.value = callback;
             }
@@ -101,7 +102,7 @@ public class IsVariableValueRequirement extends LoadingRequirement {
         protected EditBoxSuggestions variableNameSuggestions;
 
         protected IsVariableValueConfigScreen(String value, @NotNull Consumer<String> callback) {
-            super(Component.translatable("fancymenu.editor.elements.visibilityrequirements.edit_value"), callback);
+            super(Component.translatable("fancymenu.helper.visibilityrequirement.is_variable_value.value.desc"), callback);
             if (value == null) value = "";
             if (value.contains(":")) {
                 this.variableName = value.split(":", 2)[0];
@@ -118,21 +119,8 @@ public class IsVariableValueRequirement extends LoadingRequirement {
             this.addLabelCell(Component.translatable("fancymenu.loading_requirements.is_variable_value.var_name"));
             this.nameCell = this.addTextInputCell(null, true, true).setText(name);
 
-            //TODO support für custom background zu Suggestions class adden
-
-            //TODO farbe von selected suggestion ändern
-
-            //TODO wenn var name edit box leer und neu fokussiert -> Suggestions zeigen
-
-            //TODO suggestion instance von ExtendedEditBox entfernen, da nutzlos
-
-            this.variableNameSuggestions = new EditBoxSuggestions(Minecraft.getInstance(), this, this.nameCell.editBox, Minecraft.getInstance().font, false, true, 0, 7, false, Integer.MIN_VALUE);
-            this.variableNameSuggestions.setAllowSuggestions(true);
-            this.variableNameSuggestions.enableOnlyCustomSuggestionsMode(true);
-            this.variableNameSuggestions.setSuggestionsRenderPosition(EditBoxSuggestions.SuggestionsRenderPosition.ABOVE_EDIT_BOX);
-            this.variableNameSuggestions.setAllowRenderUsage(false);
-            this.variableNameSuggestions.setCustomSuggestions(VariableHandler.getVariableNames());
-            this.variableNameSuggestions.updateCommandInfo();
+            this.variableNameSuggestions = EditBoxSuggestions.createWithCustomSuggestions(this, this.nameCell.editBox, EditBoxSuggestions.SuggestionsRenderPosition.ABOVE_EDIT_BOX, VariableHandler.getVariableNames());
+            UIBase.applyDefaultWidgetSkinTo(this.variableNameSuggestions);
             this.nameCell.editBox.setResponder(s -> this.variableNameSuggestions.updateCommandInfo());
 
             String value = this.getVarValueString();

@@ -23,6 +23,7 @@ public class ExtendedEditBox extends EditBox {
     protected DrawableColor borderFocusedColor = DrawableColor.of(new Color(255, 255, 255));
     protected DrawableColor textColor = DrawableColor.of(new Color(14737632));
     protected DrawableColor textColorUneditable = DrawableColor.of(new Color(7368816));
+    protected DrawableColor suggestionTextColor = DrawableColor.of(new Color(-8355712));
     protected boolean textShadow = true;
     protected final Font font;
 
@@ -115,11 +116,19 @@ public class ExtendedEditBox extends EditBox {
 
             Component hint = access.getHintFancyMenu();
             if ((hint != null) && text.isEmpty() && !this.isFocused()) {
-                this.font.drawShadow(pose, hint, (float)textXAfterCursor, (float)textY, textColor);
+                if (this.textShadow) {
+                    this.font.drawShadow(pose, hint, (float) textXAfterCursor, (float) textY, textColor);
+                } else {
+                    this.font.draw(pose, hint, (float) textXAfterCursor, (float) textY, textColor);
+                }
             }
 
             if (!renderSmallCursor && access.getSuggestionFancyMenu() != null) {
-                this.font.drawShadow(pose, access.getSuggestionFancyMenu(), (float)(finalTextXAfterCursor - 1), (float)textY, -8355712);
+                if (this.textShadow) {
+                    this.font.drawShadow(pose, access.getSuggestionFancyMenu(), (float) (finalTextXAfterCursor - 1), (float) textY, this.suggestionTextColor.getColorInt());
+                } else {
+                    this.font.draw(pose, access.getSuggestionFancyMenu(), (float)finalTextXAfterCursor, (float) textY, this.suggestionTextColor.getColorInt());
+                }
             }
 
             if (isCursorVisible) {
@@ -226,6 +235,16 @@ public class ExtendedEditBox extends EditBox {
 
     public ExtendedEditBox setTextColorUneditable(@NotNull DrawableColor textColorUneditable) {
         this.textColorUneditable = textColorUneditable;
+        return this;
+    }
+
+    @NotNull
+    public DrawableColor getSuggestionTextColor() {
+        return this.suggestionTextColor;
+    }
+
+    public ExtendedEditBox setSuggestionTextColor(@NotNull DrawableColor suggestionTextColor) {
+        this.suggestionTextColor = suggestionTextColor;
         return this;
     }
 
