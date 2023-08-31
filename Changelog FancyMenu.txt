@@ -1,4 +1,13 @@
 
+CHANGELOG | FANCYMENU v2.14.9-1 for Forge 1.20.1
+ 
+- Shoutout to the Pixelmon team that made me release this update just so they can update their pack more easily on Technic lmao
+
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v2.14.9
  
 - Dropped Minecraft 1.19.3
@@ -61,12 +70,13 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - The action system now supports IF, ELSE-IF und ELSE statements (IF and ELSE-IF take loading requirements)
 - You can drag-&-drop actions (and statements) in the "Edit Actions" screen now (to move them)
 - Complex loading requirements like "Is Number" now have a GUI to build/edit their values more easily
+- FancyMenu's "config.txt" file is now called "options.txt" (It's NOT recommended to rename the old one to "options.txt"!)
  
 - Added loading requirement "File/Folder Exists" to check if a file/folder exists
 - Added loading requirement "Is Button Active" to check if a button is active (clickable/not greyed out)
 - Added loading requirement "Is ANY Element Hovered" to check if any element is hovered (takes no value and checks for ALL elements in the layout, not just buttons)
 - Added loading requirement "Is ANY Button Hovered" to check if any button is hovered (takes no value and checks for both vanilla and custom buttons)
-- Added action "Disconnect/Leave Server/World" to disconnect from/leave a server/world (allows you to set a screen that should open after disconnecting/leaving)
+- Added action "Leave World or Server" to leave a world or server (allows you to set a screen that should open after leaving)
 - Added placeholder "Absolute File/Folder Path" to get the absolute path of a file/folder
 - Added placeholder "Random Number" to get a random number in the specified range
 - Added "Cursor" element that allows you to set a custom cursor texture (supports loading requirements)
