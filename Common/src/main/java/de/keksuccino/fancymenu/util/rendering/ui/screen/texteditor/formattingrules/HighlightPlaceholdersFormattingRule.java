@@ -1,13 +1,11 @@
-
-package de.keksuccino.fancymenu.util.rendering.ui.texteditor.formattingrules;
+package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.formattingrules;
 
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorFormattingRule;
-import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorLine;
-import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorLine;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

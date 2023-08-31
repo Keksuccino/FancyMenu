@@ -36,8 +36,6 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
         element.baseWidth = 200;
         element.baseHeight = 40;
 
-//        element.markdownRenderer.skipRefresh = true;
-
         element.source = serialized.getValue("source");
         if (element.source == null) {
             element.source = "";
@@ -74,15 +72,6 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
                 element.markdownRenderer.setTextBaseScale(Float.parseFloat(scaleString));
             }
         }
-
-        //TODO legacy support für alignment adden
-//        String alignmentString = serialized.getValue("alignment");
-//        if (alignmentString != null) {
-//            AbstractElement.Alignment a = AbstractElement.Alignment.getByName(alignmentString);
-//            if (a != null) {
-//                element.alignment = a;
-//            }
-//        }
 
         String baseColorString = serialized.getValue("base_color");
         if (baseColorString != null) {
@@ -176,8 +165,6 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
             element.markdownRenderer.setBulletListSpacing(Integer.parseInt(bulletListSpacing));
         }
 
-//        element.markdownRenderer.skipRefresh = false;
-
         element.markdownRenderer.refreshRenderer();
 
         element.updateContent();
@@ -200,9 +187,6 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
             serializeTo.putProperty("case_mode", "upper");
         }
         serializeTo.putProperty("scale", "" + element.markdownRenderer.getTextBaseScale());
-//        if (element.alignment != null) {
-//            serializeTo.putProperty("alignment", element.alignment.key);
-//        }
         serializeTo.putProperty("base_color", element.markdownRenderer.getTextBaseColor().getHex());
         serializeTo.putProperty("text_border", "" + (int)element.markdownRenderer.getBorder());
         serializeTo.putProperty("line_spacing", "" + (int)element.markdownRenderer.getLineSpacing());
@@ -250,13 +234,12 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        //TODO remove debug component at end of name
-        return Component.translatable("fancymenu.customization.items.text").append(Component.literal(" V2 DEBUG"));
+        return Component.translatable("fancymenu.customization.items.text");
     }
 
     @Override
     public @Nullable Component[] getDescription(@Nullable AbstractElement element) {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.v2.desc");
     }
 
 }

@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.button.custom;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
@@ -13,6 +12,7 @@ import de.keksuccino.fancymenu.customization.element.IExecutableElement;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinButton;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.resources.texture.LocalTexture;
 import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
@@ -96,11 +96,13 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
             this.button.setTooltip(null);
         }
 
+        //The hover state of buttons gets updated in their render method, so make sure to update this field BEFORE the
+        //button gets rendered, because otherwise tick() wouldn't work correctly.
+        this.hovered = this.getButton().isHoveredOrFocused();
+
         this.getButton().render(pose, mouseX, mouseY, partial);
 
-        this.hovered = this.button.isHoveredOrFocused();
-
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderingUtils.resetShaderColor();
 
     }
 
@@ -135,7 +137,7 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
 
     protected void updateClickSound() {
         if ((this.button != null) && (this.clickSound != null)) {
-            VanillaButtonHandler.setRenderTickClickSound(this.button, this.clickSound);
+            VanillaButtonHandler.setClientTickClickSound(this.button, this.clickSound);
         }
     }
 

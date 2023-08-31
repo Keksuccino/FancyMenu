@@ -325,6 +325,10 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
         return this.identifier;
     }
 
+    public boolean isDeprecated() {
+        return false;
+    }
+
     private static SerializedElement removeReservedPropertyKeys(SerializedElement serialized) {
         List<String> reserved = Lists.newArrayList(
                 "action",

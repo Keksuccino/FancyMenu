@@ -95,14 +95,13 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                     return Tooltip.of("");
                 });
 
-        this.addGenericFileChooserContextMenuEntryTo(setSkinMenu, "set_local_skin",
-                consumes -> (consumes instanceof PlayerEntityEditorElement),
-                null,
-                consumes -> ((PlayerEntityElement) consumes.element).skinPath,
-                (element1, s) -> ((PlayerEntityElement) element1.element).setSkinTextureBySource(s, false),
-                Component.translatable("fancymenu.helper.editor.items.playerentity.skin.set.local"),
-                false,
-                file -> file.getAbsolutePath().toLowerCase().endsWith(".png") && FileFilter.RESOURCE_NAME_FILTER.checkFile(file));
+        this.addFileChooserContextMenuEntryTo(setSkinMenu, "set_local_skin", PlayerEntityEditorElement.class,
+                        null,
+                        element -> ((PlayerEntityElement)element.element).skinPath,
+                        (element, path) -> ((PlayerEntityElement)element.element).setSkinTextureBySource(path, false),
+                        Component.translatable("fancymenu.helper.editor.items.playerentity.skin.set.local"), true,
+                        file -> file.getAbsolutePath().toLowerCase().endsWith(".png") && FileFilter.RESOURCE_NAME_FILTER.checkFile(file))
+                .setStackable(true);
 
         this.addGenericStringInputContextMenuEntryTo(setSkinMenu, "set_web_skin",
                 consumes -> (consumes instanceof PlayerEntityEditorElement),

@@ -30,11 +30,11 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         element.baseWidth = 100;
         element.baseHeight = 20;
         element.label = "New Button";
-        element.button = new ExtendedButton(0, 0, 0, 0, Component.literal(""), (press) -> {
+        element.button = new ExtendedButton(0, 0, 0, 0, Component.empty(), (press) -> {
             if ((CustomizationOverlay.getCurrentMenuBarInstance() == null) || !CustomizationOverlay.getCurrentMenuBarInstance().isUserNavigatingInMenuBar()) {
                 element.getExecutableBlock().execute();
             }
-        });
+        }).setFocusable(false);
         return element;
     }
 
@@ -60,7 +60,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         element.hoverSound = serialized.getValue("hoversound");
         if (element.hoverSound != null) {
             File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(element.hoverSound));
-            if (f.exists() && f.isFile() && f.getName().endsWith(".wav")) {
+            if (f.isFile() && f.getName().toLowerCase().endsWith(".wav")) {
                 SoundRegistry.registerSound(element.hoverSound, element.hoverSound);
             } else {
                 element.hoverSound = null;
@@ -73,7 +73,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
 
         element.button = new ExtendedButton(0, 0, 0, 0, Component.literal(""), (press) -> {
             element.getExecutableBlock().execute();
-        });
+        }).setFocusable(false);
 
         element.clickSound = serialized.getValue("clicksound");
         if (element.clickSound != null) {

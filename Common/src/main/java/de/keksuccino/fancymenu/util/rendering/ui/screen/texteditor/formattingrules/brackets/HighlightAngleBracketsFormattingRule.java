@@ -1,5 +1,5 @@
 
-package de.keksuccino.fancymenu.util.rendering.ui.texteditor.formattingrules.brackets;
+package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.formattingrules.brackets;
 
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.network.chat.Style;

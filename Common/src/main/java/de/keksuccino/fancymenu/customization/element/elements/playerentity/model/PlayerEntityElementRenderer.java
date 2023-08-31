@@ -35,6 +35,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
+@SuppressWarnings("all")
 public class PlayerEntityElementRenderer extends PlayerRenderer {
 
     private static final EntityModelSet ENTITY_MODEL_SET = Minecraft.getInstance().getEntityModels();
@@ -130,7 +131,6 @@ public class PlayerEntityElementRenderer extends PlayerRenderer {
         }
 
         this.playerModel.setupAnimWithoutEntity(f5, f8, f7, f2, f6);
-        Minecraft minecraft = Minecraft.getInstance();
         boolean flag = !this.properties.invisible;
         boolean flag1 = false;
         boolean glowing = this.properties.glowing;
@@ -142,9 +142,9 @@ public class PlayerEntityElementRenderer extends PlayerRenderer {
         }
 
         if (!this.properties.isSpectator()) {
-            for(RenderLayer renderlayer : this.layers) {
-                if (renderlayer instanceof PlayerEntityRenderLayer) {
-                    renderlayer.render(matrix, bufferSource, i11, null, f5, f8, f12, f7, f2, f6);
+            for(RenderLayer<?,?> renderlayer : this.layers) {
+                if (renderlayer instanceof PlayerEntityRenderLayer pl) {
+                    pl.render(matrix, bufferSource, i11, null, f5, f8, f12, f7, f2, f6);
                 }
             }
         }

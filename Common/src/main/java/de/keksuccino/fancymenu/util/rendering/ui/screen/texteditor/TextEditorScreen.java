@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util.rendering.ui.texteditor;
+package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.Window;
@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollbar.ScrollBar;
-import de.keksuccino.fancymenu.util.rendering.ui.texteditor.formattingrules.TextEditorFormattingRules;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.formattingrules.TextEditorFormattingRules;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderRegistry;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
@@ -895,6 +895,14 @@ public class TextEditorScreen extends Screen {
             l.add(n);
         }
         return l;
+    }
+
+    /**
+     * Don't use this if you don't know what you do!<br>
+     * For a safe way to get all lines, use {@link TextEditorScreen#getCopyOfLines()} instead.
+     */
+    public List<TextEditorLine> getLines() {
+        return this.textFieldLines;
     }
 
     public boolean isTextHighlighted() {

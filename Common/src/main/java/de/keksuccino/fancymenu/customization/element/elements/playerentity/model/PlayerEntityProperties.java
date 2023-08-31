@@ -32,6 +32,10 @@ public class PlayerEntityProperties {
     public double zCloak;
     public double zCloakO;
 
+    public float leftArmRotation;
+    public float leftArmX;
+    public float leftArmY;
+
     public float bob;
     public float oBob;
 

@@ -1,5 +1,5 @@
 
-package de.keksuccino.fancymenu.util.rendering.ui.texteditor;
+package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;

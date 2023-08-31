@@ -540,26 +540,28 @@ public class LayoutEditorUI {
 
 		int i = 0;
 		for (ElementBuilder<?,?> builder : ElementRegistry.getBuilders()) {
-			ContextMenu.ClickableContextMenuEntry<?> entry = menu.addClickableEntry("element_" + i, builder.getDisplayName(null), (menu1, entry1) -> {
-				AbstractEditorElement editorElement = builder.wrapIntoEditorElementInternal(builder.buildDefaultInstance(), editor);
-				if (editorElement != null) {
-					editor.history.saveSnapshot();
-					editor.normalEditorElements.add(editorElement);
-					if ((editor.rightClickMenuOpenPosX != -1000) && (editor.rightClickMenuOpenPosY != -1000)) {
-						//Add new element at right-click menu coordinates
-						editorElement.setAnchorPoint(editorElement.element.anchorPoint, true, editor.rightClickMenuOpenPosX, editor.rightClickMenuOpenPosY, true);
+			if (!builder.isDeprecated()) {
+				ContextMenu.ClickableContextMenuEntry<?> entry = menu.addClickableEntry("element_" + i, builder.getDisplayName(null), (menu1, entry1) -> {
+					AbstractEditorElement editorElement = builder.wrapIntoEditorElementInternal(builder.buildDefaultInstance(), editor);
+					if (editorElement != null) {
+						editor.history.saveSnapshot();
+						editor.normalEditorElements.add(editorElement);
+						if ((editor.rightClickMenuOpenPosX != -1000) && (editor.rightClickMenuOpenPosY != -1000)) {
+							//Add new element at right-click menu coordinates
+							editorElement.setAnchorPoint(editorElement.element.anchorPoint, true, editor.rightClickMenuOpenPosX, editor.rightClickMenuOpenPosY, true);
+						}
+						for (AbstractLayoutEditorWidget w : editor.layoutEditorWidgets) {
+							w.editorElementAdded(editorElement);
+						}
+						menu.closeMenu();
 					}
-					for (AbstractLayoutEditorWidget w : editor.layoutEditorWidgets) {
-						w.editorElementAdded(editorElement);
-					}
-					menu.closeMenu();
+				});
+				Component[] desc = builder.getDescription(null);
+				if ((desc != null) && (desc.length > 0)) {
+					entry.setTooltipSupplier((menu1, entry1) -> Tooltip.of(desc));
 				}
-			});
-			Component[] desc = builder.getDescription(null);
-			if ((desc != null) && (desc.length > 0)) {
-				entry.setTooltipSupplier((menu1, entry1) -> Tooltip.of(desc));
+				i++;
 			}
-			i++;
 		}
 
 		return menu;

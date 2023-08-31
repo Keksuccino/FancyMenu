@@ -1,11 +1,11 @@
 
-package de.keksuccino.fancymenu.util.rendering.ui.texteditor.formattingrules;
+package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.formattingrules;
 
-import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorFormattingRule;
-import de.keksuccino.fancymenu.util.rendering.ui.texteditor.formattingrules.brackets.HighlightAngleBracketsFormattingRule;
-import de.keksuccino.fancymenu.util.rendering.ui.texteditor.formattingrules.brackets.HighlightCurlyBracketsFormattingRule;
-import de.keksuccino.fancymenu.util.rendering.ui.texteditor.formattingrules.brackets.HighlightRoundBracketsFormattingRule;
-import de.keksuccino.fancymenu.util.rendering.ui.texteditor.formattingrules.brackets.HighlightSquareBracketsFormattingRule;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.formattingrules.brackets.HighlightAngleBracketsFormattingRule;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.formattingrules.brackets.HighlightCurlyBracketsFormattingRule;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.formattingrules.brackets.HighlightRoundBracketsFormattingRule;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.formattingrules.brackets.HighlightSquareBracketsFormattingRule;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

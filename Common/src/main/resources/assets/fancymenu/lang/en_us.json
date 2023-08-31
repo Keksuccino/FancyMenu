@@ -72,8 +72,8 @@
   "fancymenu.editor.custombutton.config.actiontype.openfile": "Open File/Folder",
   "fancymenu.editor.custombutton.config.actiontype.openfile.desc": "Open a file or folder.",
   "fancymenu.editor.custombutton.config.actiontype.openfile.desc.value": "Path to File/Folder",
-  "fancymenu.editor.custombutton.config.actiontype.disconnect": "Disconnect/Leave Server/World",
-  "fancymenu.editor.custombutton.config.actiontype.disconnect.desc": "Disconnect from/Leave a server/world\nand set a screen to open after.",
+  "fancymenu.editor.custombutton.config.actiontype.disconnect": "Leave World or Server",
+  "fancymenu.editor.custombutton.config.actiontype.disconnect.desc": "Leave a world or server\nand set a screen to open after.",
   "fancymenu.editor.custombutton.config.actiontype.disconnect.desc.value": "Menu Identifier of Screen to Open",
   "fancymenu.editor.items.setorientation": "Anchor Point",
   "fancymenu.editor.items.delete": "Delete",
@@ -1264,5 +1264,9 @@
   "fancymenu.loading_requirements.is_variable_value.var_name": "Variable Name:",
   "fancymenu.loading_requirements.is_variable_value.var_value": "Variable Value to Check For:",
   "fancymenu.loading_requirements.is_mod_loaded.mod_id": "Mod ID:",
-  "fancymenu.loading_requirements.is_language.lang_id": "Language ID:"
+  "fancymenu.loading_requirements.is_language.lang_id": "Language ID:",
+  "fancymenu.customization.items.text.v2.desc": "Renders a text body.\nIt support multi-line text, markdown\nand has many options to customize\nthe look and feel of the element\nand its content.",
+  "fancymenu.editor.elements.deprectated_warning.line1": "DEPRECATED ELEMENT! This element type gets removed in the future!",
+  "fancymenu.editor.elements.deprectated_warning.line2": "There should be a new version of this element type.",
+  "fancymenu.editor.elements.deprectated_warning.line3": "You should replace this element with the new version."
 }

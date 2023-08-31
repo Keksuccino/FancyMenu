@@ -11,13 +11,9 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
-
-import java.awt.*;
 import java.util.function.Consumer;
 
 public class PlayerEntityRotationScreen extends Screen {
-
-    protected static final Color SCREEN_BACKGROUND_COLOR = new Color(54, 54, 54);
 
     protected AdvancedButton doneButton;
     protected AdvancedButton cancelButton;
@@ -25,12 +21,18 @@ public class PlayerEntityRotationScreen extends Screen {
     protected RangeSliderButton bodyYSlider;
     protected RangeSliderButton headXSlider;
     protected RangeSliderButton headYSlider;
+    protected RangeSliderButton leftArmZSlider;
+    protected RangeSliderButton leftArmXSlider;
+    protected RangeSliderButton leftArmYSlider;
 
     protected PlayerEntityElement element;
     protected float bodyRotationX;
     protected float bodyRotationY;
     protected float headRotationX;
     protected float headRotationY;
+    protected float leftArmZ;
+    protected float leftArmX;
+    protected float leftArmY;
 
     protected Consumer<PlayerEntityElement> callback;
 
@@ -79,6 +81,31 @@ public class PlayerEntityRotationScreen extends Screen {
             }
         };
 
+        this.leftArmZSlider = new RangeSliderButton(0, 0, 200, 20, true, -180.0D, 180.0D, this.headRotationY, (slider) -> {
+            this.leftArmZ = (float)((RangeSliderButton)slider).getSelectedRangeDoubleValue();
+        }) {
+            @Override
+            public String getSliderMessageWithoutPrefixSuffix() {
+                return "Left Arm Z: " + super.getSliderMessageWithoutPrefixSuffix();
+            }
+        };
+        this.leftArmXSlider = new RangeSliderButton(0, 0, 200, 20, true, -180.0D, 180.0D, this.headRotationY, (slider) -> {
+            this.leftArmX = (float)((RangeSliderButton)slider).getSelectedRangeDoubleValue();
+        }) {
+            @Override
+            public String getSliderMessageWithoutPrefixSuffix() {
+                return "Left Arm X: " + super.getSliderMessageWithoutPrefixSuffix();
+            }
+        };
+        this.leftArmYSlider = new RangeSliderButton(0, 0, 200, 20, true, -180.0D, 180.0D, this.headRotationY, (slider) -> {
+            this.leftArmY = (float)((RangeSliderButton)slider).getSelectedRangeDoubleValue();
+        }) {
+            @Override
+            public String getSliderMessageWithoutPrefixSuffix() {
+                return "Left Arm Y: " + super.getSliderMessageWithoutPrefixSuffix();
+            }
+        };
+
         this.doneButton = new AdvancedButton(0, 0, 100, 20, I18n.get("fancymenu.guicomponents.done"), true, (press) -> {
             this.applyChanges();
         });
@@ -97,7 +124,7 @@ public class PlayerEntityRotationScreen extends Screen {
         RenderSystem.enableBlend();
 
         //Draw screen background
-        fill(pose, 0, 0, this.width, this.height, SCREEN_BACKGROUND_COLOR.getRGB());
+        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         int xCenter = this.width / 2;
         int yCenter = this.height / 2;
@@ -114,6 +141,15 @@ public class PlayerEntityRotationScreen extends Screen {
 
         this.headYSlider.setPosition(sliderX, yCenter + 20 + 5);
         this.headYSlider.render(pose, mouseX, mouseY, partial);
+
+        this.leftArmZSlider.setPosition(sliderX + 110, yCenter - 5 - 20);
+        this.leftArmZSlider.render(pose, mouseX, mouseY, partial);
+
+        this.leftArmXSlider.setPosition(sliderX + 110, yCenter);
+        this.leftArmXSlider.render(pose, mouseX, mouseY, partial);
+
+        this.leftArmYSlider.setPosition(sliderX + 110, yCenter + 20 + 5);
+        this.leftArmYSlider.render(pose, mouseX, mouseY, partial);
 
         this.doneButton.setX(xCenter - this.doneButton.getWidth() - 5);
         this.doneButton.setY(this.height - 35);
@@ -139,6 +175,9 @@ public class PlayerEntityRotationScreen extends Screen {
         String oriAdY = this.element.advancedY;
         int oriPosX = this.element.posOffsetX;
         int oriPosY = this.element.posOffsetY;
+        float leftArmX = this.element.leftArmX;
+        float leftArmY = this.element.leftArmY;
+        float leftArmZ = this.element.leftArmZ;
 
         this.element.bodyRotationX = this.bodyRotationX;
         this.element.bodyRotationY = this.bodyRotationY;
@@ -150,6 +189,9 @@ public class PlayerEntityRotationScreen extends Screen {
         this.element.advancedY = null;
         this.element.posOffsetX = posX;
         this.element.posOffsetY = posY;
+        this.element.leftArmX = this.leftArmX;
+        this.element.leftArmY = this.leftArmY;
+        this.element.leftArmZ = this.leftArmZ;
 
         this.element.render(pose, mouseX, mouseY, partial);
 
@@ -163,6 +205,9 @@ public class PlayerEntityRotationScreen extends Screen {
         this.element.advancedY = oriAdY;
         this.element.posOffsetX = oriPosX;
         this.element.posOffsetY = oriPosY;
+        this.element.leftArmX = leftArmX;
+        this.element.leftArmY = leftArmY;
+        this.element.leftArmZ = leftArmZ;
 
     }
 

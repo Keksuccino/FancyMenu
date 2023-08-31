@@ -5,9 +5,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
-
 import javax.annotation.Nonnull;
-
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
@@ -25,6 +23,7 @@ import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
@@ -33,7 +32,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseFileScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -59,6 +58,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	private static final Logger LOGGER = LogManager.getLogger();
 
 	protected static final ResourceLocation DRAGGING_NOT_ALLOWED_TEXTURE = new ResourceLocation("fancymenu", "textures/not_allowed.png");
+	protected static final ResourceLocation DEPRECATED_WARNING_TEXTURE = new ResourceLocation("fancymenu", "textures/warning_20x20.png");
 	protected static final ConsumingSupplier<AbstractEditorElement, Integer> BORDER_COLOR = (editorElement) -> {
 		if (editorElement.isSelected()) {
 			return UIBase.getUIColorTheme().layout_editor_element_border_color_selected.getColorInt();
@@ -122,6 +122,12 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		this.topLeftDisplay.addLine("anchor_point", () -> Component.translatable("fancymenu.element.border_display.anchor_point", this.element.anchorPoint.getDisplayName()));
 		this.topLeftDisplay.addLine("pos_x", () -> Component.translatable("fancymenu.element.border_display.pos_x", "" + this.getX()));
 		this.topLeftDisplay.addLine("width", () -> Component.translatable("fancymenu.element.border_display.width", "" + this.getWidth()));
+		if (this.element.builder.isDeprecated()) {
+			this.topLeftDisplay.addLine("deprecated_warning_line0", () -> Component.empty());
+			this.topLeftDisplay.addLine("deprecated_warning_line1", () -> Component.translatable("fancymenu.editor.elements.deprectated_warning.line1").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
+			this.topLeftDisplay.addLine("deprecated_warning_line2", () -> Component.translatable("fancymenu.editor.elements.deprectated_warning.line2").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
+			this.topLeftDisplay.addLine("deprecated_warning_line3", () -> Component.translatable("fancymenu.editor.elements.deprectated_warning.line3").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
+		}
 
 		this.bottomRightDisplay.addLine("pos_y", () -> Component.translatable("fancymenu.element.border_display.pos_y", "" + this.getY()));
 		this.bottomRightDisplay.addLine("height", () -> Component.translatable("fancymenu.element.border_display.height", "" + this.getHeight()));
@@ -473,6 +479,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		this.renderDraggingNotAllowedOverlay(pose);
 
+		this.renderDeprecatedIndicator(pose);
+
 		//Update cursor
 		ResizeGrabber hoveredGrabber = this.getHoveredResizeGrabber();
 		if (hoveredGrabber != null) CursorHandler.setClientTickCursor(hoveredGrabber.getCursor());
@@ -508,6 +516,22 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			int texY = this.getY() + (this.getHeight() / 2) - (texH / 2);
 			RenderUtils.bindTexture(DRAGGING_NOT_ALLOWED_TEXTURE);
 			blit(pose, texX, texY, 0.0F, 0.0F, texW, texH, texW, texH);
+		}
+	}
+
+	protected void renderDeprecatedIndicator(PoseStack pose) {
+		if (this.element.builder.isDeprecated()) {
+			RenderSystem.enableBlend();
+			AspectRatio ratio = new AspectRatio(32, 32);
+			int[] size = ratio.getAspectRatioSizeByMaximumSize(this.getWidth() / 3, this.getHeight() / 3);
+			int texW = size[0];
+			int texH = size[1];
+			int texX = this.getX() + this.getWidth() - texW;
+			int texY = this.getY();
+			UIBase.setShaderColor(UIBase.getUIColorTheme().warning_text_color);
+			RenderUtils.bindTexture(DEPRECATED_WARNING_TEXTURE);
+			blit(pose, texX, texY, 0.0F, 0.0F, texW, texH, texW, texH);
+			RenderingUtils.resetShaderColor();
 		}
 	}
 

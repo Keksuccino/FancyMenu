@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.action;
 
-import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorFormattingRule;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -12,13 +12,6 @@ import java.util.Objects;
  * Needs to get registered to the {@link ActionRegistry} at mod init.
  */
 public abstract class Action {
-
-    //TODO Custom Click Action für "Edit Value" Button adden (wie bei Loading Requirements)
-    //TODO Custom Click Action für "Edit Value" Button adden (wie bei Loading Requirements)
-    //TODO Custom Click Action für "Edit Value" Button adden (wie bei Loading Requirements)
-    //TODO Custom Click Action für "Edit Value" Button adden (wie bei Loading Requirements)
-    //TODO Custom Click Action für "Edit Value" Button adden (wie bei Loading Requirements)
-    //TODO Custom Click Action für "Edit Value" Button adden (wie bei Loading Requirements)
 
     public static final Action EMPTY = new Action("empty") {@Override public boolean hasValue() {return false;}@Override public void execute(@Nullable String value) {}@Override public @NotNull Component getActionDisplayName() {return Component.empty();}@Override public @NotNull Component[] getActionDescription() {return new Component[0];}@Override public @Nullable Component getValueDisplayName() {return null;}@Override public @Nullable String getValueExample() {return null;}};
 

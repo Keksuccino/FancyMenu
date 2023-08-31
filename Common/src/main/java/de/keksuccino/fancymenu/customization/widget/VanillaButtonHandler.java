@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.widget;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
@@ -21,6 +22,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
+@SuppressWarnings("unused")
 public class VanillaButtonHandler {
 
     private static final Map<AbstractWidget, ResourceLocation> BACKGROUND_TEXTURES = new HashMap<>();
@@ -47,7 +49,7 @@ public class VanillaButtonHandler {
         }
     }
 
-    public static void setRenderTickClickSound(AbstractWidget widget, String clickSound) {
+    public static void setClientTickClickSound(AbstractWidget widget, String clickSound) {
         if (clickSound != null) {
             CLICK_SOUNDS.put(widget, clickSound);
         } else {
@@ -121,6 +123,10 @@ public class VanillaButtonHandler {
     public void onRenderScreenPost(RenderScreenEvent.Post e) {
         BACKGROUND_TEXTURES.clear();
         BACKGROUND_ANIMATIONS.clear();
+    }
+
+    @EventListener(priority = -100)
+    public void onClientTickPost(ClientTickEvent.Post e) {
         CLICK_SOUNDS.clear();
     }
 

@@ -35,7 +35,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-public class TextElementOLD extends AbstractElement {
+@Deprecated
+public class TextElement extends AbstractElement {
 
     public SourceMode sourceMode = SourceMode.DIRECT;
     public String source; //direct text, file path, link
@@ -57,7 +58,7 @@ public class TextElementOLD extends AbstractElement {
     public volatile LinkedListMultimap<String, Float> lines = LinkedListMultimap.create();
     public volatile boolean updating = false;
 
-    public TextElementOLD(@NotNull ElementBuilder<?, ?> builder) {
+    public TextElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
     }
 
@@ -67,14 +68,14 @@ public class TextElementOLD extends AbstractElement {
             @Override
             public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
                 super.render(matrix, mouseX, mouseY, partial);
-                this.verticalScrollBar.active = (this.getTotalEntryHeight() > this.getInnerHeight()) && TextElementOLD.this.enableScrolling;
+                this.verticalScrollBar.active = (this.getTotalEntryHeight() > this.getInnerHeight()) && TextElement.this.enableScrolling;
             }
             @Override
             public void updateScrollArea() {
                 super.updateScrollArea();
                 if (Minecraft.getInstance().screen != null) {
-                    this.verticalScrollBar.scrollAreaEndX = TextElementOLD.this.getAbsoluteX() + TextElementOLD.this.getAbsoluteWidth() + 12;
-                    this.horizontalScrollBar.scrollAreaEndY = TextElementOLD.this.getAbsoluteY() + TextElementOLD.this.getAbsoluteHeight() + 12;
+                    this.verticalScrollBar.scrollAreaEndX = TextElement.this.getAbsoluteX() + TextElement.this.getAbsoluteWidth() + 12;
+                    this.horizontalScrollBar.scrollAreaEndY = TextElement.this.getAbsoluteY() + TextElement.this.getAbsoluteHeight() + 12;
                 }
             }
         };
@@ -363,10 +364,10 @@ public class TextElementOLD extends AbstractElement {
         public final String textRaw;
         public final boolean bold;
         public final float scale;
-        public final TextElementOLD parentItem;
+        public final TextElement parentItem;
         protected String lastTextToRender;
 
-        public LineScrollEntry(ScrollArea parent, String textRaw, boolean bold, float scale, TextElementOLD parentItem) {
+        public LineScrollEntry(ScrollArea parent, String textRaw, boolean bold, float scale, TextElement parentItem) {
             super(parent, Component.literal(""), (entry) -> {});
             this.textRaw = textRaw;
             this.bold = bold;

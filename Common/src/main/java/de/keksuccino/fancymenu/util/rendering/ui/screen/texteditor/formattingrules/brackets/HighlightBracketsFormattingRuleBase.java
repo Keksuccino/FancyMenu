@@ -1,12 +1,10 @@
+package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.formattingrules.brackets;
 
-package de.keksuccino.fancymenu.util.rendering.ui.texteditor.formattingrules.brackets;
-
-import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorFormattingRule;
-import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorLine;
-import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorLine;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -42,7 +40,7 @@ public abstract class HighlightBracketsFormattingRuleBase extends TextEditorForm
                 if (focusedLineIndex == editor.getLineCount()-1) {
                     lines.add(focusedLine);
                 } else {
-                    lines.addAll(editor.getCopyOfLines().subList(focusedLineIndex, editor.getLineCount()));
+                    lines.addAll(editor.getLines().subList(focusedLineIndex, editor.getLineCount()));
                 }
                 int depth = 1;
                 for (TextEditorLine line : lines) {
@@ -78,7 +76,7 @@ public abstract class HighlightBracketsFormattingRuleBase extends TextEditorForm
                 if (focusedLineIndex == 0) {
                     lines.add(focusedLine);
                 } else {
-                    lines.addAll(editor.getCopyOfLines().subList(0, focusedLineIndex+1));
+                    lines.addAll(editor.getLines().subList(0, focusedLineIndex+1));
                 }
                 Collections.reverse(lines);
                 int depth = 1;
@@ -87,7 +85,7 @@ public abstract class HighlightBracketsFormattingRuleBase extends TextEditorForm
                         int inLineIndex = line.getValue().length()-1;
                         String lineValue = new StringBuilder(line.getValue()).reverse().toString();
                         if (line == focusedLine) {
-                            lineValue = new StringBuilder(textBeforeCursor).reverse().toString().substring(1);
+                            lineValue = new StringBuilder(textBeforeCursor).reverse().substring(1);
                             inLineIndex = lineValue.length()-1;
                         }
                         for (char c : lineValue.toCharArray()) {

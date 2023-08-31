@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.customization.loadingrequirement;
 
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
-import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorFormattingRule;
-import de.keksuccino.fancymenu.util.rendering.ui.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -12,7 +12,6 @@ import org.jetbrains.annotations.Nullable;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Consumer;
 
 /**
  * A LoadingRequirement.<br><br>

@@ -21,19 +21,15 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO Custom Click Action für "Edit Value" Button von Actions adden (genau so wie bei Loading Requirements)
+	//TODO FIXEN: Local Skin für Player Element wird nicht gesetzt
 
-	//TODO Neues Text Element richtig benennen ("V2 DEBUG" weg) und legacy support adden, damit alte elemente zu neuen konvertiert werden
+	//TODO FIXEN: Cape On/Off Switch fehlt in right-click menu von Player Element
+
+	//TODO Arm rotation für player elements
 
 	//TODO custom background support für slider adden (+ eventuell option zum changen von slider grabber textur)
 
-	//TODO FIXEN: Hover sound von vanilla + custom buttons geht nicht
-
-	//TODO text editor brackets highlighter broken
-
 	//TODO option für "keep position after anchor change" adden
-
-	//TODO Arm rotation für player elements
 
 	//TODO rewrite SetupSharingEngine
 	// - All layout assets are now in config/fancymenu/assets, so just export config/fancymenu and that's it
@@ -44,12 +40,6 @@ public class FancyMenu {
 	//TODO re-implement GameIntroScreen
 
 	//TODO Key Presses in TextEditorScreen genau wie in LayoutEditorScreen handeln (pressed char getten und dann damit checken)
-
-	//TODO Bei 4K Auflösung UI Scale automatisch auf 2 bei erstem Start
-
-	//TODO per action ermöglichen, zu disconnecten/welt zu verlassen und dabei den zielscreen zu wählen
-
-	//TODO An inject point von TextColorFormatters (custom string color codes) system für HEX color codes adden ( format: §[#ffffff] / §[ffffff] )
 
 	//TODO FIXEN: "is new Menu" stuff in ScreenCustomizationLayer und CustomizationHandler, etc. checkt nicht auf CustomGuiBase (wenn custom gui -> identifier getten)
 

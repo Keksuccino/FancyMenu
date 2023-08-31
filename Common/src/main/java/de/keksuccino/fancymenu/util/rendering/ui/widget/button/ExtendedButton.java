@@ -26,7 +26,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.awt.*;
 import java.util.Objects;
 
@@ -48,6 +47,7 @@ public class ExtendedButton extends Button {
     protected boolean forceDefaultTooltipStyle = false;
     @Nullable
     protected ConsumingSupplier<ExtendedButton, Boolean> activeSupplier;
+    protected boolean focusable = true;
 
     protected int lastHoverState = -1;
 
@@ -172,6 +172,15 @@ public class ExtendedButton extends Button {
             i = 2;
         }
         return 46 + i * 20;
+    }
+
+    public boolean isFocusable() {
+        return this.focusable;
+    }
+
+    public ExtendedButton setFocusable(boolean focusable) {
+        this.focusable = focusable;
+        return this;
     }
 
     @Nullable
@@ -317,6 +326,21 @@ public class ExtendedButton extends Button {
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         return false;
+    }
+
+    @Override
+    public boolean isFocused() {
+        if (!this.focusable) return false;
+        return super.isFocused();
+    }
+
+    @Override
+    public void setFocused(boolean $$0) {
+        if (!this.focusable) {
+            super.setFocused(false);
+            return;
+        }
+        super.setFocused($$0);
     }
 
     public static abstract class ButtonBackground extends GuiComponent implements Renderable {

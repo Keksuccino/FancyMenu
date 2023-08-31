@@ -16,8 +16,8 @@ public class PlayerEntityModel extends PlayerModel {
         this.properties = properties;
     }
 
-    public void setupAnimWithoutEntity(float p_103396_, float p_103397_, float p_103398_, float p_103399_, float p_103400_) {
-        this.setupAnimRaw(p_103396_, p_103397_, p_103398_, p_103399_, p_103400_);
+    public void setupAnimWithoutEntity(float animationSpeed, float animationSpeedOld, float someFloatThatsAlways1, float headRotY, float headRotX) {
+        this.setupAnimRaw(animationSpeed, animationSpeedOld, someFloatThatsAlways1, headRotY, headRotX);
         this.leftPants.copyFrom(this.leftLeg);
         this.rightPants.copyFrom(this.rightLeg);
         this.leftSleeve.copyFrom(this.leftArm);
@@ -32,45 +32,42 @@ public class PlayerEntityModel extends PlayerModel {
         }
     }
 
-    protected void setupAnimRaw(float p_102867_, float p_102868_, float p_102869_, float p_102870_, float p_102871_) {
+    protected void setupAnimRaw(float animationSpeed, float animationSpeedOld, float someFloatThatsAlways1, float headRotY, float headRotX) {
 
-        this.head.yRot = p_102870_ * ((float)Math.PI / 180F);
-        this.head.xRot = p_102871_ * ((float)Math.PI / 180F);
+        this.head.yRot = headRotY * ((float)Math.PI / 180F);
+        this.head.xRot = headRotX * ((float)Math.PI / 180F);
 
         this.body.yRot = 0.0F;
         this.rightArm.z = 0.0F;
         this.rightArm.x = -5.0F;
         this.leftArm.z = 0.0F;
         this.leftArm.x = 5.0F;
+
         float f = 1.0F;
 
-        if (f < 1.0F) {
-            f = 1.0F;
-        }
+        //Arms X Rot
+        this.leftArm.xRot = this.properties.leftArmX * ((float)Math.PI / 180F); // Mth.cos(animationSpeed * 0.6662F) * 2.0F * animationSpeedOld * 0.5F / f;
+        this.rightArm.xRot = Mth.cos(animationSpeed * 0.6662F + (float)Math.PI) * 2.0F * animationSpeedOld * 0.5F / f;
 
-        this.rightArm.xRot = Mth.cos(p_102867_ * 0.6662F + (float)Math.PI) * 2.0F * p_102868_ * 0.5F / f;
-        this.leftArm.xRot = Mth.cos(p_102867_ * 0.6662F) * 2.0F * p_102868_ * 0.5F / f;
+        //Arms Y Rot
+        this.leftArm.yRot = this.properties.leftArmY * ((float)Math.PI / 180F); // 0.0F;
+        this.rightArm.yRot = 0.0F;
+
+        //Arms Z Rot
+        this.leftArm.zRot = this.properties.leftArmRotation * ((float)Math.PI / 180F); // 0.0F;
         this.rightArm.zRot = 0.0F;
-        this.leftArm.zRot = 0.0F;
-        this.rightLeg.xRot = Mth.cos(p_102867_ * 0.6662F) * 1.4F * p_102868_ / f;
-        this.leftLeg.xRot = Mth.cos(p_102867_ * 0.6662F + (float)Math.PI) * 1.4F * p_102868_ / f;
+
+        //Legs X Rot
+        this.rightLeg.xRot = Mth.cos(animationSpeed * 0.6662F) * 1.4F * animationSpeedOld / f;
+        this.leftLeg.xRot = Mth.cos(animationSpeed * 0.6662F + (float)Math.PI) * 1.4F * animationSpeedOld / f;
+
+        //Legs Y Rot
         this.rightLeg.yRot = 0.0F;
         this.leftLeg.yRot = 0.0F;
+
+        //Legs Z Rot
         this.rightLeg.zRot = 0.0F;
         this.leftLeg.zRot = 0.0F;
-        if (this.riding) {
-            this.rightArm.xRot += (-(float)Math.PI / 5F);
-            this.leftArm.xRot += (-(float)Math.PI / 5F);
-            this.rightLeg.xRot = -1.4137167F;
-            this.rightLeg.yRot = ((float)Math.PI / 10F);
-            this.rightLeg.zRot = 0.07853982F;
-            this.leftLeg.xRot = -1.4137167F;
-            this.leftLeg.yRot = (-(float)Math.PI / 10F);
-            this.leftLeg.zRot = -0.07853982F;
-        }
-
-        this.leftArm.yRot = 0.0F;
-        this.rightArm.yRot = 0.0F;
 
         if (this.crouching) {
             this.body.xRot = 0.5F;
@@ -97,11 +94,11 @@ public class PlayerEntityModel extends PlayerModel {
         }
 
         if (this.rightArmPose != HumanoidModel.ArmPose.SPYGLASS) {
-            AnimationUtils.bobModelPart(this.rightArm, p_102869_, 1.0F);
+            AnimationUtils.bobModelPart(this.rightArm, someFloatThatsAlways1, 1.0F);
         }
 
         if (this.leftArmPose != HumanoidModel.ArmPose.SPYGLASS) {
-            AnimationUtils.bobModelPart(this.leftArm, p_102869_, -1.0F);
+            AnimationUtils.bobModelPart(this.leftArm, someFloatThatsAlways1, -1.0F);
         }
 
         this.hat.copyFrom(this.head);

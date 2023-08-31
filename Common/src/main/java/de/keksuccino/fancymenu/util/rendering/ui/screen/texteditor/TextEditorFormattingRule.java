@@ -1,5 +1,5 @@
 
-package de.keksuccino.fancymenu.util.rendering.ui.texteditor;
+package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor;
 
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.Nullable;

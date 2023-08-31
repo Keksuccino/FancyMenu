@@ -2,12 +2,11 @@ package de.keksuccino.fancymenu;
 
 import de.keksuccino.konkrete.config.Config;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.Objects;
 
 public class Options {
 
-    protected final Config config = new Config(FancyMenu.MOD_DIR.getAbsolutePath().replace("\\", "/") + "/config.txt");
+    protected final Config config = new Config(FancyMenu.MOD_DIR.getAbsolutePath().replace("\\", "/") + "/options.txt");
 
     public final Option<Boolean> playVanillaMenuMusic = new Option<>(config, "play_vanilla_menu_music", true, "general");
     public final Option<Integer> defaultGuiScale = new Option<>(config, "default_gui_scale", -1, "general");

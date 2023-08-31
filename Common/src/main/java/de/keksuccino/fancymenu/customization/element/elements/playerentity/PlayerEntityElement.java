@@ -62,6 +62,10 @@ public class PlayerEntityElement extends AbstractElement {
     public float headRotationX;
     public float headRotationY;
 
+    public float leftArmZ;
+    public float leftArmX;
+    public float leftArmY;
+
     public PlayerEntityElement(@NotNull ElementBuilder<PlayerEntityElement, PlayerEntityEditorElement> builder) {
         super(builder);
         if (isEditor()) {
@@ -149,6 +153,9 @@ public class PlayerEntityElement extends AbstractElement {
             props.xRot = this.headRotationY;
             props.yHeadRot = 180.0F + this.headRotationX;
             props.yHeadRotO = 180.0F + this.headRotationX;
+            props.leftArmRotation = this.leftArmZ;
+            props.leftArmX = this.leftArmX;
+            props.leftArmY = this.leftArmY;
         }
         Lighting.setupForEntityInInventory();
         EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
