@@ -32,6 +32,8 @@ public class UIColorTheme {
     public DrawableColor element_border_color_hover = DrawableColor.of(new Color(93, 97, 100));
     public DrawableColor element_background_color_normal = DrawableColor.of(new Color(71, 71, 71));
     public DrawableColor element_background_color_hover = DrawableColor.of(new Color(83, 156, 212));
+    public DrawableColor slider_handle_color_normal = DrawableColor.of(new Color(71, 132, 180));
+    public DrawableColor slider_handle_color_hover = DrawableColor.of(new Color(83, 156, 212));
     public DrawableColor area_background_color = DrawableColor.of(new Color(43, 43, 43));
     public DrawableColor edit_box_background_color = DrawableColor.of(new Color(43, 43, 43));
     public DrawableColor edit_box_border_color_normal = DrawableColor.of(new Color(209, 194, 209));

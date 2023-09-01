@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util.rendering.ui.slider;
+package de.keksuccino.fancymenu.util.rendering.ui.widget.slider;
 
 import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
@@ -8,13 +8,13 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ListSliderButton extends AdvancedSliderButton {
+public class ListSliderButton extends ExtendedSliderButton {
 
     private static final Logger LOGGER = LogManager.getLogger("fancymenu/ListSliderButton");
 
     public List<String> values;
 
-    public ListSliderButton(int x, int y, int width, int height, boolean handleClick, @NotNull List<String> values, double selectedIndex, Consumer<AdvancedSliderButton> applyValueCallback) {
+    public ListSliderButton(int x, int y, int width, int height, boolean handleClick, @NotNull List<String> values, double selectedIndex, Consumer<ExtendedSliderButton> applyValueCallback) {
         super(x, y, width, height, handleClick, 0, applyValueCallback);
         this.values = values;
         this.setSelectedIndex(selectedIndex);

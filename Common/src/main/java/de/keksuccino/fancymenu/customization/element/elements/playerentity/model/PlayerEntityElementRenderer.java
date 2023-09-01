@@ -131,10 +131,10 @@ public class PlayerEntityElementRenderer extends PlayerRenderer {
         }
 
         this.playerModel.setupAnimWithoutEntity(f5, f8, f7, f2, f6);
-        boolean flag = !this.properties.invisible;
+        boolean visible = !this.properties.invisible;
         boolean flag1 = false;
         boolean glowing = this.properties.glowing;
-        RenderType rendertype = this.getRenderType(null, flag, flag1, glowing);
+        RenderType rendertype = this.getRenderType(null, visible, flag1, glowing);
         if (rendertype != null) {
             VertexConsumer vertexconsumer = bufferSource.getBuffer(rendertype);
             int i = OverlayTexture.pack(OverlayTexture.u(this.getWhiteOverlayProgress(null, f12)), OverlayTexture.v(false));

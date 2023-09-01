@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.ExtendedSliderButton;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -19,6 +20,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
+@SuppressWarnings("unused")
 public class UIBase extends RenderingUtils {
 
 	public static final int ELEMENT_BORDER_THICKNESS = 1;
@@ -41,14 +43,28 @@ public class UIBase extends RenderingUtils {
 		if (widget instanceof EditBoxSuggestions s) {
 			return (T) applyDefaultEditBoxSuggestionsSkinTo(s);
 		}
+		if (widget instanceof ExtendedSliderButton s) {
+			return (T) applyDefaultSliderSkinTo(s);
+		}
 		return widget;
+	}
+
+	private static ExtendedSliderButton applyDefaultSliderSkinTo(ExtendedSliderButton slider) {
+		slider.setBackgroundColor(UIBase.getUIColorTheme().element_background_color_normal);
+		slider.setBorderColor(UIBase.getUIColorTheme().element_border_color_normal);
+		slider.setHandleColorNormal(UIBase.getUIColorTheme().slider_handle_color_normal);
+		slider.setHandleColorHover(UIBase.getUIColorTheme().slider_handle_color_hover);
+		slider.setLabelColorNormal(UIBase.getUIColorTheme().element_label_color_normal);
+		slider.setLabelColorInactive(UIBase.getUIColorTheme().element_label_color_inactive);
+		slider.setLabelShadow(FancyMenu.getOptions().enableUiTextShadow.getValue());
+		return slider;
 	}
 
 	private static EditBoxSuggestions applyDefaultEditBoxSuggestionsSkinTo(EditBoxSuggestions editBoxSuggestions) {
 		editBoxSuggestions.setBackgroundColor(UIBase.getUIColorTheme().suggestions_background_color);
 		editBoxSuggestions.setNormalTextColor(UIBase.getUIColorTheme().suggestions_text_color_normal);
 		editBoxSuggestions.setSelectedTextColor(UIBase.getUIColorTheme().suggestions_text_color_selected);
-		editBoxSuggestions.setTextShadow(false);
+		editBoxSuggestions.setTextShadow(FancyMenu.getOptions().enableUiTextShadow.getValue());
 		return editBoxSuggestions;
 	}
 

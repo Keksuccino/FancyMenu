@@ -5,7 +5,6 @@ import net.minecraft.client.model.AnimationUtils;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelPart;
-import net.minecraft.util.Mth;
 
 public class PlayerEntityModel extends PlayerModel {
 
@@ -34,9 +33,6 @@ public class PlayerEntityModel extends PlayerModel {
 
     protected void setupAnimRaw(float animationSpeed, float animationSpeedOld, float someFloatThatsAlways1, float headRotY, float headRotX) {
 
-        this.head.yRot = headRotY * ((float)Math.PI / 180F);
-        this.head.xRot = headRotX * ((float)Math.PI / 180F);
-
         this.body.yRot = 0.0F;
         this.rightArm.z = 0.0F;
         this.rightArm.x = -5.0F;
@@ -45,29 +41,32 @@ public class PlayerEntityModel extends PlayerModel {
 
         float f = 1.0F;
 
-        //Arms X Rot
-        this.leftArm.xRot = this.properties.leftArmX * ((float)Math.PI / 180F); // Mth.cos(animationSpeed * 0.6662F) * 2.0F * animationSpeedOld * 0.5F / f;
-        this.rightArm.xRot = Mth.cos(animationSpeed * 0.6662F + (float)Math.PI) * 2.0F * animationSpeedOld * 0.5F / f;
+        //Head
+        this.head.yRot = headRotY * ((float)Math.PI / 180F);
+        this.head.xRot = headRotX * ((float)Math.PI / 180F);
+        this.head.zRot = this.properties.headZRot * ((float)Math.PI / 180F);
 
-        //Arms Y Rot
-        this.leftArm.yRot = this.properties.leftArmY * ((float)Math.PI / 180F); // 0.0F;
-        this.rightArm.yRot = 0.0F;
+        //Left Arm
+        this.leftArm.xRot = this.properties.leftArmXRot * ((float)Math.PI / 180F); // Mth.cos(animationSpeed * 0.6662F) * 2.0F * animationSpeedOld * 0.5F / f;
+        this.leftArm.yRot = this.properties.leftArmYRot * ((float)Math.PI / 180F); // 0.0F;
+        this.leftArm.zRot = this.properties.leftArmZRot * ((float)Math.PI / 180F); // 0.0F;
 
-        //Arms Z Rot
-        this.leftArm.zRot = this.properties.leftArmRotation * ((float)Math.PI / 180F); // 0.0F;
-        this.rightArm.zRot = 0.0F;
+        //Right Arm
+        this.rightArm.xRot = this.properties.rightArmXRot * ((float)Math.PI / 180F); // Mth.cos(animationSpeed * 0.6662F + (float)Math.PI) * 2.0F * animationSpeedOld * 0.5F / f;
+        this.rightArm.yRot = this.properties.rightArmYRot * ((float)Math.PI / 180F); // 0.0F;
+        this.rightArm.zRot = this.properties.rightArmZRot * ((float)Math.PI / 180F); // 0.0F;
 
-        //Legs X Rot
-        this.rightLeg.xRot = Mth.cos(animationSpeed * 0.6662F) * 1.4F * animationSpeedOld / f;
-        this.leftLeg.xRot = Mth.cos(animationSpeed * 0.6662F + (float)Math.PI) * 1.4F * animationSpeedOld / f;
+        //-------------------
 
-        //Legs Y Rot
-        this.rightLeg.yRot = 0.0F;
-        this.leftLeg.yRot = 0.0F;
+        //Left Leg
+        this.leftLeg.xRot = this.properties.leftLegXRot * ((float)Math.PI / 180F); // Mth.cos(animationSpeed * 0.6662F + (float)Math.PI) * 1.4F * animationSpeedOld / f;
+        this.leftLeg.yRot = this.properties.leftLegYRot * ((float)Math.PI / 180F); // 0.0F;
+        this.leftLeg.zRot = this.properties.leftLegZRot * ((float)Math.PI / 180F); // 0.0F;
 
-        //Legs Z Rot
-        this.rightLeg.zRot = 0.0F;
-        this.leftLeg.zRot = 0.0F;
+        //Right Leg
+        this.rightLeg.xRot = this.properties.rightLegXRot * ((float)Math.PI / 180F); // Mth.cos(animationSpeed * 0.6662F) * 1.4F * animationSpeedOld / f;
+        this.rightLeg.yRot = this.properties.rightLegYRot * ((float)Math.PI / 180F); // 0.0F;
+        this.rightLeg.zRot = this.properties.rightLegZRot * ((float)Math.PI / 180F); // 0.0F;
 
         if (this.crouching) {
             this.body.xRot = 0.5F;

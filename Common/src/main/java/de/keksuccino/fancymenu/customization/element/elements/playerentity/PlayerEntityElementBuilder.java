@@ -9,16 +9,16 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
+@SuppressWarnings("all")
 public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityElement, PlayerEntityEditorElement> {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -49,34 +49,17 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
 
         PlayerEntityElement element = this.buildDefaultInstance();
 
-        String copyClientPlayerString = serialized.getValue("copy_client_player");
-        if ((copyClientPlayerString != null) && copyClientPlayerString.equals("true")) {
-            element.setCopyClientPlayer(true);
-        }
+        element.setCopyClientPlayer(this.deserializeBoolean(element.copyClientPlayer, serialized.getValue("copy_client_player")));
 
         if (!element.copyClientPlayer) {
 
-            String playerNameString = serialized.getValue("playername");
-            if (playerNameString != null) {
-                element.setPlayerName(playerNameString, true);
-            }
+            element.setPlayerName(Objects.requireNonNullElse(serialized.getValue("playername"), element.playerName), true);
 
-            String autoSkinString = serialized.getValue("auto_skin");
-            if ((autoSkinString != null) && autoSkinString.equalsIgnoreCase("true")) {
-                element.autoSkin = true;
-            }
+            element.autoSkin = this.deserializeBoolean(element.autoSkin, serialized.getValue("auto_skin"));
 
-            String autoCapeString = serialized.getValue("auto_cape");
-            if ((autoCapeString != null) && autoCapeString.equalsIgnoreCase("true")) {
-                element.autoCape = true;
-            }
+            element.autoCape = this.deserializeBoolean(element.autoCape, serialized.getValue("auto_cape"));
 
-            String slim = serialized.getValue("slim");
-            if (slim != null) {
-                if (slim.replace(" ", "").equalsIgnoreCase("true")) {
-                    element.slim = true;
-                }
-            }
+            element.slim = this.deserializeBoolean(element.slim, serialized.getValue("slim"));
 
             if (!element.autoSkin) {
                 element.skinUrl = serialized.getValue("skinurl");
@@ -106,84 +89,44 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
 
         }
 
-        String scaleString = serialized.getValue("scale");
-        if ((scaleString != null) && MathUtils.isDouble(scaleString)) {
-            element.scale = (int) Double.parseDouble(scaleString);
-        }
+        element.scale = this.deserializeNumber(Integer.class, element.scale, serialized.getValue("scale"));
 
-        String hasParrotString = serialized.getValue("parrot");
-        if (hasParrotString != null) {
-            if (hasParrotString.replace(" ", "").equalsIgnoreCase("true")) {
-                element.setHasParrotOnShoulder(true, false);
-            }
-        }
+        element.setHasParrotOnShoulder(
+                this.deserializeBoolean(element.hasParrotOnShoulder, serialized.getValue("parrot")),
+                this.deserializeBoolean(element.parrotOnLeftShoulder, serialized.getValue("parrot_left_shoulder"))
+        );
 
-        String parrotLeftShoulderString = serialized.getValue("parrot_left_shoulder");
-        if (parrotLeftShoulderString != null) {
-            if (parrotLeftShoulderString.replace(" ", "").equalsIgnoreCase("true")) {
-                element.setHasParrotOnShoulder(element.hasParrotOnShoulder, true);
-            }
-        }
+        element.setIsBaby(this.deserializeBoolean(element.isBaby, serialized.getValue("is_baby")));
 
-        String isBabyString = serialized.getValue("is_baby");
-        if (isBabyString != null) {
-            if (isBabyString.replace(" ", "").equalsIgnoreCase("true")) {
-                element.setIsBaby(true);
-            }
-        }
+        element.setCrouching(this.deserializeBoolean(element.crouching, serialized.getValue("crouching")));
 
-        String crouching = serialized.getValue("crouching");
-        if (crouching != null) {
-            if (crouching.replace(" ", "").equalsIgnoreCase("true")) {
-                element.setCrouching(true);
-            }
-        }
+        element.setShowPlayerName(this.deserializeBoolean(element.showPlayerName, serialized.getValue("showname")));
 
-        String showName = serialized.getValue("showname");
-        if (showName != null) {
-            if (showName.replace(" ", "").equalsIgnoreCase("false")) {
-                element.setShowPlayerName(false);
-            }
-        }
+        element.followMouse = this.deserializeBoolean(element.followMouse, serialized.getValue("follow_mouse"));
 
-        String followMouseString = serialized.getValue("follow_mouse");
-        if (followMouseString != null) {
-            if (followMouseString.replace(" ", "").equalsIgnoreCase("false")) {
-                element.followMouse = false;
-            }
-        }
+        element.headXRot = this.deserializeNumber(Float.class, element.headXRot, serialized.getValue("headrotationx"));
+        element.headYRot = this.deserializeNumber(Float.class, element.headYRot, serialized.getValue("headrotationy"));
 
-        String rotX = serialized.getValue("headrotationx");
-        if (rotX != null) {
-            rotX = rotX.replace(" ", "");
-            if (MathUtils.isFloat(rotX)) {
-                element.headRotationX = Float.parseFloat(rotX);
-            }
-        }
+        element.bodyXRot = this.deserializeNumber(Float.class, element.bodyXRot, serialized.getValue("bodyrotationx"));
+        element.bodyYRot = this.deserializeNumber(Float.class, element.bodyYRot, serialized.getValue("bodyrotationy"));
 
-        String rotY = serialized.getValue("headrotationy");
-        if (rotY != null) {
-            rotY = rotY.replace(" ", "");
-            if (MathUtils.isFloat(rotY)) {
-                element.headRotationY = Float.parseFloat(rotY);
-            }
-        }
+        element.headZRot = this.deserializeNumber(Float.class, element.headZRot, serialized.getValue("head_z_rot"));
 
-        String bodyrotX = serialized.getValue("bodyrotationx");
-        if (bodyrotX != null) {
-            bodyrotX = bodyrotX.replace(" ", "");
-            if (MathUtils.isFloat(bodyrotX)) {
-                element.bodyRotationX = Float.parseFloat(bodyrotX);
-            }
-        }
+        element.leftArmXRot = this.deserializeNumber(Float.class, element.leftArmXRot, serialized.getValue("left_arm_x_rot"));
+        element.leftArmYRot = this.deserializeNumber(Float.class, element.leftArmYRot, serialized.getValue("left_arm_y_rot"));
+        element.leftArmZRot = this.deserializeNumber(Float.class, element.leftArmZRot, serialized.getValue("left_arm_z_rot"));
 
-        String bodyrotY = serialized.getValue("bodyrotationy");
-        if (bodyrotY != null) {
-            bodyrotY = bodyrotY.replace(" ", "");
-            if (MathUtils.isFloat(bodyrotY)) {
-                element.bodyRotationY = Float.parseFloat(bodyrotY);
-            }
-        }
+        element.rightArmXRot = this.deserializeNumber(Float.class, element.rightArmXRot, serialized.getValue("right_arm_x_rot"));
+        element.rightArmYRot = this.deserializeNumber(Float.class, element.rightArmYRot, serialized.getValue("right_arm_y_rot"));
+        element.rightArmZRot = this.deserializeNumber(Float.class, element.rightArmZRot, serialized.getValue("right_arm_z_rot"));
+
+        element.leftLegXRot = this.deserializeNumber(Float.class, element.leftLegXRot, serialized.getValue("left_leg_x_rot"));
+        element.leftLegYRot = this.deserializeNumber(Float.class, element.leftLegYRot, serialized.getValue("left_leg_y_rot"));
+        element.leftLegZRot = this.deserializeNumber(Float.class, element.leftLegZRot, serialized.getValue("left_leg_z_rot"));
+
+        element.rightLegXRot = this.deserializeNumber(Float.class, element.rightLegXRot, serialized.getValue("right_leg_x_rot"));
+        element.rightLegYRot = this.deserializeNumber(Float.class, element.rightLegYRot, serialized.getValue("right_leg_y_rot"));
+        element.rightLegZRot = this.deserializeNumber(Float.class, element.rightLegZRot, serialized.getValue("right_leg_z_rot"));
 
         return element;
 
@@ -218,10 +161,23 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
         serializeTo.putProperty("crouching", "" + element.crouching);
         serializeTo.putProperty("showname", "" + element.showPlayerName);
         serializeTo.putProperty("follow_mouse", "" + element.followMouse);
-        serializeTo.putProperty("headrotationx", "" + element.headRotationX);
-        serializeTo.putProperty("headrotationy", "" + element.headRotationY);
-        serializeTo.putProperty("bodyrotationx", "" + element.bodyRotationX);
-        serializeTo.putProperty("bodyrotationy", "" + element.bodyRotationY);
+        serializeTo.putProperty("headrotationx", "" + element.headXRot);
+        serializeTo.putProperty("headrotationy", "" + element.headYRot);
+        serializeTo.putProperty("bodyrotationx", "" + element.bodyXRot);
+        serializeTo.putProperty("bodyrotationy", "" + element.bodyYRot);
+        serializeTo.putProperty("head_z_rot", "" + element.headZRot);
+        serializeTo.putProperty("left_arm_x_rot", "" + element.leftArmXRot);
+        serializeTo.putProperty("left_arm_y_rot", "" + element.leftArmYRot);
+        serializeTo.putProperty("left_arm_z_rot", "" + element.leftArmZRot);
+        serializeTo.putProperty("right_arm_x_rot", "" + element.rightArmXRot);
+        serializeTo.putProperty("right_arm_y_rot", "" + element.rightArmYRot);
+        serializeTo.putProperty("right_arm_z_rot", "" + element.rightArmZRot);
+        serializeTo.putProperty("left_leg_x_rot", "" + element.leftLegXRot);
+        serializeTo.putProperty("left_leg_y_rot", "" + element.leftLegYRot);
+        serializeTo.putProperty("left_leg_z_rot", "" + element.leftLegZRot);
+        serializeTo.putProperty("right_leg_x_rot", "" + element.rightLegXRot);
+        serializeTo.putProperty("right_leg_y_rot", "" + element.rightLegYRot);
+        serializeTo.putProperty("right_leg_z_rot", "" + element.rightLegZRot);
 
         return serializeTo;
         

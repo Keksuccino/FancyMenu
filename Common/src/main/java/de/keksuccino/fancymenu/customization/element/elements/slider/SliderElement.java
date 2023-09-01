@@ -4,9 +4,9 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.util.rendering.ui.slider.AdvancedSliderButton;
-import de.keksuccino.fancymenu.util.rendering.ui.slider.ListSliderButton;
-import de.keksuccino.fancymenu.util.rendering.ui.slider.RangeSliderButton;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.ExtendedSliderButton;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.ListSliderButton;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.RangeSliderButton;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -28,7 +28,7 @@ public class SliderElement extends AbstractElement {
     public String labelPrefix;
     public String labelSuffix;
 
-    public AdvancedSliderButton slider;
+    public ExtendedSliderButton slider;
 
     public SliderElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);

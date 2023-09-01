@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util.rendering.ui.slider;
+package de.keksuccino.fancymenu.util.rendering.ui.widget.slider;
 
 import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
@@ -6,14 +6,14 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.function.Consumer;
 
-public class RangeSliderButton extends AdvancedSliderButton {
+public class RangeSliderButton extends ExtendedSliderButton {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
     public double minValue;
     public double maxValue;
 
-    public RangeSliderButton(int x, int y, int width, int height, boolean handleClick, double minRangeValue, double maxRangeValue, double selectedRangeValue, Consumer<AdvancedSliderButton> applyValueCallback) {
+    public RangeSliderButton(int x, int y, int width, int height, boolean handleClick, double minRangeValue, double maxRangeValue, double selectedRangeValue, Consumer<ExtendedSliderButton> applyValueCallback) {
         super(x, y, width, height, handleClick, 0, applyValueCallback);
         this.minValue = minRangeValue;
         this.maxValue = maxRangeValue;

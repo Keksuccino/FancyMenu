@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.playerentity;
 
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -12,6 +13,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
+@SuppressWarnings("all")
 public class PlayerEntityEditorElement extends AbstractEditorElement {
 
     public PlayerEntityEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
@@ -96,17 +98,21 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                 });
 
         this.addFileChooserContextMenuEntryTo(setSkinMenu, "set_local_skin", PlayerEntityEditorElement.class,
-                        null,
-                        element -> ((PlayerEntityElement)element.element).skinPath,
-                        (element, path) -> ((PlayerEntityElement)element.element).setSkinTextureBySource(path, false),
-                        Component.translatable("fancymenu.helper.editor.items.playerentity.skin.set.local"), true,
-                        file -> file.getAbsolutePath().toLowerCase().endsWith(".png") && FileFilter.RESOURCE_NAME_FILTER.checkFile(file))
-                .setStackable(true);
+                null,
+                element -> element.getElement().skinPath,
+                (element, path) -> {
+                    element.getElement().skinPath = path;
+                    element.getElement().setSkinTextureBySource(ScreenCustomization.getAbsoluteGameDirectoryPath(path), false);
+                },
+                Component.translatable("fancymenu.helper.editor.items.playerentity.skin.set.local"), true,
+                file -> file.getAbsolutePath().toLowerCase().endsWith(".png") && FileFilter.RESOURCE_NAME_FILTER.checkFile(file));
 
-        this.addGenericStringInputContextMenuEntryTo(setSkinMenu, "set_web_skin",
-                consumes -> (consumes instanceof PlayerEntityEditorElement),
-                consumes -> ((PlayerEntityElement) consumes.element).skinUrl,
-                (element, s) -> ((PlayerEntityElement) element.element).setSkinTextureBySource(s, false),
+        this.addStringInputContextMenuEntryTo(setSkinMenu, "set_web_skin", PlayerEntityEditorElement.class,
+                element -> element.getElement().skinUrl,
+                (element, url) -> {
+                    element.getElement().skinUrl = url;
+                    element.getElement().setSkinTextureBySource(url, true);
+                },
                 null, false, false, Component.translatable("fancymenu.helper.editor.items.playerentity.skin.set.web"),
                 true, null, TextValidators.BASIC_URL_TEXT_VALIDATOR, null);
 
@@ -169,19 +175,24 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                     return Tooltip.of("");
                 });
 
-        this.addGenericFileChooserContextMenuEntryTo(setCapeMenu, "set_local_cape",
-                consumes -> (consumes instanceof PlayerEntityEditorElement),
+        this.addFileChooserContextMenuEntryTo(setCapeMenu, "set_local_cape", PlayerEntityEditorElement.class,
                 null,
-                consumes -> ((PlayerEntityElement) consumes.element).capePath,
-                (element1, s) -> ((PlayerEntityElement) element1.element).setCapeTextureBySource(s, false),
+                element -> element.getElement().capePath,
+                (element, s) -> {
+                    element.getElement().capePath = s;
+                    element.getElement().setCapeTextureBySource(ScreenCustomization.getAbsoluteGameDirectoryPath(s), false);
+                },
                 Component.translatable("fancymenu.helper.editor.items.playerentity.cape.set.local"),
                 false,
                 file -> file.getAbsolutePath().toLowerCase().endsWith(".png") && FileFilter.RESOURCE_NAME_FILTER.checkFile(file));
 
-        this.addGenericStringInputContextMenuEntryTo(setCapeMenu, "set_web_cape",
-                consumes -> (consumes instanceof PlayerEntityEditorElement),
-                consumes -> ((PlayerEntityElement) consumes.element).capeUrl,
-                (element, s) -> ((PlayerEntityElement) element.element).setCapeTextureBySource(s, false),
+        this.addStringInputContextMenuEntryTo(setCapeMenu, "set_web_cape",
+                PlayerEntityEditorElement.class,
+                consumes -> consumes.getElement().capeUrl,
+                (element, s) -> {
+                    element.getElement().capeUrl = s;
+                    element.getElement().setCapeTextureBySource(s, false);
+                },
                 null, false, false, Component.translatable("fancymenu.helper.editor.items.playerentity.cape.set.web"),
                 true, null, TextValidators.BASIC_URL_TEXT_VALIDATOR, null);
 
@@ -194,9 +205,9 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                         "fancymenu.helper.editor.items.playerentity.rotation.follow_mouse")
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.rotation.follow_mouse.desc")));
 
-        this.rightClickMenu.addClickableEntry("custom_rotation", Component.translatable("fancymenu.helper.editor.items.playerentity.rotation.custom"), (menu, entry) ->
+        this.rightClickMenu.addClickableEntry("entity_pose", Component.translatable("fancymenu.editor.elements.player_entity.edit_pose"), (menu, entry) ->
                 {
-                    Minecraft.getInstance().setScreen(new PlayerEntityRotationScreen((PlayerEntityElement) this.element, call -> {
+                    Minecraft.getInstance().setScreen(new PlayerEntityPoseScreen(this.getElement(), this.editor, () -> {
                         Minecraft.getInstance().setScreen(this.editor);
                     }));
                 })
@@ -255,6 +266,10 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                         "fancymenu.helper.editor.items.playerentity.parrot_left")
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.parrot_left.desc")));
 
+    }
+
+    public PlayerEntityElement getElement() {
+        return (PlayerEntityElement) this.element;
     }
 
 }

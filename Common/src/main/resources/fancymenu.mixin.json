@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_17",
   "client": [
     "client.IMixinAbstractSelectionList",
+    "client.IMixinAbstractSliderButton",
     "client.IMixinAbstractWidget",
     "client.IMixinButton",
     "client.IMixinChatScreen",

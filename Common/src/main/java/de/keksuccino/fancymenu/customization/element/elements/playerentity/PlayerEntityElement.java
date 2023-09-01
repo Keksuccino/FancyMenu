@@ -57,14 +57,24 @@ public class PlayerEntityElement extends AbstractElement {
     protected volatile ResourceLocation currentCapeLocation = null;
 
     public boolean followMouse = true;
-    public float bodyRotationX;
-    public float bodyRotationY;
-    public float headRotationX;
-    public float headRotationY;
+    public float bodyXRot;
+    public float bodyYRot;
+    public float headXRot;
+    public float headYRot;
 
-    public float leftArmZ;
-    public float leftArmX;
-    public float leftArmY;
+    public float headZRot;
+    public float leftArmXRot;
+    public float leftArmYRot;
+    public float leftArmZRot;
+    public float rightArmXRot;
+    public float rightArmYRot;
+    public float rightArmZRot;
+    public float leftLegXRot;
+    public float leftLegYRot;
+    public float leftLegZRot;
+    public float rightLegXRot;
+    public float rightLegYRot;
+    public float rightLegZRot;
 
     public PlayerEntityElement(@NotNull ElementBuilder<PlayerEntityElement, PlayerEntityEditorElement> builder) {
         super(builder);
@@ -144,18 +154,41 @@ public class PlayerEntityElement extends AbstractElement {
             props.xRot = -angleYComponent * 20.0F;
             props.yHeadRot = props.yRot;
             props.yHeadRotO = props.yRot;
+            props.headZRot = 0;
+            props.leftArmXRot = 0;
+            props.leftArmYRot = 0;
+            props.leftArmZRot = 0;
+            props.rightArmXRot = 0;
+            props.rightArmYRot = 0;
+            props.rightArmZRot = 0;
+            props.leftLegXRot = 0;
+            props.leftLegYRot = 0;
+            props.leftLegZRot = 0;
+            props.rightLegXRot = 0;
+            props.rightLegYRot = 0;
+            props.rightLegZRot = 0;
         } else {
             quat1 = Axis.ZP.rotationDegrees(180.0F);
-            quat2 = Axis.XP.rotationDegrees(this.bodyRotationY);
+            quat2 = Axis.XP.rotationDegrees(this.bodyYRot);
             quat1.mul(quat2);
             innerMatrix.mulPose(quat1);
-            props.yBodyRot = 180.0F + this.bodyRotationX;
-            props.xRot = this.headRotationY;
-            props.yHeadRot = 180.0F + this.headRotationX;
-            props.yHeadRotO = 180.0F + this.headRotationX;
-            props.leftArmRotation = this.leftArmZ;
-            props.leftArmX = this.leftArmX;
-            props.leftArmY = this.leftArmY;
+            props.yBodyRot = 180.0F + this.bodyXRot;
+            props.xRot = this.headYRot;
+            props.yHeadRot = 180.0F + this.headXRot;
+            props.yHeadRotO = 180.0F + this.headXRot;
+            props.headZRot = this.headZRot;
+            props.leftArmXRot = this.leftArmXRot;
+            props.leftArmYRot = this.leftArmYRot;
+            props.leftArmZRot = this.leftArmZRot;
+            props.rightArmXRot = this.rightArmXRot;
+            props.rightArmYRot = this.rightArmYRot;
+            props.rightArmZRot = this.rightArmZRot;
+            props.leftLegXRot = this.leftLegXRot;
+            props.leftLegYRot = this.leftLegYRot;
+            props.leftLegZRot = this.leftLegZRot;
+            props.rightLegXRot = this.rightLegXRot;
+            props.rightLegYRot = this.rightLegYRot;
+            props.rightLegZRot = this.rightLegZRot;
         }
         Lighting.setupForEntityInInventory();
         EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();

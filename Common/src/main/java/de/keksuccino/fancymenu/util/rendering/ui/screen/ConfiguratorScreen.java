@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -143,13 +144,13 @@ public abstract class ConfiguratorScreen extends Screen {
     }
 
     @NotNull
-    protected <T> ButtonCell addCycleButtonCell(@NotNull ILocalizedValueCycle<T> cycle, boolean applyDefaultButtonSkin, CycleButton.CycleButtonClickFeedback<T> clickFeedback) {
-        return this.addButtonCell(new CycleButton(0, 0, 20, 20, cycle, clickFeedback), applyDefaultButtonSkin);
+    protected <T> ConfiguratorScreen.WidgetCell addCycleButtonCell(@NotNull ILocalizedValueCycle<T> cycle, boolean applyDefaultButtonSkin, CycleButton.CycleButtonClickFeedback<T> clickFeedback) {
+        return this.addWidgetCell(new CycleButton(0, 0, 20, 20, cycle, clickFeedback), applyDefaultButtonSkin);
     }
 
     @NotNull
-    protected ButtonCell addButtonCell(@NotNull ExtendedButton button, boolean applyDefaultButtonSkin) {
-        return this.addCell(new ButtonCell(button, applyDefaultButtonSkin));
+    protected ConfiguratorScreen.WidgetCell addWidgetCell(@NotNull AbstractWidget widget, boolean applyDefaultButtonSkin) {
+        return this.addCell(new WidgetCell(widget, applyDefaultButtonSkin));
     }
 
     @NotNull
@@ -235,27 +236,27 @@ public abstract class ConfiguratorScreen extends Screen {
 
     }
 
-    public class ButtonCell extends RenderCell {
+    public class WidgetCell extends RenderCell {
 
-        public final ExtendedButton button;
+        public final AbstractWidget widget;
 
-        public ButtonCell(@NotNull ExtendedButton button, boolean applyDefaultSkin) {
-            this.button = button;
-            if (applyDefaultSkin) UIBase.applyDefaultWidgetSkinTo(this.button);
-            this.children().add(this.button);
+        public WidgetCell(@NotNull AbstractWidget widget, boolean applyDefaultSkin) {
+            this.widget = widget;
+            if (applyDefaultSkin) UIBase.applyDefaultWidgetSkinTo(this.widget);
+            this.children().add(this.widget);
         }
 
         @Override
         public void renderCell(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-            this.button.setX(this.getX());
-            this.button.setY(this.getY());
-            this.button.setWidth(this.getWidth());
+            this.widget.setX(this.getX());
+            this.widget.setY(this.getY());
+            this.widget.setWidth(this.getWidth());
         }
 
         @Override
         public void updateSize() {
             this.setWidth((int)(ConfiguratorScreen.this.scrollArea.getInnerWidth() - 40));
-            this.setHeight(this.button.getHeight());
+            this.setHeight(this.widget.getHeight());
         }
 
     }

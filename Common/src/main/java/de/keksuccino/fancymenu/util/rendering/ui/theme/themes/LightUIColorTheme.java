@@ -26,6 +26,8 @@ public class LightUIColorTheme extends UIColorTheme {
         element_border_color_hover = DrawableColor.of(new Color(119, 119, 119));
         element_background_color_normal = DrawableColor.of(new Color(203, 203, 203));
         element_background_color_hover = DrawableColor.of(new Color(175, 175, 175));
+        slider_handle_color_normal = DrawableColor.of(new Color(133, 132, 132));
+        slider_handle_color_hover = DrawableColor.of(new Color(162, 162, 162));
         area_background_color = DrawableColor.of(new Color(203, 203, 203));
         edit_box_background_color = DrawableColor.of(new Color(203, 203, 203));
         edit_box_border_color_normal = DrawableColor.of(new Color(56, 56, 56));

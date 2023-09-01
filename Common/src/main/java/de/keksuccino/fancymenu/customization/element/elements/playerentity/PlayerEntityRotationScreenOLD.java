@@ -5,7 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.slider.RangeSliderButton;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.RangeSliderButton;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.gui.screens.Screen;
@@ -13,7 +13,7 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.function.Consumer;
 
-public class PlayerEntityRotationScreen extends Screen {
+public class PlayerEntityRotationScreenOLD extends Screen {
 
     protected AdvancedButton doneButton;
     protected AdvancedButton cancelButton;
@@ -36,17 +36,17 @@ public class PlayerEntityRotationScreen extends Screen {
 
     protected Consumer<PlayerEntityElement> callback;
 
-    protected PlayerEntityRotationScreen(PlayerEntityElement element, Consumer<PlayerEntityElement> callback) {
+    protected PlayerEntityRotationScreenOLD(PlayerEntityElement element, Consumer<PlayerEntityElement> callback) {
 
         super(Component.literal(""));
 
         this.callback = callback;
         this.element = element;
 
-        this.bodyRotationX = element.bodyRotationX;
-        this.bodyRotationY = element.bodyRotationY;
-        this.headRotationX = element.headRotationX;
-        this.headRotationY = element.headRotationY;
+        this.bodyRotationX = element.bodyXRot;
+        this.bodyRotationY = element.bodyYRot;
+        this.headRotationX = element.headXRot;
+        this.headRotationY = element.headYRot;
 
         this.bodyXSlider = new RangeSliderButton(0, 0, 200, 20, true, -180.0D, 180.0D, this.bodyRotationX, (slider) -> {
             this.bodyRotationX = (float)((RangeSliderButton)slider).getSelectedRangeDoubleValue();
@@ -165,57 +165,57 @@ public class PlayerEntityRotationScreen extends Screen {
 
     protected void renderEntity(PoseStack pose, int mouseX, int mouseY, float partial, int posX, int posY) {
 
-        float bX = this.element.bodyRotationX;
-        float bY = this.element.bodyRotationY;
-        float hX = this.element.headRotationX;
-        float hY = this.element.headRotationY;
+        float bX = this.element.bodyXRot;
+        float bY = this.element.bodyYRot;
+        float hX = this.element.headXRot;
+        float hY = this.element.headYRot;
         int oriScale = this.element.scale;
         ElementAnchorPoint oriOrientation = this.element.anchorPoint;
         String oriAdX = this.element.advancedX;
         String oriAdY = this.element.advancedY;
         int oriPosX = this.element.posOffsetX;
         int oriPosY = this.element.posOffsetY;
-        float leftArmX = this.element.leftArmX;
-        float leftArmY = this.element.leftArmY;
-        float leftArmZ = this.element.leftArmZ;
+        float leftArmX = this.element.leftArmXRot;
+        float leftArmY = this.element.leftArmYRot;
+        float leftArmZ = this.element.leftArmZRot;
 
-        this.element.bodyRotationX = this.bodyRotationX;
-        this.element.bodyRotationY = this.bodyRotationY;
-        this.element.headRotationX = this.headRotationX;
-        this.element.headRotationY = this.headRotationY;
+        this.element.bodyXRot = this.bodyRotationX;
+        this.element.bodyYRot = this.bodyRotationY;
+        this.element.headXRot = this.headRotationX;
+        this.element.headYRot = this.headRotationY;
         this.element.scale = 40;
         this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
         this.element.advancedX = null;
         this.element.advancedY = null;
         this.element.posOffsetX = posX;
         this.element.posOffsetY = posY;
-        this.element.leftArmX = this.leftArmX;
-        this.element.leftArmY = this.leftArmY;
-        this.element.leftArmZ = this.leftArmZ;
+        this.element.leftArmXRot = this.leftArmX;
+        this.element.leftArmYRot = this.leftArmY;
+        this.element.leftArmZRot = this.leftArmZ;
 
         this.element.render(pose, mouseX, mouseY, partial);
 
-        this.element.bodyRotationX = bX;
-        this.element.bodyRotationY = bY;
-        this.element.headRotationX = hX;
-        this.element.headRotationY = hY;
+        this.element.bodyXRot = bX;
+        this.element.bodyYRot = bY;
+        this.element.headXRot = hX;
+        this.element.headYRot = hY;
         this.element.scale = oriScale;
         this.element.anchorPoint = oriOrientation;
         this.element.advancedX = oriAdX;
         this.element.advancedY = oriAdY;
         this.element.posOffsetX = oriPosX;
         this.element.posOffsetY = oriPosY;
-        this.element.leftArmX = leftArmX;
-        this.element.leftArmY = leftArmY;
-        this.element.leftArmZ = leftArmZ;
+        this.element.leftArmXRot = leftArmX;
+        this.element.leftArmYRot = leftArmY;
+        this.element.leftArmZRot = leftArmZ;
 
     }
 
     protected void applyChanges() {
-        this.element.bodyRotationX = this.bodyRotationX;
-        this.element.bodyRotationY = this.bodyRotationY;
-        this.element.headRotationX = this.headRotationX;
-        this.element.headRotationY = this.headRotationY;
+        this.element.bodyXRot = this.bodyRotationX;
+        this.element.bodyYRot = this.bodyRotationY;
+        this.element.headXRot = this.headRotationX;
+        this.element.headYRot = this.headRotationY;
         this.callback.accept(this.element);
     }
 

@@ -11,6 +11,7 @@ import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@SuppressWarnings("all")
 public class PlayerEntityProperties {
 
     public double xo;
@@ -32,9 +33,23 @@ public class PlayerEntityProperties {
     public double zCloak;
     public double zCloakO;
 
-    public float leftArmRotation;
-    public float leftArmX;
-    public float leftArmY;
+    public float headZRot;
+
+    public float leftArmXRot;
+    public float leftArmYRot;
+    public float leftArmZRot;
+
+    public float rightArmXRot;
+    public float rightArmYRot;
+    public float rightArmZRot;
+
+    public float leftLegXRot;
+    public float leftLegYRot;
+    public float leftLegZRot;
+
+    public float rightLegXRot;
+    public float rightLegYRot;
+    public float rightLegZRot;
 
     public float bob;
     public float oBob;

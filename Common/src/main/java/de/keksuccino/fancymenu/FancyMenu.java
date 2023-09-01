@@ -21,11 +21,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO FIXEN: Local Skin für Player Element wird nicht gesetzt
-
-	//TODO FIXEN: Cape On/Off Switch fehlt in right-click menu von Player Element
-
-	//TODO Arm rotation für player elements
+	//TODO Player Entity: "Head Follows Mouse" Mode adden, bei dem nur der Kopf dem Mauszeiger folgt und sonstige custom pose werte trotzdem applied werden
 
 	//TODO custom background support für slider adden (+ eventuell option zum changen von slider grabber textur)
 
