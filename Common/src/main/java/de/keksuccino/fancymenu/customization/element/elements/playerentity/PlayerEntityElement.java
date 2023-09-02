@@ -9,10 +9,13 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.model.PlayerEntityElementRenderer;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.model.PlayerEntityProperties;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.textures.CapeWebTextureResourceLocation;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.textures.SkinExternalTextureResourceLocation;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.textures.SkinWebTextureResourceLocation;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.PlayerUtils;
-import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import net.minecraft.client.Minecraft;
@@ -24,7 +27,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
-
 import java.io.File;
 
 public class PlayerEntityElement extends AbstractElement {
@@ -42,7 +44,8 @@ public class PlayerEntityElement extends AbstractElement {
     public boolean crouching = false;
     public boolean isBaby = false;
     public int scale = 30;
-
+    public boolean headFollowsMouse = true;
+    public boolean bodyFollowsMouse = true;
     public volatile boolean slim = false;
     public volatile boolean autoSkin = false;
     public volatile boolean autoCape = false;
@@ -52,16 +55,12 @@ public class PlayerEntityElement extends AbstractElement {
     public volatile String capeUrl;
     protected volatile String oldCapeUrl = null;
     public volatile String capePath;
-    
     protected volatile ResourceLocation currentSkinLocation = null;
     protected volatile ResourceLocation currentCapeLocation = null;
-
-    public boolean followMouse = true;
     public float bodyXRot;
     public float bodyYRot;
     public float headXRot;
     public float headYRot;
-
     public float headZRot;
     public float leftArmXRot;
     public float leftArmYRot;
@@ -110,86 +109,80 @@ public class PlayerEntityElement extends AbstractElement {
             this.setPlayerName(this.playerName, false);
 
             //Update element size based on entity size
-            this.baseWidth = (int)(this.getActiveEntityProperties().getDimensions().width*this.scale);
-            this.baseHeight = (int)(this.getActiveEntityProperties().getDimensions().height*this.scale);
+            this.baseWidth = (int)(this.getActiveEntityProperties().getDimensions().width * this.scale);
+            this.baseHeight = (int)(this.getActiveEntityProperties().getDimensions().height * this.scale);
 
             RenderSystem.enableBlend();
 
+            PlayerEntityProperties props = this.getActiveEntityProperties();
             int x = this.getAbsoluteX();
             int y = this.getAbsoluteY();
+            int mouseOffsetX = this.baseWidth / 2;
+            int mouseOffsetY = (this.baseHeight / 4) / 2;
+            if (props.isBaby) mouseOffsetY += (this.baseHeight / 2) - mouseOffsetY; //not exactly the same eye pos as for adult size, but good enough
+            this.renderPlayerEntity(x, y, this.scale, (float)x - mouseX + mouseOffsetX, (float)y - mouseY + mouseOffsetY, props);
 
-            this.renderPlayerEntity(x, y, this.scale, (float)x - MouseInput.getMouseX(), (float)(y - 50) - MouseInput.getMouseY());
-
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+            RenderingUtils.resetShaderColor();
 
         }
 
     }
 
-    protected void renderPlayerEntity(int i11, int i12, int i13, float angleXComponent, float angleYComponent) {
+    protected void renderPlayerEntity(int posX, int posY, int scale, float angleXComponent, float angleYComponent, PlayerEntityProperties props) {
         float f = (float)Math.atan(angleXComponent / 40.0F);
         float f1 = (float)Math.atan(angleYComponent / 40.0F);
-        innerRenderPlayerEntity(i11, i12, i13, f, f1, this.getActiveEntityProperties(), this.getActiveRenderer());
+        innerRenderPlayerEntity(posX, posY, scale, f, f1, props, this.getActiveRenderer());
     }
 
     @SuppressWarnings("all")
     protected void innerRenderPlayerEntity(int posX, int posY, int scale, float angleXComponent, float angleYComponent, PlayerEntityProperties props, PlayerEntityElementRenderer renderer) {
+
         PoseStack modelViewStack = RenderSystem.getModelViewStack();
         modelViewStack.pushPose();
-        modelViewStack.translate((posX+((this.getActiveEntityProperties().getDimensions().width / 2) * scale)), (posY+(this.getActiveEntityProperties().getDimensions().height * this.scale)), 1050.0F);
+        modelViewStack.translate((posX+((props.getDimensions().width / 2) * scale)), (posY+(props.getDimensions().height * scale)), 1050.0F);
         modelViewStack.scale(1.0F, 1.0F, -1.0F);
         RenderSystem.applyModelViewMatrix();
-        PoseStack innerMatrix = new PoseStack();
-        innerMatrix.translate(0.0F, 0.0F, 1000.0F);
-        innerMatrix.scale((float)scale, (float)scale, (float)scale);
-        Quaternionf quat1;
-        Quaternionf quat2;
-        if (this.followMouse) {
-            quat1 = (new Quaternionf()).rotateZ((float)Math.PI);
-            quat2 = (new Quaternionf()).rotateX(angleYComponent * 20.0F * ((float)Math.PI / 180F));
-            quat1.mul(quat2);
-            innerMatrix.mulPose(quat1);
-            props.yBodyRot = 180.0F + angleXComponent * 20.0F;
-            props.yRot = 180.0F + angleXComponent * 40.0F;
-            props.xRot = -angleYComponent * 20.0F;
-            props.yHeadRot = props.yRot;
-            props.yHeadRotO = props.yRot;
-            props.headZRot = 0;
-            props.leftArmXRot = 0;
-            props.leftArmYRot = 0;
-            props.leftArmZRot = 0;
-            props.rightArmXRot = 0;
-            props.rightArmYRot = 0;
-            props.rightArmZRot = 0;
-            props.leftLegXRot = 0;
-            props.leftLegYRot = 0;
-            props.leftLegZRot = 0;
-            props.rightLegXRot = 0;
-            props.rightLegYRot = 0;
-            props.rightLegZRot = 0;
-        } else {
-            quat1 = Axis.ZP.rotationDegrees(180.0F);
-            quat2 = Axis.XP.rotationDegrees(this.bodyYRot);
-            quat1.mul(quat2);
-            innerMatrix.mulPose(quat1);
+        PoseStack innerPoseStack = new PoseStack();
+        innerPoseStack.pushPose();
+        innerPoseStack.translate(0.0F, 0.0F, 1000.0F);
+        innerPoseStack.scale((float)scale, (float)scale, (float)scale);
+
+        Quaternionf quat1 = this.bodyFollowsMouse ? new Quaternionf().rotateZ((float)Math.PI) : Axis.ZP.rotationDegrees(180.0F);
+        Quaternionf quat2 = this.bodyFollowsMouse ? new Quaternionf().rotateX(angleYComponent * 20.0F * ((float)Math.PI / 180F)) : Axis.XP.rotationDegrees(this.bodyYRot);
+        quat1.mul(quat2);
+        innerPoseStack.mulPose(quat1);
+
+        //Apply follow-mouse values by default
+        props.yBodyRot = 180.0F + angleXComponent * 20.0F;
+        props.yRot = 180.0F + angleXComponent * 40.0F;
+        props.xRot = -angleYComponent * 20.0F;
+        props.yHeadRot = 180.0F + angleXComponent * 40.0F;
+        props.yHeadRotO = 180.0F + angleXComponent * 40.0F;
+        props.headZRot = 0;
+
+        if (!this.bodyFollowsMouse) {
             props.yBodyRot = 180.0F + this.bodyXRot;
+        }
+        if (!this.headFollowsMouse) {
             props.xRot = this.headYRot;
+            props.yRot = 0;
             props.yHeadRot = 180.0F + this.headXRot;
             props.yHeadRotO = 180.0F + this.headXRot;
             props.headZRot = this.headZRot;
-            props.leftArmXRot = this.leftArmXRot;
-            props.leftArmYRot = this.leftArmYRot;
-            props.leftArmZRot = this.leftArmZRot;
-            props.rightArmXRot = this.rightArmXRot;
-            props.rightArmYRot = this.rightArmYRot;
-            props.rightArmZRot = this.rightArmZRot;
-            props.leftLegXRot = this.leftLegXRot;
-            props.leftLegYRot = this.leftLegYRot;
-            props.leftLegZRot = this.leftLegZRot;
-            props.rightLegXRot = this.rightLegXRot;
-            props.rightLegYRot = this.rightLegYRot;
-            props.rightLegZRot = this.rightLegZRot;
         }
+        props.leftArmXRot = this.leftArmXRot;
+        props.leftArmYRot = this.leftArmYRot;
+        props.leftArmZRot = this.leftArmZRot;
+        props.rightArmXRot = this.rightArmXRot;
+        props.rightArmYRot = this.rightArmYRot;
+        props.rightArmZRot = this.rightArmZRot;
+        props.leftLegXRot = this.leftLegXRot;
+        props.leftLegYRot = this.leftLegYRot;
+        props.leftLegZRot = this.leftLegZRot;
+        props.rightLegXRot = this.rightLegXRot;
+        props.rightLegYRot = this.rightLegYRot;
+        props.rightLegZRot = this.rightLegZRot;
+
         Lighting.setupForEntityInInventory();
         EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         quat2.conjugate();
@@ -197,13 +190,14 @@ public class PlayerEntityElement extends AbstractElement {
         dispatcher.setRenderShadow(false);
         MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
         RenderSystem.runAsFancy(() -> {
-            renderer.renderPlayerEntityItem(0.0D, 0.0D, 0.0D, 0.0F, 1.0F, innerMatrix, bufferSource, 15728880);
+            renderer.renderPlayerEntityItem(0.0D, 0.0D, 0.0D, 0.0F, 1.0F, innerPoseStack, bufferSource, 15728880);
         });
         bufferSource.endBatch();
         dispatcher.setRenderShadow(true);
         modelViewStack.popPose();
         RenderSystem.applyModelViewMatrix();
         Lighting.setupFor3DItems();
+        innerPoseStack.popPose();
     }
 
     public void setCopyClientPlayer(boolean copyClientPlayer) {

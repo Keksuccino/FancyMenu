@@ -21,7 +21,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO Player Entity: "Head Follows Mouse" Mode adden, bei dem nur der Kopf dem Mauszeiger folgt und sonstige custom pose werte trotzdem applied werden
+	//TODO Item Element, das per item meta (wie in give command) customized werden kann
+
+	//TODO Placeholder support für Player Entity pose adden (alle rotation values)
 
 	//TODO custom background support für slider adden (+ eventuell option zum changen von slider grabber textur)
 

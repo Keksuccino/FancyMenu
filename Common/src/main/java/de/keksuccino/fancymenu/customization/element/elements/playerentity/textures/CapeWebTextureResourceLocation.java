@@ -1,5 +1,5 @@
 
-package de.keksuccino.fancymenu.customization.element.elements.playerentity;
+package de.keksuccino.fancymenu.customization.element.elements.playerentity.textures;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import de.keksuccino.konkrete.input.CharacterFilter;

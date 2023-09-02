@@ -72,6 +72,8 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - Complex loading requirements like "Is Number" now have a GUI to build/edit their values more easily
 - FancyMenu's "config.txt" file is now called "options.txt" (It's NOT recommended to rename the old one to "options.txt"!)
 - The pose of Player Entity elements is now fully customizable (Every body part can be rotated on its X, Y and Z axis, except base body/torso, which only rotates on X and Y)
+- Player Entity elements now have separate "follow mouse" toggles for head and body
+- Player Entity elements now keep their customized pose while "follow mouse" is enabled
  
 - Added loading requirement "File/Folder Exists" to check if a file/folder exists
 - Added loading requirement "Is Button Active" to check if a button is active (clickable/not greyed out)

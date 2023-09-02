@@ -35,6 +35,8 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                         "fancymenu.helper.editor.items.playerentity.copy_client_player")
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.copy_client_player.desc")));
 
+        this.rightClickMenu.addSeparatorEntry("separator_after_copy_client_player");
+
         this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "set_player_name",
                         consumes -> (consumes instanceof PlayerEntityEditorElement),
                         consumes -> ((PlayerEntityElement) consumes.element).playerName,
@@ -57,6 +59,13 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                     }
                     return Tooltip.of("fancymenu.helper.editor.items.playerentity.copy_client_player.blocked_until_disabled");
                 });
+
+        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "show_name",
+                        consumes -> (consumes instanceof PlayerEntityEditorElement),
+                        consumes -> ((PlayerEntityElement) consumes.element).showPlayerName,
+                        (element1, s) -> ((PlayerEntityElement) element1.element).setShowPlayerName(s),
+                        "fancymenu.helper.editor.items.playerentity.show_name")
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.show_name.desc")));
 
         this.rightClickMenu.addSeparatorEntry("player_entity_separator_1");
 
@@ -113,7 +122,7 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                     element.getElement().skinUrl = url;
                     element.getElement().setSkinTextureBySource(url, true);
                 },
-                null, false, false, Component.translatable("fancymenu.helper.editor.items.playerentity.skin.set.web"),
+                null, false, true, Component.translatable("fancymenu.helper.editor.items.playerentity.skin.set.web"),
                 true, null, TextValidators.BASIC_URL_TEXT_VALIDATOR, null);
 
         this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "slim_skin",
@@ -193,35 +202,29 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                     element.getElement().capeUrl = s;
                     element.getElement().setCapeTextureBySource(s, false);
                 },
-                null, false, false, Component.translatable("fancymenu.helper.editor.items.playerentity.cape.set.web"),
+                null, false, true, Component.translatable("fancymenu.helper.editor.items.playerentity.cape.set.web"),
                 true, null, TextValidators.BASIC_URL_TEXT_VALIDATOR, null);
 
-        this.rightClickMenu.addSeparatorEntry("player_entity_separator_3");
+        this.rightClickMenu.addSeparatorEntry("separator_after_set_web_cape");
 
-        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "follow_mouse",
-                        consumes -> (consumes instanceof PlayerEntityEditorElement),
-                        consumes -> ((PlayerEntityElement) consumes.element).followMouse,
-                        (element1, s) -> ((PlayerEntityElement) element1.element).followMouse = s,
-                        "fancymenu.helper.editor.items.playerentity.rotation.follow_mouse")
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.rotation.follow_mouse.desc")));
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "head_follows_mouse", PlayerEntityEditorElement.class,
+                element -> element.getElement().headFollowsMouse,
+                (element, follow) -> element.getElement().headFollowsMouse = follow,
+                "fancymenu.editor.elements.player_entity.head_follows_mouse");
 
-        this.rightClickMenu.addClickableEntry("entity_pose", Component.translatable("fancymenu.editor.elements.player_entity.edit_pose"), (menu, entry) ->
-                {
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "body_follows_mouse", PlayerEntityEditorElement.class,
+                element -> element.getElement().bodyFollowsMouse,
+                (element, follow) -> element.getElement().bodyFollowsMouse = follow,
+                "fancymenu.editor.elements.player_entity.body_follows_mouse");
+
+        this.rightClickMenu.addClickableEntry("entity_pose", Component.translatable("fancymenu.editor.elements.player_entity.edit_pose"),
+                (menu, entry) -> {
                     Minecraft.getInstance().setScreen(new PlayerEntityPoseScreen(this.getElement(), this.editor, () -> {
                         Minecraft.getInstance().setScreen(this.editor);
                     }));
-                })
-                .setIsActiveSupplier((menu, entry) -> !((PlayerEntityElement) this.element).followMouse)
-                .setTooltipSupplier((menu, entry) -> {
-                    if (entry.isActive()) {
-                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.rotation.custom.desc"));
-                    }
-                    return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.rotation.custom.disabled"));
                 });
 
-        this.rightClickMenu.addSeparatorEntry("player_entity_separator_4");
-
-        this.addGenericIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_scale",
+        this.addGenericIntegerInputContextMenuEntryTo(this.rightClickMenu, "entity_scale",
                         consumes -> (consumes instanceof PlayerEntityEditorElement),
                         consumes -> ((PlayerEntityElement) consumes.element).scale,
                         (element, scale) -> ((PlayerEntityElement) element.element).scale = scale,
@@ -229,19 +232,14 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                         true, 30, null, null)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.scale.desc")));
 
+        this.rightClickMenu.addSeparatorEntry("separator_after_entity_scale");
+
         this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "crouching",
                         consumes -> (consumes instanceof PlayerEntityEditorElement),
                         consumes -> ((PlayerEntityElement) consumes.element).crouching,
                         (element1, s) -> ((PlayerEntityElement) element1.element).setCrouching(s),
                         "fancymenu.helper.editor.items.playerentity.crouching")
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.crouching.desc")));
-
-        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "show_name",
-                        consumes -> (consumes instanceof PlayerEntityEditorElement),
-                        consumes -> ((PlayerEntityElement) consumes.element).showPlayerName,
-                        (element1, s) -> ((PlayerEntityElement) element1.element).setShowPlayerName(s),
-                        "fancymenu.helper.editor.items.playerentity.show_name")
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.show_name.desc")));
 
         this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "is_baby",
                         consumes -> (consumes instanceof PlayerEntityEditorElement),

@@ -102,7 +102,10 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
 
         element.setShowPlayerName(this.deserializeBoolean(element.showPlayerName, serialized.getValue("showname")));
 
-        element.followMouse = this.deserializeBoolean(element.followMouse, serialized.getValue("follow_mouse"));
+        boolean isLegacyFollowMouse = serialized.getValue("follow_mouse") != null;
+        boolean legacyFollowMouse = this.deserializeBoolean(false, serialized.getValue("follow_mouse"));
+        element.headFollowsMouse = !isLegacyFollowMouse ? this.deserializeBoolean(element.headFollowsMouse, serialized.getValue("head_follows_mouse")) : legacyFollowMouse;
+        element.bodyFollowsMouse = !isLegacyFollowMouse ? this.deserializeBoolean(element.bodyFollowsMouse, serialized.getValue("body_follows_mouse")) : legacyFollowMouse;
 
         element.headXRot = this.deserializeNumber(Float.class, element.headXRot, serialized.getValue("headrotationx"));
         element.headYRot = this.deserializeNumber(Float.class, element.headYRot, serialized.getValue("headrotationy"));
@@ -160,7 +163,8 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
         serializeTo.putProperty("is_baby", "" + element.isBaby);
         serializeTo.putProperty("crouching", "" + element.crouching);
         serializeTo.putProperty("showname", "" + element.showPlayerName);
-        serializeTo.putProperty("follow_mouse", "" + element.followMouse);
+        serializeTo.putProperty("head_follows_mouse", "" + element.headFollowsMouse);
+        serializeTo.putProperty("body_follows_mouse", "" + element.bodyFollowsMouse);
         serializeTo.putProperty("headrotationx", "" + element.headXRot);
         serializeTo.putProperty("headrotationy", "" + element.headYRot);
         serializeTo.putProperty("bodyrotationx", "" + element.bodyXRot);

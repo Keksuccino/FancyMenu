@@ -60,8 +60,6 @@ public class MixinTitleScreen {
                 AbstractElement e = layer.getElementByInstanceIdentifier("deep:" + DeepScreenCustomizationLayers.TITLE_SCREEN.realmsNotification.getIdentifier());
                 if (e instanceof TitleScreenRealmsNotificationDeepElement d) {
                     if (d.isHidden()) {
-                        //TODO remove debug
-                        LogManager.getLogger().info("############# NOTIFICATIONS HIDDEN");
                         info.setReturnValue(false);
                     }
                 }
