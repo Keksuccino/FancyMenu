@@ -74,6 +74,7 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - The pose of Player Entity elements is now fully customizable (Every body part can be rotated on its X, Y and Z axis, except base body/torso, which only rotates on X and Y)
 - Player Entity elements now have separate "follow mouse" toggles for head and body
 - Player Entity elements now keep their customized pose while "follow mouse" is enabled
+- Player Entity elements now have full placeholder support for pose (all body part rotations) and scale
  
 - Added loading requirement "File/Folder Exists" to check if a file/folder exists
 - Added loading requirement "Is Button Active" to check if a button is active (clickable/not greyed out)
