@@ -62,7 +62,6 @@ public class Layout extends LayoutBase {
     public File layoutFile;
     public long lastEditedTime = -1;
     protected boolean enabled = true;
-
     public boolean renderElementsBehindVanilla = false;
     public boolean randomMode = false;
     public String randomGroup = "1";
@@ -201,6 +200,7 @@ public class Layout extends LayoutBase {
         }
         scrollListContainer.putProperty("render_scroll_list_header_shadow", "" + this.renderScrollListHeaderShadow);
         scrollListContainer.putProperty("render_scroll_list_footer_shadow", "" + this.renderScrollListFooterShadow);
+        scrollListContainer.putProperty("show_scroll_list_header_footer_preview_in_editor", "" + this.showScrollListHeaderFooterPreviewInEditor);
         set.putContainer(scrollListContainer);
 
         this.layoutWideLoadingRequirementContainer.serializeToExistingPropertyContainer(meta);
@@ -375,6 +375,11 @@ public class Layout extends LayoutBase {
                 if (renderScrollFooterShadow != null) {
                     if (renderScrollFooterShadow.equals("true")) layout.renderScrollListFooterShadow = true;
                     if (renderScrollFooterShadow.equals("false")) layout.renderScrollListFooterShadow = false;
+                }
+                String showListHeaderFooter = scrollListCustomizations.getValue("show_scroll_list_header_footer_preview_in_editor");
+                if ((showListHeaderFooter != null)) {
+                    if (showListHeaderFooter.equals("true")) layout.showScrollListHeaderFooterPreviewInEditor = true;
+                    if (showListHeaderFooter.equals("false")) layout.showScrollListHeaderFooterPreviewInEditor = false;
                 }
             }
 

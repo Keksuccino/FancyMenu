@@ -523,6 +523,13 @@ public class LayoutEditorUI {
 			editor.layout.renderScrollListFooterShadow = cycle.getAsBoolean();
 		}));
 
+		menu.addSeparatorEntry("separator_after_footer_shadow");
+
+		menu.addValueCycleEntry("show_header_footer_preview", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.show_preview", editor.layout.showScrollListHeaderFooterPreviewInEditor).addCycleListener(cycle -> {
+			editor.history.saveSnapshot();
+			editor.layout.showScrollListHeaderFooterPreviewInEditor = cycle.getAsBoolean();
+		}));
+
 		return menu;
 
 	}

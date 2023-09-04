@@ -26,6 +26,7 @@ import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
 import java.io.File;
 
@@ -43,7 +44,7 @@ public class PlayerEntityElement extends AbstractElement {
     public boolean parrotOnLeftShoulder = false;
     public boolean crouching = false;
     public boolean isBaby = false;
-    public int scale = 30;
+    public String scale = "30";
     public boolean headFollowsMouse = true;
     public boolean bodyFollowsMouse = true;
     public volatile boolean slim = false;
@@ -57,23 +58,40 @@ public class PlayerEntityElement extends AbstractElement {
     public volatile String capePath;
     protected volatile ResourceLocation currentSkinLocation = null;
     protected volatile ResourceLocation currentCapeLocation = null;
-    public float bodyXRot;
-    public float bodyYRot;
-    public float headXRot;
-    public float headYRot;
-    public float headZRot;
-    public float leftArmXRot;
-    public float leftArmYRot;
-    public float leftArmZRot;
-    public float rightArmXRot;
-    public float rightArmYRot;
-    public float rightArmZRot;
-    public float leftLegXRot;
-    public float leftLegYRot;
-    public float leftLegZRot;
-    public float rightLegXRot;
-    public float rightLegYRot;
-    public float rightLegZRot;
+    public String bodyXRot;
+    public String bodyYRot;
+    public String headXRot;
+    public String headYRot;
+    public String headZRot;
+    public String leftArmXRot;
+    public String leftArmYRot;
+    public String leftArmZRot;
+    public String rightArmXRot;
+    public String rightArmYRot;
+    public String rightArmZRot;
+    public String leftLegXRot;
+    public String leftLegYRot;
+    public String leftLegZRot;
+    public String rightLegXRot;
+    public String rightLegYRot;
+    public String rightLegZRot;
+    public boolean bodyXRotAdvancedMode;
+    public boolean bodyYRotAdvancedMode;
+    public boolean headXRotAdvancedMode;
+    public boolean headYRotAdvancedMode;
+    public boolean headZRotAdvancedMode;
+    public boolean leftArmXRotAdvancedMode;
+    public boolean leftArmYRotAdvancedMode;
+    public boolean leftArmZRotAdvancedMode;
+    public boolean rightArmXRotAdvancedMode;
+    public boolean rightArmYRotAdvancedMode;
+    public boolean rightArmZRotAdvancedMode;
+    public boolean leftLegXRotAdvancedMode;
+    public boolean leftLegYRotAdvancedMode;
+    public boolean leftLegZRotAdvancedMode;
+    public boolean rightLegXRotAdvancedMode;
+    public boolean rightLegYRotAdvancedMode;
+    public boolean rightLegZRotAdvancedMode;
 
     public PlayerEntityElement(@NotNull ElementBuilder<PlayerEntityElement, PlayerEntityEditorElement> builder) {
         super(builder);
@@ -108,9 +126,12 @@ public class PlayerEntityElement extends AbstractElement {
             //Update placeholders in player name
             this.setPlayerName(this.playerName, false);
 
+            float scale = this.stringToFloat(this.scale);
+            if (scale == 0.0F) scale = 30;
+
             //Update element size based on entity size
-            this.baseWidth = (int)(this.getActiveEntityProperties().getDimensions().width * this.scale);
-            this.baseHeight = (int)(this.getActiveEntityProperties().getDimensions().height * this.scale);
+            this.baseWidth = (int)(this.getActiveEntityProperties().getDimensions().width * scale);
+            this.baseHeight = (int)(this.getActiveEntityProperties().getDimensions().height * scale);
 
             RenderSystem.enableBlend();
 
@@ -120,7 +141,7 @@ public class PlayerEntityElement extends AbstractElement {
             int mouseOffsetX = this.baseWidth / 2;
             int mouseOffsetY = (this.baseHeight / 4) / 2;
             if (props.isBaby) mouseOffsetY += (this.baseHeight / 2) - mouseOffsetY; //not exactly the same eye pos as for adult size, but good enough
-            this.renderPlayerEntity(x, y, this.scale, (float)x - mouseX + mouseOffsetX, (float)y - mouseY + mouseOffsetY, props);
+            this.renderPlayerEntity(x, y, (int)scale, (float)x - mouseX + mouseOffsetX, (float)y - mouseY + mouseOffsetY, props);
 
             RenderingUtils.resetShaderColor();
 
@@ -137,6 +158,24 @@ public class PlayerEntityElement extends AbstractElement {
     @SuppressWarnings("all")
     protected void innerRenderPlayerEntity(int posX, int posY, int scale, float angleXComponent, float angleYComponent, PlayerEntityProperties props, PlayerEntityElementRenderer renderer) {
 
+        float bodyXRot = this.stringToFloat(this.bodyXRot);
+        float bodyYRot = this.stringToFloat(this.bodyYRot);
+        float headXRot = this.stringToFloat(this.headXRot);
+        float headYRot = this.stringToFloat(this.headYRot);
+        float headZRot = this.stringToFloat(this.headZRot);
+        float leftArmXRot = this.stringToFloat(this.leftArmXRot);
+        float leftArmYRot = this.stringToFloat(this.leftArmYRot);
+        float leftArmZRot = this.stringToFloat(this.leftArmZRot);
+        float rightArmXRot = this.stringToFloat(this.rightArmXRot);
+        float rightArmYRot = this.stringToFloat(this.rightArmYRot);
+        float rightArmZRot = this.stringToFloat(this.rightArmZRot);
+        float leftLegXRot = this.stringToFloat(this.leftLegXRot);
+        float leftLegYRot = this.stringToFloat(this.leftLegYRot);
+        float leftLegZRot = this.stringToFloat(this.leftLegZRot);
+        float rightLegXRot = this.stringToFloat(this.rightLegXRot);
+        float rightLegYRot = this.stringToFloat(this.rightLegYRot);
+        float rightLegZRot = this.stringToFloat(this.rightLegZRot);
+
         PoseStack modelViewStack = RenderSystem.getModelViewStack();
         modelViewStack.pushPose();
         modelViewStack.translate((posX+((props.getDimensions().width / 2) * scale)), (posY+(props.getDimensions().height * scale)), 1050.0F);
@@ -148,7 +187,7 @@ public class PlayerEntityElement extends AbstractElement {
         innerPoseStack.scale((float)scale, (float)scale, (float)scale);
 
         Quaternionf quat1 = this.bodyFollowsMouse ? new Quaternionf().rotateZ((float)Math.PI) : Axis.ZP.rotationDegrees(180.0F);
-        Quaternionf quat2 = this.bodyFollowsMouse ? new Quaternionf().rotateX(angleYComponent * 20.0F * ((float)Math.PI / 180F)) : Axis.XP.rotationDegrees(this.bodyYRot);
+        Quaternionf quat2 = this.bodyFollowsMouse ? new Quaternionf().rotateX(angleYComponent * 20.0F * ((float)Math.PI / 180F)) : Axis.XP.rotationDegrees(bodyYRot);
         quat1.mul(quat2);
         innerPoseStack.mulPose(quat1);
 
@@ -161,27 +200,27 @@ public class PlayerEntityElement extends AbstractElement {
         props.headZRot = 0;
 
         if (!this.bodyFollowsMouse) {
-            props.yBodyRot = 180.0F + this.bodyXRot;
+            props.yBodyRot = 180.0F + bodyXRot;
         }
         if (!this.headFollowsMouse) {
-            props.xRot = this.headYRot;
+            props.xRot = headYRot;
             props.yRot = 0;
-            props.yHeadRot = 180.0F + this.headXRot;
-            props.yHeadRotO = 180.0F + this.headXRot;
-            props.headZRot = this.headZRot;
+            props.yHeadRot = 180.0F + headXRot;
+            props.yHeadRotO = 180.0F + headXRot;
+            props.headZRot = headZRot;
         }
-        props.leftArmXRot = this.leftArmXRot;
-        props.leftArmYRot = this.leftArmYRot;
-        props.leftArmZRot = this.leftArmZRot;
-        props.rightArmXRot = this.rightArmXRot;
-        props.rightArmYRot = this.rightArmYRot;
-        props.rightArmZRot = this.rightArmZRot;
-        props.leftLegXRot = this.leftLegXRot;
-        props.leftLegYRot = this.leftLegYRot;
-        props.leftLegZRot = this.leftLegZRot;
-        props.rightLegXRot = this.rightLegXRot;
-        props.rightLegYRot = this.rightLegYRot;
-        props.rightLegZRot = this.rightLegZRot;
+        props.leftArmXRot = leftArmXRot;
+        props.leftArmYRot = leftArmYRot;
+        props.leftArmZRot = leftArmZRot;
+        props.rightArmXRot = rightArmXRot;
+        props.rightArmYRot = rightArmYRot;
+        props.rightArmZRot = rightArmZRot;
+        props.leftLegXRot = leftLegXRot;
+        props.leftLegYRot = leftLegYRot;
+        props.leftLegZRot = leftLegZRot;
+        props.rightLegXRot = rightLegXRot;
+        props.rightLegYRot = rightLegYRot;
+        props.rightLegZRot = rightLegZRot;
 
         Lighting.setupForEntityInInventory();
         EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
@@ -198,6 +237,16 @@ public class PlayerEntityElement extends AbstractElement {
         RenderSystem.applyModelViewMatrix();
         Lighting.setupFor3DItems();
         innerPoseStack.popPose();
+    }
+
+    protected float stringToFloat(@Nullable String s) {
+        if (s == null) return 0.0F;
+        s = PlaceholderParser.replacePlaceholders(s);
+        s = s.replace(" ", "");
+        try {
+            return Float.parseFloat(s);
+        } catch (Exception ignore) {}
+        return 0.0F;
     }
 
     public void setCopyClientPlayer(boolean copyClientPlayer) {

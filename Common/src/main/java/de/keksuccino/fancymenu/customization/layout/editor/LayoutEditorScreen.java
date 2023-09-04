@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -41,8 +40,11 @@ import de.keksuccino.fancymenu.util.*;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.SaveFileScreen;
+import de.keksuccino.fancymenu.util.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -53,8 +55,6 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 public class LayoutEditorScreen extends Screen implements IElementFactory {
-
-	//TODO grid toggle in Window tab wird nicht aktualisiert, wenn grid per Ctrl + G getoggelt wird
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -271,7 +271,83 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			this.layout.menuBackground.render(pose, mouseX, mouseY, partial);
 		}
 
+		this.renderScrollListHeaderFooterPreview(pose, mouseX, mouseY, partial);
+
 		this.renderGrid(pose);
+
+	}
+
+	protected void renderScrollListHeaderFooterPreview(PoseStack pose, int mouseX, int mouseY, float partial) {
+
+		if (this.layout.showScrollListHeaderFooterPreviewInEditor) {
+
+			int x0 = 0;
+			int x1 = this.width;
+			int y0 = 48;
+			int y1 = this.height - 64;
+
+			ITexture headerTexture = (this.layout.scrollListHeaderTexture != null) ? TextureHandler.INSTANCE.getTexture(ScreenCustomization.getAbsoluteGameDirectoryPath(this.layout.scrollListHeaderTexture)) : null;
+			ITexture footerTexture = (this.layout.scrollListFooterTexture != null) ? TextureHandler.INSTANCE.getTexture(ScreenCustomization.getAbsoluteGameDirectoryPath(this.layout.scrollListFooterTexture)) : null;
+
+			//Header Texture
+			if ((headerTexture != null) && (headerTexture.getResourceLocation() != null)) {
+				RenderingUtils.bindTexture(headerTexture.getResourceLocation());
+				RenderingUtils.resetShaderColor();
+				if (this.layout.preserveScrollListHeaderFooterAspectRatio) {
+					int[] headerSize = headerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(this.width, y0);
+					int headerWidth = headerSize[0];
+					int headerHeight = headerSize[1];
+					int headerX = x0 + (this.width / 2) - (headerWidth / 2);
+					int headerY = (y0 / 2) - (headerHeight / 2);
+					enableScissor(x0, 0, x0 + this.width, y0);
+					blit(pose, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
+					disableScissor();
+				} else {
+					blit(pose, x0, 0, 0.0F, 0.0F, this.width, y0, this.width, y0);
+				}
+			} else {
+				RenderSystem.setShaderTexture(0, GuiComponent.BACKGROUND_LOCATION);
+				RenderSystem.setShaderColor(0.25F, 0.25F, 0.25F, 1.0F);
+				blit(pose, x0, 0, 0.0F, 0.0F, this.width, y0, 32, 32);
+			}
+			//Footer Texture
+			if ((footerTexture != null) && (footerTexture.getResourceLocation() != null)) {
+				RenderingUtils.bindTexture(footerTexture.getResourceLocation());
+				RenderingUtils.resetShaderColor();
+				if (this.layout.preserveScrollListHeaderFooterAspectRatio) {
+					int footerOriginalHeight = this.height - y1;
+					int[] footerSize = footerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(this.width, footerOriginalHeight);
+					int footerWidth = footerSize[0];
+					int footerHeight = footerSize[1];
+					int footerX = x0 + (this.width / 2) - (footerWidth / 2);
+					int footerY = y1 + (footerOriginalHeight / 2) - (footerHeight / 2);
+					enableScissor(x0, y1, x0 + this.width, y1 + footerOriginalHeight);
+					blit(pose, footerX, footerY, 0.0F, 0.0F, footerWidth, footerHeight, footerWidth, footerHeight);
+					disableScissor();
+				} else {
+					int footerHeight = this.height - y1;
+					blit(pose, x0, y1, 0.0F, 0.0F, this.width, footerHeight, this.width, footerHeight);
+				}
+			} else {
+				RenderSystem.setShaderTexture(0, GuiComponent.BACKGROUND_LOCATION);
+				RenderSystem.setShaderColor(0.25F, 0.25F, 0.25F, 1.0F);
+				blit(pose, x0, y1, 0.0F, (float) y1, this.width, this.height - y1, 32, 32);
+			}
+
+			RenderingUtils.resetShaderColor();
+
+			//Header Shadow
+			if (this.layout.renderScrollListHeaderShadow) {
+				fillGradient(pose, x0, y0, x1, y0 + 4, -16777216, 0);
+			}
+			//Footer Shadow
+			if (this.layout.renderScrollListFooterShadow) {
+				fillGradient(pose, x0, y1 - 4, x1, y1, 0, -16777216);
+			}
+
+			RenderingUtils.resetShaderColor();
+
+		}
 
 	}
 

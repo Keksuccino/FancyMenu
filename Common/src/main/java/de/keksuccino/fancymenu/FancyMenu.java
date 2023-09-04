@@ -21,9 +21,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO Item Element, das per item meta (wie in give command) customized werden kann
+	//TODO FIXEN: Layout Editor: grid toggle in Window tab wird nicht aktualisiert, wenn grid per Ctrl + G getoggelt wird
 
-	//TODO Placeholder support für Player Entity pose adden (alle rotation values)
+	//TODO Item Element, das per item meta (wie in give command) customized werden kann
 
 	//TODO custom background support für slider adden (+ eventuell option zum changen von slider grabber textur)
 

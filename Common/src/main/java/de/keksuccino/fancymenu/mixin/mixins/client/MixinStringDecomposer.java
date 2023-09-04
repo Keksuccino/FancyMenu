@@ -26,12 +26,6 @@ public class MixinStringDecomposer {
         cachedIterateFormattedEmptyStyle = emptyStyle;
     }
 
-//    @Redirect(method = "iterateFormatted(Ljava/lang/String;ILnet/minecraft/network/chat/Style;Lnet/minecraft/network/chat/Style;Lnet/minecraft/util/FormattedCharSink;)Z", at = @At(value = "INVOKE", target = "Ljava/lang/String;charAt(I)C", remap = false, ordinal = 0))
-//    private static char redirectFirstCharAtFancyMenu(String instance, int index) {
-//        cachedIterateFormattedForLoopCharIndex = index;
-//        return instance.charAt(index);
-//    }
-
     @Redirect(method = "iterateFormatted(Ljava/lang/String;ILnet/minecraft/network/chat/Style;Lnet/minecraft/network/chat/Style;Lnet/minecraft/util/FormattedCharSink;)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/ChatFormatting;getByCode(C)Lnet/minecraft/ChatFormatting;"))
     private static ChatFormatting redirectGetByCodeFancyMenu(char c) {
         cachedIterateFormattedFormattingCodeChar = c;

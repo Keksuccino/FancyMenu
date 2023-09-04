@@ -26,6 +26,7 @@ public class LayoutBase {
     public String scrollListFooterTexture;
     public boolean renderScrollListHeaderShadow = true;
     public boolean renderScrollListFooterShadow = true;
+    public boolean showScrollListHeaderFooterPreviewInEditor = false;
 
     @NotNull
     public static LayoutBase stackLayoutBases(LayoutBase... layouts) {
@@ -74,6 +75,9 @@ public class LayoutBase {
                 }
                 if (!l.preserveScrollListHeaderFooterAspectRatio) {
                     layout.preserveScrollListHeaderFooterAspectRatio = false;
+                }
+                if (l.showScrollListHeaderFooterPreviewInEditor) {
+                    layout.showScrollListHeaderFooterPreviewInEditor = true;
                 }
 
             }

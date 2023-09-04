@@ -224,13 +224,19 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                     }));
                 });
 
-        this.addGenericIntegerInputContextMenuEntryTo(this.rightClickMenu, "entity_scale",
-                        consumes -> (consumes instanceof PlayerEntityEditorElement),
-                        consumes -> ((PlayerEntityElement) consumes.element).scale,
-                        (element, scale) -> ((PlayerEntityElement) element.element).scale = scale,
-                        Component.translatable("fancymenu.helper.editor.items.playerentity.scale"),
-                        true, 30, null, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.scale.desc")));
+//        this.addGenericIntegerInputContextMenuEntryTo(this.rightClickMenu, "entity_scale",
+//                        consumes -> (consumes instanceof PlayerEntityEditorElement),
+//                        consumes -> ((PlayerEntityElement) consumes.element).scale,
+//                        (element, scale) -> ((PlayerEntityElement) element.element).scale = scale,
+//                        Component.translatable("fancymenu.helper.editor.items.playerentity.scale"),
+//                        true, 30, null, null)
+//                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.scale.desc")));
+
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "entity_scale", PlayerEntityEditorElement.class,
+                consumes -> consumes.getElement().scale,
+                (playerEntityEditorElement, s) -> playerEntityEditorElement.getElement().scale = s,
+                null, false, true, Component.translatable("fancymenu.helper.editor.items.playerentity.scale"),
+                true, "30", null, null);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_entity_scale");
 
