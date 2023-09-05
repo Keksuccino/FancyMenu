@@ -1,7 +1,10 @@
 package de.keksuccino.fancymenu.util;
 
+import de.keksuccino.fancymenu.mixin.mixins.client.IMixinClientLanguage;
 import de.keksuccino.konkrete.input.StringUtils;
+import net.minecraft.client.resources.language.ClientLanguage;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,6 +25,16 @@ public class LocalizationUtils {
     @NotNull
     public static String[] splitLocalizedStringLines(@NotNull String localizationKey, String... placeholderReplacements) {
         return StringUtils.splitLines(I18n.get(localizationKey, (Object[]) placeholderReplacements), "\n");
+    }
+
+    @NotNull
+    public static List<String> getLocalizationKeys() {
+        List<String> keys = new ArrayList<>();
+        Language lang = Language.getInstance();
+        if (lang instanceof ClientLanguage c) {
+            keys.addAll(((IMixinClientLanguage)c).getStorageFancyMenu().keySet());
+        }
+        return keys;
     }
 
 }

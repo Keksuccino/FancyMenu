@@ -60,6 +60,8 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 	protected static final Map<SerializedElement, ElementBuilder<?,?>> COPIED_ELEMENTS_CLIPBOARD = new LinkedHashMap<>();
 
+	protected static LayoutEditorScreen currentInstance = null;
+
 	@Nullable
 	public Screen layoutTargetScreen;
 	@NotNull
@@ -89,6 +91,8 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	public LayoutEditorScreen(@Nullable Screen layoutTargetScreen, @NotNull Layout layout) {
 
 		super(Component.literal(""));
+
+		currentInstance = this;
 
 		this.layoutTargetScreen = layoutTargetScreen;
 		layout.updateLastEditedTime();
@@ -1112,6 +1116,11 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 		return super.keyPressed(keycode, scancode, $$2);
 
+	}
+
+	@Nullable
+	public static LayoutEditorScreen getCurrentInstance() {
+		return currentInstance;
 	}
 
 }

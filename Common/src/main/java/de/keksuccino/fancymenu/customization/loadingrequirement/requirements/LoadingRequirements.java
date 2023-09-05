@@ -24,6 +24,7 @@ public class LoadingRequirements {
     public static final IsLayoutEnabledRequirement IS_LAYOUT_ENABLED = new IsLayoutEnabledRequirement();
     public static final IsGuiScaleRequirement IS_GUI_SCALE = new IsGuiScaleRequirement();
     public static final IsButtonActiveRequirement IS_BUTTON_ACTIVE = new IsButtonActiveRequirement();
+    public static final IsMenuTitleRequirement IS_MENU_TITLE = new IsMenuTitleRequirement();
     public static final IsRealTimeDayRequirement IS_REAL_TIME_DAY = new IsRealTimeDayRequirement();
     public static final IsRealTimeHourRequirement IS_REAL_TIME_HOUR = new IsRealTimeHourRequirement();
     public static final IsRealTimeMinuteRequirement IS_REAL_TIME_MINUTE = new IsRealTimeMinuteRequirement();
@@ -63,6 +64,7 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(IS_LAYOUT_ENABLED);
         LoadingRequirementRegistry.register(IS_GUI_SCALE);
         LoadingRequirementRegistry.register(IS_BUTTON_ACTIVE);
+        LoadingRequirementRegistry.register(IS_MENU_TITLE);
 
         LoadingRequirementRegistry.register(IS_REAL_TIME_DAY);
         LoadingRequirementRegistry.register(IS_REAL_TIME_HOUR);

@@ -8,6 +8,7 @@
     "client.IMixinAbstractWidget",
     "client.IMixinButton",
     "client.IMixinChatScreen",
+    "client.IMixinClientLanguage",
     "client.IMixinCommandSuggestions",
     "client.IMixinEditBox",
     "client.IMixinLevelLoadingScreen",

@@ -92,7 +92,7 @@ public class IsLanguageRequirement extends LoadingRequirement {
         protected EditBoxSuggestions langIdSuggestions;
 
         protected IsLanguageValueConfigScreen(@NotNull String value, @NotNull Consumer<String> callback) {
-            super(Component.translatable("fancymenu.helper.editor.items.visibilityrequirements.modloaded.valuename"), callback);
+            super(Component.translatable("fancymenu.editor.elements.visibilityrequirements.edit_value"), callback);
             this.langId = value;
         }
 

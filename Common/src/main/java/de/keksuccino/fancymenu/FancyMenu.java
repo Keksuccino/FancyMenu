@@ -23,6 +23,12 @@ public class FancyMenu {
 
 	//TODO FIXEN: Layout Editor: grid toggle in Window tab wird nicht aktualisiert, wenn grid per Ctrl + G getoggelt wird
 
+	//TODO "Is Menu Title" Loading Requirement
+	// - Support für localization keys adden (checken ob Value localization key ist -> wenn ja, als key handlen, wenn nicht, als plain text handlen)
+
+	//TODO "Menu Title" Placeholder to get title of specific menu
+	// - hat 2 Argumente: menu_identifier & as_localization_key
+
 	//TODO Item Element, das per item meta (wie in give command) customized werden kann
 
 	//TODO custom background support für slider adden (+ eventuell option zum changen von slider grabber textur)

@@ -1303,5 +1303,10 @@
   "fancymenu.editor.elements.deprectated_warning.line3": "You should replace this element with the new version.",
   "fancymenu.editor.elements.player_entity.edit_pose": "Entity Pose",
   "fancymenu.editor.elements.player_entity.head_follows_mouse": "Head Follows Mouse: %s",
-  "fancymenu.editor.elements.player_entity.body_follows_mouse": "Body Follows Mouse: %s"
+  "fancymenu.editor.elements.player_entity.body_follows_mouse": "Body Follows Mouse: %s",
+  "fancymenu.editor.loading_requirements.is_menu_title": "Is Menu Title",
+  "fancymenu.editor.loading_requirements.is_menu_title.desc": "Checks for a specific menu title.\nMenu titles are the names of GUIs you can see in some GUIs like\nthe Options or Pause screen.",
+  "fancymenu.editor.loading_requirements.is_menu_title.value": "Plain Text Title or Localization Key",
+  "fancymenu.editor.loading_requirements.is_menu_title.value.current_menu_title_key": "Current Title Localization Key: %s",
+  "fancymenu.editor.loading_requirements.is_menu_title.value.current_menu_title_plain": "Current Title Plain Text: %s"
 }
