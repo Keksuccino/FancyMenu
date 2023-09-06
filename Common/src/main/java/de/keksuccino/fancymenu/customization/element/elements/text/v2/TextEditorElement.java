@@ -102,6 +102,7 @@ public class TextEditorElement extends AbstractEditorElement {
                     }
                     return Component.translatable("fancymenu.customization.items.text.set_source.direct");
                 })
+                .setIcon(ContextMenu.IconFactory.getIcon("text"))
                 .setStackable(false);
 
         this.rightClickMenu.addSeparatorEntry("text_separator_1");
@@ -136,6 +137,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         },
                         Component.translatable("fancymenu.customization.items.text.scale"),
                         true, 1.0F, null, null)
+                .setIcon(ContextMenu.IconFactory.getIcon("text_size"))
                 .setStackable(true);
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "set_shadow", TextEditorElement.class,
@@ -143,25 +145,6 @@ public class TextEditorElement extends AbstractEditorElement {
                         (textEditorElement, aBoolean) -> textEditorElement.getTextElement().markdownRenderer.setTextShadow(aBoolean),
                         "fancymenu.customization.items.text.shadow")
                 .setStackable(true);
-
-//        this.addCycleContextMenuEntryTo(this.rightClickMenu, "set_alignment",
-//                        ListUtils.build(AbstractElement.Alignment.LEFT, AbstractElement.Alignment.CENTERED, AbstractElement.Alignment.RIGHT),
-//                        consumes -> (consumes instanceof TextEditorElement),
-//                        consumes -> ((TextElement)consumes.element).alignment,
-//                        (element1, alignment) -> {
-//                            ((TextElement)element1.element).alignment = alignment;
-//                            ((TextElement)element1.element).updateContent();
-//                        },
-//                        (menu, entry, switcherValue) -> {
-//                            if (switcherValue == AbstractElement.Alignment.LEFT) {
-//                                return Component.translatable("fancymenu.customization.items.text.alignment.left");
-//                            }
-//                            if (switcherValue == AbstractElement.Alignment.CENTERED) {
-//                                return Component.translatable("fancymenu.customization.items.text.alignment.center");
-//                            }
-//                            return Component.translatable("fancymenu.customization.items.text.alignment.right");
-//                        })
-//                .setStackable(true);
 
         this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "set_base_color",
                         consumes -> (consumes instanceof TextEditorElement),

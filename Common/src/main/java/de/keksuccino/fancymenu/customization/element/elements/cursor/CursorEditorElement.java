@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.network.chat.Component;
@@ -27,6 +28,7 @@ public class CursorEditorElement extends AbstractEditorElement {
                         Component.translatable("fancymenu.customization.elements.cursor.cursor_texture"),
                         true, file -> file.getAbsolutePath().toLowerCase().endsWith(".png"))
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.elements.cursor.cursor_texture.desc")))
+                .setIcon(ContextMenu.IconFactory.getIcon("cursor"))
                 .setStackable(true);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_cursor_texture").setStackable(true);

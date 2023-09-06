@@ -32,6 +32,7 @@ import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -75,7 +76,8 @@ public class CustomizationOverlayUI {
                         ScreenCustomization.setCustomizationForScreenEnabled(screen, cycle.getAsBoolean());
                         ScreenCustomization.reInitCurrentScreen();
                     }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
-                }));
+                }))
+                .setIcon(ContextMenu.IconFactory.getIcon("edit"));
 
         customizationMenu.addClickableEntry("override_current", Component.translatable("fancymenu.overlay.menu_bar.customization.current_override"), (menu, entry) -> {
                     //TODO implement this
@@ -90,7 +92,8 @@ public class CustomizationOverlayUI {
         customizationMenu.addSeparatorEntry("separator_after_override_current");
 
         ContextMenu layoutMenu = new ContextMenu();
-        customizationMenu.addSubMenuEntry("layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout"), layoutMenu);
+        customizationMenu.addSubMenuEntry("layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout"), layoutMenu)
+                .setIcon(ContextMenu.IconFactory.getIcon("layout"));
 
         ContextMenu layoutNewMenu = new ContextMenu();
         layoutMenu.addSubMenuEntry("new_layout", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.new"), layoutNewMenu);
@@ -178,12 +181,14 @@ public class CustomizationOverlayUI {
         customizationMenu.addSeparatorEntry("separator_after_layout_menu");
 
         ContextMenu customizationSettingsMenu = new ContextMenu();
-        customizationMenu.addSubMenuEntry("screen_settings", Component.translatable("fancymenu.overlay.menu_bar.customization.settings"), customizationSettingsMenu);
+        customizationMenu.addSubMenuEntry("screen_settings", Component.translatable("fancymenu.overlay.menu_bar.customization.settings"), customizationSettingsMenu)
+                .setIcon(ContextMenu.IconFactory.getIcon("settings"));
 
         customizationSettingsMenu.addValueCycleEntry("advanced_customization_mode", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.advanced_customization_mode", FancyMenu.getOptions().advancedCustomizationMode.getValue())
                 .addCycleListener(cycle -> {
                     FancyMenu.getOptions().advancedCustomizationMode.setValue(cycle.getAsBoolean());
-                })).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.settings.advanced_customization_mode.tooltip")));
+                })).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.settings.advanced_customization_mode.tooltip")))
+                .setIcon(ContextMenu.IconFactory.getIcon("warning"));
 
         customizationSettingsMenu.addSeparatorEntry("separator_after_advanced_mode");
 
@@ -194,7 +199,8 @@ public class CustomizationOverlayUI {
                     if (FancyMenu.getOptions().playVanillaMenuMusic.getValue()) {
                         Minecraft.getInstance().getMusicManager().startPlaying(Minecraft.getInstance().getSituationalMusic());
                     }
-                }));
+                }))
+                .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
         NonStackableOverlayUI.addIntegerInputContextMenuEntryTo(customizationSettingsMenu, "default_gui_scale",
                         Component.translatable("fancymenu.overlay.menu_bar.customization.settings.set_default_gui_scale"),
@@ -366,7 +372,8 @@ public class CustomizationOverlayUI {
                             FancyMenu.getOptions().customWindowTitle.setValue(s);
                             WindowHandler.updateWindowTitle();
                         }, true, FancyMenu.getOptions().customWindowTitle.getDefaultValue(), null, false, false, TextValidators.NO_EMPTY_STRING_SPACES_ALLOWED_TEXT_VALIDATOR, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.settings.custom_window_title.tooltip")));
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.settings.custom_window_title.tooltip")))
+                .setIcon(ContextMenu.IconFactory.getIcon("text"));
 
         customizationMenu.addSeparatorEntry("separator_after_settings");
 
@@ -375,7 +382,8 @@ public class CustomizationOverlayUI {
                 grandfatheredMenuBar = CustomizationOverlay.getCurrentMenuBarInstance();
                 ScreenCustomization.reloadFancyMenu();
             }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
-        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.overlay.menu_bar.customization.reload_fancymenu.shortcut"));
+        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.overlay.menu_bar.customization.reload_fancymenu.shortcut"))
+                .setIcon(ContextMenu.IconFactory.getIcon("reload"));
 
         customizationMenu.addClickableEntry("disable_customization_for_all", Component.translatable("fancymenu.overlay.menu_bar.customization.disable_customization_for_all"), (menu, entry) -> {
             Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call) -> {
@@ -388,7 +396,8 @@ public class CustomizationOverlayUI {
                     }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                 }
             }, LocalizationUtils.splitLocalizedStringLines("fancymenu.overlay.menu_bar.customization.disable_customization_for_all.confirm")));
-        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.disable_customization_for_all.tooltip")));
+        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.disable_customization_for_all.tooltip")))
+                .setIcon(ContextMenu.IconFactory.getIcon("warning"));
 
         customizationMenu.addSeparatorEntry("separator_before_hide_menu_bar");
 
@@ -502,8 +511,11 @@ public class CustomizationOverlayUI {
 
         userInterfaceMenu.addValueCycleEntry("ui_click_sounds", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.user_interface.ui_click_sounds", FancyMenu.getOptions().playUiClickSounds.getValue())
                 .addCycleListener(cycle -> {
+                    if (cycle.getAsBoolean()) {
+                        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                    }
                     FancyMenu.getOptions().playUiClickSounds.setValue(cycle.getAsBoolean());
-                }));
+                })).setClickSoundEnabled(false);
 
         ContextMenu windowUiThemeMenu = new ContextMenu();
         userInterfaceMenu.addSubMenuEntry("ui_theme", Component.translatable("fancymenu.overlay.menu_bar.user_interface.ui_theme"), windowUiThemeMenu);

@@ -1298,9 +1298,9 @@
   "fancymenu.loading_requirements.is_mod_loaded.mod_id": "Mod ID:",
   "fancymenu.loading_requirements.is_language.lang_id": "Language ID:",
   "fancymenu.customization.items.text.v2.desc": "Renders a text body.\nIt support multi-line text, markdown\nand has many options to customize\nthe look and feel of the element\nand its content.",
-  "fancymenu.editor.elements.deprectated_warning.line1": "DEPRECATED ELEMENT! This element type gets removed in the future!",
-  "fancymenu.editor.elements.deprectated_warning.line2": "There should be a new version of this element type.",
-  "fancymenu.editor.elements.deprectated_warning.line3": "You should replace this element with the new version.",
+  "fancymenu.editor.elements.deprecated_warning.line1": "DEPRECATED ELEMENT! This element type gets removed in the future!",
+  "fancymenu.editor.elements.deprecated_warning.line2": "There should be a new version of this element type.",
+  "fancymenu.editor.elements.deprecated_warning.line3": "You should replace this element with the new version.",
   "fancymenu.editor.elements.player_entity.edit_pose": "Entity Pose",
   "fancymenu.editor.elements.player_entity.head_follows_mouse": "Head Follows Mouse: %s",
   "fancymenu.editor.elements.player_entity.body_follows_mouse": "Body Follows Mouse: %s",
@@ -1308,5 +1308,12 @@
   "fancymenu.editor.loading_requirements.is_menu_title.desc": "Checks for a specific menu title.\nMenu titles are the names of GUIs you can see in some GUIs like\nthe Options or Pause screen.",
   "fancymenu.editor.loading_requirements.is_menu_title.value": "Plain Text Title or Localization Key",
   "fancymenu.editor.loading_requirements.is_menu_title.value.current_menu_title_key": "Current Title Localization Key: %s",
-  "fancymenu.editor.loading_requirements.is_menu_title.value.current_menu_title_plain": "Current Title Plain Text: %s"
+  "fancymenu.editor.loading_requirements.is_menu_title.value.current_menu_title_plain": "Current Title Plain Text: %s",
+  "fancymenu.context_menu.entries.choose_or_set.current": "Current: %s",
+  "fancymenu.customization.items.text.shadow.on": "Shadow: §öEnabled",
+  "fancymenu.customization.items.text.shadow.off": "Shadow: §äDisabled",
+  "fancymenu.customization.items.text.scrolling.on": "Scrolling: §öEnabled",
+  "fancymenu.customization.items.text.scrolling.off": "Scrolling: §äDisabled",
+  "fancymenu.customization.items.text.scroll_grabber_texture.normal": "Normal Texture",
+  "fancymenu.customization.items.text.scroll_grabber_texture.hover": "Hover Texture"
 }

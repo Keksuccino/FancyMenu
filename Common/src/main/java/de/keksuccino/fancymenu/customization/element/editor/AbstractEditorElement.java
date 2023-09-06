@@ -5,6 +5,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -124,9 +125,9 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		this.topLeftDisplay.addLine("width", () -> Component.translatable("fancymenu.element.border_display.width", "" + this.getWidth()));
 		if (this.element.builder.isDeprecated()) {
 			this.topLeftDisplay.addLine("deprecated_warning_line0", () -> Component.empty());
-			this.topLeftDisplay.addLine("deprecated_warning_line1", () -> Component.translatable("fancymenu.editor.elements.deprectated_warning.line1").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
-			this.topLeftDisplay.addLine("deprecated_warning_line2", () -> Component.translatable("fancymenu.editor.elements.deprectated_warning.line2").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
-			this.topLeftDisplay.addLine("deprecated_warning_line3", () -> Component.translatable("fancymenu.editor.elements.deprectated_warning.line3").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
+			this.topLeftDisplay.addLine("deprecated_warning_line1", () -> Component.translatable("fancymenu.editor.elements.deprecated_warning.line1").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
+			this.topLeftDisplay.addLine("deprecated_warning_line2", () -> Component.translatable("fancymenu.editor.elements.deprecated_warning.line2").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
+			this.topLeftDisplay.addLine("deprecated_warning_line3", () -> Component.translatable("fancymenu.editor.elements.deprecated_warning.line3").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
 		}
 
 		this.bottomRightDisplay.addLine("pos_y", () -> Component.translatable("fancymenu.element.border_display.pos_y", "" + this.getY()));
@@ -399,7 +400,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 						menu.closeMenu();
 					})
 					.setStackable(true)
-					.setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.copy"));
+					.setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.copy"))
+					.setIcon(ContextMenu.IconFactory.getIcon("copy"));
 
 		}
 
@@ -414,7 +416,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 						menu.closeMenu();
 					})
 					.setStackable(true)
-					.setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.delete"));
+					.setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.delete"))
+					.setIcon(ContextMenu.IconFactory.getIcon("delete"));
 
 		}
 
@@ -866,9 +869,10 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	}
 
 	protected ContextMenu.ClickableContextMenuEntry<?> addGenericFileChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, String defaultValue, @NotNull ConsumingSupplier<AbstractEditorElement, String> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, String> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter) {
+
 		ContextMenu subMenu = new ContextMenu();
-		ContextMenu addToFinal = addResetOption ? subMenu : addTo;
-		ContextMenu.ClickableContextMenuEntry<?> chooseEntry = addToFinal.addClickableEntry(addResetOption ? "choose_file" : entryIdentifier, addResetOption ? Component.translatable("fancymenu.ui.filechooser.choose.file") : label, (menu, entry) ->
+
+		ContextMenu.ClickableContextMenuEntry<?> chooseEntry = subMenu.addClickableEntry("choose_file", Component.translatable("fancymenu.ui.filechooser.choose.file"), (menu, entry) ->
 		{
 			List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
 			if (entry.getStackMeta().isFirstInStack() && !selectedElements.isEmpty()) {
@@ -895,6 +899,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				Minecraft.getInstance().setScreen(fileChooser);
 			}
 		}).setStackable(true);
+
 		if (addResetOption) {
 			subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.editor.filechooser.reset"), (menu, entry) ->
 			{
@@ -906,9 +911,39 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 					}
 				}
 			}).setStackable(true);
-			return addTo.addSubMenuEntry(entryIdentifier, label, subMenu).setStackable(true);
 		}
-		return chooseEntry;
+
+		Supplier<Component> currentValueDisplayLabelSupplier = () -> {
+			List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
+			if (selectedElements.size() == 1) {
+				Component valueComponent;
+				String val = targetFieldGetter.get(selectedElements.get(0));
+				if (val == null) {
+					valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+				} else {
+					val = ScreenCustomization.getPathWithoutGameDirectory(val);
+					if (Minecraft.getInstance().font.width(val) > 150) {
+						val = new StringBuilder(val).reverse().toString();
+						val = Minecraft.getInstance().font.plainSubstrByWidth(val, 150);
+						val = new StringBuilder(val).reverse().toString();
+						val = ".." + val;
+					}
+					valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+				}
+				return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
+			}
+			return Component.empty();
+		};
+		subMenu.addSeparatorEntry("separator_before_current_value_display")
+				.setIsVisibleSupplier((menu, entry) -> this.getFilteredSelectedElementList(selectedElementsFilter).size() == 1);
+		subMenu.addClickableEntry("current_value_display", Component.empty(), (menu, entry) -> {})
+				.setLabelSupplier((menu, entry) -> currentValueDisplayLabelSupplier.get())
+				.setClickSoundEnabled(false)
+				.setHoverable(false)
+				.setIsVisibleSupplier((menu, entry) -> this.getFilteredSelectedElementList(selectedElementsFilter).size() == 1)
+				.setIcon(ContextMenu.IconFactory.getIcon("info"));
+
+		return addTo.addSubMenuEntry(entryIdentifier, label, subMenu).setStackable(true);
 	}
 
 	@SuppressWarnings("all")
@@ -920,8 +955,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 	protected ContextMenu.ClickableContextMenuEntry<?> addInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, String> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
 		ContextMenu subMenu = new ContextMenu();
-		ContextMenu addToFinal = addResetOption ? subMenu : addTo;
-		ContextMenu.ClickableContextMenuEntry<?> inputEntry = addToFinal.addClickableEntry(addResetOption ? "input_value" : entryIdentifier, addResetOption ? Component.translatable("fancymenu.guicomponents.set") : label, (menu, entry) ->
+		ContextMenu.ClickableContextMenuEntry<?> inputEntry = subMenu.addClickableEntry("input_value", Component.translatable("fancymenu.guicomponents.set"), (menu, entry) ->
 		{
 			if (entry.getStackMeta().isFirstInStack()) {
 				List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
@@ -978,6 +1012,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				Minecraft.getInstance().setScreen(inputScreen);
 			}
 		}).setStackable(true);
+
 		if (addResetOption) {
 			subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.guicomponents.reset"), (menu, entry) -> {
 				if (entry.getStackMeta().isFirstInStack()) {
@@ -988,9 +1023,40 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 					}
 				}
 			}).setStackable(true);
-			return addTo.addSubMenuEntry(entryIdentifier, label, subMenu).setStackable(true);
 		}
-		return inputEntry;
+
+		Supplier<Component> currentValueDisplayLabelSupplier = () -> {
+			List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
+			if (selectedElements.size() == 1) {
+				Component valueComponent;
+				String val = targetFieldGetter.get(selectedElements.get(0));
+				if (val == null) {
+					valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+				} else {
+					val = ScreenCustomization.getPathWithoutGameDirectory(val);
+					if (Minecraft.getInstance().font.width(val) > 150) {
+						val = new StringBuilder(val).reverse().toString();
+						val = Minecraft.getInstance().font.plainSubstrByWidth(val, 150);
+						val = new StringBuilder(val).reverse().toString();
+						val = ".." + val;
+					}
+					valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+				}
+				return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
+			}
+			return Component.empty();
+		};
+		subMenu.addSeparatorEntry("separator_before_current_value_display")
+				.setIsVisibleSupplier((menu, entry) -> this.getFilteredSelectedElementList(selectedElementsFilter).size() == 1);
+		subMenu.addClickableEntry("current_value_display", Component.empty(), (menu, entry) -> {})
+				.setLabelSupplier((menu, entry) -> currentValueDisplayLabelSupplier.get())
+				.setClickSoundEnabled(false)
+				.setHoverable(false)
+				.setIsVisibleSupplier((menu, entry) -> this.getFilteredSelectedElementList(selectedElementsFilter).size() == 1)
+				.setIcon(ContextMenu.IconFactory.getIcon("info"));
+
+		return addTo.addSubMenuEntry(entryIdentifier, label, subMenu).setStackable(true);
+
 	}
 
 	@SuppressWarnings("all")

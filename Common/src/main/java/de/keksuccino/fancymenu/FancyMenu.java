@@ -21,6 +21,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO re-implement button to shrink/minimize menu bar (overlay and editor)
+
 	//TODO FIXEN: Layout Editor: grid toggle in Window tab wird nicht aktualisiert, wenn grid per Ctrl + G getoggelt wird
 
 	//TODO Item Element, das per item meta (wie in give command) customized werden kann

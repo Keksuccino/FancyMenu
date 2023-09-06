@@ -839,6 +839,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         protected Supplier<Tooltip> tooltipSupplier;
         protected Font font = Minecraft.getInstance().font;
         protected boolean addSpaceForIcon = false;
+        protected boolean hoverable = true;
 
         public ContextMenuEntry(@NotNull String identifier, @NotNull ContextMenu parent) {
             this.identifier = identifier;
@@ -869,12 +870,23 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         public abstract float getMinWidth();
 
         protected void setHovered(boolean hovered) {
+            if (!this.isHoverable()) return;
             this.hovered = hovered;
         }
 
         public boolean isHovered() {
+            if (!this.isHoverable()) return false;
             if (!this.parent.isOpen()) return false;
             return this.hovered;
+        }
+
+        public boolean isHoverable() {
+            return this.hoverable;
+        }
+
+        public T setHoverable(boolean hoverable) {
+            this.hoverable = hoverable;
+            return (T) this;
         }
 
         public boolean isActive() {
@@ -966,6 +978,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         protected boolean tooltipIconHovered = false;
         protected boolean tooltipActive = false;
         protected long tooltipIconHoverStart = -1;
+        protected boolean enableClickSound = true;
 
         public ClickableContextMenuEntry(@NotNull String identifier, @NotNull ContextMenu parent, @NotNull Component label, @NotNull ClickAction clickAction) {
             super(identifier, parent);
@@ -1104,6 +1117,15 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             return (T) this;
         }
 
+        public boolean isClickSoundEnabled() {
+            return this.enableClickSound;
+        }
+
+        public T setClickSoundEnabled(boolean enabled) {
+            this.enableClickSound = enabled;
+            return (T) this;
+        }
+
         @Override
         public ClickableContextMenuEntry<T> copy() {
             ClickableContextMenuEntry<T> copy = new ClickableContextMenuEntry<>(this.identifier, this.parent, Component.literal(""), this.clickAction);
@@ -1145,7 +1167,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             if ((button == 0) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered() && !this.tooltipIconHovered) {
-                if (FancyMenu.getOptions().playUiClickSounds.getValue()) {
+                if (FancyMenu.getOptions().playUiClickSounds.getValue() && this.enableClickSound) {
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 }
                 this.clickAction.onClick(this.parent, this);
@@ -1248,7 +1270,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         @Override
         protected void renderBackground(@NotNull PoseStack pose) {
             boolean hover = this.hovered;
-            this.hovered = this.hovered || this.subContextMenu.isOpen();
+            if (this.isHoverable()) this.hovered = this.hovered || this.subContextMenu.isOpen();
             super.renderBackground(pose);
             this.hovered = hover;
         }

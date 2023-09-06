@@ -14,6 +14,7 @@ import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
@@ -25,9 +26,10 @@ public class NonStackableOverlayUI {
 
     @NotNull
     public static ContextMenu.ClickableContextMenuEntry<?> addFileChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Component label, @NotNull Supplier<String> getter, @NotNull Consumer<String> setter, boolean addResetOption, String defaultValue, @Nullable FileFilter fileFilter) {
+
         ContextMenu subMenu = new ContextMenu();
-        ContextMenu addToFinal = addResetOption ? subMenu : addTo;
-        ContextMenu.ClickableContextMenuEntry<?> chooseEntry = addToFinal.addClickableEntry(addResetOption ? "choose_file" : entryIdentifier, addResetOption ? Component.translatable("fancymenu.ui.filechooser.choose.file") : label, (menu, entry) -> {
+
+        subMenu.addClickableEntry("choose_file", Component.translatable("fancymenu.ui.filechooser.choose.file"), (menu, entry) -> {
             File startDir = LayoutHandler.ASSETS_DIR;
             String path = getter.get();
             if (path != null) {
@@ -46,20 +48,44 @@ public class NonStackableOverlayUI {
             fileChooser.setFileFilter(fileFilter);
             Minecraft.getInstance().setScreen(fileChooser);
         });
+
         if (addResetOption) {
             subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.editor.filechooser.reset"), (menu, entry) -> {
                 setter.accept(defaultValue);
             });
-            return addTo.addSubMenuEntry(entryIdentifier, label, subMenu);
         }
-        return chooseEntry;
+
+        Supplier<Component> currentValueDisplayLabelSupplier = () -> {
+            Component valueComponent;
+            String val = getter.get();
+            if (val == null) {
+                valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+            } else {
+                val = ScreenCustomization.getPathWithoutGameDirectory(val);
+                if (Minecraft.getInstance().font.width(val) > 150) {
+                    val = new StringBuilder(val).reverse().toString();
+                    val = Minecraft.getInstance().font.plainSubstrByWidth(val, 150);
+                    val = new StringBuilder(val).reverse().toString();
+                    val = ".." + val;
+                }
+                valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+            }
+            return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
+        };
+        subMenu.addSeparatorEntry("separator_before_current_value_display");
+        subMenu.addClickableEntry("current_value_display", Component.empty(), (menu, entry) -> {})
+                .setLabelSupplier((menu, entry) -> currentValueDisplayLabelSupplier.get())
+                .setClickSoundEnabled(false)
+                .setHoverable(false)
+                .setIcon(ContextMenu.IconFactory.getIcon("info"));
+
+        return addTo.addSubMenuEntry(entryIdentifier, label, subMenu);
     }
 
     @NotNull
     public static ContextMenu.ClickableContextMenuEntry<?> addInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Component label, @NotNull Supplier<String> getter, @NotNull Consumer<String> setter, boolean addResetOption, String defaultValue, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
         ContextMenu subMenu = new ContextMenu();
-        ContextMenu addToFinal = addResetOption ? subMenu : addTo;
-        ContextMenu.ClickableContextMenuEntry<?> inputEntry = addToFinal.addClickableEntry(addResetOption ? "input_value" : entryIdentifier, addResetOption ? Component.translatable("fancymenu.guicomponents.set") : label, (menu, entry) -> {
+        ContextMenu.ClickableContextMenuEntry<?> inputEntry = subMenu.addClickableEntry("input_value", Component.translatable("fancymenu.guicomponents.set"), (menu, entry) -> {
             Screen current = Minecraft.getInstance().screen;
             Screen inputScreen;
             if (!multiLineInput && !allowPlaceholders) {
@@ -99,13 +125,38 @@ public class NonStackableOverlayUI {
             }
             Minecraft.getInstance().setScreen(inputScreen);
         });
+
         if (addResetOption) {
             subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.guicomponents.reset"), (menu, entry) -> {
                 setter.accept(defaultValue);
             });
-            return addTo.addSubMenuEntry(entryIdentifier, label, subMenu);
         }
-        return inputEntry;
+
+        Supplier<Component> currentValueDisplayLabelSupplier = () -> {
+            Component valueComponent;
+            String val = getter.get();
+            if (val == null) {
+                valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+            } else {
+                val = ScreenCustomization.getPathWithoutGameDirectory(val);
+                if (Minecraft.getInstance().font.width(val) > 150) {
+                    val = new StringBuilder(val).reverse().toString();
+                    val = Minecraft.getInstance().font.plainSubstrByWidth(val, 150);
+                    val = new StringBuilder(val).reverse().toString();
+                    val = ".." + val;
+                }
+                valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+            }
+            return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
+        };
+        subMenu.addSeparatorEntry("separator_before_current_value_display");
+        subMenu.addClickableEntry("current_value_display", Component.empty(), (menu, entry) -> {})
+                .setLabelSupplier((menu, entry) -> currentValueDisplayLabelSupplier.get())
+                .setClickSoundEnabled(false)
+                .setHoverable(false)
+                .setIcon(ContextMenu.IconFactory.getIcon("info"));
+
+        return addTo.addSubMenuEntry(entryIdentifier, label, subMenu);
     }
 
     @NotNull
