@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.mixin.mixins.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.gameintro.GameIntroHandler;
+import de.keksuccino.fancymenu.customization.gameintro.GameIntroScreen;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
@@ -9,8 +11,10 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.util.ScreenUtils;
+import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.LoadingOverlay;
+import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.server.packs.resources.ReloadInstance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,7 +22,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
 import java.util.function.Consumer;
 
 @Mixin(LoadingOverlay.class)
@@ -37,23 +40,34 @@ public abstract class MixinLoadingOverlay {
 	}
 
 	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V"))
-	private void beforeRenderScreenFancyMenu(PoseStack matrix, int mouseX, int mouseY, float partial, CallbackInfo info) {
+	private void beforeRenderScreenFancyMenu(PoseStack pose, int mouseX, int mouseY, float partial, CallbackInfo info) {
 		//Fire RenderPre event for current screen in loading overlay
 		if (ScreenUtils.getScreen() != null) {
-			EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(ScreenUtils.getScreen(), matrix, mouseX, mouseY, partial));
+			EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(ScreenUtils.getScreen(), pose, mouseX, mouseY, partial));
 		}
 	}
 
 	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V", shift = At.Shift.AFTER))
-	private void afterRenderScreenFancyMenu(PoseStack matrix, int mouseX, int mouseY, float partial, CallbackInfo info) {
+	private void afterRenderScreenFancyMenu(PoseStack pose, int mouseX, int mouseY, float partial, CallbackInfo info) {
 		//Fire RenderPost event for current screen in loading overlay
 		if (ScreenUtils.getScreen() != null) {
-			EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(ScreenUtils.getScreen(), matrix, mouseX, mouseY, partial));
+			EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(ScreenUtils.getScreen(), pose, mouseX, mouseY, partial));
 		}
 	}
 
+	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;init(Lnet/minecraft/client/Minecraft;II)V"))
+	private void beforeInitScreenFancyMenu(PoseStack pose, int mouseX, int mouseY, float partial, CallbackInfo info) {
+		if (!GameIntroHandler.introPlayed && GameIntroHandler.shouldPlayIntro()) {
+			IAnimationRenderer animationRenderer = GameIntroHandler.getGameIntroAnimation();
+			if (animationRenderer != null) {
+				Minecraft.getInstance().setScreen(new GameIntroScreen((Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen : new TitleScreen(), animationRenderer));
+			}
+		}
+		GameIntroHandler.introPlayed = true;
+	}
+
 	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;init(Lnet/minecraft/client/Minecraft;II)V", shift = At.Shift.AFTER))
-	private void afterInitScreenFancyMenu(PoseStack matrix, int mouseX, int mouseY, float partial, CallbackInfo info) {
+	private void afterInitScreenFancyMenu(PoseStack pose, int mouseX, int mouseY, float partial, CallbackInfo info) {
 		if (Minecraft.getInstance().screen != null) {
 			//Update resource pack animation sizes after reloading textures and when starting the game
 			LOGGER.info("[FANCYMENU] Updating animation sizes..");
@@ -70,7 +84,7 @@ public abstract class MixinLoadingOverlay {
 	}
 
 	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;setOverlay(Lnet/minecraft/client/gui/screens/Overlay;)V"))
-	private void beforeClosingOverlayFancyMenu(PoseStack $$0, int $$1, int $$2, float $$3, CallbackInfo ci) {
+	private void beforeClosingOverlayFancyMenu(PoseStack pose, int mouseX, int mouseY, float partial, CallbackInfo info) {
 		if (Minecraft.getInstance().screen == null) {
 			//Update resource pack animation sizes after reloading textures if fading to no screen (while in-game)
 			LOGGER.info("[FANCYMENU] Updating animation sizes..");

@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization;
 
 import java.io.File;
 import java.util.*;
-
 import de.keksuccino.fancymenu.Compat;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
@@ -15,7 +14,6 @@ import de.keksuccino.fancymenu.customization.action.ButtonScriptHandler;
 import de.keksuccino.fancymenu.customization.widget.VanillaButtonHandler;
 import de.keksuccino.fancymenu.customization.widget.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.customization.deep.layers.DeepScreenCustomizationLayers;
-import de.keksuccino.fancymenu.customization.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBase;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.element.elements.Elements;
@@ -99,8 +97,6 @@ public class ScreenCustomization {
 		SlideshowHandler.init();
 
 		CustomGuiHandler.reloadGuis();
-
-		GameIntroHandler.init();
 
 		CustomizationOverlay.init();
 

@@ -21,6 +21,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO re-implement custom GUI builder (rewrite builder screen + add option to menu bar)
+
 	//TODO re-implement button to shrink/minimize menu bar (overlay and editor)
 
 	//TODO FIXEN: Layout Editor: grid toggle in Window tab wird nicht aktualisiert, wenn grid per Ctrl + G getoggelt wird
@@ -36,8 +38,6 @@ public class FancyMenu {
 	// - Pack exported setup to ZIP
 	// - Allow import of ZIP setups
 	// - Use SaveFileScreen to save setup
-
-	//TODO re-implement GameIntroScreen
 
 	//TODO Key Presses in TextEditorScreen genau wie in LayoutEditorScreen handeln (pressed char getten und dann damit checken)
 

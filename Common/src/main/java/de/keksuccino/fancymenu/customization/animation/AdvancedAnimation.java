@@ -3,9 +3,7 @@ package de.keksuccino.fancymenu.customization.animation;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.List;
-
 import javax.annotation.Nullable;
-
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.animation.exceptions.AnimationNotFoundException;
 import de.keksuccino.konkrete.rendering.animation.ExternalTextureAnimationRenderer;
@@ -88,6 +86,8 @@ public class AdvancedAnimation implements IAnimationRenderer {
 	 */
 	@Override
 	public void resetAnimation() {
+		this.stopAudio();
+		this.resetAudio();
 		if (this.animationRenderer != null) {
 			this.animationRenderer.resetAnimation();
 		}

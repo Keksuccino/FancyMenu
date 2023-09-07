@@ -7,7 +7,6 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,6 +34,11 @@ public class LocalizationUtils {
             keys.addAll(((IMixinClientLanguage)c).getStorageFancyMenu().keySet());
         }
         return keys;
+    }
+
+    public static boolean isLocalizationKey(String key) {
+        if (key == null) return false;
+        return I18n.exists(key);
     }
 
 }

@@ -141,9 +141,11 @@ public class LayoutEditorUI {
 		ContextMenu elementMenu = new ContextMenu();
 		menuBar.addContextMenuEntry("element_tab", Component.translatable("fancymenu.editor.element"), elementMenu);
 
-		elementMenu.addSubMenuEntry("new_element", Component.translatable("fancymenu.editor.element.new"), buildElementContextMenu(editor));
+		elementMenu.addSubMenuEntry("new_element", Component.translatable("fancymenu.editor.element.new"), buildElementContextMenu(editor))
+				.setIcon(ContextMenu.IconFactory.getIcon("add"));
 
-		elementMenu.addSubMenuEntry("manage_hidden_vanilla_elements", Component.translatable("fancymenu.fancymenu.editor.element.deleted_vanilla_elements"), buildHiddenVanillaElementsContextMenu(editor));
+		elementMenu.addSubMenuEntry("manage_hidden_vanilla_elements", Component.translatable("fancymenu.fancymenu.editor.element.deleted_vanilla_elements"), buildHiddenVanillaElementsContextMenu(editor))
+				.setIcon(ContextMenu.IconFactory.getIcon("delete"));
 
 		//WINDOW
 		ContextMenu windowMenu = new ContextMenu();
@@ -325,7 +327,8 @@ public class LayoutEditorUI {
 				Minecraft.getInstance().setScreen(editor);
 			});
 			Minecraft.getInstance().setScreen(s);
-		}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground.btn.desc")));
+		}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground.btn.desc")))
+				.setIcon(ContextMenu.IconFactory.getIcon("image"));
 
 		menu.addValueCycleEntry("keep_background_aspect_ratio", CommonCycles.cycleEnabledDisabled("fancymenu.helper.editor.layoutoptions.backgroundoptions.keepaspect", editor.layout.preserveBackgroundAspectRatio).addCycleListener(cycle -> {
 			editor.history.saveSnapshot();
@@ -345,7 +348,8 @@ public class LayoutEditorUI {
 							true, null, null, false, true,
 							consumes -> !consumes.isEmpty(),
 							consumes -> consumes.isEmpty() ? Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.edit_menu_title.reset.invalid_title")) : null)
-					.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.edit_menu_title.desc")));
+					.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.edit_menu_title.desc")))
+					.setIcon(ContextMenu.IconFactory.getIcon("text"));
 
 			menu.addSeparatorEntry("separator_after_edit_menu_title");
 
@@ -417,7 +421,8 @@ public class LayoutEditorUI {
 						return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.autoscale.btn.desc"));
 					}
 					return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.autoscale.forced_scale_needed"));
-				});
+				})
+				.setIcon(ContextMenu.IconFactory.getIcon("measure"));
 
 		NonStackableOverlayUI.addIntegerInputContextMenuEntryTo(menu, "forced_gui_scale", Component.translatable("fancymenu.editor.rightclick.scale"),
 				() -> (int) editor.layout.forcedScale,
@@ -439,7 +444,8 @@ public class LayoutEditorUI {
 						}
 					}
 					return null;
-				}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.scale.btn.desc")));
+				}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.scale.btn.desc")))
+				.setIcon(ContextMenu.IconFactory.getIcon("measure"));
 
 		menu.addSeparatorEntry("separator_after_forced_scale");
 
@@ -449,7 +455,8 @@ public class LayoutEditorUI {
 							editor.history.saveSnapshot();
 							editor.layout.openAudio = s;
 						}, true, null, FileFilter.WAV_AUDIO_FILE_FILTER)
-				.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.open_audio.desc")));
+				.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.open_audio.desc")))
+				.setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
 		NonStackableOverlayUI.addFileChooserContextMenuEntryTo(menu, "close_audio", Component.translatable("fancymenu.editor.close_audio"),
 						() -> editor.layout.closeAudio,
@@ -457,7 +464,8 @@ public class LayoutEditorUI {
 							editor.history.saveSnapshot();
 							editor.layout.closeAudio = s;
 						}, true, null, FileFilter.WAV_AUDIO_FILE_FILTER)
-				.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.close_audio.desc")));
+				.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.close_audio.desc")))
+				.setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
 		menu.addSeparatorEntry("separator_after_close_audio");
 
@@ -468,7 +476,8 @@ public class LayoutEditorUI {
 				}
 				Minecraft.getInstance().setScreen(editor);
 			}));
-		}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.loading_requirement.layouts.loading_requirements.desc")));
+		}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.loading_requirement.layouts.loading_requirements.desc")))
+				.setIcon(ContextMenu.IconFactory.getIcon("check_list"));
 
 		menu.addSeparatorEntry("separator_after_layout_wide_requirements");
 
@@ -479,7 +488,8 @@ public class LayoutEditorUI {
 
 		menu.addSeparatorEntry("separator_after_paste_elements");
 
-		menu.addSubMenuEntry("add_element", Component.translatable("fancymenu.editor.layoutproperties.newelement"), buildElementContextMenu(editor));
+		menu.addSubMenuEntry("add_element", Component.translatable("fancymenu.editor.layoutproperties.newelement"), buildElementContextMenu(editor))
+				.setIcon(ContextMenu.IconFactory.getIcon("add"));
 
 		return menu;
 
