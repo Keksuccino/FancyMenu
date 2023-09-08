@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.mixin.mixins.client;
 
+import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.*;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
@@ -59,10 +60,19 @@ public class MixinMinecraft {
 		}
 	}
 
-	@Inject(method = "setScreen", at = @At("HEAD"))
+	@Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
 	private void headSetScreenFancyMenu(Screen screen, CallbackInfo info) {
+
 		//Reset GUI scale in case some layout changed it
 		RenderingUtils.resetGuiScale();
+
+		//Handle Overrides
+		Screen overrideWith = CustomGuiHandler.beforeSetScreen(screen);
+		if (overrideWith != null) {
+			info.cancel();
+			Minecraft.getInstance().setScreen(overrideWith);
+		}
+
 	}
 
 	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/BufferUploader;reset()V", shift = At.Shift.AFTER))

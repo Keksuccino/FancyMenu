@@ -43,7 +43,6 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -56,7 +55,7 @@ public class LayoutEditorUI {
 	private static MenuBar grandfatheredMenuBar = null;
 
 	@NotNull
-	public static MenuBar buildMenuBar(LayoutEditorScreen editor) {
+	public static MenuBar buildMenuBar(LayoutEditorScreen editor, boolean expanded) {
 
 		if (grandfatheredMenuBar != null) {
 			MenuBar mb = grandfatheredMenuBar;
@@ -65,6 +64,7 @@ public class LayoutEditorUI {
 		}
 
 		MenuBar menuBar = new MenuBar();
+		menuBar.setExpanded(expanded);
 
 		//FANCYMENU ICON
 		CustomizationOverlayUI.buildFMIconTabAndAddTo(menuBar);

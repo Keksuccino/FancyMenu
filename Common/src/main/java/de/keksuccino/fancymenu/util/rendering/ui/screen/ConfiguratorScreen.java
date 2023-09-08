@@ -29,6 +29,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 @SuppressWarnings("all")
 public abstract class ConfiguratorScreen extends Screen {
@@ -290,7 +291,6 @@ public abstract class ConfiguratorScreen extends Screen {
         public ExtendedEditBox editBox;
         public ExtendedButton openEditorButton;
         public final boolean allowEditor;
-
         protected boolean widgetSizesSet = false;
 
         public TextInputCell(@Nullable CharacterFilter characterFilter, boolean allowEditor, boolean allowEditorPlaceholders) {
@@ -352,6 +352,11 @@ public abstract class ConfiguratorScreen extends Screen {
         @Override
         public void tick() {
             this.editBox.tick();
+        }
+
+        public TextInputCell setEditListener(@Nullable Consumer<String> listener) {
+            this.editBox.setResponder(listener);
+            return this;
         }
 
         @NotNull

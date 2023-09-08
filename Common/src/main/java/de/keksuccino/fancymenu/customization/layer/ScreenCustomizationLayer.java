@@ -12,7 +12,7 @@ import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractSelectionList;
 import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElement;
-import de.keksuccino.fancymenu.customization.customgui.CustomGuiBase;
+import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutBase;
@@ -196,7 +196,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 		//Override menu with custom GUI if custom GUI identifier is defined
 		if (this.layoutBase.overrideMenuWith != null) {
 			if (CustomGuiHandler.guiExists(this.layoutBase.overrideMenuWith)) {
-				CustomGuiBase cus = CustomGuiHandler.getGui(this.layoutBase.overrideMenuWith, null, e.getScreen(), (onClose) -> {
+				CustomGuiBaseScreen cus = CustomGuiHandler.getGui(this.layoutBase.overrideMenuWith, null, e.getScreen(), (onClose) -> {
 					//TODO tf is this and why did I add it???
 					e.getScreen().removed();
 				});

@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("all")
-public class PropertiesSerializer {
+public class PropertiesParser {
 
     private static final Logger LOGGER = LogManager.getLogger();
 

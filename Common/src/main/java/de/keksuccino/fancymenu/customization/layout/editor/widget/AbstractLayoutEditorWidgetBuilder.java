@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
-import de.keksuccino.fancymenu.util.properties.PropertiesSerializer;
+import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -127,7 +127,7 @@ public abstract class AbstractLayoutEditorWidgetBuilder<T extends AbstractLayout
             PropertyContainerSet set = new PropertyContainerSet("layout_editor_widget_settings");
             set.putContainer(settings);
 
-            PropertiesSerializer.serializeSetToFile(set, this.getSettingsFile().getAbsolutePath());
+            PropertiesParser.serializeSetToFile(set, this.getSettingsFile().getAbsolutePath());
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -141,7 +141,7 @@ public abstract class AbstractLayoutEditorWidgetBuilder<T extends AbstractLayout
             if (!savedSettingsFile.isFile()) {
                 this.writeSettingsInternal(Objects.requireNonNull(this.buildDefaultInstance(DUMMY_LAYOUT_EDITOR)));
             }
-            PropertyContainerSet set = PropertiesSerializer.deserializeSetFromFile(savedSettingsFile.getAbsolutePath());
+            PropertyContainerSet set = PropertiesParser.deserializeSetFromFile(savedSettingsFile.getAbsolutePath());
             if (set != null) {
                 List<PropertyContainer> containers = set.getContainersOfType("settings");
                 if (!containers.isEmpty()) {

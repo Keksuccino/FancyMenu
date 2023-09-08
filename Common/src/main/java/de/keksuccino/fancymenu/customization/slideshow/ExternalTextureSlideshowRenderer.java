@@ -14,7 +14,7 @@ import de.keksuccino.fancymenu.util.resources.texture.LocalTexture;
 import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
-import de.keksuccino.fancymenu.util.properties.PropertiesSerializer;
+import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.gui.GuiComponent;
@@ -54,7 +54,7 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 		
 		if (props.exists()) {
 			
-			PropertyContainerSet s = PropertiesSerializer.deserializeSetFromFile(props.getPath());
+			PropertyContainerSet s = PropertiesParser.deserializeSetFromFile(props.getPath());
 			
 			if (s != null) {
 				List<PropertyContainer> l = s.getContainersOfType("slideshow-meta");

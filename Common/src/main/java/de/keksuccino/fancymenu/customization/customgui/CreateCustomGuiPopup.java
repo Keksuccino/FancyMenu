@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import net.minecraft.client.resources.language.I18n;
@@ -143,7 +142,7 @@ public class CreateCustomGuiPopup extends FMPopup {
 				
 				this.setDisplayed(false);
 				CustomGuiHandler.reloadGuis();
-				CustomGuiBase gui = CustomGuiHandler.getGui(this.identifierText.getValue(), Minecraft.getInstance().screen, null);
+				CustomGuiBaseScreen gui = CustomGuiHandler.getGui(this.identifierText.getValue(), Minecraft.getInstance().screen, null);
 				if (gui != null) {
 					Minecraft.getInstance().setScreen(gui);
 					Minecraft.getInstance().setScreen(new LayoutEditorScreen(gui, new Layout(gui)));

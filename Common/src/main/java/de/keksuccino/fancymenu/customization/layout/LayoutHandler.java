@@ -14,7 +14,7 @@ import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.file.FilenameComparator;
 import de.keksuccino.fancymenu.util.Legacy;
 import de.keksuccino.fancymenu.util.ListUtils;
-import de.keksuccino.fancymenu.util.properties.PropertiesSerializer;
+import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
@@ -51,7 +51,7 @@ public class LayoutHandler {
 		if (filesArray != null) {
 			for (File f : filesArray) {
 				if (f.getPath().toLowerCase().endsWith(".txt")) {
-					PropertyContainerSet s = PropertiesSerializer.deserializeSetFromFile(f.getAbsolutePath().replace("\\", "/"));
+					PropertyContainerSet s = PropertiesParser.deserializeSetFromFile(f.getAbsolutePath().replace("\\", "/"));
 					if (s != null) {
 						Layout layout = deserializeLayout(s, f);
 						if (layout != null) {
@@ -231,7 +231,7 @@ public class LayoutHandler {
 		}
 		PropertyContainerSet set = layout.serialize();
 		if (set != null) {
-			PropertiesSerializer.serializeSetToFile(set, f.getPath());
+			PropertiesParser.serializeSetToFile(set, f.getPath());
 			return true;
 		}
 		return false;

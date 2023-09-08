@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.customgui.CustomGuiBase;
+import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
@@ -92,9 +92,9 @@ public class ScreenCustomizationLayerHandler {
 			if (ScreenCustomization.isScreenBlacklisted(screen)) {
 				return;
 			}
-			if (screen instanceof CustomGuiBase) {
-				if (!isLayerRegistered(((CustomGuiBase)screen).getIdentifier())) {
-					registerLayer(((CustomGuiBase) screen).getIdentifier(), new CustomGuiCustomizationLayer(((CustomGuiBase) screen).getIdentifier()));
+			if (screen instanceof CustomGuiBaseScreen) {
+				if (!isLayerRegistered(((CustomGuiBaseScreen)screen).getIdentifier())) {
+					registerLayer(((CustomGuiBaseScreen) screen).getIdentifier(), new CustomGuiCustomizationLayer(((CustomGuiBaseScreen) screen).getIdentifier()));
 				}
 			} else {
 				registerScreen(screen);

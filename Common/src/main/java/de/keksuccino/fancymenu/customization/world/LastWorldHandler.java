@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.world;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
-import de.keksuccino.fancymenu.util.properties.PropertiesSerializer;
+import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 
 import java.io.File;
@@ -43,7 +43,7 @@ public class LastWorldHandler {
             if (!LAST_WORLD_SAVE_FILE.isFile()) {
                 writeFile();
             }
-            PropertyContainerSet set = PropertiesSerializer.deserializeSetFromFile(LAST_WORLD_SAVE_FILE.getPath());
+            PropertyContainerSet set = PropertiesParser.deserializeSetFromFile(LAST_WORLD_SAVE_FILE.getPath());
             if (set != null) {
                 List<PropertyContainer> secs = set.getContainersOfType("last_world");
                 if (!secs.isEmpty()) {
@@ -73,7 +73,7 @@ public class LastWorldHandler {
             sec.putProperty("is_server", "" + isServer);
             sec.putProperty("world", lastWorld);
             set.putContainer(sec);
-            PropertiesSerializer.serializeSetToFile(set, LAST_WORLD_SAVE_FILE.getPath());
+            PropertiesParser.serializeSetToFile(set, LAST_WORLD_SAVE_FILE.getPath());
         } catch (Exception e) {
             e.printStackTrace();
         }

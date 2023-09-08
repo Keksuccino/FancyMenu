@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.variables;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.Legacy;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
-import de.keksuccino.fancymenu.util.properties.PropertiesSerializer;
+import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -76,7 +76,7 @@ public class VariableHandler {
             for (Variable v : VARIABLES.values()) {
                 set.putContainer(v.serialize());
             }
-            PropertiesSerializer.serializeSetToFile(set, VARIABLES_FILE.getPath());
+            PropertiesParser.serializeSetToFile(set, VARIABLES_FILE.getPath());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -88,7 +88,7 @@ public class VariableHandler {
                 writeToFile();
             }
             VARIABLES.clear();
-            PropertyContainerSet set = PropertiesSerializer.deserializeSetFromFile(VARIABLES_FILE.getPath());
+            PropertyContainerSet set = PropertiesParser.deserializeSetFromFile(VARIABLES_FILE.getPath());
             if (set != null) {
                 if (set.getType().equals("cached_variables")) {
                     readFromLegacyFile();
@@ -114,7 +114,7 @@ public class VariableHandler {
                 writeToFile();
             }
             VARIABLES.clear();
-            PropertyContainerSet set = PropertiesSerializer.deserializeSetFromFile(VARIABLES_FILE.getPath());
+            PropertyContainerSet set = PropertiesParser.deserializeSetFromFile(VARIABLES_FILE.getPath());
             if (set != null) {
                 List<PropertyContainer> secs = set.getContainersOfType("variables");
                 if (!secs.isEmpty()) {

@@ -14,7 +14,7 @@ import de.keksuccino.fancymenu.customization.action.ButtonScriptHandler;
 import de.keksuccino.fancymenu.customization.widget.VanillaButtonHandler;
 import de.keksuccino.fancymenu.customization.widget.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.customization.deep.layers.DeepScreenCustomizationLayers;
-import de.keksuccino.fancymenu.customization.customgui.CustomGuiBase;
+import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.element.elements.Elements;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
@@ -36,7 +36,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
 import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
-import de.keksuccino.fancymenu.util.properties.PropertiesSerializer;
+import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -96,7 +96,7 @@ public class ScreenCustomization {
 
 		SlideshowHandler.init();
 
-		CustomGuiHandler.reloadGuis();
+		CustomGuiHandler.init();
 
 		CustomizationOverlay.init();
 
@@ -135,7 +135,7 @@ public class ScreenCustomization {
 			readCustomizableScreensFromFile();
 		}
 		if ((screen != null) && !isCustomizationEnabledForScreen(screen, true)) {
-			if (!(screen instanceof CustomGuiBase)) {
+			if (!(screen instanceof CustomGuiBaseScreen)) {
 				String identifier = screen.getClass().getName();
 				PropertyContainer sec = new PropertyContainer(identifier);
 				customizableScreens.putContainer(sec);
@@ -149,7 +149,7 @@ public class ScreenCustomization {
 			readCustomizableScreensFromFile();
 		}
 		if (screen != null) {
-			if (!(screen instanceof CustomGuiBase)) {
+			if (!(screen instanceof CustomGuiBaseScreen)) {
 				String identifier = screen.getClass().getName();
 				List<PropertyContainer> l = new ArrayList<>();
 				for (PropertyContainer sec : customizableScreens.getContainers()) {
@@ -181,7 +181,7 @@ public class ScreenCustomization {
 		if (customizableScreens == null) {
 			readCustomizableScreensFromFile();
 		}
-		if (screen instanceof CustomGuiBase) {
+		if (screen instanceof CustomGuiBaseScreen) {
 			return true;
 		}
 		List<PropertyContainer> s = customizableScreens.getContainersOfType(screen.getClass().getName());
@@ -197,19 +197,19 @@ public class ScreenCustomization {
 	}
 
 	private static void writeCustomizableScreensToFile() {
-		PropertiesSerializer.serializeSetToFile(customizableScreens, CUSTOMIZABLE_MENUS_FILE.getPath());
+		PropertiesParser.serializeSetToFile(customizableScreens, CUSTOMIZABLE_MENUS_FILE.getPath());
 	}
 
 	public static void readCustomizableScreensFromFile() {
 		try {
 			if (!CUSTOMIZABLE_MENUS_FILE.exists()) {
 				CUSTOMIZABLE_MENUS_FILE.createNewFile();
-				PropertiesSerializer.serializeSetToFile(new PropertyContainerSet("customizablemenus"), CUSTOMIZABLE_MENUS_FILE.getPath());
+				PropertiesParser.serializeSetToFile(new PropertyContainerSet("customizablemenus"), CUSTOMIZABLE_MENUS_FILE.getPath());
 			}
-			PropertyContainerSet s = PropertiesSerializer.deserializeSetFromFile(CUSTOMIZABLE_MENUS_FILE.getPath());
+			PropertyContainerSet s = PropertiesParser.deserializeSetFromFile(CUSTOMIZABLE_MENUS_FILE.getPath());
 			if (s == null) {
-				PropertiesSerializer.serializeSetToFile(new PropertyContainerSet("customizablemenus"), CUSTOMIZABLE_MENUS_FILE.getPath());
-				s = PropertiesSerializer.deserializeSetFromFile(CUSTOMIZABLE_MENUS_FILE.getPath());
+				PropertiesParser.serializeSetToFile(new PropertyContainerSet("customizablemenus"), CUSTOMIZABLE_MENUS_FILE.getPath());
+				s = PropertiesParser.deserializeSetFromFile(CUSTOMIZABLE_MENUS_FILE.getPath());
 			}
 			Objects.requireNonNull(s, "[FANCYMENU] Unable to read customizable menus file! PropertyContainer was NULL!");
 			PropertyContainerSet s2 = new PropertyContainerSet("customizablemenus");
@@ -284,7 +284,6 @@ public class ScreenCustomization {
 		AnimationHandler.resetAnimationSounds();
 		AnimationHandler.stopAnimationSounds();
 		LayoutHandler.reloadLayouts();
-		CustomGuiHandler.reloadGuis();
 		EventHandler.INSTANCE.postEvent(new ModReloadEvent(Minecraft.getInstance().screen));
 		reInitCurrentScreen();
 	}
@@ -303,14 +302,14 @@ public class ScreenCustomization {
 	@Nullable
 	public static String getScreenIdentifier(Screen screen) {
 		if (screen == null) return null;
-		if (screen instanceof CustomGuiBase c) {
+		if (screen instanceof CustomGuiBaseScreen c) {
 			return c.getIdentifier();
 		}
 		return screen.getClass().getName();
 	}
 
 	public static boolean isOverridingOtherScreen(Screen current) {
-		return (current instanceof CustomGuiBase) && (((CustomGuiBase)current).getOverriddenScreen() != null);
+		return (current instanceof CustomGuiBaseScreen) && (((CustomGuiBaseScreen)current).getOverriddenScreen() != null);
 	}
 
 	public static void addScreenBlacklistRule(ScreenBlacklistRule rule) {
@@ -346,7 +345,7 @@ public class ScreenCustomization {
 		addScreenBlacklistRule((screen) -> screen.startsWith("net.optifine"));
 		addScreenBlacklistRule((screen) -> screen.startsWith("slimeknights."));
 		addScreenBlacklistRule((screen) -> screen.equals(VideoSettingsScreen.class.getName()) && Compat.isOptiFineLoaded());
-		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.fancymenu.") && !screen.equals(CustomGuiBase.class.getName()));
+		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.fancymenu.") && !screen.equals(CustomGuiBaseScreen.class.getName()));
 
 	}
 

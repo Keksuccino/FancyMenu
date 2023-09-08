@@ -10,7 +10,7 @@ import de.keksuccino.fancymenu.customization.animation.AnimationData.Type;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
-import de.keksuccino.fancymenu.util.properties.PropertiesSerializer;
+import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
@@ -93,7 +93,7 @@ public class AnimationHandler {
 					continue;
 				}
 
-				PropertyContainerSet props = PropertiesSerializer.deserializeSetFromFile(p.getPath());
+				PropertyContainerSet props = PropertiesParser.deserializeSetFromFile(p.getPath());
 				if (props == null) {
 					continue;
 				}

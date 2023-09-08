@@ -21,7 +21,7 @@ public class CustomizationOverlay {
 	}
 
 	public static void rebuildMenuBar() {
-		overlayMenuBar = CustomizationOverlayUI.buildMenuBar();
+		overlayMenuBar = CustomizationOverlayUI.buildMenuBar((overlayMenuBar == null) || overlayMenuBar.isExpanded());
 	}
 
 	@Nullable

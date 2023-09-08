@@ -10,7 +10,7 @@ import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
-import de.keksuccino.fancymenu.util.properties.PropertiesSerializer;
+import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import net.minecraft.client.Minecraft;
@@ -45,7 +45,7 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 
 		if (props.exists()) {
 
-			PropertyContainerSet s = PropertiesSerializer.deserializeSetFromFile(props.getPath());
+			PropertyContainerSet s = PropertiesParser.deserializeSetFromFile(props.getPath());
 
 			if (s != null) {
 				List<PropertyContainer> l = s.getContainersOfType("panorama-meta");

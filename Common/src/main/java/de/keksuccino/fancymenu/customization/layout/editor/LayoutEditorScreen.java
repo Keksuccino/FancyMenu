@@ -10,7 +10,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.customgui.CustomGuiBase;
+import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.LayoutEditorWidgetRegistry;
@@ -126,7 +126,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		if (this.menuBar != null) {
 			this.menuBar.closeAllContextMenus();
 		}
-		this.menuBar = LayoutEditorUI.buildMenuBar(this);
+		this.menuBar = LayoutEditorUI.buildMenuBar(this, (this.menuBar == null) || this.menuBar.isExpanded());
 		this.addWidget(this.menuBar);
 
 		for (AbstractLayoutEditorWidget w : Lists.reverse(new ArrayList<>(this.layoutEditorWidgets))) {
@@ -733,7 +733,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	public void saveLayoutAs() {
 		String fileNamePreset = "universal_layout";
 		if (this.layoutTargetScreen != null) {
-			if (this.layoutTargetScreen instanceof CustomGuiBase c) {
+			if (this.layoutTargetScreen instanceof CustomGuiBaseScreen c) {
 				fileNamePreset = c.getIdentifier() + "_layout";
 			} else {
 				fileNamePreset = this.layoutTargetScreen.getClass().getSimpleName() + "_layout";
