@@ -299,9 +299,8 @@ public class ScreenCustomization {
 		}
 	}
 
-	@Nullable
-	public static String getScreenIdentifier(Screen screen) {
-		if (screen == null) return null;
+	@NotNull
+	public static String getScreenIdentifier(@NotNull Screen screen) {
 		if (screen instanceof CustomGuiBaseScreen c) {
 			return c.getIdentifier();
 		}

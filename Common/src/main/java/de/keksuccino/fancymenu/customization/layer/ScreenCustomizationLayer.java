@@ -7,13 +7,12 @@ import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.events.widget.RenderGuiListHeaderFooterEvent;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractSelectionList;
 import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElement;
-import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
-import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutBase;
 import de.keksuccino.fancymenu.customization.widget.ScreenWidgetDiscoverer;
@@ -56,7 +55,6 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 	private static final Logger LOGGER = LogManager.getLogger();
 
 	protected String identifier;
-
 	public LayoutBase layoutBase = new LayoutBase();
 	public List<AbstractElement> allElements = new ArrayList<>();
 	public Layout.OrderedElementCollection normalElements = new Layout.OrderedElementCollection();
@@ -64,10 +62,8 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 	public List<AbstractDeepElement> deepElements = new ArrayList<>();
 	public Map<String, RandomLayoutContainer> randomLayoutGroups = new HashMap<>();
 	public List<Layout> activeLayouts = new ArrayList<>();
-
 	public List<String> delayAppearanceFirstTime = new ArrayList<>();
 	public List<ScreenCustomizationLayer.ThreadCaller> delayThreads = new ArrayList<>();
-
 	public boolean backgroundDrawable;
 	public boolean isNewMenu = true;
 	public boolean forceDisableCustomMenuTitle = false;
@@ -193,17 +189,6 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 		//Stack active layouts
 		this.layoutBase = LayoutBase.stackLayoutBases(activeLayouts.toArray(new LayoutBase[]{}));
 
-		//Override menu with custom GUI if custom GUI identifier is defined
-		if (this.layoutBase.overrideMenuWith != null) {
-			if (CustomGuiHandler.guiExists(this.layoutBase.overrideMenuWith)) {
-				CustomGuiBaseScreen cus = CustomGuiHandler.getGui(this.layoutBase.overrideMenuWith, null, e.getScreen(), (onClose) -> {
-					//TODO tf is this and why did I add it???
-					e.getScreen().removed();
-				});
-				Minecraft.getInstance().setScreen(cus);
-			}
-		}
-
 		//Handle forced GUI scale
 		if (this.layoutBase.forcedScale != 0) {
 			float newscale = this.layoutBase.forcedScale;
@@ -275,9 +260,6 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 
 	protected void handleAppearanceDelayFor(AbstractElement element) {
 		if ((element.appearanceDelay != null) && (element.appearanceDelay != AbstractElement.AppearanceDelay.NO_DELAY)) {
-			if (element.getInstanceIdentifier() == null) {
-				return;
-			}
 			if ((element.appearanceDelay == AbstractElement.AppearanceDelay.FIRST_TIME) && delayAppearanceFirstTime.contains(element.getInstanceIdentifier())) {
 				return;
 			}
@@ -513,7 +495,11 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 	@SuppressWarnings("all")
 	protected boolean shouldCustomize(Screen screen) {
 		if (screen == null) return false;
-		if (!this.getIdentifier().equals(screen.getClass().getName())) return false;
+		if (screen instanceof CustomGuiBaseScreen c) {
+			if (!this.getIdentifier().equals(c.getIdentifier())) return false;
+		} else {
+			if (!this.getIdentifier().equals(screen.getClass().getName())) return false;
+		}
 		if (!ScreenCustomization.isCustomizationEnabledForScreen(screen)) return false;
 		return true;
 	}

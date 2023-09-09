@@ -1,9 +1,12 @@
 package de.keksuccino.fancymenu.customization.customgui;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.LegacyHandler;
 import de.keksuccino.fancymenu.util.Legacy;
+import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
-import de.keksuccino.konkrete.file.FileUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
@@ -11,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CustomGui {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final File LEGACY_CUSTOM_GUIS_DIR = new File(FancyMenu.MOD_DIR, "/customguis");
 
@@ -22,10 +27,9 @@ public class CustomGui {
 
     @NotNull
     public CustomGui copy() {
-        CustomGui copy = new CustomGui();
-        copy.identifier = this.identifier;
-        copy.title = this.title;
-        copy.allowEsc = this.allowEsc;
+        CustomGui copy = deserialize(this.serialize());
+        //Should never happen
+        if (copy == null) copy = new CustomGui();
         return copy;
     }
 
@@ -65,7 +69,8 @@ public class CustomGui {
     @NotNull
     public static List<CustomGui> deserializeLegacyGuis() {
         List<CustomGui> guis = new ArrayList<>();
-        if (LEGACY_CUSTOM_GUIS_DIR.isDirectory()) {
+        if (LEGACY_CUSTOM_GUIS_DIR.isDirectory() && !LegacyHandler.getCheckList().customGuisPorted.getValue()) {
+            LOGGER.info("[FANCYMENU] Trying to port old FMv2 custom GUIs to the new FMv3 system..");
             for (String s : FileUtils.getFiles(LEGACY_CUSTOM_GUIS_DIR.getPath())) {
                 File f = new File(s);
                 String identifier = null;
@@ -104,6 +109,15 @@ public class CustomGui {
                     gui.allowEsc = allowEsc;
                     guis.add(gui);
                 }
+            }
+            LegacyHandler.getCheckList().customGuisPorted.setValue(true);
+            try {
+                LOGGER.info("[FANCYMENU] Successfully ported old FMv2 custom GUIs to new FMv3 system! Renaming old FMv2 'customguis' directory now..");
+                File renamedDir = FileUtils.generateUniqueFileName(new File(LEGACY_CUSTOM_GUIS_DIR.getPath() + "_old"), true);
+                org.apache.commons.io.FileUtils.moveDirectory(LEGACY_CUSTOM_GUIS_DIR, renamedDir);
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to rename old FMv2 'customguis' directory!");
+                ex.printStackTrace();
             }
         }
         return guis;

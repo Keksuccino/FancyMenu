@@ -6,6 +6,7 @@ import javax.annotation.Nullable;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.events.ModReloadEvent;
+import de.keksuccino.fancymenu.mixin.mixins.client.MixinMinecraft;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
@@ -19,12 +20,11 @@ import org.jetbrains.annotations.NotNull;
 
 public class CustomGuiHandler {
 
-	//TODO Add ManageCustomGuisScreen
-	// - Add, Edit and Remove Custom GUIs
-	// - Manage Screen Overrides (Remove Existing Ones) (Maybe separate screen for that)
-	// - Bei Edit von GUI darauf achten, eine Kopie an den BuildCustomGuiScreen zu geben
-
-	//TODO Menu Bar entry fertig machen
+	//TODO Build + Manage Custom GUI Screens fixen
+	//TODO Build + Manage Custom GUI Screens fixen
+	//TODO Build + Manage Custom GUI Screens fixen
+	//TODO Build + Manage Custom GUI Screens fixen
+	//TODO Build + Manage Custom GUI Screens fixen
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -32,16 +32,18 @@ public class CustomGuiHandler {
 
 	protected static final Map<String, CustomGui> CUSTOM_GUI_SCREENS = new HashMap<>();
 	protected static final Map<String, String> OVERRIDDEN_SCREENS = new HashMap<>();
+	protected static boolean initialized = false;
 
 	public static void init() {
 		reload();
 		EventHandler.INSTANCE.registerListenersOf(new CustomGuiHandler());
+		initialized = true;
 	}
 
 	public static void reload() {
 		try {
 
-			saveChanges();
+			if (initialized || !CUSTOM_GUIS_FILE.isFile()) saveChanges();
 
 			OVERRIDDEN_SCREENS.clear();
 			CUSTOM_GUI_SCREENS.clear();
@@ -100,6 +102,7 @@ public class CustomGuiHandler {
 		reload();
 	}
 
+	/** Gets called in {@link MixinMinecraft}. **/
 	@Nullable
 	public static Screen beforeSetScreen(@Nullable Screen screen) {
 		if ((screen != null) && !(screen instanceof CustomGuiBaseScreen)) {
@@ -126,7 +129,6 @@ public class CustomGuiHandler {
 	public static CustomGui getGuiForOverriddenScreen(@NotNull Screen screen) {
 		if (screen instanceof CustomGuiBaseScreen) return null;
 		String identifier = ScreenCustomization.getScreenIdentifier(screen);
-		if (identifier == null) return null;
 		String customGuiIdentifier = OVERRIDDEN_SCREENS.get(identifier);
 		if (customGuiIdentifier != null) {
 			return getGui(customGuiIdentifier);
@@ -137,11 +139,15 @@ public class CustomGuiHandler {
 	public static boolean shouldOverrideScreen(@NotNull Screen screen) {
 		if (screen instanceof CustomGuiBaseScreen) return false;
 		String identifier = ScreenCustomization.getScreenIdentifier(screen);
-		return (identifier != null) && shouldOverrideScreen(identifier);
+		return shouldOverrideScreen(identifier);
 	}
 
 	public static boolean shouldOverrideScreen(@NotNull String menuIdentifier) {
 		return OVERRIDDEN_SCREENS.containsKey(menuIdentifier);
+	}
+
+	public static Map<String, String> getOverriddenScreens() {
+		return OVERRIDDEN_SCREENS;
 	}
 
 	public static void addGui(@NotNull CustomGui gui) {
@@ -166,6 +172,13 @@ public class CustomGuiHandler {
 	@NotNull
 	public static List<CustomGui> getGuis() {
 		return new ArrayList<>(CUSTOM_GUI_SCREENS.values());
+	}
+
+	@NotNull
+	public static List<String> getGuiIdentifiers() {
+		List<String> l = new ArrayList<>();
+		getGuis().forEach(customGui -> l.add(customGui.identifier));
+		return l;
 	}
 
 	public static boolean guiExists(@NotNull String identifier) {

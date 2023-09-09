@@ -5,18 +5,18 @@ import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.screeninstancefactory.ScreenInstanceFactory;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.popup.FMNotificationPopup;
-import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.awt.*;
 
 public class OpenScreenAction extends Action {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public OpenScreenAction() {
         super("opengui");
@@ -35,13 +35,14 @@ public class OpenScreenAction extends Action {
                 CreateWorldScreen.openFresh(Minecraft.getInstance(), Minecraft.getInstance().screen);
             } else {
                 if (CustomGuiHandler.guiExists(value)) {
-                    Minecraft.getInstance().setScreen(CustomGuiHandler.getGui(value, Minecraft.getInstance().screen, null));
+                    Screen custom = CustomGuiHandler.constructInstance(value, Minecraft.getInstance().screen, null);
+                    if (custom != null) Minecraft.getInstance().setScreen(custom);
                 } else {
                     Screen s = ScreenInstanceFactory.tryConstruct(value);
                     if (s != null) {
                         Minecraft.getInstance().setScreen(s);
                     } else {
-                        PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, I18n.get("fancymenu.custombuttons.action.opengui.cannotopengui")));
+                        LOGGER.error("[FANCYMENU] Unable to construct screen instance for '" + value + "'!");
                     }
                 }
             }

@@ -92,9 +92,9 @@ public class ScreenCustomizationLayerHandler {
 			if (ScreenCustomization.isScreenBlacklisted(screen)) {
 				return;
 			}
-			if (screen instanceof CustomGuiBaseScreen) {
-				if (!isLayerRegistered(((CustomGuiBaseScreen)screen).getIdentifier())) {
-					registerLayer(((CustomGuiBaseScreen) screen).getIdentifier(), new CustomGuiCustomizationLayer(((CustomGuiBaseScreen) screen).getIdentifier()));
+			if (screen instanceof CustomGuiBaseScreen c) {
+				if (!isLayerRegistered(c.getIdentifier())) {
+					registerLayer(new ScreenCustomizationLayer(c.getIdentifier()));
 				}
 			} else {
 				registerScreen(screen);

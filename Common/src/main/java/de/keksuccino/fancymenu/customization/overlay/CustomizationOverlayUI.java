@@ -2,6 +2,10 @@ package de.keksuccino.fancymenu.customization.overlay;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
+import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
+import de.keksuccino.fancymenu.customization.customgui.ManageCustomGuisScreen;
+import de.keksuccino.fancymenu.customization.customgui.ManageOverriddenGuisScreen;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.ManageLayoutsScreen;
@@ -16,6 +20,8 @@ import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.ui.NonStackableOverlayUI;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorThemeRegistry;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -60,7 +66,7 @@ public class CustomizationOverlayUI {
         MenuBar menuBar = new MenuBar();
         menuBar.setExpanded(expanded);
         Screen screen = Minecraft.getInstance().screen;
-        String identifier = ScreenCustomization.getScreenIdentifier(screen);
+        String identifier = (screen != null) ? ScreenCustomization.getScreenIdentifier(screen) : null;
 
         // FANCYMENU ICON
         buildFMIconTabAndAddTo(menuBar);
@@ -78,6 +84,18 @@ public class CustomizationOverlayUI {
                     }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                 }))
                 .setIcon(ContextMenu.IconFactory.getIcon("edit"));
+
+        customizationMenu.addClickableEntry("copy_current_screen_identifier", Component.translatable("fancymenu.overlay.menu_bar.customization.copy_current_screen_identifier"), (menu, entry) -> {
+            if (identifier != null) {
+                Minecraft.getInstance().keyboardHandler.setClipboard(identifier);
+                menu.closeMenu();
+            }
+        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.copy_current_screen_identifier.desc")));
+
+        customizationMenu.addClickableEntry("force_close_current_screen", Component.translatable("fancymenu.overlay.menu_bar.customization.close_current_screen"), (menu, entry) -> {
+            menu.closeMenu();
+            Minecraft.getInstance().setScreen(null);
+        });
 
         customizationMenu.addSeparatorEntry("separator_after_override_current");
 
@@ -380,19 +398,44 @@ public class CustomizationOverlayUI {
         customizationMenu.addSubMenuEntry("custom_guis", Component.translatable("fancymenu.overlay.menu_bar.customization.custom_guis"), customGuiMenu)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.custom_guis.desc")));
 
+        customGuiMenu.addClickableEntry("manage_custom_guis", Component.translatable("fancymenu.overlay.menu_bar.customization.custom_guis.manage"), (menu, entry) -> {
+            Screen s = Minecraft.getInstance().screen;
+            Minecraft.getInstance().setScreen(new ManageCustomGuisScreen(() -> Minecraft.getInstance().setScreen(s)));
+        });
+
+        customGuiMenu.addSeparatorEntry("separator_after_manage_custom_guis");
+
         customGuiMenu.addClickableEntry("override_current", Component.translatable("fancymenu.overlay.menu_bar.customization.custom_guis.override_current"), (menu, entry) -> {
-                    //TODO implement this
-                }).setIsActiveSupplier((menu, entry) -> FancyMenu.getOptions().advancedCustomizationMode.getValue())
+                    Screen current = Minecraft.getInstance().screen;
+                    if (!(current instanceof CustomGuiBaseScreen)) {
+                        Minecraft.getInstance().setScreen(NotificationScreen.warning(override -> {
+                            if (override) {
+                                Minecraft.getInstance().setScreen(new StringListChooserScreen(Component.translatable(""), CustomGuiHandler.getGuiIdentifiers(), s -> {
+                                    if (s != null) {
+                                        CustomGuiHandler.overrideScreenWithCustomGui(current.getClass().getName(), s);
+                                    }
+                                    Minecraft.getInstance().setScreen(current);
+                                }));
+                            } else {
+                                Minecraft.getInstance().setScreen(current);
+                            }
+                        }, LocalizationUtils.splitLocalizedLines("fancymenu.custom_guis.manage_overridden.remove_override.confirm")));
+                    }
+                }).setIsActiveSupplier((menu, entry) -> FancyMenu.getOptions().advancedCustomizationMode.getValue() && !(Minecraft.getInstance().screen instanceof CustomGuiBaseScreen))
                 .setTooltipSupplier((menu, entry) -> {
                     if (!FancyMenu.getOptions().advancedCustomizationMode.getValue()) {
                         return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.custom_guis.override_current.disabled.tooltip"));
                     }
+                    if (Minecraft.getInstance().screen instanceof CustomGuiBaseScreen) {
+                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.custom_guis.override_current.cant_override_custom"));
+                    }
                     return null;
                 });
 
-        customGuiMenu.addClickableEntry("manage_custom_guis", Component.translatable("fancymenu.overlay.menu_bar.customization.custom_guis.manage"), (menu, entry) -> {
-            //TODO implement this
-        });
+        customGuiMenu.addClickableEntry("manage_overridden_screens", Component.translatable("fancymenu.custom_guis.manage_overridden"), (menu, entry) -> {
+            Screen s = Minecraft.getInstance().screen;
+            Minecraft.getInstance().setScreen(new ManageOverriddenGuisScreen(() -> Minecraft.getInstance().setScreen(s)));
+        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.custom_guis.manage_overridden.desc")));
 
         ContextMenu variablesMenu = new ContextMenu();
         customizationMenu.addSubMenuEntry("variables", Component.translatable("fancymenu.overlay.menu_bar.variables"), variablesMenu)
@@ -445,12 +488,7 @@ public class CustomizationOverlayUI {
         ContextMenu toolsMenu = new ContextMenu();
         menuBar.addContextMenuEntry("tools", Component.translatable("fancymenu.overlay.menu_bar.tools"), toolsMenu);
 
-        toolsMenu.addClickableEntry("copy_current_screen_identifier", Component.translatable("fancymenu.overlay.menu_bar.tools.copy_current_screen_identifier"), (menu, entry) -> {
-            if (identifier != null) {
-                Minecraft.getInstance().keyboardHandler.setClipboard(identifier);
-                menu.closeMenu();
-            }
-        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.tools.copy_current_screen_identifier.tooltip")));
+        //TODO add "Open Dummy Screen Instance" entries to tools
 
         // USER INTERFACE
         buildUITabAndAddTo(menuBar);

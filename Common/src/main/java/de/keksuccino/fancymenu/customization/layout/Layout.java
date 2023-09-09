@@ -140,13 +140,6 @@ public class Layout extends LayoutBase {
             meta.putProperty("custom_menu_title", this.customMenuTitle);
         }
 
-        if (this.overrideMenuWith != null) {
-            PropertyContainer sec = new PropertyContainer("customization");
-            sec.putProperty("action", "overridemenu");
-            sec.putProperty("identifier", this.overrideMenuWith);
-            set.putContainer(sec);
-        }
-
         if (this.forcedScale != 0) {
             PropertyContainer ps = new PropertyContainer("customization");
             ps.putProperty("action", "setscale");

@@ -12,7 +12,6 @@ import java.util.Map;
  */
 public class LayoutBase {
 
-    public String overrideMenuWith;
     public MenuBackground menuBackground;
     public boolean preserveBackgroundAspectRatio = false;
     public String openAudio;
@@ -34,9 +33,6 @@ public class LayoutBase {
         if (layouts != null) {
             for (LayoutBase l : layouts) {
 
-                if (l.overrideMenuWith != null) {
-                    layout.overrideMenuWith = l.overrideMenuWith;
-                }
                 if (l.menuBackground != null) {
                     layout.menuBackground = l.menuBackground;
                 }

@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
@@ -30,6 +31,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 @SuppressWarnings("all")
 public abstract class ConfiguratorScreen extends Screen {
@@ -37,6 +39,8 @@ public abstract class ConfiguratorScreen extends Screen {
     public ScrollArea scrollArea;
     public ExtendedButton cancelButton;
     public ExtendedButton doneButton;
+    @Nullable
+    protected RenderCell selectedCell;
 
     protected ConfiguratorScreen(@NotNull Component title) {
         super(title);
@@ -58,8 +62,6 @@ public abstract class ConfiguratorScreen extends Screen {
             oldScrollY = this.scrollArea.verticalScrollBar.getScroll();
         }
         this.scrollArea = new ScrollArea(20, 50 + 15, this.width - 40 - this.getRightSideButtonWidth() - 20, this.height - 85);
-        this.scrollArea.makeEntriesWidthOfArea = true;
-        this.scrollArea.minimumEntryWidthIsAreaWidth = true;
         this.initCells();
         this.addWidget(this.scrollArea);
         this.scrollArea.horizontalScrollBar.setScroll(oldScrollX);
@@ -67,7 +69,7 @@ public abstract class ConfiguratorScreen extends Screen {
 
         for (ScrollAreaEntry e : this.scrollArea.getEntries()) {
             if (e instanceof CellScrollEntry ce) {
-                ce.cell.updateSize();
+                ce.cell.updateSize(ce);
                 ce.setHeight(ce.cell.getHeight());
             }
         }
@@ -102,6 +104,8 @@ public abstract class ConfiguratorScreen extends Screen {
 
     @Override
     public void render(PoseStack pose, int mouseX, int mouseY, float partial) {
+
+        this.updateSelectedCell();
 
         fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
@@ -140,6 +144,16 @@ public abstract class ConfiguratorScreen extends Screen {
     }
 
     @NotNull
+    protected SeparatorCell addSeparatorCell(int height) {
+        return this.addCell(new SeparatorCell(height));
+    }
+
+    @NotNull
+    protected SeparatorCell addSeparatorCell() {
+        return this.addCell(new SeparatorCell());
+    }
+
+    @NotNull
     protected SpacerCell addSpacerCell(int height) {
         return this.addCell(new SpacerCell(height));
     }
@@ -158,6 +172,21 @@ public abstract class ConfiguratorScreen extends Screen {
     protected <T extends RenderCell> T addCell(@NotNull T cell) {
         this.scrollArea.addEntry(new CellScrollEntry(this.scrollArea, cell));
         return this.addWidget(cell);
+    }
+
+    protected void updateSelectedCell() {
+        for (ScrollAreaEntry e : this.scrollArea.getEntries()) {
+            if (e instanceof CellScrollEntry c) {
+                if (c.cell.selectable && c.cell.selected) this.selectedCell = c.cell;
+                return;
+            }
+        }
+        this.selectedCell = null;
+    }
+
+    @Nullable
+    protected RenderCell getSelectedCell() {
+        return this.selectedCell;
     }
 
     @Override
@@ -198,15 +227,74 @@ public abstract class ConfiguratorScreen extends Screen {
 
         @Override
         public void renderEntry(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-            this.cell.updateSize();
+            this.cell.updateSize(this);
+            this.setWidth(this.cell.getWidth() + 40);
+            if (this.getWidth() < this.parent.getInnerWidth()) this.setWidth(this.parent.getInnerWidth());
             this.setHeight(this.cell.getHeight());
-            this.cell.setX((int)(this.getX() + (this.getWidth() / 2) - (this.cell.getWidth() / 2)));
-            this.cell.setY((int)this.getY());
+            this.cell.updatePosition(this);
+            this.cell.hovered = UIBase.isXYInArea(mouseX, mouseY, this.cell.x, this.cell.y, this.cell.width, this.cell.height);
+            if (this.cell.isSelectable() && (this.cell.isHovered() || this.cell.isSelected())) {
+                RenderingUtils.resetShaderColor();
+                fill(pose, (int) this.getX(), (int) this.getY(), (int) (this.getX() + this.parent.getInnerWidth()), (int) (this.getY() + this.getHeight()), this.cell.hoverColorSupplier.get().getColorInt());
+                RenderingUtils.resetShaderColor();
+            }
             this.cell.render(pose, mouseX, mouseY, partial);
         }
 
         @Override
         public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
+        }
+
+    }
+
+    public class SeparatorCell extends RenderCell {
+
+        protected Supplier<DrawableColor> separatorColorSupplier = () -> UIBase.getUIColorTheme().element_border_color_normal;
+        protected int separatorThickness = 1;
+
+        public SeparatorCell() {
+            this.setHeight(10);
+        }
+
+        public SeparatorCell(int height) {
+            this.setHeight(height);
+        }
+
+        @Override
+        public int getTopBottomSpace() {
+            return 0;
+        }
+
+        @Override
+        public void renderCell(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+            int centerY = this.getY() + (this.getHeight() / 2);
+            int halfThickness = Math.max(1, this.separatorThickness / 2);
+            fill(pose, this.getX(), centerY - ((halfThickness > 1) ? halfThickness : 0), this.getX() + this.getWidth(), centerY + halfThickness, this.separatorColorSupplier.get().getColorInt());
+            RenderingUtils.resetShaderColor();
+        }
+
+        @Override
+        protected void updateSize(@NotNull CellScrollEntry scrollEntry) {
+            this.setWidth((int)(ConfiguratorScreen.this.scrollArea.getInnerWidth() - 40));
+        }
+
+        @NotNull
+        public Supplier<DrawableColor> getSeparatorColorSupplier() {
+            return this.separatorColorSupplier;
+        }
+
+        public SeparatorCell setSeparatorColorSupplier(@NotNull Supplier<DrawableColor> separatorColorSupplier) {
+            this.separatorColorSupplier = separatorColorSupplier;
+            return this;
+        }
+
+        public int getSeparatorThickness() {
+            return this.separatorThickness;
+        }
+
+        public SeparatorCell setSeparatorThickness(int separatorThickness) {
+            this.separatorThickness = separatorThickness;
+            return this;
         }
 
     }
@@ -232,7 +320,7 @@ public abstract class ConfiguratorScreen extends Screen {
         }
 
         @Override
-        public void updateSize() {
+        protected void updateSize(@NotNull CellScrollEntry scrollEntry) {
         }
 
     }
@@ -255,7 +343,7 @@ public abstract class ConfiguratorScreen extends Screen {
         }
 
         @Override
-        public void updateSize() {
+        protected void updateSize(@NotNull CellScrollEntry scrollEntry) {
             this.setWidth((int)(ConfiguratorScreen.this.scrollArea.getInnerWidth() - 40));
             this.setHeight(this.widget.getHeight());
         }
@@ -265,7 +353,8 @@ public abstract class ConfiguratorScreen extends Screen {
     public class LabelCell extends RenderCell {
 
         @NotNull
-        public final Component text;
+        protected Component text;
+        protected boolean yCentered = false;
 
         public LabelCell(@NotNull Component label) {
             this.text = label;
@@ -279,9 +368,28 @@ public abstract class ConfiguratorScreen extends Screen {
         }
 
         @Override
-        public void updateSize() {
-            this.setWidth((int)(ConfiguratorScreen.this.scrollArea.getInnerWidth() - 40));
-            this.setHeight(Minecraft.getInstance().font.lineHeight + 4);
+        protected void updateSize(@NotNull CellScrollEntry scrollEntry) {
+            this.setWidth(Minecraft.getInstance().font.width(this.text));
+            this.setHeight(Minecraft.getInstance().font.lineHeight + (this.yCentered ? 0 : 4));
+        }
+
+        @NotNull
+        public Component getText() {
+            return this.text;
+        }
+
+        public LabelCell setText(@NotNull Component text) {
+            this.text = text;
+            return this;
+        }
+
+        public boolean isLabelYCentered() {
+            return this.yCentered;
+        }
+
+        public LabelCell setLabelYCentered(boolean yCentered) {
+            this.yCentered = yCentered;
+            return this;
         }
 
     }
@@ -381,12 +489,18 @@ public abstract class ConfiguratorScreen extends Screen {
         protected int y;
         protected int width;
         protected int height;
+        protected boolean selectable = false;
+        protected boolean selected = false;
+        protected boolean hovered = false;
+        protected Supplier<DrawableColor> hoverColorSupplier = () -> UIBase.getUIColorTheme().list_entry_color_selected_hovered;
         protected final List<GuiEventListener> children = new ArrayList<>();
 
         public abstract void renderCell(@NotNull PoseStack pose, int mouseX, int mouseY, float partial);
 
         @Override
         public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+
+            if (!this.selectable) this.selected = false;
 
             this.renderCell(pose, mouseX, mouseY, partial);
 
@@ -401,9 +515,14 @@ public abstract class ConfiguratorScreen extends Screen {
         public void tick() {
         }
 
-        public void updateSize() {
+        protected void updateSize(@NotNull CellScrollEntry scrollEntry) {
             this.setWidth((int)(ConfiguratorScreen.this.scrollArea.getInnerWidth() - 40));
             this.setHeight(20);
+        }
+
+        protected void updatePosition(@NotNull CellScrollEntry scrollEntry) {
+            this.setX((int)(scrollEntry.getX() + 20));
+            this.setY((int)scrollEntry.getY());
         }
 
         public int getTopBottomSpace() {
@@ -414,32 +533,59 @@ public abstract class ConfiguratorScreen extends Screen {
             return x;
         }
 
-        public void setX(int x) {
+        public RenderCell setX(int x) {
             this.x = x;
+            return this;
         }
 
         public int getY() {
             return y + this.getTopBottomSpace();
         }
 
-        public void setY(int y) {
+        public RenderCell setY(int y) {
             this.y = y;
+            return this;
         }
 
         public int getWidth() {
             return width;
         }
 
-        public void setWidth(int width) {
+        public RenderCell setWidth(int width) {
             this.width = width;
+            return this;
         }
 
         public int getHeight() {
             return height + (this.getTopBottomSpace() * 2);
         }
 
-        public void setHeight(int height) {
+        public RenderCell setHeight(int height) {
             this.height = height;
+            return this;
+        }
+
+        public boolean isHovered() {
+            return this.hovered;
+        }
+
+        public boolean isSelected() {
+            return this.selected;
+        }
+
+        public boolean isSelectable() {
+            return this.selectable;
+        }
+
+        public RenderCell setSelectable(boolean selectable) {
+            this.selectable = selectable;
+            if (!this.selectable) this.selected = false;
+            return this;
+        }
+
+        public RenderCell setHoverColorSupplier(@NotNull Supplier<DrawableColor> hoverColorSupplier) {
+            this.hoverColorSupplier = hoverColorSupplier;
+            return this;
         }
 
         @Override
@@ -460,6 +606,11 @@ public abstract class ConfiguratorScreen extends Screen {
         public boolean mouseClicked(double $$0, double $$1, int $$2) {
             if (ConfiguratorScreen.this.scrollArea.isMouseInteractingWithGrabbers()) {
                 return false;
+            }
+            if (this.hovered && this.selectable) {
+                this.selected = true;
+            } else {
+                this.selected = false;
             }
             return super.mouseClicked($$0, $$1, $$2);
         }

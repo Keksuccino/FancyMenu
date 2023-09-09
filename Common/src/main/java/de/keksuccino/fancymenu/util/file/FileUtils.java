@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.util.file;
 
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
-
 import java.io.File;
 import java.net.URL;
 import java.nio.file.Files;
@@ -10,9 +9,23 @@ import java.util.Locale;
 
 public class FileUtils extends de.keksuccino.konkrete.file.FileUtils {
 
+    @NotNull
+    public static File generateUniqueFileName(@NotNull File fileOrFolder, boolean isDirectory) {
+        if (isDirectory && !fileOrFolder.isDirectory()) return fileOrFolder;
+        if (!isDirectory && !fileOrFolder.isFile()) return fileOrFolder;
+        File f = new File(fileOrFolder.getPath());
+        int count = 1;
+        while ((isDirectory && f.isDirectory()) || (!isDirectory && f.isFile())) {
+            f = new File(fileOrFolder.getPath() + "_" + count);
+            count++;
+        }
+        return f;
+    }
+
     /**
      * Creates the given directory and returns it.
      */
+    @NotNull
     public static File createDirectory(@NotNull File directory) {
         try {
             if (!directory.isDirectory()) {

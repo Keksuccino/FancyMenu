@@ -34,7 +34,8 @@ public class OpenGuiScreenCommand {
             }
             if (CustomGuiHandler.guiExists(menuIdentifierOrCustomGuiName)) {
                 MainThreadTaskExecutor.executeInMainThread(() -> {
-                    Minecraft.getInstance().setScreen(CustomGuiHandler.getGui(menuIdentifierOrCustomGuiName, Minecraft.getInstance().screen, null));
+                    Screen custom = CustomGuiHandler.constructInstance(menuIdentifierOrCustomGuiName, Minecraft.getInstance().screen, null);
+                    if (custom != null) Minecraft.getInstance().setScreen(custom);
                 }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
             } else {
                 Screen s = ScreenInstanceFactory.tryConstruct(ScreenCustomization.findValidMenuIdentifierFor(menuIdentifierOrCustomGuiName));
