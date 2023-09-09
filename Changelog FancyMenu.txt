@@ -37,8 +37,8 @@ tl;dr: BACKUP your LAYOUTS and Minecraft INSTANCE before updating!
  
 The following changelog only contains SOME of the changes in FancyMenu v3, but not all of them.
 It's just too much stuff to mention every change in detail.
-It's also very likely that I forgot some of the bigger changes, because I worked on v3 for over 4 months.
-In these 4+ months I rewrote like 75% of the code (some parts multiple times), shared progress updates with you all and got a lot of feedback
+It's also very likely that I forgot some of the bigger changes, because I worked on v3 for over 5 months.
+In these 5+ months I rewrote like 75% of the code (some parts multiple times), shared progress updates with you all and got a lot of feedback
 from you to polish as many of the new/rewritten stuff as possible and I am very thankful for that!
  
 But well, since SO MUCH stuff got rewritten in this update, there's like no chance it will not contain bugs and some of them could harm your layouts!
@@ -55,6 +55,7 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - Variables now get saved in a new format (Old variables get converted to the new format, but you need to enable "Reset on Launch" again, because the config option for it no longer exists)
 - New elements now stay on screen by default (they never go out of screen by resizing the window or changing the GUI scale; this can be disabled per-element)
 - New elements now have "mid-centered" as default anchor point
+- When adding a new element by using the right-click context menu, the new element will now get added at the spot where you've opened the context menu
 - Custom window icon system now allows you to set your own icon paths (You will need to set your custom icons again and move them to /config/fancymenu/assets/)
 - You don't need to restart the game anymore after changing the custom window icon(s) (gets updated automatically)
 - You don't need to restart the game anymore after changing the custom window title (gets updated automatically)
@@ -118,7 +119,7 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - Removed legacy "Maximum/Minimum FancyMenu Version" option of layouts, since loading requirements can be used for that instead
 - Removed legacy "Screen Height/Width Requirements" option of layouts, since loading requirements can be used for that instead
 - Removed legacy "Only In Multiplayer/Singleplayer" options of button elements, because loading requirements can be used for that instead
-- Removed customizability of the Vanilla Splash Text element in the Title Screen, because you can simply add a custom one and set it to Vanilla
+- Removed customizability of the Vanilla Splash Text element in the Title Screen, because you can simply add a custom one and set it to Vanilla mode
  
 - Fixed: Probably a lot of stuff that was caused by old spaghetti code (and probably added the same amount of new bugs)
 - Fixed: MC 1.19.4+: Vanilla buttons that got moved or resized flicker when resizing some screens like the Create World screen
