@@ -124,29 +124,11 @@ public class PlayerEntityPoseScreen extends ConfiguratorScreen {
 
         this.addLabelCell(Component.translatable("fancymenu.editor.elements.player_entity.pose.body"));
 
-//        this.addWidgetCell(new RangeSliderButton(0, 0, 20, 20, false, -180.0D, 180.0D, this.bodyXRot, (slider) -> {
-//            this.bodyXRot = (float)((RangeSliderButton)slider).getSelectedRangeDoubleValue();
-//        }) {
-//            @Override
-//            public String getSliderMessageWithoutPrefixSuffix() {
-//                return I18n.get("fancymenu.helper.editor.items.playerentity.rotation.bodyx", super.getSliderMessageWithoutPrefixSuffix());
-//            }
-//        }, true);
-
         this.addCell(new RotationCell("body_x_rot",
                 () -> this.bodyXRot,
                 s -> this.bodyXRot = s,
                 () -> this.bodyXRotAdvancedMode,
                 aBoolean -> this.bodyXRotAdvancedMode = aBoolean));
-
-//        this.addWidgetCell(new RangeSliderButton(0, 0, 20, 20, false, -180.0D, 180.0D, this.bodyYRot, (slider) -> {
-//            this.bodyYRot = (float)((RangeSliderButton)slider).getSelectedRangeDoubleValue();
-//        }) {
-//            @Override
-//            public String getSliderMessageWithoutPrefixSuffix() {
-//                return I18n.get("fancymenu.helper.editor.items.playerentity.rotation.bodyy", super.getSliderMessageWithoutPrefixSuffix());
-//            }
-//        }, true);
 
         this.addCell(new RotationCell("body_y_rot",
                 () -> this.bodyYRot,
@@ -156,44 +138,17 @@ public class PlayerEntityPoseScreen extends ConfiguratorScreen {
 
         this.addLabelCell(Component.translatable("fancymenu.editor.elements.player_entity.pose.head"));
 
-//        this.addWidgetCell(new RangeSliderButton(0, 0, 20, 20, false, -180.0D, 180.0D, this.headXRot, (slider) -> {
-//            this.headXRot = (float)((RangeSliderButton)slider).getSelectedRangeDoubleValue();
-//        }) {
-//            @Override
-//            public String getSliderMessageWithoutPrefixSuffix() {
-//                return I18n.get("fancymenu.helper.editor.items.playerentity.rotation.headx", super.getSliderMessageWithoutPrefixSuffix());
-//            }
-//        }, true);
-
         this.addCell(new RotationCell("head_x_rot",
                 () -> this.headXRot,
                 s -> this.headXRot = s,
                 () -> this.headXRotAdvancedMode,
                 aBoolean -> this.headXRotAdvancedMode = aBoolean));
 
-//        this.addWidgetCell(new RangeSliderButton(0, 0, 20, 20, false, -180.0D, 180.0D, this.headYRot, (slider) -> {
-//            this.headYRot = (float)((RangeSliderButton)slider).getSelectedRangeDoubleValue();
-//        }) {
-//            @Override
-//            public String getSliderMessageWithoutPrefixSuffix() {
-//                return I18n.get("fancymenu.helper.editor.items.playerentity.rotation.heady", super.getSliderMessageWithoutPrefixSuffix());
-//            }
-//        }, true);
-
         this.addCell(new RotationCell("head_y_rot",
                 () -> this.headYRot,
                 s -> this.headYRot = s,
                 () -> this.headYRotAdvancedMode,
                 aBoolean -> this.headYRotAdvancedMode = aBoolean));
-
-//        this.addWidgetCell(new RangeSliderButton(0, 0, 20, 20, false, -180.0D, 180.0D, this.headZRot, (slider) -> {
-//            this.headZRot = (float)((RangeSliderButton)slider).getSelectedRangeDoubleValue();
-//        }) {
-//            @Override
-//            public String getSliderMessageWithoutPrefixSuffix() {
-//                return I18n.get("fancymenu.editor.elements.player_entity.pose.head_z_rot", super.getSliderMessageWithoutPrefixSuffix());
-//            }
-//        }, true);
 
         this.addCell(new RotationCell("head_z_rot",
                 () -> this.headZRot,
@@ -203,44 +158,17 @@ public class PlayerEntityPoseScreen extends ConfiguratorScreen {
 
         this.addLabelCell(Component.translatable("fancymenu.editor.elements.player_entity.pose.left_arm"));
 
-//        this.addWidgetCell(new RangeSliderButton(0, 0, 20, 20, false, -180.0D, 180.0D, this.leftArmXRot, (slider) -> {
-//            this.leftArmXRot = (float)((RangeSliderButton)slider).getSelectedRangeDoubleValue();
-//        }) {
-//            @Override
-//            public String getSliderMessageWithoutPrefixSuffix() {
-//                return I18n.get("fancymenu.editor.elements.player_entity.pose.left_arm_x_rot", super.getSliderMessageWithoutPrefixSuffix());
-//            }
-//        }, true);
-
         this.addCell(new RotationCell("left_arm_x_rot",
                 () -> this.leftArmXRot,
                 s -> this.leftArmXRot = s,
                 () -> this.leftArmXRotAdvancedMode,
                 aBoolean -> this.leftArmXRotAdvancedMode = aBoolean));
 
-//        this.addWidgetCell(new RangeSliderButton(0, 0, 20, 20, false, -180.0D, 180.0D, this.leftArmYRot, (slider) -> {
-//            this.leftArmYRot = (float)((RangeSliderButton)slider).getSelectedRangeDoubleValue();
-//        }) {
-//            @Override
-//            public String getSliderMessageWithoutPrefixSuffix() {
-//                return I18n.get("fancymenu.editor.elements.player_entity.pose.left_arm_y_rot", super.getSliderMessageWithoutPrefixSuffix());
-//            }
-//        }, true);
-
         this.addCell(new RotationCell("left_arm_y_rot",
                 () -> this.leftArmYRot,
                 s -> this.leftArmYRot = s,
                 () -> this.leftArmYRotAdvancedMode,
                 aBoolean -> this.leftArmYRotAdvancedMode = aBoolean));
-
-//        this.addWidgetCell(new RangeSliderButton(0, 0, 20, 20, false, -180.0D, 180.0D, this.leftArmZRot, (slider) -> {
-//            this.leftArmZRot = (float)((RangeSliderButton)slider).getSelectedRangeDoubleValue();
-//        }) {
-//            @Override
-//            public String getSliderMessageWithoutPrefixSuffix() {
-//                return I18n.get("fancymenu.editor.elements.player_entity.pose.left_arm_z_rot", super.getSliderMessageWithoutPrefixSuffix());
-//            }
-//        }, true);
 
         this.addCell(new RotationCell("left_arm_z_rot",
                 () -> this.leftArmZRot,
@@ -250,44 +178,17 @@ public class PlayerEntityPoseScreen extends ConfiguratorScreen {
 
         this.addLabelCell(Component.translatable("fancymenu.editor.elements.player_entity.pose.right_arm"));
 
-//        this.addWidgetCell(new RangeSliderButton(0, 0, 20, 20, false, -180.0D, 180.0D, this.rightArmXRot, (slider) -> {
-//            this.rightArmXRot = (float)((RangeSliderButton)slider).getSelectedRangeDoubleValue();
-//        }) {
-//            @Override
-//            public String getSliderMessageWithoutPrefixSuffix() {
-//                return I18n.get("fancymenu.editor.elements.player_entity.pose.right_arm_x_rot", super.getSliderMessageWithoutPrefixSuffix());
-//            }
-//        }, true);
-
         this.addCell(new RotationCell("right_arm_x_rot",
                 () -> this.rightArmXRot,
                 s -> this.rightArmXRot = s,
                 () -> this.rightArmXRotAdvancedMode,
                 aBoolean -> this.rightArmXRotAdvancedMode = aBoolean));
 
-//        this.addWidgetCell(new RangeSliderButton(0, 0, 20, 20, false, -180.0D, 180.0D, this.rightArmYRot, (slider) -> {
-//            this.rightArmYRot = (float)((RangeSliderButton)slider).getSelectedRangeDoubleValue();
-//        }) {
-//            @Override
-//            public String getSliderMessageWithoutPrefixSuffix() {
-//                return I18n.get("fancymenu.editor.elements.player_entity.pose.right_arm_y_rot", super.getSliderMessageWithoutPrefixSuffix());
-//            }
-//        }, true);
-
         this.addCell(new RotationCell("right_arm_y_rot",
                 () -> this.rightArmYRot,
                 s -> this.rightArmYRot = s,
                 () -> this.rightArmYRotAdvancedMode,
                 aBoolean -> this.rightArmYRotAdvancedMode = aBoolean));
-
-//        this.addWidgetCell(new RangeSliderButton(0, 0, 20, 20, false, -180.0D, 180.0D, this.rightArmZRot, (slider) -> {
-//            this.rightArmZRot = (float)((RangeSliderButton)slider).getSelectedRangeDoubleValue();
-//        }) {
-//            @Override
-//            public String getSliderMessageWithoutPrefixSuffix() {
-//                return I18n.get("fancymenu.editor.elements.player_entity.pose.right_arm_z_rot", super.getSliderMessageWithoutPrefixSuffix());
-//            }
-//        }, true);
 
         this.addCell(new RotationCell("right_arm_z_rot",
                 () -> this.rightArmZRot,
@@ -297,44 +198,17 @@ public class PlayerEntityPoseScreen extends ConfiguratorScreen {
 
         this.addLabelCell(Component.translatable("fancymenu.editor.elements.player_entity.pose.left_leg"));
 
-//        this.addWidgetCell(new RangeSliderButton(0, 0, 20, 20, false, -180.0D, 180.0D, this.leftLegXRot, (slider) -> {
-//            this.leftLegXRot = (float)((RangeSliderButton)slider).getSelectedRangeDoubleValue();
-//        }) {
-//            @Override
-//            public String getSliderMessageWithoutPrefixSuffix() {
-//                return I18n.get("fancymenu.editor.elements.player_entity.pose.left_leg_x_rot", super.getSliderMessageWithoutPrefixSuffix());
-//            }
-//        }, true);
-
         this.addCell(new RotationCell("left_leg_x_rot",
                 () -> this.leftLegXRot,
                 s -> this.leftLegXRot = s,
                 () -> this.leftLegXRotAdvancedMode,
                 aBoolean -> this.leftLegXRotAdvancedMode = aBoolean));
 
-//        this.addWidgetCell(new RangeSliderButton(0, 0, 20, 20, false, -180.0D, 180.0D, this.leftLegYRot, (slider) -> {
-//            this.leftLegYRot = (float)((RangeSliderButton)slider).getSelectedRangeDoubleValue();
-//        }) {
-//            @Override
-//            public String getSliderMessageWithoutPrefixSuffix() {
-//                return I18n.get("fancymenu.editor.elements.player_entity.pose.left_leg_y_rot", super.getSliderMessageWithoutPrefixSuffix());
-//            }
-//        }, true);
-
         this.addCell(new RotationCell("left_leg_y_rot",
                 () -> this.leftLegYRot,
                 s -> this.leftLegYRot = s,
                 () -> this.leftLegYRotAdvancedMode,
                 aBoolean -> this.leftLegYRotAdvancedMode = aBoolean));
-
-//        this.addWidgetCell(new RangeSliderButton(0, 0, 20, 20, false, -180.0D, 180.0D, this.leftLegZRot, (slider) -> {
-//            this.leftLegZRot = (float)((RangeSliderButton)slider).getSelectedRangeDoubleValue();
-//        }) {
-//            @Override
-//            public String getSliderMessageWithoutPrefixSuffix() {
-//                return I18n.get("fancymenu.editor.elements.player_entity.pose.left_leg_z_rot", super.getSliderMessageWithoutPrefixSuffix());
-//            }
-//        }, true);
 
         this.addCell(new RotationCell("left_leg_z_rot",
                 () -> this.leftLegZRot,
@@ -344,44 +218,17 @@ public class PlayerEntityPoseScreen extends ConfiguratorScreen {
 
         this.addLabelCell(Component.translatable("fancymenu.editor.elements.player_entity.pose.right_leg"));
 
-//        this.addWidgetCell(new RangeSliderButton(0, 0, 20, 20, false, -180.0D, 180.0D, this.rightLegXRot, (slider) -> {
-//            this.rightLegXRot = (float)((RangeSliderButton)slider).getSelectedRangeDoubleValue();
-//        }) {
-//            @Override
-//            public String getSliderMessageWithoutPrefixSuffix() {
-//                return I18n.get("fancymenu.editor.elements.player_entity.pose.right_leg_x_rot", super.getSliderMessageWithoutPrefixSuffix());
-//            }
-//        }, true);
-
         this.addCell(new RotationCell("right_leg_x_rot",
                 () -> this.rightLegXRot,
                 s -> this.rightLegXRot = s,
                 () -> this.rightLegXRotAdvancedMode,
                 aBoolean -> this.rightLegXRotAdvancedMode = aBoolean));
 
-//        this.addWidgetCell(new RangeSliderButton(0, 0, 20, 20, false, -180.0D, 180.0D, this.rightLegYRot, (slider) -> {
-//            this.rightLegYRot = (float)((RangeSliderButton)slider).getSelectedRangeDoubleValue();
-//        }) {
-//            @Override
-//            public String getSliderMessageWithoutPrefixSuffix() {
-//                return I18n.get("fancymenu.editor.elements.player_entity.pose.right_leg_y_rot", super.getSliderMessageWithoutPrefixSuffix());
-//            }
-//        }, true);
-
         this.addCell(new RotationCell("right_leg_y_rot",
                 () -> this.rightLegYRot,
                 s -> this.rightLegYRot = s,
                 () -> this.rightLegYRotAdvancedMode,
                 aBoolean -> this.rightLegYRotAdvancedMode = aBoolean));
-
-//        this.addWidgetCell(new RangeSliderButton(0, 0, 20, 20, false, -180.0D, 180.0D, this.rightLegZRot, (slider) -> {
-//            this.rightLegZRot = (float)((RangeSliderButton)slider).getSelectedRangeDoubleValue();
-//        }) {
-//            @Override
-//            public String getSliderMessageWithoutPrefixSuffix() {
-//                return I18n.get("fancymenu.editor.elements.player_entity.pose.right_leg_z_rot", super.getSliderMessageWithoutPrefixSuffix());
-//            }
-//        }, true);
 
         this.addCell(new RotationCell("right_leg_z_rot",
                 () -> this.rightLegZRot,
@@ -398,7 +245,7 @@ public class PlayerEntityPoseScreen extends ConfiguratorScreen {
 
         super.render(pose, mouseX, mouseY, partial);
 
-        int entityX = this.width - 20 - (this.getRightSideButtonWidth() / 2) - ((int)(this.element.getActiveEntityProperties().getDimensions().width * ENTITY_SCALE) / 2);
+        int entityX = this.width - 20 - (this.getRightSideWidgetWidth() / 2) - ((int)(this.element.getActiveEntityProperties().getDimensions().width * ENTITY_SCALE) / 2);
         int entityY = (int) this.scrollArea.getYWithBorder() + 30;
         this.renderEntity(pose, mouseX, mouseY, partial, entityX, entityY);
 

@@ -9,7 +9,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,48 +19,49 @@ public class ButtonMimeHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    protected static Map<String, ButtonPackage> cachedButtons = new HashMap<>();
+    protected static final Map<String, ButtonPackage> CACHED_BUTTONS = new HashMap<>();
 
     public static boolean tryCache(String menuIdentifier, boolean overrideCache) {
-        if (!cachedButtons.containsKey(menuIdentifier) || overrideCache) {
+        if (!CACHED_BUTTONS.containsKey(menuIdentifier) || overrideCache) {
             try {
                 Screen s = ScreenInstanceFactory.tryConstruct(menuIdentifier);
                 if (s != null) {
                     ButtonPackage p = new ButtonPackage();
                     if (p.init(s)) {
-                        cachedButtons.put(menuIdentifier, p);
+                        CACHED_BUTTONS.put(menuIdentifier, p);
                     }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        if (cachedButtons.containsKey(menuIdentifier)) {
+        if (CACHED_BUTTONS.containsKey(menuIdentifier)) {
             return true;
         }
         LOGGER.warn("[FANCYMENU] ButtonMimeHandler#tryCache: Failed to cache buttons of screen!");
         return false;
     }
 
-    public static boolean cacheFromInstance(Screen screen, boolean overrideCache) {
+    public static boolean tryCache(Screen screen, boolean overrideCache) {
         String menuIdentifier = screen.getClass().getName();
-        if (!cachedButtons.containsKey(menuIdentifier) || overrideCache) {
+        if (!CACHED_BUTTONS.containsKey(menuIdentifier) || overrideCache) {
             try {
                 ButtonPackage p = new ButtonPackage();
                 if (p.init(screen)) {
-                    cachedButtons.put(menuIdentifier, p);
+                    CACHED_BUTTONS.put(menuIdentifier, p);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        if (cachedButtons.containsKey(menuIdentifier)) {
+        if (CACHED_BUTTONS.containsKey(menuIdentifier)) {
             return true;
         }
         LOGGER.warn("[FANCYMENU] ButtonMimeHandler#cacheFromInstance: Failed to cache buttons of screen!");
         return false;
     }
 
+    @Nullable
     public static WidgetMeta getButton(String buttonLocator) {
         if (buttonLocator.contains(":")) {
             String menuIdentifier = buttonLocator.split(":", 2)[0];
@@ -69,23 +70,23 @@ public class ButtonMimeHandler {
             if (MathUtils.isLong(buttonId) || (buttonId.startsWith("button_compatibility_id:"))) {
                 Screen current = Minecraft.getInstance().screen;
                 if ((current != null) && (menuIdentifier.equals(current.getClass().getName()))) {
-                    if (cachedButtons.containsKey(menuIdentifier)) {
-                        ButtonPackage pack = cachedButtons.get(menuIdentifier);
+                    if (CACHED_BUTTONS.containsKey(menuIdentifier)) {
+                        ButtonPackage pack = CACHED_BUTTONS.get(menuIdentifier);
                         WidgetMeta d = pack.getButton(buttonId);
                         if (d != null) {
                             if (d.getScreen() != current) {
-                                cacheFromInstance(current, true);
+                                tryCache(current, true);
                                 Minecraft.getInstance().setScreen(current);
                             }
                         }
                     } else {
-                        cacheFromInstance(current, true);
+                        tryCache(current, true);
                         Minecraft.getInstance().setScreen(current);
                     }
-                } else if (!cachedButtons.containsKey(menuIdentifier)) {
+                } else if (!CACHED_BUTTONS.containsKey(menuIdentifier)) {
                     tryCache(menuIdentifier, false);
                 }
-                ButtonPackage p = cachedButtons.get(menuIdentifier);
+                ButtonPackage p = CACHED_BUTTONS.get(menuIdentifier);
                 if (p != null) {
                     return p.getButton(buttonId);
                 }
@@ -99,10 +100,8 @@ public class ButtonMimeHandler {
             WidgetMeta d = getButton(buttonLocator);
             if (d != null) {
                 AbstractWidget b = d.getWidget();
-                if (b != null) {
-                    b.onClick(b.x+1, b.y+1);
-                    return true;
-                }
+                b.onClick(b.x + 1, b.y + 1);
+                return true;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -112,7 +111,7 @@ public class ButtonMimeHandler {
     }
 
     public static void clearCache() {
-        cachedButtons.clear();
+        CACHED_BUTTONS.clear();
     }
 
     public static class ButtonPackage {

@@ -218,13 +218,19 @@ public class IsTextRequirement extends LoadingRequirement {
                 this.mode = value;
             });
 
+            this.addCellGroupEndSpacerCell();
+
             String fText = this.getFirstTextString();
             this.addLabelCell(Component.translatable("fancymenu.loading_requirements.is_text.compare_mode.first_text"));
             this.firstTextCell = this.addTextInputCell(null, true, true).setText(fText);
 
+            this.addCellGroupEndSpacerCell();
+
             String sText = this.getSecondTextString();
             this.addLabelCell(Component.translatable("fancymenu.loading_requirements.is_text.compare_mode.second_text"));
             this.secondTextCell = this.addTextInputCell(null, true, true).setText(sText);
+
+            this.addSpacerCell(20);
 
         }
 

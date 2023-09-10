@@ -1153,6 +1153,7 @@
   "fancymenu.layout.manage.layouts.sort_by.status": "Status",
   "fancymenu.overlay.menu_bar.customization": "Customization",
   "fancymenu.overlay.menu_bar.customization.current_customization": "Current Screen Customization: %s",
+  "fancymenu.overlay.menu_bar.customization.current_customization.cant_toggle_custom_guis": "§äYou can't turn off customization for custom GUIs.",
   "fancymenu.overlay.menu_bar.customization.copy_current_screen_identifier": "Copy Identifier of Current Screen",
   "fancymenu.overlay.menu_bar.customization.copy_current_screen_identifier.desc": "The screen identifier is used in\nmany places of the customization system.\nIt's used to get the correct layouts\nfor a screen and it's part of the\nbutton locator, which is basically a 'path'\nto a button in a menu.",
   "fancymenu.overlay.menu_bar.customization.close_current_screen": "Force-Close Current Screen",
@@ -1335,8 +1336,10 @@
   "fancymenu.custom_guis.build.allow_esc": "Allow ESC to Close GUI: %s",
   "fancymenu.custom_guis.build.title": "Menu Title (Optional):",
   "fancymenu.custom_guis.override.confirm": "Are you sure?\n\nOverriding screens can cause unexpected game behaviour.\nDo you really want to override the screen now?",
+  "fancymenu.custom_guis.override.choose_custom": "Choose Custom GUI",
   "fancymenu.custom_guis.manage_overridden": "Manage Overridden Screens",
   "fancymenu.custom_guis.manage_overridden.desc": "Remove override rules for Vanilla/mod screens.",
+  "fancymenu.custom_guis.manage_overridden.screen": "Screen: %s",
   "fancymenu.custom_guis.manage_overridden.overridden_with": "Overridden With: %s",
   "fancymenu.custom_guis.manage_overridden.remove_override": "Remove Override Rule",
   "fancymenu.custom_guis.manage_overridden.remove_override.confirm": "Are you sure?\n\nDo you really want to remove the override rule?"

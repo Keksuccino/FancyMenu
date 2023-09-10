@@ -89,6 +89,9 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
             editBoxPresetValue += "." + this.forcedFileExtension;
         }
         this.fileNameEditBox.setValue(editBoxPresetValue);
+        this.fileNameEditBox.setCursorPosition(0);
+        this.fileNameEditBox.setHighlightPos(0);
+        this.fileNameEditBox.setDisplayPosition(0);
         this.defaultFileName = editBoxPresetValue;
 
         this.setForceResourceFriendlyFileNames(true);

@@ -20,7 +20,6 @@ import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.ui.NonStackableOverlayUI;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorThemeRegistry;
@@ -83,6 +82,11 @@ public class CustomizationOverlayUI {
                         ScreenCustomization.reInitCurrentScreen();
                     }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                 }))
+                .setIsActiveSupplier((menu, entry) -> !(screen instanceof CustomGuiBaseScreen))
+                .setTooltipSupplier((menu, entry) -> {
+                    if (screen instanceof CustomGuiBaseScreen) return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.current_customization.cant_toggle_custom_guis"));
+                    return null;
+                })
                 .setIcon(ContextMenu.IconFactory.getIcon("edit"));
 
         customizationMenu.addClickableEntry("copy_current_screen_identifier", Component.translatable("fancymenu.overlay.menu_bar.customization.copy_current_screen_identifier"), (menu, entry) -> {
@@ -408,18 +412,21 @@ public class CustomizationOverlayUI {
         customGuiMenu.addClickableEntry("override_current", Component.translatable("fancymenu.overlay.menu_bar.customization.custom_guis.override_current"), (menu, entry) -> {
                     Screen current = Minecraft.getInstance().screen;
                     if (!(current instanceof CustomGuiBaseScreen)) {
-                        Minecraft.getInstance().setScreen(NotificationScreen.warning(override -> {
+                        Minecraft.getInstance().setScreen(ConfirmationScreen.warning(override -> {
                             if (override) {
-                                Minecraft.getInstance().setScreen(new StringListChooserScreen(Component.translatable(""), CustomGuiHandler.getGuiIdentifiers(), s -> {
+                                Minecraft.getInstance().setScreen(new StringListChooserScreen(Component.translatable("fancymenu.custom_guis.override.choose_custom"), CustomGuiHandler.getGuiIdentifiers(), s -> {
+                                    CustomGuiBaseScreen customInstance = null;
                                     if (s != null) {
                                         CustomGuiHandler.overrideScreenWithCustomGui(current.getClass().getName(), s);
+                                        //This is to avoid setting the Choose Custom GUI screen as parent of the custom GUI instance
+                                        customInstance = CustomGuiHandler.constructInstance(s, null, current);
                                     }
-                                    Minecraft.getInstance().setScreen(current);
+                                    Minecraft.getInstance().setScreen((customInstance != null) ? customInstance : current);
                                 }));
                             } else {
                                 Minecraft.getInstance().setScreen(current);
                             }
-                        }, LocalizationUtils.splitLocalizedLines("fancymenu.custom_guis.manage_overridden.remove_override.confirm")));
+                        }, LocalizationUtils.splitLocalizedLines("fancymenu.custom_guis.override.confirm")));
                     }
                 }).setIsActiveSupplier((menu, entry) -> FancyMenu.getOptions().advancedCustomizationMode.getValue() && !(Minecraft.getInstance().screen instanceof CustomGuiBaseScreen))
                 .setTooltipSupplier((menu, entry) -> {

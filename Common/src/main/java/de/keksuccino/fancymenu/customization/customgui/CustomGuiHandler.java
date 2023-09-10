@@ -20,10 +20,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class CustomGuiHandler {
 
-	//TODO Build + Manage Custom GUI Screens fixen
-
-	//TODO ComponentWidget in Builder screen durch LabelCell ersetzen
-
 	private static final Logger LOGGER = LogManager.getLogger();
 
 	public static final File CUSTOM_GUIS_FILE = new File(FancyMenu.MOD_DIR, "/custom_gui_screens.txt");

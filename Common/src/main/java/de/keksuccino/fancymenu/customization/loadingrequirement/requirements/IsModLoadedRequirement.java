@@ -137,6 +137,8 @@ public class IsModLoadedRequirement extends LoadingRequirement {
             UIBase.applyDefaultWidgetSkinTo(this.modIdSuggestions);
             this.modIdCell.editBox.setResponder(s -> this.modIdSuggestions.updateCommandInfo());
 
+            this.addSpacerCell(20);
+
         }
 
         @Override

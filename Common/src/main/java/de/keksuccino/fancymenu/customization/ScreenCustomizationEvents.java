@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
+import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
 import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.widget.ButtonMimeHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -56,11 +58,14 @@ public class ScreenCustomizationEvents {
 	}
 
 	@EventListener
-	public void onInitPre(InitOrResizeScreenEvent.Pre e) {
+	public void onInitStarting(InitOrResizeScreenStartingEvent e) {
 
 		if (e.getScreen() != null) {
 			if (this.lastScreen != null) {
 				ScreenCustomization.isNewMenu = !this.lastScreen.getClass().getName().equals(e.getScreen().getClass().getName());
+				if ((this.lastScreen instanceof CustomGuiBaseScreen cLast) && (e.getScreen() instanceof CustomGuiBaseScreen cNow)) {
+					ScreenCustomization.isNewMenu = !cLast.getIdentifier().equals(cNow.getIdentifier());
+				}
 			} else {
 				ScreenCustomization.isNewMenu = true;
 			}

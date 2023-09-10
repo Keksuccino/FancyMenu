@@ -65,7 +65,6 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 	public List<String> delayAppearanceFirstTime = new ArrayList<>();
 	public List<ScreenCustomizationLayer.ThreadCaller> delayThreads = new ArrayList<>();
 	public boolean backgroundDrawable;
-	public boolean isNewMenu = true;
 	public boolean forceDisableCustomMenuTitle = false;
 	public float backgroundOpacity = 1.0F;
 	public Map<LoadingRequirementContainer, Boolean> cachedLayoutWideLoadingRequirements = new HashMap<>();
@@ -89,7 +88,6 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 
 	public void resetLayer() {
 		this.delayAppearanceFirstTime.clear();
-		this.isNewMenu = true;
 		for (RandomLayoutContainer c : this.randomLayoutGroups.values()) {
 			c.lastLayoutPath = null;
 		}
@@ -106,7 +104,6 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 		if (!cachedOriginalMenuTitles.containsKey(e.getScreen().getClass())) {
 			cachedOriginalMenuTitles.put(e.getScreen().getClass(), e.getScreen().getTitle());
 		}
-		this.isNewMenu = true;
 	}
 
 	@EventListener
@@ -223,7 +220,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 
 		if (!this.shouldCustomize(e.getScreen())) return;
 
-		if (this.isNewMenu && (this.layoutBase.openAudio != null)) {
+		if (ScreenCustomization.isNewMenu() && (this.layoutBase.openAudio != null)) {
 			SoundHandler.resetSound(this.layoutBase.openAudio);
 			SoundHandler.playSound(this.layoutBase.openAudio);
 		}
@@ -238,7 +235,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 
 		for (AbstractElement i : this.allElements) {
 			//Handle appearance delay
-			if (this.isNewMenu) {
+			if (ScreenCustomization.isNewMenu()) {
 				this.handleAppearanceDelayFor(i);
 			}
 			//Add widgets of element to screen
@@ -253,8 +250,6 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 				}
 			}
 		}
-
-		this.isNewMenu = false;
 
 	}
 
@@ -553,7 +548,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 		@Nullable
 		public Layout getRandomLayout() {
 			if (!this.layouts.isEmpty()) {
-				if ((this.onlyFirstTime || !this.parent.isNewMenu) && (this.lastLayoutPath != null)) {
+				if ((this.onlyFirstTime || !ScreenCustomization.isNewMenu()) && (this.lastLayoutPath != null)) {
 					File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(this.lastLayoutPath));
 					if (f.exists()) {
 						for (Layout layout : this.layouts) {

@@ -134,13 +134,12 @@ public class ScreenCustomization {
 		if (customizableScreens == null) {
 			readCustomizableScreensFromFile();
 		}
+		if (screen instanceof CustomGuiBaseScreen) return;
 		if ((screen != null) && !isCustomizationEnabledForScreen(screen, true)) {
-			if (!(screen instanceof CustomGuiBaseScreen)) {
-				String identifier = screen.getClass().getName();
-				PropertyContainer sec = new PropertyContainer(identifier);
-				customizableScreens.putContainer(sec);
-				writeCustomizableScreensToFile();
-			}
+			String identifier = screen.getClass().getName();
+			PropertyContainer sec = new PropertyContainer(identifier);
+			customizableScreens.putContainer(sec);
+			writeCustomizableScreensToFile();
 		}
 	}
 
@@ -148,21 +147,20 @@ public class ScreenCustomization {
 		if (customizableScreens == null) {
 			readCustomizableScreensFromFile();
 		}
+		if (screen instanceof CustomGuiBaseScreen) return;
 		if (screen != null) {
-			if (!(screen instanceof CustomGuiBaseScreen)) {
-				String identifier = screen.getClass().getName();
-				List<PropertyContainer> l = new ArrayList<>();
-				for (PropertyContainer sec : customizableScreens.getContainers()) {
-					if (!sec.getType().equals(identifier)) {
-						l.add(sec);
-					}
+			String identifier = screen.getClass().getName();
+			List<PropertyContainer> l = new ArrayList<>();
+			for (PropertyContainer sec : customizableScreens.getContainers()) {
+				if (!sec.getType().equals(identifier)) {
+					l.add(sec);
 				}
-				customizableScreens = new PropertyContainerSet("customizablemenus");
-				for (PropertyContainer sec : l) {
-					customizableScreens.putContainer(sec);
-				}
-				writeCustomizableScreensToFile();
 			}
+			customizableScreens = new PropertyContainerSet("customizablemenus");
+			for (PropertyContainer sec : l) {
+				customizableScreens.putContainer(sec);
+			}
+			writeCustomizableScreensToFile();
 		}
 	}
 
@@ -250,6 +248,13 @@ public class ScreenCustomization {
 		return identifier;
 	}
 
+	/**
+	 * TRUE when, and only when, a new TYPE of screen (different identifier than last one) gets opened.<br>
+	 * Returns FALSE if a new instance of the same screen type as the last one gets opened.<br><br>
+	 *
+	 * The isNewMenu value gets updated in an {@link InitOrResizeScreenStartingEvent},
+	 * so it is already up-to-date when {@link InitOrResizeScreenEvent.Pre} and {@link InitOrResizeScreenEvent.Post} gets fired.
+	 */
 	public static boolean isNewMenu() {
 		return isNewMenu;
 	}

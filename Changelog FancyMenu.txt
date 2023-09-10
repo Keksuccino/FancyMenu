@@ -108,6 +108,12 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 --> Special markdown formatting code to colorize text parts with HEX colors
 --> Special markdown formatting codes to make text parts centered or right-sided
  
+- Reworked Custom GUIs
+--> OLD SCREEN OVERRIDES DON'T WORK ANYMORE! You need to override screens again (sorry >.<)
+--> They should now be way more stable and shouldn't cause so many issues anymore
+--> Custom GUIs can now be managed more easily (custom GUI controls are now located in the "Customization" tab of the menu bar)
+--> Overriding Vanilla/Mod screens should be more stable now and there's now a menu where you can see and manage (delete) all overridden screens
+ 
 - Removed deprecated (old) text element and web text element (this does not affect the new text element added in FancyMenu v2.12.0)
 - Removed deprecated background audio feature of layouts, since the Audio Extension is a thing now (install the extension mod and add an Audio element to the layout)
 - Removed deprecated feature to use the localization key/label of a vanilla button to identify it (this was an _ancient_ thing and was probably unused zombie code for like 2-3 years)
@@ -132,6 +138,8 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - Fixed: "&" formatting codes in "Paste to Chat" action get replaced with "§" formatting codes
 - Fixed: "&" formatting codes in "Send Message" action get replaced with "§" formatting codes
 - Fixed: Crash when pressing DELETE on an empty line in the text editor
+ 
+- KNOWN ISSUE: The anchor overlay in the layout editor sometimes doesn't correctly change element anchors on hover (wasn't able to reproduce this bug, but it happened 2 or 3 times, so would be nice to get some feedback for this)
  
 %changelog:end%
 

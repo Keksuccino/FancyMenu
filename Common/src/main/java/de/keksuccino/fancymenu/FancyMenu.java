@@ -21,9 +21,18 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO re-implement custom GUI builder (rewrite builder screen + add option to menu bar)
+	//TODO Add "Force to Top Render Level" toggle for elements, to set its render Z level to 1000 or something (to render them in front of player entities for example)
+	// - Add tooltip that describes that this is NOT THE SAME as render layers and should only be used if normal layers don't work)
 
-	//TODO re-implement button to shrink/minimize menu bar (overlay and editor)
+	//TODO In "Tools" menu bar tab alle "Open Dummy Instance" entries wieder adden (level loading screen, dirt message screen, etc.)
+
+	//TODO "Key Pressed" Loading Requirement
+	// - Modes: ONCE_PER_KEY_PRESS (nur einen tick pro key press auf true), CONTINUOUS (hält bei key press dauerhaft auf true)
+	// - Setzt "pressed" boolean bei onKeyPress auf true und bei onKeyRelease auf false (für modes)
+
+	//TODO placeholders und generic progress bar von Drippy porten (+ aus Drippy entfernen)
+
+	//TODO FIXEN: Anchor Point Overlay scheint manchmal nicht richtig zu funktionieren (hover mit element ändert nicht den Element Anchor) (schwer zu replizieren)
 
 	//TODO FIXEN: Layout Editor: grid toggle in Window tab wird nicht aktualisiert, wenn grid per Ctrl + G getoggelt wird
 
@@ -41,21 +50,13 @@ public class FancyMenu {
 
 	//TODO Key Presses in TextEditorScreen genau wie in LayoutEditorScreen handeln (pressed char getten und dann damit checken)
 
-	//TODO FIXEN: "is new Menu" stuff in ScreenCustomizationLayer und CustomizationHandler, etc. checkt nicht auf CustomGuiBase (wenn custom gui -> identifier getten)
-
 	//TODO Möglichkeit adden, Custom GUIs zu kopieren (bei kopieren öffnet sich input screen, um neuen identifier einzugeben)
 
 	//TODO add setAlpha() support to Vanilla ImageButtons (language button, accessibility button)
 
 	//TODO FIXEN: Slider elemente nutzen element opacity nicht (Vanilla bug oder in element vergessen?)
 
-	//TODO "Key Pressed" Loading Requirement
-
-	//TODO Button Element: "Click On Key Press" option, um buttons per key press zu klicken
-
 	//TODO Layout Editor: Toast Notifications rechts oben nach verschiedenen Aktionen wie copy/paste, undo/redo, etc.
-
-	//TODO placeholders und generic progress bar von Drippy porten (+ aus Drippy entfernen)
 
 	private static final Logger LOGGER = LogManager.getLogger();
 

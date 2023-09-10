@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
+import com.google.common.collect.Lists;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
@@ -37,10 +38,13 @@ import java.util.function.Supplier;
 public abstract class ConfiguratorScreen extends Screen {
 
     public ScrollArea scrollArea;
-    public ExtendedButton cancelButton;
-    public ExtendedButton doneButton;
     @Nullable
     protected RenderCell selectedCell;
+    protected final List<AbstractWidget> rightSideWidgets = new ArrayList<>();
+    @Nullable
+    protected ExtendedButton doneButton;
+    @Nullable
+    protected ExtendedButton cancelButton;
 
     protected ConfiguratorScreen(@NotNull Component title) {
         super(title);
@@ -49,11 +53,14 @@ public abstract class ConfiguratorScreen extends Screen {
     protected void initCells() {
     }
 
-    protected void initWidgets() {
+    protected void initRightSideWidgets() {
     }
 
     @Override
-    protected final void init() {
+    protected void init() {
+
+        this.rightSideWidgets.clear();
+        this.selectedCell = null;
 
         float oldScrollX = 0.0F;
         float oldScrollY = 0.0F;
@@ -61,7 +68,7 @@ public abstract class ConfiguratorScreen extends Screen {
             oldScrollX = this.scrollArea.horizontalScrollBar.getScroll();
             oldScrollY = this.scrollArea.verticalScrollBar.getScroll();
         }
-        this.scrollArea = new ScrollArea(20, 50 + 15, this.width - 40 - this.getRightSideButtonWidth() - 20, this.height - 85);
+        this.scrollArea = new ScrollArea(20, 50 + 15, this.width - 40 - this.getRightSideWidgetWidth() - 20, this.height - 85);
         this.initCells();
         this.addWidget(this.scrollArea);
         this.scrollArea.horizontalScrollBar.setScroll(oldScrollX);
@@ -74,22 +81,31 @@ public abstract class ConfiguratorScreen extends Screen {
             }
         }
 
-        int buttonWidth = this.getRightSideButtonWidth();
-        int buttonX = this.width - 20 - buttonWidth;
+        this.initRightSideWidgets();
 
-        this.doneButton = new ExtendedButton(buttonX, this.height - 20 - 20, buttonWidth, 20, Component.translatable("fancymenu.guicomponents.done"), button -> {
-            this.onDone();
+        this.addRightSideSpacer(5);
+
+        this.cancelButton = this.addRightSideButton(20, Component.translatable("fancymenu.guicomponents.cancel"), button -> {
+            this.onCancel();
         });
-        UIBase.applyDefaultWidgetSkinTo(this.doneButton);
-        this.addWidget(this.doneButton);
 
-        this.cancelButton = new ExtendedButton(buttonX, this.doneButton.getY() - 5 - 20, buttonWidth, 20, Component.translatable("fancymenu.guicomponents.cancel"), button -> {
-           this.onCancel();
-        });
-        UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
-        this.addWidget(this.cancelButton);
+        this.doneButton = this.addRightSideButton(20, Component.translatable("fancymenu.guicomponents.done"), button -> {
+            if (this.allowDone()) this.onDone();
+        }).setIsActiveSupplier(consumes -> this.allowDone());
 
-        this.initWidgets();
+        int widgetWidth = this.getRightSideWidgetWidth();
+        int widgetX = this.width - 20 - widgetWidth;
+        int widgetY = this.height - 20;
+        for (AbstractWidget w : Lists.reverse(this.rightSideWidgets)) {
+            if (!(w instanceof RightSideSpacer)) {
+                UIBase.applyDefaultWidgetSkinTo(w);
+                w.setX(widgetX);
+                w.setY(widgetY - w.getHeight());
+                w.setWidth(widgetWidth);
+                this.addRenderableWidget(w);
+            }
+            widgetY -= w.getHeight() + this.getRightSideDefaultSpaceBetweenWidgets();
+        }
 
     }
 
@@ -113,8 +129,6 @@ public abstract class ConfiguratorScreen extends Screen {
         this.font.draw(pose, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
 
         this.scrollArea.render(pose, mouseX, mouseY, partial);
-        this.doneButton.render(pose, mouseX, mouseY, partial);
-        this.cancelButton.render(pose, mouseX, mouseY, partial);
 
         super.render(pose, mouseX, mouseY, partial);
 
@@ -129,8 +143,35 @@ public abstract class ConfiguratorScreen extends Screen {
         }
     }
 
-    public int getRightSideButtonWidth() {
+    public int getRightSideWidgetWidth() {
         return 150;
+    }
+
+    public int getRightSideDefaultSpaceBetweenWidgets() {
+        return 5;
+    }
+
+    public boolean allowDone() {
+        return true;
+    }
+
+    protected void addRightSideSpacer(int height) {
+        this.rightSideWidgets.add(new RightSideSpacer(height));
+    }
+
+    protected <T> CycleButton<T> addRightSideCycleButton(int height, @NotNull ILocalizedValueCycle<T> cycle, @NotNull CycleButton.CycleButtonClickFeedback<T> clickFeedback) {
+        return this.addRightSideWidget(new CycleButton<>(0, 0, 0, height, cycle, clickFeedback));
+    }
+
+    protected ExtendedButton addRightSideButton(int height, @NotNull Component label, @NotNull Consumer<ExtendedButton> onClick) {
+        return this.addRightSideWidget(new ExtendedButton(0, 0, 0, height, label, var1 -> {
+            onClick.accept((ExtendedButton) var1);
+        }));
+    }
+
+    protected <T extends AbstractWidget> T addRightSideWidget(@NotNull T widget) {
+        this.rightSideWidgets.add(widget);
+        return widget;
     }
 
     @NotNull
@@ -151,6 +192,11 @@ public abstract class ConfiguratorScreen extends Screen {
     @NotNull
     protected SeparatorCell addSeparatorCell() {
         return this.addCell(new SeparatorCell());
+    }
+
+    @NotNull
+    protected SpacerCell addCellGroupEndSpacerCell() {
+        return this.addSpacerCell(7);
     }
 
     @NotNull
@@ -177,8 +223,10 @@ public abstract class ConfiguratorScreen extends Screen {
     protected void updateSelectedCell() {
         for (ScrollAreaEntry e : this.scrollArea.getEntries()) {
             if (e instanceof CellScrollEntry c) {
-                if (c.cell.selectable && c.cell.selected) this.selectedCell = c.cell;
-                return;
+                if (c.cell.selectable && c.cell.selected) {
+                    this.selectedCell = c.cell;
+                    return;
+                }
             }
         }
         this.selectedCell = null;
@@ -193,7 +241,7 @@ public abstract class ConfiguratorScreen extends Screen {
     public boolean keyPressed(int keycode, int scancode, int modifiers) {
 
         if (keycode == InputConstants.KEY_ENTER) {
-            this.onDone();
+            if (this.allowDone()) this.onDone();
             return true;
         }
 
@@ -211,7 +259,7 @@ public abstract class ConfiguratorScreen extends Screen {
         return null;
     }
 
-    protected static class CellScrollEntry extends ScrollAreaEntry {
+    protected class CellScrollEntry extends ScrollAreaEntry {
 
         public final RenderCell cell;
 
@@ -232,8 +280,9 @@ public abstract class ConfiguratorScreen extends Screen {
             if (this.getWidth() < this.parent.getInnerWidth()) this.setWidth(this.parent.getInnerWidth());
             this.setHeight(this.cell.getHeight());
             this.cell.updatePosition(this);
-            this.cell.hovered = UIBase.isXYInArea(mouseX, mouseY, this.cell.x, this.cell.y, this.cell.width, this.cell.height);
-            if (this.cell.isSelectable() && (this.cell.isHovered() || this.cell.isSelected())) {
+            //Use the scroll entry position and size to check for cell hover, to cover the whole cell line and not just the (sometimes too small) actual cell size
+            this.cell.hovered = UIBase.isXYInArea(mouseX, mouseY, this.getX(), this.getY(), this.parent.getInnerWidth(), this.getHeight());
+            if ((cell.isSelectable() && cell.isHovered()) || (cell == ConfiguratorScreen.this.selectedCell)) {
                 RenderingUtils.resetShaderColor();
                 fill(pose, (int) this.getX(), (int) this.getY(), (int) (this.getX() + this.parent.getInnerWidth()), (int) (this.getY() + this.getHeight()), this.cell.hoverColorSupplier.get().getColorInt());
                 RenderingUtils.resetShaderColor();
@@ -312,11 +361,17 @@ public abstract class ConfiguratorScreen extends Screen {
         }
 
         @Override
-        public void renderCell(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        public boolean isSelectable() {
+            return false;
         }
 
         @Override
-        public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        public RenderCell setSelectable(boolean selectable) {
+            throw new RuntimeException("You can't make SpacerCells selectable.");
+        }
+
+        @Override
+        public void renderCell(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
         }
 
         @Override
@@ -354,7 +409,6 @@ public abstract class ConfiguratorScreen extends Screen {
 
         @NotNull
         protected Component text;
-        protected boolean yCentered = false;
 
         public LabelCell(@NotNull Component label) {
             this.text = label;
@@ -363,14 +417,14 @@ public abstract class ConfiguratorScreen extends Screen {
         @Override
         public void renderCell(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
             RenderingUtils.resetShaderColor();
-            UIBase.drawElementLabel(pose, Minecraft.getInstance().font, this.text, this.getX(), this.getY() + (this.getHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2));
+            UIBase.drawElementLabel(pose, Minecraft.getInstance().font, this.text, this.getX(), this.getY());
             RenderingUtils.resetShaderColor();
         }
 
         @Override
         protected void updateSize(@NotNull CellScrollEntry scrollEntry) {
             this.setWidth(Minecraft.getInstance().font.width(this.text));
-            this.setHeight(Minecraft.getInstance().font.lineHeight + (this.yCentered ? 0 : 4));
+            this.setHeight(Minecraft.getInstance().font.lineHeight);
         }
 
         @NotNull
@@ -380,15 +434,6 @@ public abstract class ConfiguratorScreen extends Screen {
 
         public LabelCell setText(@NotNull Component text) {
             this.text = text;
-            return this;
-        }
-
-        public boolean isLabelYCentered() {
-            return this.yCentered;
-        }
-
-        public LabelCell setLabelYCentered(boolean yCentered) {
-            this.yCentered = yCentered;
             return this;
         }
 
@@ -629,6 +674,31 @@ public abstract class ConfiguratorScreen extends Screen {
                 return false;
             }
             return super.mouseReleased($$0, $$1, $$2);
+        }
+
+    }
+
+    protected class RightSideSpacer extends AbstractWidget {
+
+        protected RightSideSpacer(int height) {
+            super(0, 0, 0, height, Component.empty());
+        }
+
+        @Override
+        public void setFocused(boolean var1) {
+        }
+
+        @Override
+        public void renderWidget(PoseStack var1, int var2, int var3, float var4) {
+        }
+
+        @Override
+        public boolean isFocused() {
+            return false;
+        }
+
+        @Override
+        protected void updateWidgetNarration(NarrationElementOutput var1) {
         }
 
     }

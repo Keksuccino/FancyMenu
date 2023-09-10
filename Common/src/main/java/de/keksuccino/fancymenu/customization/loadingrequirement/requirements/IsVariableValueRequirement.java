@@ -119,13 +119,19 @@ public class IsVariableValueRequirement extends LoadingRequirement {
             this.addLabelCell(Component.translatable("fancymenu.loading_requirements.is_variable_value.var_name"));
             this.nameCell = this.addTextInputCell(null, true, true).setText(name);
 
+            this.addCellGroupEndSpacerCell();
+
             this.variableNameSuggestions = EditBoxSuggestions.createWithCustomSuggestions(this, this.nameCell.editBox, EditBoxSuggestions.SuggestionsRenderPosition.ABOVE_EDIT_BOX, VariableHandler.getVariableNames());
             UIBase.applyDefaultWidgetSkinTo(this.variableNameSuggestions);
             this.nameCell.editBox.setResponder(s -> this.variableNameSuggestions.updateCommandInfo());
 
+            this.addCellGroupEndSpacerCell();
+
             String value = this.getVarValueString();
             this.addLabelCell(Component.translatable("fancymenu.loading_requirements.is_variable_value.var_value"));
             this.valueCell = this.addTextInputCell(null, true, true).setText(value);
+
+            this.addSpacerCell(20);
 
         }
 

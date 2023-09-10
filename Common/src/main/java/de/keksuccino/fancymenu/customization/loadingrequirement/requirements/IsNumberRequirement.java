@@ -229,13 +229,19 @@ public class IsNumberRequirement extends LoadingRequirement {
                 this.mode = value;
             });
 
+            this.addCellGroupEndSpacerCell();
+
             String fNumber = this.getFirstNumberString();
             this.addLabelCell(Component.translatable("fancymenu.loading_requirements.is_number.compare_mode.first_number"));
             this.firstNumberCell = this.addTextInputCell(null, true, true).setText(fNumber);
 
+            this.addCellGroupEndSpacerCell();
+
             String sNumber = this.getSecondNumberString();
             this.addLabelCell(Component.translatable("fancymenu.loading_requirements.is_number.compare_mode.second_number"));
             this.secondNumberCell = this.addTextInputCell(null, true, true).setText(sNumber);
+
+            this.addSpacerCell(20);
 
         }
 

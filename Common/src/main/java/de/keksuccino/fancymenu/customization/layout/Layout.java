@@ -430,21 +430,19 @@ public class Layout extends LayoutBase {
                 }
 
                 if ((action != null) && action.equalsIgnoreCase("setopenaudio")) {
-                    if (ScreenCustomization.isNewMenu()) {
-                        String path = AbstractElement.fixBackslashPath(sec.getValue("path"));
-                        if (path != null) {
-                            File f = new File(path);
-                            if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
-                                path = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + path;
-                                f = new File(path);
-                            }
-                            if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
-                                try {
-                                    layout.openAudio = "opensound_" + path + Files.size(f.toPath());
-                                    SoundRegistry.registerSound(layout.openAudio, path);
-                                } catch (Exception ex) {
-                                    ex.printStackTrace();
-                                }
+                    String path = AbstractElement.fixBackslashPath(sec.getValue("path"));
+                    if (path != null) {
+                        File f = new File(path);
+                        if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+                            path = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + path;
+                            f = new File(path);
+                        }
+                        if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
+                            try {
+                                layout.openAudio = "opensound_" + path + Files.size(f.toPath());
+                                SoundRegistry.registerSound(layout.openAudio, path);
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
                             }
                         }
                     }

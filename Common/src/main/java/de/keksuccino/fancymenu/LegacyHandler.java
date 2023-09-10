@@ -1,9 +1,11 @@
 package de.keksuccino.fancymenu;
 
 import de.keksuccino.fancymenu.util.AbstractOptions;
+import de.keksuccino.fancymenu.util.Legacy;
 import de.keksuccino.konkrete.config.Config;
 import org.jetbrains.annotations.NotNull;
 
+@Legacy("This is to safe stuff for legacy handling. Remove this in the future.")
 public class LegacyHandler {
 
     protected static LegacyCheckList legacyCheckList = null;

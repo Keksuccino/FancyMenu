@@ -105,9 +105,13 @@ public class IsLanguageRequirement extends LoadingRequirement {
             this.addLabelCell(Component.translatable("fancymenu.loading_requirements.is_language.lang_id"));
             this.langIdCell = this.addTextInputCell(null, true, true).setText(id);
 
+            this.addCellGroupEndSpacerCell();
+
             this.langIdSuggestions = EditBoxSuggestions.createWithCustomSuggestions(this, this.langIdCell.editBox, EditBoxSuggestions.SuggestionsRenderPosition.ABOVE_EDIT_BOX, new ArrayList<>(Minecraft.getInstance().getLanguageManager().getLanguages().keySet()));
             UIBase.applyDefaultWidgetSkinTo(this.langIdSuggestions);
             this.langIdCell.editBox.setResponder(s -> this.langIdSuggestions.updateCommandInfo());
+
+            this.addSpacerCell(20);
 
         }
 

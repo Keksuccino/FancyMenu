@@ -20,9 +20,7 @@ public class StringListChooserScreen extends ConfiguratorScreen {
     protected void initCells() {
 
         for (String s : this.list) {
-            this.addCell(new StringCell(s))
-                    .setLabelYCentered(true)
-                    .setSelectable(true);
+            this.addCell(new StringCell(s)).setSelectable(true);
         }
 
         this.addSpacerCell(20);
@@ -30,8 +28,8 @@ public class StringListChooserScreen extends ConfiguratorScreen {
     }
 
     @Override
-    protected void initWidgets() {
-        this.doneButton.setIsActiveSupplier(consumes -> this.getSelectedCell() != null);
+    public boolean allowDone() {
+        return (this.getSelectedCell() != null);
     }
 
     @Override

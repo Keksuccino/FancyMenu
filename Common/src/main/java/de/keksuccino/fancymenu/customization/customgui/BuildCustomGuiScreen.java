@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.customgui;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
-import de.keksuccino.fancymenu.util.rendering.text.component.ComponentWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfiguratorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
@@ -24,8 +23,7 @@ public class BuildCustomGuiScreen extends ConfiguratorScreen {
     protected boolean allSettingsValid = false;
     @Nullable
     protected String identifierOfEdit;
-    @NotNull
-    protected ComponentWidget settingsFeedbackWidget = ComponentWidget.empty(0,0);
+    protected LabelCell settingsFeedbackCell;
 
     protected BuildCustomGuiScreen(@Nullable CustomGui guiToEdit, @NotNull Consumer<CustomGui> callback) {
         super(Component.translatable("fancymenu.custom_guis.build"));
@@ -41,18 +39,18 @@ public class BuildCustomGuiScreen extends ConfiguratorScreen {
         this.addSpacerCell(20);
 
         this.addLabelCell(Component.translatable("fancymenu.custom_guis.build.identifier"));
-
         this.addTextInputCell(CharacterFilter.buildBasicFilenameCharacterFilter(), false, false)
                 .setEditListener(s -> this.guiTemp.identifier = s)
                 .setText(this.guiTemp.identifier);
 
-        this.addLabelCell(Component.translatable("fancymenu.custom_guis.build.title"));
+        this.addCellGroupEndSpacerCell();
 
+        this.addLabelCell(Component.translatable("fancymenu.custom_guis.build.title"));
         this.addTextInputCell(null, true, true)
                 .setEditListener(s -> this.guiTemp.title = s)
                 .setText(this.guiTemp.title);
 
-        this.addSpacerCell(10);
+        this.addCellGroupEndSpacerCell();
 
         this.addWidgetCell(new CycleButton<>(0, 0, 20, 20, CommonCycles.cycleEnabledDisabled("fancymenu.custom_guis.build.allow_esc", this.guiTemp.allowEsc), (value, button) -> {
             this.guiTemp.allowEsc = value.getAsBoolean();
@@ -60,28 +58,28 @@ public class BuildCustomGuiScreen extends ConfiguratorScreen {
 
         this.addSpacerCell(10);
 
-        this.addWidgetCell(this.settingsFeedbackWidget, false);
+        this.settingsFeedbackCell = this.addLabelCell(Component.empty());
 
         this.addSpacerCell(20);
 
     }
 
     @Override
-    protected void initWidgets() {
-        this.doneButton.setIsActiveSupplier(consumes -> this.allSettingsValid);
+    public boolean allowDone() {
+        return this.allSettingsValid;
     }
 
     @Override
     public void render(PoseStack pose, int mouseX, int mouseY, float partial) {
 
         if (this.guiTemp.identifier.isEmpty()) {
-            this.settingsFeedbackWidget.setText(Component.translatable("fancymenu.custom_guis.build.identifier.invalid").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())));
+            this.settingsFeedbackCell.setText(Component.translatable("fancymenu.custom_guis.build.identifier.invalid").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())));
             this.allSettingsValid = false;
         } else if (CustomGuiHandler.guiExists(this.guiTemp.identifier) && !Objects.equals(this.guiTemp.identifier, this.identifierOfEdit)) {
-            this.settingsFeedbackWidget.setText(Component.translatable("fancymenu.custom_guis.build.identifier.already_in_use").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())));
+            this.settingsFeedbackCell.setText(Component.translatable("fancymenu.custom_guis.build.identifier.already_in_use").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())));
             this.allSettingsValid = false;
         } else {
-            this.settingsFeedbackWidget.setText(Component.empty());
+            this.settingsFeedbackCell.setText(Component.empty());
             this.allSettingsValid = true;
         }
 
