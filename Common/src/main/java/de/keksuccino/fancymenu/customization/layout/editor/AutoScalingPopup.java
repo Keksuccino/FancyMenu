@@ -103,11 +103,11 @@ public class AutoScalingPopup extends FMPopup {
                     this.answerCallback(true);
                 } else {
                     this.answerCallback(false);
-                    UIBase.displayNotification(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.properties.autoscale.error")));
+//                    UIBase.displayNotification(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.properties.autoscale.error")));
                 }
             } else {
                 this.answerCallback(false);
-                UIBase.displayNotification(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.properties.autoscale.error")));
+//                UIBase.displayNotification(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.properties.autoscale.error")));
             }
         } catch (Exception e) {
             e.printStackTrace();

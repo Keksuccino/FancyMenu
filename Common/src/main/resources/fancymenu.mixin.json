@@ -10,6 +10,7 @@
     "client.IMixinChatScreen",
     "client.IMixinClientLanguage",
     "client.IMixinCommandSuggestions",
+    "client.IMixinConnectScreen",
     "client.IMixinEditBox",
     "client.IMixinLevelLoadingScreen",
     "client.IMixinMinecraft",

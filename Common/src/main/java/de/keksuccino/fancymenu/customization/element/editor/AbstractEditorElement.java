@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.editor;
 
-import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,14 +27,12 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.popup.FMNotificationPopup;
-import de.keksuccino.fancymenu.util.rendering.ui.popup.FMTextInputPopup;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseFileScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
-import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
@@ -43,7 +40,6 @@ import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -177,33 +173,38 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 			if (this.settings.isElementAnchorPointAllowed()) {
 
-				anchorPointMenu.addClickableEntry("anchor_point_element", ElementAnchorPoints.ELEMENT.getDisplayName(), (menu, entry) ->
-						{
-							if (entry.getStackMeta().isFirstInStack()) {
-								FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), I18n.get("fancymenu.helper.editor.items.orientation.element.setidentifier"), null, 240, (call) -> {
-									if (call != null) {
-										AbstractEditorElement editorElement = this.editor.getElementByInstanceIdentifier(call);
-										if (editorElement != null) {
-											this.editor.history.saveSnapshot();
-											for (AbstractEditorElement e : this.editor.getSelectedElements()) {
-												if (e.settings.isAnchorPointChangeable() && e.settings.isElementAnchorPointAllowed()) {
-													e.element.anchorPointElementIdentifier = editorElement.element.getInstanceIdentifier();
-													e.element.setElementAnchorPointElement(editorElement.element);
-													e.setAnchorPoint(ElementAnchorPoints.ELEMENT, false, e.getX(), e.getY(), true);
+				anchorPointMenu.addClickableEntry("anchor_point_element", ElementAnchorPoints.ELEMENT.getDisplayName(),
+								(menu, entry) -> {
+									if (entry.getStackMeta().isFirstInStack()) {
+										TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.helper.editor.items.orientation.element.setidentifier"), null, call -> {
+											if (call != null) {
+												AbstractEditorElement editorElement = this.editor.getElementByInstanceIdentifier(call);
+												if (editorElement != null) {
+													this.editor.history.saveSnapshot();
+													for (AbstractEditorElement e : this.editor.getSelectedElements()) {
+														if (e.settings.isAnchorPointChangeable() && e.settings.isElementAnchorPointAllowed()) {
+															e.element.anchorPointElementIdentifier = editorElement.element.getInstanceIdentifier();
+															e.element.setElementAnchorPointElement(editorElement.element);
+															e.setAnchorPoint(ElementAnchorPoints.ELEMENT, false, e.getX(), e.getY(), true);
+														}
+													}
+													Minecraft.getInstance().setScreen(this.editor);
+												} else {
+													Minecraft.getInstance().setScreen(NotificationScreen.error(b -> {
+														Minecraft.getInstance().setScreen(this.editor);
+													}, LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.orientation.element.setidentifier.identifiernotfound")));
 												}
+											} else {
+												Minecraft.getInstance().setScreen(this.editor);
 											}
-										} else {
-											PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.items.orientation.element.setidentifier.identifiernotfound")));
+										});
+										if (!entry.getStackMeta().isPartOfStack()) {
+											s.setText(this.element.anchorPointElementIdentifier);
 										}
+										Minecraft.getInstance().setScreen(s);
+										menu.closeMenu();
 									}
-								});
-								if (!entry.getStackMeta().isPartOfStack() && (this.element.anchorPointElementIdentifier != null)) {
-									p.setText(this.element.anchorPointElementIdentifier);
-								}
-								PopupHandler.displayPopup(p);
-								menu.closeMenu();
-							}
-						})
+								})
 						.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.orientation.element.btn.desc")))
 						.setStackable(true);
 

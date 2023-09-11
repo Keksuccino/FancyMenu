@@ -10,6 +10,8 @@ import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.ManageLayoutsScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.ChooseAnimationScreen;
+import de.keksuccino.fancymenu.customization.screeninstancefactory.dummyscreens.DummyScreenBuilder;
+import de.keksuccino.fancymenu.customization.screeninstancefactory.dummyscreens.DummyScreenRegistry;
 import de.keksuccino.fancymenu.customization.variables.ManageVariablesScreen;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -495,9 +497,20 @@ public class CustomizationOverlayUI {
         ContextMenu toolsMenu = new ContextMenu();
         menuBar.addContextMenuEntry("tools", Component.translatable("fancymenu.overlay.menu_bar.tools"), toolsMenu);
 
-        //TODO add "Open Dummy Screen Instance" entries to tools
+        ContextMenu dummyScreenMenu = new ContextMenu();
+        toolsMenu.addSubMenuEntry("dummy_screens", Component.translatable("fancymenu.overlay.menu_bar.tools.dummy_screen_instances"), dummyScreenMenu)
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.tools.dummy_screen_instances.desc")));
 
-        // USER INTERFACE
+        int builderCount = 1;
+        for (DummyScreenBuilder builder : DummyScreenRegistry.getBuilders()) {
+            ContextMenu.ClickableContextMenuEntry<?> entry = dummyScreenMenu.addClickableEntry("builder_" + builderCount, builder.getScreenDisplayName(), (menu, entry2) -> Minecraft.getInstance().setScreen(builder.tryConstruct()));
+            if (builder.getScreenDescription() != null) {
+                entry.setTooltipSupplier((menu, entry1) -> Tooltip.of(builder.getScreenDescription().toArray(new Component[0])));
+            }
+            builderCount++;
+        }
+
+        // UI
         buildUITabAndAddTo(menuBar);
 
         // HELP

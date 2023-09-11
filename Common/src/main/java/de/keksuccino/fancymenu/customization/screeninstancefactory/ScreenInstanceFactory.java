@@ -15,6 +15,7 @@ import net.minecraft.client.multiplayer.ClientAdvancements;
 import net.minecraft.client.resources.language.LanguageManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -22,9 +23,12 @@ public class ScreenInstanceFactory {
 	
 	private static final Map<Class<?>, Object> DEFAULT_PARAMETERS = new HashMap<>();
 	private static final Map<String, Supplier<? extends Screen>> SCREEN_INSTANCE_PROVIDERS = new HashMap<>();
-	
-	public static void init() {
-		
+
+	static {
+
+		//TODO remove debug
+		LogManager.getLogger().info("####################### INIT SCREEN INSTANCE FACTORY");
+
 		DEFAULT_PARAMETERS.put(Minecraft.class, Minecraft.getInstance());
 		DEFAULT_PARAMETERS.put(Screen.class, null);
 		DEFAULT_PARAMETERS.put(Options.class, Minecraft.getInstance().options);

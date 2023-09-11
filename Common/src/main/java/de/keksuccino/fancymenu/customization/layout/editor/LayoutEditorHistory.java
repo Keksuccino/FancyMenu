@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.layout.editor;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import org.apache.logging.log4j.LogManager;

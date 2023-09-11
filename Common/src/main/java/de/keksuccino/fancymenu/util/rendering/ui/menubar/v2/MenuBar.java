@@ -35,9 +35,6 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-//    protected static final WrappedTexture COLLAPSE_TEXTURE = WrappedTexture.of(new ResourceLocation("fancymenu", "textures/menubar/icons/collapse.png"));
-//    protected static final WrappedTexture EXPAND_TEXTURE = WrappedTexture.of(new ResourceLocation("fancymenu", "textures/menubar/icons/expand.png"));
-
     protected static final WrappedTexture COLLAPSE_EXPAND_TEXTURE = WrappedTexture.of(new ResourceLocation("fancymenu", "textures/menubar/icons/collapse_expand.png"));
 
     protected final List<MenuBarEntry> leftEntries = new ArrayList<>();
@@ -53,7 +50,6 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         this.collapseOrExpandEntry = this.addClickableEntry(Side.RIGHT, "collapse_or_expand", Component.empty(), (bar, entry) -> {
             this.setExpanded(!this.expanded);
         }).setIconTextureSupplier((bar, entry) -> COLLAPSE_EXPAND_TEXTURE);
-//        .setIconTextureSupplier((bar, entry) -> this.expanded ? COLLAPSE_TEXTURE : EXPAND_TEXTURE);
         this.addSpacerEntry(Side.RIGHT, "spacer_after_collapse_or_expand_entry").setWidth(10);
     }
 

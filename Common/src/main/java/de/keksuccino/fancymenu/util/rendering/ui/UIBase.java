@@ -8,12 +8,10 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorThemeRegistry;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
-import de.keksuccino.fancymenu.util.rendering.ui.popup.FMNotificationPopup;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.ExtendedSliderButton;
-import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -184,12 +182,6 @@ public class UIBase extends RenderingUtils {
 		float g = Math.min(1F, Math.max(0F, (float)c.getGreen() / 255.0F));
 		float b = Math.min(1F, Math.max(0F, (float)c.getBlue() / 255.0F));
 		RenderSystem.setShaderColor(r, g, b, alpha);
-	}
-
-	//TODO remove this
-	@Deprecated
-	public static void displayNotification(String... notification) {
-		PopupHandler.displayPopup(new FMNotificationPopup(300, new Color(0,0,0,0), 240, null, notification));
 	}
 
 	@NotNull

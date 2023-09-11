@@ -9,22 +9,22 @@ import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.fancymenu.customization.customlocals.CustomLocalsHandler;
-import de.keksuccino.fancymenu.customization.setupsharing.SetupSharingHandler;
 import de.keksuccino.fancymenu.customization.server.ServerCache;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.screeninstancefactory.ScreenInstanceFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO Replace/Delete these classes:
+	// - AutoScalingPopup
+	// - FMPopup
+
 	//TODO Add "Force to Top Render Level" toggle for elements, to set its render Z level to 1000 or something (to render them in front of player entities for example)
 	// - Add tooltip that describes that this is NOT THE SAME as render layers and should only be used if normal layers don't work)
-
-	//TODO In "Tools" menu bar tab alle "Open Dummy Instance" entries wieder adden (level loading screen, dirt message screen, etc.)
 
 	//TODO "Key Pressed" Loading Requirement
 	// - Modes: ONCE_PER_KEY_PRESS (nur einen tick pro key press auf true), CONTINUOUS (hält bei key press dauerhaft auf true)
@@ -112,11 +112,7 @@ public class FancyMenu {
 	public static void onClientSetup() {
 		try {
 
-			SetupSharingHandler.init();
-
 			CustomLocalsHandler.loadLocalizations();
-
-        	ScreenInstanceFactory.init();
 
 			ServerCache.init();
 	    	

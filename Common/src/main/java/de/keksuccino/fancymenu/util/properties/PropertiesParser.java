@@ -132,6 +132,15 @@ public class PropertiesParser {
     }
 
     @NotNull
+    public static String buildFancyStringFromList(@NotNull List<String> list) {
+        String fancy = "";
+        for (String s : list) {
+            fancy += s + "\n";
+        }
+        return fancy;
+    }
+
+    @NotNull
     public static String stringifyFancyString(@NotNull String fancyString) {
         return Objects.requireNonNull(fancyString)
                 .replace("\n", "$prop_line_break$")

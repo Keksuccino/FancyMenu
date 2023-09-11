@@ -63,7 +63,7 @@ public class IsButtonActiveRequirement extends LoadingRequirement {
 
     @Override
     public String getValueDisplayName() {
-        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.is_button_active");
+        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.is_button_active.valuename");
     }
 
     @Override

@@ -6,16 +6,12 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.file.FileFilter;
-import de.keksuccino.fancymenu.util.rendering.ui.popup.FMTextInputPopup;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseFileScreen;
 import de.keksuccino.fancymenu.util.ListUtils;
-import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
-
-import java.awt.*;
 import java.util.List;
 
 public class ImageEditorElement extends AbstractEditorElement {
@@ -56,16 +52,13 @@ public class ImageEditorElement extends AbstractEditorElement {
                 s.setFileFilter(FileFilter.IMAGE_AND_GIF_FILE_FILTER);
                 Minecraft.getInstance().setScreen(s);
             } else {
-                FMTextInputPopup p = new FMTextInputPopup(new Color(0,0,0,0), I18n.get("fancymenu.elements.image.set_source"), null, 240, (call) -> {
-                    if (call != null) {
+                Minecraft.getInstance().setScreen(TextInputScreen.build(Component.translatable("fancymenu.elements.image.set_source"), null, s -> {
+                    if (s != null) {
                         this.editor.history.saveSnapshot();
-                        ((ImageElement)this.element).source = call;
+                        ((ImageElement)this.element).source = s;
                     }
-                });
-                if (((ImageElement)this.element).source != null) {
-                    p.setText(((ImageElement)this.element).source);
-                }
-                PopupHandler.displayPopup(p);
+                    Minecraft.getInstance().setScreen(this.editor);
+                }).setText(((ImageElement)this.element).source));
             }
         });
 
