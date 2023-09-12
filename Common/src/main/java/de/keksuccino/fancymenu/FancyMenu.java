@@ -19,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO "World Load Progress" Placeholder
+	//TODO Add markdown formatting code to set text font (use setFont() of components)
 
 	//TODO Replace/Delete these classes:
 	// - AutoScalingPopup
