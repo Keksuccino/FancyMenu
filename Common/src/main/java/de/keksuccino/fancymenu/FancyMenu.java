@@ -19,6 +19,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO "World Load Progress" Placeholder
+
 	//TODO Replace/Delete these classes:
 	// - AutoScalingPopup
 	// - FMPopup

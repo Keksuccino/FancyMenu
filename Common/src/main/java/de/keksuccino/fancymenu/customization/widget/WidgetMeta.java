@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.widget;
 
+import de.keksuccino.fancymenu.customization.screenidentifiers.ScreenIdentifierHandler;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -12,7 +13,6 @@ public class WidgetMeta {
 	protected String compatibilityId;
 	private final AbstractWidget widget;
 	private final Screen screen;
-	
 	public Component label;
 	public int x;
 	public int y;
@@ -63,12 +63,7 @@ public class WidgetMeta {
 
 	@NotNull
 	public String getLocator() {
-		return this.screen.getClass().getName() + ":" + this.getIdentifier();
-	}
-
-	@NotNull
-	public String getLongLocator() {
-		return this.screen.getClass().getName() + ":" + this.getLongIdentifier();
+		return ScreenIdentifierHandler.getIdentifierOfScreen(this.screen) + ":" + this.getIdentifier();
 	}
 
 }

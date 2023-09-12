@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.customization.action.actions.screen;
 
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
+import de.keksuccino.fancymenu.customization.screenidentifiers.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screeninstancefactory.ScreenInstanceFactory;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
@@ -30,7 +30,7 @@ public class OpenScreenAction extends Action {
     @Override
     public void execute(@Nullable String value) {
         if (value != null) {
-            value = ScreenCustomization.findValidMenuIdentifierFor(value);
+            value = ScreenIdentifierHandler.tryFixInvalidIdentifierWithNonUniversal(value);
             if (value.equals(CreateWorldScreen.class.getName())) {
                 CreateWorldScreen.openFresh(Minecraft.getInstance(), Minecraft.getInstance().screen);
             } else {

@@ -16,6 +16,7 @@
     "client.IMixinMinecraft",
     "client.IMixinPauseScreen",
     "client.IMixinPlayerModel",
+    "client.IMixinProgressScreen",
     "client.IMixinScreen",
     "client.IMixinServerList",
     "client.IMixinSuggestionsList",

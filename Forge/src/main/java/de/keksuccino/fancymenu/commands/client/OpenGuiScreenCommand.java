@@ -2,8 +2,8 @@ package de.keksuccino.fancymenu.commands.client;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
+import de.keksuccino.fancymenu.customization.screenidentifiers.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screeninstancefactory.ScreenInstanceFactory;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
@@ -16,35 +16,35 @@ import net.minecraft.network.chat.Component;
 public class OpenGuiScreenCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> d) {
-        d.register(Commands.literal("openguiscreen").then(Commands.argument("menu_identifier", StringArgumentType.string())
+        d.register(Commands.literal("openguiscreen").then(Commands.argument("screen_identifier", StringArgumentType.string())
                 .executes((stack) -> {
-                    return openGui(stack.getSource(), StringArgumentType.getString(stack, "menu_identifier"));
+                    return openGui(stack.getSource(), StringArgumentType.getString(stack, "screen_identifier"));
                 })
                 .suggests((context, provider) -> {
-                    return CommandUtils.getStringSuggestions(provider, "<menu_identifier>");
+                    return CommandUtils.getStringSuggestions(provider, "<screen_identifier>");
                 })
         ));
     }
 
-    private static int openGui(CommandSourceStack stack, String menuIdentifierOrCustomGuiName) {
+    private static int openGui(CommandSourceStack stack, String screenIdentifierOrCustomGuiName) {
         try {
-            if (menuIdentifierOrCustomGuiName.equalsIgnoreCase(CreateWorldScreen.class.getName())) {
+            if (screenIdentifierOrCustomGuiName.equalsIgnoreCase(CreateWorldScreen.class.getName())) {
                 CreateWorldScreen.openFresh(Minecraft.getInstance(), Minecraft.getInstance().screen);
                 return 1;
             }
-            if (CustomGuiHandler.guiExists(menuIdentifierOrCustomGuiName)) {
+            if (CustomGuiHandler.guiExists(screenIdentifierOrCustomGuiName)) {
                 MainThreadTaskExecutor.executeInMainThread(() -> {
-                    Screen custom = CustomGuiHandler.constructInstance(menuIdentifierOrCustomGuiName, Minecraft.getInstance().screen, null);
+                    Screen custom = CustomGuiHandler.constructInstance(screenIdentifierOrCustomGuiName, Minecraft.getInstance().screen, null);
                     if (custom != null) Minecraft.getInstance().setScreen(custom);
                 }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
             } else {
-                Screen s = ScreenInstanceFactory.tryConstruct(ScreenCustomization.findValidMenuIdentifierFor(menuIdentifierOrCustomGuiName));
+                Screen s = ScreenInstanceFactory.tryConstruct(ScreenIdentifierHandler.tryFixInvalidIdentifierWithNonUniversal(screenIdentifierOrCustomGuiName));
                 if (s != null) {
                     MainThreadTaskExecutor.executeInMainThread(() -> {
                         Minecraft.getInstance().setScreen(s);
                     }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                 } else {
-                    stack.sendFailure(Component.translatable("fancymenu.commmands.openguiscreen.unable_to_open_gui", menuIdentifierOrCustomGuiName));
+                    stack.sendFailure(Component.translatable("fancymenu.commmands.openguiscreen.unable_to_open_gui", screenIdentifierOrCustomGuiName));
                 }
             }
         } catch (Exception e) {

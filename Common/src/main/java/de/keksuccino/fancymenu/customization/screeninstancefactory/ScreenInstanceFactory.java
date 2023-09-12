@@ -15,7 +15,6 @@ import net.minecraft.client.multiplayer.ClientAdvancements;
 import net.minecraft.client.resources.language.LanguageManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,9 +24,6 @@ public class ScreenInstanceFactory {
 	private static final Map<String, Supplier<? extends Screen>> SCREEN_INSTANCE_PROVIDERS = new HashMap<>();
 
 	static {
-
-		//TODO remove debug
-		LogManager.getLogger().info("####################### INIT SCREEN INSTANCE FACTORY");
 
 		DEFAULT_PARAMETERS.put(Minecraft.class, Minecraft.getInstance());
 		DEFAULT_PARAMETERS.put(Screen.class, null);
@@ -57,19 +53,19 @@ public class ScreenInstanceFactory {
 
 	}
 
-	public static void registerScreenProvider(@NotNull String fullScreenClassNameWithClassPath, @NotNull Supplier<? extends Screen> provider) {
-		SCREEN_INSTANCE_PROVIDERS.put(fullScreenClassNameWithClassPath, provider);
+	public static void registerScreenProvider(@NotNull String screenClassPath, @NotNull Supplier<? extends Screen> provider) {
+		SCREEN_INSTANCE_PROVIDERS.put(screenClassPath, provider);
 	}
 
 	@Nullable
-	public static Supplier<? extends Screen> getScreenProvider(@NotNull String fullScreenClassNameWithClassPath) {
-		return SCREEN_INSTANCE_PROVIDERS.get(fullScreenClassNameWithClassPath);
+	public static Supplier<? extends Screen> getScreenProvider(@NotNull String screenClassPath) {
+		return SCREEN_INSTANCE_PROVIDERS.get(screenClassPath);
 	}
 
 	@Nullable
-	public static Screen tryConstruct(@NotNull String fullScreenClassName) {
+	public static Screen tryConstruct(@NotNull String screenClassPath) {
 		try {
-			if (ScreenCustomization.isScreenBlacklisted(fullScreenClassName)) {
+			if (ScreenCustomization.isScreenBlacklisted(screenClassPath)) {
 				return null;
 			}
 			//Update last screen
@@ -80,10 +76,10 @@ public class ScreenInstanceFactory {
 				DEFAULT_PARAMETERS.put(ClientAdvancements.class, Minecraft.getInstance().player.connection.getAdvancements());
 			}
 			//Check if a provider is registered for the screen and return from provider if one was found
-			Supplier<? extends Screen> screenProvider = getScreenProvider(fullScreenClassName);
+			Supplier<? extends Screen> screenProvider = getScreenProvider(screenClassPath);
 			if (screenProvider != null) return screenProvider.get();
 			//Try to construct and instance of the screen
-			Class<?> screenClass = Class.forName(fullScreenClassName, false, ScreenInstanceFactory.class.getClassLoader());
+			Class<?> screenClass = Class.forName(screenClassPath, false, ScreenInstanceFactory.class.getClassLoader());
 			if (Screen.class.isAssignableFrom(screenClass)) {
 				Constructor<?>[] constructors = screenClass.getConstructors();
 				if (constructors.length > 0) {

@@ -7,7 +7,7 @@ import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
+import de.keksuccino.fancymenu.customization.screenidentifiers.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.events.widget.RenderGuiListHeaderFooterEvent;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractSelectionList;
 import de.keksuccino.fancymenu.util.audio.SoundRegistry;
@@ -54,7 +54,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	protected String identifier;
+	protected String screenIdentifier;
 	public LayoutBase layoutBase = new LayoutBase();
 	public List<AbstractElement> allElements = new ArrayList<>();
 	public Layout.OrderedElementCollection normalElements = new Layout.OrderedElementCollection();
@@ -72,18 +72,15 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 
 	public static Map<Class<?>, Component> cachedOriginalMenuTitles = new HashMap<>();
 
-	/**
-	 * @param identifier Has to be the full class path of the menu screen.
-	 */
-	public ScreenCustomizationLayer(@NotNull String identifier) {
-		Objects.requireNonNull(identifier);
-		this.identifier = identifier;
+	public ScreenCustomizationLayer(@NotNull String screenIdentifier) {
+		Objects.requireNonNull(screenIdentifier);
+		this.screenIdentifier = screenIdentifier;
 		EventHandler.INSTANCE.registerListenersOf(this);
 	}
 
 	@NotNull
-	public String getIdentifier() {
-		return this.identifier;
+	public String getScreenIdentifier() {
+		return this.screenIdentifier;
 	}
 
 	public void resetLayer() {
@@ -128,7 +125,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 
 		if (!this.shouldCustomize(e.getScreen())) return;
 
-		List<Layout> rawLayouts = LayoutHandler.getEnabledLayoutsForMenuIdentifier(this.getIdentifier(), true);
+		List<Layout> rawLayouts = LayoutHandler.getEnabledLayoutsForScreenIdentifier(this.getScreenIdentifier(), true);
 		List<Layout> normalLayouts = new ArrayList<>();
 
 		this.activeLayouts.clear();
@@ -227,7 +224,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 
 		this.cachedScreenWidgetMetas = ScreenWidgetDiscoverer.getWidgetMetasOfScreen(e.getScreen(), false);
 
-		this.constructElementInstances(this.identifier, this.cachedScreenWidgetMetas, this.activeLayouts, this.normalElements, this.vanillaButtonElements, this.deepElements);
+		this.constructElementInstances(this.getScreenIdentifier(), this.cachedScreenWidgetMetas, this.activeLayouts, this.normalElements, this.vanillaButtonElements, this.deepElements);
 		this.allElements.addAll(this.normalElements.backgroundElements);
 		this.allElements.addAll(this.normalElements.foregroundElements);
 		this.allElements.addAll(this.deepElements);
@@ -488,13 +485,9 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 	}
 
 	@SuppressWarnings("all")
-	protected boolean shouldCustomize(Screen screen) {
+	protected boolean shouldCustomize(@Nullable Screen screen) {
 		if (screen == null) return false;
-		if (screen instanceof CustomGuiBaseScreen c) {
-			if (!this.getIdentifier().equals(c.getIdentifier())) return false;
-		} else {
-			if (!this.getIdentifier().equals(screen.getClass().getName())) return false;
-		}
+		if (!ScreenIdentifierHandler.isIdentifierOfScreen(this.getScreenIdentifier(), screen)) return false;
 		if (!ScreenCustomization.isCustomizationEnabledForScreen(screen)) return false;
 		return true;
 	}

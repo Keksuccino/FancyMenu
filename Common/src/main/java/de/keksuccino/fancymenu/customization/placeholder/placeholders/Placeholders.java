@@ -1,15 +1,12 @@
 package de.keksuccino.fancymenu.customization.placeholder.placeholders;
 
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.advanced.*;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.client.*;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.gui.*;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderRegistry;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.AbsolutePathPlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.realtime.*;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.server.*;
-import de.keksuccino.fancymenu.customization.placeholder.placeholders.client.LoadedModsPlaceholder;
-import de.keksuccino.fancymenu.customization.placeholder.placeholders.client.MinecraftVersionPlaceholder;
-import de.keksuccino.fancymenu.customization.placeholder.placeholders.client.ModVersionPlaceholder;
-import de.keksuccino.fancymenu.customization.placeholder.placeholders.client.TotalModsPlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.RandomTextPlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.WebTextPlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.ram.MaxRamPlaceholder;
@@ -24,6 +21,7 @@ public class Placeholders {
     public static final ModVersionPlaceholder MOD_VERSION = new ModVersionPlaceholder();
     public static final LoadedModsPlaceholder LOADED_MODS = new LoadedModsPlaceholder();
     public static final TotalModsPlaceholder TOTAL_MODS = new TotalModsPlaceholder();
+    public static final WorldLoadProgressPlaceholder WORLD_LOAD_PROGRESS = new WorldLoadProgressPlaceholder();
     public static final ScreenWidthPlaceholder SCREEN_WIDTH = new ScreenWidthPlaceholder();
     public static final ScreenHeightPlaceholder SCREEN_HEIGHT = new ScreenHeightPlaceholder();
     public static final ElementWidthPlaceholder ELEMENT_WIDTH = new ElementWidthPlaceholder();
@@ -67,6 +65,7 @@ public class Placeholders {
         PlaceholderRegistry.register(MOD_VERSION);
         PlaceholderRegistry.register(LOADED_MODS);
         PlaceholderRegistry.register(TOTAL_MODS);
+        PlaceholderRegistry.register(WORLD_LOAD_PROGRESS);
 
         //GUI
         PlaceholderRegistry.register(SCREEN_WIDTH);

@@ -6,6 +6,8 @@ import de.keksuccino.fancymenu.Compat;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.widgets.LayoutEditorWidgets;
+import de.keksuccino.fancymenu.customization.screenidentifiers.ScreenIdentifierHandler;
+import de.keksuccino.fancymenu.customization.screenidentifiers.UniversalScreenIdentifierRegistry;
 import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.action.actions.Actions;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
@@ -40,10 +42,20 @@ import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.VideoSettingsScreen;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("unused")
 public class ScreenCustomization {
+
+	//TODO ScreenIdentifiersHandler fixen (wird zu früh initialized; findet resource nicht)
+
+	//TODO Popups weiter ersetzen + klassen löschen
+
+	//TODO Checken, ob alles mit universal screen identifiers klappt
+
+	private static final Logger LOGGER = LogManager.getLogger();
 
 	public static final File CUSTOMIZABLE_MENUS_FILE = new File("config/fancymenu/customizablemenus.txt");
 
@@ -66,6 +78,8 @@ public class ScreenCustomization {
 		EventHandler.INSTANCE.registerListenersOf(eventsInstance);
 
 		addDefaultScreenBlacklistRules();
+
+		ScreenIdentifierHandler.init();
 
 		ScreenCustomizationLayerHandler.init();
 
@@ -134,8 +148,9 @@ public class ScreenCustomization {
 		}
 		if (screen instanceof CustomGuiBaseScreen) return;
 		if ((screen != null) && !isCustomizationEnabledForScreen(screen, true)) {
-			String identifier = screen.getClass().getName();
-			PropertyContainer sec = new PropertyContainer(identifier);
+			//Always use the screen class path here! NEVER universal identifiers!
+			String screenClassPath = screen.getClass().getName();
+			PropertyContainer sec = new PropertyContainer(screenClassPath);
 			customizableScreens.putContainer(sec);
 			writeCustomizableScreensToFile();
 		}
@@ -147,10 +162,11 @@ public class ScreenCustomization {
 		}
 		if (screen instanceof CustomGuiBaseScreen) return;
 		if (screen != null) {
-			String identifier = screen.getClass().getName();
+			//Always use the screen class path here! NEVER universal identifiers!
+			String screenClassPath = screen.getClass().getName();
 			List<PropertyContainer> l = new ArrayList<>();
 			for (PropertyContainer sec : customizableScreens.getContainers()) {
-				if (!sec.getType().equals(identifier)) {
+				if (!sec.getType().equals(screenClassPath)) {
 					l.add(sec);
 				}
 			}
@@ -180,6 +196,7 @@ public class ScreenCustomization {
 		if (screen instanceof CustomGuiBaseScreen) {
 			return true;
 		}
+		//Always use the screen class path here! NEVER universal identifiers!
 		List<PropertyContainer> s = customizableScreens.getContainersOfType(screen.getClass().getName());
 		return !s.isEmpty();
 	}
@@ -210,40 +227,20 @@ public class ScreenCustomization {
 			Objects.requireNonNull(s, "[FANCYMENU] Unable to read customizable menus file! PropertyContainer was NULL!");
 			PropertyContainerSet s2 = new PropertyContainerSet("customizablemenus");
 			for (PropertyContainer sec : s.getContainers()) {
-				String identifier = null;
-				try {
-					if (sec.getType().length() > 5) {
-						Class.forName(sec.getType(), false, ScreenCustomization.class.getClassLoader());
-						identifier = sec.getType();
-					}
-				} catch (Exception ignored) {}
-				if (identifier == null) {
-					identifier = findValidMenuIdentifierFor(sec.getType());
+				//This should never be a universal identifier, but if it is, skip it and print error log message
+				String identifier = ScreenIdentifierHandler.tryFixInvalidIdentifierWithNonUniversal(sec.getType());
+				if (UniversalScreenIdentifierRegistry.universalIdentifierExists(identifier)) {
+					LOGGER.error("[FANCYMENU] Found illegal universal identifier '" + identifier + "' in customizable menus file! Skipping..");
+					continue;
 				}
-				s2.putContainer(new PropertyContainer(identifier));
+				if (ScreenIdentifierHandler.isValidIdentifier(identifier)) {
+					s2.putContainer(new PropertyContainer(identifier));
+				}
 			}
 			customizableScreens = s2;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-
-	public static String findValidMenuIdentifierFor(String identifier) {
-		if (CustomGuiHandler.guiExists(identifier)) {
-			return identifier;
-		}
-		SetupSharingHandler.MenuIdentifierDatabase db = SetupSharingHandler.getIdentifierDatabase();
-		try {
-			Class.forName(identifier, false, ScreenCustomization.class.getClassLoader());
-			return identifier;
-		} catch (Exception ignored) {}
-		if (db != null) {
-			String s = db.findValidIdentifierFor(identifier);
-			if (s != null) {
-				return s;
-			}
-		}
-		return identifier;
 	}
 
 	/**
@@ -300,18 +297,6 @@ public class ScreenCustomization {
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(Minecraft.getInstance().screen));
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(Minecraft.getInstance().screen));
 		}
-	}
-
-	@NotNull
-	public static String getScreenIdentifier(@NotNull Screen screen) {
-		if (screen instanceof CustomGuiBaseScreen c) {
-			return c.getIdentifier();
-		}
-		return screen.getClass().getName();
-	}
-
-	public static boolean isOverridingOtherScreen(Screen current) {
-		return (current instanceof CustomGuiBaseScreen) && (((CustomGuiBaseScreen)current).getOverriddenScreen() != null);
 	}
 
 	public static void addScreenBlacklistRule(ScreenBlacklistRule rule) {

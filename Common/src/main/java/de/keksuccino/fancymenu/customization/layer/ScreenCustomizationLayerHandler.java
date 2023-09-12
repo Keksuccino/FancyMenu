@@ -2,9 +2,9 @@ package de.keksuccino.fancymenu.customization.layer;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
+import de.keksuccino.fancymenu.customization.screenidentifiers.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
@@ -25,35 +25,32 @@ public class ScreenCustomizationLayerHandler {
 		EventHandler.INSTANCE.registerListenersOf(new ScreenCustomizationLayerHandler());
 	}
 
-	protected ScreenCustomizationLayerHandler() {
+	private ScreenCustomizationLayerHandler() {
 	}
 
 	public static void registerScreen(@NotNull Screen screen) {
-		registerScreen(screen.getClass());
-	}
-
-	public static void registerScreen(@NotNull Class<? extends Screen> screenClass) {
-		if (!LAYERS.containsKey(screenClass.getName())) {
-			ScreenCustomizationLayer layer = new ScreenCustomizationLayer(screenClass.getName());
-			registerLayer(screenClass.getName(), layer);
+		String identifier = ScreenIdentifierHandler.getIdentifierOfScreen(screen);
+		if (!LAYERS.containsKey(identifier)) {
+			ScreenCustomizationLayer layer = new ScreenCustomizationLayer(identifier);
+			registerLayer(identifier, layer);
 		}
 	}
 
 	public static void registerLayer(@NotNull ScreenCustomizationLayer layer) {
-		registerLayer(layer.getIdentifier(), layer);
+		registerLayer(layer.getScreenIdentifier(), layer);
 	}
 
-	public static void registerLayer(@NotNull String identifier, @NotNull ScreenCustomizationLayer layer) {
-		if (!LAYERS.containsKey(identifier)) {
-			LOGGER.info("[FANCYMENU] ScreenCustomizationLayer registered: " + identifier);
+	public static void registerLayer(@NotNull String screenIdentifier, @NotNull ScreenCustomizationLayer layer) {
+		if (!LAYERS.containsKey(screenIdentifier)) {
+			LOGGER.info("[FANCYMENU] ScreenCustomizationLayer registered: " + screenIdentifier);
 		} else {
-			LOGGER.info("[FANCYMENU] ScreenCustomizationLayer replaced: " + identifier);
+			LOGGER.warn("[FANCYMENU] ScreenCustomizationLayer replaced: " + screenIdentifier);
 		}
-		LAYERS.put(identifier, layer);
+		LAYERS.put(screenIdentifier, layer);
 	}
 	
-	public static boolean isLayerRegistered(@NotNull String identifier) {
-		return LAYERS.containsKey(identifier);
+	public static boolean isLayerRegistered(@NotNull String screenIdentifier) {
+		return LAYERS.containsKey(screenIdentifier);
 	}
 
 	@Nullable
@@ -76,8 +73,8 @@ public class ScreenCustomizationLayerHandler {
 	}
 
 	@Nullable
-	public static ScreenCustomizationLayer getLayer(@NotNull String identifier) {
-		return LAYERS.get(identifier);
+	public static ScreenCustomizationLayer getLayer(@NotNull String screenIdentifier) {
+		return LAYERS.get(screenIdentifier);
 	}
 
 	// Event Handling ------------------->

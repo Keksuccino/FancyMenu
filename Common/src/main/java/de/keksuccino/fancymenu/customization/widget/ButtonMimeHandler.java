@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.widget;
 
+import de.keksuccino.fancymenu.customization.screenidentifiers.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.widget.identification.ButtonIdentificator;
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.screeninstancefactory.ScreenInstanceFactory;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
@@ -9,6 +9,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,19 +43,19 @@ public class ButtonMimeHandler {
         return false;
     }
 
-    public static boolean tryCache(Screen screen, boolean overrideCache) {
-        String menuIdentifier = screen.getClass().getName();
-        if (!CACHED_BUTTONS.containsKey(menuIdentifier) || overrideCache) {
+    public static boolean tryCache(@NotNull Screen screen, boolean overrideCache) {
+        String screenIdentifier = ScreenIdentifierHandler.getIdentifierOfScreen(screen);
+        if (!CACHED_BUTTONS.containsKey(screenIdentifier) || overrideCache) {
             try {
                 ButtonPackage p = new ButtonPackage();
                 if (p.init(screen)) {
-                    CACHED_BUTTONS.put(menuIdentifier, p);
+                    CACHED_BUTTONS.put(screenIdentifier, p);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        if (CACHED_BUTTONS.containsKey(menuIdentifier)) {
+        if (CACHED_BUTTONS.containsKey(screenIdentifier)) {
             return true;
         }
         LOGGER.warn("[FANCYMENU] ButtonMimeHandler#cacheFromInstance: Failed to cache buttons of screen!");
@@ -64,14 +65,14 @@ public class ButtonMimeHandler {
     @Nullable
     public static WidgetMeta getButton(String buttonLocator) {
         if (buttonLocator.contains(":")) {
-            String menuIdentifier = buttonLocator.split(":", 2)[0];
-            menuIdentifier = ScreenCustomization.findValidMenuIdentifierFor(menuIdentifier);
+            String screenIdentifier = buttonLocator.split(":", 2)[0];
+            screenIdentifier = ScreenIdentifierHandler.getBestIdentifier(screenIdentifier);
             String buttonId = buttonLocator.split(":", 2)[1];
             if (MathUtils.isLong(buttonId) || (buttonId.startsWith("button_compatibility_id:"))) {
                 Screen current = Minecraft.getInstance().screen;
-                if ((current != null) && (menuIdentifier.equals(current.getClass().getName()))) {
-                    if (CACHED_BUTTONS.containsKey(menuIdentifier)) {
-                        ButtonPackage pack = CACHED_BUTTONS.get(menuIdentifier);
+                if ((current != null) && (screenIdentifier.equals(current.getClass().getName()))) {
+                    if (CACHED_BUTTONS.containsKey(screenIdentifier)) {
+                        ButtonPackage pack = CACHED_BUTTONS.get(screenIdentifier);
                         WidgetMeta d = pack.getButton(buttonId);
                         if (d != null) {
                             if (d.getScreen() != current) {
@@ -83,10 +84,10 @@ public class ButtonMimeHandler {
                         tryCache(current, true);
                         Minecraft.getInstance().setScreen(current);
                     }
-                } else if (!CACHED_BUTTONS.containsKey(menuIdentifier)) {
-                    tryCache(menuIdentifier, false);
+                } else if (!CACHED_BUTTONS.containsKey(screenIdentifier)) {
+                    tryCache(screenIdentifier, false);
                 }
-                ButtonPackage p = CACHED_BUTTONS.get(menuIdentifier);
+                ButtonPackage p = CACHED_BUTTONS.get(screenIdentifier);
                 if (p != null) {
                     return p.getButton(buttonId);
                 }

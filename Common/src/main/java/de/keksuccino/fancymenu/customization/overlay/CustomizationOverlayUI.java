@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.ManageLayoutsScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.ChooseAnimationScreen;
+import de.keksuccino.fancymenu.customization.screenidentifiers.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screeninstancefactory.dummyscreens.DummyScreenBuilder;
 import de.keksuccino.fancymenu.customization.screeninstancefactory.dummyscreens.DummyScreenRegistry;
 import de.keksuccino.fancymenu.customization.variables.ManageVariablesScreen;
@@ -67,7 +68,7 @@ public class CustomizationOverlayUI {
         MenuBar menuBar = new MenuBar();
         menuBar.setExpanded(expanded);
         Screen screen = Minecraft.getInstance().screen;
-        String identifier = (screen != null) ? ScreenCustomization.getScreenIdentifier(screen) : null;
+        String identifier = (screen != null) ? ScreenIdentifierHandler.getIdentifierOfScreen(screen) : null;
 
         // FANCYMENU ICON
         buildFMIconTabAndAddTo(menuBar);
@@ -145,7 +146,7 @@ public class CustomizationOverlayUI {
 
         if (identifier != null) {
             int i = 0;
-            for (Layout l : LayoutHandler.sortLayoutListByLastEdited(LayoutHandler.getAllLayoutsForMenuIdentifier(identifier, false), true, 8)) {
+            for (Layout l : LayoutHandler.sortLayoutListByLastEdited(LayoutHandler.getAllLayoutsForScreenIdentifier(identifier, false), true, 8)) {
                 layoutManageCurrentMenu.addSubMenuEntry("layout_" + i, Component.empty(), buildManageLayoutSubMenu(l))
                         .setLabelSupplier((menu, entry) -> {
                             Style style = l.getStatus().getEntryComponentStyle();
@@ -163,7 +164,7 @@ public class CustomizationOverlayUI {
 
         layoutManageCurrentMenu.addClickableEntry("layout.manage.current.all", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.all"), (menu, entry) -> {
             if (identifier != null) {
-                Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForMenuIdentifier(identifier, false), screen, layouts -> {
+                Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(identifier, false), screen, layouts -> {
                     Minecraft.getInstance().setScreen(screen);
                 }));
             }
@@ -173,7 +174,7 @@ public class CustomizationOverlayUI {
         layoutManageMenu.addSubMenuEntry("layout.manage.universal", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.universal"), layoutManageUniversalMenu);
 
         int i = 0;
-        for (Layout l : LayoutHandler.sortLayoutListByLastEdited(LayoutHandler.getAllLayoutsForMenuIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), true, 8)) {
+        for (Layout l : LayoutHandler.sortLayoutListByLastEdited(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), true, 8)) {
             layoutManageUniversalMenu.addSubMenuEntry("layout.manage.universal.recent_" + i, Component.empty(), buildManageLayoutSubMenu(l))
                     .setLabelSupplier((menu, entry) -> {
                         Style style = l.getStatus().getEntryComponentStyle();
@@ -189,7 +190,7 @@ public class CustomizationOverlayUI {
         layoutManageUniversalMenu.addSeparatorEntry("layout.manage.universal.separator_1");
 
         layoutManageUniversalMenu.addClickableEntry("layout.manage.universal.all", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.all"), (menu, entry) -> {
-            Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForMenuIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), null, (layouts -> {
+            Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), null, (layouts -> {
                 Minecraft.getInstance().setScreen(screen);
             })));
         });

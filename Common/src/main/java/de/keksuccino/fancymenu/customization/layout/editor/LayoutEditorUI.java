@@ -642,7 +642,7 @@ public class LayoutEditorUI {
 		if (editor.layout.isUniversalLayout()) {
 
 			int i = 0;
-			for (Layout l : LayoutHandler.sortLayoutListByLastEdited(LayoutHandler.getAllLayoutsForMenuIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), true, 8)) {
+			for (Layout l : LayoutHandler.sortLayoutListByLastEdited(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), true, 8)) {
 				if (l.getLayoutName().equals(editor.layout.getLayoutName())) continue; //Don't show the current layout in the list
 				menu.addSubMenuEntry("layout_" + i, Component.empty(), buildManageLayoutSubMenu(editor, l))
 						.setLabelSupplier((menu1, entry) -> {
@@ -662,7 +662,7 @@ public class LayoutEditorUI {
 				displayUnsavedWarning(call -> {
 					if (call) {
 						editor.saveWidgetSettings();
-						Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForMenuIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), editor.layoutTargetScreen, layouts -> {
+						Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), editor.layoutTargetScreen, layouts -> {
 							Minecraft.getInstance().setScreen(editor);
 						}));
 					} else {
@@ -674,7 +674,7 @@ public class LayoutEditorUI {
 		} else {
 
 			int i = 0;
-			for (Layout l : LayoutHandler.sortLayoutListByLastEdited(LayoutHandler.getAllLayoutsForMenuIdentifier(editor.layout.menuIdentifier, false), true, 8)) {
+			for (Layout l : LayoutHandler.sortLayoutListByLastEdited(LayoutHandler.getAllLayoutsForScreenIdentifier(editor.layout.screenIdentifier, false), true, 8)) {
 				if (l.getLayoutName().equals(editor.layout.getLayoutName())) continue; //Don't show the current layout in the list
 				menu.addSubMenuEntry("layout_" + i, Component.empty(), buildManageLayoutSubMenu(editor, l))
 						.setLabelSupplier((menu1, entry) -> {
@@ -694,7 +694,7 @@ public class LayoutEditorUI {
 				displayUnsavedWarning(call -> {
 					if (call) {
 						editor.saveWidgetSettings();
-						Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForMenuIdentifier(editor.layout.menuIdentifier, false), editor.layoutTargetScreen, layouts -> {
+						Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(editor.layout.screenIdentifier, false), editor.layoutTargetScreen, layouts -> {
 							Minecraft.getInstance().setScreen(editor);
 						}));
 					} else {

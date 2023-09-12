@@ -975,5 +975,7 @@
   "fancymenu.custom_guis.manage_overridden.screen": "Screen: %s",
   "fancymenu.custom_guis.manage_overridden.overridden_with": "Overridden With: %s",
   "fancymenu.custom_guis.manage_overridden.remove_override": "Remove Override Rule",
-  "fancymenu.custom_guis.manage_overridden.remove_override.confirm": "Are you sure?\n\nDo you really want to remove the override rule?"
+  "fancymenu.custom_guis.manage_overridden.remove_override.confirm": "Are you sure?\n\nDo you really want to remove the override rule?",
+  "fancymenu.placeholders.world_load_progress": "World Loading Progress",
+  "fancymenu.placeholders.world_load_progress.desc": "Reflects the world loading progress\nwhile in a progress screen.\nCan be used to make loading bars, etc."
 }

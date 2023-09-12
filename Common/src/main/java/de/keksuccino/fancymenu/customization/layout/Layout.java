@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.layout;
 
+import de.keksuccino.fancymenu.customization.screenidentifiers.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
@@ -29,7 +30,6 @@ import de.keksuccino.fancymenu.customization.element.elements.image.ImageElement
 import de.keksuccino.fancymenu.customization.element.elements.shape.ShapeElement;
 import de.keksuccino.fancymenu.customization.element.elements.slideshow.SlideshowElement;
 import de.keksuccino.fancymenu.customization.element.elements.splash.SplashTextElement;
-import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
@@ -47,18 +47,17 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.function.Supplier;
 
-@SuppressWarnings("unused")
 public class Layout extends LayoutBase {
 
     public static final String UNIVERSAL_LAYOUT_IDENTIFIER = "%fancymenu:universal_layout%";
 
-    public String menuIdentifier;
+    @Nullable
+    public String screenIdentifier;
     public File layoutFile;
     public long lastEditedTime = -1;
     protected boolean enabled = true;
@@ -86,8 +85,8 @@ public class Layout extends LayoutBase {
     }
 
     @NotNull
-    public static Layout buildForScreen(@NotNull String menuIdentifier) {
-        return new Layout(menuIdentifier);
+    public static Layout buildForScreen(@NotNull String screenIdentifier) {
+        return new Layout(screenIdentifier);
     }
 
     public Layout() {
@@ -95,24 +94,24 @@ public class Layout extends LayoutBase {
     }
 
     public Layout(@NotNull Screen screen) {
-        this.menuIdentifier = screen.getClass().getName();
-        if (screen instanceof CustomGuiBaseScreen c) {
-            this.menuIdentifier = c.getIdentifier();
-        }
+        this.screenIdentifier = ScreenIdentifierHandler.getIdentifierOfScreen(screen);
     }
 
-    public Layout(@NotNull String menuIdentifier) {
-        this.menuIdentifier = menuIdentifier;
+    public Layout(@NotNull String screenIdentifier) {
+        this.setScreenIdentifier(screenIdentifier);
     }
 
+    @NotNull
     public PropertyContainerSet serialize() {
+
+        Objects.requireNonNull(this.screenIdentifier);
 
         PropertyContainerSet set = new PropertyContainerSet("fancymenu_layout");
         PropertyContainer meta = new PropertyContainer("layout-meta");
 
         set.putContainer(meta);
 
-        meta.putProperty("identifier", this.menuIdentifier);
+        meta.putProperty("identifier", this.screenIdentifier);
         meta.putProperty("render_custom_elements_behind_vanilla", "" + this.renderElementsBehindVanilla);
         meta.putProperty("last_edited_time", "" + this.lastEditedTime);
         meta.putProperty("is_enabled", "" + this.enabled);
@@ -222,7 +221,7 @@ public class Layout extends LayoutBase {
             }
             if (meta != null) {
 
-                layout.setMenuIdentifier(meta.getValue("identifier"));
+                layout.setScreenIdentifier(meta.getValue("identifier"));
 
                 String defaultRandomLayoutGroup = "-100397";
                 String randomMode = meta.getValue("randommode");
@@ -269,14 +268,14 @@ public class Layout extends LayoutBase {
                     if ((whitelistRaw != null) && whitelistRaw.contains(";")) {
                         for (String s : whitelistRaw.split(";")) {
                             if (s.length() > 0) {
-                                layout.universalLayoutMenuWhitelist.add(ScreenCustomization.findValidMenuIdentifierFor(s));
+                                layout.universalLayoutMenuWhitelist.add(ScreenIdentifierHandler.getBestIdentifier(s));
                             }
                         }
                     }
                     if ((blacklistRaw != null) && blacklistRaw.contains(";")) {
                         for (String s : blacklistRaw.split(";")) {
                             if (s.length() > 0) {
-                                layout.universalLayoutMenuBlacklist.add(ScreenCustomization.findValidMenuIdentifierFor(s));
+                                layout.universalLayoutMenuBlacklist.add(ScreenIdentifierHandler.getBestIdentifier(s));
                             }
                         }
                     }
@@ -312,7 +311,7 @@ public class Layout extends LayoutBase {
             layout.serializedElements.addAll(convertLegacyElements(serialized));
 
             //Handle deep elements
-            layout.deepScreenCustomizationLayer = ((layout.menuIdentifier != null) && !layout.isUniversalLayout()) ? DeepScreenCustomizationLayerRegistry.getLayer(layout.menuIdentifier) : null;
+            layout.deepScreenCustomizationLayer = ((layout.screenIdentifier != null) && !layout.isUniversalLayout()) ? DeepScreenCustomizationLayerRegistry.getLayer(layout.screenIdentifier) : null;
             if (layout.deepScreenCustomizationLayer != null) {
                 for (PropertyContainer sec : ListUtils.mergeLists(serialized.getContainersOfType("deep_element"), serialized.getContainersOfType("customization"))) {
                     String elementType = sec.getValue("element_type");
@@ -470,19 +469,20 @@ public class Layout extends LayoutBase {
         return this;
     }
 
-    public Layout setMenuIdentifier(String identifier) {
-        if (identifier != null) {
-            this.menuIdentifier = ScreenCustomization.findValidMenuIdentifierFor(identifier);
+    public Layout setScreenIdentifier(String screenIdentifier) {
+        if (screenIdentifier != null) {
+            if (screenIdentifier.equals(UNIVERSAL_LAYOUT_IDENTIFIER)) return this.setToUniversalLayout();
+            this.screenIdentifier = ScreenIdentifierHandler.getBestIdentifier(screenIdentifier);
         }
         return this;
     }
 
     public boolean isUniversalLayout() {
-        return (this.menuIdentifier != null) && this.menuIdentifier.equals(UNIVERSAL_LAYOUT_IDENTIFIER);
+        return (this.screenIdentifier != null) && this.screenIdentifier.equals(UNIVERSAL_LAYOUT_IDENTIFIER);
     }
 
     public Layout setToUniversalLayout() {
-        this.menuIdentifier = UNIVERSAL_LAYOUT_IDENTIFIER;
+        this.screenIdentifier = UNIVERSAL_LAYOUT_IDENTIFIER;
         return this;
     }
 

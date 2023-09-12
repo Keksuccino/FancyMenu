@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.*;
 import javax.annotation.Nullable;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.screenidentifiers.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.events.ModReloadEvent;
 import de.keksuccino.fancymenu.mixin.mixins.client.MixinMinecraft;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
@@ -47,7 +47,7 @@ public class CustomGuiHandler {
 				PropertyContainer overridden = set.getFirstContainerOfType("overridden_screens");
 				if (overridden != null) {
 					for (Map.Entry<String, String> m : overridden.getProperties().entrySet()) {
-						OVERRIDDEN_SCREENS.put(ScreenCustomization.findValidMenuIdentifierFor(m.getKey()), m.getValue());
+						OVERRIDDEN_SCREENS.put(ScreenIdentifierHandler.getBestIdentifier(m.getKey()), m.getValue());
 					}
 				}
 				for (PropertyContainer c : set.getContainersOfType("custom_gui")) {
@@ -122,22 +122,12 @@ public class CustomGuiHandler {
 	@Nullable
 	public static CustomGui getGuiForOverriddenScreen(@NotNull Screen screen) {
 		if (screen instanceof CustomGuiBaseScreen) return null;
-		String identifier = ScreenCustomization.getScreenIdentifier(screen);
-		String customGuiIdentifier = OVERRIDDEN_SCREENS.get(identifier);
-		if (customGuiIdentifier != null) {
-			return getGui(customGuiIdentifier);
+		for (Map.Entry<String, String> m : OVERRIDDEN_SCREENS.entrySet()) {
+			if (ScreenIdentifierHandler.isIdentifierOfScreen(m.getKey(), screen)) {
+				return getGui(m.getValue());
+			}
 		}
 		return null;
-	}
-
-	public static boolean shouldOverrideScreen(@NotNull Screen screen) {
-		if (screen instanceof CustomGuiBaseScreen) return false;
-		String identifier = ScreenCustomization.getScreenIdentifier(screen);
-		return shouldOverrideScreen(identifier);
-	}
-
-	public static boolean shouldOverrideScreen(@NotNull String menuIdentifier) {
-		return OVERRIDDEN_SCREENS.containsKey(menuIdentifier);
 	}
 
 	public static Map<String, String> getOverriddenScreens() {

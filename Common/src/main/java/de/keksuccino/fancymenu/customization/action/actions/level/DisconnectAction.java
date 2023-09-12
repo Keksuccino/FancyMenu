@@ -1,7 +1,8 @@
 package de.keksuccino.fancymenu.customization.action.actions.level;
 
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.action.Action;
+import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
+import de.keksuccino.fancymenu.customization.screenidentifiers.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screeninstancefactory.ScreenInstanceFactory;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
@@ -34,13 +35,18 @@ public class DisconnectAction extends Action {
                 if (current == null) current = new TitleScreen();
                 mc.getReportingContext().draftReportHandled(mc, current, () -> {
                     if ((mc.level != null) && (mc.player != null)) {
-                        Screen s = ScreenInstanceFactory.tryConstruct(ScreenCustomization.findValidMenuIdentifierFor(value));
+                        Screen s;
+                        if (CustomGuiHandler.guiExists(value)) {
+                            s = CustomGuiHandler.constructInstance(value, null, null);
+                        } else {
+                            s = ScreenInstanceFactory.tryConstruct(ScreenIdentifierHandler.tryFixInvalidIdentifierWithNonUniversal(value));
+                        }
                         if (s == null) {
                             s = new TitleScreen();
                         }
-                        boolean singleplayer = mc.isLocalServer();
+                        boolean singlePlayer = mc.isLocalServer();
                         mc.level.disconnect();
-                        if (singleplayer) {
+                        if (singlePlayer) {
                             mc.clearLevel(new GenericDirtMessageScreen(SAVING_LEVEL));
                         } else {
                             mc.clearLevel();

@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.properties;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -91,6 +92,18 @@ public class PropertiesParser {
             } else {
                 LOGGER.error("[FANCYMENU] Failed to deserialize PropertyContainerSet! Missing type: " + serializedFancyString.replace("\n", "").replace("\r", ""));
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    @Nullable
+    public static PropertyContainerSet deserializeSetFromStream(@NotNull InputStream in) {
+        try {
+            List<String> dbTextLines = FileUtils.readTextLinesFrom(in);
+            String fancyString = PropertiesParser.buildFancyStringFromList(dbTextLines);
+            return PropertiesParser.deserializeSetFromFancyString(fancyString);
         } catch (Exception ex) {
             ex.printStackTrace();
         }

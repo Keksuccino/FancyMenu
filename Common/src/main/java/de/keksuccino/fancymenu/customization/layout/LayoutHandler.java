@@ -2,9 +2,9 @@ package de.keksuccino.fancymenu.customization.layout;
 
 import java.io.File;
 import java.util.*;
-
 import com.google.common.io.Files;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.screenidentifiers.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
@@ -89,16 +89,16 @@ public class LayoutHandler {
 	}
 
 	@NotNull
-	public static List<Layout> getEnabledLayoutsForMenuIdentifier(@NotNull String menuIdentifier, boolean includeUniversalLayouts) {
+	public static List<Layout> getEnabledLayoutsForScreenIdentifier(@NotNull String screenIdentifier, boolean includeUniversalLayouts) {
 		List<Layout> l = new ArrayList<>();
 		for (Layout layout : getEnabledLayouts()) {
-			if (layout.menuIdentifier.equals(menuIdentifier)) {
+			if (ScreenIdentifierHandler.identifiersEqual(screenIdentifier, layout.screenIdentifier)) {
 				l.add(layout);
 			} else if (layout.isUniversalLayout() && includeUniversalLayouts) {
 				if (!layout.universalLayoutMenuWhitelist.isEmpty() || !layout.universalLayoutMenuBlacklist.isEmpty()) {
-					if (!layout.universalLayoutMenuWhitelist.isEmpty() && layout.universalLayoutMenuWhitelist.contains(menuIdentifier)) {
+					if (!layout.universalLayoutMenuWhitelist.isEmpty() && layout.universalLayoutMenuWhitelist.contains(screenIdentifier)) {
 						l.add(layout);
-					} else if (!layout.universalLayoutMenuBlacklist.isEmpty() && !layout.universalLayoutMenuBlacklist.contains(menuIdentifier)) {
+					} else if (!layout.universalLayoutMenuBlacklist.isEmpty() && !layout.universalLayoutMenuBlacklist.contains(screenIdentifier)) {
 						l.add(layout);
 					}
 				} else {
@@ -110,10 +110,10 @@ public class LayoutHandler {
 	}
 
 	@NotNull
-	public static List<Layout> getDisabledLayoutsForMenuIdentifier(@NotNull String menuIdentifier) {
+	public static List<Layout> getDisabledLayoutsForScreenIdentifier(@NotNull String screenIdentifier) {
 		List<Layout> l = new ArrayList<>();
 		for (Layout layout : getDisabledLayouts()) {
-			if (layout.menuIdentifier.equals(menuIdentifier)) {
+			if (ScreenIdentifierHandler.identifiersEqual(screenIdentifier, layout.screenIdentifier)) {
 				l.add(layout);
 			}
 		}
@@ -121,8 +121,8 @@ public class LayoutHandler {
 	}
 
 	@NotNull
-	public static List<Layout> getAllLayoutsForMenuIdentifier(@NotNull String menuIdentifier, boolean includeUniversalLayouts) {
-		return ListUtils.mergeLists(getEnabledLayoutsForMenuIdentifier(menuIdentifier, includeUniversalLayouts), getDisabledLayoutsForMenuIdentifier(menuIdentifier));
+	public static List<Layout> getAllLayoutsForScreenIdentifier(@NotNull String screenIdentifier, boolean includeUniversalLayouts) {
+		return ListUtils.mergeLists(getEnabledLayoutsForScreenIdentifier(screenIdentifier, includeUniversalLayouts), getDisabledLayoutsForScreenIdentifier(screenIdentifier));
 	}
 
 	@Nullable
@@ -225,16 +225,14 @@ public class LayoutHandler {
 	 * @param saveTo Full file path with file name + extension.
 	 */
 	public static boolean saveLayoutToFile(Layout layout, String saveTo) {
+		if (layout.screenIdentifier == null) return false;
 		File f = new File(saveTo);
 		if (f.isFile()) {
 			f.delete();
 		}
 		PropertyContainerSet set = layout.serialize();
-		if (set != null) {
-			PropertiesParser.serializeSetToFile(set, f.getPath());
-			return true;
-		}
-		return false;
+		PropertiesParser.serializeSetToFile(set, f.getPath());
+		return true;
 	}
 
 	@Legacy("This basically copies all layouts from the old '.disabled' directory to the main directory and sets them to disabled.")
