@@ -76,6 +76,7 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - Player Entity elements now have separate "follow mouse" toggles for head and body
 - Player Entity elements now keep their customized pose while "follow mouse" is enabled
 - Player Entity elements now have full placeholder support for pose (all body part rotations) and scale
+- Most screens now have shorter, universal identifiers (no too.long.identifiers.nobody.can.read anymore!)
  
 - Added loading requirement "File/Folder Exists" to check if a file/folder exists
 - Added loading requirement "Is Button Active" to check if a button is active (clickable/not greyed out)
@@ -85,6 +86,7 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - Added action "Leave World or Server" to leave a world or server (allows you to set a screen that should open after leaving)
 - Added placeholder "Absolute File/Folder Path" to get the absolute path of a file/folder
 - Added placeholder "Random Number" to get a random number in the specified range
+- Added placeholder "World Loading Progress" that reflects the current world loading progress percentage while in a progress screen
 - Added "Cursor" element that allows you to set a custom cursor texture (supports loading requirements)
  
 - Added a bunch of accessibility stuff
