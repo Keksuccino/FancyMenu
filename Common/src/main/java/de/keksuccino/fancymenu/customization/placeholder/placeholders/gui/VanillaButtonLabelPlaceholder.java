@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.placeholder.placeholders.gui;
 
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
-import de.keksuccino.fancymenu.customization.widget.ButtonMimeHandler;
+import de.keksuccino.fancymenu.customization.widget.WidgetLocatorHandler;
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -27,7 +27,7 @@ public class VanillaButtonLabelPlaceholder extends Placeholder {
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         String buttonLocator = dps.values.get("locator");
         if (buttonLocator != null) {
-            WidgetMeta d = ButtonMimeHandler.getButton(buttonLocator);
+            WidgetMeta d = WidgetLocatorHandler.getWidget(buttonLocator);
             if (d != null) {
                 return d.getWidget().getMessage().getString();
             }

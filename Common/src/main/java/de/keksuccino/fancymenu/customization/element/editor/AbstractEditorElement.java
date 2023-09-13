@@ -294,31 +294,31 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		}
 
-		this.rightClickMenu.addSeparatorEntry("separator_3").setStackable(true);
+		this.rightClickMenu.addSeparatorEntry("separator_after_advanced_sizing_positioning").setStackable(true);
 
 		if (this.settings.isStretchable()) {
 
-			this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "stretch_x",
-							consumes -> consumes.settings.isStretchable(),
+			this.addToggleContextMenuEntryTo(this.rightClickMenu, "stretch_x",
+							AbstractEditorElement.class,
 							consumes -> consumes.element.stretchX,
-							(element, switcherValue) -> element.element.stretchX = switcherValue,
-							"fancymenu.editor.object.stretch.x")
+							(element1, aBoolean) -> element1.element.stretchX = aBoolean,
+							"fancymenu.editor.elements.stretch.x")
 					.setStackable(true)
 					.setIsActiveSupplier((menu, entry) -> element.advancedWidth == null)
 					.setIcon(ContextMenu.IconFactory.getIcon("arrow_horizontal"));
 
-			this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "stretch_y",
-							consumes -> consumes.settings.isStretchable(),
+			this.addToggleContextMenuEntryTo(this.rightClickMenu, "stretch_y",
+							AbstractEditorElement.class,
 							consumes -> consumes.element.stretchY,
-							(element, switcherValue) -> element.element.stretchY = switcherValue,
-							"fancymenu.editor.object.stretch.y")
+							(element1, aBoolean) -> element1.element.stretchY = aBoolean,
+							"fancymenu.editor.elements.stretch.y")
 					.setStackable(true)
 					.setIsActiveSupplier((menu, entry) -> element.advancedHeight == null)
 					.setIcon(ContextMenu.IconFactory.getIcon("arrow_vertical"));
 
 		}
 
-		this.rightClickMenu.addSeparatorEntry("separator_4").setStackable(true);
+		this.rightClickMenu.addSeparatorEntry("separator_after_stretch_xy").setStackable(true);
 
 		if (this.settings.isLoadingRequirementsEnabled()) {
 

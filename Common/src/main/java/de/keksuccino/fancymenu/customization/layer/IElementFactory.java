@@ -10,11 +10,10 @@ import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.Van
 import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElementBuilder;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.widget.identification.WidgetIdentifierHandler;
 import de.keksuccino.fancymenu.util.ListUtils;
-import de.keksuccino.konkrete.math.MathUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,7 +52,7 @@ public interface IElementFactory {
             if (vanillaButtonElements != null) {
                 //Construct vanilla button element instances
                 for (VanillaButtonElement element : layout.buildVanillaButtonElementInstances()) {
-                    WidgetMeta d = findWidgetMeta(element.getInstanceIdentifier(), vanillaWidgetMetaList);
+                    WidgetMeta d = (vanillaWidgetMetaList != null) ? findWidgetMeta(element.getInstanceIdentifier(), vanillaWidgetMetaList) : null;
                     if (d != null) {
                         element.setVanillaButton(d);
                         if (!unstackedVanillaButtonElements.containsKey(d)) {
@@ -151,31 +150,10 @@ public interface IElementFactory {
      * Returns the widget with the given identifier or NULL if no widget for the given identifier was found in the list.
      */
     @Nullable
-    private static WidgetMeta findWidgetMeta(String identifier, List<WidgetMeta> metas) {
+    private static WidgetMeta findWidgetMeta(@NotNull String identifier, @NotNull List<WidgetMeta> metas) {
         identifier = identifier.replace("vanillabtn:", "");
-        WidgetMeta data = findWidgetMetaForCompatibilityId(identifier, metas);
-        if ((data == null) && MathUtils.isLong(identifier)) {
-            data = findWidgetMetaForId(Long.parseLong(identifier), metas);
-        }
-        return data;
-    }
-
-    @Nullable
-    private static WidgetMeta findWidgetMetaForId(long id, List<WidgetMeta> metas) {
-        for (WidgetMeta m : metas) {
-            if (m.getLongIdentifier() == id) return m;
-        }
-        return null;
-    }
-
-    @Nullable
-    private static WidgetMeta findWidgetMetaForCompatibilityId(String compId, List<WidgetMeta> metas) {
-        for (WidgetMeta m : metas) {
-            if (m.getCompatibilityIdentifier() != null) {
-                if (m.getCompatibilityIdentifier().equals(compId)) {
-                    return m;
-                }
-            }
+        for (WidgetMeta meta : metas) {
+            if (WidgetIdentifierHandler.isIdentifierOfWidget(identifier, meta)) return meta;
         }
         return null;
     }

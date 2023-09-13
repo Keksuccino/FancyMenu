@@ -7,7 +7,7 @@ import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.screenidentifiers.ScreenIdentifierHandler;
+import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.events.widget.RenderGuiListHeaderFooterEvent;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractSelectionList;
 import de.keksuccino.fancymenu.util.audio.SoundRegistry;
@@ -68,7 +68,8 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 	public boolean forceDisableCustomMenuTitle = false;
 	public float backgroundOpacity = 1.0F;
 	public Map<LoadingRequirementContainer, Boolean> cachedLayoutWideLoadingRequirements = new HashMap<>();
-	protected List<WidgetMeta> cachedScreenWidgetMetas = new ArrayList<>();
+	@NotNull
+	public List<WidgetMeta> cachedScreenWidgetMetas = new ArrayList<>();
 
 	public static Map<Class<?>, Component> cachedOriginalMenuTitles = new HashMap<>();
 
@@ -222,7 +223,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 			SoundHandler.playSound(this.layoutBase.openAudio);
 		}
 
-		this.cachedScreenWidgetMetas = ScreenWidgetDiscoverer.getWidgetMetasOfScreen(e.getScreen(), false);
+		this.cachedScreenWidgetMetas = ScreenWidgetDiscoverer.getWidgetsOfScreen(e.getScreen(), false, true);
 
 		this.constructElementInstances(this.getScreenIdentifier(), this.cachedScreenWidgetMetas, this.activeLayouts, this.normalElements, this.vanillaButtonElements, this.deepElements);
 		this.allElements.addAll(this.normalElements.backgroundElements);
@@ -356,7 +357,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 		}
 
 		//Add back vanilla widgets after screen rendering
-		//Info: Adding back widgets is important for screens that don't clear their widgets on resize, like the CreateWorldScreen
+		//Note: Adding back widgets is important for screens that don't clear their widgets on resize, like the CreateWorldScreen
 		if (e.getScreen() != null) {
 			for (WidgetMeta d : this.cachedScreenWidgetMetas) {
 				((IMixinScreen)e.getScreen()).getRenderablesFancyMenu().add(d.getWidget());

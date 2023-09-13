@@ -7,11 +7,10 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
 import de.keksuccino.fancymenu.util.audio.SoundRegistry;
-import de.keksuccino.fancymenu.customization.widget.ButtonMimeHandler;
+import de.keksuccino.fancymenu.customization.widget.WidgetLocatorHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.event.acara.EventPriority;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
-import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.events.widget.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.events.ScreenReloadEvent;
@@ -45,14 +44,14 @@ public class ScreenCustomizationEvents {
 
 	@EventListener(priority = EventPriority.HIGH)
 	public void onModReloaded(ModReloadEvent e) {
-		ButtonMimeHandler.clearCache();
+		WidgetLocatorHandler.clearCache();
 		ScreenCustomization.isNewMenu = true;
 		this.lastScreen = null;
 	}
 
 	@EventListener(priority =  EventPriority.HIGH)
 	public void onSoftReload(ScreenReloadEvent e) {
-		ButtonMimeHandler.clearCache();
+		WidgetLocatorHandler.clearCache();
 		ScreenCustomization.isNewMenu = true;
 		this.lastScreen = null;
 	}
@@ -72,7 +71,7 @@ public class ScreenCustomizationEvents {
 		}
 		this.lastScreen = e.getScreen();
 		if (ScreenCustomization.isNewMenu) {
-			ButtonMimeHandler.clearCache();
+			WidgetLocatorHandler.clearCache();
 		}
 
 		ScreenCustomization.isCurrentScrollable = false;

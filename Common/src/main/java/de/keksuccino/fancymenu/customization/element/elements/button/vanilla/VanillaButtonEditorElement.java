@@ -174,8 +174,8 @@ public class VanillaButtonEditorElement extends ButtonEditorElement implements I
     }
 
     public boolean isCopyrightButton() {
-        String compId = ((VanillaButtonElement)this.element).widgetMeta.getCompatibilityIdentifier();
-        return ((compId != null) && compId.equals("button_compatibility_id:mc_titlescreen_copyright_button"));
+        String compId = ((VanillaButtonElement)this.element).widgetMeta.getUniversalIdentifier();
+        return ((compId != null) && compId.equals("mc_titlescreen_copyright_button"));
     }
 
 }

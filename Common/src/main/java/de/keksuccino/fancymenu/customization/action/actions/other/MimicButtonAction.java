@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.action.actions.other;
 
 import de.keksuccino.fancymenu.customization.action.Action;
-import de.keksuccino.fancymenu.customization.widget.ButtonMimeHandler;
+import de.keksuccino.fancymenu.customization.widget.WidgetLocatorHandler;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +22,7 @@ public class MimicButtonAction extends Action {
     public void execute(@Nullable String value) {
         if (value != null) {
             if (value.contains(":")) {
-                ButtonMimeHandler.executeButtonAction(value);
+                WidgetLocatorHandler.invokeWidgetOnClick(value);
             }
         }
     }

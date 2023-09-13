@@ -1,33 +1,22 @@
-package de.keksuccino.fancymenu.customization.widget.identification.identificationcontext;
+package de.keksuccino.fancymenu.customization.widget.identification.identificationcontext.contexts;
 
-import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
-import de.keksuccino.fancymenu.customization.widget.identification.ButtonIdentificator;
-import net.minecraft.client.gui.components.AbstractWidget;
+import de.keksuccino.fancymenu.customization.widget.identification.identificationcontext.WidgetIdentificationContext;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.LiteralContents;
 import net.minecraft.network.chat.contents.TranslatableContents;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 
-public class TitleScreenButtonsIdentificationContext extends MenuButtonsIdentificationContext {
+public class TitleScreenWidgetIdentificationContext extends WidgetIdentificationContext {
 
-    @Override
-    public Class<?> getMenu() {
-        return TitleScreen.class;
-    }
+    public TitleScreenWidgetIdentificationContext() {
 
-    @Nullable
-    @Override
-    protected String getRawCompatibilityIdentifierForButton(WidgetMeta data) {
-        if (data.getScreen().getClass() != this.getMenu()) {
-            return null;
-        }
-        AbstractWidget b = data.getWidget();
-        if (b != null) {
-            Component c = b.getMessage();
+        this.addUniversalIdentifierProvider(meta -> {
+            Component c = meta.getWidget().getMessage();
             if ((c instanceof MutableComponent) && (c.getContents() instanceof TranslatableContents)) {
-                String key = ButtonIdentificator.getLocalizationKeyForButton(b);
+                String key = meta.getWidgetLocalizationKey();
                 if (key != null) {
                     if (key.equals("fml.menu.mods")) {
                         return "forge_titlescreen_mods_button";
@@ -66,8 +55,14 @@ public class TitleScreenButtonsIdentificationContext extends MenuButtonsIdentifi
                     return "mc_titlescreen_copyright_button";
                 }
             }
-        }
-        return null;
+            return null;
+        });
+
+    }
+
+    @Override
+    public @NotNull Class<? extends Screen> getTargetScreen() {
+        return TitleScreen.class;
     }
 
 }

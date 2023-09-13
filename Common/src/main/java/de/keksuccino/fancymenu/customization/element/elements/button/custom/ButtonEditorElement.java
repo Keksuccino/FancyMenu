@@ -213,17 +213,17 @@ public class ButtonEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("button_separator_2").setStackable(true);
 
-        this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "edit_label",
-                        consumes -> (consumes instanceof ButtonEditorElement),
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "edit_label",
+                        ButtonEditorElement.class,
                         consumes -> ((ButtonElement)consumes.element).label,
                         (element1, s) -> ((ButtonElement)element1.element).label = s,
                         null, false, true, Component.translatable("fancymenu.editor.items.button.editlabel"),
-                        true, null, null, null)
+                        true, "", null, null)
                 .setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("text"));
 
-        this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "edit_hover_label",
-                        consumes -> (consumes instanceof ButtonEditorElement),
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "edit_hover_label",
+                        ButtonEditorElement.class,
                         consumes -> ((ButtonElement)consumes.element).hoverLabel,
                         (element1, s) -> ((ButtonElement)element1.element).hoverLabel = s,
                         null, false, true, Component.translatable("fancymenu.editor.items.button.hoverlabel"),

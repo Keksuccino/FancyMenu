@@ -1,6 +1,6 @@
-package de.keksuccino.fancymenu.customization.screeninstancefactory.dummyscreens;
+package de.keksuccino.fancymenu.customization.screen.dummyscreen;
 
-import de.keksuccino.fancymenu.customization.screeninstancefactory.ScreenInstanceFactory;
+import de.keksuccino.fancymenu.customization.screen.ScreenInstanceFactory;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;

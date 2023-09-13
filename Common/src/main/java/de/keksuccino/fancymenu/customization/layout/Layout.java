@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.layout;
 
-import de.keksuccino.fancymenu.customization.screenidentifiers.ScreenIdentifierHandler;
+import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;

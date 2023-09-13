@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.widget;
 
-import de.keksuccino.fancymenu.customization.screenidentifiers.ScreenIdentifierHandler;
+import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -9,8 +10,8 @@ import org.jetbrains.annotations.Nullable;
 
 public class WidgetMeta {
 
-	private final long id;
-	protected String compatibilityId;
+	private final long longIdentifier;
+	private String universalIdentifier;
 	private final AbstractWidget widget;
 	private final Screen screen;
 	public Component label;
@@ -19,8 +20,8 @@ public class WidgetMeta {
 	public int width;
 	public int height;
 
-	public WidgetMeta(@NotNull AbstractWidget widget, long id, @NotNull Screen parentScreen) {
-		this.id = id;
+	public WidgetMeta(@NotNull AbstractWidget widget, long longIdentifier, @NotNull Screen parentScreen) {
+		this.longIdentifier = longIdentifier;
 		this.widget = widget;
 		this.screen = parentScreen;
 		this.label = widget.getMessage();
@@ -32,38 +33,43 @@ public class WidgetMeta {
 
 	@NotNull
 	public AbstractWidget getWidget() {
-		return widget;
+		return this.widget;
 	}
 
 	@NotNull
 	public Screen getScreen() {
-		return screen;
+		return this.screen;
 	}
 
 	public long getLongIdentifier() {
-		return id;
+		return this.longIdentifier;
 	}
 
 	@Nullable
-	public String getCompatibilityIdentifier() {
-		return this.compatibilityId;
+	public String getUniversalIdentifier() {
+		return this.universalIdentifier;
 	}
 
-	public void setCompatibilityId(String id) {
-		this.compatibilityId = id;
+	public void setUniversalIdentifier(String identifier) {
+		this.universalIdentifier = identifier;
 	}
 
 	@NotNull
 	public String getIdentifier() {
-		if (this.getCompatibilityIdentifier() != null) {
-			return this.getCompatibilityIdentifier();
+		if (this.getUniversalIdentifier() != null) {
+			return this.getUniversalIdentifier();
 		}
 		return "" + this.getLongIdentifier();
 	}
 
 	@NotNull
 	public String getLocator() {
-		return ScreenIdentifierHandler.getIdentifierOfScreen(this.screen) + ":" + this.getIdentifier();
+		return ScreenIdentifierHandler.getIdentifierOfScreen(this.getScreen()) + ":" + this.getIdentifier();
+	}
+
+	@Nullable
+	public String getWidgetLocalizationKey() {
+		return LocalizationUtils.getComponentLocalizationKey(this.getWidget().getMessage());
 	}
 
 }

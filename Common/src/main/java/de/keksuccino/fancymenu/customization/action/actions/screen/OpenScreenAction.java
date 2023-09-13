@@ -2,8 +2,8 @@ package de.keksuccino.fancymenu.customization.action.actions.screen;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
-import de.keksuccino.fancymenu.customization.screenidentifiers.ScreenIdentifierHandler;
-import de.keksuccino.fancymenu.customization.screeninstancefactory.ScreenInstanceFactory;
+import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
+import de.keksuccino.fancymenu.customization.screen.ScreenInstanceFactory;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;

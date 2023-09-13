@@ -1,25 +1,16 @@
-package de.keksuccino.fancymenu.customization.widget.identification.identificationcontext;
+package de.keksuccino.fancymenu.customization.widget.identification.identificationcontext.contexts;
 
-import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
-import de.keksuccino.fancymenu.customization.widget.identification.ButtonIdentificator;
-import net.minecraft.client.gui.components.AbstractWidget;
+import de.keksuccino.fancymenu.customization.widget.identification.identificationcontext.WidgetIdentificationContext;
 import net.minecraft.client.gui.screens.PauseScreen;
+import net.minecraft.client.gui.screens.Screen;
+import org.jetbrains.annotations.NotNull;
 
-public class PauseScreenButtonsIdentificationContext extends MenuButtonsIdentificationContext {
+public class PauseScreenWidgetIdentificationContext extends WidgetIdentificationContext {
 
-    @Override
-    public Class<?> getMenu() {
-        return PauseScreen.class;
-    }
+    public PauseScreenWidgetIdentificationContext() {
 
-    @Override
-    protected String getRawCompatibilityIdentifierForButton(WidgetMeta data) {
-        if (data.getScreen().getClass() != this.getMenu()) {
-            return null;
-        }
-        AbstractWidget b = data.getWidget();
-        if (b != null) {
-            String key = ButtonIdentificator.getLocalizationKeyForButton(b);
+        this.addUniversalIdentifierProvider(meta -> {
+            String key = meta.getWidgetLocalizationKey();
             if (key != null) {
                 if (key.equals("menu.returnToGame")) {
                     return "mc_pausescreen_return_to_game_button";
@@ -46,8 +37,14 @@ public class PauseScreenButtonsIdentificationContext extends MenuButtonsIdentifi
                     return "mc_pausescreen_disconnect_button";
                 }
             }
-        }
-        return null;
+            return null;
+        });
+
+    }
+
+    @Override
+    public @NotNull Class<? extends Screen> getTargetScreen() {
+        return PauseScreen.class;
     }
 
 }

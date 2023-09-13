@@ -6,15 +6,16 @@ import de.keksuccino.fancymenu.Compat;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.widgets.LayoutEditorWidgets;
-import de.keksuccino.fancymenu.customization.screenidentifiers.ScreenIdentifierHandler;
-import de.keksuccino.fancymenu.customization.screenidentifiers.UniversalScreenIdentifierRegistry;
+import de.keksuccino.fancymenu.customization.screen.dummyscreen.DummyScreens;
+import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
+import de.keksuccino.fancymenu.customization.screen.identifier.UniversalScreenIdentifierRegistry;
+import de.keksuccino.fancymenu.customization.widget.identification.identificationcontext.contexts.WidgetIdentificationContexts;
 import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.action.actions.Actions;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.background.backgrounds.MenuBackgrounds;
 import de.keksuccino.fancymenu.customization.action.ButtonScriptHandler;
 import de.keksuccino.fancymenu.customization.widget.VanillaButtonHandler;
-import de.keksuccino.fancymenu.customization.widget.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.customization.deep.layers.DeepScreenCustomizationLayers;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
@@ -49,12 +50,6 @@ import org.jetbrains.annotations.NotNull;
 @SuppressWarnings("unused")
 public class ScreenCustomization {
 
-	//TODO ScreenIdentifiersHandler fixen (wird zu früh initialized; findet resource nicht)
-
-	//TODO Popups weiter ersetzen + klassen löschen
-
-	//TODO Checken, ob alles mit universal screen identifiers klappt
-
 	private static final Logger LOGGER = LogManager.getLogger();
 
 	public static final File CUSTOMIZABLE_MENUS_FILE = new File("config/fancymenu/customizablemenus.txt");
@@ -79,8 +74,6 @@ public class ScreenCustomization {
 
 		addDefaultScreenBlacklistRules();
 
-		ScreenIdentifierHandler.init();
-
 		ScreenCustomizationLayerHandler.init();
 
 		VanillaButtonHandler.init();
@@ -99,7 +92,9 @@ public class ScreenCustomization {
 
 		VariableHandler.init();
 
-		ButtonIdentificator.init();
+		WidgetIdentificationContexts.registerAll();
+
+		DummyScreens.registerAll();
 
 		AnimationHandler.init();
 		AnimationHandler.discoverAndRegisterExternalAnimations();

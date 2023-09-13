@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.*;
 import com.google.common.io.Files;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.customization.screenidentifiers.ScreenIdentifierHandler;
+import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
@@ -92,7 +92,7 @@ public class LayoutHandler {
 	public static List<Layout> getEnabledLayoutsForScreenIdentifier(@NotNull String screenIdentifier, boolean includeUniversalLayouts) {
 		List<Layout> l = new ArrayList<>();
 		for (Layout layout : getEnabledLayouts()) {
-			if (ScreenIdentifierHandler.identifiersEqual(screenIdentifier, layout.screenIdentifier)) {
+			if (ScreenIdentifierHandler.equalIdentifiers(screenIdentifier, layout.screenIdentifier)) {
 				l.add(layout);
 			} else if (layout.isUniversalLayout() && includeUniversalLayouts) {
 				if (!layout.universalLayoutMenuWhitelist.isEmpty() || !layout.universalLayoutMenuBlacklist.isEmpty()) {
@@ -113,7 +113,7 @@ public class LayoutHandler {
 	public static List<Layout> getDisabledLayoutsForScreenIdentifier(@NotNull String screenIdentifier) {
 		List<Layout> l = new ArrayList<>();
 		for (Layout layout : getDisabledLayouts()) {
-			if (ScreenIdentifierHandler.identifiersEqual(screenIdentifier, layout.screenIdentifier)) {
+			if (ScreenIdentifierHandler.equalIdentifiers(screenIdentifier, layout.screenIdentifier)) {
 				l.add(layout);
 			}
 		}

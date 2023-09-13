@@ -19,20 +19,33 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO FIXEN: Position von vanilla widgets wird nicht richtig aktualisiert (moven ist nur in editor sichtbar) <---------------
+
+	//TODO Popups weiter ersetzen + klassen löschen
+
+	//TODO Progress Screen (+ ähnliche screens) texte durch TextWidgets ersetzen (per Mixin), damit sie customized werden können
+
+	//TODO Add toggleable "Debug" menu overlay (when not in layout editor)
+	// - Make toggleable with menu bar entry AND shortcut (CTRL + ALT + D)
+	// - Shows screen identifier
+	// - Shows screen width + height
+	// - Shows current FPS in menu
+	// - Shows RAM usage in menu (JVM ram usage and, if possible, actual system RAM usage)
+	// - Shows CPU + GPU usage in menu
+	// - draws borders around customizable vanilla/mod widgets
+	//   - add simple right-click context menu for widgets with entries to copy locator, identifier, etc.
+
 	//TODO Add markdown formatting code to set text font (use setFont() of components)
+
+	//TODO placeholders und generic progress bar von Drippy porten (+ aus Drippy entfernen)
 
 	//TODO Replace/Delete these classes:
 	// - AutoScalingPopup
 	// - FMPopup
 
-	//TODO Add "Force to Top Render Level" toggle for elements, to set its render Z level to 1000 or something (to render them in front of player entities for example)
-	// - Add tooltip that describes that this is NOT THE SAME as render layers and should only be used if normal layers don't work)
-
 	//TODO "Key Pressed" Loading Requirement
 	// - Modes: ONCE_PER_KEY_PRESS (nur einen tick pro key press auf true), CONTINUOUS (hält bei key press dauerhaft auf true)
 	// - Setzt "pressed" boolean bei onKeyPress auf true und bei onKeyRelease auf false (für modes)
-
-	//TODO placeholders und generic progress bar von Drippy porten (+ aus Drippy entfernen)
 
 	//TODO FIXEN: Anchor Point Overlay scheint manchmal nicht richtig zu funktionieren (hover mit element ändert nicht den Element Anchor) (schwer zu replizieren)
 

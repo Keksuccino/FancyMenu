@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.screeninstancefactory;
+package de.keksuccino.fancymenu.customization.screen;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
+import de.keksuccino.fancymenu.customization.screen.identifier.UniversalScreenIdentifierRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.client.gui.screens.Screen;
@@ -63,9 +65,16 @@ public class ScreenInstanceFactory {
 	}
 
 	@Nullable
-	public static Screen tryConstruct(@NotNull String screenClassPath) {
+	public static Screen tryConstruct(@NotNull String screenClassPathOrIdentifier) {
 		try {
-			if (ScreenCustomization.isScreenBlacklisted(screenClassPath)) {
+			//Convert universal identifiers to actual class paths
+			if (UniversalScreenIdentifierRegistry.universalIdentifierExists(screenClassPathOrIdentifier)) {
+				String nonUniversal = UniversalScreenIdentifierRegistry.getScreenForUniversalIdentifier(screenClassPathOrIdentifier);
+				if (nonUniversal != null) screenClassPathOrIdentifier = nonUniversal;
+			}
+			//Fixing potentially invalid class paths
+			screenClassPathOrIdentifier = ScreenIdentifierHandler.tryFixInvalidIdentifierWithNonUniversal(screenClassPathOrIdentifier);
+			if (ScreenCustomization.isScreenBlacklisted(screenClassPathOrIdentifier)) {
 				return null;
 			}
 			//Update last screen
@@ -76,10 +85,10 @@ public class ScreenInstanceFactory {
 				DEFAULT_PARAMETERS.put(ClientAdvancements.class, Minecraft.getInstance().player.connection.getAdvancements());
 			}
 			//Check if a provider is registered for the screen and return from provider if one was found
-			Supplier<? extends Screen> screenProvider = getScreenProvider(screenClassPath);
+			Supplier<? extends Screen> screenProvider = getScreenProvider(screenClassPathOrIdentifier);
 			if (screenProvider != null) return screenProvider.get();
 			//Try to construct and instance of the screen
-			Class<?> screenClass = Class.forName(screenClassPath, false, ScreenInstanceFactory.class.getClassLoader());
+			Class<?> screenClass = Class.forName(screenClassPathOrIdentifier, false, ScreenInstanceFactory.class.getClassLoader());
 			if (Screen.class.isAssignableFrom(screenClass)) {
 				Constructor<?>[] constructors = screenClass.getConstructors();
 				if (constructors.length > 0) {
