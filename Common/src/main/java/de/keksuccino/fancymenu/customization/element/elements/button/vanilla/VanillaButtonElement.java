@@ -56,9 +56,9 @@ public class VanillaButtonElement extends ButtonElement implements IHideableElem
     }
 
     @Override
-    protected void tick() {
+    protected void renderTick() {
 
-        super.tick();
+        super.renderTick();
 
         if (this.button == null) return;
 
@@ -147,7 +147,22 @@ public class VanillaButtonElement extends ButtonElement implements IHideableElem
         return true;
     }
 
+    //TODO remove debug
+    public static VanillaButtonElement singleplayerButtonInstance = null;
+
     public void setVanillaButton(WidgetMeta data) {
+        //TODO remove debug
+        if (this == singleplayerButtonInstance) {
+            LOGGER.info("??????????????????? META OF SP BUTTON INSTANCE SET AGAIN!!!");
+        }
+        if (data.getIdentifier().contains("singleplayer_button")) {
+//            LOGGER.info("!!!!!!!!!!!!!!!!!!!!!! META SET! SINGLEPLAYER VANILLA BUTTON INSTANCE IS: " + this + " | ANCHOR: " + this.anchorPoint.getName());
+            if (this.anchorPoint == ElementAnchorPoints.TOP_LEFT) {
+                LOGGER.info("??????????????????????? FINAL SP BUTTON INSTANCE FOUND: " + this);
+                singleplayerButtonInstance = this;
+            }
+        }
+        //----------------
         this.widgetMeta = data;
         this.button = data.getWidget();
         this.originalLabel = this.button.getMessage();

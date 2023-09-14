@@ -9,10 +9,14 @@ import de.keksuccino.fancymenu.customization.element.elements.button.custom.Butt
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.network.chat.Component;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class VanillaButtonElementBuilder extends ButtonElementBuilder implements IElementStacker<VanillaButtonElement> {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public static final VanillaButtonElementBuilder INSTANCE = new VanillaButtonElementBuilder();
 
@@ -152,6 +156,10 @@ public class VanillaButtonElementBuilder extends ButtonElementBuilder implements
         //AbstractElement stuff
         if (e.anchorPoint != ElementAnchorPoints.VANILLA) {
             stack.anchorPoint = e.anchorPoint;
+            //TODO remove debug
+            if (stack == VanillaButtonElement.singleplayerButtonInstance) {
+                LOGGER.info("???????????????? SETTING " + stack.anchorPoint.getName() + " ANCHOR TO VANILLA BUTTON ELEMENT: " + stack);
+            }
         }
 
     }
@@ -161,6 +169,10 @@ public class VanillaButtonElementBuilder extends ButtonElementBuilder implements
     public @Nullable VanillaButtonElement stackElementsInternal(AbstractElement stack, AbstractElement... elements) {
         if (stack != null) {
             stack.anchorPoint = ElementAnchorPoints.VANILLA;
+            //TODO remove debug
+            if (stack == VanillaButtonElement.singleplayerButtonInstance) {
+                LOGGER.info("????????????? SETTING VANILLA ANCHOR TO SP BUTTON ELEMENT: " + stack);
+            }
         }
         return IElementStacker.super.stackElementsInternal(stack, elements);
     }

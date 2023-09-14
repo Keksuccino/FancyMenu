@@ -74,13 +74,18 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
         if (!this.shouldRender()) return;
         if (this.getButton() == null) return;
 
-        this.tick();
+        this.renderTick();
 
         this.getButton().setAlpha(this.opacity);
         this.getButton().setX(this.getAbsoluteX());
         this.getButton().setY(this.getAbsoluteY());
         this.getButton().setWidth(this.getAbsoluteWidth());
         ((IMixinAbstractWidget)this.getButton()).setHeightFancyMenu(this.getAbsoluteHeight());
+
+        //TODO remove debug
+//        if (this.getInstanceIdentifier().contains("mc_titlescreen_singleplayer_button")) {
+//            LOGGER.info("############ SINGLEPLAYER BUTTON SET TO: X:" + this.getButton().getX() + " Y:" + this.getButton().getY() + " | ANCHOR: " + this.anchorPoint.getName());
+//        }
 
         if (isEditor()) {
             this.button.visible = true;
@@ -97,7 +102,7 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
         }
 
         //The hover state of buttons gets updated in their render method, so make sure to update this field BEFORE the
-        //button gets rendered, because otherwise tick() wouldn't work correctly.
+        //button gets rendered, because otherwise renderTick() wouldn't work correctly.
         this.hovered = this.getButton().isHoveredOrFocused();
 
         this.getButton().render(pose, mouseX, mouseY, partial);
@@ -112,7 +117,7 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
         return ListUtils.build(this.getButton());
     }
 
-    protected void tick() {
+    protected void renderTick() {
         if ((this.tooltip != null) && (this.getButton() != null) && this.getButton().isHoveredOrFocused() && !isEditor()) {
             String tooltip = this.tooltip.replace("%n%", "\n");
             TooltipHandler.INSTANCE.addWidgetTooltip(this.getButton(), Tooltip.of(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(tooltip), "\n")), false, true);

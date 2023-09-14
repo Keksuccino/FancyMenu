@@ -1,6 +1,9 @@
 package de.keksuccino.fancymenu.customization.element;
 
+import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -21,6 +24,14 @@ public interface IElementStacker<E extends AbstractElement> {
         //AbstractElement stuff
         if (e.anchorPoint != null) {
             stack.anchorPoint = e.anchorPoint;
+            //TODO remove debug
+            if ((stack == VanillaButtonElement.singleplayerButtonInstance) && (stack.anchorPoint == ElementAnchorPoints.VANILLA)) {
+                LogManager.getLogger().error("????????????????????????? *VANILLA* ANCHOR SET TO SP BUTTON INSTANCE FOR NO REASON: ELEMENT INSTANCE: " + e + " | STACK INSTANCE: " + stack);
+                new Throwable().printStackTrace();
+                LogManager.getLogger().error("-----------------------------------------------------------------------------");
+            } else if (stack == VanillaButtonElement.singleplayerButtonInstance) {
+                LogManager.getLogger().info("???????????????????? " + stack.anchorPoint.getName() + " ANCHOR SET TO SP BUTTON INSTANCE");
+            }
         }
         if (e.anchorPointElementIdentifier != null) {
             stack.anchorPointElementIdentifier = e.anchorPointElementIdentifier;

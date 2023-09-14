@@ -12,6 +12,8 @@ import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.widget.identification.WidgetIdentifierHandler;
 import de.keksuccino.fancymenu.util.ListUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -54,6 +56,10 @@ public interface IElementFactory {
                 for (VanillaButtonElement element : layout.buildVanillaButtonElementInstances()) {
                     WidgetMeta d = (vanillaWidgetMetaList != null) ? findWidgetMeta(element.getInstanceIdentifier(), vanillaWidgetMetaList) : null;
                     if (d != null) {
+                        //TODO remove debug
+                        if (d.getIdentifier().contains("singleplayer_button")) {
+                            LogManager.getLogger().info("!!!!!!!!!!!!!!!!!! IElementFactory: UNSTACKED SP BUTTON INSTANCE IS: " + element + " | ANCHOR: " + element.anchorPoint.getName());
+                        }
                         element.setVanillaButton(d);
                         if (!unstackedVanillaButtonElements.containsKey(d)) {
                             unstackedVanillaButtonElements.put(d, new ArrayList<>());
@@ -121,9 +127,17 @@ public interface IElementFactory {
                     if (m.getValue().size() > 1) {
                         VanillaButtonElement stacked = VanillaButtonElementBuilder.INSTANCE.stackElementsInternal(VanillaButtonElementBuilder.INSTANCE.buildDefaultInstance(), m.getValue().toArray(new VanillaButtonElement[0]));
                         if (stacked != null) {
+                            //TODO remove debug
+                            if ((stacked.widgetMeta != null) && stacked.widgetMeta.getIdentifier().contains("singleplayer_button")) {
+                                LogManager.getLogger().info("!!!!!!!!!!!!!!!! IElementFactory: STACKED SP BUTTON INSTANCE IS: " + stacked + " | ANCHOR: " + stacked.anchorPoint.getName());
+                            }
                             vanillaButtonElements.add(stacked);
                         }
                     } else {
+                        //TODO remove debug
+                        if ((m.getValue().get(0).widgetMeta != null) && m.getValue().get(0).widgetMeta.getIdentifier().contains("singleplayer_button")) {
+                            LogManager.getLogger().info("!!!!!!!!!!!!!!!! IElementFactory: STACKED SP BUTTON INSTANCE IS SAME AS UNSTACKED: " + m.getValue().get(0) + " | ANCHOR: " + m.getValue().get(0).anchorPoint.getName());
+                        }
                         vanillaButtonElements.add(m.getValue().get(0));
                     }
                 }

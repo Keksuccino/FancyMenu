@@ -63,7 +63,7 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             if (id == null) id = ScreenCustomization.generateUniqueIdentifier();
             if (id.equals("null")) {
                 id = ScreenCustomization.generateUniqueIdentifier();
-                LOGGER.warn("[FANCYMENU] Automatically corrected broken element identifier from 'null' to '" + id + "'! This could break parts of its parent layout!");
+                LOGGER.warn("[FANCYMENU] Automatically corrected broken element instance identifier from 'null' to '" + id + "'! This could break parts of its parent layout!");
             }
             element.setInstanceIdentifier(id);
 

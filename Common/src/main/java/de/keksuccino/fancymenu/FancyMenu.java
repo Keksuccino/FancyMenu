@@ -19,19 +19,27 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO FIXEN: Position von vanilla widgets wird nicht richtig aktualisiert (moven ist nur in editor sichtbar) <---------------
+	//TODO FIXEN: Vanilla Buttons werden immer auf VANILLA anchor gesetzt, wenn sie universal/compat identifier haben <--------------
+	// - Eventuell wird durch comp id eine zusätzliche instance von button erstellt, welche dann falsch gestackt wird????
+	// - Weitere Instanz könnte in IElementFactory:117 erstellt werden, weil der check failt??
 
 	//TODO Popups weiter ersetzen + klassen löschen
 
 	//TODO Progress Screen (+ ähnliche screens) texte durch TextWidgets ersetzen (per Mixin), damit sie customized werden können
 
 	//TODO Add toggleable "Debug" menu overlay (when not in layout editor)
+	// - Extendable !!
 	// - Make toggleable with menu bar entry AND shortcut (CTRL + ALT + D)
 	// - Shows screen identifier
 	// - Shows screen width + height
-	// - Shows current FPS in menu
-	// - Shows RAM usage in menu (JVM ram usage and, if possible, actual system RAM usage)
-	// - Shows CPU + GPU usage in menu
+	// - Active layout count for current screen (split universal and normal)
+	// - Active element count for current screen (combine all active layouts)
+	// - Active ticker elements count (split sync and async)
+	// - Loaded Animations Count + Total Loaded Frames Count + Min/Max Frame Resolution used (warning if animation uses more than 200 frames at max 1080p)
+	// - Loaded Slideshows Count + Total Loaded Slideshow Images Count + Min/Max Images Resolution used
+	// - Shows current FPS in menu (render text orange if FPS <20 and red if <10)
+	// - Shows RAM usage in menu (JVM ram usage and, if possible, actual system RAM usage) (render text orange or red if too much RAM used)
+	// - Shows CPU + GPU usage in menu (render text orange or red if usage too high)
 	// - draws borders around customizable vanilla/mod widgets
 	//   - add simple right-click context menu for widgets with entries to copy locator, identifier, etc.
 

@@ -45,6 +45,7 @@ import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Style;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
@@ -825,6 +826,8 @@ public class Layout extends LayoutBase {
                         element.anchorPoint = ElementAnchorPoints.getAnchorPointByName(anchor);
                         if (element.anchorPoint == null) {
                             element.anchorPoint = ElementAnchorPoints.VANILLA;
+                            //TODO remove debug
+                            LogManager.getLogger().info("########## SETTING VANILLA ANCHOR TO VANILLA BUTTON ELEMENT: " + element);
                         }
                         if (element.anchorPoint != ElementAnchorPoints.VANILLA) {
                             addElement = true;
