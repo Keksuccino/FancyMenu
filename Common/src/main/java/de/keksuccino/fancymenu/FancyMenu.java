@@ -19,13 +19,16 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO FIXEN: Vanilla Buttons werden immer auf VANILLA anchor gesetzt, wenn sie universal/compat identifier haben <--------------
-	// - Eventuell wird durch comp id eine zusätzliche instance von button erstellt, welche dann falsch gestackt wird????
-	// - Weitere Instanz könnte in IElementFactory:117 erstellt werden, weil der check failt??
+	//TODO Render layout editor grid always at scale 1 (ignore game scale and UI scale)
 
-	//TODO Popups weiter ersetzen + klassen löschen
+	//TODO FIXEN: Manchmal wird per Anchor Overlay onHover der Anchor nicht aktualisiert (hover loading animation sichtbar, aber am ende passiert nichts)
+	// - Aufgetreten, nachdem Label von Custom Button editiert (fenster danach nicht resized oder gespeichert)
+	// - Speichern per CTRL + S hat es gefixt (nur gespeichert, nicht resized, etc.)
 
-	//TODO Progress Screen (+ ähnliche screens) texte durch TextWidgets ersetzen (per Mixin), damit sie customized werden können
+	//TODO Texte und anderen stuff in simplen Screens durch TextWidgets, etc. ersetzen (per Mixin), damit sie customized werden können
+	// - Darauf achten, dass widgets immer selbe X Y pos haben müssen (sonst widget identifier nutzen)
+	// - ProgressScreen
+	// - LevelLoadingScreen (settings zum hiden von progress text entfernen) (eventuell auch chunk animation zu widget machen und dafür settings dafür entfernen)
 
 	//TODO Add toggleable "Debug" menu overlay (when not in layout editor)
 	// - Extendable !!
@@ -55,8 +58,6 @@ public class FancyMenu {
 	// - Modes: ONCE_PER_KEY_PRESS (nur einen tick pro key press auf true), CONTINUOUS (hält bei key press dauerhaft auf true)
 	// - Setzt "pressed" boolean bei onKeyPress auf true und bei onKeyRelease auf false (für modes)
 
-	//TODO FIXEN: Anchor Point Overlay scheint manchmal nicht richtig zu funktionieren (hover mit element ändert nicht den Element Anchor) (schwer zu replizieren)
-
 	//TODO FIXEN: Layout Editor: grid toggle in Window tab wird nicht aktualisiert, wenn grid per Ctrl + G getoggelt wird
 
 	//TODO Item Element, das per item meta (wie in give command) customized werden kann
@@ -64,12 +65,6 @@ public class FancyMenu {
 	//TODO custom background support für slider adden (+ eventuell option zum changen von slider grabber textur)
 
 	//TODO option für "keep position after anchor change" adden
-
-	//TODO rewrite SetupSharingEngine
-	// - All layout assets are now in config/fancymenu/assets, so just export config/fancymenu and that's it
-	// - Pack exported setup to ZIP
-	// - Allow import of ZIP setups
-	// - Use SaveFileScreen to save setup
 
 	//TODO Key Presses in TextEditorScreen genau wie in LayoutEditorScreen handeln (pressed char getten und dann damit checken)
 

@@ -34,6 +34,7 @@
     "client.MixinMouseHandler",
     "client.MixinMusicManager",
     "client.MixinOnlineServerEntry",
+    "client.MixinProgressScreen",
     "client.MixinRealmsNotificationsScreen",
     "client.MixinScreen",
     "client.MixinStringDecomposer",

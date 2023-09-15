@@ -41,6 +41,7 @@ public class ScreenCustomizationLayerHandler {
 	}
 
 	public static void registerLayer(@NotNull String screenIdentifier, @NotNull ScreenCustomizationLayer layer) {
+		screenIdentifier = ScreenIdentifierHandler.getBestIdentifier(screenIdentifier);
 		if (!LAYERS.containsKey(screenIdentifier)) {
 			LOGGER.info("[FANCYMENU] ScreenCustomizationLayer registered: " + screenIdentifier);
 		} else {
@@ -74,7 +75,7 @@ public class ScreenCustomizationLayerHandler {
 
 	@Nullable
 	public static ScreenCustomizationLayer getLayer(@NotNull String screenIdentifier) {
-		return LAYERS.get(screenIdentifier);
+		return LAYERS.get(ScreenIdentifierHandler.getBestIdentifier(screenIdentifier));
 	}
 
 	// Event Handling ------------------->

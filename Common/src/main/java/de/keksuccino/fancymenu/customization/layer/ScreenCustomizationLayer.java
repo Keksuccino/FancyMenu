@@ -223,7 +223,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 			SoundHandler.playSound(this.layoutBase.openAudio);
 		}
 
-		this.cachedScreenWidgetMetas = ScreenWidgetDiscoverer.getWidgetsOfScreen(e.getScreen(), false, true);
+		this.cachedScreenWidgetMetas = ScreenWidgetDiscoverer.getWidgetsOfScreen(e.getScreen(), false, false);
 
 		this.constructElementInstances(this.getScreenIdentifier(), this.cachedScreenWidgetMetas, this.activeLayouts, this.normalElements, this.vanillaButtonElements, this.deepElements);
 		this.allElements.addAll(this.normalElements.backgroundElements);

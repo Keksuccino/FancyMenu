@@ -426,7 +426,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		List<VanillaButtonElement> vanillaButtonElements = (this.layoutTargetScreen != null) ? new ArrayList<>() : null;
 		List<AbstractDeepElement> deepElements = (this.layoutTargetScreen != null) ? new ArrayList<>() : null;
 
-		List<WidgetMeta> vanillaWidgetMetaList = (this.layoutTargetScreen != null) ? ScreenWidgetDiscoverer.getWidgetsOfScreen(this.layoutTargetScreen, true, true) : null;
+		List<WidgetMeta> vanillaWidgetMetaList = (this.layoutTargetScreen != null) ? ScreenWidgetDiscoverer.getWidgetsOfScreen(this.layoutTargetScreen, true, false) : null;
 
 		this.constructElementInstances(this.layout.screenIdentifier, vanillaWidgetMetaList, this.layout, normalElements, vanillaButtonElements, deepElements);
 

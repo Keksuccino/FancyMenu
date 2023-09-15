@@ -4,18 +4,17 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.*;
 
 public class DeepScreenCustomizationLayer {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    protected String targetMenuIdentifier;
+    protected String targetScreenClassPath;
     protected final Map<String, DeepElementBuilder<?,?,?>> builders = new LinkedHashMap<>();
 
-    public DeepScreenCustomizationLayer(@NotNull String targetMenuIdentifier) {
-        this.targetMenuIdentifier = targetMenuIdentifier;
+    public DeepScreenCustomizationLayer(@NotNull String targetScreenClassPath) {
+        this.targetScreenClassPath = targetScreenClassPath;
     }
 
     public void registerBuilder(@NotNull DeepElementBuilder<?,?,?> builder) {
@@ -45,8 +44,8 @@ public class DeepScreenCustomizationLayer {
     }
 
     @NotNull
-    public String getTargetMenuIdentifier() {
-        return this.targetMenuIdentifier;
+    public String getTargetScreenClassPath() {
+        return this.targetScreenClassPath;
     }
 
 }

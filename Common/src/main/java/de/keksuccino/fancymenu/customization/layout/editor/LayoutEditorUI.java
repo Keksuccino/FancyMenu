@@ -28,16 +28,14 @@ import de.keksuccino.fancymenu.util.rendering.ui.NonStackableOverlayUI;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ChooseFromStringListScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.resources.texture.WrappedTexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
-import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -250,18 +248,19 @@ public class LayoutEditorUI {
 			}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_blacklist.desc")));
 
 			universalLayoutMenu.addClickableEntry("remove_blacklist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist"), (menu1, entry) -> {
-				ChooseFromStringListScreen s = new ChooseFromStringListScreen(I18n.get("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), editor, editor.layout.universalLayoutMenuBlacklist, (call) -> {
-					if (call != null) {
+				Minecraft.getInstance().setScreen(new StringListChooserScreen(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), editor.layout.universalLayoutMenuBlacklist, s1 -> {
+					if (s1 != null) {
 						Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call2) -> {
 							if (call2) {
 								editor.history.saveSnapshot();
-								editor.layout.universalLayoutMenuBlacklist.remove(call);
+								editor.layout.universalLayoutMenuBlacklist.remove(s1);
 							}
 							Minecraft.getInstance().setScreen(editor);
 						}, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_blacklist.confirm")));
+					} else {
+						Minecraft.getInstance().setScreen(editor);
 					}
-				});
-				Minecraft.getInstance().setScreen(s);
+				}));
 			});
 
 			universalLayoutMenu.addClickableEntry("clear_blacklist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_blacklist"), (menu1, entry) -> {
@@ -290,18 +289,19 @@ public class LayoutEditorUI {
 			}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_whitelist.desc")));
 
 			universalLayoutMenu.addClickableEntry("remove_whitelist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist"), (menu1, entry) -> {
-				ChooseFromStringListScreen s = new ChooseFromStringListScreen(I18n.get("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), editor, editor.layout.universalLayoutMenuWhitelist, (call) -> {
-					if (call != null) {
+				Minecraft.getInstance().setScreen(new StringListChooserScreen(Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.choose_menu_identifier"), editor.layout.universalLayoutMenuWhitelist, s1 -> {
+					if (s1 != null) {
 						Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call2) -> {
 							if (call2) {
 								editor.history.saveSnapshot();
-								editor.layout.universalLayoutMenuWhitelist.remove(call);
+								editor.layout.universalLayoutMenuWhitelist.remove(s1);
 							}
 							Minecraft.getInstance().setScreen(editor);
 						}, LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.layoutoptions.universal_layout.options.remove_whitelist.confirm")));
+					} else {
+						Minecraft.getInstance().setScreen(editor);
 					}
-				});
-				Minecraft.getInstance().setScreen(s);
+				}));
 			});
 
 			universalLayoutMenu.addClickableEntry("clear_whitelist", Component.translatable("fancymenu.helper.editor.layoutoptions.universal_layout.options.clear_whitelist"), (menu1, entry) -> {
@@ -397,14 +397,11 @@ public class LayoutEditorUI {
 		cycleAutoScaling.addCycleListener(cycle -> {
 			if (cycle.getAsBoolean()) {
 				menu.closeMenu();
-				//TODO durch screen ersetzen
-				PopupHandler.displayPopup(new AutoScalingPopup(editor, (call) -> {
-					if (call) {
-						editor.history.saveSnapshot();
-						editor.init();
-					} else {
+				Minecraft.getInstance().setScreen(new AutoScalingScreen(editor, call -> {
+					if (!call) {
 						cycleAutoScaling.setCurrentValue(CommonCycles.CycleEnabledDisabled.DISABLED, false);
 					}
+					Minecraft.getInstance().setScreen(editor);
 				}));
 			} else {
 				editor.history.saveSnapshot();
@@ -641,8 +638,10 @@ public class LayoutEditorUI {
 
 		if (editor.layout.isUniversalLayout()) {
 
+			List<Layout> allLayouts = LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true);
+			int allLayoutsCount = allLayouts.size();
 			int i = 0;
-			for (Layout l : LayoutHandler.sortLayoutListByLastEdited(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), true, 8)) {
+			for (Layout l : LayoutHandler.sortLayoutListByLastEdited(allLayouts, true, 8)) {
 				if (l.getLayoutName().equals(editor.layout.getLayoutName())) continue; //Don't show the current layout in the list
 				menu.addSubMenuEntry("layout_" + i, Component.empty(), buildManageLayoutSubMenu(editor, l))
 						.setLabelSupplier((menu1, entry) -> {
@@ -654,6 +653,21 @@ public class LayoutEditorUI {
 							return c;
 						});
 				i++;
+			}
+			if (allLayoutsCount > 8) {
+				String moreLayoutCount = "" + (allLayoutsCount-8);
+				menu.addClickableEntry("x_more_layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.more_layouts", moreLayoutCount), (menu1, entry) -> {
+					displayUnsavedWarning(call -> {
+						if (call) {
+							editor.saveWidgetSettings();
+							Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), editor.layoutTargetScreen, layouts -> {
+								Minecraft.getInstance().setScreen(editor);
+							}));
+						} else {
+							Minecraft.getInstance().setScreen(editor);
+						}
+					});
+				});
 			}
 
 			menu.addSeparatorEntry("separator_after_recent_layouts");
@@ -671,10 +685,12 @@ public class LayoutEditorUI {
 				});
 			});
 
-		} else {
+		} else if (editor.layout.screenIdentifier != null) {
 
+			List<Layout> allLayouts = LayoutHandler.getAllLayoutsForScreenIdentifier(editor.layout.screenIdentifier, false);
+			int allLayoutsCount = allLayouts.size();
 			int i = 0;
-			for (Layout l : LayoutHandler.sortLayoutListByLastEdited(LayoutHandler.getAllLayoutsForScreenIdentifier(editor.layout.screenIdentifier, false), true, 8)) {
+			for (Layout l : LayoutHandler.sortLayoutListByLastEdited(allLayouts, true, 8)) {
 				if (l.getLayoutName().equals(editor.layout.getLayoutName())) continue; //Don't show the current layout in the list
 				menu.addSubMenuEntry("layout_" + i, Component.empty(), buildManageLayoutSubMenu(editor, l))
 						.setLabelSupplier((menu1, entry) -> {
@@ -686,6 +702,21 @@ public class LayoutEditorUI {
 							return c;
 						});
 				i++;
+			}
+			if (allLayoutsCount > 8) {
+				String moreLayoutCount = "" + (allLayoutsCount-8);
+				menu.addClickableEntry("x_more_layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.more_layouts", moreLayoutCount), (menu1, entry) -> {
+					displayUnsavedWarning(call -> {
+						if (call) {
+							editor.saveWidgetSettings();
+							Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(editor.layout.screenIdentifier, false), editor.layoutTargetScreen, layouts -> {
+								Minecraft.getInstance().setScreen(editor);
+							}));
+						} else {
+							Minecraft.getInstance().setScreen(editor);
+						}
+					});
+				});
 			}
 
 			menu.addSeparatorEntry("separator_after_recent_layouts");

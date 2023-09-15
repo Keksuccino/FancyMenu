@@ -48,6 +48,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
+
 public class CustomizationOverlayUI {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -146,7 +148,9 @@ public class CustomizationOverlayUI {
 
         if (identifier != null) {
             int i = 0;
-            for (Layout l : LayoutHandler.sortLayoutListByLastEdited(LayoutHandler.getAllLayoutsForScreenIdentifier(identifier, false), true, 8)) {
+            List<Layout> allLayouts = LayoutHandler.getAllLayoutsForScreenIdentifier(identifier, false);
+            int allLayoutsCount = allLayouts.size();
+            for (Layout l : LayoutHandler.sortLayoutListByLastEdited(allLayouts, true, 8)) {
                 layoutManageCurrentMenu.addSubMenuEntry("layout_" + i, Component.empty(), buildManageLayoutSubMenu(l))
                         .setLabelSupplier((menu, entry) -> {
                             Style style = l.getStatus().getEntryComponentStyle();
@@ -158,11 +162,19 @@ public class CustomizationOverlayUI {
                         });
                 i++;
             }
+            if (allLayoutsCount > 8) {
+                String moreLayoutCount = "" + (allLayoutsCount-8);
+                layoutManageCurrentMenu.addClickableEntry("x_more_layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.more_layouts", moreLayoutCount), (menu, entry) -> {
+                    Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(identifier, false), screen, layouts -> {
+                        Minecraft.getInstance().setScreen(screen);
+                    }));
+                });
+            }
         }
 
         layoutManageCurrentMenu.addSeparatorEntry("layout.manage.current.separator_1");
 
-        layoutManageCurrentMenu.addClickableEntry("layout.manage.current.all", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.all"), (menu, entry) -> {
+        layoutManageCurrentMenu.addClickableEntry("layout_manage_current_all", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.all"), (menu, entry) -> {
             if (identifier != null) {
                 Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(identifier, false), screen, layouts -> {
                     Minecraft.getInstance().setScreen(screen);
@@ -171,10 +183,12 @@ public class CustomizationOverlayUI {
         });
 
         ContextMenu layoutManageUniversalMenu = new ContextMenu();
-        layoutManageMenu.addSubMenuEntry("layout.manage.universal", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.universal"), layoutManageUniversalMenu);
+        layoutManageMenu.addSubMenuEntry("layout_manage_universal", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.universal"), layoutManageUniversalMenu);
 
         int i = 0;
-        for (Layout l : LayoutHandler.sortLayoutListByLastEdited(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), true, 8)) {
+        List<Layout> allLayouts = LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true);
+        int allLayoutsCount = allLayouts.size();
+        for (Layout l : LayoutHandler.sortLayoutListByLastEdited(allLayouts, true, 8)) {
             layoutManageUniversalMenu.addSubMenuEntry("layout.manage.universal.recent_" + i, Component.empty(), buildManageLayoutSubMenu(l))
                     .setLabelSupplier((menu, entry) -> {
                         Style style = l.getStatus().getEntryComponentStyle();
@@ -185,6 +199,14 @@ public class CustomizationOverlayUI {
                         return c;
                     });
             i++;
+        }
+        if (allLayoutsCount > 8) {
+            String moreLayoutCount = "" + (allLayoutsCount-8);
+            layoutManageUniversalMenu.addClickableEntry("x_more_layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.more_layouts", moreLayoutCount), (menu, entry) -> {
+                Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), null, (layouts -> {
+                    Minecraft.getInstance().setScreen(screen);
+                })));
+            });
         }
 
         layoutManageUniversalMenu.addSeparatorEntry("layout.manage.universal.separator_1");

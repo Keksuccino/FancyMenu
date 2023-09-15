@@ -94,13 +94,17 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
     }
 
     public void renderEntries(PoseStack pose, int mouseX, int mouseY, float partial) {
-
-        Window win = Minecraft.getInstance().getWindow();
         
         if (this.isApplyScissor()) {
-            double scale = (this.renderScale != null) ? this.renderScale : win.getGuiScale();
-            float sciBottomY = this.getInnerY() + this.getInnerHeight();
-            RenderSystem.enableScissor((int)(this.getInnerX() * scale), (int)(win.getHeight() - (sciBottomY * scale)), (int)(this.getInnerWidth() * scale), (int)(this.getInnerHeight() * scale));
+            //TODO this is probably broken if actually used (leftover from old scissor stuff)
+            double scale = (this.renderScale != null) ? this.renderScale : 1;
+//            float sciBottomY = this.getInnerY() + this.getInnerHeight();
+//            RenderSystem.enableScissor((int)(this.getInnerX() * scale), (int)(win.getHeight() - (sciBottomY * scale)), (int)(this.getInnerWidth() * scale), (int)(this.getInnerHeight() * scale));
+            int xMin = (int)(this.getInnerX() * scale);
+            int yMin = (int)(this.getInnerY() * scale);
+            int xMax = xMin + (int)this.getInnerWidth();
+            int yMax = yMin + (int)this.getInnerHeight();
+            this.enableScissor(xMin, yMin, xMax, yMax);
         }
 
         final float totalWidth = this.makeAllEntriesWidthOfWidestEntry ? this.getTotalEntryWidth() : 0;
@@ -112,7 +116,7 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
             entry.render(pose, mouseX, mouseY, partial);
         });
 
-        if (this.isApplyScissor()) RenderSystem.disableScissor();
+        if (this.isApplyScissor()) this.disableScissor();
 
     }
 

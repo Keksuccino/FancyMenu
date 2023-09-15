@@ -2,9 +2,11 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.client;
 
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
+import de.keksuccino.fancymenu.mixin.mixins.client.IMixinLevelLoadingScreen;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinProgressScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.client.gui.screens.ProgressScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
@@ -24,6 +26,9 @@ public class WorldLoadProgressPlaceholder extends Placeholder {
         Screen s = Minecraft.getInstance().screen;
         if (s instanceof ProgressScreen p) {
             return "" + ((IMixinProgressScreen)p).getProgressFancyMenu();
+        }
+        if (s instanceof LevelLoadingScreen l) {
+            return "" + ((IMixinLevelLoadingScreen)l).getProgressListenerFancyMenu().getProgress();
         }
         return "0";
     }

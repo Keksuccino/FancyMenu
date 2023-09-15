@@ -456,47 +456,56 @@ public abstract class ConfiguratorScreen extends Screen {
             UIBase.applyDefaultWidgetSkinTo(this.editBox);
             this.children().add(this.editBox);
 
-            this.openEditorButton = new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.ui.screens.string_builder_screen.edit_in_editor"), button -> {
-                if (allowEditor) {
-                    TextEditorScreen s = new TextEditorScreen((characterFilter != null) ? characterFilter.convertToLegacyFilter() : null, callback -> {
-                        if (callback != null) {
-                            this.editBox.setValue(callback);
-                        }
-                        Minecraft.getInstance().setScreen(ConfiguratorScreen.this);
-                    });
-                    s.setMultilineMode(false);
-                    s.setPlaceholdersAllowed(allowEditorPlaceholders);
-                    s.setText(this.editBox.getValue());
-                    Minecraft.getInstance().setScreen(s);
-                }
-            });
-            UIBase.applyDefaultWidgetSkinTo(this.openEditorButton);
-            this.children().add(this.openEditorButton);
+            if (this.allowEditor) {
+                this.openEditorButton = new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.ui.screens.string_builder_screen.edit_in_editor"), button -> {
+                    if (allowEditor) {
+                        TextEditorScreen s = new TextEditorScreen((characterFilter != null) ? characterFilter.convertToLegacyFilter() : null, callback -> {
+                            if (callback != null) {
+                                this.editBox.setValue(callback);
+                            }
+                            Minecraft.getInstance().setScreen(ConfiguratorScreen.this);
+                        });
+                        s.setMultilineMode(false);
+                        s.setPlaceholdersAllowed(allowEditorPlaceholders);
+                        s.setText(this.editBox.getValue());
+                        Minecraft.getInstance().setScreen(s);
+                    }
+                });
+                UIBase.applyDefaultWidgetSkinTo(this.openEditorButton);
+                this.children().add(this.openEditorButton);
+            }
 
         }
 
         @Override
         public void renderCell(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+
             if (!this.widgetSizesSet) {
                 this.setWidgetSizes();
                 this.widgetSizesSet = true;
             }
+
+            this.editBox.setX(this.getX());
+            this.editBox.setY(this.getY());
+
+            if (this.allowEditor) {
+                this.openEditorButton.setX(this.getX() + this.getWidth() - this.openEditorButton.getWidth());
+                this.openEditorButton.setY(this.getY());
+            }
+
             if (MouseInput.isLeftMouseDown() && !this.editBox.isHovered()) {
                 this.editBox.setFocused(false);
             }
+
         }
 
         protected void setWidgetSizes() {
 
             int editorButtonWidth = (this.allowEditor ? Minecraft.getInstance().font.width(this.openEditorButton.getLabelSupplier().get(this.openEditorButton)) : 0) + 6;
 
-            this.editBox.setX(this.getX());
-            this.editBox.setY(this.getY());
             this.editBox.setWidth(this.allowEditor ? this.getWidth() - editorButtonWidth - 5 : this.getWidth());
 
             if (this.allowEditor) {
-                this.openEditorButton.setX(this.getX() + this.getWidth() - editorButtonWidth);
-                this.openEditorButton.setY(this.getY());
                 this.openEditorButton.setWidth(editorButtonWidth);
             }
 
@@ -650,6 +659,9 @@ public abstract class ConfiguratorScreen extends Screen {
         @Override
         public boolean mouseClicked(double $$0, double $$1, int $$2) {
             if (ConfiguratorScreen.this.scrollArea.isMouseInteractingWithGrabbers()) {
+                return false;
+            }
+            if (!ConfiguratorScreen.this.scrollArea.isInnerAreaHovered()) {
                 return false;
             }
             if (this.hovered && this.selectable) {

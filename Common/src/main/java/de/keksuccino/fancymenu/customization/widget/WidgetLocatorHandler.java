@@ -25,6 +25,7 @@ public class WidgetLocatorHandler {
     protected static void tryCache(@NotNull String screenIdentifier, boolean overrideCache) {
         Screen instance = ScreenInstanceFactory.tryConstruct(screenIdentifier);
         if (instance != null) {
+            instance.init(Minecraft.getInstance(), 1000, 1000);
             tryCache(instance, overrideCache);
         } else {
             LOGGER.error("[FANCYMENU] WidgetLocatorHandler failed to construct instance of '" + screenIdentifier + "'! Unable to cache widgets!");
@@ -40,7 +41,7 @@ public class WidgetLocatorHandler {
         if (!CACHED_WIDGETS.containsKey(screenIdentifier) || overrideCache) {
             Screen current = Minecraft.getInstance().screen;
             if (current == screen) {
-                if (!ScreenCustomization.isCustomizationEnabledForScreen(screen)) return;
+                if (!ScreenCustomization.isCustomizationEnabledForScreen(current)) return;
                 ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(current);
                 if (layer != null) {
                     ScreenWidgetCollection collection = new ScreenWidgetCollection();
@@ -51,7 +52,7 @@ public class WidgetLocatorHandler {
                 }
             } else {
                 ScreenWidgetCollection collection = new ScreenWidgetCollection();
-                collection.setWidgets(ScreenWidgetDiscoverer.getWidgetsOfScreen(screen, false, true));
+                collection.setWidgets(ScreenWidgetDiscoverer.getWidgetsOfScreen(screen, false, false));
                 CACHED_WIDGETS.put(screenIdentifier, collection);
             }
         }

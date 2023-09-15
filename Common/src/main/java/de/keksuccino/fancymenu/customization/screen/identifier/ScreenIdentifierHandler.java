@@ -14,6 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class ScreenIdentifierHandler {
 
@@ -25,6 +26,11 @@ public class ScreenIdentifierHandler {
         return equalIdentifiers(screenIdentifier, getIdentifierOfScreen(screen));
     }
 
+    /**
+     * Prioritizes <b>universal identifiers</b>.<br>
+     * Returns the non-universal (classpath) identifier if no universal identifier was found.<br>
+     * Checks for {@link CustomGuiBaseScreen}s and returns its Custom GUI identifier if the given screen is a {@link CustomGuiBaseScreen}.
+     **/
     @NotNull
     public static String getIdentifierOfScreen(@NotNull Screen screen) {
         if (screen instanceof CustomGuiBaseScreen c) return c.getIdentifier();
@@ -76,6 +82,14 @@ public class ScreenIdentifierHandler {
         return potentiallyInvalidScreenIdentifier;
     }
 
+    @NotNull
+    public static String tryConvertToNonUniversal(@NotNull String screenIdentifier) {
+        if (UniversalScreenIdentifierRegistry.universalIdentifierExists(screenIdentifier)) {
+            return Objects.requireNonNull(UniversalScreenIdentifierRegistry.getScreenForUniversalIdentifier(screenIdentifier));
+        }
+        return tryFixInvalidIdentifierWithNonUniversal(screenIdentifier);
+    }
+
     protected static class ScreenClasspathDatabase {
 
         protected List<List<String>> classpathGroups = new ArrayList<>();
@@ -125,7 +139,7 @@ public class ScreenIdentifierHandler {
 
     private static final String SCREEN_CLASSPATH_DATABASE_SOURCE =
                     """
-                    type = menu_identifier_database
+                    type = screen_classpath_database
 
                     identifier-group {
                       forge_1.12 = net.minecraft.client.gui.GuiMainMenu

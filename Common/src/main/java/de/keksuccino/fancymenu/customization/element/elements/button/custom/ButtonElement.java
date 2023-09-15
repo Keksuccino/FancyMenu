@@ -82,11 +82,6 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
         this.getButton().setWidth(this.getAbsoluteWidth());
         ((IMixinAbstractWidget)this.getButton()).setHeightFancyMenu(this.getAbsoluteHeight());
 
-        //TODO remove debug
-//        if (this.getInstanceIdentifier().contains("mc_titlescreen_singleplayer_button")) {
-//            LOGGER.info("############ SINGLEPLAYER BUTTON SET TO: X:" + this.getButton().getX() + " Y:" + this.getButton().getY() + " | ANCHOR: " + this.anchorPoint.getName());
-//        }
-
         if (isEditor()) {
             this.button.visible = true;
             if (this.button instanceof ExtendedButton) {

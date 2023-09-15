@@ -156,10 +156,6 @@ public class VanillaButtonElementBuilder extends ButtonElementBuilder implements
         //AbstractElement stuff
         if (e.anchorPoint != ElementAnchorPoints.VANILLA) {
             stack.anchorPoint = e.anchorPoint;
-            //TODO remove debug
-            if (stack == VanillaButtonElement.singleplayerButtonInstance) {
-                LOGGER.info("???????????????? SETTING " + stack.anchorPoint.getName() + " ANCHOR TO VANILLA BUTTON ELEMENT: " + stack);
-            }
         }
 
     }
@@ -169,10 +165,6 @@ public class VanillaButtonElementBuilder extends ButtonElementBuilder implements
     public @Nullable VanillaButtonElement stackElementsInternal(AbstractElement stack, AbstractElement... elements) {
         if (stack != null) {
             stack.anchorPoint = ElementAnchorPoints.VANILLA;
-            //TODO remove debug
-            if (stack == VanillaButtonElement.singleplayerButtonInstance) {
-                LOGGER.info("????????????? SETTING VANILLA ANCHOR TO SP BUTTON ELEMENT: " + stack);
-            }
         }
         return IElementStacker.super.stackElementsInternal(stack, elements);
     }

@@ -979,5 +979,11 @@
   "fancymenu.placeholders.world_load_progress": "World Loading Progress",
   "fancymenu.placeholders.world_load_progress.desc": "Reflects the world loading progress\nwhile in a progress screen.\nCan be used to make loading bars, etc.",
   "fancymenu.editor.elements.stretch.x": "Stretch Horizontally: %s",
-  "fancymenu.editor.elements.stretch.y": "Stretch Vertically: %s"
+  "fancymenu.editor.elements.stretch.y": "Stretch Vertically: %s",
+  "fancymenu.overlay.menu_bar.customization.layout.manage.more_layouts": "... and %s more layouts",
+  "fancymenu.editor.auto_scaling.configure": "Configure Auto Scaling",
+  "fancymenu.editor.auto_scaling.configure.width": "Optimal Layout Screen Width:",
+  "fancymenu.editor.auto_scaling.configure.height": "Optimal Layout Screen Height:",
+  "fancymenu.editor.auto_scaling.configure.current_screen_width": "Current Screen Width: %s",
+  "fancymenu.editor.auto_scaling.configure.current_screen_height": "Current Screen Height: %s"
 }

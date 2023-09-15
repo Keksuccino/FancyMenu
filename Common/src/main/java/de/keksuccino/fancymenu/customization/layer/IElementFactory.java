@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.layer;
 
+import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
+import de.keksuccino.fancymenu.customization.screen.identifier.UniversalScreenIdentifierRegistry;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
@@ -12,8 +14,6 @@ import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.widget.identification.WidgetIdentifierHandler;
 import de.keksuccino.fancymenu.util.ListUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -26,14 +26,14 @@ public interface IElementFactory {
     /**
      * Constructs element instances for {@link ScreenCustomizationLayer}s and {@link LayoutEditorScreen}s.
      *
-     * @param menuIdentifier        The target menu the elements get constructed for. If this is NULL, no {@link AbstractDeepElement} instances will get constructed.
+     * @param screenIdentifier        The target menu the elements get constructed for. If this is NULL, no {@link AbstractDeepElement} instances will get constructed.
      * @param vanillaWidgetMetaList The vanilla buttons of the target menu. If this is NULL, no {@link VanillaButtonElement}s will get constructed.
      * @param layouts               The source layouts to construct the elements from.
      * @param normalElements        All normal {@link AbstractElement} instances will get added to this {@link Layout.OrderedElementCollection}.
      * @param vanillaButtonElements All {@link VanillaButtonElement} instances will get added to this list. If this is NULL, no {@link VanillaButtonElement}s will get constructed.
      * @param deepElements          All {@link AbstractDeepElement} instances will get added to this list. If this is NULL, no {@link AbstractDeepElement}s will get constructed.
      */
-    default void constructElementInstances(@Nullable String menuIdentifier, @Nullable List<WidgetMeta> vanillaWidgetMetaList, @NotNull List<Layout> layouts, @NotNull Layout.OrderedElementCollection normalElements, @Nullable List<VanillaButtonElement> vanillaButtonElements, @Nullable List<AbstractDeepElement> deepElements) {
+    default void constructElementInstances(@Nullable String screenIdentifier, @Nullable List<WidgetMeta> vanillaWidgetMetaList, @NotNull List<Layout> layouts, @NotNull Layout.OrderedElementCollection normalElements, @Nullable List<VanillaButtonElement> vanillaButtonElements, @Nullable List<AbstractDeepElement> deepElements) {
 
         Map<WidgetMeta, List<VanillaButtonElement>> unstackedVanillaButtonElements = new HashMap<>();
         Map<DeepElementBuilder<?, ?, ?>, List<AbstractDeepElement>> unstackedDeepElements = new HashMap<>();
@@ -56,10 +56,6 @@ public interface IElementFactory {
                 for (VanillaButtonElement element : layout.buildVanillaButtonElementInstances()) {
                     WidgetMeta d = (vanillaWidgetMetaList != null) ? findWidgetMeta(element.getInstanceIdentifier(), vanillaWidgetMetaList) : null;
                     if (d != null) {
-                        //TODO remove debug
-                        if (d.getIdentifier().contains("singleplayer_button")) {
-                            LogManager.getLogger().info("!!!!!!!!!!!!!!!!!! IElementFactory: UNSTACKED SP BUTTON INSTANCE IS: " + element + " | ANCHOR: " + element.anchorPoint.getName());
-                        }
                         element.setVanillaButton(d);
                         if (!unstackedVanillaButtonElements.containsKey(d)) {
                             unstackedVanillaButtonElements.put(d, new ArrayList<>());
@@ -72,7 +68,7 @@ public interface IElementFactory {
 
         if (deepElements != null) {
             //Add missing deep element instances
-            DeepScreenCustomizationLayer deepScreenCustomizationLayer = (menuIdentifier != null) ? DeepScreenCustomizationLayerRegistry.getLayer(menuIdentifier) : null;
+            DeepScreenCustomizationLayer deepScreenCustomizationLayer = (screenIdentifier != null) ? DeepScreenCustomizationLayerRegistry.getLayer(screenIdentifier) : null;
             if (deepScreenCustomizationLayer != null) {
                 for (DeepElementBuilder<?, ?, ?> builder : deepScreenCustomizationLayer.getBuilders()) {
                     if (!unstackedDeepElements.containsKey(builder)) {
@@ -127,17 +123,9 @@ public interface IElementFactory {
                     if (m.getValue().size() > 1) {
                         VanillaButtonElement stacked = VanillaButtonElementBuilder.INSTANCE.stackElementsInternal(VanillaButtonElementBuilder.INSTANCE.buildDefaultInstance(), m.getValue().toArray(new VanillaButtonElement[0]));
                         if (stacked != null) {
-                            //TODO remove debug
-                            if ((stacked.widgetMeta != null) && stacked.widgetMeta.getIdentifier().contains("singleplayer_button")) {
-                                LogManager.getLogger().info("!!!!!!!!!!!!!!!! IElementFactory: STACKED SP BUTTON INSTANCE IS: " + stacked + " | ANCHOR: " + stacked.anchorPoint.getName());
-                            }
                             vanillaButtonElements.add(stacked);
                         }
                     } else {
-                        //TODO remove debug
-                        if ((m.getValue().get(0).widgetMeta != null) && m.getValue().get(0).widgetMeta.getIdentifier().contains("singleplayer_button")) {
-                            LogManager.getLogger().info("!!!!!!!!!!!!!!!! IElementFactory: STACKED SP BUTTON INSTANCE IS SAME AS UNSTACKED: " + m.getValue().get(0) + " | ANCHOR: " + m.getValue().get(0).anchorPoint.getName());
-                        }
                         vanillaButtonElements.add(m.getValue().get(0));
                     }
                 }
