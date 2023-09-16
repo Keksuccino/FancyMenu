@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.widget;
 
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -47,6 +48,7 @@ public class WidgetMeta {
 
 	@Nullable
 	public String getUniversalIdentifier() {
+		if ((this.widget instanceof UniqueWidget<?> u) && (u.getIdentifier() != null)) return u.getIdentifier();
 		return this.universalIdentifier;
 	}
 

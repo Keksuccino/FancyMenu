@@ -1,15 +1,15 @@
 package de.keksuccino.fancymenu.customization.element.elements.button.vanilla;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.IHideableElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.custom.ButtonEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.custom.ButtonElement;
-import de.keksuccino.fancymenu.mixin.mixins.client.IMixinScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,7 +22,6 @@ public class VanillaButtonElement extends ButtonElement implements IHideableElem
     private static final Logger LOGGER = LogManager.getLogger();
 
     public WidgetMeta widgetMeta;
-    public Component originalLabel;
     public int originalX;
     public int originalY;
     public int originalWidth;
@@ -35,17 +34,11 @@ public class VanillaButtonElement extends ButtonElement implements IHideableElem
         super(builder);
     }
 
+    @SuppressWarnings("all")
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-        if (this.isHidden()) {
-            Screen s = getScreen();
-            if ((s != null) && (this.getButton() != null)) {
-                ((IMixinScreen)s).invokeRemoveWidgetFancyMenu(this.getButton());
-            }
-        }
-        if (this.isButtonVisible() || isEditor()) {
-            super.render(pose, mouseX, mouseY, partial);
-        }
+    protected void renderElementWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        ((CustomizableWidget)this.button).setHiddenFancyMenu(isEditor() ? false : this.vanillaButtonHidden);
+        super.renderElementWidget(pose, mouseX, mouseY, partial);
     }
 
     @Override
@@ -60,11 +53,6 @@ public class VanillaButtonElement extends ButtonElement implements IHideableElem
 
         if (this.button == null) return;
 
-        //Restore original label if custom label is null
-        if ((this.label == null) && (this.originalLabel != null) && ((this.hoverLabel == null) || !this.button.isHoveredOrFocused())) {
-            this.button.setMessage(this.originalLabel);
-        }
-
         //Auto-click the vanilla button on menu load
         if (!isEditor() && !this.automatedButtonClicksDone && (this.automatedButtonClicks > 0)) {
             for (int i = 0; i < this.automatedButtonClicks; i++) {
@@ -73,6 +61,13 @@ public class VanillaButtonElement extends ButtonElement implements IHideableElem
             this.automatedButtonClicksDone = true;
         }
 
+    }
+
+    @Override
+    protected void updateLabels() {
+        if (this.button == null) return;
+        ((CustomizableWidget)this.button).setCustomLabelFancyMenu((this.label != null) ? Component.literal(PlaceholderParser.replacePlaceholders(this.label)) : null);
+        ((CustomizableWidget)this.button).setHoverLabelFancyMenu((this.hoverLabel != null) ? Component.literal(PlaceholderParser.replacePlaceholders(this.hoverLabel)) : null);
     }
 
     @Override
@@ -129,26 +124,25 @@ public class VanillaButtonElement extends ButtonElement implements IHideableElem
         return super.getInstanceIdentifier();
     }
 
-    public boolean isButtonVisible() {
-        if (!this.loadingRequirementsMet()) {
-            return false;
-        }
-        if (this.vanillaButtonHidden) {
-            return false;
-        }
-        if (!this.visible) {
-            return false;
-        }
-        if (this.button != null) {
-            return this.button.visible;
-        }
-        return true;
-    }
+//    public boolean isButtonVisible() {
+//        if (!this.loadingRequirementsMet()) {
+//            return false;
+//        }
+//        if (this.vanillaButtonHidden) {
+//            return false;
+//        }
+//        if (!this.visible) {
+//            return false;
+//        }
+//        if (this.button != null) {
+//            return this.button.visible;
+//        }
+//        return true;
+//    }
 
     public void setVanillaButton(WidgetMeta data) {
         this.widgetMeta = data;
         this.button = data.getWidget();
-        this.originalLabel = this.button.getMessage();
         this.originalX = this.button.x;
         this.originalY = this.button.y;
         this.originalWidth = this.button.getWidth();

@@ -25,9 +25,6 @@ public class Options extends AbstractOptions {
     public final Option<String> customWindowIconMacOS = new Option<>(config, "custom_window_icon_macos", "", "window");
     public final Option<String> customWindowTitle = new Option<>(config, "custom_window_title", "", "window");
 
-    public final Option<Boolean> showLevelLoadingScreenChunkAnimation = new Option<>(config, "show_world_loading_screen_animation", true, "world_loading_screen");
-    public final Option<Boolean> showLevelLoadingScreenPercent = new Option<>(config, "show_world_loading_screen_percent", true, "world_loading_screen");
-
     public final Option<Boolean> showMultiplayerScreenServerIcons = new Option<>(config, "show_multiplayer_screen_server_icons", true, "multiplayer_screen");
 
     public final Option<Boolean> showSingleplayerScreenWorldIcons = new Option<>(config, "show_singleplayer_screen_world_icons", true, "singleplayer_screen");

@@ -218,7 +218,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
                         consumes -> ((ButtonElement)consumes.element).label,
                         (element1, s) -> ((ButtonElement)element1.element).label = s,
                         null, false, true, Component.translatable("fancymenu.editor.items.button.editlabel"),
-                        true, "", null, null)
+                        true, null, null, null)
                 .setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("text"));
 

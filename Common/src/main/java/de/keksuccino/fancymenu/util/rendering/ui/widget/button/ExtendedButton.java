@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.Util;
@@ -30,7 +31,7 @@ import java.awt.*;
 import java.util.Objects;
 
 @SuppressWarnings("unused")
-public class ExtendedButton extends Button {
+public class ExtendedButton extends Button implements UniqueWidget<ExtendedButton> {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -42,33 +43,35 @@ public class ExtendedButton extends Button {
     protected DrawableColor labelBaseColorInactive = DrawableColor.of(new Color(0xA0A0A0));
     protected boolean labelShadow = true;
     @NotNull
-    protected ConsumingSupplier<ExtendedButton, Component> labelSupplier;
+    protected ConsumingSupplier<ExtendedButton, Component> labelSupplier = consumes -> Component.empty();
     protected ConsumingSupplier<ExtendedButton, Tooltip> tooltipSupplier = null;
     protected boolean forceDefaultTooltipStyle = false;
     @Nullable
     protected ConsumingSupplier<ExtendedButton, Boolean> activeSupplier;
     protected boolean focusable = true;
+    @Nullable
+    protected String identifier;
 
     protected int lastHoverState = -1;
 
     public ExtendedButton(int x, int y, int width, int height, @NotNull String label, @NotNull OnPress onPress) {
         super(x, y, width, height, Component.literal(""), onPress, DEFAULT_NARRATION);
-        this.labelSupplier = consumes -> Component.literal(label);
+        this.setLabel(Component.literal(label));
     }
 
     public ExtendedButton(int x, int y, int width, int height, @NotNull String label, @NotNull OnPress onPress, CreateNarration narration) {
         super(x, y, width, height, Component.literal(""), onPress, narration);
-        this.labelSupplier = consumes -> Component.literal(label);
+        this.setLabel(Component.literal(label));
     }
 
     public ExtendedButton(int x, int y, int width, int height, @NotNull Component label, @NotNull OnPress onPress) {
         super(x, y, width, height, Component.literal(""), onPress, DEFAULT_NARRATION);
-        this.labelSupplier = consumes -> label;
+        this.setLabel(label);
     }
 
     public ExtendedButton(int x, int y, int width, int height, @NotNull Component label, @NotNull OnPress onPress, CreateNarration narration) {
         super(x, y, width, height, Component.literal(""), onPress, narration);
-        this.labelSupplier = consumes -> label;
+        this.setLabel(label);
     }
 
     @Override
@@ -102,6 +105,7 @@ public class ExtendedButton extends Button {
     protected void renderScrollingLabel(@NotNull PoseStack pose, @NotNull Font font, int spaceLeftRight, int textColor) {
         int xMin = this.getX() + spaceLeftRight;
         int xMax = this.getX() + this.getWidth() - spaceLeftRight;
+        //Use getMessage() here to not break custom label handling of CustomizableWidget
         this.renderScrollingLabelInternal(pose, font, this.getMessage(), xMin, this.getY(), xMax, this.getY() + this.getHeight(), textColor);
     }
 
@@ -233,6 +237,7 @@ public class ExtendedButton extends Button {
 
     public ExtendedButton setLabel(@NotNull Component label) {
         this.labelSupplier = (btn) -> label;
+        ((IMixinAbstractWidget)this).setMessageFieldFancyMenu(label);
         return this;
     }
 
@@ -341,6 +346,17 @@ public class ExtendedButton extends Button {
             return;
         }
         super.setFocused($$0);
+    }
+
+    @Override
+    public ExtendedButton setIdentifier(@Nullable String identifier) {
+        this.identifier = identifier;
+        return this;
+    }
+
+    @Override
+    public @Nullable String getIdentifier() {
+        return this.identifier;
     }
 
     public static abstract class ButtonBackground extends GuiComponent implements Renderable {

@@ -301,19 +301,6 @@ public class CustomizationOverlayUI {
 
         customizationSettingsMenu.addSeparatorEntry("separator_after_preload_animations");
 
-        ContextMenu worldLoadingScreenSettingsMenu = new ContextMenu();
-        customizationSettingsMenu.addSubMenuEntry("world_loading_screen", Component.translatable("fancymenu.overlay.menu_bar.customization.settings.world_loading_screen"), worldLoadingScreenSettingsMenu);
-
-        worldLoadingScreenSettingsMenu.addValueCycleEntry("world_loading_screen_animation", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.world_loading_screen.animation", FancyMenu.getOptions().showLevelLoadingScreenChunkAnimation.getValue())
-                .addCycleListener(cycle -> {
-                    FancyMenu.getOptions().showLevelLoadingScreenChunkAnimation.setValue(cycle.getAsBoolean());
-                }));
-
-        worldLoadingScreenSettingsMenu.addValueCycleEntry("world_loading_screen_percent", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.world_loading_screen.percent", FancyMenu.getOptions().showLevelLoadingScreenPercent.getValue())
-                .addCycleListener(cycle -> {
-                    FancyMenu.getOptions().showLevelLoadingScreenPercent.setValue(cycle.getAsBoolean());
-                }));
-
         customizationSettingsMenu.addValueCycleEntry("singleplayer_world_icons", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.singleplayer_screen.world_icons", FancyMenu.getOptions().showSingleplayerScreenWorldIcons.getValue())
                 .addCycleListener(cycle -> {
                     FancyMenu.getOptions().showSingleplayerScreenWorldIcons.setValue(cycle.getAsBoolean());

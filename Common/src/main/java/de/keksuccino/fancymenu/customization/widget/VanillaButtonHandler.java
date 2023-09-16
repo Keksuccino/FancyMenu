@@ -1,16 +1,12 @@
 package de.keksuccino.fancymenu.customization.widget;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
-import de.keksuccino.fancymenu.events.widget.PlayWidgetClickSoundEvent;
 import de.keksuccino.fancymenu.events.widget.RenderWidgetBackgroundEvent;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
-import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -18,7 +14,6 @@ import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,7 +22,6 @@ public class VanillaButtonHandler {
 
     private static final Map<AbstractWidget, ResourceLocation> BACKGROUND_TEXTURES = new HashMap<>();
     private static final Map<AbstractWidget, VanillaBackgroundAnimation> BACKGROUND_ANIMATIONS = new HashMap<>();
-    private static final Map<AbstractWidget, String> CLICK_SOUNDS = new HashMap<>();
 
     public static void init() {
         EventHandler.INSTANCE.registerListenersOf(new VanillaButtonHandler());
@@ -47,31 +41,6 @@ public class VanillaButtonHandler {
         } else {
             BACKGROUND_ANIMATIONS.remove(widget);
         }
-    }
-
-    public static void setClientTickClickSound(AbstractWidget widget, String clickSound) {
-        if (clickSound != null) {
-            CLICK_SOUNDS.put(widget, clickSound);
-        } else {
-            CLICK_SOUNDS.remove(widget);
-        }
-    }
-
-    @EventListener
-    public void onButtonClickSoundPre(PlayWidgetClickSoundEvent.Pre e) {
-
-        String clickSound = CLICK_SOUNDS.get(e.getWidget());
-
-        if (clickSound != null) {
-            File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(clickSound));
-            if (f.exists() && f.isFile() && f.getPath().toLowerCase().endsWith(".wav")) {
-                SoundHandler.registerSound(f.getPath(), f.getPath());
-                SoundHandler.resetSound(f.getPath());
-                SoundHandler.playSound(f.getPath());
-                e.setCanceled(true);
-            }
-        }
-
     }
 
     @EventListener
@@ -123,11 +92,6 @@ public class VanillaButtonHandler {
     public void onRenderScreenPost(RenderScreenEvent.Post e) {
         BACKGROUND_TEXTURES.clear();
         BACKGROUND_ANIMATIONS.clear();
-    }
-
-    @EventListener(priority = -100)
-    public void onClientTickPost(ClientTickEvent.Post e) {
-        CLICK_SOUNDS.clear();
     }
 
     protected static class VanillaBackgroundAnimation {

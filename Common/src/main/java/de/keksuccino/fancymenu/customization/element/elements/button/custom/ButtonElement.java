@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElement;
 import de.keksuccino.fancymenu.customization.widget.VanillaButtonHandler;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
@@ -13,6 +14,7 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinButton;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.resources.texture.LocalTexture;
 import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
@@ -21,7 +23,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
-import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -42,7 +43,9 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
 
     public String clickSound;
     public String hoverSound;
+    @Nullable
     public String label;
+    @Nullable
     public String hoverLabel;
     public String tooltip;
     public String backgroundTextureNormal;
@@ -100,10 +103,14 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
         //button gets rendered, because otherwise renderTick() wouldn't work correctly.
         this.hovered = this.getButton().isHoveredOrFocused();
 
-        this.getButton().render(pose, mouseX, mouseY, partial);
+        this.renderElementWidget(pose, mouseX, mouseY, partial);
 
         RenderingUtils.resetShaderColor();
 
+    }
+
+    protected void renderElementWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        this.getButton().render(pose, mouseX, mouseY, partial);
     }
 
     @Override
@@ -117,27 +124,37 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
             String tooltip = this.tooltip.replace("%n%", "\n");
             TooltipHandler.INSTANCE.addWidgetTooltip(this.getButton(), Tooltip.of(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(tooltip), "\n")), false, true);
         }
-        if ((this.label != null) && (this.getButton() != null)) {
-            this.getButton().setMessage(Component.literal(PlaceholderParser.replacePlaceholders(this.label)));
-        }
-        if ((this.hoverLabel != null) && (this.getButton() != null) && this.getButton().isHoveredOrFocused() && this.getButton().active) {
-            this.getButton().setMessage(Component.literal(PlaceholderParser.replacePlaceholders(this.hoverLabel)));
-        }
+        this.updateLabels();
         this.updateHoverSound();
         this.updateClickSound();
         this.updateButtonBackground();
     }
 
+    protected void updateLabels() {
+        if (this.button == null) return;
+        if (this.label != null) {
+            this.getButton().setMessage(Component.literal(PlaceholderParser.replacePlaceholders(this.label)));
+        } else {
+            this.button.setMessage(Component.empty());
+        }
+        if ((this.hoverLabel != null) && this.getButton().isHoveredOrFocused() && this.getButton().active) {
+            this.getButton().setMessage(Component.literal(PlaceholderParser.replacePlaceholders(this.hoverLabel)));
+        }
+    }
+
     protected void updateHoverSound() {
-        if ((this.getButton() != null) && this.getButton().isHoveredOrFocused() && this.getButton().active && (this.hoverSound != null) && !this.hovered) {
-            SoundHandler.resetSound(this.hoverSound);
-            SoundHandler.playSound(this.hoverSound);
+//        if ((this.getButton() != null) && this.getButton().isHoveredOrFocused() && this.getButton().active && (this.hoverSound != null) && !this.hovered) {
+//            SoundHandler.resetSound(this.hoverSound);
+//            SoundHandler.playSound(this.hoverSound);
+//        }
+        if (this.button != null) {
+            ((CustomizableWidget)this.button).setHoverSoundFancyMenu(this.hoverSound);
         }
     }
 
     protected void updateClickSound() {
-        if ((this.button != null) && (this.clickSound != null)) {
-            VanillaButtonHandler.setClientTickClickSound(this.button, this.clickSound);
+        if (this.button != null) {
+            ((CustomizableWidget)this.button).setCustomClickSoundFancyMenu(this.clickSound);
         }
     }
 

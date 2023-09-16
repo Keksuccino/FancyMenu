@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.mixin.mixins.client.IMixinEditBox;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
@@ -14,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.Color;
 
 @SuppressWarnings("unused")
-public class ExtendedEditBox extends EditBox {
+public class ExtendedEditBox extends EditBox implements UniqueWidget<ExtendedEditBox> {
 
     protected CharacterFilter characterFilter;
     protected CharacterRenderFormatter characterRenderFormatter;
@@ -26,6 +27,8 @@ public class ExtendedEditBox extends EditBox {
     protected DrawableColor suggestionTextColor = DrawableColor.of(new Color(-8355712));
     protected boolean textShadow = true;
     protected final Font font;
+    @Nullable
+    protected String identifier;
 
     public ExtendedEditBox(Font font, int x, int y, int width, int height, Component hint) {
         super(font, x, y, width, height, hint);
@@ -280,6 +283,17 @@ public class ExtendedEditBox extends EditBox {
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         return false;
+    }
+
+    @Override
+    public ExtendedEditBox setIdentifier(@Nullable String identifier) {
+        this.identifier = identifier;
+        return this;
+    }
+
+    @Override
+    public @Nullable String getIdentifier() {
+        return this.identifier;
     }
 
     @FunctionalInterface

@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util.rendering.text.component;
+package de.keksuccino.fancymenu.util.rendering.ui.widget.component;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;

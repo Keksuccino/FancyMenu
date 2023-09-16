@@ -19,16 +19,15 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO Screens widgetifien:
+	// - Dirt Message Screen
+	// - Connect Screen (text)
+
 	//TODO Render layout editor grid always at scale 1 (ignore game scale and UI scale)
 
 	//TODO FIXEN: Manchmal wird per Anchor Overlay onHover der Anchor nicht aktualisiert (hover loading animation sichtbar, aber am ende passiert nichts)
 	// - Aufgetreten, nachdem Label von Custom Button editiert (fenster danach nicht resized oder gespeichert)
 	// - Speichern per CTRL + S hat es gefixt (nur gespeichert, nicht resized, etc.)
-
-	//TODO Texte und anderen stuff in simplen Screens durch TextWidgets, etc. ersetzen (per Mixin), damit sie customized werden können
-	// - Darauf achten, dass widgets immer selbe X Y pos haben müssen (sonst widget identifier nutzen)
-	// - ProgressScreen
-	// - LevelLoadingScreen (settings zum hiden von progress text entfernen) (eventuell auch chunk animation zu widget machen und dafür settings dafür entfernen)
 
 	//TODO Add toggleable "Debug" menu overlay (when not in layout editor)
 	// - Extendable !!
@@ -50,10 +49,6 @@ public class FancyMenu {
 
 	//TODO placeholders und generic progress bar von Drippy porten (+ aus Drippy entfernen)
 
-	//TODO Replace/Delete these classes:
-	// - AutoScalingPopup
-	// - FMPopup
-
 	//TODO "Key Pressed" Loading Requirement
 	// - Modes: ONCE_PER_KEY_PRESS (nur einen tick pro key press auf true), CONTINUOUS (hält bei key press dauerhaft auf true)
 	// - Setzt "pressed" boolean bei onKeyPress auf true und bei onKeyRelease auf false (für modes)
@@ -73,8 +68,6 @@ public class FancyMenu {
 	//TODO add setAlpha() support to Vanilla ImageButtons (language button, accessibility button)
 
 	//TODO FIXEN: Slider elemente nutzen element opacity nicht (Vanilla bug oder in element vergessen?)
-
-	//TODO Layout Editor: Toast Notifications rechts oben nach verschiedenen Aktionen wie copy/paste, undo/redo, etc.
 
 	private static final Logger LOGGER = LogManager.getLogger();
 

@@ -3,8 +3,9 @@ package de.keksuccino.fancymenu.mixin.mixins.client;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.util.patches.WidgetifiedScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.TextWidget;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.screens.ProgressScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -15,7 +16,9 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import java.util.Objects;
 
+@WidgetifiedScreen
 @Mixin(ProgressScreen.class)
 public class MixinProgressScreen extends Screen {
 
@@ -23,8 +26,8 @@ public class MixinProgressScreen extends Screen {
     @Shadow private @Nullable Component stage;
     @Shadow private int progress;
 
-    @Unique private StringWidget headerText;
-    @Unique private StringWidget stageText;
+    @Unique private TextWidget headerTextFancyMenu;
+    @Unique private TextWidget stageTextFancyMenu;
 
     protected MixinProgressScreen(Component $$0) {
         super($$0);
@@ -33,11 +36,17 @@ public class MixinProgressScreen extends Screen {
     @Override
     protected void init() {
 
-        if (this.isCustomizable()) {
+        if (this.isCustomizableFancyMenu()) {
 
-            this.headerText = this.addRenderableWidget(new StringWidget(Component.empty(), this.font));
+            this.headerTextFancyMenu = this.addRenderableWidget(TextWidget.empty(0, 70, 500))
+                    .setTextAlignment(TextWidget.TextAlignment.CENTER)
+                    .centerWidget(this)
+                    .setIdentifier("header");
 
-            this.stageText = this.addRenderableWidget(new StringWidget(Component.empty(), this.font));
+            this.stageTextFancyMenu = this.addRenderableWidget(TextWidget.empty(0, 90, 500))
+                    .setTextAlignment(TextWidget.TextAlignment.CENTER)
+                    .centerWidget(this)
+                    .setIdentifier("stage");
 
             this.updateText();
 
@@ -47,25 +56,15 @@ public class MixinProgressScreen extends Screen {
     @Unique
     private void updateText() {
 
-        if (this.headerText != null) {
-            if (this.header != null) {
-                this.headerText.setMessage(this.header);
-                this.headerText.setWidth(this.font.width(this.headerText.getMessage().getVisualOrderText()));
-                this.headerText.x = (this.width / 2) - (this.headerText.getWidth() / 2);
-                this.headerText.y = 70;
-            } else {
-                this.headerText.setMessage(Component.empty());
-            }
+        if (this.headerTextFancyMenu != null) {
+            this.headerTextFancyMenu.setMessage(Objects.requireNonNullElse(this.header, Component.empty()));
         }
 
-        if (this.stageText != null) {
+        if (this.stageTextFancyMenu != null) {
             if ((this.stage != null) && (this.progress != 0)) {
-                this.stageText.setMessage(Component.empty().append(this.stage).append(" " + this.progress + "%"));
-                this.stageText.setWidth(this.font.width(this.stageText.getMessage().getVisualOrderText()));
-                this.stageText.x = (this.width / 2) - (this.stageText.getWidth() / 2);
-                this.stageText.y = 90;
+                this.stageTextFancyMenu.setMessage(Component.empty().append(this.stage).append(" " + this.progress + "%"));
             } else {
-                this.stageText.setMessage(Component.empty());
+                this.stageTextFancyMenu.setMessage(Component.empty());
             }
         }
 
@@ -73,7 +72,7 @@ public class MixinProgressScreen extends Screen {
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/ProgressScreen;drawCenteredString(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)V"))
     private boolean wrapDrawCenteredStringInRenderFancyMenu(PoseStack poseStack, Font font, Component component, int i1, int i2, int i3) {
-        return !this.isCustomizable();
+        return !this.isCustomizableFancyMenu();
     }
 
     @Inject(method = "progressStart", at = @At("RETURN"))
@@ -92,13 +91,13 @@ public class MixinProgressScreen extends Screen {
     }
 
     @Unique
-    private boolean isCustomizable() {
-        return ScreenCustomization.isCustomizationEnabledForScreen(this.getScreen());
+    private boolean isCustomizableFancyMenu() {
+        return ScreenCustomization.isCustomizationEnabledForScreen(this.getScreenFancyMenu());
     }
 
     @Unique
     @SuppressWarnings("all")
-    private ProgressScreen getScreen() {
+    private ProgressScreen getScreenFancyMenu() {
         return (ProgressScreen)((Object)this);
     }
 

@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractSliderButton;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -20,7 +21,7 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 import java.util.function.Consumer;
 
-public abstract class ExtendedSliderButton extends AbstractSliderButton {
+public abstract class ExtendedSliderButton extends AbstractSliderButton implements UniqueWidget<ExtendedSliderButton> {
 
     protected static final ResourceLocation SLIDER_LOCATION = new ResourceLocation("textures/gui/slider.png");
 
@@ -46,6 +47,8 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton {
     @NotNull
     protected DrawableColor labelColorInactive = DrawableColor.of(new Color(10526880));
     protected boolean labelShadow = true;
+    @Nullable
+    protected String identifier;
 
     protected boolean leftDownNotHovered = false;
     protected boolean leftDownThis = false;
@@ -322,6 +325,17 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton {
             return false;
         }
         return MouseInput.isVanillaInputBlocked();
+    }
+
+    @Override
+    public @Nullable String getIdentifier() {
+        return this.identifier;
+    }
+
+    @Override
+    public ExtendedSliderButton setIdentifier(@Nullable String identifier) {
+        this.identifier = identifier;
+        return this;
     }
 
 }
