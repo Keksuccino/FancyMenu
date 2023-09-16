@@ -129,8 +129,9 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - Removed legacy "Screen Height/Width Requirements" option of layouts, since loading requirements can be used for that instead
 - Removed legacy "Only In Multiplayer/Singleplayer" options of button elements, because loading requirements can be used for that instead
 - Removed customizability of the Vanilla Splash Text element in the Title Screen, because you can simply add a custom one and set it to Vanilla mode
+- Removed config options to toggle the visibility of the percentage and chunk elements of the Level Loading Screen (these are now customizable in the layout editor)
  
-- Fixed: Probably a lot of stuff that was caused by old spaghetti code (and probably added the same amount of new bugs)
+- Fixed: Probably a lot of bugs that were caused by old spaghetti code (and probably added the same amount of new bugs)
 - Fixed: MC 1.19.4+: Vanilla buttons that got moved or resized flicker when resizing some screens like the Create World screen
 - Fixed: Button tooltips sometimes sticking to next menu screen
 - Fixed: Copyright button is deletable (you can't delete or resize it anymore, but moving still works as long as the button stays on-screen)
