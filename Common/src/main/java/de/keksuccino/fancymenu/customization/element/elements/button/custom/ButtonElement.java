@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
-import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElement;
 import de.keksuccino.fancymenu.customization.widget.VanillaButtonHandler;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
@@ -133,20 +132,16 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
     protected void updateLabels() {
         if (this.button == null) return;
         if (this.label != null) {
-            this.getButton().setMessage(Component.literal(PlaceholderParser.replacePlaceholders(this.label)));
+            this.getButton().setMessage(buildComponent(this.label));
         } else {
             this.button.setMessage(Component.empty());
         }
         if ((this.hoverLabel != null) && this.getButton().isHoveredOrFocused() && this.getButton().active) {
-            this.getButton().setMessage(Component.literal(PlaceholderParser.replacePlaceholders(this.hoverLabel)));
+            this.getButton().setMessage(buildComponent(this.hoverLabel));
         }
     }
 
     protected void updateHoverSound() {
-//        if ((this.getButton() != null) && this.getButton().isHoveredOrFocused() && this.getButton().active && (this.hoverSound != null) && !this.hovered) {
-//            SoundHandler.resetSound(this.hoverSound);
-//            SoundHandler.playSound(this.hoverSound);
-//        }
         if (this.button != null) {
             ((CustomizableWidget)this.button).setHoverSoundFancyMenu(this.hoverSound);
         }

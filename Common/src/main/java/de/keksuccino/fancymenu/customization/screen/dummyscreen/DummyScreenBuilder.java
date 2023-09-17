@@ -16,7 +16,7 @@ public class DummyScreenBuilder {
     @NotNull
     protected Component screenDisplayName;
     @Nullable
-    protected List<Component> screenDescription;
+    protected Supplier<List<Component>> screenDescription;
     @Nullable
     protected Supplier<? extends Screen> screenProvider;
 
@@ -47,13 +47,13 @@ public class DummyScreenBuilder {
         return this.screenDisplayName;
     }
 
-    public DummyScreenBuilder setScreenDescription(@Nullable List<Component> description) {
+    public DummyScreenBuilder setScreenDescriptionSupplier(@Nullable Supplier<List<Component>> description) {
         this.screenDescription = description;
         return this;
     }
 
     @Nullable
-    public List<Component> getScreenDescription() {
+    public Supplier<List<Component>> getScreenDescriptionSupplier() {
         return this.screenDescription;
     }
 

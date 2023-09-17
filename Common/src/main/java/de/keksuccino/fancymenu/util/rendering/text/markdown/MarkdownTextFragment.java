@@ -14,6 +14,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -51,6 +52,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     public HeadlineType headlineType = HeadlineType.NONE;
     public QuoteContext quoteContext = null;
     public CodeBlockContext codeBlockContext = null;
+    public ResourceLocation font = null;
     public boolean hovered = false;
 
     public MarkdownTextFragment(@NotNull MarkdownRenderer parent, @NotNull String text) {
@@ -181,6 +183,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     @NotNull
     protected Component buildRenderComponent(boolean forWidthCalculation) {
         Style style = Style.EMPTY;
+        if (this.font != null) {
+            style = style.withFont(this.font);
+        }
         if (this.italic) {
             style = style.withItalic(true);
         }

@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.element.elements.cursor.CursorEleme
 import de.keksuccino.fancymenu.customization.element.elements.image.ImageElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.inputfield.InputFieldElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.PlayerEntityElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.progressbar.ProgressBarElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.shape.ShapeElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.slider.SliderElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.slideshow.SlideshowElementBuilder;
@@ -30,6 +31,7 @@ public class Elements {
     public static final SlideshowElementBuilder SLIDESHOW = new SlideshowElementBuilder();
     public static final ShapeElementBuilder SHAPE = new ShapeElementBuilder();
     public static final CursorElementBuilder CURSOR = new CursorElementBuilder();
+    public static final ProgressBarElementBuilder PROGRESS_BAR = new ProgressBarElementBuilder();
 
     public static void registerAll() {
 
@@ -46,6 +48,7 @@ public class Elements {
         ElementRegistry.register(SLIDESHOW);
         ElementRegistry.register(SHAPE);
         ElementRegistry.register(CURSOR);
+        ElementRegistry.register(PROGRESS_BAR);
 
     }
 

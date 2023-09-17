@@ -19,13 +19,20 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO Screens widgetifien:
-	// - Dirt Message Screen
-	// - Connect Screen (text)
+	//TODO ERSTEN ALPHA BUILD COMPILEN !!!! <------------------------------
+	//TODO ERSTEN ALPHA BUILD COMPILEN !!!! <------------------------------
+	//TODO ERSTEN ALPHA BUILD COMPILEN !!!! <------------------------------
+	//TODO ERSTEN ALPHA BUILD COMPILEN !!!! <------------------------------
+	//TODO ERSTEN ALPHA BUILD COMPILEN !!!! <------------------------------
+
+	//TODO Eventuell UniqueWidget interface zu AbstractWidget adden, um auch vanilla buttons identifier geben zu können, wenn nötig
+	// - könnte universal button identifiers ersetzen / alternative dazu sein
+
+	//TODO FIXEN: Splash Elemente werden bei resize reloaded (isNewMenu in builder fixen??)
 
 	//TODO Render layout editor grid always at scale 1 (ignore game scale and UI scale)
 
-	//TODO FIXEN: Manchmal wird per Anchor Overlay onHover der Anchor nicht aktualisiert (hover loading animation sichtbar, aber am ende passiert nichts)
+	//TODO FIXEN: Manchmal wird per Anchor Overlay onHover der Anchor nicht aktualisiert (hover loading animation sichtbar, aber anchor wechselt am Ende nicht)
 	// - Aufgetreten, nachdem Label von Custom Button editiert (fenster danach nicht resized oder gespeichert)
 	// - Speichern per CTRL + S hat es gefixt (nur gespeichert, nicht resized, etc.)
 
@@ -44,10 +51,6 @@ public class FancyMenu {
 	// - Shows CPU + GPU usage in menu (render text orange or red if usage too high)
 	// - draws borders around customizable vanilla/mod widgets
 	//   - add simple right-click context menu for widgets with entries to copy locator, identifier, etc.
-
-	//TODO Add markdown formatting code to set text font (use setFont() of components)
-
-	//TODO placeholders und generic progress bar von Drippy porten (+ aus Drippy entfernen)
 
 	//TODO "Key Pressed" Loading Requirement
 	// - Modes: ONCE_PER_KEY_PRESS (nur einen tick pro key press auf true), CONTINUOUS (hält bei key press dauerhaft auf true)

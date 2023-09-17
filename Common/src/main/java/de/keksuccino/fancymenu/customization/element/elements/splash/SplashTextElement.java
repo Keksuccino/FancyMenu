@@ -6,30 +6,23 @@ import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.konkrete.file.FileUtils;
-import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.util.FastColor;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
+import java.awt.*;
 import java.io.File;
 import java.util.List;
 import java.util.Objects;
 
 public class SplashTextElement extends AbstractElement {
-
-    //TODO FIXEN: Splash wird bei resize reloaded (isNewMenu in builder fixen??)
-    //TODO FIXEN: Splash wird bei resize reloaded (isNewMenu in builder fixen??)
-    //TODO FIXEN: Splash wird bei resize reloaded (isNewMenu in builder fixen??)
-    //TODO FIXEN: Splash wird bei resize reloaded (isNewMenu in builder fixen??)
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -39,13 +32,11 @@ public class SplashTextElement extends AbstractElement {
     public boolean shadow = true;
     public boolean bounce = true;
     public float rotation = 20.0F;
-    public DrawableColor baseColor = DrawableColor.of(255, 255, 0);
+    public DrawableColor baseColor = DrawableColor.of(new Color(255, 255, 0));
     public boolean refreshOnMenuReload = false;
-
     public Font font = Minecraft.getInstance().font;
     protected float baseScale = 1.8F;
     protected String renderText = null;
-
     protected String lastSource = null;
     protected SourceMode lastSourceMode = null;
     protected boolean refreshedOnMenuLoad = false;
@@ -131,16 +122,13 @@ public class SplashTextElement extends AbstractElement {
             }
         }
 
-        String renderTextFinal = PlaceholderParser.replacePlaceholders(this.renderText);
-        if (isEditor()) {
-            renderTextFinal = StringUtils.convertFormatCodes(this.renderText, "&", "§");
-        }
+        Component renderTextComponent = buildComponent(this.renderText);
 
         float splashBaseScale = this.baseScale;
         if (this.bounce) {
             splashBaseScale = splashBaseScale - Mth.abs(Mth.sin((float) (System.currentTimeMillis() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
         }
-        splashBaseScale = splashBaseScale * 100.0F / (float) (font.width(renderTextFinal) + 32);
+        splashBaseScale = splashBaseScale * 100.0F / (float) (font.width(renderTextComponent) + 32);
 
         RenderSystem.enableBlend();
 
@@ -159,9 +147,9 @@ public class SplashTextElement extends AbstractElement {
         }
 
         if (this.shadow) {
-            font.drawShadow(pose, renderTextFinal, -((float)font.width(renderTextFinal) / 2F), 0F, RenderingUtils.replaceAlphaInColor(this.baseColor.getColorInt(), alpha));
+            font.drawShadow(pose, renderTextComponent, -((float)font.width(renderTextComponent) / 2F), 0F, RenderingUtils.replaceAlphaInColor(this.baseColor.getColorInt(), alpha));
         } else {
-            font.draw(pose, renderTextFinal, -((float)font.width(renderTextFinal) / 2F), 0F, RenderingUtils.replaceAlphaInColor(this.baseColor.getColorInt(), alpha));
+            font.draw(pose, renderTextComponent, -((float)font.width(renderTextComponent) / 2F), 0F, RenderingUtils.replaceAlphaInColor(this.baseColor.getColorInt(), alpha));
         }
 
         pose.popPose();

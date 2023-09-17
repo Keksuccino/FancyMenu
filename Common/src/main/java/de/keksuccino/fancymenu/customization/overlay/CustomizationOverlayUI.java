@@ -514,8 +514,8 @@ public class CustomizationOverlayUI {
         int builderCount = 1;
         for (DummyScreenBuilder builder : DummyScreenRegistry.getBuilders()) {
             ContextMenu.ClickableContextMenuEntry<?> entry = dummyScreenMenu.addClickableEntry("builder_" + builderCount, builder.getScreenDisplayName(), (menu, entry2) -> Minecraft.getInstance().setScreen(builder.tryConstruct()));
-            if (builder.getScreenDescription() != null) {
-                entry.setTooltipSupplier((menu, entry1) -> Tooltip.of(builder.getScreenDescription().toArray(new Component[0])));
+            if (builder.getScreenDescriptionSupplier() != null) {
+                entry.setTooltipSupplier((menu, entry1) -> Tooltip.of(builder.getScreenDescriptionSupplier().get().toArray(new Component[0])));
             }
             builderCount++;
         }
@@ -557,7 +557,8 @@ public class CustomizationOverlayUI {
 
         helpMenu.addClickableEntry("curseforge_fancymenu_category", Component.translatable("fancymenu.overlay.menu_bar.help.curseforge_fancymenu_category"), (menu, entry) -> {
             WebUtils.openWebLink("https://www.curseforge.com/minecraft/search?page=1&class=customization&categoryIds=5186");
-        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.help.curseforge_fancymenu_category.tooltip")));
+        }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.help.curseforge_fancymenu_category.tooltip")))
+                .setIcon(ContextMenu.IconFactory.getIcon("curseforge"));
 
         helpMenu.addSeparatorEntry("separator_after_curseforge");
 

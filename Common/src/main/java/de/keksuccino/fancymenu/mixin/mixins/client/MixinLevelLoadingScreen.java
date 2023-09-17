@@ -73,13 +73,7 @@ public abstract class MixinLevelLoadingScreen extends Screen {
 
     @Unique
     private boolean isCustomizableFancyMenu() {
-        return ScreenCustomization.isCustomizationEnabledForScreen(this.getScreenFancyMenu());
-    }
-
-    @Unique
-    @SuppressWarnings("all")
-    private LevelLoadingScreen getScreenFancyMenu() {
-        return (LevelLoadingScreen) ((Object)this);
+        return ScreenCustomization.isCustomizationEnabledForScreen(this);
     }
 
     @Shadow protected abstract String getFormattedProgress();

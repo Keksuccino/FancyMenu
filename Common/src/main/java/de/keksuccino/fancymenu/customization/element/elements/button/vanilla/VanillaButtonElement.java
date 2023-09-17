@@ -66,8 +66,8 @@ public class VanillaButtonElement extends ButtonElement implements IHideableElem
     @Override
     protected void updateLabels() {
         if (this.button == null) return;
-        ((CustomizableWidget)this.button).setCustomLabelFancyMenu((this.label != null) ? Component.literal(PlaceholderParser.replacePlaceholders(this.label)) : null);
-        ((CustomizableWidget)this.button).setHoverLabelFancyMenu((this.hoverLabel != null) ? Component.literal(PlaceholderParser.replacePlaceholders(this.hoverLabel)) : null);
+        ((CustomizableWidget)this.button).setCustomLabelFancyMenu((this.label != null) ? buildComponent(this.label) : null);
+        ((CustomizableWidget)this.button).setHoverLabelFancyMenu((this.hoverLabel != null) ? buildComponent(this.hoverLabel) : null);
     }
 
     @Override

@@ -92,13 +92,7 @@ public class MixinProgressScreen extends Screen {
 
     @Unique
     private boolean isCustomizableFancyMenu() {
-        return ScreenCustomization.isCustomizationEnabledForScreen(this.getScreenFancyMenu());
-    }
-
-    @Unique
-    @SuppressWarnings("all")
-    private ProgressScreen getScreenFancyMenu() {
-        return (ProgressScreen)((Object)this);
+        return ScreenCustomization.isCustomizationEnabledForScreen(this);
     }
 
 }

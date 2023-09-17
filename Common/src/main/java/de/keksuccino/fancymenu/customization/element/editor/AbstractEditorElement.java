@@ -184,7 +184,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 													for (AbstractEditorElement e : this.editor.getSelectedElements()) {
 														if (e.settings.isAnchorPointChangeable() && e.settings.isElementAnchorPointAllowed()) {
 															e.element.anchorPointElementIdentifier = editorElement.element.getInstanceIdentifier();
-															e.element.setElementAnchorPointElement(editorElement.element);
+															e.element.setParentElementAnchorPointElement(editorElement.element);
 															e.setAnchorPoint(ElementAnchorPoints.ELEMENT, false, e.getX(), e.getY(), true);
 														}
 													}
@@ -589,7 +589,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			this.element.anchorPointElementIdentifier = ea.elementIdentifier;
 			AbstractEditorElement ee = ea.getElement();
 			if (ee != null) {
-				this.element.setElementAnchorPointElement(ee.element);
+				this.element.setParentElementAnchorPointElement(ee.element);
 			} else {
 				LOGGER.error("[FANCYMENU] Failed to get element in AbstractEditorElement#setAnchorPointViaOverlay()! Element was NULL!");
 			}

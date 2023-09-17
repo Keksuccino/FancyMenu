@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -26,6 +27,8 @@ import java.util.Objects;
 public class MarkdownParser {
 
     private static final Logger LOGGER = LogManager.getLogger();
+
+    private static final CharacterFilter RESOURCE_NAME_FILTER = CharacterFilter.buildBasicFilenameCharacterFilter();
 
     @NotNull
     public static List<MarkdownTextFragment> parse(@NotNull MarkdownRenderer renderer, @NotNull String markdownText) {
@@ -52,8 +55,10 @@ public class MarkdownParser {
 
             index++;
 
-            String sub = markdownText.substring(index);
-            String subLine = getLine(sub);
+            //Part of full Markdown text source, starting at the current index
+            String subText = markdownText.substring(index);
+            //Part of current line, starting at current index
+            String subLine = getLine(subText);
 
             //Update Current Line
             if (isStartOfLine) {
@@ -81,15 +86,15 @@ public class MarkdownParser {
             //Handle Headline
             if ((c == '#') && isStartOfLine && (builder.codeBlockContext == null)) {
                 if (builder.headlineType == HeadlineType.NONE) {
-                    if (sub.startsWith("# ")) {
+                    if (subText.startsWith("# ")) {
                         builder.headlineType = HeadlineType.BIGGEST;
                         charsToSkip = 1;
                     }
-                    if (sub.startsWith("## ")) {
+                    if (subText.startsWith("## ")) {
                         builder.headlineType = HeadlineType.BIGGER;
                         charsToSkip = 2;
                     }
-                    if (sub.startsWith("### ")) {
+                    if (subText.startsWith("### ")) {
                         builder.headlineType = HeadlineType.BIG;
                         charsToSkip = 3;
                     }
@@ -99,13 +104,40 @@ public class MarkdownParser {
                 }
             }
 
+            //Handle Fonts
+            if (subLine.startsWith("%!!") && !subLine.startsWith("%!!%") && subLine.substring(3).contains("%") && (builder.font == null) && (builder.codeBlockContext == null)) {
+                String fontName = subLine.substring(3).split("%", 2)[0];
+                if (RESOURCE_NAME_FILTER.isAllowedText(fontName)) {
+                    if (subText.contains("%!!%")) {
+                        ResourceLocation font = null;
+                        try {
+                            font = new ResourceLocation(fontName);
+                        } catch (Exception ignore) {}
+                        if (font != null) {
+                            if (!builder.text.isEmpty() || isStartOfLine) {
+                                lastBuiltFragment = addFragment(fragments, builder.build(false, false));
+                            }
+                            builder.font = font;
+                            charsToSkip = fontName.length()+3;
+                            continue;
+                        }
+                    }
+                }
+            }
+            if (subText.startsWith("%!!%") && (builder.font != null)) {
+                lastBuiltFragment = addFragment(fragments, builder.build(false, false));
+                builder.font = null;
+                charsToSkip = 3;
+                continue;
+            }
+
             //Handle HEX Coloring
             if (subLine.startsWith("%#") && !subLine.startsWith("%#%") && (builder.textColor == null) && (builder.codeBlockContext == null)) {
                 String s = (subLine.length() >= 11) ? subLine.substring(1, 11) : "";
                 if (!s.endsWith("%")) {
                     s = (subLine.length() >= 9) ? subLine.substring(1, 9) : "";
                 }
-                if (s.endsWith("%") && sub.contains("%#%")) {
+                if (s.endsWith("%") && subText.contains("%#%")) {
                     DrawableColor color = DrawableColor.of(s.substring(0, s.length()-1));
                     if (color != DrawableColor.EMPTY) {
                         if (!builder.text.isEmpty() || isStartOfLine) {
@@ -117,7 +149,7 @@ public class MarkdownParser {
                     }
                 }
             }
-            if (sub.startsWith("%#%") && (builder.textColor != null)) {
+            if (subText.startsWith("%#%") && (builder.textColor != null)) {
                 lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                 builder.textColor = null;
                 charsToSkip = 2;
@@ -127,7 +159,7 @@ public class MarkdownParser {
             //Handle Bold
             if ((c == '*') && !builder.bold && (builder.codeBlockContext == null)) {
                 String s2 = markdownText.substring(Math.min(markdownText.length(), index+2));
-                if (sub.startsWith("**") && s2.contains("**")) {
+                if (subText.startsWith("**") && s2.contains("**")) {
                     if (!builder.text.isEmpty() || isStartOfLine) {
                         lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                     }
@@ -137,7 +169,7 @@ public class MarkdownParser {
                 }
             }
             if ((c == '*') && builder.bold) {
-                if (sub.startsWith("**")) {
+                if (subText.startsWith("**")) {
                     lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                     builder.bold = false;
                     charsToSkip = 1;
@@ -167,7 +199,7 @@ public class MarkdownParser {
             //Handle Italic Asterisk
             if ((c == '*') && !builder.italic && (builder.codeBlockContext == null)) {
                 String s2 = markdownText.substring(Math.min(markdownText.length(), index+1));
-                if (!sub.startsWith("**") && s2.contains("*")) {
+                if (!subText.startsWith("**") && s2.contains("*")) {
                     boolean isEndSingleAsterisk = false;
                     int index2 = 0;
                     for (char c2 : s2.toCharArray()) {
@@ -190,7 +222,7 @@ public class MarkdownParser {
                 }
             }
             if ((c == '*') && builder.italic && !italicUnderscore) {
-                if (!sub.startsWith("**")) {
+                if (!subText.startsWith("**")) {
                     lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                     builder.italic = false;
                     continue;
@@ -249,7 +281,7 @@ public class MarkdownParser {
             if ((c == '[') && (builder.hyperlink == null) && (builder.codeBlockContext == null)) {
                 String s2 = markdownText.substring(Math.min(markdownText.length(), index+1));
                 if (s2.contains("](") && s2.contains(")")) {
-                    String hyperlink = getHyperlinkFromLine(sub);
+                    String hyperlink = getHyperlinkFromLine(subText);
                     if (hyperlink != null) {
                         if (!builder.text.isEmpty() || isStartOfLine) {
                             lastBuiltFragment = addFragment(fragments, builder.build(false, false));
@@ -261,7 +293,7 @@ public class MarkdownParser {
                 }
             }
             if ((c == ']') && (builder.hyperlink != null)) {
-                if (sub.startsWith("](")) {
+                if (subText.startsWith("](")) {
                     lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                     charsToSkip = 2 + builder.hyperlink.link.length();
                     builder.hyperlink = null;
@@ -271,7 +303,7 @@ public class MarkdownParser {
 
             //Handle Quote
             if ((c == '>') && isStartOfLine && (builder.quoteContext == null) && (builder.codeBlockContext == null)) {
-                if (sub.startsWith("> ")) {
+                if (subText.startsWith("> ")) {
                     builder.quoteContext = new QuoteContext();
                     charsToSkip = 1;
                     continue;
@@ -298,13 +330,14 @@ public class MarkdownParser {
                 charsToSkip = 3;
                 continue;
             }
+            //TODO add more bullet list levels (make better handling for infinite levels)
 
             //Handle Separation Line
             if ((c == '-') && isStartOfLine && (builder.codeBlockContext == null)) {
                 CharacterFilter filter = new CharacterFilter();
                 filter.addAllowedCharacters('-');
                 String line = currentLine.replace(" ", "");
-                if (sub.startsWith("---") && filter.isAllowedText(line)) {
+                if (subText.startsWith("---") && filter.isAllowedText(line)) {
                     builder.separationLine = true;
                     builder.text = "---";
                     lastBuiltFragment = addFragment(fragments, builder.build(true, true));
@@ -315,7 +348,7 @@ public class MarkdownParser {
 
             //Handle Code Block Single Line
             if ((c == '`') && (builder.codeBlockContext == null)) {
-                if (!sub.startsWith("```") && isFormattedBlock(sub, '`', true)) {
+                if (!subText.startsWith("```") && isFormattedBlock(subText, '`', true)) {
                     if (!builder.text.isEmpty() || isStartOfLine) {
                         lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                     }
@@ -325,7 +358,7 @@ public class MarkdownParser {
                 }
             }
             if ((c == '`') && (builder.codeBlockContext != null) && builder.codeBlockContext.singleLine) {
-                if (!sub.startsWith("```")) {
+                if (!subText.startsWith("```")) {
                     lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                     builder.codeBlockContext = null;
                     continue;
@@ -334,7 +367,7 @@ public class MarkdownParser {
 
             //Handle Code Block Multi Line
             if ((c == '`') && isStartOfLine && (builder.codeBlockContext == null)) {
-                if (sub.startsWith("```") && isFormattedBlock(sub, '`', false)) {
+                if (subText.startsWith("```") && isFormattedBlock(subText, '`', false)) {
                     builder.codeBlockContext = new CodeBlockContext();
                     builder.codeBlockContext.singleLine = false;
                     skipLine = true;
@@ -342,7 +375,7 @@ public class MarkdownParser {
                 }
             }
             if ((c == '`') && isStartOfLine && (builder.codeBlockContext != null) && !builder.codeBlockContext.singleLine) {
-                if (sub.startsWith("```")) {
+                if (subText.startsWith("```")) {
                     builder.codeBlockContext = null;
                     skipLine = true;
                     continue;
@@ -351,7 +384,7 @@ public class MarkdownParser {
 
             //Handle Alignment : Centered
             if (subLine.startsWith("^^^") && !subLine.startsWith("^^^^") && isStartOfLine && (builder.codeBlockContext == null)) {
-                if ((builder.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT) && isFormattedBlock(sub, '^', false)) {
+                if ((builder.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT) && isFormattedBlock(subText, '^', false)) {
                     builder.alignment = MarkdownRenderer.MarkdownLineAlignment.CENTERED;
                     skipLine = true;
                     continue;
@@ -365,7 +398,7 @@ public class MarkdownParser {
 
             //Handle Alignment : Right
             if (subLine.startsWith("|||") && !subLine.startsWith("||||") && isStartOfLine && (builder.codeBlockContext == null)) {
-                if ((builder.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT) && isFormattedBlock(sub, '|', false)) {
+                if ((builder.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT) && isFormattedBlock(subText, '|', false)) {
                     builder.alignment = MarkdownRenderer.MarkdownLineAlignment.RIGHT;
                     skipLine = true;
                     continue;
@@ -632,6 +665,7 @@ public class MarkdownParser {
         protected HeadlineType headlineType = HeadlineType.NONE;
         protected QuoteContext quoteContext = null;
         protected CodeBlockContext codeBlockContext = null;
+        protected ResourceLocation font = null;
 
         protected FragmentBuilder(MarkdownRenderer renderer) {
             this.renderer = renderer;
@@ -640,6 +674,7 @@ public class MarkdownParser {
         @NotNull
         protected MarkdownTextFragment build(boolean naturalLineBreakAfter, boolean endOfWord) {
             MarkdownTextFragment frag = new MarkdownTextFragment(this.renderer, text);
+            frag.font = font;
             frag.textColor = textColor;
             frag.image = image;
             frag.separationLine = separationLine;

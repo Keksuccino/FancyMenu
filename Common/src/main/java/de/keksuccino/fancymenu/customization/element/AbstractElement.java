@@ -16,6 +16,8 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
@@ -139,7 +141,7 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	}
 
 	@Nullable
-	public AbstractElement getElementAnchorPointElement() {
+	public AbstractElement getParentElementAnchorPointElement() {
 		if (this.anchorPointElementIdentifier == null) return null;
 		if (this.cachedAnchorPointElement == null) {
 			this.cachedAnchorPointElement = getElementByInstanceIdentifier(this.anchorPointElementIdentifier);
@@ -147,7 +149,7 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 		return this.cachedAnchorPointElement;
 	}
 
-	public void setElementAnchorPointElement(AbstractElement element) {
+	public void setParentElementAnchorPointElement(AbstractElement element) {
 		this.cachedAnchorPointElement = element;
 	}
 	
@@ -200,6 +202,20 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 		return this.baseHeight;
 	}
 
+	/**
+	 * This is the X position used by the child element if this element is used as {@link ElementAnchorPoints#ELEMENT} anchor.
+	 */
+	public int getElementAnchorX() {
+		return this.getAbsoluteX();
+	}
+
+	/**
+	 * This is the Y position used by the child element if this element is used as {@link ElementAnchorPoints#ELEMENT} anchor.
+	 */
+	public int getElementAnchorY() {
+		return this.getAbsoluteY();
+	}
+
 	public static String fixBackslashPath(String path) {
 		if (path != null) {
 			return path.replace("\\", "/");
@@ -236,6 +252,20 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 			if (layer != null) return layer.getElementByInstanceIdentifier(identifier);
 		}
 		return null;
+	}
+
+	/**
+	 * Replaces placeholders and deserializes serialized {@link MutableComponent}s.
+	 */
+	@NotNull
+	public static Component buildComponent(@NotNull String serializedComponentOrPlainText) {
+		serializedComponentOrPlainText = PlaceholderParser.replacePlaceholders(serializedComponentOrPlainText);
+		if (!serializedComponentOrPlainText.startsWith("{")) return Component.literal(serializedComponentOrPlainText);
+		try {
+			Component c = Component.Serializer.fromJson(serializedComponentOrPlainText);
+			if (c != null) return c;
+		} catch (Exception ignore) {}
+		return Component.literal(serializedComponentOrPlainText);
 	}
 
 	public enum Alignment {

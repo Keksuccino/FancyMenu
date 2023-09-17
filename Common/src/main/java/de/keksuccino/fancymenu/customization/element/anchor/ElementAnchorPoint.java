@@ -289,25 +289,25 @@ public class ElementAnchorPoint {
 
         @Override
         public int getOriginX(@NotNull AbstractElement element) {
-            AbstractElement anchor = element.getElementAnchorPointElement();
+            AbstractElement anchor = element.getParentElementAnchorPointElement();
             if (anchor != null) {
-                return anchor.getAbsoluteX();
+                return anchor.getElementAnchorX();
             }
             return super.getOriginX(element);
         }
 
         @Override
         public int getOriginY(@NotNull AbstractElement element) {
-            AbstractElement anchor = element.getElementAnchorPointElement();
+            AbstractElement anchor = element.getParentElementAnchorPointElement();
             if (anchor != null) {
-                return anchor.getAbsoluteY();
+                return anchor.getElementAnchorY();
             }
             return super.getOriginY(element);
         }
 
         @Override
         public int getDefaultElementBaseY(@NotNull AbstractElement element) {
-            AbstractElement anchor = element.getElementAnchorPointElement();
+            AbstractElement anchor = element.getParentElementAnchorPointElement();
             if (anchor != null) {
                 return anchor.getAbsoluteHeight();
             }
