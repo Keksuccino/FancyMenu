@@ -12,7 +12,7 @@ public class WidgetIdentifierHandler {
 
     public static boolean isIdentifierOfWidget(@NotNull String widgetIdentifier, @NotNull WidgetMeta meta) {
         widgetIdentifier = widgetIdentifier.replace("button_compatibility_id:", "");
-        if ((meta.getWidget() instanceof UniqueWidget<?> u) && widgetIdentifier.equals(u.getIdentifier())) return true;
+        if ((meta.getWidget() instanceof UniqueWidget u) && widgetIdentifier.equals(u.getWidgetIdentifierFancyMenu())) return true;
         if (MathUtils.isLong(widgetIdentifier)) {
             return widgetIdentifier.equals("" + meta.getLongIdentifier());
         }
@@ -21,7 +21,7 @@ public class WidgetIdentifierHandler {
 
     @Nullable
     public static String getUniversalIdentifierForWidgetMeta(@NotNull WidgetMeta meta) {
-        if ((meta.getWidget() instanceof UniqueWidget<?> u) && (u.getIdentifier() != null)) return u.getIdentifier();
+        if ((meta.getWidget() instanceof UniqueWidget u) && (u.getWidgetIdentifierFancyMenu() != null)) return u.getWidgetIdentifierFancyMenu();
         try {
             WidgetIdentificationContext c = WidgetIdentificationContextRegistry.getContextForScreen(meta.getScreen().getClass());
             if (c != null) {

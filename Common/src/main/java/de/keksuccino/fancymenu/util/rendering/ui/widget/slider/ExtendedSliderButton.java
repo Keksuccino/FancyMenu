@@ -21,7 +21,7 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 import java.util.function.Consumer;
 
-public abstract class ExtendedSliderButton extends AbstractSliderButton implements UniqueWidget<ExtendedSliderButton> {
+public abstract class ExtendedSliderButton extends AbstractSliderButton implements UniqueWidget {
 
     protected static final ResourceLocation SLIDER_LOCATION = new ResourceLocation("textures/gui/slider.png");
 
@@ -328,12 +328,12 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
     }
 
     @Override
-    public @Nullable String getIdentifier() {
+    public @Nullable String getWidgetIdentifierFancyMenu() {
         return this.identifier;
     }
 
     @Override
-    public ExtendedSliderButton setIdentifier(@Nullable String identifier) {
+    public ExtendedSliderButton setWidgetIdentifierFancyMenu(@Nullable String identifier) {
         this.identifier = identifier;
         return this;
     }

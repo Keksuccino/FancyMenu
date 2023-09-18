@@ -29,6 +29,7 @@ public class ProgressBarElement extends AbstractElement {
     public String backgroundTexturePath;
     public boolean useProgressForElementAnchor = false;
     public String progressSource = null;
+    public ProgressValueMode progressValueMode = ProgressValueMode.PERCENTAGE;
 
     //These fields are for caching the last x, y, width and height of the PROGRESS (not the element!)
     protected int lastProgressX = 0;
@@ -122,7 +123,8 @@ public class ProgressBarElement extends AbstractElement {
         if (this.progressSource != null) {
             String s = PlaceholderParser.replacePlaceholders(this.progressSource).replace(" ", "");
             if (MathUtils.isFloat(s)) {
-                return Float.parseFloat(s) / 100.0F;
+                if (this.progressValueMode == ProgressValueMode.PERCENTAGE) return Float.parseFloat(s) / 100.0F;
+                return Float.parseFloat(s);
             }
         }
         return 0.0F;
@@ -197,6 +199,43 @@ public class ProgressBarElement extends AbstractElement {
                 }
             }
             return BarDirection.LEFT;
+        }
+
+    }
+
+    public enum ProgressValueMode implements LocalizedCycleEnum {
+
+        PERCENTAGE("percentage"),
+        FLOATING_POINT("float");
+
+        private final String name;
+
+        ProgressValueMode(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public @NotNull String getLocalizationKeyBase() {
+            return "fancymenu.editor.elements.progress_bar.mode";
+        }
+
+        @Override
+        public @NotNull Style getEntryComponentStyle() {
+            return WARNING_TEXT_STYLE.get();
+        }
+
+        @Override
+        public @NotNull String getName() {
+            return this.name;
+        }
+
+        public static ProgressValueMode byName(@NotNull String name) {
+            for (ProgressValueMode d : ProgressValueMode.values()) {
+                if (d.name.equals(name)) {
+                    return d;
+                }
+            }
+            return ProgressValueMode.PERCENTAGE;
         }
 
     }

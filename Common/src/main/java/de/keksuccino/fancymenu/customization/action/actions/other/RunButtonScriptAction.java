@@ -17,6 +17,11 @@ public class RunButtonScriptAction extends Action {
     }
 
     @Override
+    public boolean isDeprecated() {
+        return true;
+    }
+
+    @Override
     public boolean hasValue() {
         return true;
     }

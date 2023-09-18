@@ -15,6 +15,7 @@ import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -23,7 +24,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Objects;
 
-public abstract class AbstractElement extends GuiComponent implements Renderable {
+public abstract class AbstractElement extends GuiComponent implements Renderable, GuiEventListener, NarratableEntry {
 
 	/** The {@link AbstractElement#builder} field is NULL for this element! Keep that in mind when using it as placeholder! **/
 	@SuppressWarnings("all")
@@ -74,9 +75,11 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	@Override
 	public abstract void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial);
 
-	/**
-	 * Widgets need to extend {@link GuiEventListener} and {@link NarratableEntry}.
-	 */
+	/** Gets called every screen tick. **/
+	public void tick() {
+	}
+
+	/** Widgets need to extend {@link GuiEventListener} and {@link NarratableEntry}. **/
 	@Nullable
 	public List<GuiEventListener> getWidgetsToRegister() {
 		return null;
@@ -266,6 +269,24 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 			if (c != null) return c;
 		} catch (Exception ignore) {}
 		return Component.literal(serializedComponentOrPlainText);
+	}
+
+	@Override
+	public void setFocused(boolean var1) {
+	}
+
+	@Override
+	public boolean isFocused() {
+		return false;
+	}
+
+	@Override
+	public @NotNull NarrationPriority narrationPriority() {
+		return NarrationPriority.NONE;
+	}
+
+	@Override
+	public void updateNarration(@NotNull NarrationElementOutput narrationElementOutput) {
 	}
 
 	public enum Alignment {

@@ -26,7 +26,7 @@ public class MixinGenericDirtMessageScreen extends Screen {
         this.addRenderableWidget(TextWidget.of(this.getTitle(), 0, 70, 200))
                 .centerWidget(this)
                 .setTextAlignment(TextWidget.TextAlignment.CENTER)
-                .setIdentifier("message");
+                .setWidgetIdentifierFancyMenu("message");
 
     }
 

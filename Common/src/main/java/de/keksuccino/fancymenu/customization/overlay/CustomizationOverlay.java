@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.overlay;
 
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.events.screen.KeyPressedScreenEvent;
+import de.keksuccino.fancymenu.events.screen.ScreenKeyPressedEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventPriority;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
@@ -45,7 +45,7 @@ public class CustomizationOverlay {
 	}
 
 	@EventListener
-	public void onScreenKeyPressed(KeyPressedScreenEvent e) {
+	public void onScreenKeyPressed(ScreenKeyPressedEvent e) {
 
 		if (!ScreenCustomization.isScreenBlacklisted(e.getScreen().getClass().getName())) {
 

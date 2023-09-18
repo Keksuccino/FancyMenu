@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.events.widget.RenderGuiListHeaderFooterEvent;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractSelectionList;
@@ -231,13 +232,13 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 		this.allElements.addAll(this.deepElements);
 		this.allElements.addAll(this.vanillaButtonElements);
 
-		for (AbstractElement i : this.allElements) {
+		for (AbstractElement ae : this.allElements) {
 			//Handle appearance delay
 			if (ScreenCustomization.isNewMenu()) {
-				this.handleAppearanceDelayFor(i);
+				this.handleAppearanceDelayFor(ae);
 			}
 			//Add widgets of element to screen
-			List<GuiEventListener> widgetsToRegister = i.getWidgetsToRegister();
+			List<GuiEventListener> widgetsToRegister = ae.getWidgetsToRegister();
 			if (widgetsToRegister != null) {
 				//Element children get always added at pos 0, so reverse the list to preserve the natural widget order
 				widgetsToRegister = Lists.reverse(widgetsToRegister);
@@ -247,6 +248,16 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 					}
 				}
 			}
+		}
+
+		//Add all elements to the screen's widget list
+		for (AbstractElement ae : Lists.reverse(this.allElements)) {
+			((IMixinScreen)e.getScreen()).getChildrenFancyMenu().add(0, ae);
+		}
+
+		//Add menu background to screen's widget list
+		if (this.layoutBase.menuBackground != null) {
+			((IMixinScreen)e.getScreen()).getChildrenFancyMenu().add(0, this.layoutBase.menuBackground);
 		}
 
 	}
@@ -301,6 +312,20 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 				}
 			}).start();
 		}
+	}
+
+	@EventListener
+	public void onScreenTickPre(ScreenTickEvent.Pre e) {
+
+		if (PopupHandler.isPopupActive()) return;
+		if (!this.shouldCustomize(e.getScreen())) return;
+
+		if (this.layoutBase.menuBackground != null) this.layoutBase.menuBackground.tick();
+
+		for (AbstractElement element : this.allElements) {
+			element.tick();
+		}
+
 	}
 
 	@EventListener(priority = EventPriority.VERY_HIGH)

@@ -1,6 +1,9 @@
 package de.keksuccino.fancymenu.customization.action;
 
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,6 +22,10 @@ public abstract class Action {
 
     public Action(@NotNull String uniqueIdentifier) {
         this.identifier = Objects.requireNonNull(uniqueIdentifier);
+    }
+
+    public boolean isDeprecated() {
+        return false;
     }
 
     /**
@@ -54,6 +61,26 @@ public abstract class Action {
     @Nullable
     public List<TextEditorFormattingRule> getValueFormattingRules() {
         return null;
+    }
+
+    public void editValue(@NotNull Screen parentScreen, @NotNull ActionInstance instance) {
+        if (this.hasValue()) {
+            TextEditorScreen s = new TextEditorScreen(this.getValueDisplayName(), null, (call) -> {
+                if (call != null) {
+                    instance.value = call;
+                }
+                Minecraft.getInstance().setScreen(parentScreen);
+            });
+            List<TextEditorFormattingRule> formattingRules = this.getValueFormattingRules();
+            if (formattingRules != null) s.formattingRules.addAll(formattingRules);
+            s.setMultilineMode(false);
+            if (instance.value != null) {
+                s.setText(instance.value);
+            } else {
+                s.setText(this.getValueExample());
+            }
+            Minecraft.getInstance().setScreen(s);
+        }
     }
 
 }

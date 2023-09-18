@@ -71,6 +71,7 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - The action system now supports IF, ELSE-IF und ELSE statements (IF and ELSE-IF take loading requirements)
 - You can drag-&-drop actions (and statements) in the "Edit Actions" screen now (to move them)
 - Complex loading requirements like "Is Number" now have a GUI to build/edit their values more easily
+- Complex actions like "Execute Terminal/CMD Command" now have a GUI to build/edit their values more easily
 - FancyMenu's "config.txt" file is now called "options.txt" (It's NOT recommended to rename the old one to "options.txt"!)
 - The pose of Player Entity elements is now fully customizable (Every body part can be rotated on its X, Y and Z axis, except base body/torso, which only rotates on X and Y)
 - Player Entity elements now have separate "follow mouse" toggles for head and body
@@ -83,6 +84,7 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - All elements of the Receiving Level Screen are now customizable
 - All elements of the Connect Screen are now customizable
 - It is now possible to set a serialized text component (like in the '/tellraw' command for example) as label for buttons and as text for Splash Text elements
+- The "Execute Terminal/CMD Command" action now prints its process output to the game log
  
 - Added loading requirement "File/Folder Exists" to check if a file/folder exists
 - Added loading requirement "Is Button Active" to check if a button is active (clickable/not greyed out)

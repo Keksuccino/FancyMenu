@@ -6,10 +6,14 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
-import de.keksuccino.konkrete.gui.content.AdvancedTextField;
-import de.keksuccino.konkrete.input.CharacterFilter;
+import de.keksuccino.fancymenu.util.ListUtils;
+import de.keksuccino.fancymenu.util.input.CharacterFilter;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import org.jetbrains.annotations.NotNull;
-
+import org.jetbrains.annotations.Nullable;
+import java.util.List;
 import java.util.Objects;
 
 public class InputFieldElement extends AbstractElement {
@@ -17,8 +21,7 @@ public class InputFieldElement extends AbstractElement {
     public String linkedVariable;
     public InputFieldType type = InputFieldType.TEXT;
     public int maxTextLength = 10000;
-
-    public AdvancedTextField textField;
+    public ExtendedEditBox editBox;
     public String lastValue = "";
 
     public InputFieldElement(ElementBuilder<InputFieldElement, InputFieldEditorElement> builder) {
@@ -34,51 +37,61 @@ public class InputFieldElement extends AbstractElement {
 
             //Handle editor mode for text field
             if (isEditor()) {
-                this.textField.active = false;
-                this.textField.setEditable(false);
+                this.editBox.active = false;
+                this.editBox.setEditable(false);
                 if (this.linkedVariable != null) {
                     if (VariableHandler.variableExists(this.linkedVariable)) {
                         String var = Objects.requireNonNull(VariableHandler.getVariable(this.linkedVariable)).getValue();
-                        this.textField.setValue(var);
+                        this.editBox.setValue(var);
                     }
                 }
             }
 
-            this.textField.x = this.getAbsoluteX();
-            this.textField.y = this.getAbsoluteY();
-            this.textField.setWidth(this.getAbsoluteWidth());
-            ((IMixinAbstractWidget)this.textField).setHeightFancyMenu(this.getAbsoluteHeight());
-            this.textField.render(pose, mouseX, mouseY, partial);
+            this.editBox.x = this.getAbsoluteX();
+            this.editBox.y = this.getAbsoluteY();
+            this.editBox.setWidth(this.getAbsoluteWidth());
+            ((IMixinAbstractWidget)this.editBox).setHeightFancyMenu(this.getAbsoluteHeight());
+            this.editBox.render(pose, mouseX, mouseY, partial);
 
             //Update variable value on change
             if (!isEditor()) {
                 if (this.linkedVariable != null) {
-                    if (!this.lastValue.equals(this.textField.getValue())) {
-                        VariableHandler.setVariable(linkedVariable, this.textField.getValue());
+                    if (!this.lastValue.equals(this.editBox.getValue())) {
+                        VariableHandler.setVariable(linkedVariable, this.editBox.getValue());
                     }
                     if (VariableHandler.variableExists(this.linkedVariable)) {
                         String val = Objects.requireNonNull(VariableHandler.getVariable(this.linkedVariable)).getValue();
-                        if (!this.textField.getValue().equals(val)) {
-                            this.textField.setValue(val);
+                        if (!this.editBox.getValue().equals(val)) {
+                            this.editBox.setValue(val);
                         }
                     } else {
-                        this.textField.setValue("");
+                        this.editBox.setValue("");
                     }
                 }
-                this.lastValue = this.textField.getValue();
+                this.lastValue = this.editBox.getValue();
             }
 
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+            RenderingUtils.resetShaderColor();
 
         }
 
     }
 
+    @Override
+    public void tick() {
+        this.editBox.tick();
+    }
+
+    @Override
+    public @Nullable List<GuiEventListener> getWidgetsToRegister() {
+        return ListUtils.build(this.editBox);
+    }
+
     public enum InputFieldType {
 
-        INTEGER_ONLY("integer", CharacterFilter.getIntegerCharacterFiler()),
-        DECIMAL_ONLY("decimal", CharacterFilter.getDoubleCharacterFiler()),
-        URL("url", CharacterFilter.getUrlCharacterFilter()),
+        INTEGER_ONLY("integer", CharacterFilter.buildIntegerCharacterFiler()),
+        DECIMAL_ONLY("decimal", CharacterFilter.buildDoubleCharacterFiler()),
+        URL("url", CharacterFilter.buildUrlCharacterFilter()),
         TEXT("text", null);
 
         final String name;

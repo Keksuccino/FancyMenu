@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu;
 import de.keksuccino.fancymenu.commands.client.CloseGuiScreenCommand;
 import de.keksuccino.fancymenu.commands.client.OpenGuiScreenCommand;
 import de.keksuccino.fancymenu.commands.client.VariableCommand;
-import de.keksuccino.fancymenu.events.screen.KeyPressedScreenEvent;
+import de.keksuccino.fancymenu.events.screen.ScreenKeyPressedEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import net.minecraftforge.client.event.RegisterClientCommandsEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
@@ -28,7 +28,7 @@ public class FancyMenuForgeClientEvents {
 
     @SubscribeEvent
     public void afterScreenKeyPress(ScreenEvent.KeyPressed.Post e) {
-        KeyPressedScreenEvent event = new KeyPressedScreenEvent(e.getScreen(), e.getKeyCode(), e.getScanCode(), e.getModifiers());
+        ScreenKeyPressedEvent event = new ScreenKeyPressedEvent(e.getScreen(), e.getKeyCode(), e.getScanCode(), e.getModifiers());
         EventHandler.INSTANCE.postEvent(event);
     }
 

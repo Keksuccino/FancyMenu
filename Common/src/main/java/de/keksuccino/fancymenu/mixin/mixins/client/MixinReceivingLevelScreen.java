@@ -28,7 +28,7 @@ public class MixinReceivingLevelScreen extends Screen {
         this.addRenderableWidget(TextWidget.of(DOWNLOADING_TERRAIN_TEXT_FANCYMENU, 0, (this.height / 2) - 50, 200))
                 .centerWidget(this)
                 .setTextAlignment(TextWidget.TextAlignment.CENTER)
-                .setIdentifier("downloading_terrain");
+                .setWidgetIdentifierFancyMenu("downloading_terrain");
 
     }
 

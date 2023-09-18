@@ -124,7 +124,7 @@ public class TextElement extends AbstractElement {
 
             try {
 
-                this.tick();
+                this.renderTick();
 
                 RenderSystem.enableBlend();
                 this.scrollArea.setX(this.getAbsoluteX(), true);
@@ -148,7 +148,7 @@ public class TextElement extends AbstractElement {
         return ListUtils.build(this.markdownRenderer, this.scrollArea);
     }
 
-    protected void tick() {
+    protected void renderTick() {
 
         //If placeholders used in the URL or path change, update content
         if ((this.sourceMode == SourceMode.WEB_SOURCE) || (this.sourceMode == SourceMode.LOCAL_SOURCE)) {

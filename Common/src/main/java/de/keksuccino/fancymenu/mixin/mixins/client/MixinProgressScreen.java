@@ -41,12 +41,12 @@ public class MixinProgressScreen extends Screen {
             this.headerTextFancyMenu = this.addRenderableWidget(TextWidget.empty(0, 70, 500))
                     .setTextAlignment(TextWidget.TextAlignment.CENTER)
                     .centerWidget(this)
-                    .setIdentifier("header");
+                    .setWidgetIdentifierFancyMenu("header");
 
             this.stageTextFancyMenu = this.addRenderableWidget(TextWidget.empty(0, 90, 500))
                     .setTextAlignment(TextWidget.TextAlignment.CENTER)
                     .centerWidget(this)
-                    .setIdentifier("stage");
+                    .setWidgetIdentifierFancyMenu("stage");
 
             this.updateText();
 

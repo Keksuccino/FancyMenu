@@ -6,13 +6,12 @@ import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.konkrete.gui.content.AdvancedTextField;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.Objects;
 
 public class InputFieldElementBuilder extends ElementBuilder<InputFieldElement, InputFieldEditorElement> {
@@ -23,11 +22,12 @@ public class InputFieldElementBuilder extends ElementBuilder<InputFieldElement, 
 
     @Override
     public @NotNull InputFieldElement buildDefaultInstance() {
-        InputFieldElement i = new InputFieldElement(this);
-        i.baseWidth = 100;
-        i.baseHeight = 20;
-        i.textField = new AdvancedTextField(Minecraft.getInstance().font, i.getAbsoluteX(), i.getAbsoluteY(), i.getAbsoluteWidth(), i.getAbsoluteHeight(), true, i.type.filter);
-        return i;
+        InputFieldElement e = new InputFieldElement(this);
+        e.baseWidth = 100;
+        e.baseHeight = 20;
+        e.editBox = new ExtendedEditBox(Minecraft.getInstance().font, e.getAbsoluteX(), e.getAbsoluteY(), e.getAbsoluteWidth(), e.getAbsoluteHeight(), Component.empty());
+        e.editBox.setCharacterFilter(e.type.filter);
+        return e;
     }
 
     @Override
@@ -55,12 +55,13 @@ public class InputFieldElementBuilder extends ElementBuilder<InputFieldElement, 
             element.maxTextLength = 1;
         }
 
-        element.textField = new AdvancedTextField(Minecraft.getInstance().font, element.getAbsoluteX(), element.getAbsoluteY(), element.getAbsoluteWidth(), element.getAbsoluteHeight(), true, element.type.filter);
-        element.textField.setMaxLength(element.maxTextLength);
+        element.editBox = new ExtendedEditBox(Minecraft.getInstance().font, element.getAbsoluteX(), element.getAbsoluteY(), element.getAbsoluteWidth(), element.getAbsoluteHeight(), Component.empty());
+        element.editBox.setCharacterFilter(element.type.filter);
+        element.editBox.setMaxLength(element.maxTextLength);
         if (element.linkedVariable != null) {
             if (VariableHandler.variableExists(element.linkedVariable)) {
                 String var = Objects.requireNonNull(VariableHandler.getVariable(element.linkedVariable)).getValue();
-                element.textField.setValue(var);
+                element.editBox.setValue(var);
             }
         }
 

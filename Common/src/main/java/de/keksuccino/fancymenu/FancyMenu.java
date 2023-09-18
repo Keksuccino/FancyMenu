@@ -19,14 +19,21 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO Target mappings in MixinForgeGameRenderer fixen, falls nötig
+
 	//TODO ERSTEN ALPHA BUILD COMPILEN !!!! <------------------------------
 	//TODO ERSTEN ALPHA BUILD COMPILEN !!!! <------------------------------
 	//TODO ERSTEN ALPHA BUILD COMPILEN !!!! <------------------------------
 	//TODO ERSTEN ALPHA BUILD COMPILEN !!!! <------------------------------
 	//TODO ERSTEN ALPHA BUILD COMPILEN !!!! <------------------------------
 
-	//TODO Eventuell UniqueWidget interface zu AbstractWidget adden, um auch vanilla buttons identifier geben zu können, wenn nötig
-	// - könnte universal button identifiers ersetzen / alternative dazu sein
+	//TODO Add Edit GUI to more Action values, if needed
+
+	//TODO Testweise Title screen widget identifiers adden (eventuell dafür universal widget identifiers entfernen)
+
+	//TODO Icon rechts zu menu bar adden (Tür mit Pfeil nach draußen), mit dem man screens verlassen kann (wird nicht in Layout Editor gezeigt)
+
+	//TODO Markdown support for tooltips
 
 	//TODO FIXEN: Splash Elemente werden bei resize reloaded (isNewMenu in builder fixen??)
 

@@ -12,7 +12,7 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class TextWidget extends AbstractWidget implements UniqueWidget<TextWidget> {
+public class TextWidget extends AbstractWidget implements UniqueWidget {
 
     @Nullable
     protected String widgetIdentifier;
@@ -110,14 +110,14 @@ public class TextWidget extends AbstractWidget implements UniqueWidget<TextWidge
     }
 
     @Override
-    public TextWidget setIdentifier(@Nullable String identifier) {
+    public TextWidget setWidgetIdentifierFancyMenu(@Nullable String identifier) {
         this.widgetIdentifier = identifier;
         return this;
     }
 
     @Nullable
     @Override
-    public String getIdentifier() {
+    public String getWidgetIdentifierFancyMenu() {
         return this.widgetIdentifier;
     }
 

@@ -1,11 +1,15 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
+import net.minecraft.client.gui.components.AbstractWidget;
 import org.jetbrains.annotations.Nullable;
 
-public interface UniqueWidget<T> {
+/**
+ * Gets applied to the {@link AbstractWidget} class, to be able to set identifiers to instances of it.
+ */
+public interface UniqueWidget {
 
-    T setIdentifier(@Nullable String identifier);
+    AbstractWidget setWidgetIdentifierFancyMenu(@Nullable String identifier);
 
-    String getIdentifier();
+    String getWidgetIdentifierFancyMenu();
 
 }

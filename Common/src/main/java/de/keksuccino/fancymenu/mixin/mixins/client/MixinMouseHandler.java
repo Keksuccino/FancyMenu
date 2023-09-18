@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.client;
 
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
-import de.keksuccino.fancymenu.events.screen.MouseScrollScreenEvent;
+import de.keksuccino.fancymenu.events.screen.ScreenMouseScrollEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import org.spongepowered.asm.mixin.Mixin;
@@ -27,7 +27,7 @@ public class MixinMouseHandler {
         double scrollDelta = (this.mc.options.discreteMouseScroll().get() ? Math.signum(offset) : offset) * this.mc.options.mouseWheelSensitivity().get();
         double mX = this.xpos * (double)this.mc.getWindow().getGuiScaledWidth() / (double)this.mc.getWindow().getScreenWidth();
         double mY = this.ypos * (double)this.mc.getWindow().getGuiScaledHeight() / (double)this.mc.getWindow().getScreenHeight();
-        MouseScrollScreenEvent.Pre e = new MouseScrollScreenEvent.Pre(mc.screen, mX, mY, scrollDelta);
+        ScreenMouseScrollEvent.Pre e = new ScreenMouseScrollEvent.Pre(mc.screen, mX, mY, scrollDelta);
         EventHandler.INSTANCE.postEvent(e);
         if (e.isCanceled()) {
             info.cancel();
@@ -43,7 +43,7 @@ public class MixinMouseHandler {
         double scrollDelta = (this.mc.options.discreteMouseScroll().get() ? Math.signum(offset) : offset) * this.mc.options.mouseWheelSensitivity().get();
         double mX = this.xpos * (double)this.mc.getWindow().getGuiScaledWidth() / (double)this.mc.getWindow().getScreenWidth();
         double mY = this.ypos * (double)this.mc.getWindow().getGuiScaledHeight() / (double)this.mc.getWindow().getScreenHeight();
-        MouseScrollScreenEvent.Post e = new MouseScrollScreenEvent.Post(mc.screen, mX, mY, scrollDelta);
+        ScreenMouseScrollEvent.Post e = new ScreenMouseScrollEvent.Post(mc.screen, mX, mY, scrollDelta);
         EventHandler.INSTANCE.postEvent(e);
     }
 

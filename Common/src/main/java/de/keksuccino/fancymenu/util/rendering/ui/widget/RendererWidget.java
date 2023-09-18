@@ -1,14 +1,13 @@
-package de.keksuccino.fancymenu.util.rendering;
+package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class RendererWidget extends AbstractWidget implements UniqueWidget<RendererWidget> {
+public class RendererWidget extends AbstractWidget implements UniqueWidget {
 
     @NotNull
     protected RendererWidgetBody body;
@@ -36,12 +35,12 @@ public class RendererWidget extends AbstractWidget implements UniqueWidget<Rende
 
     @Override
     @Nullable
-    public String getIdentifier() {
+    public String getWidgetIdentifierFancyMenu() {
         return this.identifier;
     }
 
     @Override
-    public RendererWidget setIdentifier(@Nullable String identifier) {
+    public RendererWidget setWidgetIdentifierFancyMenu(@Nullable String identifier) {
         this.identifier = identifier;
         return this;
     }

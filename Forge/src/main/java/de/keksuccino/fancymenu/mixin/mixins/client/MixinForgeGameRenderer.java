@@ -28,15 +28,13 @@ public class MixinForgeGameRenderer {
         this.cachedMouseY = mouseY;
         this.cachedPartial = partial;
         MixinCache.currentRenderScreen = screen;
-        RenderScreenEvent.Pre e = new RenderScreenEvent.Pre(Minecraft.getInstance().screen, poseStack, mouseX, mouseY, partial);
-        EventHandler.INSTANCE.postEvent(e);
+        EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(Minecraft.getInstance().screen, poseStack, mouseX, mouseY, partial));
         return true;
     }
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/client/ForgeHooksClient;drawScreen(Lnet/minecraft/client/gui/screens/Screen;Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V", shift = At.Shift.AFTER))
     private void afterRenderScreenFancyMenu(float $$0, long $$1, boolean $$2, CallbackInfo info) {
-        RenderScreenEvent.Post e = new RenderScreenEvent.Post(Minecraft.getInstance().screen, (this.cachedStack != null) ? this.cachedStack : new PoseStack(), this.cachedMouseX, this.cachedMouseY, this.cachedPartial);
-        EventHandler.INSTANCE.postEvent(e);
+        EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(Minecraft.getInstance().screen, (this.cachedStack != null) ? this.cachedStack : new PoseStack(), this.cachedMouseX, this.cachedMouseY, this.cachedPartial));
     }
 
 }

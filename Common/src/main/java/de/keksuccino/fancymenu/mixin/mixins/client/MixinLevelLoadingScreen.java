@@ -4,7 +4,7 @@ import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.patches.WidgetifiedScreen;
-import de.keksuccino.fancymenu.util.rendering.RendererWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.RendererWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.TextWidget;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.LevelLoadingScreen;
@@ -38,11 +38,11 @@ public abstract class MixinLevelLoadingScreen extends Screen {
         this.percentageTextFancyMenu = this.addRenderableWidget(TextWidget.of(this.getFormattedProgress(), 0, (this.height / 2) - 30 - (9 / 2), 200))
                 .setTextAlignment(TextWidget.TextAlignment.CENTER)
                 .centerWidget(this)
-                .setIdentifier("percentage");
+                .setWidgetIdentifierFancyMenu("percentage");
 
         this.addRenderableWidget(new RendererWidget((this.width / 2) - 50, (this.height / 2) + 30 - 50, 100, 100, (pose, mouseX, mouseY, partial, x, y, width1, height1, renderer) -> {
             this.renderChunkBoxFancyMenu(pose, x + 50, y + 50);
-        })).setIdentifier("chunks");
+        })).setWidgetIdentifierFancyMenu("chunks");
 
     }
 

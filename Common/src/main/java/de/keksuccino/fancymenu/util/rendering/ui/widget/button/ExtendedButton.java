@@ -31,7 +31,7 @@ import java.awt.*;
 import java.util.Objects;
 
 @SuppressWarnings("unused")
-public class ExtendedButton extends Button implements UniqueWidget<ExtendedButton> {
+public class ExtendedButton extends Button implements UniqueWidget {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -349,13 +349,13 @@ public class ExtendedButton extends Button implements UniqueWidget<ExtendedButto
     }
 
     @Override
-    public ExtendedButton setIdentifier(@Nullable String identifier) {
+    public ExtendedButton setWidgetIdentifierFancyMenu(@Nullable String identifier) {
         this.identifier = identifier;
         return this;
     }
 
     @Override
-    public @Nullable String getIdentifier() {
+    public @Nullable String getWidgetIdentifierFancyMenu() {
         return this.identifier;
     }
 

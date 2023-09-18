@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollbar;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.events.screen.MouseScrollScreenEvent;
+import de.keksuccino.fancymenu.events.screen.ScreenMouseScrollEvent;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.gui.GuiComponent;
@@ -155,7 +155,7 @@ public class ScrollBar extends GuiComponent {
 
     }
 
-    protected void handleWheelScrolling(MouseScrollScreenEvent.Pre e) {
+    protected void handleWheelScrolling(ScreenMouseScrollEvent.Pre e) {
         if (this.active && this.allowScrollWheel && this.isMouseInsideScrollArea(true) && !this.grabbed) {
             float scrollOffset = 0.1F * this.wheelScrollSpeed;
             if (e.getScrollDelta() > 0) {

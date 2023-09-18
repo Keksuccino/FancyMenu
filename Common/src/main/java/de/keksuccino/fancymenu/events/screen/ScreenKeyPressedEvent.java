@@ -6,37 +6,46 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
+import org.jetbrains.annotations.NotNull;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 
-public class MouseScrollScreenEvent extends EventBase {
+public class ScreenKeyPressedEvent extends EventBase {
 
     private final Screen screen;
-    private final double scrollDelta;
-    private final double mouseX;
-    private final double mouseY;
+    private final int keycode;
+    private final int scancode;
+    private final int modifiers;
 
-    protected MouseScrollScreenEvent(Screen screen, double mouseX, double mouseY, double scrollDelta) {
+    public ScreenKeyPressedEvent(Screen screen, int keycode, int scancode, int modifiers) {
         this.screen = screen;
-        this.mouseX = mouseX;
-        this.mouseY = mouseY;
-        this.scrollDelta = scrollDelta;
+        this.keycode = keycode;
+        this.scancode = scancode;
+        this.modifiers = modifiers;
     }
 
     public Screen getScreen() {
-        return screen;
+        return this.screen;
     }
 
-    public double getScrollDelta() {
-        return scrollDelta;
+    public int getKeycode() {
+        return this.keycode;
     }
 
-    public double getMouseX() {
-        return mouseX;
+    public int getScancode() {
+        return this.scancode;
     }
 
-    public double getMouseY() {
-        return mouseY;
+    public int getModifiers() {
+        return this.modifiers;
+    }
+
+    @NotNull
+    public String getKeyName() {
+        String key = GLFW.glfwGetKeyName(this.keycode, this.scancode);
+        if (key == null) key = "";
+        return key;
     }
 
     public <T extends GuiEventListener & NarratableEntry> void addWidget(T widget) {
@@ -64,27 +73,6 @@ public class MouseScrollScreenEvent extends EventBase {
     @Override
     public boolean isCancelable() {
         return false;
-    }
-
-    public static class Pre extends MouseScrollScreenEvent {
-
-        public Pre(Screen screen, double mouseX, double mouseY, double scrollDelta) {
-            super(screen, mouseX, mouseY, scrollDelta);
-        }
-
-        @Override
-        public boolean isCancelable() {
-            return true;
-        }
-
-    }
-
-    public static class Post extends MouseScrollScreenEvent {
-
-        public Post(Screen screen, double mouseX, double mouseY, double scrollDelta) {
-            super(screen, mouseX, mouseY, scrollDelta);
-        }
-
     }
 
 }

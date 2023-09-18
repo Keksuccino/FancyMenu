@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -23,13 +24,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.io.File;
 
 @Mixin(value = AbstractWidget.class)
-public abstract class MixinAbstractWidget extends GuiComponent implements CustomizableWidget {
+public abstract class MixinAbstractWidget extends GuiComponent implements CustomizableWidget, UniqueWidget {
 
 	@Shadow protected float alpha;
 	@Shadow public boolean visible;
 	@Shadow public boolean active;
 	@Shadow protected boolean isHovered;
 
+	@Unique @Nullable
+	private String widgetIdentifierFancyMenu;
 	@Unique @Nullable
 	private Component customLabelFancyMenu;
 	@Unique @Nullable
@@ -202,6 +205,20 @@ public abstract class MixinAbstractWidget extends GuiComponent implements Custom
 	@Override
 	public void setHiddenFancyMenu(boolean hiddenFancyMenu) {
 		this.hiddenFancyMenu = hiddenFancyMenu;
+	}
+
+	@SuppressWarnings("all")
+	@Unique
+	@Override
+	public AbstractWidget setWidgetIdentifierFancyMenu(@Nullable String identifier) {
+		this.widgetIdentifierFancyMenu = identifier;
+		return (AbstractWidget)((Object)this);
+	}
+
+	@Unique
+	@Override
+	public @Nullable String getWidgetIdentifierFancyMenu() {
+		return this.widgetIdentifierFancyMenu;
 	}
 
 }

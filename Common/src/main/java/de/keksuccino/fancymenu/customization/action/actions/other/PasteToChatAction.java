@@ -1,9 +1,14 @@
 package de.keksuccino.fancymenu.customization.action.actions.other;
 
 import de.keksuccino.fancymenu.customization.action.Action;
+import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinChatScreen;
 import de.keksuccino.fancymenu.mixin.mixins.client.IMixinMinecraft;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.cycle.CommonCycles;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
@@ -11,6 +16,9 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Objects;
+import java.util.function.Consumer;
 
 public class PasteToChatAction extends Action {
 
@@ -72,6 +80,56 @@ public class PasteToChatAction extends Action {
     @Override
     public String getValueExample() {
         return "true:Hi my name is Fred.";
+    }
+
+    @Override
+    public void editValue(@NotNull Screen parentScreen, @NotNull ActionInstance instance) {
+        PasteToChatActionValueScreen s = new PasteToChatActionValueScreen(Objects.requireNonNullElse(instance.value, this.getValueExample()), value -> {
+            if (value != null) {
+                instance.value = value;
+            }
+            Minecraft.getInstance().setScreen(parentScreen);
+        });
+        Minecraft.getInstance().setScreen(s);
+    }
+
+    public static class PasteToChatActionValueScreen extends StringBuilderScreen {
+
+        protected boolean append = false;
+        protected String msg = "";
+
+        protected PasteToChatActionValueScreen(@NotNull String value, @NotNull Consumer<String> callback) {
+            super(Component.translatable("fancymenu.editor.actions.generic_edit_value"), callback);
+            if (value.contains(":")) {
+                this.msg = value.split(":", 2)[1];
+                String appendString = value.split(":", 2)[0];
+                if (appendString.equalsIgnoreCase("true")) this.append = true;
+            }
+        }
+
+        @Override
+        protected void initCells() {
+
+            this.addSpacerCell(20);
+
+            this.addLabelCell(Component.translatable("fancymenu.editor.actions.paste_to_chat.text"));
+            this.addTextInputCell(null, true, true).setEditListener(s -> this.msg = s).setText(this.msg);
+
+            this.addCellGroupEndSpacerCell();
+
+            this.addWidgetCell(new CycleButton<>(0, 0, 20, 20, CommonCycles.cycleEnabledDisabled("fancymenu.editor.actions.paste_to_chat.append", this.append), (value, button) -> {
+                this.append = value.getAsBoolean();
+            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.actions.paste_to_chat.append.desc"))), true);
+
+            this.addSpacerCell(20);
+
+        }
+
+        @Override
+        public @NotNull String buildString() {
+            return this.append + ":" + this.msg;
+        }
+
     }
 
 }

@@ -7,10 +7,13 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class MenuBackground extends GuiComponent implements Renderable {
+public abstract class MenuBackground extends GuiComponent implements Renderable, GuiEventListener, NarratableEntry {
 
     public final MenuBackgroundBuilder<?> builder;
     /** This gets set by the {@link ScreenCustomizationLayer} when screens fade in or out and should only get used as getter. **/
@@ -24,6 +27,10 @@ public abstract class MenuBackground extends GuiComponent implements Renderable 
 
     @Override
     public abstract void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial);
+
+    /** Gets called every screen tick. **/
+    public void tick() {
+    }
 
     @Nullable
     public MenuBackground copy() {
@@ -45,6 +52,24 @@ public abstract class MenuBackground extends GuiComponent implements Renderable 
 
     public static int getScreenHeight() {
         return AbstractElement.getScreenHeight();
+    }
+
+    @Override
+    public void setFocused(boolean var1) {
+    }
+
+    @Override
+    public boolean isFocused() {
+        return false;
+    }
+
+    @Override
+    public @NotNull NarrationPriority narrationPriority() {
+        return NarrationPriority.NONE;
+    }
+
+    @Override
+    public void updateNarration(@NotNull NarrationElementOutput narrationElementOutput) {
     }
 
 }

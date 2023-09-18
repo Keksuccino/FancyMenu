@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.mixin.mixins.client;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.world.LastWorldHandler;
 import de.keksuccino.fancymenu.util.patches.WidgetifiedScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.TextWidget;
@@ -45,7 +44,7 @@ public abstract class MixinConnectScreen extends Screen {
         this.statusTextFancyMenu = this.addRenderableWidget(TextWidget.of(this.status, 0, (this.height / 2) - 50, 200))
                 .centerWidget(this)
                 .setTextAlignment(TextWidget.TextAlignment.CENTER)
-                .setIdentifier("status");
+                .setWidgetIdentifierFancyMenu("status");
 
     }
 

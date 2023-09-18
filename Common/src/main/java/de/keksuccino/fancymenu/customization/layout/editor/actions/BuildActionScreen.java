@@ -9,19 +9,16 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextListScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.List;
 import java.util.function.Consumer;
 
 public class BuildActionScreen extends Screen {
@@ -68,23 +65,7 @@ public class BuildActionScreen extends Screen {
             if (this.instance.action == Action.EMPTY) return;
             this.originalAction = null;
             this.originalActionValue = null;
-            TextEditorScreen s = new TextEditorScreen(this.instance.action.getValueDisplayName(), null, (call) -> {
-                if (call != null) {
-                    this.instance.value = call;
-                }
-                Minecraft.getInstance().setScreen(this);
-            });
-            if (this.instance.action != Action.EMPTY) {
-                List<TextEditorFormattingRule> formattingRules = this.instance.action.getValueFormattingRules();
-                if (formattingRules != null) s.formattingRules.addAll(formattingRules);
-            }
-            s.setMultilineMode(false);
-            if (this.instance.value != null) {
-                s.setText(this.instance.value);
-            } else if (this.instance.action != Action.EMPTY) {
-                s.setText(this.instance.action.getValueExample());
-            }
-            Minecraft.getInstance().setScreen(s);
+            this.instance.action.editValue(this, this.instance);
         }) {
             @Override
             public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
@@ -213,8 +194,19 @@ public class BuildActionScreen extends Screen {
         public Action action;
 
         public ActionScrollEntry(ScrollArea parent, @NotNull Action action, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), UIBase.getUIColorTheme().listing_dot_color_1.getColor(), onClick);
+            super(parent, buildLabel(action), UIBase.getUIColorTheme().listing_dot_color_1.getColor(), onClick);
             this.action = action;
+        }
+
+        @NotNull
+        private static Component buildLabel(@NotNull Action action) {
+            MutableComponent c = action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
+            if (action.isDeprecated()) {
+                c = c.withStyle(Style.EMPTY.withStrikethrough(true));
+                c = c.append(Component.literal(" ").setStyle(Style.EMPTY.withStrikethrough(false)));
+                c = c.append(Component.translatable("fancymenu.editor.actions.deprecated").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()).withStrikethrough(false)));
+            }
+            return c;
         }
 
     }

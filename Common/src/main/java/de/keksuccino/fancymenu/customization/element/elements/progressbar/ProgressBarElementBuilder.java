@@ -55,6 +55,11 @@ public class ProgressBarElementBuilder extends ElementBuilder<ProgressBarElement
             element.direction = ProgressBarElement.BarDirection.byName(barDirection);
         }
 
+        String valueMode = serialized.getValue("value_mode");
+        if (valueMode != null) {
+            element.progressValueMode = ProgressBarElement.ProgressValueMode.byName(valueMode);
+        }
+
         element.progressSource = serialized.getValue("progress_source");
 
         return element;
@@ -75,6 +80,7 @@ public class ProgressBarElementBuilder extends ElementBuilder<ProgressBarElement
         serializeTo.putProperty("direction", element.direction.getName());
         serializeTo.putProperty("progress_for_element_anchor", "" + element.useProgressForElementAnchor);
         serializeTo.putProperty("progress_source", element.progressSource);
+        serializeTo.putProperty("value_mode", element.progressValueMode.getName());
 
         return serializeTo;
         

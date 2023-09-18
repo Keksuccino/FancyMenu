@@ -28,7 +28,7 @@ public class TickerElement extends AbstractElement implements IExecutableElement
         super(builder);
     }
 
-    public void tick() {
+    protected void tickerElementTick() {
         if (this.ready && this.shouldRender()) {
             if (this.ticked && (this.tickMode == TickMode.ON_MENU_LOAD)) {
                 return;
@@ -60,7 +60,7 @@ public class TickerElement extends AbstractElement implements IExecutableElement
             fill(pose, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), Color.ORANGE.getRGB());
             drawCenteredString(pose, Minecraft.getInstance().font, "§l" + I18n.get("fancymenu.customization.items.ticker"), this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY() + (this.getAbsoluteHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
         } else if (!this.isAsync) {
-            this.tick();
+            this.tickerElementTick();
         }
 
         //Start thread if not in editor and isAsync
@@ -70,7 +70,7 @@ public class TickerElement extends AbstractElement implements IExecutableElement
                 TickerElementBuilder.cachedThreadControllers.add(this.asyncThreadController);
                 new Thread(() -> {
                     while ((this.asyncThreadController != null) && this.asyncThreadController.running && this.isAsync) {
-                        this.tick();
+                        this.tickerElementTick();
                         try {
                             //Sleep 50ms to tick 20 times per second (like normal MC menus)
                             Thread.sleep(50);

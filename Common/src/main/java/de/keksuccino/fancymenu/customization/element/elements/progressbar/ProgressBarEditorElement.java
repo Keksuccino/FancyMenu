@@ -64,6 +64,14 @@ public class ProgressBarEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("separator_after_background_entries");
 
+        this.addCycleContextMenuEntryTo(this.rightClickMenu, "set_progress_value_mode",
+                        ListUtils.build(ProgressBarElement.ProgressValueMode.PERCENTAGE, ProgressBarElement.ProgressValueMode.FLOATING_POINT),
+                        ProgressBarEditorElement.class,
+                        element -> ((ProgressBarElement)element.element).progressValueMode,
+                        (element, progressValueMode) -> ((ProgressBarElement)element.element).progressValueMode = progressValueMode,
+                        (menu, entry, switcherValue) -> switcherValue.getCycleComponent())
+                .setStackable(true);
+
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_progress_source",
                         ProgressBarEditorElement.class,
                         consumes -> ((ProgressBarElement)consumes.element).progressSource,

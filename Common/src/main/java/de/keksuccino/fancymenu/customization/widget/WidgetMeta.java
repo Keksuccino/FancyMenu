@@ -48,7 +48,7 @@ public class WidgetMeta {
 
 	@Nullable
 	public String getUniversalIdentifier() {
-		if ((this.widget instanceof UniqueWidget<?> u) && (u.getIdentifier() != null)) return u.getIdentifier();
+		if ((this.widget instanceof UniqueWidget u) && (u.getWidgetIdentifierFancyMenu() != null)) return u.getWidgetIdentifierFancyMenu();
 		return this.universalIdentifier;
 	}
 

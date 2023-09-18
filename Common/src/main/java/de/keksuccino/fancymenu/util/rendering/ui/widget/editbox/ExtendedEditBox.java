@@ -15,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.Color;
 
 @SuppressWarnings("unused")
-public class ExtendedEditBox extends EditBox implements UniqueWidget<ExtendedEditBox> {
+public class ExtendedEditBox extends EditBox implements UniqueWidget {
 
     protected CharacterFilter characterFilter;
     protected CharacterRenderFormatter characterRenderFormatter;
@@ -286,13 +286,13 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget<ExtendedEdi
     }
 
     @Override
-    public ExtendedEditBox setIdentifier(@Nullable String identifier) {
+    public ExtendedEditBox setWidgetIdentifierFancyMenu(@Nullable String identifier) {
         this.identifier = identifier;
         return this;
     }
 
     @Override
-    public @Nullable String getIdentifier() {
+    public @Nullable String getWidgetIdentifierFancyMenu() {
         return this.identifier;
     }
 
