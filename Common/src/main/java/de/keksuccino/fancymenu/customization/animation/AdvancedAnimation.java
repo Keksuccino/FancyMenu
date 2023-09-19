@@ -14,6 +14,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 
+@SuppressWarnings("all")
 public class AdvancedAnimation implements IAnimationRenderer {
 	
 	private final IAnimationRenderer introRenderer;
@@ -23,9 +24,7 @@ public class AdvancedAnimation implements IAnimationRenderer {
 	private final String introAudioPath;
 	private boolean muted = false;
 	private final boolean replayIntro;
-
 	public String propertiesPath = null;
-
 	protected boolean prepared = false;
 	
 	/**
@@ -65,12 +64,6 @@ public class AdvancedAnimation implements IAnimationRenderer {
 	@Override
 	public void prepareAnimation() {
 		if (!this.prepared) {
-			if (this.mainAudioPath != null) {
-				SoundHandler.registerSound(mainAudioPath, mainAudioPath);
-			}
-			if ((this.introAudioPath != null) && this.hasIntro()) {
-				SoundHandler.registerSound(introAudioPath, introAudioPath);
-			}
 			if (this.animationRenderer != null) {
 				this.animationRenderer.prepareAnimation();
 			}
@@ -110,6 +103,7 @@ public class AdvancedAnimation implements IAnimationRenderer {
 			if (!this.muted) {
 				if (this.hasIntroAudio() && !this.introRenderer.isFinished() && ((this.introRenderer.currentFrame() == 1) || (this.introRenderer.currentFrame() > 1) && !SoundHandler.isPlaying(introAudioPath))) {
 					SoundHandler.stopSound(mainAudioPath);
+					SoundHandler.registerSound(introAudioPath, introAudioPath);
 					SoundHandler.resetSound(introAudioPath);
 					SoundHandler.playSound(introAudioPath);
 				}
@@ -120,6 +114,7 @@ public class AdvancedAnimation implements IAnimationRenderer {
 					if (this.hasIntroAudio()) {
 						SoundHandler.stopSound(introAudioPath);
 					}
+					SoundHandler.registerSound(mainAudioPath, mainAudioPath);
 					SoundHandler.resetSound(mainAudioPath);
 					SoundHandler.playSound(mainAudioPath);
 					SoundHandler.setLooped(mainAudioPath, true);
@@ -322,11 +317,11 @@ public class AdvancedAnimation implements IAnimationRenderer {
 	}
 
 	public boolean hasMainAudio() {
-		return ((this.mainAudioPath != null) && SoundHandler.soundExists(mainAudioPath));
+		return (this.mainAudioPath != null);
 	}
 
 	public boolean hasIntroAudio() {
-		return (this.hasIntro() && (this.introAudioPath != null) && SoundHandler.soundExists(introAudioPath));
+		return (this.hasIntro() && (this.introAudioPath != null));
 	}
 
 	public void stopAudio() {

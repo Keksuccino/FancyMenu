@@ -33,9 +33,7 @@ public class AutoScalingScreen extends ConfiguratorScreen {
         this.addLabelCell(Component.translatable("fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line2"));
         this.addLabelCell(Component.translatable("fancymenu.helper.editor.properties.autoscale.basesize.popup.desc.line3"));
 
-        this.addSpacerCell(5);
-        this.addSeparatorCell();
-        this.addSpacerCell(5);
+        this.addDescriptionEndSeparatorCell();
 
         this.addLabelCell(Component.translatable("fancymenu.editor.auto_scaling.configure.width"));
         this.addTextInputCell(CharacterFilter.buildIntegerCharacterFiler(), false, false)

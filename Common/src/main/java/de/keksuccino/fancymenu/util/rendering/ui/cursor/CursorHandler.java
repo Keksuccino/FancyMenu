@@ -48,11 +48,13 @@ public class CursorHandler {
     }
 
     public static void registerCustomCursor(@NotNull String uniqueCursorName, @NotNull CustomCursor cursor) {
+        if (!initialized) throw new RuntimeException("[FANCYMENU] CursorHandler accessed too early!");
         LOGGER.info("[FANCYMENU] Registering GLFW custom cursor: NAME: " + uniqueCursorName + " | TEXTURE PATH: " + cursor.texturePath);
         CUSTOM_CURSORS.put(Objects.requireNonNull(uniqueCursorName), Objects.requireNonNull(cursor));
     }
 
     public static void unregisterCustomCursor(@NotNull String cursorName) {
+        if (!initialized) throw new RuntimeException("[FANCYMENU] CursorHandler accessed too early!");
         CustomCursor c = CUSTOM_CURSORS.get(cursorName);
         if (c != null) c.destroy();
         CUSTOM_CURSORS.remove(cursorName);
@@ -60,6 +62,7 @@ public class CursorHandler {
 
     @Nullable
     public static CustomCursor getCustomCursor(@NotNull String cursorName) {
+        if (!initialized) throw new RuntimeException("[FANCYMENU] CursorHandler accessed too early!");
         return CUSTOM_CURSORS.get(cursorName);
     }
 
@@ -67,6 +70,7 @@ public class CursorHandler {
      * Cursor gets reset every tick, so only set non-default cursors here.
      */
     public static void setClientTickCursor(long cursor) {
+        if (!initialized) throw new RuntimeException("[FANCYMENU] CursorHandler accessed too early!");
         clientTickCursor = cursor;
     }
 
@@ -74,11 +78,13 @@ public class CursorHandler {
      * Cursor gets reset every tick.
      */
     public static void setClientTickCursor(@NotNull String customCursorName) {
+        if (!initialized) throw new RuntimeException("[FANCYMENU] CursorHandler accessed too early!");
         CustomCursor c = getCustomCursor(customCursorName);
         if (c != null) setClientTickCursor(c.id_long);
     }
 
     private static void setCursor(long cursor) {
+        if (!initialized) throw new RuntimeException("[FANCYMENU] CursorHandler accessed too early!");
         GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().getWindow(), cursor);
     }
 

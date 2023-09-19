@@ -32,11 +32,7 @@ minecraft {
             workingDirectory project.file('../run_client')
             ideaModule "${rootProject.name}.${project.name}.main"
             taskName 'Client'
-//            property 'mixin.env.remapRefMap', 'true'
-//            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
             property 'forge.enabledGameTestNamespaces', 'konkrete'
-//            arg "-mixin.config=${mod_id}.mixin.json"
-//            arg "-mixin.config=${mod_id}.forge.mixin.json"
             mods {
                 modClientRun {
                     source sourceSets.main
@@ -48,11 +44,7 @@ minecraft {
             workingDirectory project.file('../run_server')
             ideaModule "${rootProject.name}.${project.name}.main"
             taskName 'Server'
-//            property 'mixin.env.remapRefMap', 'true'
-//            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
             property 'forge.enabledGameTestNamespaces', 'konkrete'
-//            arg "-mixin.config=${mod_id}.mixin.json"
-//            arg "-mixin.config=${mod_id}.forge.mixin.json"
             mods {
                 modServerRun {
                     source sourceSets.main
@@ -71,6 +63,18 @@ repositories {
         url "https://cursemaven.com"
         content {
             includeGroup "curse.maven"
+        }
+    }
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = "https://api.modrinth.com/maven"
+            }
+        }
+        forRepositories(fg.repository) // Only add this if you're using ForgeGradle, otherwise remove this line
+        filter {
+            includeGroup "maven.modrinth"
         }
     }
 }
@@ -113,19 +117,3 @@ processResources {
 }
 
 jar.finalizedBy('reobfJar')
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            groupId project.group
-            artifactId project.archivesBaseName
-            version project.version
-            artifact jar
-        }
-    }
-    repositories {
-        maven {
-            url "file://" + System.getenv("local_maven")
-        }
-    }
-}

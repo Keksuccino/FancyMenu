@@ -11,7 +11,7 @@
   "contributors": [],
   "contact": {},
   "license": "DSMSL (DON'T SNATCH MA STUFF LICENSE)",
-  "icon": "assets/fancymenu/icon.png",
+  "icon": "fancymenu_logo_128x128.png",
   "entrypoints": {
     "main": [
       "de.keksuccino.fancymenu.FancyMenuFabric"

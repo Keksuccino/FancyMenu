@@ -175,7 +175,7 @@ public class ExecuteTerminalCommandAction extends Action {
             this.addLabelCell(Component.translatable("fancymenu.editor.actions.execute_terminal_command.edit.desc.line2"));
             this.addLabelCell(Component.translatable("fancymenu.editor.actions.execute_terminal_command.edit.desc.line3"));
 
-            this.addSpacerCell(10);
+            this.addDescriptionEndSeparatorCell();
 
             this.addLabelCell(Component.translatable("fancymenu.editor.actions.execute_terminal_command.windows"));
             this.addTextInputCell(null, true, true).setEditListener(s -> this.windowsCommand = s).setText(this.windowsCommand);

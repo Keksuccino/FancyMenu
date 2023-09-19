@@ -69,10 +69,15 @@ public class VanillaButtonEditorElement extends ButtonEditorElement implements I
             }
         }
         this.lastAnchorPoint = this.element.anchorPoint;
-        //Make the Copyright button un-deletable
+        //Restrict customization options for the Copyright button
         if (this.isCopyrightButton() && (this.settings.isDestroyable() || this.settings.isResizeable())) {
             this.settings.setDestroyable(false);
             this.settings.setResizeable(false);
+            this.settings.setAdvancedSizingSupported(false);
+            this.settings.setAdvancedPositioningSupported(false);
+            this.settings.setDelayable(false);
+            this.settings.setStretchable(false);
+            this.settings.setLoadingRequirementsEnabled(false);
         }
         //Make it impossible to move the Copyright button out-of-screen
         this.handleCopyrightButtonPositionRestrictions();

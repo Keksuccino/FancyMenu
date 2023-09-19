@@ -8,9 +8,9 @@ public class TextColorFormatters {
 
     public static void registerAll() {
 
-        TextColorFormatterRegistry.register("orange", new DynamicTextColorFormatter('ü', () -> UIBase.getUIColorTheme().warning_text_color));
-        TextColorFormatterRegistry.register("green", new DynamicTextColorFormatter('ö', () -> UIBase.getUIColorTheme().success_text_color));
-        TextColorFormatterRegistry.register("red", new DynamicTextColorFormatter('ä', () -> UIBase.getUIColorTheme().error_text_color));
+        TextColorFormatterRegistry.register("orange", new DynamicTextColorFormatter("ü".charAt(0), () -> UIBase.getUIColorTheme().warning_text_color));
+        TextColorFormatterRegistry.register("green", new DynamicTextColorFormatter("ö".charAt(0), () -> UIBase.getUIColorTheme().success_text_color));
+        TextColorFormatterRegistry.register("red", new DynamicTextColorFormatter("ä".charAt(0), () -> UIBase.getUIColorTheme().error_text_color));
 
     }
 

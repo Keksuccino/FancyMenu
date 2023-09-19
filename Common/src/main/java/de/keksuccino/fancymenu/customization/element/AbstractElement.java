@@ -91,6 +91,9 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	 */
 	public int getAbsoluteX() {
 		int x = 0;
+		if (this.anchorPoint != null) {
+			x = this.anchorPoint.getElementPositionX(this);
+		}
 		if (this.advancedX != null) {
 			String s = PlaceholderParser.replacePlaceholders(this.advancedX).replace(" ", "");
 			if (MathUtils.isDouble(s)) {
@@ -99,11 +102,7 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 		}
 		if (this.stretchX) {
 			x = 0;
-		}
-		if (this.anchorPoint != null) {
-			x = this.anchorPoint.getElementPositionX(this);
-		}
-		if (this.stayOnScreen && !this.stretchX) {
+		} else if (this.stayOnScreen) {
 			if (x < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
 				x = STAY_ON_SCREEN_EDGE_ZONE_SIZE;
 			}
@@ -120,6 +119,9 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	 */
 	public int getAbsoluteY() {
 		int y = 0;
+		if (this.anchorPoint != null) {
+			y = this.anchorPoint.getElementPositionY(this);
+		}
 		if (this.advancedY != null) {
 			String s = PlaceholderParser.replacePlaceholders(this.advancedY).replace(" ", "");
 			if (MathUtils.isDouble(s)) {
@@ -128,11 +130,7 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 		}
 		if (this.stretchY) {
 			y = 0;
-		}
-		if (this.anchorPoint != null) {
-			y = this.anchorPoint.getElementPositionY(this);
-		}
-		if (this.stayOnScreen && !this.stretchY) {
+		} else if (this.stayOnScreen) {
 			if (y < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
 				y = STAY_ON_SCREEN_EDGE_ZONE_SIZE;
 			}

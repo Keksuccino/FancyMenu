@@ -14,6 +14,7 @@ version="3.0.0" #mandatory
 displayName="FancyMenu" #mandatory
 # A text field displayed in the mod UI
 authors="Keksuccino" #optional
+logoFile="fancymenu_logo_128x128.png"
 # The description text for the mod (multi line!) (#mandatory)
 description='''Give your life a fancy touch. You deserve it.
 

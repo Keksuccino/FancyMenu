@@ -6,6 +6,20 @@ plugins {
 
 archivesBaseName = "${mod_id}-fabric"
 
+repositories {
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = "https://api.modrinth.com/maven"
+            }
+        }
+        filter {
+            includeGroup "maven.modrinth"
+        }
+    }
+}
+
 dependencies {
 
     minecraft "com.mojang:minecraft:${minecraft_version}"
@@ -23,6 +37,8 @@ dependencies {
     implementation project(":Common")
 
     implementation fileTree('libs') { include '*.jar' }
+
+    modImplementation "maven.modrinth:modmenu:6.3.1"
 
 }
 
@@ -59,20 +75,4 @@ processResources {
 
 tasks.withType(JavaCompile) {
     source(project(":Common").sourceSets.main.allSource)
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            groupId project.group
-            artifactId project.archivesBaseName
-            version project.version
-            from components.java
-        }
-    }
-    repositories {
-        maven {
-            url "file://" + System.getenv("local_maven")
-        }
-    }
 }

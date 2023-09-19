@@ -6,7 +6,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.ServerStatusPinger;
 import net.minecraft.network.chat.Component;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,14 +16,14 @@ public class ServerCache {
     protected static final Component CANT_CONNECT_TEXT = (Component.translatable("multiplayer.status.cannot_connect")).withStyle(ChatFormatting.DARK_RED);
 
     protected static ServerStatusPinger pinger = new ServerStatusPinger();
-    protected static Map<String, ServerData> servers = new HashMap<String, ServerData>();
-    protected static Map<String, ServerData> serversUpdated = new HashMap<String, ServerData>();
+    protected static Map<String, ServerData> servers = new HashMap<>();
+    protected static Map<String, ServerData> serversUpdated = new HashMap<>();
 
     public static void init() {
         new Thread(() -> {
             while (true) {
                 try {
-                    if ((Minecraft.getInstance().screen != null) && ScreenCustomization.isCustomizationEnabledForScreen(Minecraft.getInstance().screen)) {
+                    if (ScreenCustomization.isCustomizationEnabledForScreen(Minecraft.getInstance().screen)) {
                         pingServers();
                     }
                 } catch (Exception e) {
@@ -84,14 +83,13 @@ public class ServerCache {
     }
 
     public static void pingServers() {
-        List<ServerData> l = new ArrayList<ServerData>();
-        l.addAll(servers.values());
+        List<ServerData> l = new ArrayList<>(servers.values());
         for (ServerData d : l) {
             try {
                 new Thread(() -> {
                     try {
                         pinger.pingServer(d, () -> {});
-                        if (d.status == Component.empty()) {
+                        if ((d == null) || d.status.getString().isEmpty()) {
                             d.ping = -1L;
                             d.motd = CANT_CONNECT_TEXT;
                         }

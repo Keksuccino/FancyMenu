@@ -2,9 +2,9 @@ package de.keksuccino.fancymenu.commands.client;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.screen.ScreenInstanceFactory;
+import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.command.CommandUtils;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
@@ -37,10 +37,10 @@ public class OpenGuiScreenCommand {
             
             if (CustomGuiHandler.guiExists(menuIdentifierOrCustomGuiName)) {
                 MainThreadTaskExecutor.executeInMainThread(() -> {
-                    Minecraft.getInstance().setScreen(CustomGuiHandler.getGui(menuIdentifierOrCustomGuiName, Minecraft.getInstance().screen, null));
+                    Minecraft.getInstance().setScreen(CustomGuiHandler.constructInstance(menuIdentifierOrCustomGuiName, Minecraft.getInstance().screen, null));
                 }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
             } else {
-                Screen s = ScreenInstanceFactory.tryConstruct(ScreenCustomization.findValidScreenIdentifierFor(menuIdentifierOrCustomGuiName));
+                Screen s = ScreenInstanceFactory.tryConstruct(ScreenIdentifierHandler.getBestIdentifier(menuIdentifierOrCustomGuiName));
                 if (s != null) {
                     MainThreadTaskExecutor.executeInMainThread(() -> {
                         Minecraft.getInstance().setScreen(s);

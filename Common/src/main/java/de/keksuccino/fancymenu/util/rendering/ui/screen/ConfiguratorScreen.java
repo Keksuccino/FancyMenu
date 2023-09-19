@@ -184,6 +184,12 @@ public abstract class ConfiguratorScreen extends Screen {
         return this.addCell(new LabelCell(text));
     }
 
+    protected void addDescriptionEndSeparatorCell() {
+        this.addSpacerCell(5);
+        this.addSeparatorCell();
+        this.addSpacerCell(5);
+    }
+
     @NotNull
     protected SeparatorCell addSeparatorCell(int height) {
         return this.addCell(new SeparatorCell(height));

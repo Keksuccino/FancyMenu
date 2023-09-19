@@ -19,7 +19,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO Target mappings in MixinForgeGameRenderer fixen, falls nötig
+	//TODO missing resource in Image element durch gerenderten placeholder ersetzen, damit kein error geworfen wird
 
 	//TODO ERSTEN ALPHA BUILD COMPILEN !!!! <------------------------------
 	//TODO ERSTEN ALPHA BUILD COMPILEN !!!! <------------------------------
@@ -32,6 +32,8 @@ public class FancyMenu {
 	//TODO Testweise Title screen widget identifiers adden (eventuell dafür universal widget identifiers entfernen)
 
 	//TODO Icon rechts zu menu bar adden (Tür mit Pfeil nach draußen), mit dem man screens verlassen kann (wird nicht in Layout Editor gezeigt)
+
+	//TODO "Split Text" placeholder (regex support)
 
 	//TODO Markdown support for tooltips
 
@@ -93,28 +95,18 @@ public class FancyMenu {
 	private static Options options;
 
 	public static void init() {
+
 		try {
 
 	    	if (Services.PLATFORM.isOnClient()) {
 
 				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in client-side mode on " + MOD_LOADER.toUpperCase() + "!");
 
-				if (!MOD_DIR.isDirectory()) {
-					MOD_DIR.mkdirs();
-				}
-				if (!INSTANCE_DATA_DIR.isDirectory()) {
-					INSTANCE_DATA_DIR.mkdirs();
-				}
-
 				UIColorThemes.registerAll();
 
 				TextColorFormatters.registerAll();
 
-				CursorHandler.init();
-
 	        	ScreenCustomization.init();
-
-				WindowHandler.handleForceFullscreen();
 
 				//TODO remove debug
 				EventHandler.INSTANCE.registerListenersOf(new Test());
@@ -125,21 +117,26 @@ public class FancyMenu {
 
 			Compat.printInfoLog();
 	    	
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-	
-	public static void onClientSetup() {
-		try {
-
-			CustomLocalsHandler.loadLocalizations();
-
-			ServerCache.init();
-	    	
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+
+	}
+
+	public static void lateClientInit() {
+
+		LOGGER.info("[FANCYMENU] Starting late client initialization phase..");
+
+		WindowHandler.updateCustomWindowIcon();
+
+		WindowHandler.handleForceFullscreen();
+
+		CursorHandler.init();
+
+		CustomLocalsHandler.loadLocalizations();
+
+		ServerCache.init();
+
 	}
 
 	public static Options getOptions() {

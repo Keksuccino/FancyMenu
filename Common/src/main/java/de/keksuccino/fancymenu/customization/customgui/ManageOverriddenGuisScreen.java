@@ -37,9 +37,7 @@ public class ManageOverriddenGuisScreen extends ConfiguratorScreen {
             if (!this.removedOverrides.contains(overriddenScreen)) {
 
                 if (!first) {
-                    this.addSpacerCell(5);
-                    this.addSeparatorCell();
-                    this.addSpacerCell(5);
+                    this.addDescriptionEndSeparatorCell();
                 }
                 first = false;
 

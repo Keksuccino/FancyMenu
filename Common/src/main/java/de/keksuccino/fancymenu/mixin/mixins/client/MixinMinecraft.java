@@ -1,16 +1,18 @@
 package de.keksuccino.fancymenu.mixin.mixins.client;
 
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.*;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.main.GameConfig;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -24,9 +26,14 @@ public class MixinMinecraft {
 
 	@Shadow @Nullable public Screen screen;
 
-	@Inject(method = "<init>", at = @At(value = "RETURN"))
-	private void setCustomWindowIconFancyMenu(GameConfig $$0, CallbackInfo info) {
-		WindowHandler.updateCustomWindowIcon();
+	@Unique private boolean lateClientInitDone = false;
+
+	@Inject(method = "setOverlay", at = @At("HEAD"))
+	private void beforeSetOverlayFancyMenu(Overlay overlay, CallbackInfo info) {
+		if (!this.lateClientInitDone) {
+			this.lateClientInitDone = true;
+			FancyMenu.lateClientInit();
+		}
 	}
 
 	@Inject(method = "tick", at = @At("HEAD"))
