@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.util.rendering;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import de.keksuccino.fancymenu.mixin.mixins.client.IMixinMinecraft;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinMinecraft;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.renderer.GameRenderer;

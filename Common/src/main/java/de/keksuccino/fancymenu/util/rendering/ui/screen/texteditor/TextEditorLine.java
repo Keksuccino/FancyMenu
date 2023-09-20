@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.mixin.mixins.client.IMixinEditBox;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.MouseInput;

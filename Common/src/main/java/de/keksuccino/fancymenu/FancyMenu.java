@@ -27,6 +27,8 @@ public class FancyMenu {
 	//TODO ERSTEN ALPHA BUILD COMPILEN !!!! <------------------------------
 	//TODO ERSTEN ALPHA BUILD COMPILEN !!!! <------------------------------
 
+	//TODO add widget label scale option (per CustomizableWidget adden)
+
 	//TODO Add Edit GUI to more Action values, if needed
 
 	//TODO Testweise Title screen widget identifiers adden (eventuell dafür universal widget identifiers entfernen)
@@ -96,30 +98,24 @@ public class FancyMenu {
 
 	public static void init() {
 
-		try {
+		if (Services.PLATFORM.isOnClient()) {
 
-	    	if (Services.PLATFORM.isOnClient()) {
+			LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in client-side mode on " + MOD_LOADER.toUpperCase() + "!");
 
-				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in client-side mode on " + MOD_LOADER.toUpperCase() + "!");
+			UIColorThemes.registerAll();
 
-				UIColorThemes.registerAll();
+			TextColorFormatters.registerAll();
 
-				TextColorFormatters.registerAll();
+			ScreenCustomization.init();
 
-	        	ScreenCustomization.init();
+			//TODO remove debug
+			EventHandler.INSTANCE.registerListenersOf(new Test());
 
-				//TODO remove debug
-				EventHandler.INSTANCE.registerListenersOf(new Test());
-
-	    	} else {
-				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in server-side mode on " + MOD_LOADER.toUpperCase() + "!");
-	    	}
-
-			Compat.printInfoLog();
-	    	
-		} catch (Exception ex) {
-			ex.printStackTrace();
+		} else {
+			LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in server-side mode on " + MOD_LOADER.toUpperCase() + "!");
 		}
+
+		Compat.printInfoLog();
 
 	}
 

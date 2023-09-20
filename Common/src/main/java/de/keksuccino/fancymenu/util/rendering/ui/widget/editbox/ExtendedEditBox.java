@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.editbox;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.mixin.mixins.client.IMixinEditBox;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;

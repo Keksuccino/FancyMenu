@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.widget;
 
 import java.util.*;
 import de.keksuccino.fancymenu.customization.widget.identification.WidgetIdentifierHandler;
-import de.keksuccino.fancymenu.mixin.mixins.client.IMixinScreen;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;

@@ -2,8 +2,8 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.client;
 
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
-import de.keksuccino.fancymenu.mixin.mixins.client.IMixinLevelLoadingScreen;
-import de.keksuccino.fancymenu.mixin.mixins.client.IMixinProgressScreen;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinLevelLoadingScreen;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinProgressScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.LevelLoadingScreen;

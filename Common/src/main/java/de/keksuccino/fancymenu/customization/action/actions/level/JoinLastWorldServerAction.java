@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.action.actions.level;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.world.LastWorldHandler;
-import de.keksuccino.fancymenu.mixin.mixins.client.IMixinServerList;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinServerList;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;

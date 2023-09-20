@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.ExtendedSliderBut
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.ListSliderButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.RangeSliderButton;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
-import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;

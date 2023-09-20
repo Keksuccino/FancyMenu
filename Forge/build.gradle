@@ -1,119 +1,116 @@
-
-buildscript {
-    repositories {
-        maven { url = 'https://maven.minecraftforge.net' }
-        maven { url = 'https://repo.spongepowered.org/maven' }
-        mavenCentral()
-    }
-    dependencies {
-        classpath group: 'org.spongepowered', name: 'mixingradle', version: '0.7-SNAPSHOT'
-    }
-}
-
 plugins {
-    id 'java'
-    id 'eclipse'
+    id 'idea'
     id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '5.1.+'
+    id 'net.minecraftforge.gradle'
+    id 'org.spongepowered.mixin'
 }
+base {
+    archivesName = "${mod_name}-forge-${minecraft_version}"
+}
+mixin {
+    add(sourceSets.main, "${mod_id}.refmap.json")
 
-apply plugin: 'org.spongepowered.mixin'
-
-archivesBaseName = "${mod_id}-forge"
+    config("${mod_id}.mixins.json")
+    config("${mod_id}.forge.mixins.json")
+}
 
 minecraft {
-
     mappings channel: 'official', version: minecraft_version
-    
-    accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+
+    // Automatically enable forge AccessTransformers if the file exists
+    // This location is hardcoded in Forge and can not be changed.
+    // https://github.com/MinecraftForge/MinecraftForge/blob/be1698bb1554f9c8fa2f58e32b9ab70bc4385e60/fmlloader/src/main/java/net/minecraftforge/fml/loading/moddiscovery/ModFile.java#L123
+    if (file('src/main/resources/META-INF/accesstransformer.cfg').exists()) {
+        accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+    }
 
     runs {
         client {
-            workingDirectory project.file('../run_client')
+            workingDirectory project.file('run')
             ideaModule "${rootProject.name}.${project.name}.main"
             taskName 'Client'
-            property 'forge.enabledGameTestNamespaces', 'konkrete'
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
             mods {
                 modClientRun {
                     source sourceSets.main
-                    source project(":Common").sourceSets.main
+                    source project(":common").sourceSets.main
                 }
             }
         }
+
         server {
-            workingDirectory project.file('../run_server')
+            workingDirectory project.file('run')
             ideaModule "${rootProject.name}.${project.name}.main"
             taskName 'Server'
-            property 'forge.enabledGameTestNamespaces', 'konkrete'
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
             mods {
                 modServerRun {
                     source sourceSets.main
-                    source project(":Common").sourceSets.main
+                    source project(":common").sourceSets.main
+                }
+            }
+        }
+
+        data {
+            workingDirectory project.file('run')
+            ideaModule "${rootProject.name}.${project.name}.main"
+            args '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+            taskName 'Data'
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            mods {
+                modDataRun {
+                    source sourceSets.main
+                    source project(":common").sourceSets.main
                 }
             }
         }
     }
-
 }
 
 sourceSets.main.resources.srcDir 'src/generated/resources'
 
-repositories {
-    maven {
-        url "https://cursemaven.com"
-        content {
-            includeGroup "curse.maven"
-        }
-    }
-    exclusiveContent {
-        forRepository {
-            maven {
-                name = "Modrinth"
-                url = "https://api.modrinth.com/maven"
-            }
-        }
-        forRepositories(fg.repository) // Only add this if you're using ForgeGradle, otherwise remove this line
-        filter {
-            includeGroup "maven.modrinth"
-        }
-    }
-}
-
 dependencies {
-
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-
-    compileOnly project(":Common")
-
-    implementation fileTree('libs') { include '*.jar' }
-
-//    implementation fg.deobf("curse.maven:essential-mod-546670:3918566")
-
-//    implementation fg.deobf("curse.maven:rrls-833233:4611129")
-//    implementation fg.deobf("curse.maven:cloth-config-348521:4633433")
-
-    implementation(annotationProcessor("com.github.llamalad7.mixinextras:mixinextras-common:0.2.0-beta.6"))
-    implementation(jarJar("com.github.llamalad7.mixinextras:mixinextras-forge:0.2.0-beta.6")) {
-        jarJar.ranged(it, "[0.2.0-beta.6,)")
+    compileOnly project(":common")
+    implementation(annotationProcessor("io.github.llamalad7:mixinextras-common:0.2.0-rc.4"))
+    implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.2.0-rc.4")) {
+        jarJar.ranged(it, "[0.2.0-rc.4,)")
     }
-
-    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
-    testAnnotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
-
+    annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
+    implementation fg.deobf("curse.maven:konkrete-410295:4514916")
+    implementation fg.deobf("curse.maven:load-my-resources-forge-534502:4203277")
 }
 
-mixin {
-    add sourceSets.main, "${mod_id}.mixin-refmap.json"
-    config "${mod_id}.mixin.json"
-    config "${mod_id}.forge.mixin.json"
+tasks.withType(JavaCompile).configureEach {
+    source(project(":common").sourceSets.main.allSource)
 }
-
-tasks.withType(JavaCompile) {
-    source(project(":Common").sourceSets.main.allSource)
+tasks.withType(Javadoc).configureEach {
+    source(project(":common").sourceSets.main.allJava)
+}
+tasks.named("sourcesJar", Jar) {
+    from(project(":common").sourceSets.main.allSource)
 }
 
 processResources {
-    from project(":Common").sourceSets.main.resources
+    from project(":common").sourceSets.main.resources
 }
 
 jar.finalizedBy('reobfJar')
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId base.archivesName.get()
+            from components.java
+            fg.component(it)
+        }
+    }
+    repositories {
+        maven {
+            url "file://" + System.getenv("local_maven")
+        }
+    }
+}

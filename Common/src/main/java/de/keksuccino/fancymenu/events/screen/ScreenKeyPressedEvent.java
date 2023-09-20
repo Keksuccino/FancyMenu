@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.events.screen;
 
-import de.keksuccino.fancymenu.mixin.mixins.client.IMixinScreen;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.event.acara.EventBase;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;

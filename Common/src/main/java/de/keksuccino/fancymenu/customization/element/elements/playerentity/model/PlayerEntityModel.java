@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.playerentity.model;
 
-import de.keksuccino.fancymenu.mixin.mixins.client.IMixinPlayerModel;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPlayerModel;
 import net.minecraft.client.model.AnimationUtils;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.PlayerModel;

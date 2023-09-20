@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidgetBuilder;
-import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;

@@ -1,0 +1,17 @@
+{
+  "required": true,
+  "package": "de.keksuccino.fancymenu.mixin.mixins.forge",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+  ],
+  "client": [
+    "client.MixinForgeGameRenderer",
+    "client.MixinForgeTitleScreen"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "refmap": "fancymenu.refmap.json",
+  "plugin": "de.keksuccino.fancymenu.mixin.FMMixinPlugin",
+  "minVersion": "0.8"
+}

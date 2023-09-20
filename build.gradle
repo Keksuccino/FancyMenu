@@ -1,10 +1,16 @@
+plugins {
+    id 'fabric-loom' version '1.2-SNAPSHOT' apply(false)
+    id 'net.minecraftforge.gradle' version '[6.0,6.2)' apply(false)
+    id 'org.spongepowered.gradle.vanilla' version '0.2.1-SNAPSHOT' apply(false)
+    id("org.spongepowered.mixin") version "0.7-SNAPSHOT" apply(false)
+}
+
 subprojects {
-    
     apply plugin: 'java'
-    
+
     java.toolchain.languageVersion = JavaLanguageVersion.of(17)
     java.withSourcesJar()
-    java.withJavadocJar()
+//    java.withJavadocJar()
         
     jar {
         from(rootProject.file("LICENSE")) {
@@ -22,47 +28,56 @@ subprojects {
                 'Timestamp'               : System.currentTimeMillis(),
                 'Built-On-Java'           : "${System.getProperty('java.vm.version')} (${System.getProperty('java.vm.vendor')})",
                 'Built-On-Minecraft'      : minecraft_version
-//                'TweakClass'              : "org.spongepowered.asm.launch.MixinTweaker",
-//                'TweakOrder'              : 0,
-//                'MixinConfigs'            : "fancymenu.mixin.json"
             ])
         }
     }
 
     sourcesJar {
-        from(rootProject.file("LICENSE")) {
-            rename { "${it}_${mod_name}" }
-        }
+//        from(rootProject.file("LICENSE")) {
+//            rename { "${it}_${mod_name}" }
+//        }
     }
 
     repositories {
-
         mavenCentral()
-
         maven {
             name = 'Sponge / Mixin'
             url = 'https://repo.spongepowered.org/repository/maven-public/'
         }
-
         maven {
-            name = 'BlameJared Maven (CrT / Bookshelf)'
+            name = 'BlameJared Maven (JEI / CraftTweaker / Bookshelf)'
             url = 'https://maven.blamejared.com'
         }
-
-        maven { url 'https://jitpack.io' }
-
+        maven {
+            url "https://cursemaven.com"
+            content {
+                includeGroup "curse.maven"
+            }
+        }
+        maven {
+            url "https://api.modrinth.com/maven"
+            content {
+                includeGroup "maven.modrinth"
+            }
+        }
     }
 
     tasks.withType(JavaCompile).configureEach {
         it.options.encoding = 'UTF-8'
-        it.options.release = 17
+        it.options.getRelease().set(17)
+    }
+
+    processResources {
+        filesMatching(['pack.mcmeta', 'fabric.mod.json', 'mods.toml', '*.mixins.json']) {
+            expand project.properties
+        }
     }
 
     // Disables Gradle's custom module metadata from being published to maven. The
     // metadata includes mapped dependencies which are not reasonably consumable by
     // other mod developers.
-    tasks.withType(GenerateModuleMetadata) {
+    tasks.withType(GenerateModuleMetadata).configureEach {
+
         enabled = false
     }
-
 }

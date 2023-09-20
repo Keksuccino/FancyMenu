@@ -2,8 +2,8 @@ package de.keksuccino.fancymenu.customization.action.actions.other;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
-import de.keksuccino.fancymenu.mixin.mixins.client.IMixinChatScreen;
-import de.keksuccino.fancymenu.mixin.mixins.client.IMixinMinecraft;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinChatScreen;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinMinecraft;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;

@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.screen.dummyscreen;
 
-import de.keksuccino.fancymenu.mixin.mixins.client.IMixinConnectScreen;
-import de.keksuccino.fancymenu.mixin.mixins.client.IMixinReceivingLevelScreen;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinConnectScreen;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinReceivingLevelScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.gui.screens.*;
 import net.minecraft.network.chat.Component;

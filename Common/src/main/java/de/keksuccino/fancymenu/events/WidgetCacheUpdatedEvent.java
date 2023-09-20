@@ -5,7 +5,7 @@ import java.util.List;
 
 import de.keksuccino.fancymenu.util.event.acara.EventBase;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
-import de.keksuccino.fancymenu.mixin.mixins.client.IMixinScreen;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;

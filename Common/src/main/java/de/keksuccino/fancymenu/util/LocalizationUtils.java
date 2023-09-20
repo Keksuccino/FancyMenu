@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.util;
 
-import de.keksuccino.fancymenu.mixin.mixins.client.IMixinClientLanguage;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinClientLanguage;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.resources.language.ClientLanguage;
 import net.minecraft.client.resources.language.I18n;

@@ -1,47 +1,38 @@
 plugins {
+    id 'idea'
     id 'java'
-    id 'org.spongepowered.gradle.vanilla' version '0.2.1-SNAPSHOT'
     id 'maven-publish'
+    id 'org.spongepowered.gradle.vanilla'
 }
-
-archivesBaseName = "${mod_id}-common"
-
+base {
+    archivesName = "${mod_name}-common-${minecraft_version}"
+}
 minecraft {
     version(minecraft_version)
-    runs {   
-        if (project.hasProperty('common_runs_enabled') ? project.findProperty('common_runs_enabled').toBoolean() : true) {
-            server(project.hasProperty('common_server_run_name') ? project.findProperty('common_server_run_name') : 'vanilla_server') {
-                workingDirectory(this.file("run"))
-            }
-            client(project.hasProperty('common_client_run_name') ? project.findProperty('common_client_run_name') : 'vanilla_client') {
-                workingDirectory(this.file("run"))
-            }
-        }
+    if(file("src/main/resources/${mod_id}.accesswidener").exists()){
+        accessWideners(file("src/main/resources/${mod_id}.accesswidener"))
     }
-    //Apply the access widener of the Fabric project to the common source, so field/method access works like intended
-    accessWideners(file("../Fabric/src/main/resources/fancymenu.accessWidener"))
 }
 
 dependencies {
-
-    implementation(annotationProcessor("com.github.llamalad7.mixinextras:mixinextras-fabric:0.2.0-beta.6"))
-
+    implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.2.0-rc.4"))
     compileOnly group:'org.spongepowered', name:'mixin', version:'0.8.5'
-
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
-
     implementation group: 'org.ow2.asm', name: 'asm-tree', version: '9.3'
-
-    implementation fileTree('libs') { include '*.jar' }
-
+    implementation "curse.maven:konkrete-fabric-416797:4514891"
+    implementation "curse.maven:load-my-resources-fabric-534835:4203280"
 }
 
-processResources {
-
-    def buildProps = project.properties.clone()
-
-    filesMatching(['pack.mcmeta']) {
-        expand buildProps
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId base.archivesName.get()
+            from components.java
+        }
     }
-
+    repositories {
+        maven {
+            url "file://" + System.getenv("local_maven")
+        }
+    }
 }

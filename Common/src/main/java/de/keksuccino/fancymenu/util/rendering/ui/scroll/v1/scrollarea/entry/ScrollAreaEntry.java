@@ -4,7 +4,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
-import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractWidget;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import net.minecraft.client.sounds.SoundManager;
 import org.jetbrains.annotations.NotNull;

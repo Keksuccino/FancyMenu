@@ -16,5 +16,12 @@ pluginManagement {
     }
 }
 
-rootProject.name = "FancyMenu-1.19.4"
-include("Common", "Fabric", "Forge")
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.5.0'
+}
+
+// This should match the folder name of the project, or else IDEA may complain (see https://youtrack.jetbrains.com/issue/IDEA-317606)
+rootProject.name = 'fancymenu-1.19.4-2'
+include("common")
+include("fabric")
+include("forge")

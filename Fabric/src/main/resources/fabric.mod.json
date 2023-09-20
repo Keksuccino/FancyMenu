@@ -8,7 +8,9 @@
   "authors": [
     "Keksuccino"
   ],
-  "contributors": [],
+  "contributors": [
+    "xllifi - Made a lot of great looking icons for context menus!"
+  ],
   "contact": {},
   "license": "DSMSL (DON'T SNATCH MA STUFF LICENSE)",
   "icon": "fancymenu_logo_128x128.png",
@@ -20,8 +22,8 @@
     "server": []
   },
   "mixins": [
-    "fancymenu.mixin.json",
-    "fancymenu.fabric.mixin.json"
+    "fancymenu.mixins.json",
+    "fancymenu.fabric.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.13.3",
@@ -33,5 +35,5 @@
   "breaks": {
     "drippyloadingscreen": "<2.2.0"
   },
-  "accessWidener": "fancymenu.accessWidener"
+  "accessWidener": "fancymenu.accesswidener"
 }

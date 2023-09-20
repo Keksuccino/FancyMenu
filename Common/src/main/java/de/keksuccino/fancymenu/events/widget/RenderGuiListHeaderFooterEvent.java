@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.events.widget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractSelectionList;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractSelectionList;
 import de.keksuccino.fancymenu.util.event.acara.EventBase;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import org.jetbrains.annotations.NotNull;

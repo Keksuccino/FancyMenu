@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.widget.slider;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.mixin.mixins.client.IMixinAbstractSliderButton;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractSliderButton;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;

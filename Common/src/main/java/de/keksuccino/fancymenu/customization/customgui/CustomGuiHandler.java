@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.events.ModReloadEvent;
-import de.keksuccino.fancymenu.mixin.mixins.client.MixinMinecraft;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.MixinMinecraft;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;

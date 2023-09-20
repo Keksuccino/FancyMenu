@@ -29,7 +29,7 @@ import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.Van
 import de.keksuccino.fancymenu.customization.layer.IElementFactory;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.Layout;
-import de.keksuccino.fancymenu.mixin.mixins.client.IMixinScreen;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
