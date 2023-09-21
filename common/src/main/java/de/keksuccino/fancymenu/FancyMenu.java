@@ -19,13 +19,11 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO missing resource in Image element durch gerenderten placeholder ersetzen, damit kein error geworfen wird
+	//TODO add new context menu icons
 
-	//TODO ERSTEN ALPHA BUILD COMPILEN !!!! <------------------------------
-	//TODO ERSTEN ALPHA BUILD COMPILEN !!!! <------------------------------
-	//TODO ERSTEN ALPHA BUILD COMPILEN !!!! <------------------------------
-	//TODO ERSTEN ALPHA BUILD COMPILEN !!!! <------------------------------
-	//TODO ERSTEN ALPHA BUILD COMPILEN !!!! <------------------------------
+	//TODO In layout safe-as screen als default file name universal identifiers nutzen, falls vorhanden
+
+	//TODO missing resource in Image element durch gerenderten placeholder ersetzen, damit kein error geworfen wird
 
 	//TODO add widget label scale option (per CustomizableWidget adden)
 

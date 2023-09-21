@@ -19,7 +19,6 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.CommandSuggestions;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -43,7 +42,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 @SuppressWarnings("unused")
-public class EditBoxSuggestions extends CommandSuggestions implements GuiEventListener {
+public class EditBoxSuggestions extends CommandSuggestions {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -208,15 +207,6 @@ public class EditBoxSuggestions extends CommandSuggestions implements GuiEventLi
         } else {
             return false;
         }
-    }
-
-    @Override
-    public void setFocused(boolean var1) {
-    }
-
-    @Override
-    public boolean isFocused() {
-        return false;
     }
 
     @Override

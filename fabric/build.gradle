@@ -13,10 +13,10 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
+    implementation project(":common")
     modImplementation "curse.maven:konkrete-fabric-416797:4514891"
     modImplementation "curse.maven:load-my-resources-fabric-534835:4203280"
     modImplementation "maven.modrinth:modmenu:6.3.1"
-    implementation project(":common")
     include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.2.0-rc.4")))
 }
 
@@ -55,6 +55,7 @@ tasks.named("sourcesJar", Jar) {
 
 processResources {
     from project(":common").sourceSets.main.resources
+    exclude('konkrete.accessWidener')
 }
 
 publishing {

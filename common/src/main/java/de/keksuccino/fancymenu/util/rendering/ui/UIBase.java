@@ -14,7 +14,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.ExtendedSliderButton;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -31,7 +30,7 @@ public class UIBase extends RenderingUtils {
 	 * Applies the default UI skin to the given widget and returns it.
 	 */
 	@SuppressWarnings("all")
-	public static <T extends GuiEventListener> T applyDefaultWidgetSkinTo(T widget) {
+	public static <T> T applyDefaultWidgetSkinTo(T widget) {
 		if (widget instanceof ExtendedButton e) {
 			return (T) applyDefaultButtonSkinTo(e);
 		}
