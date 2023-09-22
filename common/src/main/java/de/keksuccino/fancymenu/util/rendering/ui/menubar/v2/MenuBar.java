@@ -73,11 +73,12 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         this.hovered = this.isMouseOver(mouseX, mouseY);
 
         RenderSystem.enableBlend();
+        RenderSystem.enableDepthTest();
         UIBase.resetShaderColor();
 
         pose.pushPose();
         pose.scale(scale, scale, scale);
-        pose.translate(0f, 0f, 400f);
+        pose.translate(0f, 0f, 500f);
 
         if (this.expanded) {
             this.renderBackground(pose, 0, y, scaledWidth, this.height);
@@ -126,6 +127,11 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         pose.popPose();
         UIBase.resetShaderColor();
 
+        RenderSystem.enableDepthTest();
+
+        pose.pushPose();
+        pose.translate(0f, 0f, 500f);
+
         //Render context menus of ContextMenuBarEntries
         for (MenuBarEntry e : ListUtils.mergeLists(this.leftEntries, this.rightEntries)) {
             if (e instanceof ContextMenuBarEntry c) {
@@ -133,6 +139,9 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
             }
         }
 
+        pose.popPose();
+
+        RenderSystem.disableDepthTest();
         UIBase.resetShaderColor();
 
     }

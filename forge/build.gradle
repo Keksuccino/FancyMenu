@@ -26,7 +26,8 @@ minecraft {
 
     runs {
         client {
-            workingDirectory project.file('run')
+//            workingDirectory project.file('run')
+            workingDirectory project.file('../run_client')
             ideaModule "${rootProject.name}.${project.name}.main"
             taskName 'Client'
             property 'mixin.env.remapRefMap', 'true'
@@ -38,30 +39,15 @@ minecraft {
                 }
             }
         }
-
         server {
-            workingDirectory project.file('run')
+//            workingDirectory project.file('run')
+            workingDirectory project.file('../run_server')
             ideaModule "${rootProject.name}.${project.name}.main"
             taskName 'Server'
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
             mods {
                 modServerRun {
-                    source sourceSets.main
-                    source project(":common").sourceSets.main
-                }
-            }
-        }
-
-        data {
-            workingDirectory project.file('run')
-            ideaModule "${rootProject.name}.${project.name}.main"
-            args '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
-            taskName 'Data'
-            property 'mixin.env.remapRefMap', 'true'
-            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
-            mods {
-                modDataRun {
                     source sourceSets.main
                     source project(":common").sourceSets.main
                 }

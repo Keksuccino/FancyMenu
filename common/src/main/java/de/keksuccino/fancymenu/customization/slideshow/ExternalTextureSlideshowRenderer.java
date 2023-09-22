@@ -275,4 +275,8 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 		return this.originalHeight;
 	}
 
+	public int getImageCount() {
+		return this.images.size();
+	}
+
 }

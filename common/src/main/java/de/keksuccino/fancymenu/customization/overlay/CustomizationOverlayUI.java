@@ -1,11 +1,15 @@
 package de.keksuccino.fancymenu.customization.overlay;
 
+import com.mojang.blaze3d.platform.GlUtil;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.customgui.ManageCustomGuisScreen;
 import de.keksuccino.fancymenu.customization.customgui.ManageOverriddenGuisScreen;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.ManageLayoutsScreen;
@@ -13,10 +17,10 @@ import de.keksuccino.fancymenu.customization.layout.editor.ChooseAnimationScreen
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screen.dummyscreen.DummyScreenBuilder;
 import de.keksuccino.fancymenu.customization.screen.dummyscreen.DummyScreenRegistry;
+import de.keksuccino.fancymenu.customization.slideshow.ExternalTextureSlideshowRenderer;
+import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.customization.variables.ManageVariablesScreen;
-import de.keksuccino.fancymenu.util.ListUtils;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.WebUtils;
+import de.keksuccino.fancymenu.util.*;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedValueCycle;
 import de.keksuccino.fancymenu.util.file.FileUtils;
@@ -36,6 +40,8 @@ import de.keksuccino.fancymenu.util.resources.texture.WrappedTexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.konkrete.math.MathUtils;
+import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
@@ -47,16 +53,100 @@ import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.List;
 
 public class CustomizationOverlayUI {
+
+    //TODO Entry in Menu Bar für Debug Overlay adden
+    //TODO Entry in Menu Bar für Debug Overlay adden
+    //TODO Entry in Menu Bar für Debug Overlay adden
+    //TODO Entry in Menu Bar für Debug Overlay adden
+    //TODO Entry in Menu Bar für Debug Overlay adden
 
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final WrappedTexture FM_LOGO_ICON_TEXTURE = WrappedTexture.of(new ResourceLocation("fancymenu", "textures/menubar/icons/fancymenu_logo.png"));
 
     private static MenuBar grandfatheredMenuBar = null;
+
+    @NotNull static DebugOverlay buildDebugOverlay(@NotNull MenuBar menuBar) {
+
+        DebugOverlay overlay = new DebugOverlay();
+
+        int menuBarHeight = (int)((float)menuBar.getHeight() * UIBase.calculateFixedScale(menuBar.getScale()));
+        overlay.setTopYOffsetSupplier(() -> menuBarHeight + 10);
+
+        Screen current = Minecraft.getInstance().screen;
+        if (current == null) return overlay;
+        ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(current);
+        if (layer == null) return overlay;
+        String currentIdentifier = ScreenIdentifierHandler.getIdentifierOfScreen(current);
+        List<Layout> allLayoutsCurrent = LayoutHandler.getAllLayoutsForScreenIdentifier(currentIdentifier, true);
+        int animationCount = AnimationHandler.getAnimations().size();
+        int totalAnimationFrameCount = 0;
+        boolean tooHighAnimationResolution = false;
+        for (IAnimationRenderer ani : AnimationHandler.getAnimations()) {
+            totalAnimationFrameCount += ani.animationFrames();
+            if ((ani.getWidth() > 1920) || (ani.getHeight() > 1080)) tooHighAnimationResolution = true;
+        }
+        boolean tooManyAnimationFrames = totalAnimationFrameCount > 1000;
+        final int finalTotalAnimationFrameCount = totalAnimationFrameCount;
+        int slideshowCount = SlideshowHandler.getSlideshows().size();
+        int totalSlideshowImages = 0;
+        for (ExternalTextureSlideshowRenderer slide : SlideshowHandler.getSlideshows()) {
+            totalSlideshowImages += slide.getImageCount();
+        }
+        final int finalTotalSlideshowImages = totalSlideshowImages;
+
+        overlay.addLine("screen_identifier", DebugOverlay.LinePosition.TOP_LEFT,
+                        consumes -> {
+                            MutableComponent c = Component.translatable("fancymenu.overlay.debug.screen_identifier", currentIdentifier);
+                            if (consumes.isHovered()) c = c.setStyle(Style.EMPTY.withUnderlined(true));
+                            if (consumes.recentlyClicked()) c = Component.translatable("fancymenu.overlay.debug.screen_identifier.copied").setStyle(Style.EMPTY.withColor(ChatFormatting.GREEN));
+                            return c;
+                        })
+                .setClickAction(line -> Minecraft.getInstance().keyboardHandler.setClipboard(currentIdentifier));
+        overlay.addLine("screen_size", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.screen_size", "" + Minecraft.getInstance().getWindow().getScreenWidth(), "" + Minecraft.getInstance().getWindow().getScreenHeight()));
+        overlay.addLine("active_layout_count", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.screen_active_layout_count", "" + layer.activeLayouts.size()));
+        overlay.addLine("total_layout_count", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.screen_total_layout_count", "" + allLayoutsCurrent.size()));
+        overlay.addLine("active_elements_count", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.screen_active_element_count", "" + layer.allElements.size()));
+        overlay.addLine("total_animations", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.loaded_animations", "" + animationCount, "" + finalTotalAnimationFrameCount));
+        if (tooManyAnimationFrames) {
+            overlay.addLine("too_many_animation_frames", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.loaded_animations.too_many_frames").setStyle(Style.EMPTY.withColor(ChatFormatting.RED)));
+        }
+        if (tooHighAnimationResolution) {
+            overlay.addLine("too_high_resolution", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.loaded_animations.resolution_too_high").setStyle(Style.EMPTY.withColor(ChatFormatting.RED)));
+        }
+        overlay.addLine("total_slideshows", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.loaded_slideshows", "" + slideshowCount, "" + finalTotalSlideshowImages));
+        overlay.addLine("frames_per_second", DebugOverlay.LinePosition.TOP_LEFT, consumes -> {
+            int fps = Minecraft.getInstance().getFps();
+            MutableComponent fpsComp = Component.literal("" + fps);
+            if (fps < 20) fpsComp = fpsComp.setStyle(Style.EMPTY.withColor(ChatFormatting.GOLD));
+            if (fps < 10) fpsComp = fpsComp.setStyle(Style.EMPTY.withColor(ChatFormatting.RED));
+            return Component.translatable("fancymenu.overlay.debug.fps", fpsComp);
+        });
+        overlay.addLine("ram_usage", DebugOverlay.LinePosition.TOP_LEFT, consumes -> {
+            long max = Runtime.getRuntime().maxMemory();
+            long total = Runtime.getRuntime().totalMemory();
+            long free = Runtime.getRuntime().freeMemory();
+            long used = total - free;
+            long percent = (total - free) * 100L / max;
+            String ramString = bytesToMb(used) + "/" + bytesToMb(max) + "MB";
+            String percentString = percent + "%";
+            if (percent >= 60) percentString = ChatFormatting.GOLD + "" + percent + "%" + ChatFormatting.RESET;
+            if (percent >= 80) percentString = ChatFormatting.RED + "" + percent + "%" + ChatFormatting.RESET;
+            return Component.translatable("fancymenu.overlay.debug.memory", ramString, percentString);
+        });
+        overlay.addLine("cpu_info", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.cpu", GlUtil.getCpuInfo()));
+        overlay.addLine("gpu_info", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.gpu", GlUtil.getVendor()));
+
+        return overlay;
+
+    }
+
+    private static long bytesToMb(long bytes) {
+        return bytes / 1024L / 1024L;
+    }
 
     @NotNull
     protected static MenuBar buildMenuBar(boolean expanded) {

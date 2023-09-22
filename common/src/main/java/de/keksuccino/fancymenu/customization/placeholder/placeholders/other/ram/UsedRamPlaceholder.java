@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import net.minecraft.client.resources.language.I18n;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.List;
 
 public class UsedRamPlaceholder extends Placeholder {

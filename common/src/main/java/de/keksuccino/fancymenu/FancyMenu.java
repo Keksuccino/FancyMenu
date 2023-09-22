@@ -19,6 +19,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO Add Web Image backgrounds
+
 	//TODO add new context menu icons
 
 	//TODO In layout safe-as screen als default file name universal identifiers nutzen, falls vorhanden
