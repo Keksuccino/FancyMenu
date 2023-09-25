@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.element.elements;
 
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
 import de.keksuccino.fancymenu.customization.element.elements.animation.AnimationElementBuilder;
-import de.keksuccino.fancymenu.customization.element.elements.button.custom.ButtonElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.cursor.CursorElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.image.ImageElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.inputfield.InputFieldElementBuilder;

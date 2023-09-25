@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.element.elements.button.custom;
+package de.keksuccino.fancymenu.customization.element.elements.button.custombutton;
 
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.action.blocks.ExecutableBlockDeserializer;

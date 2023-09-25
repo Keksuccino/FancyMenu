@@ -1,11 +1,11 @@
-package de.keksuccino.fancymenu.customization.element.elements.button.vanilla;
+package de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.IElementStacker;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
-import de.keksuccino.fancymenu.customization.element.elements.button.custom.ButtonElement;
-import de.keksuccino.fancymenu.customization.element.elements.button.custom.ButtonElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElementBuilder;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.network.chat.Component;
@@ -14,11 +14,11 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class VanillaButtonElementBuilder extends ButtonElementBuilder implements IElementStacker<VanillaButtonElement> {
+public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements IElementStacker<VanillaWidgetElement> {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public static final VanillaButtonElementBuilder INSTANCE = new VanillaButtonElementBuilder();
+    public static final VanillaWidgetElementBuilder INSTANCE = new VanillaWidgetElementBuilder();
 
     @Override
     public @NotNull String getIdentifier() {
@@ -26,8 +26,8 @@ public class VanillaButtonElementBuilder extends ButtonElementBuilder implements
     }
 
     @Override
-    public @NotNull VanillaButtonElement buildDefaultInstance() {
-        VanillaButtonElement element = new VanillaButtonElement(this);
+    public @NotNull VanillaWidgetElement buildDefaultInstance() {
+        VanillaWidgetElement element = new VanillaWidgetElement(this);
         element.anchorPoint = ElementAnchorPoints.VANILLA;
         return element;
     }
@@ -37,7 +37,7 @@ public class VanillaButtonElementBuilder extends ButtonElementBuilder implements
 
         try {
 
-            VanillaButtonElement element = (VanillaButtonElement) elementAbstract;
+            VanillaWidgetElement element = (VanillaWidgetElement) elementAbstract;
             SerializedElement serialized = super.serializeElementInternal(element);
             if (serialized != null) {
 
@@ -59,9 +59,9 @@ public class VanillaButtonElementBuilder extends ButtonElementBuilder implements
     }
 
     @Override
-    public @NotNull VanillaButtonElement deserializeElement(@NotNull SerializedElement serialized) {
+    public @NotNull VanillaWidgetElement deserializeElement(@NotNull SerializedElement serialized) {
 
-        VanillaButtonElement element = (VanillaButtonElement) super.deserializeElement(serialized);
+        VanillaWidgetElement element = (VanillaWidgetElement) super.deserializeElement(serialized);
 
         String hidden = serialized.getValue("is_hidden");
         if ((hidden != null) && hidden.equalsIgnoreCase("true")) {
@@ -78,18 +78,18 @@ public class VanillaButtonElementBuilder extends ButtonElementBuilder implements
     }
 
     @Override
-    public @Nullable VanillaButtonElement deserializeElementInternal(@NotNull SerializedElement serialized) {
-        return (VanillaButtonElement) super.deserializeElementInternal(serialized);
+    public @Nullable VanillaWidgetElement deserializeElementInternal(@NotNull SerializedElement serialized) {
+        return (VanillaWidgetElement) super.deserializeElementInternal(serialized);
     }
 
     @Override
-    public @NotNull VanillaButtonEditorElement wrapIntoEditorElement(@NotNull ButtonElement element, @NotNull LayoutEditorScreen editor) {
-        return new VanillaButtonEditorElement(element, editor);
+    public @NotNull VanillaWidgetEditorElement wrapIntoEditorElement(@NotNull ButtonElement element, @NotNull LayoutEditorScreen editor) {
+        return new VanillaWidgetEditorElement(element, editor);
     }
 
     //Stacking Step 3
     @Override
-    public void stackElements(@NotNull VanillaButtonElement e, @NotNull VanillaButtonElement stack) {
+    public void stackElements(@NotNull VanillaWidgetElement e, @NotNull VanillaWidgetElement stack) {
 
         //Don't stack cached button stuff, just the plain customization part + identifier
 
@@ -162,7 +162,7 @@ public class VanillaButtonElementBuilder extends ButtonElementBuilder implements
 
     //Stacking Step 1
     @Override
-    public @Nullable VanillaButtonElement stackElementsInternal(AbstractElement stack, AbstractElement... elements) {
+    public @Nullable VanillaWidgetElement stackElementsInternal(AbstractElement stack, AbstractElement... elements) {
         if (stack != null) {
             stack.anchorPoint = ElementAnchorPoints.VANILLA;
         }

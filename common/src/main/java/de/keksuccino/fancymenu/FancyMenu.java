@@ -19,6 +19,12 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO FIXEN: eventuell aktualisieren Forge Deep elements in title screen ihre position nicht richtig (checken)
+
+	//TODO FIXEN: Menu Bar context menus rendern nicht auf scale 3 (vllt wegen depth test + Z ??)
+
+	//TODO Add option for "open on hover" open speed of submenu context menu entries
+
 	//TODO Add Web Image backgrounds
 
 	//TODO add new context menu icons

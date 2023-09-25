@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.element.elements.button.custom;
+package de.keksuccino.fancymenu.customization.element.elements.button.custombutton;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;

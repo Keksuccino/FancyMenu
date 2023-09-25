@@ -19,7 +19,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
-import java.util.Objects;
 
 @Mixin(value = Minecraft.class)
 public class MixinMinecraft {
@@ -62,12 +61,14 @@ public class MixinMinecraft {
 
 	@Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;wrapScreenError(Ljava/lang/Runnable;Ljava/lang/String;Ljava/lang/String;)V"))
 	private void beforeScreenTickFancyMenu(CallbackInfo info) {
-		EventHandler.INSTANCE.postEvent(new ScreenTickEvent.Pre(Objects.requireNonNull(this.screen)));
+		if (this.screen == null) return;
+		EventHandler.INSTANCE.postEvent(new ScreenTickEvent.Pre(this.screen));
 	}
 
 	@Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;wrapScreenError(Ljava/lang/Runnable;Ljava/lang/String;Ljava/lang/String;)V", shift = At.Shift.AFTER))
 	private void afterScreenTickFancyMenu(CallbackInfo info) {
-		EventHandler.INSTANCE.postEvent(new ScreenTickEvent.Post(Objects.requireNonNull(this.screen)));
+		if (this.screen == null) return;
+		EventHandler.INSTANCE.postEvent(new ScreenTickEvent.Post(this.screen));
 	}
 	
 	@Inject(at = @At(value = "HEAD"), method = "createTitle", cancellable = true)
@@ -111,11 +112,13 @@ public class MixinMinecraft {
 
 	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;removed()V"))
 	private void beforeCloseScreenFancyMenu(Screen screen, CallbackInfo info) {
+		if (this.screen == null) return;
 		EventHandler.INSTANCE.postEvent(new CloseScreenEvent(this.screen));
 	}
 
 	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;added()V"))
 	private void beforeOpenScreenFancyMenu(Screen screen, CallbackInfo info) {
+		if (this.screen == null) return;
 		EventHandler.INSTANCE.postEvent(new OpenScreenEvent(this.screen));
 	}
 

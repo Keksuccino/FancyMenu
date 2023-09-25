@@ -1,23 +1,21 @@
-package de.keksuccino.fancymenu.customization.element.elements.button.vanilla;
+package de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.IHideableElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
-import de.keksuccino.fancymenu.customization.element.elements.button.custom.ButtonEditorElement;
-import de.keksuccino.fancymenu.customization.element.elements.button.custom.ButtonElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonEditorElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
-public class VanillaButtonElement extends ButtonElement implements IHideableElement {
+public class VanillaWidgetElement extends ButtonElement implements IHideableElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -30,7 +28,7 @@ public class VanillaButtonElement extends ButtonElement implements IHideableElem
     public int automatedButtonClicks = 0;
     protected boolean automatedButtonClicksDone = false;
 
-    public VanillaButtonElement(ElementBuilder<ButtonElement, ButtonEditorElement> builder) {
+    public VanillaWidgetElement(ElementBuilder<ButtonElement, ButtonEditorElement> builder) {
         super(builder);
     }
 
@@ -123,22 +121,6 @@ public class VanillaButtonElement extends ButtonElement implements IHideableElem
         }
         return super.getInstanceIdentifier();
     }
-
-//    public boolean isButtonVisible() {
-//        if (!this.loadingRequirementsMet()) {
-//            return false;
-//        }
-//        if (this.vanillaButtonHidden) {
-//            return false;
-//        }
-//        if (!this.visible) {
-//            return false;
-//        }
-//        if (this.button != null) {
-//            return this.button.visible;
-//        }
-//        return true;
-//    }
 
     public void setVanillaButton(WidgetMeta data) {
         this.widgetMeta = data;

@@ -11,6 +11,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetEditorElement;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.LayoutEditorWidgetRegistry;
@@ -23,9 +24,8 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.IHideableElement;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
-import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonEditorElement;
-import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElement;
-import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElementBuilder;
 import de.keksuccino.fancymenu.customization.layer.IElementFactory;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.Layout;
@@ -67,7 +67,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	@NotNull
 	public Layout layout;
 	public List<AbstractEditorElement> normalEditorElements = new ArrayList<>();
-	public List<VanillaButtonEditorElement> vanillaButtonEditorElements = new ArrayList<>();
+	public List<VanillaWidgetEditorElement> vanillaWidgetEditorElements = new ArrayList<>();
 	public List<AbstractDeepEditorElement> deepEditorElements = new ArrayList<>();
 
 	public LayoutEditorHistory history = new LayoutEditorHistory(this);
@@ -243,7 +243,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			}
 		}
 		//Render vanilla button elements
-		for (VanillaButtonEditorElement e : new ArrayList<>(this.vanillaButtonEditorElements)) {
+		for (VanillaWidgetEditorElement e : new ArrayList<>(this.vanillaWidgetEditorElements)) {
 			if (!e.isSelected() && !e.isHidden()) e.render(pose, mouseX, mouseY, partial);
 		}
 		//Render deep elements
@@ -419,16 +419,16 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			e.resetElementStates();
 		}
 		this.normalEditorElements.clear();
-		this.vanillaButtonEditorElements.clear();
+		this.vanillaWidgetEditorElements.clear();
 		this.deepEditorElements.clear();
 
 		Layout.OrderedElementCollection normalElements = new Layout.OrderedElementCollection();
-		List<VanillaButtonElement> vanillaButtonElements = (this.layoutTargetScreen != null) ? new ArrayList<>() : null;
+		List<VanillaWidgetElement> vanillaWidgetElements = (this.layoutTargetScreen != null) ? new ArrayList<>() : null;
 		List<AbstractDeepElement> deepElements = (this.layoutTargetScreen != null) ? new ArrayList<>() : null;
 
 		List<WidgetMeta> vanillaWidgetMetaList = (this.layoutTargetScreen != null) ? ScreenWidgetDiscoverer.getWidgetsOfScreen(this.layoutTargetScreen, true, false) : null;
 
-		this.constructElementInstances(this.layout.screenIdentifier, vanillaWidgetMetaList, this.layout, normalElements, vanillaButtonElements, deepElements);
+		this.constructElementInstances(this.layout.screenIdentifier, vanillaWidgetMetaList, this.layout, normalElements, vanillaWidgetElements, deepElements);
 
 		//Wrap normal elements
 		for (AbstractElement e : ListUtils.mergeLists(normalElements.backgroundElements, normalElements.foregroundElements)) {
@@ -447,11 +447,11 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			}
 		}
 		//Wrap vanilla elements
-		if (vanillaButtonElements != null) {
-			for (VanillaButtonElement e : vanillaButtonElements) {
-				VanillaButtonEditorElement editorElement = (VanillaButtonEditorElement) VanillaButtonElementBuilder.INSTANCE.wrapIntoEditorElementInternal(e, this);
+		if (vanillaWidgetElements != null) {
+			for (VanillaWidgetElement e : vanillaWidgetElements) {
+				VanillaWidgetEditorElement editorElement = (VanillaWidgetEditorElement) VanillaWidgetElementBuilder.INSTANCE.wrapIntoEditorElementInternal(e, this);
 				if (editorElement != null) {
-					this.vanillaButtonEditorElements.add(editorElement);
+					this.vanillaWidgetEditorElements.add(editorElement);
 				}
 			}
 		}
@@ -479,8 +479,8 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			}
 		}
 		//Serialize vanilla button elements
-		for (VanillaButtonEditorElement e : this.vanillaButtonEditorElements) {
-			SerializedElement serialized = VanillaButtonElementBuilder.INSTANCE.serializeElementInternal(e.element);
+		for (VanillaWidgetEditorElement e : this.vanillaWidgetEditorElements) {
+			SerializedElement serialized = VanillaWidgetElementBuilder.INSTANCE.serializeElementInternal(e.element);
 			if (serialized != null) {
 				this.layout.serializedVanillaButtonElements.add(serialized);
 			}
@@ -496,7 +496,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		if (this.layout.renderElementsBehindVanilla) {
 			elements.addAll(this.normalEditorElements);
 		}
-		elements.addAll(this.vanillaButtonEditorElements);
+		elements.addAll(this.vanillaWidgetEditorElements);
 		elements.addAll(this.deepEditorElements);
 		if (!this.layout.renderElementsBehindVanilla) {
 			elements.addAll(this.normalEditorElements);
@@ -581,7 +581,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		if (element.settings.isDestroyable()) {
 			if (!element.settings.shouldHideInsteadOfDestroy()) {
 				this.normalEditorElements.remove(element);
-				this.vanillaButtonEditorElements.remove(element);
+				this.vanillaWidgetEditorElements.remove(element);
 				this.deepEditorElements.remove(element);
 				for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
 					w.editorElementRemovedOrHidden(element);

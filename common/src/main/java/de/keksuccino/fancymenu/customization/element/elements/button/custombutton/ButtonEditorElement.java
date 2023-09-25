@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.element.elements.button.custom;
+package de.keksuccino.fancymenu.customization.element.elements.button.custombutton;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.ObjectUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.List;
@@ -44,8 +45,11 @@ public class ButtonEditorElement extends AbstractEditorElement {
         this.rightClickMenu.addSeparatorEntry("button_separator_1");
 
         ContextMenu buttonBackgroundMenu = new ContextMenu();
-        this.rightClickMenu.addSubMenuEntry("button_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground"), buttonBackgroundMenu)
-                .setStackable(true);
+        //Only add background settings if element holds AbstractButton
+        if (this.getButtonElement().getButton() instanceof AbstractButton) {
+            this.rightClickMenu.addSubMenuEntry("button_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground"), buttonBackgroundMenu)
+                    .setStackable(true);
+        }
 
         ContextMenu setBackMenu = new ContextMenu();
         buttonBackgroundMenu.addSubMenuEntry("set_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.set"), setBackMenu)
@@ -217,7 +221,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
                         ButtonEditorElement.class,
                         consumes -> ((ButtonElement)consumes.element).label,
                         (element1, s) -> ((ButtonElement)element1.element).label = s,
-                        null, false, true, Component.translatable("fancymenu.editor.items.button.editlabel"),
+                        null, false, true, Component.translatable((this.getButtonElement().getButton() instanceof AbstractButton) ? "fancymenu.editor.items.button.editlabel" : "fancymenu.editor.items.button.label.generic"),
                         true, null, null, null)
                 .setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("text"));
@@ -226,7 +230,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
                         ButtonEditorElement.class,
                         consumes -> ((ButtonElement)consumes.element).hoverLabel,
                         (element1, s) -> ((ButtonElement)element1.element).hoverLabel = s,
-                        null, false, true, Component.translatable("fancymenu.editor.items.button.hoverlabel"),
+                        null, false, true, Component.translatable((this.getButtonElement().getButton() instanceof AbstractButton) ? "fancymenu.editor.items.button.hoverlabel" : "fancymenu.editor.items.button.hover_label.generic"),
                         true, null, null, null)
                 .setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("text"));

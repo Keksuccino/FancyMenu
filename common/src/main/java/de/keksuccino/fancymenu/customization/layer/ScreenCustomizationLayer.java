@@ -12,7 +12,7 @@ import de.keksuccino.fancymenu.events.widget.RenderGuiListHeaderFooterEvent;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractSelectionList;
 import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
-import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutBase;
 import de.keksuccino.fancymenu.customization.widget.ScreenWidgetDiscoverer;
@@ -58,7 +58,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 	public LayoutBase layoutBase = new LayoutBase();
 	public List<AbstractElement> allElements = new ArrayList<>();
 	public Layout.OrderedElementCollection normalElements = new Layout.OrderedElementCollection();
-	public List<VanillaButtonElement> vanillaButtonElements = new ArrayList<>();
+	public List<VanillaWidgetElement> vanillaWidgetElements = new ArrayList<>();
 	public List<AbstractDeepElement> deepElements = new ArrayList<>();
 	public Map<String, RandomLayoutContainer> randomLayoutGroups = new HashMap<>();
 	public List<Layout> activeLayouts = new ArrayList<>();
@@ -132,7 +132,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 		this.activeLayouts.clear();
 		this.layoutBase = new LayoutBase();
 		this.normalElements = new Layout.OrderedElementCollection();
-		this.vanillaButtonElements.clear();
+		this.vanillaWidgetElements.clear();
 		this.deepElements.clear();
 		this.allElements.clear();
 		this.backgroundOpacity = 1.0F;
@@ -225,11 +225,11 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 
 		this.cachedScreenWidgetMetas = ScreenWidgetDiscoverer.getWidgetsOfScreen(e.getScreen(), false, false);
 
-		this.constructElementInstances(this.getScreenIdentifier(), this.cachedScreenWidgetMetas, this.activeLayouts, this.normalElements, this.vanillaButtonElements, this.deepElements);
+		this.constructElementInstances(this.getScreenIdentifier(), this.cachedScreenWidgetMetas, this.activeLayouts, this.normalElements, this.vanillaWidgetElements, this.deepElements);
 		this.allElements.addAll(this.normalElements.backgroundElements);
 		this.allElements.addAll(this.normalElements.foregroundElements);
 		this.allElements.addAll(this.deepElements);
-		this.allElements.addAll(this.vanillaButtonElements);
+		this.allElements.addAll(this.vanillaWidgetElements);
 
 		for (AbstractElement ae : this.allElements) {
 			//Handle appearance delay
@@ -368,7 +368,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 			}
 		}
 		//Render vanilla button elements
-		for (AbstractElement element : new ArrayList<>(this.vanillaButtonElements)) {
+		for (AbstractElement element : new ArrayList<>(this.vanillaWidgetElements)) {
 			element.render(e.getPoseStack(), e.getMouseX(), e.getMouseY(), e.getPartial());
 		}
 		//Render deep elements

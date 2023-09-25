@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.resources.texture.WrappedTexture;
 import de.keksuccino.konkrete.rendering.RenderUtils;
@@ -84,31 +85,31 @@ public class Tooltip extends GuiComponent implements Renderable {
         Screen s = Minecraft.getInstance().screen;
         if (!this.isEmpty() && (s != null)) {
 
-            RenderSystem.enableBlend();
-
             this.updateAspectRatio();
 
             int x = this.calculateX(s, mouseX);
             int y = this.calculateY(s, mouseY);
 
+            RenderSystem.enableBlend();
+
+            pose.pushPose();
+
+            float scale = 1.0F;
             if (this.scale != null) {
-                pose.pushPose();
-                float scale = UIBase.calculateFixedScale(this.scale);
+                scale = UIBase.calculateFixedScale(this.scale);
                 pose.scale(scale, scale, scale);
             }
-            RenderUtils.setZLevelPre(pose, 400);
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+            pose.translate(0.0F, 0.0F, 600.0F / scale);
+            RenderSystem.enableDepthTest();
+            RenderingUtils.resetShaderColor();
 
             this.renderBackground(pose, x, y);
             this.renderTextLines(pose, x, y);
 
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-            RenderUtils.setZLevelPost(pose);
-            if (this.scale != null) {
-                pose.popPose();
-            }
+            RenderSystem.disableDepthTest();
+            pose.popPose();
 
-            RenderSystem.disableBlend();
+            RenderingUtils.resetShaderColor();
 
         }
     }

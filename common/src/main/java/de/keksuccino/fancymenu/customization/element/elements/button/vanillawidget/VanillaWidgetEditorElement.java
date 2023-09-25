@@ -1,26 +1,25 @@
-package de.keksuccino.fancymenu.customization.element.elements.button.vanilla;
+package de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.IHideableElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
-import de.keksuccino.fancymenu.customization.element.elements.button.custom.ButtonEditorElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.AnchorPointOverlay;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
-public class VanillaButtonEditorElement extends ButtonEditorElement implements IHideableElement {
+public class VanillaWidgetEditorElement extends ButtonEditorElement implements IHideableElement {
 
     private ElementAnchorPoint lastAnchorPoint = null;
 
-    public VanillaButtonEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public VanillaWidgetEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
         this.settings.setOrderable(false);
         this.settings.setCopyable(false);
@@ -42,11 +41,11 @@ public class VanillaButtonEditorElement extends ButtonEditorElement implements I
             this.rightClickMenu.removeEntry("edit_hover_label");
         }
 
-        if (this.getButtonElement().getButton() instanceof AbstractButton) {
+        if (this.getButtonElement().getButton() != null) {
 
-            this.rightClickMenu.addClickableEntryAfter("copy_id", "copy_vanilla_button_locator", Component.translatable("fancymenu.helper.editor.items.vanilla_button.copy_locator"), (menu, entry) ->
+            this.rightClickMenu.addClickableEntryAfter("copy_id", "copy_vanilla_widget_locator", Component.translatable("fancymenu.helper.editor.items.vanilla_button.copy_locator"), (menu, entry) ->
                     {
-                        Minecraft.getInstance().keyboardHandler.setClipboard(((VanillaButtonElement)this.element).widgetMeta.getLocator());
+                        Minecraft.getInstance().keyboardHandler.setClipboard(((VanillaWidgetElement)this.element).widgetMeta.getLocator());
                         menu.closeMenu();
                     })
                     .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.vanilla_button.copy_locator.desc")))
@@ -179,7 +178,7 @@ public class VanillaButtonEditorElement extends ButtonEditorElement implements I
     }
 
     public boolean isCopyrightButton() {
-        String compId = ((VanillaButtonElement)this.element).widgetMeta.getUniversalIdentifier();
+        String compId = ((VanillaWidgetElement)this.element).widgetMeta.getUniversalIdentifier();
         return ((compId != null) && compId.equals("mc_titlescreen_copyright_button"));
     }
 

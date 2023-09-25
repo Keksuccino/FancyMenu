@@ -78,7 +78,7 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
 
         pose.pushPose();
         pose.scale(scale, scale, scale);
-        pose.translate(0f, 0f, 500f);
+        pose.translate(0f, 0f, 500f / scale);
 
         if (this.expanded) {
             this.renderBackground(pose, 0, y, scaledWidth, this.height);
@@ -127,10 +127,8 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         pose.popPose();
         UIBase.resetShaderColor();
 
-        RenderSystem.enableDepthTest();
-
         pose.pushPose();
-        pose.translate(0f, 0f, 500f);
+        RenderSystem.enableDepthTest();
 
         //Render context menus of ContextMenuBarEntries
         for (MenuBarEntry e : ListUtils.mergeLists(this.leftEntries, this.rightEntries)) {
@@ -139,9 +137,9 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
             }
         }
 
+        RenderSystem.disableDepthTest();
         pose.popPose();
 
-        RenderSystem.disableDepthTest();
         UIBase.resetShaderColor();
 
     }

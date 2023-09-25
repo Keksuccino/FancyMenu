@@ -7,8 +7,8 @@ import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
-import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonEditorElement;
-import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetEditorElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.ManageLayoutsScreen;
@@ -593,8 +593,8 @@ public class LayoutEditorUI {
 
 				this.entries.clear();
 
-				List<VanillaButtonEditorElement> hiddenVanillaButtons = new ArrayList<>();
-				for (VanillaButtonEditorElement e : editor.vanillaButtonEditorElements) {
+				List<VanillaWidgetEditorElement> hiddenVanillaButtons = new ArrayList<>();
+				for (VanillaWidgetEditorElement e : editor.vanillaWidgetEditorElements) {
 					if (e.isHidden()) {
 						hiddenVanillaButtons.add(e);
 					}
@@ -607,8 +607,8 @@ public class LayoutEditorUI {
 				}
 
 				int i = 0;
-				for (VanillaButtonEditorElement e : hiddenVanillaButtons) {
-					this.addClickableEntry("element_" + i, ((VanillaButtonElement)e.element).button.getMessage(), (menu1, entry) -> {
+				for (VanillaWidgetEditorElement e : hiddenVanillaButtons) {
+					this.addClickableEntry("element_" + i, ((VanillaWidgetElement)e.element).button.getMessage(), (menu1, entry) -> {
 						editor.history.saveSnapshot();
 						e.setHidden(false);
 						MainThreadTaskExecutor.executeInMainThread(() -> menu1.removeEntry(entry.getIdentifier()), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);

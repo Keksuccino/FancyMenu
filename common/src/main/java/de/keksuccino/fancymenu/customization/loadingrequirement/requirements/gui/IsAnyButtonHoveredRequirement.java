@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.loadingrequirement.requirements.gui;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
-import de.keksuccino.fancymenu.customization.element.elements.button.custom.ButtonElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;

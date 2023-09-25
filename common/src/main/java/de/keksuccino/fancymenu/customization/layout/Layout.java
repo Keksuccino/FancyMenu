@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.layout;
 
+import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
@@ -23,9 +24,8 @@ import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.Elements;
 import de.keksuccino.fancymenu.customization.element.elements.animation.AnimationElement;
-import de.keksuccino.fancymenu.customization.element.elements.button.custom.ButtonElement;
-import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElement;
-import de.keksuccino.fancymenu.customization.element.elements.button.vanilla.VanillaButtonElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.image.ImageElement;
 import de.keksuccino.fancymenu.customization.element.elements.shape.ShapeElement;
 import de.keksuccino.fancymenu.customization.element.elements.slideshow.SlideshowElement;
@@ -561,10 +561,10 @@ public class Layout extends LayoutBase {
     }
 
     @NotNull
-    public List<VanillaButtonElement> buildVanillaButtonElementInstances() {
-        List<VanillaButtonElement> elements = new ArrayList<>();
+    public List<VanillaWidgetElement> buildVanillaButtonElementInstances() {
+        List<VanillaWidgetElement> elements = new ArrayList<>();
         for (SerializedElement serialized : this.serializedVanillaButtonElements) {
-            VanillaButtonElement element = VanillaButtonElementBuilder.INSTANCE.deserializeElementInternal(serialized);
+            VanillaWidgetElement element = VanillaWidgetElementBuilder.INSTANCE.deserializeElementInternal(serialized);
             if (element != null) {
                 elements.add(element);
             }
@@ -758,10 +758,10 @@ public class Layout extends LayoutBase {
     @NotNull
     protected static List<SerializedElement> convertLegacyVanillaButtonCustomizations(PropertyContainerSet layout) {
 
-        Map<String, VanillaButtonElement> elements = new HashMap<>();
+        Map<String, VanillaWidgetElement> elements = new HashMap<>();
 
         for (PropertyContainer sec : layout.getContainersOfType("customization")) {
-            VanillaButtonElement element = VanillaButtonElementBuilder.INSTANCE.buildDefaultInstance();
+            VanillaWidgetElement element = VanillaWidgetElementBuilder.INSTANCE.buildDefaultInstance();
             String action = sec.getValue("action");
             String identifier = sec.getValue("identifier");
             if ((identifier != null) && identifier.startsWith("%id=")) {
@@ -915,7 +915,7 @@ public class Layout extends LayoutBase {
                     if (!elements.containsKey(identifier)) {
                         elements.put(identifier, element);
                     } else {
-                        VanillaButtonElement stack = VanillaButtonElementBuilder.INSTANCE.stackElementsInternal(VanillaButtonElementBuilder.INSTANCE.buildDefaultInstance(), elements.get(identifier), element);
+                        VanillaWidgetElement stack = VanillaWidgetElementBuilder.INSTANCE.stackElementsInternal(VanillaWidgetElementBuilder.INSTANCE.buildDefaultInstance(), elements.get(identifier), element);
                         if (stack != null) {
                             elements.put(identifier, stack);
                         }
@@ -926,9 +926,9 @@ public class Layout extends LayoutBase {
         }
 
         List<SerializedElement> l = new ArrayList<>();
-        for (VanillaButtonElement e : elements.values()) {
+        for (VanillaWidgetElement e : elements.values()) {
             e.stayOnScreen = false;
-            SerializedElement serialized = VanillaButtonElementBuilder.INSTANCE.serializeElementInternal(e);
+            SerializedElement serialized = VanillaWidgetElementBuilder.INSTANCE.serializeElementInternal(e);
             if (serialized != null) {
                 l.add(serialized);
             }

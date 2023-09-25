@@ -71,7 +71,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         UIBase.resetShaderColor();
         pose.pushPose();
         pose.scale(scale, scale, scale);
-        pose.translate(0.0F, 0.0F, 400.0F);
+        pose.translate(0.0F, 0.0F, 500.0F / scale);
 
         List<ContextMenuEntry<?>> renderEntries = new ArrayList<>();
         renderEntries.add(new SpacerContextMenuEntry("unregistered_spacer_top", this));
