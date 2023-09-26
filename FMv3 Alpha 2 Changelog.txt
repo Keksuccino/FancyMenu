@@ -1,9 +1,14 @@
 
 CHANGELOG | FANCYMENU v3.0.0 ALPHA 2
  
+ 
+IMPORTANT: I recommend you to make a new instance for this build, because layout stuff that got destroyed by Alpha 1 does not get repaired
+ 
+---------------
+ 
 - Added: Debug overlay (press CTRL + ALT + D while in a menu)
  
-- Changed: "Change Anchor on Hover" is now disabled by default (will still be enabled for you, because it got already saved to your config)
+- Changed: "Change Anchor on Hover" is now disabled by default
  
 - Fixed: Rare crash when loading into a world
 - Fixed: Old v2 custom GUIs don't get correctly converted to v3
