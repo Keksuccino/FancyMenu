@@ -1,3 +1,21 @@
+ 
+- Fixed loading screen fade-out bug
+
+%changelog:end%
+
+
+
+
+
+CHANGELOG | FANCYMENU v2.14.9 for MC 1.20.2
+ 
+- Added support for MC 1.20.2
+
+%changelog:end%
+
+
+
+
 
 CHANGELOG | FANCYMENU v2.14.9-1 for Forge 1.20.1
  
@@ -73,6 +91,7 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - Complex loading requirements like "Is Number" now have a GUI to build/edit their values more easily
 - Complex actions like "Execute Terminal/CMD Command" now have a GUI to build/edit their values more easily
 - FancyMenu's "config.txt" file is now called "options.txt" (It's NOT recommended to rename the old one to "options.txt"!)
+--> This also means everything from the old config needs to get set again (like custom window title, window icon, etc.) (sorry for that!)
 - The pose of Player Entity elements is now fully customizable (Every body part can be rotated on its X, Y and Z axis, except base body/torso, which only rotates on X and Y)
 - Player Entity elements now have separate "follow mouse" toggles for head and body
 - Player Entity elements now keep their customized pose while "follow mouse" is enabled

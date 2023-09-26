@@ -23,7 +23,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -171,7 +170,9 @@ public class Tooltip extends GuiComponent implements Renderable {
         bufferBuilder2.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
         Matrix4f matrix4f2 = pose.last().pose();
 
-        TooltipRenderUtil.renderTooltipBackground(GuiComponent::fillGradient, matrix4f2, bufferBuilder2, x, y, width, height, 400);
+        //Set Z to 0, because Z level gets handled in parent method instead
+        int z = 0;
+        TooltipRenderUtil.renderTooltipBackground(GuiComponent::fillGradient, matrix4f2, bufferBuilder2, x, y, width, height, z);
 
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
@@ -179,6 +180,9 @@ public class Tooltip extends GuiComponent implements Renderable {
         if (shaderInstance != null) {
             RenderSystem.setShader(() -> shaderInstance);
         }
+
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderingUtils.resetShaderColor();
 
         pose.popPose();
 

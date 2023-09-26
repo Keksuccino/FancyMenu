@@ -1,0 +1,14 @@
+
+CHANGELOG | FANCYMENU v3.0.0 ALPHA 2
+ 
+- Added: Debug overlay (press CTRL + ALT + D while in a menu)
+ 
+- Changed: "Change Anchor on Hover" is now disabled by default (will still be enabled for you, because it got already saved to your config)
+ 
+- Fixed: Rare crash when loading into a world
+- Fixed: Old v2 custom GUIs don't get correctly converted to v3
+- Fixed: Custom locals not working
+- Fixed: Old v2 custom buttons not working (actions don't get loaded)
+- Fixed: Old v2 layouts do not appear in "Recently Edited" list in "Manage Layouts" context menu
+- Fixed: When saving a layout, elements sometimes get saved with wrong base width and height (if advanced sizing is used for example)
+- Fixed: Image element width gets incorrectly loaded in the editor (leads to saving image elements with wrong width if the layout gets saved)

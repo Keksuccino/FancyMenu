@@ -300,8 +300,8 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             }
             sec.putProperty("x", "" + element.posOffsetX);
             sec.putProperty("y", "" + element.posOffsetY);
-            sec.putProperty("width", "" + element.getAbsoluteWidth());
-            sec.putProperty("height", "" + element.getAbsoluteHeight());
+            sec.putProperty("width", "" + element.baseWidth);
+            sec.putProperty("height", "" + element.baseHeight);
             sec.putProperty("stretch_x", "" + element.stretchX);
             sec.putProperty("stretch_y", "" + element.stretchY);
 

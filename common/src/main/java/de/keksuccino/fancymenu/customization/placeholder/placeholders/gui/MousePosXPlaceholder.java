@@ -23,7 +23,7 @@ public class MousePosXPlaceholder extends Placeholder {
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         Screen s = Minecraft.getInstance().screen;
-        if ((s != null) && (s instanceof LayoutEditorScreen)) {
+        if (s instanceof LayoutEditorScreen) {
             return "10";
         }
         return "" + MouseInput.getMouseX();

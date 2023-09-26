@@ -22,7 +22,7 @@ public class ScreenHeightPlaceholder extends Placeholder {
         if (Minecraft.getInstance().screen != null) {
             return "" + Minecraft.getInstance().screen.height;
         }
-        return null;
+        return "1";
     }
 
     @Override

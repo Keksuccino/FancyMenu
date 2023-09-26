@@ -10,14 +10,17 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class ElementPosYPlaceholder extends Placeholder {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public ElementPosYPlaceholder() {
         super("elementposy");
@@ -30,9 +33,11 @@ public class ElementPosYPlaceholder extends Placeholder {
             AbstractElement element = findElement(id);
             if (element != null) {
                 return "" + element.getAbsoluteY();
+            } else {
+                LOGGER.error("[FANCYMENU] Unable to get Y-position of element via placeholder! Element not found: " + id);
             }
         }
-        return null;
+        return "1";
     }
 
     private AbstractElement findElement(String id) {

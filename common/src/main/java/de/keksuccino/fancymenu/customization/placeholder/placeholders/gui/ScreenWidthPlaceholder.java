@@ -22,7 +22,7 @@ public class ScreenWidthPlaceholder extends Placeholder {
         if (Minecraft.getInstance().screen != null) {
             return "" + Minecraft.getInstance().screen.width;
         }
-        return null;
+        return "1";
     }
 
     @Override

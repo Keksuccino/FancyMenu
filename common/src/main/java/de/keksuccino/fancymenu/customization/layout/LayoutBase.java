@@ -81,7 +81,7 @@ public class LayoutBase {
         return layout;
     }
 
-    protected static SerializedElement convertSectionToElement(PropertyContainer sec) {
+    protected static SerializedElement convertContainerToSerializedElement(PropertyContainer sec) {
         SerializedElement e = new SerializedElement();
         for (Map.Entry<String, String> m : sec.getProperties().entrySet()) {
             e.putProperty(m.getKey(), m.getValue());

@@ -19,9 +19,11 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO FIXEN: eventuell aktualisieren Forge Deep elements in title screen ihre position nicht richtig (checken)
+	//TODO FIXEN: Debug Overlay ist in compiled version (oder Fabric??) broke -> localized component mit literal ersetzen und per I18n string builden
 
-	//TODO FIXEN: Menu Bar context menus rendern nicht auf scale 3 (vllt wegen depth test + Z ??)
+	//TODO FIXEN: Element order von legacy elementen scheint nicht beibehalten zu werden (bringt neue elemente und legacy durcheinander, weil legacy separat deserialized wird)
+
+	//TODO FIXEN: eventuell aktualisieren Forge Deep elements in title screen ihre position nicht richtig (checken)
 
 	//TODO Add option for "open on hover" open speed of submenu context menu entries
 

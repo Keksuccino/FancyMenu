@@ -35,7 +35,7 @@ public class Options extends AbstractOptions {
     public final Option<Boolean> showAnchorOverlay = new Option<>(config, "show_anchor_overlay", true, "layout_editor");
     public final Option<Boolean> alwaysShowAnchorOverlay = new Option<>(config, "always_show_anchor_overlay", false, "layout_editor");
     public final Option<Boolean> showAllAnchorConnections = new Option<>(config, "show_all_anchor_connections", false, "layout_editor");
-    public final Option<Boolean> changeAnchorOnHover = new Option<>(config, "change_anchor_on_hover", true, "layout_editor");
+    public final Option<Boolean> changeAnchorOnHover = new Option<>(config, "change_anchor_on_hover", false, "layout_editor");
 
     public final Option<Float> uiScale = new Option<>(config, "ui_scale", 4.0F, "ui");
     public final Option<Boolean> playUiClickSounds = new Option<>(config, "play_ui_click_sounds", true, "ui");

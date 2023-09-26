@@ -55,6 +55,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
             //Legacy support for old button action format
             GenericExecutableBlock g = new GenericExecutableBlock();
             g.getExecutables().addAll(ActionInstance.deserializeAll(serialized));
+            element.actionExecutor = g;
         }
 
         element.hoverSound = serialized.getValue("hoversound");

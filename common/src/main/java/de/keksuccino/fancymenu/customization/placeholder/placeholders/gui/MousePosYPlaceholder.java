@@ -10,7 +10,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -23,7 +22,7 @@ public class MousePosYPlaceholder extends Placeholder {
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         Screen s = Minecraft.getInstance().screen;
-        if ((s != null) && (s instanceof LayoutEditorScreen)) {
+        if (s instanceof LayoutEditorScreen) {
             return "10";
         }
         return "" + MouseInput.getMouseY();

@@ -117,9 +117,6 @@ public class ImageElement extends AbstractElement {
                         }
                     }
                 }
-                if (isEditor()) {
-                    this.restoreAspectRatio();
-                }
             } else {
                 this.webTextureInitialized = false;
                 this.texture = null;

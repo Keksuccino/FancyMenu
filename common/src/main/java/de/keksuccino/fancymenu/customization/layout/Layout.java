@@ -52,6 +52,7 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.function.Supplier;
 
+@SuppressWarnings("all")
 public class Layout extends LayoutBase {
 
     public static final String UNIVERSAL_LAYOUT_IDENTIFIER = "%fancymenu:universal_layout%";
@@ -212,6 +213,8 @@ public class Layout extends LayoutBase {
 
         if (serialized.getType().equalsIgnoreCase("menu") || serialized.getType().equalsIgnoreCase("fancymenu_layout")) {
 
+            boolean legacyLayout = serialized.getType().equalsIgnoreCase("menu");
+
             Layout layout = new Layout();
             layout.layoutFile = layoutFile;
 
@@ -240,6 +243,9 @@ public class Layout extends LayoutBase {
                 String lastEdited = meta.getValue("last_edited_time");
                 if ((lastEdited != null) && MathUtils.isLong(lastEdited)) {
                     layout.lastEditedTime = Long.parseLong(lastEdited);
+                }
+                if ((lastEdited == null) && legacyLayout) {
+                    layout.lastEditedTime = System.currentTimeMillis();
                 }
 
                 String isEnabled = meta.getValue("is_enabled");
@@ -285,7 +291,7 @@ public class Layout extends LayoutBase {
 
             //Handle vanilla button elements
             for (PropertyContainer sec : serialized.getContainersOfType("vanilla_button")) {
-                SerializedElement serializedVanilla = convertSectionToElement(sec);
+                SerializedElement serializedVanilla = convertContainerToSerializedElement(sec);
                 serializedVanilla.setType("vanilla_button");
                 layout.serializedVanillaButtonElements.add(serializedVanilla);
             }
@@ -301,7 +307,7 @@ public class Layout extends LayoutBase {
                 if (elementType != null) {
                     elementType = elementType.replace("custom_layout_element:", "");
                     if (ElementRegistry.hasBuilder(elementType)) {
-                        SerializedElement e = convertSectionToElement(sec);
+                        SerializedElement e = convertContainerToSerializedElement(sec);
                         e.putProperty("element_type", elementType);
                         layout.serializedElements.add(e);
                     }
@@ -321,7 +327,7 @@ public class Layout extends LayoutBase {
                     if (elementType != null) {
                         elementType = elementType.replace("deep_customization_element:", "");
                         if (layout.deepScreenCustomizationLayer.hasBuilder(elementType)) {
-                            SerializedElement e = convertSectionToElement(sec);
+                            SerializedElement e = convertContainerToSerializedElement(sec);
                             e.setType("deep_element");
                             e.putProperty("element_type", elementType);
                             layout.serializedDeepElements.add(e);
@@ -589,7 +595,7 @@ public class Layout extends LayoutBase {
             if (action != null) {
 
                 if (action.equalsIgnoreCase("addtexture")) {
-                    ImageElement e = Elements.IMAGE.deserializeElementInternal(convertSectionToElement(sec));
+                    ImageElement e = Elements.IMAGE.deserializeElementInternal(convertContainerToSerializedElement(sec));
                     if (e != null) {
                         e.stayOnScreen = false;
                         e.sourceMode = ImageElement.SourceMode.LOCAL;
@@ -599,7 +605,7 @@ public class Layout extends LayoutBase {
                 }
 
                 if (action.equalsIgnoreCase("addwebtexture")) {
-                    ImageElement e = Elements.IMAGE.deserializeElementInternal(convertSectionToElement(sec));
+                    ImageElement e = Elements.IMAGE.deserializeElementInternal(convertContainerToSerializedElement(sec));
                     if (e != null) {
                         e.stayOnScreen = false;
                         e.sourceMode = ImageElement.SourceMode.WEB;
@@ -609,7 +615,7 @@ public class Layout extends LayoutBase {
                 }
 
                 if (action.equalsIgnoreCase("addanimation")) {
-                    AnimationElement e = Elements.ANIMATION.deserializeElementInternal(convertSectionToElement(sec));
+                    AnimationElement e = Elements.ANIMATION.deserializeElementInternal(convertContainerToSerializedElement(sec));
                     if (e != null) {
                         e.stayOnScreen = false;
                         e.animationName = sec.getValue("name");
@@ -618,7 +624,7 @@ public class Layout extends LayoutBase {
                 }
 
                 if (action.equalsIgnoreCase("addshape")) {
-                    ShapeElement e = Elements.SHAPE.deserializeElementInternal(convertSectionToElement(sec));
+                    ShapeElement e = Elements.SHAPE.deserializeElementInternal(convertContainerToSerializedElement(sec));
                     if (e != null) {
                         e.stayOnScreen = false;
                         e.color = DrawableColor.of(sec.getValue("color"));
@@ -627,7 +633,7 @@ public class Layout extends LayoutBase {
                 }
 
                 if (action.equalsIgnoreCase("addslideshow")) {
-                    SlideshowElement e = Elements.SLIDESHOW.deserializeElementInternal(convertSectionToElement(sec));
+                    SlideshowElement e = Elements.SLIDESHOW.deserializeElementInternal(convertContainerToSerializedElement(sec));
                     if (e != null) {
                         e.stayOnScreen = false;
                         e.slideshowName = sec.getValue("name");
@@ -636,7 +642,7 @@ public class Layout extends LayoutBase {
                 }
 
                 if (action.equalsIgnoreCase("addbutton")) {
-                    ButtonElement e = Elements.BUTTON.deserializeElementInternal(convertSectionToElement(sec));
+                    ButtonElement e = Elements.BUTTON.deserializeElementInternal(convertContainerToSerializedElement(sec));
                     if (e != null) {
                         e.stayOnScreen = false;
                         elements.add(Elements.BUTTON.serializeElementInternal(e));
@@ -644,7 +650,7 @@ public class Layout extends LayoutBase {
                 }
 
                 if (action.equalsIgnoreCase("addsplash")) {
-                    SplashTextElement e = Elements.SPLASH_TEXT.deserializeElementInternal(convertSectionToElement(sec));
+                    SplashTextElement e = Elements.SPLASH_TEXT.deserializeElementInternal(convertContainerToSerializedElement(sec));
                     if (e != null) {
                         String text = sec.getValue("text");
                         if (text != null) {
@@ -765,8 +771,7 @@ public class Layout extends LayoutBase {
             String action = sec.getValue("action");
             String identifier = sec.getValue("identifier");
             if ((identifier != null) && identifier.startsWith("%id=")) {
-                identifier = identifier.replace("%id=", "");
-                identifier = new StringBuilder(new StringBuilder(identifier).reverse().substring(1)).reverse().toString();
+                identifier = identifier.replace("%id=", "").replace("button_compatibility_id:", "").replace("%", "").replace("vanillabtn:", "");
             } else {
                 identifier = null;
             }
