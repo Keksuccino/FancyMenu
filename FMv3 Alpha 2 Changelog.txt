@@ -7,8 +7,9 @@ IMPORTANT: I recommend you to make a new instance for this build, because layout
 ---------------
  
 - Added: Debug overlay (press CTRL + ALT + D while in a menu)
+- Added: Support for web images to the "Image" menu background type
  
-- Changed: "Change Anchor on Hover" is now disabled by default
+- Changed: "Change Anchor on Hover" (anchor overlay in editor) is now disabled by default
  
 - Fixed: Rare crash when loading into a world
 - Fixed: Old v2 custom GUIs don't get correctly converted to v3
@@ -17,3 +18,6 @@ IMPORTANT: I recommend you to make a new instance for this build, because layout
 - Fixed: Old v2 layouts do not appear in "Recently Edited" list in "Manage Layouts" context menu
 - Fixed: When saving a layout, elements sometimes get saved with wrong base width and height (if advanced sizing is used for example)
 - Fixed: Image element width gets incorrectly loaded in the editor (leads to saving image elements with wrong width if the layout gets saved)
+- Fixed: Element order of v2 layouts broken
+- Fixed: Copyright widget hidden if it got hidden via v2 layout
+- Fixed: Some Vanilla buttons customized via v2 layouts don't get all their customizations applied correctly
