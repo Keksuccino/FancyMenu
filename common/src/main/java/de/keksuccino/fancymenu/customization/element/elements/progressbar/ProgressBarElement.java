@@ -16,6 +16,7 @@ import net.minecraft.network.chat.Style;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 
 public class ProgressBarElement extends AbstractElement {
@@ -164,7 +165,7 @@ public class ProgressBarElement extends AbstractElement {
         return this.lastProgressHeight;
     }
 
-    public enum BarDirection implements LocalizedCycleEnum {
+    public enum BarDirection implements LocalizedCycleEnum<BarDirection> {
 
         LEFT("left"),
         RIGHT("right"),
@@ -183,7 +184,7 @@ public class ProgressBarElement extends AbstractElement {
         }
 
         @Override
-        public @NotNull Style getEntryComponentStyle() {
+        public @NotNull Style getValueComponentStyle() {
             return WARNING_TEXT_STYLE.get();
         }
 
@@ -192,18 +193,27 @@ public class ProgressBarElement extends AbstractElement {
             return this.name;
         }
 
-        public static BarDirection byName(@NotNull String name) {
+        @Override
+        public @NotNull BarDirection[] getValues() {
+            return BarDirection.values();
+        }
+
+        @Override
+        public @Nullable BarDirection getByNameInternal(@NotNull String name) {
+            return getByName(name);
+        }
+
+        @Nullable
+        public static BarDirection getByName(@NotNull String name) {
             for (BarDirection d : BarDirection.values()) {
-                if (d.name.equals(name)) {
-                    return d;
-                }
+                if (d.name.equals(name)) return d;
             }
-            return BarDirection.LEFT;
+            return null;
         }
 
     }
 
-    public enum ProgressValueMode implements LocalizedCycleEnum {
+    public enum ProgressValueMode implements LocalizedCycleEnum<ProgressValueMode> {
 
         PERCENTAGE("percentage"),
         FLOATING_POINT("float");
@@ -220,7 +230,7 @@ public class ProgressBarElement extends AbstractElement {
         }
 
         @Override
-        public @NotNull Style getEntryComponentStyle() {
+        public @NotNull Style getValueComponentStyle() {
             return WARNING_TEXT_STYLE.get();
         }
 
@@ -229,13 +239,22 @@ public class ProgressBarElement extends AbstractElement {
             return this.name;
         }
 
-        public static ProgressValueMode byName(@NotNull String name) {
+        @Override
+        public @NotNull ProgressValueMode[] getValues() {
+            return ProgressValueMode.values();
+        }
+
+        @Override
+        public @Nullable ProgressValueMode getByNameInternal(@NotNull String name) {
+            return getByName(name);
+        }
+
+        @Nullable
+        public static ProgressValueMode getByName(@NotNull String name) {
             for (ProgressValueMode d : ProgressValueMode.values()) {
-                if (d.name.equals(name)) {
-                    return d;
-                }
+                if (d.name.equals(name)) return d;
             }
-            return ProgressValueMode.PERCENTAGE;
+            return null;
         }
 
     }

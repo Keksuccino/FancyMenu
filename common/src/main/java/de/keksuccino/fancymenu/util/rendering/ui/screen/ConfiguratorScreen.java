@@ -50,9 +50,18 @@ public abstract class ConfiguratorScreen extends Screen {
         super(title);
     }
 
+    /**
+     * This is to add cells to the cell view.<br>
+     * Gets called in {@link ConfiguratorScreen#init()} and before {@link ConfiguratorScreen#initRightSideWidgets()}.
+     */
     protected void initCells() {
     }
 
+    /**
+     * This is for custom widgets that should get added to the right side.<br>
+     * Gets called in {@link ConfiguratorScreen#init()}.<br>
+     * The {@link ConfiguratorScreen#cancelButton} and {@link ConfiguratorScreen#doneButton} is NOT INITIALIZED yet when this method gets called!
+     */
     protected void initRightSideWidgets() {
     }
 
@@ -203,6 +212,11 @@ public abstract class ConfiguratorScreen extends Screen {
     @NotNull
     protected SpacerCell addCellGroupEndSpacerCell() {
         return this.addSpacerCell(7);
+    }
+
+    @NotNull
+    protected SpacerCell addStartEndSpacerCell() {
+        return this.addSpacerCell(20);
     }
 
     @NotNull

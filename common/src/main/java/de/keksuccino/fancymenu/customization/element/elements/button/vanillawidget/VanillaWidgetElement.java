@@ -35,7 +35,7 @@ public class VanillaWidgetElement extends ButtonElement implements IHideableElem
     @SuppressWarnings("all")
     @Override
     protected void renderElementWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-        ((CustomizableWidget)this.button).setHiddenFancyMenu(isEditor() ? false : this.vanillaButtonHidden);
+        ((CustomizableWidget)this.button).setHiddenFancyMenu((isEditor() || this.isCopyrightButton()) ? false : this.vanillaButtonHidden);
         super.renderElementWidget(pose, mouseX, mouseY, partial);
     }
 
@@ -133,12 +133,20 @@ public class VanillaWidgetElement extends ButtonElement implements IHideableElem
 
     @Override
     public boolean isHidden() {
+        if (this.isCopyrightButton()) return false;
         return this.vanillaButtonHidden;
     }
 
     @Override
     public void setHidden(boolean hidden) {
+        if (this.isCopyrightButton()) hidden = false;
         this.vanillaButtonHidden = hidden;
+    }
+
+    public boolean isCopyrightButton() {
+        if (this.widgetMeta == null) return false;
+        String compId = this.widgetMeta.getUniversalIdentifier();
+        return ((compId != null) && compId.equals("mc_titlescreen_copyright_button"));
     }
 
 }

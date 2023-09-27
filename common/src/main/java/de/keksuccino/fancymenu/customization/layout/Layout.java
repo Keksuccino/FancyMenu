@@ -74,6 +74,8 @@ public class Layout extends LayoutBase {
     public List<SerializedElement> serializedDeepElements = new ArrayList<>();
     @Nullable
     public DeepScreenCustomizationLayer deepScreenCustomizationLayer = null;
+    @Legacy("Remove this in the future.")
+    public boolean legacyLayout = false;
 
     @NotNull
     public static Layout buildUniversal() {
@@ -213,10 +215,10 @@ public class Layout extends LayoutBase {
 
         if (serialized.getType().equalsIgnoreCase("menu") || serialized.getType().equalsIgnoreCase("fancymenu_layout")) {
 
-            boolean legacyLayout = serialized.getType().equalsIgnoreCase("menu");
-
             Layout layout = new Layout();
             layout.layoutFile = layoutFile;
+
+            layout.legacyLayout = serialized.getType().equalsIgnoreCase("menu");
 
             PropertyContainer meta = serialized.getFirstContainerOfType("layout-meta");
             if (meta == null) {
@@ -244,7 +246,7 @@ public class Layout extends LayoutBase {
                 if ((lastEdited != null) && MathUtils.isLong(lastEdited)) {
                     layout.lastEditedTime = Long.parseLong(lastEdited);
                 }
-                if ((lastEdited == null) && legacyLayout) {
+                if ((lastEdited == null) && layout.legacyLayout) {
                     layout.lastEditedTime = System.currentTimeMillis();
                 }
 
@@ -296,7 +298,9 @@ public class Layout extends LayoutBase {
                 layout.serializedVanillaButtonElements.add(serializedVanilla);
             }
             //Convert legacy vanilla button customizations
-            layout.serializedVanillaButtonElements.addAll(convertLegacyVanillaButtonCustomizations(serialized));
+            if (layout.legacyLayout) {
+                layout.serializedVanillaButtonElements.addAll(convertLegacyVanillaButtonCustomizations(serialized));
+            }
 
             //Handle normal elements
             for (PropertyContainer sec : ListUtils.mergeLists(serialized.getContainersOfType("element"), serialized.getContainersOfType("customization"))) {
@@ -313,8 +317,38 @@ public class Layout extends LayoutBase {
                     }
                 }
             }
-            //Convert legacy elements
-            layout.serializedElements.addAll(convertLegacyElements(serialized));
+
+            //Convert legacy elements (+ restore original element order)
+            if (layout.legacyLayout) {
+                List<List<?>> elementsAndOrder = convertLegacyElements(serialized);
+                List<SerializedElement> normalElements = new ArrayList<>(layout.serializedElements);
+                List<SerializedElement> legacyElements = (List<SerializedElement>) elementsAndOrder.get(0);
+                List<SerializedElement> combined = new ArrayList<>();
+                List<String> elementOrder = (List<String>) elementsAndOrder.get(1);
+                for (String identifier : elementOrder) {
+                    for (SerializedElement s : normalElements) {
+                        String actionId = s.getValue("actionid");
+                        if (actionId == null) actionId = s.getValue("instance_identifier");
+                        if ((actionId != null) && actionId.equals(identifier)) {
+                            combined.add(s);
+                            continue;
+                        }
+                    }
+                    for (SerializedElement e : legacyElements) {
+                        String actionId = e.getValue("actionid");
+                        if (actionId == null) actionId = e.getValue("instance_identifier");
+                        if ((actionId != null) && actionId.equals(identifier)) {
+                            combined.add(e);
+                            continue;
+                        }
+                    }
+                }
+                for (SerializedElement e : normalElements) {
+                    if (!combined.contains(e)) combined.add(e);
+                }
+                layout.serializedElements.clear();
+                layout.serializedElements.addAll(combined);
+            }
 
             //Handle deep elements
             layout.deepScreenCustomizationLayer = ((layout.screenIdentifier != null) && !layout.isUniversalLayout()) ? DeepScreenCustomizationLayerRegistry.getLayer(layout.screenIdentifier) : null;
@@ -349,9 +383,11 @@ public class Layout extends LayoutBase {
                 }
             }
             //Convert legacy backgrounds
-            MenuBackground legacyBackground = convertLegacyMenuBackground(serialized);
-            if (legacyBackground != null) {
-                layout.menuBackground = legacyBackground;
+            if (layout.legacyLayout) {
+                MenuBackground legacyBackground = convertLegacyMenuBackground(serialized);
+                if (legacyBackground != null) {
+                    layout.menuBackground = legacyBackground;
+                }
             }
 
             //Handle Scroll List Customizations
@@ -585,14 +621,22 @@ public class Layout extends LayoutBase {
 
     @Legacy("Converts legacy elements to the new format. Remove this later.")
     @NotNull
-    protected static List<SerializedElement> convertLegacyElements(PropertyContainerSet layout) {
+    protected static List<List<?>> convertLegacyElements(PropertyContainerSet layout) {
 
         List<SerializedElement> elements = new ArrayList<>();
+        List<String> elementOrder = new ArrayList<>();
 
         for (PropertyContainer sec : layout.getContainersOfType("customization")) {
 
             String action = sec.getValue("action");
             if (action != null) {
+
+                if (action.startsWith("custom_layout_element:")) {
+                    String identifier = sec.getValue("actionid");
+                    if (identifier != null) {
+                        elementOrder.add(identifier);
+                    }
+                }
 
                 if (action.equalsIgnoreCase("addtexture")) {
                     ImageElement e = Elements.IMAGE.deserializeElementInternal(convertContainerToSerializedElement(sec));
@@ -601,6 +645,7 @@ public class Layout extends LayoutBase {
                         e.sourceMode = ImageElement.SourceMode.LOCAL;
                         e.source = sec.getValue("path");
                         elements.add(Elements.IMAGE.serializeElementInternal(e));
+                        if (e.getInstanceIdentifier() != null) elementOrder.add(e.getInstanceIdentifier());
                     }
                 }
 
@@ -611,6 +656,7 @@ public class Layout extends LayoutBase {
                         e.sourceMode = ImageElement.SourceMode.WEB;
                         e.source = sec.getValue("url");
                         elements.add(Elements.IMAGE.serializeElementInternal(e));
+                        if (e.getInstanceIdentifier() != null) elementOrder.add(e.getInstanceIdentifier());
                     }
                 }
 
@@ -620,6 +666,7 @@ public class Layout extends LayoutBase {
                         e.stayOnScreen = false;
                         e.animationName = sec.getValue("name");
                         elements.add(Elements.ANIMATION.serializeElementInternal(e));
+                        if (e.getInstanceIdentifier() != null) elementOrder.add(e.getInstanceIdentifier());
                     }
                 }
 
@@ -629,6 +676,7 @@ public class Layout extends LayoutBase {
                         e.stayOnScreen = false;
                         e.color = DrawableColor.of(sec.getValue("color"));
                         elements.add(Elements.SHAPE.serializeElementInternal(e));
+                        if (e.getInstanceIdentifier() != null) elementOrder.add(e.getInstanceIdentifier());
                     }
                 }
 
@@ -638,6 +686,7 @@ public class Layout extends LayoutBase {
                         e.stayOnScreen = false;
                         e.slideshowName = sec.getValue("name");
                         elements.add(Elements.SLIDESHOW.serializeElementInternal(e));
+                        if (e.getInstanceIdentifier() != null) elementOrder.add(e.getInstanceIdentifier());
                     }
                 }
 
@@ -646,6 +695,7 @@ public class Layout extends LayoutBase {
                     if (e != null) {
                         e.stayOnScreen = false;
                         elements.add(Elements.BUTTON.serializeElementInternal(e));
+                        if (e.getInstanceIdentifier() != null) elementOrder.add(e.getInstanceIdentifier());
                     }
                 }
 
@@ -673,6 +723,7 @@ public class Layout extends LayoutBase {
                         }
                         e.stayOnScreen = false;
                         elements.add(Elements.SPLASH_TEXT.serializeElementInternal(e));
+                        if (e.getInstanceIdentifier() != null) elementOrder.add(e.getInstanceIdentifier());
                     }
                 }
 
@@ -680,7 +731,7 @@ public class Layout extends LayoutBase {
 
         }
 
-        return elements;
+        return List.of(elements, elementOrder);
 
     }
 
@@ -729,7 +780,7 @@ public class Layout extends LayoutBase {
                             MenuBackgroundBuilder<?> builder = MenuBackgroundRegistry.getBuilder("image");
                             if (builder != null) {
                                 ImageMenuBackground b = new ImageMenuBackground((MenuBackgroundBuilder<ImageMenuBackground>)builder);
-                                b.imagePath = value;
+                                b.imagePathOrUrl = value;
                                 b.slideLeftRight = (pano != null) && pano.equalsIgnoreCase("true");
                                 return b;
                             }
@@ -776,6 +827,10 @@ public class Layout extends LayoutBase {
                 identifier = null;
             }
             if ((action != null) && (identifier != null)) {
+
+                if (elements.containsKey(identifier)) {
+                    element = elements.get(identifier);
+                }
 
                 element.setInstanceIdentifier(identifier);
 
@@ -916,15 +971,26 @@ public class Layout extends LayoutBase {
                     }
                 }
 
-                if (addElement) {
-                    if (!elements.containsKey(identifier)) {
-                        elements.put(identifier, element);
-                    } else {
-                        VanillaWidgetElement stack = VanillaWidgetElementBuilder.INSTANCE.stackElementsInternal(VanillaWidgetElementBuilder.INSTANCE.buildDefaultInstance(), elements.get(identifier), element);
-                        if (stack != null) {
-                            elements.put(identifier, stack);
-                        }
-                    }
+//                if (addElement) {
+//                    if (identifier.contains("mc_titlescreen_realms_button")) {
+//                        //TODO remove debug
+//                        LogManager.getLogger().info("################# FOUND REALMS BUTTON SECTION: \n" + sec.toString());
+//                    }
+//                    if (!elements.containsKey(identifier)) {
+//                        elements.put(identifier, element);
+//                    } else {
+//                        VanillaWidgetElement stack = VanillaWidgetElementBuilder.INSTANCE.stackElementsInternal(VanillaWidgetElementBuilder.INSTANCE.buildDefaultInstance(), elements.get(identifier), element);
+//                        if (stack != null) {
+//                            elements.put(identifier, stack);
+//                        } else {
+//                            //TODO remove debug
+//                            LogManager.getLogger().error("############## VANILLA ELEMENT STACK WAS NULL: " + identifier);
+//                        }
+//                    }
+//                }
+
+                if (addElement && !elements.containsKey(identifier)) {
+                    elements.put(identifier, element);
                 }
 
             }
@@ -950,7 +1016,7 @@ public class Layout extends LayoutBase {
 
     }
 
-    public enum LayoutStatus implements LocalizedCycleEnum {
+    public enum LayoutStatus implements LocalizedCycleEnum<LayoutStatus> {
 
         ENABLED("enabled", SUCCESS_TEXT_STYLE),
         DISABLED("disabled", ERROR_TEXT_STYLE);
@@ -973,8 +1039,28 @@ public class Layout extends LayoutBase {
             return this.name;
         }
 
+        @NotNull
         @Override
-        public @NotNull Style getEntryComponentStyle() {
+        public LayoutStatus[] getValues() {
+            return LayoutStatus.values();
+        }
+
+        @Nullable
+        @Override
+        public LayoutStatus getByNameInternal(@NotNull String name) {
+            return getByName(name);
+        }
+
+        @Nullable
+        public static LayoutStatus getByName(@NotNull String name) {
+            for (LayoutStatus e : LayoutStatus.values()) {
+                if (e.getName().equals(name)) return e;
+            }
+            return null;
+        }
+
+        @Override
+        public @NotNull Style getValueComponentStyle() {
             return this.style.get();
         }
 

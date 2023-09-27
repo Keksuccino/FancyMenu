@@ -142,31 +142,6 @@ public class ManageLayoutsScreen extends Screen {
         this.layoutListScrollArea.setY(50 + 15, true);
         this.layoutListScrollArea.render(pose, mouseX, mouseY, partial);
 
-//        Component previewLabel = Component.translatable("fancymenu.animation.choose.preview");
-//        int previewLabelWidth = this.font.width(previewLabel);
-//        this.font.draw(pose, previewLabel, this.width - 20 - previewLabelWidth, 50, UIBase.getUIColorScheme().genericTextBaseColor.getColorInt());
-//
-//        if (this.selectedAnimation != null) {
-//            int aniW = (this.width / 2) - 40;
-//            int aniH = this.height / 2;
-//            AspectRatio ratio = new AspectRatio(this.selectedAnimation.getWidth(), this.selectedAnimation.getHeight());
-//            int[] size = ratio.getAspectRatioSizeByMaximumSize(aniW, aniH);
-//            aniW = size[0];
-//            aniH = size[1];
-//            int aniX = this.width - 20 - aniW;
-//            int aniY = 50 + 15;
-//            boolean cachedLooped = this.selectedAnimation.isGettingLooped();
-//            fill(pose, aniX, aniY, aniX + aniW, aniY + aniH, UIBase.getUIColorScheme().areaBackgroundColor.getColorInt());
-//            this.selectedAnimation.setLooped(false);
-//            this.selectedAnimation.setPosX(aniX);
-//            this.selectedAnimation.setPosY(aniY);
-//            this.selectedAnimation.setWidth(aniW);
-//            this.selectedAnimation.setHeight(aniH);
-//            this.selectedAnimation.render(pose);
-//            this.selectedAnimation.setLooped(cachedLooped);
-//            UIBase.renderBorder(pose, aniX, aniY, aniX + aniW, aniY + aniH, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUIColorScheme().elementBorderColorNormal.getColor(), true, true, true, true);
-//        }
-
         this.sortingButton.setWidth(this.font.width(this.sortingButton.getMessage()) + 10);
         this.sortingButton.setX(this.layoutListScrollArea.getXWithBorder() + this.layoutListScrollArea.getWidthWithBorder() - this.sortingButton.getWidth());
         this.sortingButton.setY(this.layoutListScrollArea.getYWithBorder() - 5 - this.sortingButton.getHeight());
@@ -236,17 +211,17 @@ public class ManageLayoutsScreen extends Screen {
         }
 
         protected void updateName() {
-            Style style = this.layout.getStatus().getEntryComponentStyle();
+            Style style = this.layout.getStatus().getValueComponentStyle();
             MutableComponent c = Component.literal(layout.getLayoutName()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
             c.append(Component.literal(" (").setStyle(style));
-            c.append(this.layout.getStatus().getEntryComponent());
+            c.append(this.layout.getStatus().getValueComponent());
             c.append(Component.literal(")").setStyle(style));
             this.setText(c);
         }
 
     }
 
-    protected enum Sorting implements LocalizedCycleEnum {
+    protected enum Sorting implements LocalizedCycleEnum<Sorting> {
 
         NAME("name"),
         LAST_EDITED("last_edited"),
@@ -266,6 +241,24 @@ public class ManageLayoutsScreen extends Screen {
         @Override
         public @NotNull String getName() {
             return this.name;
+        }
+
+        @Override
+        public @NotNull Sorting[] getValues() {
+            return Sorting.values();
+        }
+
+        @Override
+        public @Nullable Sorting getByNameInternal(@NotNull String name) {
+            return getByName(name);
+        }
+
+        @Nullable
+        public static Sorting getByName(@NotNull String name) {
+            for (Sorting e : Sorting.values()) {
+                if (e.getName().equals(name)) return e;
+            }
+            return null;
         }
 
     }

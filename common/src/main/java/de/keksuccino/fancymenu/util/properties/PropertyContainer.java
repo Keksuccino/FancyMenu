@@ -56,4 +56,12 @@ public class PropertyContainer {
         this.type = Objects.requireNonNull(type);
     }
 
+    @Override
+    public String toString() {
+        return "PropertyContainer{" +
+                "type='" + type + '\'' +
+                ", entries=" + entries +
+                '}';
+    }
+
 }

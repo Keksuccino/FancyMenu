@@ -22,7 +22,7 @@ import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.customization.variables.ManageVariablesScreen;
 import de.keksuccino.fancymenu.util.*;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
-import de.keksuccino.fancymenu.util.cycle.LocalizedValueCycle;
+import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.ui.NonStackableOverlayUI;
@@ -262,10 +262,10 @@ public class CustomizationOverlayUI {
             for (Layout l : LayoutHandler.sortLayoutListByLastEdited(allLayouts, true, 8)) {
                 layoutManageCurrentMenu.addSubMenuEntry("layout_" + i, Component.empty(), buildManageLayoutSubMenu(l))
                         .setLabelSupplier((menu, entry) -> {
-                            Style style = l.getStatus().getEntryComponentStyle();
+                            Style style = l.getStatus().getValueComponentStyle();
                             MutableComponent c = Component.literal(l.getLayoutName());
                             c.append(Component.literal(" (").setStyle(style));
-                            c.append(l.getStatus().getEntryComponent());
+                            c.append(l.getStatus().getValueComponent());
                             c.append(Component.literal(")").setStyle(style));
                             return c;
                         });
@@ -300,10 +300,10 @@ public class CustomizationOverlayUI {
         for (Layout l : LayoutHandler.sortLayoutListByLastEdited(allLayouts, true, 8)) {
             layoutManageUniversalMenu.addSubMenuEntry("layout.manage.universal.recent_" + i, Component.empty(), buildManageLayoutSubMenu(l))
                     .setLabelSupplier((menu, entry) -> {
-                        Style style = l.getStatus().getEntryComponentStyle();
+                        Style style = l.getStatus().getValueComponentStyle();
                         MutableComponent c = Component.literal(l.getLayoutName());
                         c.append(Component.literal(" (").setStyle(style));
-                        c.append(l.getStatus().getEntryComponent());
+                        c.append(l.getStatus().getValueComponent());
                         c.append(Component.literal(")").setStyle(style));
                         return c;
                     });
@@ -426,7 +426,7 @@ public class CustomizationOverlayUI {
         customizationSettingsMenu.addSubMenuEntry("window_icon", Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon"), windowIconMenu)
                 .setIcon(ContextMenu.IconFactory.getIcon("image"));
 
-        LocalizedValueCycle<CommonCycles.CycleEnabledDisabled> windowIconToggleCycle = CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.toggle", FancyMenu.getOptions().showCustomWindowIcon.getValue())
+        LocalizedEnumValueCycle<CommonCycles.CycleEnabledDisabled> windowIconToggleCycle = CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.toggle", FancyMenu.getOptions().showCustomWindowIcon.getValue())
                 .addCycleListener(cycle -> {
                     FancyMenu.getOptions().showCustomWindowIcon.setValue(cycle.getAsBoolean());
                     if (cycle.getAsBoolean()) {

@@ -8,7 +8,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.function.Consumer;
 
 public class ImageMenuBackgroundBuilder extends MenuBackgroundBuilder<ImageMenuBackground> {
@@ -23,12 +22,13 @@ public class ImageMenuBackgroundBuilder extends MenuBackgroundBuilder<ImageMenuB
         if (back == null) {
             back = new ImageMenuBackground(this);
         }
-        ImageMenuBackgroundConfigScreen s = new ImageMenuBackgroundConfigScreen(currentScreen, back, (call) -> {
-            if (call != null) {
-                backgroundConsumer.accept(call);
-            } else {
-                backgroundConsumer.accept(backgroundToEdit);
-            }
+        ImageMenuBackgroundConfigScreen s = new ImageMenuBackgroundConfigScreen(back, background -> {
+           if (background != null) {
+               backgroundConsumer.accept(background);
+           } else {
+               backgroundConsumer.accept(backgroundToEdit);
+           }
+           Minecraft.getInstance().setScreen(currentScreen);
         });
         Minecraft.getInstance().setScreen(s);
     }
@@ -38,12 +38,20 @@ public class ImageMenuBackgroundBuilder extends MenuBackgroundBuilder<ImageMenuB
 
         ImageMenuBackground b = new ImageMenuBackground(this);
 
-        b.imagePath = serializedMenuBackground.getValue("image_path");
+        b.imagePathOrUrl = serializedMenuBackground.getValue("image_path");
 
         String slide = serializedMenuBackground.getValue("slide");
         if ((slide != null) && slide.equals("true")) {
             b.slideLeftRight = true;
         }
+
+        String type = serializedMenuBackground.getValue("background_image_type");
+        if (type != null) {
+            ImageMenuBackground.BackgroundImageType imgType = ImageMenuBackground.BackgroundImageType.getByName(type);
+            if (imgType != null) b.type = imgType;
+        }
+
+        b.webImageFallbackPath = serializedMenuBackground.getValue("web_image_fallback_path");
 
         return b;
 
@@ -54,11 +62,13 @@ public class ImageMenuBackgroundBuilder extends MenuBackgroundBuilder<ImageMenuB
 
         SerializedMenuBackground serialized = new SerializedMenuBackground();
 
-        if (background.imagePath != null) {
-            serialized.putProperty("image_path", background.imagePath);
-        }
+        serialized.putProperty("image_path", background.imagePathOrUrl);
+
+        serialized.putProperty("background_image_type", background.type.getName());
 
         serialized.putProperty("slide", "" + background.slideLeftRight);
+
+        serialized.putProperty("web_image_fallback_path", background.webImageFallbackPath);
 
         return serialized;
 

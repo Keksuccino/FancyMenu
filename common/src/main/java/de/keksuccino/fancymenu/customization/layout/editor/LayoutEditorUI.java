@@ -20,7 +20,7 @@ import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
-import de.keksuccino.fancymenu.util.cycle.LocalizedValueCycle;
+import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
 import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
@@ -393,7 +393,7 @@ public class LayoutEditorUI {
 
 		menu.addSeparatorEntry("separator_after_render_custom_behind_vanilla");
 
-		LocalizedValueCycle<CommonCycles.CycleEnabledDisabled> cycleAutoScaling = CommonCycles.cycleEnabledDisabled("fancymenu.helper.editor.properties.autoscale", ((editor.layout.autoScalingWidth != 0) && (editor.layout.autoScalingHeight != 0)));
+		LocalizedEnumValueCycle<CommonCycles.CycleEnabledDisabled> cycleAutoScaling = CommonCycles.cycleEnabledDisabled("fancymenu.helper.editor.properties.autoscale", ((editor.layout.autoScalingWidth != 0) && (editor.layout.autoScalingHeight != 0)));
 		cycleAutoScaling.addCycleListener(cycle -> {
 			if (cycle.getAsBoolean()) {
 				menu.closeMenu();
@@ -645,10 +645,10 @@ public class LayoutEditorUI {
 				if (l.getLayoutName().equals(editor.layout.getLayoutName())) continue; //Don't show the current layout in the list
 				menu.addSubMenuEntry("layout_" + i, Component.empty(), buildManageLayoutSubMenu(editor, l))
 						.setLabelSupplier((menu1, entry) -> {
-							Style style = l.getStatus().getEntryComponentStyle();
+							Style style = l.getStatus().getValueComponentStyle();
 							MutableComponent c = Component.literal(l.getLayoutName());
 							c.append(Component.literal(" (").setStyle(style));
-							c.append(l.getStatus().getEntryComponent());
+							c.append(l.getStatus().getValueComponent());
 							c.append(Component.literal(")").setStyle(style));
 							return c;
 						});
@@ -694,10 +694,10 @@ public class LayoutEditorUI {
 				if (l.getLayoutName().equals(editor.layout.getLayoutName())) continue; //Don't show the current layout in the list
 				menu.addSubMenuEntry("layout_" + i, Component.empty(), buildManageLayoutSubMenu(editor, l))
 						.setLabelSupplier((menu1, entry) -> {
-							Style style = l.getStatus().getEntryComponentStyle();
+							Style style = l.getStatus().getValueComponentStyle();
 							MutableComponent c = Component.literal(l.getLayoutName());
 							c.append(Component.literal(" (").setStyle(style));
-							c.append(l.getStatus().getEntryComponent());
+							c.append(l.getStatus().getValueComponent());
 							c.append(Component.literal(")").setStyle(style));
 							return c;
 						});

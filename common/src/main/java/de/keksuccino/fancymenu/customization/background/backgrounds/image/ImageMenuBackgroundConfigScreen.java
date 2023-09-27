@@ -1,44 +1,97 @@
 package de.keksuccino.fancymenu.customization.background.backgrounds.image;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfiguratorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseFileScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.util.function.Consumer;
 
-public class ImageMenuBackgroundConfigScreen extends Screen {
+public class ImageMenuBackgroundConfigScreen extends ConfiguratorScreen {
 
-    protected Screen parent;
-    protected ImageMenuBackground background;
+    @NotNull
     protected Consumer<ImageMenuBackground> callback;
+    @NotNull ImageMenuBackground background;
 
-    protected ExtendedButton chooseImageButton;
-    protected ExtendedButton toggleSlideButton;
-    protected ExtendedButton cancelButton;
-    protected ExtendedButton doneButton;
-
-    protected ImageMenuBackgroundConfigScreen(@Nullable Screen parent, @NotNull ImageMenuBackground background, @NotNull Consumer<ImageMenuBackground> callback) {
-
+    protected ImageMenuBackgroundConfigScreen(@NotNull ImageMenuBackground background, @NotNull Consumer<ImageMenuBackground> callback) {
         super(Component.translatable("fancymenu.background.image.configure"));
-
-        this.parent = parent;
         this.background = background;
         this.callback = callback;
+    }
+
+    @Override
+    protected void initCells() {
+
+        this.addStartEndSpacerCell();
+
+        this.addCycleButtonCell(ImageMenuBackground.BackgroundImageType.LOCAL.cycle(this.background.type), true, (value, button) -> {
+            this.background.imagePathOrUrl = null;
+            this.background.type = value;
+            this.init();
+        });
+
+        this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.empty(), var1 -> {
+            if (this.background.type == ImageMenuBackground.BackgroundImageType.WEB) {
+                TextEditorScreen s = new TextEditorScreen(null, s1 -> {
+                    if (s1 != null) {
+                        this.background.imagePathOrUrl = s1;
+                    }
+                    Minecraft.getInstance().setScreen(this);
+                });
+                s.setMultilineMode(false);
+                s.setText(this.background.imagePathOrUrl);
+                Minecraft.getInstance().setScreen(s);
+            } else {
+                ChooseFileScreen s = new ChooseFileScreen(LayoutHandler.ASSETS_DIR, LayoutHandler.ASSETS_DIR, (call) -> {
+                    if (call != null) {
+                        this.background.imagePathOrUrl = ScreenCustomization.getPathWithoutGameDirectory(call.getAbsolutePath());
+                    }
+                    Minecraft.getInstance().setScreen(this);
+                });
+                s.setFileFilter(FileFilter.IMAGE_FILE_FILTER);
+                Minecraft.getInstance().setScreen(s);
+            }
+        }).setLabelSupplier(consumes -> {
+            if (this.background.type == ImageMenuBackground.BackgroundImageType.WEB) return Component.translatable("fancymenu.background.image.configure.choose_image.web");
+            return Component.translatable("fancymenu.background.image.configure.choose_image.local");
+        }), true);
+
+        if (this.background.type == ImageMenuBackground.BackgroundImageType.WEB) {
+
+            this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.background.image.type.web.fallback"), var1 -> {
+                ChooseFileScreen s = new ChooseFileScreen(LayoutHandler.ASSETS_DIR, LayoutHandler.ASSETS_DIR, (call) -> {
+                    if (call != null) {
+                        this.background.webImageFallbackPath = ScreenCustomization.getPathWithoutGameDirectory(call.getAbsolutePath());
+                    }
+                    Minecraft.getInstance().setScreen(this);
+                });
+                s.setFileFilter(FileFilter.IMAGE_FILE_FILTER);
+                Minecraft.getInstance().setScreen(s);
+            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.background.image.type.web.fallback.desc"))), true);
+
+            this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.background.image.type.web.fallback.reset").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())), var1 -> {
+                this.background.webImageFallbackPath = null;
+            }), true);
+
+        }
+
+        this.addCellGroupEndSpacerCell();
+
+        this.addCycleButtonCell(CommonCycles.cycleEnabledDisabled("fancymenu.background.image.configure.slide", this.background.slideLeftRight), true, (value, button) -> {
+           this.background.slideLeftRight = value.getAsBoolean();
+        });
+
+        this.addStartEndSpacerCell();
 
     }
 
@@ -47,95 +100,28 @@ public class ImageMenuBackgroundConfigScreen extends Screen {
 
         super.init();
 
-        this.chooseImageButton = new ExtendedButton(0, 0, 300, 20, Component.translatable("fancymenu.background.image.configure.choose_image"), (press) -> {
-            ChooseFileScreen s = new ChooseFileScreen(LayoutHandler.ASSETS_DIR, LayoutHandler.ASSETS_DIR, (call) -> {
-                if (call != null) {
-                    this.background.imagePath = ScreenCustomization.getPathWithoutGameDirectory(call.getAbsolutePath());
-                }
-                Minecraft.getInstance().setScreen(this);
+        if (this.doneButton != null) {
+            this.doneButton.setTooltipSupplier(consumes -> {
+                if (this.background.imagePathOrUrl == null) return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.background.image.configure.no_image_chosen"));
+                return null;
             });
-            s.setFileFilter(FileFilter.IMAGE_FILE_FILTER);
-            Minecraft.getInstance().setScreen(s);
-        });
-        this.addWidget(this.chooseImageButton);
-        UIBase.applyDefaultWidgetSkinTo(this.chooseImageButton);
-
-        this.toggleSlideButton = new ExtendedButton(0, 0, 300, 20, Component.literal(""), (press) -> {
-            this.background.slideLeftRight = !this.background.slideLeftRight;
-        }) {
-            @Override
-            public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-                if (!ImageMenuBackgroundConfigScreen.this.background.slideLeftRight) {
-                    this.setMessage(Component.translatable("fancymenu.background.image.configure.slide.off"));
-                } else {
-                    this.setMessage(Component.translatable("fancymenu.background.image.configure.slide.on"));
-                }
-                super.render(pose, mouseX, mouseY, partial);
-            }
-        };
-        this.addWidget(this.toggleSlideButton);
-        UIBase.applyDefaultWidgetSkinTo(this.toggleSlideButton);
-
-        this.doneButton = new ExtendedButton(0, 0, 145, 20, Component.translatable("fancymenu.guicomponents.done"), (press) -> {
-            Minecraft.getInstance().setScreen(this.parent);
-            this.callback.accept(this.background);
-        }) {
-            @Override
-            public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-                this.active = ImageMenuBackgroundConfigScreen.this.background.imagePath != null;
-                if (!this.active) {
-                    TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.background.image.configure.no_image_chosen")).setDefaultStyle(), false, true);
-                }
-                super.render(pose, mouseX, mouseY, partial);
-            }
-        };
-        this.addWidget(this.doneButton);
-        UIBase.applyDefaultWidgetSkinTo(this.doneButton);
-
-        this.cancelButton = new ExtendedButton(0, 0, 145, 20, Component.translatable("fancymenu.guicomponents.cancel"), (press) -> {
-            this.onClose();
-        });
-        this.addWidget(this.cancelButton);
-        UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
+        }
 
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-
-        RenderSystem.enableBlend();
-
-        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
-
-        int centerX = this.width / 2;
-        int centerY = this.height / 2;
-
-        MutableComponent title = this.title.copy().withStyle(ChatFormatting.BOLD);
-        int titleWidth = this.font.width(title);
-        this.font.draw(pose, title, (float)centerX - ((float)titleWidth / 2F), 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
-
-        this.chooseImageButton.setX(centerX - (this.chooseImageButton.getWidth() / 2));
-        this.chooseImageButton.setY(centerY - 20 - 3);
-        this.chooseImageButton.render(pose, mouseX, mouseY, partial);
-
-        this.toggleSlideButton.setX(centerX - (this.toggleSlideButton.getWidth() / 2));
-        this.toggleSlideButton.setY(centerY + 2);
-        this.toggleSlideButton.render(pose, mouseX, mouseY, partial);
-
-        this.doneButton.setX((this.width / 2) - this.doneButton.getWidth() - 5);
-        this.doneButton.setY(this.height - 40);
-        this.doneButton.render(pose, mouseX, mouseY, partial);
-
-        this.cancelButton.setX((this.width / 2) + 5);
-        this.cancelButton.setY(this.height - 40);
-        this.cancelButton.render(pose, mouseX, mouseY, partial);
-
+    public boolean allowDone() {
+        return (this.background.imagePathOrUrl != null);
     }
 
     @Override
-    public void onClose() {
-        Minecraft.getInstance().setScreen(this.parent);
+    protected void onCancel() {
         this.callback.accept(null);
+    }
+
+    @Override
+    protected void onDone() {
+        this.callback.accept(this.background);
     }
 
 }

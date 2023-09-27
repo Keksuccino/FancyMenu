@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.variables;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
-import de.keksuccino.fancymenu.util.cycle.LocalizedValueCycle;
+import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
@@ -95,7 +95,7 @@ public class ManageVariablesScreen extends Screen {
         this.addWidget(this.deleteVariableButton);
         UIBase.applyDefaultWidgetSkinTo(this.deleteVariableButton);
 
-        LocalizedValueCycle<CommonCycles.CycleEnabledDisabled> resetOnLaunchDisabled = CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.variables.manage.clear_on_launch", false);
+        LocalizedEnumValueCycle<CommonCycles.CycleEnabledDisabled> resetOnLaunchDisabled = CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.variables.manage.clear_on_launch", false);
         this.toggleResetOnLaunchButton = new ExtendedButton(0, 0, 220, 20, Component.empty(), (button) -> {
             VariableScrollEntry e = this.getSelectedEntry();
             if (e != null) {
@@ -105,7 +105,7 @@ public class ManageVariablesScreen extends Screen {
                 .setLabelSupplier(consumes -> {
                     VariableScrollEntry e = this.getSelectedEntry();
                     if (e != null) {
-                        LocalizedValueCycle<CommonCycles.CycleEnabledDisabled> enabledDisabled = CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.variables.manage.clear_on_launch");
+                        LocalizedEnumValueCycle<CommonCycles.CycleEnabledDisabled> enabledDisabled = CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.variables.manage.clear_on_launch");
                         enabledDisabled.setCurrentValue(CommonCycles.CycleEnabledDisabled.getByBoolean(e.variable.isResetOnLaunch()));
                         return enabledDisabled.getCycleComponent();
                     }

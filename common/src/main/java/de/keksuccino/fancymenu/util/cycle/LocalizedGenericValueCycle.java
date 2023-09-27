@@ -5,7 +5,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
-
 import java.security.InvalidParameterException;
 import java.util.Arrays;
 import java.util.List;
@@ -59,7 +58,7 @@ public class LocalizedGenericValueCycle<T> extends ValueCycle<T> implements ILoc
         return this;
     }
 
-    public LocalizedGenericValueCycle<T> setCurrentValueComponentStyleSupplier(@NotNull ConsumingSupplier<T, Style> supplier) {
+    public LocalizedGenericValueCycle<T> setValueComponentStyleSupplier(@NotNull ConsumingSupplier<T, Style> supplier) {
         this.valueStyle = supplier;
         return this;
     }

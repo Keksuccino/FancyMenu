@@ -19,11 +19,15 @@ import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class LayoutHandler {
+
+	private static final Logger LOGGER = LogManager.getLogger();
 
 	public static final File LAYOUT_DIR = FileUtils.createDirectory(new File(FancyMenu.MOD_DIR, "/customization"));
 	public static final File ASSETS_DIR = FileUtils.createDirectory(new File(FancyMenu.MOD_DIR, "/assets"));
@@ -31,8 +35,20 @@ public class LayoutHandler {
 	private static final List<Layout> LAYOUTS = new ArrayList<>();
 
 	public static void init() {
+
 		convertLegacyDisabledLayouts();
 		reloadLayouts();
+
+		//Convert legacy layouts to new v3 format
+		for (Layout l : LAYOUTS) {
+			if (l.legacyLayout) {
+				LOGGER.info("[FANCYMENU] Converting legacy (FMv2) layout '" + l.getLayoutName() + "' to new format..");
+				if (!l.saveToFileIfPossible()) {
+					LOGGER.error("[FANCYMENU] Failed to convert legacy layout '" + l.getLayoutName() + "' to new format!");
+				}
+			}
+		}
+
 	}
 
 	public static void reloadLayouts() {

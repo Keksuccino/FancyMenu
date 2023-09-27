@@ -12,6 +12,8 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
+
 public class ProgressBarElementBuilder extends ElementBuilder<ProgressBarElement, ProgressBarEditorElement> {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -52,12 +54,12 @@ public class ProgressBarElementBuilder extends ElementBuilder<ProgressBarElement
 
         String barDirection = serialized.getValue("direction");
         if (barDirection != null) {
-            element.direction = ProgressBarElement.BarDirection.byName(barDirection);
+            element.direction = Objects.requireNonNullElse(ProgressBarElement.BarDirection.getByName(barDirection), ProgressBarElement.BarDirection.LEFT);
         }
 
         String valueMode = serialized.getValue("value_mode");
         if (valueMode != null) {
-            element.progressValueMode = ProgressBarElement.ProgressValueMode.byName(valueMode);
+            element.progressValueMode = Objects.requireNonNullElse(ProgressBarElement.ProgressValueMode.getByName(valueMode), ProgressBarElement.ProgressValueMode.PERCENTAGE);
         }
 
         element.progressSource = serialized.getValue("progress_source");

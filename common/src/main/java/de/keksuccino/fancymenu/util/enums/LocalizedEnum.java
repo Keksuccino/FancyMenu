@@ -7,7 +7,10 @@ import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import java.util.function.Supplier;
 
-public interface LocalizedEnum extends NamedEnum {
+/**
+ * @param <E> The enum type.
+ */
+public interface LocalizedEnum<E> extends NamedEnum<E> {
 
     Supplier<Style> SUCCESS_TEXT_STYLE = () -> Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt());
     Supplier<Style> WARNING_TEXT_STYLE = () -> Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt());
@@ -17,17 +20,17 @@ public interface LocalizedEnum extends NamedEnum {
     String getLocalizationKeyBase();
 
     @NotNull
-    default String getEntryLocalizationKey() {
+    default String getValueLocalizationKey() {
         return this.getLocalizationKeyBase() + "." + this.getName();
     }
 
     @NotNull
-    default MutableComponent getEntryComponent() {
-        return Component.translatable(this.getEntryLocalizationKey()).withStyle(this.getEntryComponentStyle());
+    default MutableComponent getValueComponent() {
+        return Component.translatable(this.getValueLocalizationKey()).withStyle(this.getValueComponentStyle());
     }
 
     @NotNull
-    default Style getEntryComponentStyle() {
+    default Style getValueComponentStyle() {
         return Style.EMPTY;
     }
 
