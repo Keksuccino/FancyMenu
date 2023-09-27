@@ -19,11 +19,10 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO add new context menu icons
+	//TODO Add new context menu icons
+	//TODO Add option for "open on hover" open speed of submenu context menu entries
 
 	//TODO FIXEN: eventuell aktualisieren Forge Deep elements in title screen ihre position nicht richtig (checken)
-
-	//TODO Add option for "open on hover" open speed of submenu context menu entries
 
 	//TODO In layout safe-as screen als default file name universal identifiers nutzen, falls vorhanden
 
