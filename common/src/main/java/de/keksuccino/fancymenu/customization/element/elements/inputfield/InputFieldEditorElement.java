@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -27,7 +28,8 @@ public class InputFieldEditorElement extends AbstractEditorElement {
                         (element, varName) -> ((InputFieldElement)element.element).linkedVariable = varName,
                         null, false, false, Component.translatable("fancymenu.customization.items.input_field.editor.set_variable"),
                         true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.input_field.editor.set_variable.desc")));
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.input_field.editor.set_variable.desc")))
+                .setIcon(ContextMenu.IconFactory.getIcon("script"));
 
         this.rightClickMenu.addSeparatorEntry("input_field_separator_1");
 

@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -215,36 +216,11 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
     @NotNull
     protected <T extends Number> T deserializeNumber(@NotNull Class<T> type, @NotNull T fallbackValue, @Nullable String serialized) {
-        try {
-            if (serialized != null) {
-                serialized = serialized.replace(" ", "");
-                if (type == Float.class) {
-                    return (T) Float.valueOf(serialized);
-                }
-                if (type == Double.class) {
-                    return (T) Double.valueOf(serialized);
-                }
-                if (type == Integer.class) {
-                    return (T) Integer.valueOf(serialized);
-                }
-                if (type == Long.class) {
-                    return (T) Long.valueOf(serialized);
-                }
-            }
-        } catch (Exception ignore) {}
-        return fallbackValue;
+        return SerializationUtils.deserializeNumber(type, fallbackValue, serialized);
     }
 
     protected boolean deserializeBoolean(boolean fallbackValue, @Nullable String serialized) {
-        if (serialized != null) {
-            if (serialized.replace(" ", "").equalsIgnoreCase("true")) {
-                return true;
-            }
-            if (serialized.replace(" ", "").equalsIgnoreCase("false")) {
-                return false;
-            }
-        }
-        return fallbackValue;
+        return SerializationUtils.deserializeBoolean(fallbackValue, serialized);
     }
 
     /**

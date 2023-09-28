@@ -3,9 +3,12 @@ package de.keksuccino.fancymenu.util.rendering.ui.menubar.v2;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.ScreenUtils;
@@ -515,6 +518,8 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         protected boolean hovered = false;
         protected MenuBarEntryBooleanSupplier activeSupplier;
         protected MenuBarEntryBooleanSupplier visibleSupplier;
+        @Nullable
+        protected ConsumingSupplier<MenuBarEntry, Tooltip> tooltipSupplier;
 
         public MenuBarEntry(@NotNull String identifier, @NotNull MenuBar parent) {
             this.identifier = identifier;
@@ -522,7 +527,19 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         }
 
         @Override
-        public abstract void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial);
+        public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+            this.renderEntry(pose, mouseX, mouseY, partial);
+            if (this.hovered && (this.tooltipSupplier != null)) {
+                Tooltip tooltip = this.tooltipSupplier.get(this);
+                if (tooltip != null) {
+                    tooltip.setDefaultStyle();
+                    tooltip.setScale(this.parent.scale);
+                    TooltipHandler.INSTANCE.addTooltip(tooltip, () -> true, false, true);
+                }
+            }
+        }
+
+        protected abstract void renderEntry(@NotNull PoseStack pose, int mouseX, int mouseY, float partial);
 
         protected int getWidth() {
             return 20;
@@ -557,6 +574,11 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
 
         public MenuBarEntry setVisibleSupplier(MenuBarEntryBooleanSupplier visibleSupplier) {
             this.visibleSupplier = visibleSupplier;
+            return this;
+        }
+
+        public MenuBarEntry setTooltipSupplier(@Nullable ConsumingSupplier<MenuBarEntry, Tooltip> tooltipSupplier) {
+            this.tooltipSupplier = tooltipSupplier;
             return this;
         }
 
@@ -615,7 +637,7 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         }
 
         @Override
-        public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        protected void renderEntry(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
             this.renderBackground(pose);
             this.renderLabelOrIcon(pose);
         }
@@ -871,7 +893,7 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         }
 
         @Override
-        public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        protected void renderEntry(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
             RenderSystem.enableBlend();
             UIBase.resetShaderColor();
             this.renderBackground(pose);
@@ -924,7 +946,7 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         }
 
         @Override
-        public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        protected void renderEntry(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
             RenderSystem.enableBlend();
             UIBase.resetShaderColor();
             fill(pose, this.x, this.y, this.x + this.getWidth(), this.y + this.height, color.getColorInt());

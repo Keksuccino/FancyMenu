@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.layout;
 
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
+import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
@@ -62,6 +63,7 @@ public class Layout extends LayoutBase {
     public File layoutFile;
     public long lastEditedTime = -1;
     protected boolean enabled = true;
+    public int layoutIndex = 0;
     public boolean renderElementsBehindVanilla = false;
     public boolean randomMode = false;
     public String randomGroup = "1";
@@ -122,6 +124,8 @@ public class Layout extends LayoutBase {
         meta.putProperty("randommode", "" + this.randomMode);
         meta.putProperty("randomgroup", this.randomGroup);
         meta.putProperty("randomonlyfirsttime", "" + this.randomOnlyFirstTime);
+
+        meta.putProperty("layout_index", "" + this.layoutIndex);
 
         if (!this.universalLayoutMenuWhitelist.isEmpty()) {
             String wl = "";
@@ -227,6 +231,8 @@ public class Layout extends LayoutBase {
             if (meta != null) {
 
                 layout.setScreenIdentifier(meta.getValue("identifier"));
+
+                layout.layoutIndex = SerializationUtils.deserializeNumber(Integer.class, layout.layoutIndex, meta.getValue("layout_index"));
 
                 String defaultRandomLayoutGroup = "-100397";
                 String randomMode = meta.getValue("randommode");

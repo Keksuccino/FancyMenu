@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.file.FileFilter;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseFileScreen;
 import de.keksuccino.fancymenu.util.ListUtils;
@@ -60,7 +61,7 @@ public class ImageEditorElement extends AbstractEditorElement {
                     Minecraft.getInstance().setScreen(this.editor);
                 }).setText(((ImageElement)this.element).source));
             }
-        });
+        }).setIcon(ContextMenu.IconFactory.getIcon("image"));
 
         this.rightClickMenu.addSeparatorEntry("image_separator_1");
 
@@ -70,7 +71,8 @@ public class ImageEditorElement extends AbstractEditorElement {
             for (AbstractEditorElement e : selectedElements) {
                 ((ImageElement)e.element).restoreAspectRatio();
             }
-        }).setStackable(true);
+        }).setStackable(true)
+                .setIcon(ContextMenu.IconFactory.getIcon("aspect_ratio"));
 
     }
 

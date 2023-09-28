@@ -26,7 +26,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -1080,6 +1079,9 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             return this.icon;
         }
 
+        /**
+         * Icons should be 10x10 pixels and completely white. No other colors should be used.
+         */
         public T setIcon(@Nullable ResourceLocation icon) {
             this.icon = icon;
             return (T) this;
@@ -1304,7 +1306,8 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
                 if (this.entryHoverStartTime == -1) {
                     this.entryHoverStartTime = now;
                 }
-                if (((this.entryHoverStartTime + 400) < now) && !this.subContextMenu.isOpen()) {
+                int openSpeed = 400 / Math.max(1, FancyMenu.getOptions().contextMenuHoverOpenSpeed.getValue());
+                if (((this.entryHoverStartTime + openSpeed) < now) && !this.subContextMenu.isOpen()) {
                     this.parent.closeSubMenus();
                     this.openSubMenu();
                 }

@@ -126,7 +126,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         return Component.translatable("fancymenu.customization.items.text.case_mode.lower");
                     }
                     return Component.translatable("fancymenu.customization.items.text.case_mode.upper");
-                });
+                }).setIcon(ContextMenu.IconFactory.getIcon("text_size"));
 
         this.addGenericFloatInputContextMenuEntryTo(this.rightClickMenu, "set_scale",
                         consumes -> (consumes instanceof TextEditorElement),
@@ -137,14 +137,15 @@ public class TextEditorElement extends AbstractEditorElement {
                         },
                         Component.translatable("fancymenu.customization.items.text.scale"),
                         true, 1.0F, null, null)
-                .setIcon(ContextMenu.IconFactory.getIcon("text_size"))
+                .setIcon(ContextMenu.IconFactory.getIcon("measure"))
                 .setStackable(true);
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "set_shadow", TextEditorElement.class,
                         consumes -> consumes.getTextElement().markdownRenderer.isTextShadow(),
                         (textEditorElement, aBoolean) -> textEditorElement.getTextElement().markdownRenderer.setTextShadow(aBoolean),
                         "fancymenu.customization.items.text.shadow")
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(ContextMenu.IconFactory.getIcon("shadow"));
 
         this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "set_base_color",
                         consumes -> (consumes instanceof TextEditorElement),
@@ -277,7 +278,8 @@ public class TextEditorElement extends AbstractEditorElement {
 
         ContextMenu grabberTextureMenu = new ContextMenu();
         this.rightClickMenu.addSubMenuEntry("grabber_texture", Component.translatable("fancymenu.customization.items.text.scroll_grabber_texture"), grabberTextureMenu)
-                .setStackable(true);
+                .setStackable(true)
+                .setIcon(ContextMenu.IconFactory.getIcon("image"));
 
         this.addGenericFileChooserContextMenuEntryTo(grabberTextureMenu, "vertical_normal_grabber_texture",
                         consumes -> (consumes instanceof TextEditorElement),

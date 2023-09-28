@@ -11,10 +11,11 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
+import java.awt.*;
 
 public class TitleScreenSplashDeepElement extends AbstractDeepElement {
 
-    private static final DrawableColor DEFAULT_COLOR = DrawableColor.of(255, 255, 0);
+    private static final DrawableColor DEFAULT_COLOR = DrawableColor.of(new Color(255, 255, 0));
 
     public static String cachedSplashText;
 
@@ -27,7 +28,7 @@ public class TitleScreenSplashDeepElement extends AbstractDeepElement {
 
         if (!this.shouldRender()) return;
 
-        this.baseWidth = 60;
+        this.baseWidth = 100;
         this.baseHeight = 30;
 
         RenderSystem.enableBlend();
@@ -47,7 +48,7 @@ public class TitleScreenSplashDeepElement extends AbstractDeepElement {
         }
 
         pose.pushPose();
-        pose.translate(this.getAbsoluteX(), this.getAbsoluteY(), 0.0F);
+        pose.translate(this.getAbsoluteX() + 50, this.getAbsoluteY() + 15, 0.0F);
         pose.mulPose(Axis.ZP.rotationDegrees(-20));
         float f = 1.8F - Mth.abs(Mth.sin((float) (System.currentTimeMillis() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
         f = f * 100.0F / (float) (font.width(cachedSplashText) + 32);
@@ -62,17 +63,17 @@ public class TitleScreenSplashDeepElement extends AbstractDeepElement {
 
     @Override
     public int getAbsoluteX() {
-        return (getScreenWidth() / 2) + 90;
+        return ((getScreenWidth() / 2) + 90) - 50;
     }
 
     @Override
     public int getAbsoluteY() {
-        return 70;
+        return 70 - 15;
     }
 
     @Override
     public int getAbsoluteWidth() {
-        return 60;
+        return 100;
     }
 
     @Override

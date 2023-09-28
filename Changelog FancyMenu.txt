@@ -104,6 +104,8 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - All elements of the Connect Screen are now customizable
 - It is now possible to set a serialized text component (like in the '/tellraw' command for example) as label for buttons and as text for Splash Text elements
 - The "Execute Terminal/CMD Command" action now prints its process output to the game log
+- There's now a layout index system to customize the loading order of multi-layout setups (multiple layouts for the same menu)
+- The old overlay to show the screen identifier got replaced with a full debug overlay that shows useful information about performance, loaded layouts and more
  
 - Added loading requirement "File/Folder Exists" to check if a file/folder exists
 - Added loading requirement "Is Button Active" to check if a button is active (clickable/not greyed out)

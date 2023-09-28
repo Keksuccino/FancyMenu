@@ -19,22 +19,15 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO Add new context menu icons
-	//TODO Add option for "open on hover" open speed of submenu context menu entries
-
 	//TODO FIXEN: eventuell aktualisieren Forge Deep elements in title screen ihre position nicht richtig (checken)
 
 	//TODO In layout safe-as screen als default file name universal identifiers nutzen, falls vorhanden
-
-	//TODO missing resource in Image element durch gerenderten placeholder ersetzen, damit kein error geworfen wird
 
 	//TODO add widget label scale option (per CustomizableWidget adden)
 
 	//TODO Add Edit GUI to more Action values, if needed
 
 	//TODO Testweise Title screen widget identifiers adden (eventuell dafür universal widget identifiers entfernen)
-
-	//TODO Icon rechts zu menu bar adden (Tür mit Pfeil nach draußen), mit dem man screens verlassen kann (wird nicht in Layout Editor gezeigt)
 
 	//TODO "Split Text" placeholder (regex support)
 
@@ -47,22 +40,6 @@ public class FancyMenu {
 	//TODO FIXEN: Manchmal wird per Anchor Overlay onHover der Anchor nicht aktualisiert (hover loading animation sichtbar, aber anchor wechselt am Ende nicht)
 	// - Aufgetreten, nachdem Label von Custom Button editiert (fenster danach nicht resized oder gespeichert)
 	// - Speichern per CTRL + S hat es gefixt (nur gespeichert, nicht resized, etc.)
-
-	//TODO Add toggleable "Debug" menu overlay (when not in layout editor)
-	// - Extendable !!
-	// - Make toggleable with menu bar entry AND shortcut (CTRL + ALT + D)
-	// - Shows screen identifier
-	// - Shows screen width + height
-	// - Active layout count for current screen (split universal and normal)
-	// - Active element count for current screen (combine all active layouts)
-	// - Active ticker elements count (split sync and async)
-	// - Loaded Animations Count + Total Loaded Frames Count + Min/Max Frame Resolution used (warning if animation uses more than 200 frames at max 1080p)
-	// - Loaded Slideshows Count + Total Loaded Slideshow Images Count + Min/Max Images Resolution used
-	// - Shows current FPS in menu (render text orange if FPS <20 and red if <10)
-	// - Shows RAM usage in menu (JVM ram usage and, if possible, actual system RAM usage) (render text orange or red if too much RAM used)
-	// - Shows CPU + GPU usage in menu (render text orange or red if usage too high)
-	// - draws borders around customizable vanilla/mod widgets
-	//   - add simple right-click context menu for widgets with entries to copy locator, identifier, etc.
 
 	//TODO "Key Pressed" Loading Requirement
 	// - Modes: ONCE_PER_KEY_PRESS (nur einen tick pro key press auf true), CONTINUOUS (hält bei key press dauerhaft auf true)

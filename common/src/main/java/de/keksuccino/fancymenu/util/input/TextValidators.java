@@ -6,6 +6,9 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 @SuppressWarnings("all")
 public class TextValidators {
 
+    private static final CharacterFilter INTEGER_CHARACTER_FILTER = CharacterFilter.buildIntegerCharacterFiler();
+    private static final CharacterFilter DOUBLE_CHARACTER_FILTER = CharacterFilter.buildDoubleCharacterFiler();
+
     public static final ConsumingSupplier<String, Boolean> NO_EMPTY_STRING_TEXT_VALIDATOR = consumes -> {
         return (consumes != null) && !consumes.replace(" ", "").isEmpty();
     };
@@ -21,5 +24,7 @@ public class TextValidators {
     public static final ConsumingSupplier<String, Boolean> HEX_COLOR_TEXT_VALIDATOR = consumes -> {
         return (consumes != null) && !consumes.replace(" ", "").isEmpty() && (DrawableColor.of(consumes) != DrawableColor.EMPTY);
     };
+    public static final ConsumingSupplier<String, Boolean> INTEGER_TEXT_VALIDATOR = consumes -> INTEGER_CHARACTER_FILTER.isAllowedText(consumes);
+    public static final ConsumingSupplier<String, Boolean> DOUBLE_TEXT_VALIDATOR = consumes -> DOUBLE_CHARACTER_FILTER.isAllowedText(consumes);
 
 }

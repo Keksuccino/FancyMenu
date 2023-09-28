@@ -878,6 +878,8 @@
   "fancymenu.overlay.menu_bar.user_interface.ui_scale.auto": "Auto",
   "fancymenu.overlay.menu_bar.user_interface.ui_text_shadow": "UI Text Shadow: %s",
   "fancymenu.overlay.menu_bar.user_interface.ui_click_sounds": "UI Click Sounds: %s",
+  "fancymenu.overlay.menu_bar.user_interface.context_menu_hover_open_speed": "Context Menu Hover Open Speed: %s",
+  "fancymenu.overlay.menu_bar.user_interface.context_menu_hover_open_speed.desc": "How fast sub menus should open when\nhovering over its entry.",
   "fancymenu.overlay.menu_bar.user_interface.ui_theme": "UI Theme",
   "fancymenu.ui.themes.light": "Light",
   "fancymenu.ui.themes.dark": "Dark",
@@ -1044,5 +1046,8 @@
   "fancymenu.overlay.debug.memory": "Memory: %1$s (%2$s)",
   "fancymenu.overlay.debug.cpu": "CPU: %s",
   "fancymenu.overlay.debug.gpu": "GPU: %1$s (OpenGL: %2$s)",
-  "fancymenu.overlay.debug.right_click_elements": "Right-click highlighted elements to copy their widget locator and more!"
+  "fancymenu.overlay.debug.right_click_elements": "Right-click highlighted elements to copy their widget locator and more!",
+  "fancymenu.editor.layout.index": "Layout Index [Multi-Layout Ordering]",
+  "fancymenu.editor.layout.index.desc": "The layout index is useful if you use multiple\nlayouts in the same menu.\nIf you need these layouts to get loaded in\na specific order, use the layout index.\nThe bigger the index, the later the layout gets loaded,\nwhich means it is ON TOP OF layouts with a smaller index.\n\nFor example:\nA layout with index 1 will be under a layout with index 2.",
+  "fancymenu.overlay.menu_bar.leave_current_menu.desc": "Force-closes the current screen and brings\nyou back to the Title screen.\nUseful for when you're stuck in a menu without\nan option to leave it."
 }

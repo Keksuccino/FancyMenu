@@ -52,9 +52,15 @@ public class LayoutHandler {
 	}
 
 	public static void reloadLayouts() {
+
 		ScreenCustomization.readCustomizableScreensFromFile();
+
+		List<Layout> layouts = deserializeLayoutFilesInDirectory(LAYOUT_DIR);
+		layouts.sort(Comparator.comparingInt(value -> value.layoutIndex));
+
 		LAYOUTS.clear();
-		LAYOUTS.addAll(deserializeLayoutFilesInDirectory(LAYOUT_DIR));
+		LAYOUTS.addAll(layouts);
+
 	}
 
 	@NotNull

@@ -12,12 +12,12 @@ import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.ExternalGifAnimationRenderer;
 import de.keksuccino.konkrete.resources.WebTextureResourceLocation;
+import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,7 +26,7 @@ public class ImageElement extends AbstractElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final ResourceLocation MISSING = new ResourceLocation("missing_texture");
+    private static final ResourceLocation MISSING = TextureManager.INTENTIONAL_MISSING_TEXTURE;
 
     public static final Map<String, WebTextureResourceLocation> CACHED_WEB_IMAGES = new HashMap<>();
 
