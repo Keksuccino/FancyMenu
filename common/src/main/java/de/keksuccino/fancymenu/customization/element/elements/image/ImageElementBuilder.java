@@ -4,9 +4,6 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.event.acara.EventHandler;
-import de.keksuccino.fancymenu.util.event.acara.EventListener;
-import de.keksuccino.fancymenu.events.ModReloadEvent;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
@@ -20,13 +17,6 @@ public class ImageElementBuilder extends ElementBuilder<ImageElement, ImageEdito
 
     public ImageElementBuilder() {
         super("image");
-        EventHandler.INSTANCE.registerListenersOf(this);
-    }
-
-    @EventListener
-    public void onModReload(ModReloadEvent e) {
-        LOGGER.info("[FANCYMENU] Clearing Image element cache..");
-        ImageElement.CACHED_WEB_IMAGES.clear();
     }
 
     @Override

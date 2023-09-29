@@ -458,7 +458,7 @@ public class MarkdownParser {
         } else {
             String s = ScreenCustomization.getAbsoluteGameDirectoryPath(imageLink);
             File f = new File(s);
-            if (f.isFile() && f.getPath().startsWith(LayoutHandler.ASSETS_DIR.getAbsolutePath()) && FileFilter.IMAGE_FILE_FILTER.checkFile(f)) {
+            if (f.isFile() && f.getPath().startsWith(LayoutHandler.ASSETS_DIR.getAbsolutePath()) && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(f)) {
                 builder.image = TextureHandler.INSTANCE.getTexture(f);
                 if (builder.image == null) {
                     builder.text = I18n.get("fancymenu.markdown.missing_local_image");

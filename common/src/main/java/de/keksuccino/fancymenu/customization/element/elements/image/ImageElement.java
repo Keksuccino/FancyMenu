@@ -5,13 +5,12 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
+import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
-import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.konkrete.rendering.RenderUtils;
-import de.keksuccino.konkrete.rendering.animation.ExternalGifAnimationRenderer;
-import de.keksuccino.konkrete.resources.WebTextureResourceLocation;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -19,26 +18,18 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
 
 public class ImageElement extends AbstractElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
-
     private static final ResourceLocation MISSING = TextureManager.INTENTIONAL_MISSING_TEXTURE;
-
-    public static final Map<String, WebTextureResourceLocation> CACHED_WEB_IMAGES = new HashMap<>();
 
     @Nullable
     public String source;
     public SourceMode sourceMode = SourceMode.LOCAL;
-
     @Nullable
     protected ITexture texture;
-    @Nullable
-    protected ExternalGifAnimationRenderer gif;
-    protected volatile boolean webTextureInitialized = false;
+    protected boolean webTextureInitialized = false;
     @Nullable
     protected String lastSource;
     protected SourceMode lastSourceMode;
@@ -62,22 +53,7 @@ public class ImageElement extends AbstractElement {
             RenderSystem.enableBlend();
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
 
-            if (this.gif != null) {
-                int w = this.gif.getWidth();
-                int h = this.gif.getHeight();
-                int x2 = this.gif.getPosX();
-                int y2 = this.gif.getPosY();
-                this.gif.setPosX(x);
-                this.gif.setPosY(y);
-                this.gif.setWidth(this.getAbsoluteWidth());
-                this.gif.setHeight(this.getAbsoluteHeight());
-                this.gif.setOpacity(this.opacity);
-                this.gif.render(pose);
-                this.gif.setPosX(x2);
-                this.gif.setPosY(y2);
-                this.gif.setWidth(w);
-                this.gif.setHeight(h);
-            } else if ((this.texture != null) && this.texture.isReady()) {
+            if ((this.texture != null) && this.texture.isReady()) {
                 RenderUtils.bindTexture(this.texture.getResourceLocation());
                 blit(pose, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
             } else if (isEditor()) {
@@ -85,7 +61,7 @@ public class ImageElement extends AbstractElement {
                 blit(pose, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
             }
 
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+            RenderingUtils.resetShaderColor();
             RenderSystem.disableBlend();
 
         }
@@ -103,24 +79,16 @@ public class ImageElement extends AbstractElement {
             if (this.sourceMode == SourceMode.LOCAL) {
                 File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(this.source));
                 if (f.exists() && f.isFile() && (f.getName().endsWith(".png") || f.getName().endsWith(".jpg") || f.getName().endsWith(".jpeg") || f.getName().endsWith(".gif"))) {
-                    if (f.getName().endsWith(".gif")) {
-                        this.gif = TextureHandler.INSTANCE.getGifTexture(this.source);
-                        if (this.gif != null) {
-                            this.originalWidth = this.gif.getWidth();
-                            this.originalHeight = this.gif.getHeight();
-                        }
-                    } else {
-                        this.texture = TextureHandler.INSTANCE.getTexture(this.source);
-                        if (this.texture != null) {
-                            this.originalWidth = this.texture.getWidth();
-                            this.originalHeight = this.texture.getHeight();
-                        }
+                    this.texture = TextureHandler.INSTANCE.getTexture(this.source);
+                    if (this.texture != null) {
+                        this.originalWidth = this.texture.getWidth();
+                        this.originalHeight = this.texture.getHeight();
                     }
                 }
             } else {
                 this.webTextureInitialized = false;
                 this.texture = null;
-                if (WebUtils.isValidUrl(this.source)) {
+                if (TextValidators.BASIC_URL_TEXT_VALIDATOR.get(this.source)) {
                     this.texture = TextureHandler.INSTANCE.getWebTexture(this.source);
                 }
             }

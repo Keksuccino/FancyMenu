@@ -19,6 +19,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO Altes GIF handling in button element entfernen und dafür neues nutzen
+
 	//TODO FIXEN: eventuell aktualisieren Forge Deep elements in title screen ihre position nicht richtig (checken)
 
 	//TODO In layout safe-as screen als default file name universal identifiers nutzen, falls vorhanden

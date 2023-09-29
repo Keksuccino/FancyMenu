@@ -288,7 +288,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         (element1, s) -> ((TextElement)element1.element).verticalScrollGrabberTextureNormal = s,
                         Component.translatable("fancymenu.customization.items.text.vertical_scroll_grabber_texture.normal"),
                         true,
-                        FileFilter.IMAGE_FILE_FILTER)
+                        FileFilter.IMAGE_AND_GIF_FILE_FILTER)
                 .setStackable(true);
 
         this.addGenericFileChooserContextMenuEntryTo(grabberTextureMenu, "vertical_hover_grabber_texture",
@@ -298,7 +298,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         (element1, s) -> ((TextElement)element1.element).verticalScrollGrabberTextureHover = s,
                         Component.translatable("fancymenu.customization.items.text.vertical_scroll_grabber_texture.hover"),
                         true,
-                        FileFilter.IMAGE_FILE_FILTER)
+                        FileFilter.IMAGE_AND_GIF_FILE_FILTER)
                 .setStackable(true);
 
         grabberTextureMenu.addSeparatorEntry("separator_after_vertical_textures");
@@ -310,7 +310,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         (element1, s) -> ((TextElement)element1.element).horizontalScrollGrabberTextureNormal = s,
                         Component.translatable("fancymenu.customization.items.text.horizontal_scroll_grabber_texture.normal"),
                         true,
-                        FileFilter.IMAGE_FILE_FILTER)
+                        FileFilter.IMAGE_AND_GIF_FILE_FILTER)
                 .setStackable(true);
 
         this.addGenericFileChooserContextMenuEntryTo(grabberTextureMenu, "horizontal_hover_grabber_texture",
@@ -320,7 +320,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         (element1, s) -> ((TextElement)element1.element).horizontalScrollGrabberTextureHover = s,
                         Component.translatable("fancymenu.customization.items.text.horizontal_scroll_grabber_texture.hover"),
                         true,
-                        FileFilter.IMAGE_FILE_FILTER)
+                        FileFilter.IMAGE_AND_GIF_FILE_FILTER)
                 .setStackable(true);
 
         ContextMenu grabberColorMenu = new ContextMenu();

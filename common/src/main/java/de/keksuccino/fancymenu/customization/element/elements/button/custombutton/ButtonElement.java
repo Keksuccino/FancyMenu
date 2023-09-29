@@ -15,7 +15,7 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinButton;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
-import de.keksuccino.fancymenu.util.resources.texture.LocalTexture;
+import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
@@ -176,7 +176,7 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
                             }
                         }
                     } else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
-                        LocalTexture back = TextureHandler.INSTANCE.getTexture(f.getPath());
+                        ITexture back = TextureHandler.INSTANCE.getTexture(f.getPath());
                         if (back != null) {
                             if (this.button instanceof ExtendedButton) {
                                 backgroundNormal = back.getResourceLocation();
@@ -223,7 +223,7 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
                             }
                         }
                     } else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
-                        LocalTexture back = TextureHandler.INSTANCE.getTexture(f.getPath());
+                        ITexture back = TextureHandler.INSTANCE.getTexture(f.getPath());
                         if (back != null) {
                             if (this.button instanceof ExtendedButton) {
                                 backgroundHover = back.getResourceLocation();
@@ -268,7 +268,7 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
                             }
                         }
                     } else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
-                        LocalTexture back = TextureHandler.INSTANCE.getTexture(f.getPath());
+                        ITexture back = TextureHandler.INSTANCE.getTexture(f.getPath());
                         if (back != null) {
                             if (this.button instanceof ExtendedButton) {
                                 backgroundInactive = back.getResourceLocation();

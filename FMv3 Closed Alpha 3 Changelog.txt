@@ -1,0 +1,10 @@
+
+CHANGELOG | FANCYMENU v3.0.0 CLOSED ALPHA 3
+ 
+- Most GIF images now load way smoother and don't freeze the screen anymore
+- Most elements and backgrounds that support web images also support web GIFs now
+- The Progress Bar element now accepts GIF images as bar and background textures
+- The Markdown renderer now supports GIF images
+- The Image background type now supports local and web GIF images
+- Text element grabber textures now support GIF images
+- The File Explorer screens (Choose and Save File) now display previews for GIF images

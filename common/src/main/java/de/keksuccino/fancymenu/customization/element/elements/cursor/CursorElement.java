@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
+import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resources.texture.LocalTexture;
 import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
 import org.apache.logging.log4j.LogManager;
@@ -72,7 +73,12 @@ public class CursorElement extends AbstractElement {
 
         if (this.source != null) {
             if (!this.source.equals(this.lastSource) || (this.lastHotspotX != this.hotspotX) || (this.lastHotspotY != this.hotspotY)) {
-                this.texture = TextureHandler.INSTANCE.getTexture(ScreenCustomization.getAbsoluteGameDirectoryPath(this.source));
+                ITexture t = TextureHandler.INSTANCE.getTexture(ScreenCustomization.getAbsoluteGameDirectoryPath(this.source));
+                if (t instanceof LocalTexture l) {
+                    this.texture = l;
+                } else {
+                    return;
+                }
                 this.cursorReady = false;
                 if (!isEditor() || this.editorPreviewMode) {
                     CursorHandler.CustomCursor cursor = CursorHandler.getCustomCursor(this.getCursorName());

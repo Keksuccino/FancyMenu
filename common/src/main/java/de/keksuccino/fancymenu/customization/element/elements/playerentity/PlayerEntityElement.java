@@ -532,14 +532,12 @@ public class PlayerEntityElement extends AbstractElement {
     }
 
     protected void setSkinTextureLocation(ResourceLocation loc) {
-        
         this.currentSkinLocation = loc;
         this.normalRenderer.properties.setSkinTextureLocation(loc);
         this.slimRenderer.properties.setSkinTextureLocation(loc);
     }
 
     protected void setCapeTextureLocation(ResourceLocation loc) {
-        
         this.currentCapeLocation = loc;
         this.normalRenderer.properties.setCapeTextureLocation(loc);
         this.slimRenderer.properties.setCapeTextureLocation(loc);

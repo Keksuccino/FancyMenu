@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.element.elements.playerentity.textures;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resources.texture.LocalTexture;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.SelfcleaningDynamicTexture;
@@ -37,7 +38,7 @@ public class SkinExternalTextureResourceLocation extends ExternalTextureResource
         if (!this.loaded) {
             try {
 
-                LocalTexture exRL = TextureHandler.INSTANCE.getTexture(this.path);
+                ITexture exRL = TextureHandler.INSTANCE.getTexture(this.path);
                 if (exRL != null) {
                     ResourceLocation loc = exRL.getResourceLocation();
                     if (loc != null) {

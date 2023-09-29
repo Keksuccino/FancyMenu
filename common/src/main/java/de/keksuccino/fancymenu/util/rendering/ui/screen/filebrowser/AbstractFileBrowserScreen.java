@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.Text
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
+import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resources.texture.LocalTexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.file.FileUtils;
@@ -68,7 +69,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
     protected ScrollArea fileListScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ScrollArea textFilePreviewScrollArea = new ScrollArea(0, 0, 0, 0);
-    protected LocalTexture previewTexture;
+    protected ITexture previewTexture;
     protected ExtendedButton confirmButton;
     protected ExtendedButton cancelButton;
     protected ExtendedButton openInExplorerButton;
@@ -187,19 +188,22 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
     protected void renderPreview(PoseStack pose, int mouseX, int mouseY, float partial) {
         if (this.previewTexture != null) {
-            AspectRatio ratio = this.previewTexture.getAspectRatio();
-            int[] size = ratio.getAspectRatioSizeByMaximumSize((this.width / 2) - 40, (this.cancelButton.y - 50) - (50 + 15));
-            int w = size[0];
-            int h = size[1];
-            int x = this.width - 20 - w;
-            int y = 50 + 15;
-            UIBase.resetShaderColor();
-            fill(pose, x, y, x + w, y + h, UIBase.getUIColorTheme().area_background_color.getColorInt());
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-            RenderUtils.bindTexture(this.previewTexture.getResourceLocation());
-            blit(pose, x, y, 0.0F, 0.0F, w, h, w, h);
-            UIBase.resetShaderColor();
-            UIBase.renderBorder(pose, x, y, x + w, y + h, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUIColorTheme().element_border_color_normal.getColor(), true, true, true, true);
+            ResourceLocation loc = this.previewTexture.getResourceLocation();
+            if (loc != null) {
+                AspectRatio ratio = this.previewTexture.getAspectRatio();
+                int[] size = ratio.getAspectRatioSizeByMaximumSize((this.width / 2) - 40, (this.cancelButton.y - 50) - (50 + 15));
+                int w = size[0];
+                int h = size[1];
+                int x = this.width - 20 - w;
+                int y = 50 + 15;
+                UIBase.resetShaderColor();
+                fill(pose, x, y, x + w, y + h, UIBase.getUIColorTheme().area_background_color.getColorInt());
+                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+                RenderUtils.bindTexture(loc);
+                blit(pose, x, y, 0.0F, 0.0F, w, h, w, h);
+                UIBase.resetShaderColor();
+                UIBase.renderBorder(pose, x, y, x + w, y + h, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUIColorTheme().element_border_color_normal.getColor(), true, true, true, true);
+            }
         } else {
             this.textFilePreviewScrollArea.setWidth((this.width / 2) - 40, true);
             this.textFilePreviewScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);

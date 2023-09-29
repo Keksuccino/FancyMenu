@@ -58,7 +58,7 @@ public class ImageMenuBackgroundConfigScreen extends ConfiguratorScreen {
                     }
                     Minecraft.getInstance().setScreen(this);
                 });
-                s.setFileFilter(FileFilter.IMAGE_FILE_FILTER);
+                s.setFileFilter(FileFilter.IMAGE_AND_GIF_FILE_FILTER);
                 Minecraft.getInstance().setScreen(s);
             }
         }).setLabelSupplier(consumes -> {
@@ -75,7 +75,7 @@ public class ImageMenuBackgroundConfigScreen extends ConfiguratorScreen {
                     }
                     Minecraft.getInstance().setScreen(this);
                 });
-                s.setFileFilter(FileFilter.IMAGE_FILE_FILTER);
+                s.setFileFilter(FileFilter.IMAGE_AND_GIF_FILE_FILTER);
                 Minecraft.getInstance().setScreen(s);
             }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.background.image.type.web.fallback.desc"))), true);
 

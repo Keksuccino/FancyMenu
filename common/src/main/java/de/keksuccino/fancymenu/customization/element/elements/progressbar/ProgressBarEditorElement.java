@@ -38,7 +38,7 @@ public class ProgressBarEditorElement extends AbstractEditorElement {
                         null,
                         element -> ((ProgressBarElement)element.element).barTexturePath,
                         (element, s) -> ((ProgressBarElement)element.element).barTexturePath = s,
-                        Component.translatable("fancymenu.editor.elements.progress_bar.bar_texture"), true, FileFilter.IMAGE_FILE_FILTER)
+                        Component.translatable("fancymenu.editor.elements.progress_bar.bar_texture"), true, FileFilter.IMAGE_AND_GIF_FILE_FILTER)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.elements.progress_bar.bar_texture.desc")));
 
@@ -58,7 +58,7 @@ public class ProgressBarEditorElement extends AbstractEditorElement {
                         null,
                         element -> ((ProgressBarElement)element.element).backgroundTexturePath,
                         (element, s) -> ((ProgressBarElement)element.element).backgroundTexturePath = s,
-                        Component.translatable("fancymenu.editor.elements.progress_bar.background_texture"), true, FileFilter.IMAGE_FILE_FILTER)
+                        Component.translatable("fancymenu.editor.elements.progress_bar.background_texture"), true, FileFilter.IMAGE_AND_GIF_FILE_FILTER)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.elements.progress_bar.background_texture.desc")));
 

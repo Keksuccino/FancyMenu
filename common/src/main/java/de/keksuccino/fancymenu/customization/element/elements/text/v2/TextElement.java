@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
+import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resources.texture.LocalTexture;
 import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
 import de.keksuccino.konkrete.file.FileUtils;
@@ -189,7 +190,7 @@ public class TextElement extends AbstractElement {
 
         //Update scroll grabber textures
         if (this.verticalScrollGrabberTextureNormal != null) {
-            LocalTexture r = TextureHandler.INSTANCE.getTexture(this.verticalScrollGrabberTextureNormal);
+            ITexture r = TextureHandler.INSTANCE.getTexture(this.verticalScrollGrabberTextureNormal);
             if (r != null) {
                 this.scrollArea.verticalScrollBar.idleBarTexture = r.getResourceLocation();
             }
@@ -197,7 +198,7 @@ public class TextElement extends AbstractElement {
             this.scrollArea.verticalScrollBar.idleBarTexture = null;
         }
         if (this.verticalScrollGrabberTextureHover != null) {
-            LocalTexture r = TextureHandler.INSTANCE.getTexture(this.verticalScrollGrabberTextureHover);
+            ITexture r = TextureHandler.INSTANCE.getTexture(this.verticalScrollGrabberTextureHover);
             if (r != null) {
                 this.scrollArea.verticalScrollBar.hoverBarTexture = r.getResourceLocation();
             }
@@ -205,7 +206,7 @@ public class TextElement extends AbstractElement {
             this.scrollArea.verticalScrollBar.hoverBarTexture = null;
         }
         if (this.horizontalScrollGrabberTextureNormal != null) {
-            LocalTexture r = TextureHandler.INSTANCE.getTexture(this.horizontalScrollGrabberTextureNormal);
+            ITexture r = TextureHandler.INSTANCE.getTexture(this.horizontalScrollGrabberTextureNormal);
             if (r != null) {
                 this.scrollArea.horizontalScrollBar.idleBarTexture = r.getResourceLocation();
             }
@@ -213,7 +214,7 @@ public class TextElement extends AbstractElement {
             this.scrollArea.horizontalScrollBar.idleBarTexture = null;
         }
         if (this.horizontalScrollGrabberTextureHover != null) {
-            LocalTexture r = TextureHandler.INSTANCE.getTexture(this.horizontalScrollGrabberTextureHover);
+            ITexture r = TextureHandler.INSTANCE.getTexture(this.horizontalScrollGrabberTextureHover);
             if (r != null) {
                 this.scrollArea.horizontalScrollBar.hoverBarTexture = r.getResourceLocation();
             }

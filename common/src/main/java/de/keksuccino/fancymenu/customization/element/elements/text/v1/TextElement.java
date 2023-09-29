@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextScrollAreaEntry;
-import de.keksuccino.fancymenu.util.resources.texture.LocalTexture;
+import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.konkrete.file.FileUtils;
@@ -105,14 +105,14 @@ public class TextElement extends AbstractElement {
         }
 
         if (this.scrollGrabberTextureNormal != null) {
-            LocalTexture r = TextureHandler.INSTANCE.getTexture(this.scrollGrabberTextureNormal);
+            ITexture r = TextureHandler.INSTANCE.getTexture(this.scrollGrabberTextureNormal);
             if (r != null) {
                 this.scrollArea.verticalScrollBar.idleBarTexture = r.getResourceLocation();
                 this.scrollArea.horizontalScrollBar.idleBarTexture = r.getResourceLocation();
             }
         }
         if (this.scrollGrabberTextureHover != null) {
-            LocalTexture r = TextureHandler.INSTANCE.getTexture(this.scrollGrabberTextureHover);
+            ITexture r = TextureHandler.INSTANCE.getTexture(this.scrollGrabberTextureHover);
             if (r != null) {
                 this.scrollArea.verticalScrollBar.hoverBarTexture = r.getResourceLocation();
                 this.scrollArea.horizontalScrollBar.hoverBarTexture = r.getResourceLocation();

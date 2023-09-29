@@ -18,7 +18,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.io.File;
 import java.util.function.Consumer;
 
@@ -284,7 +283,7 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
             if (this.file.isFile()) {
                 SaveFileScreen.this.fileNameEditBox.setValue(this.file.getName());
                 SaveFileScreen.this.updateTextPreview(this.file);
-                if (FileFilter.IMAGE_FILE_FILTER.checkFile(this.file)) {
+                if (FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.file)) {
                     SaveFileScreen.this.previewTexture = TextureHandler.INSTANCE.getTexture(this.file);
                 } else {
                     SaveFileScreen.this.previewTexture = null;

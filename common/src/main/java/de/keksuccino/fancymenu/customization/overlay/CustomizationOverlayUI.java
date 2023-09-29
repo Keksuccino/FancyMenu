@@ -34,6 +34,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resources.texture.LocalTexture;
 import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
 import de.keksuccino.fancymenu.util.resources.texture.WrappedTexture;
@@ -447,7 +448,7 @@ public class CustomizationOverlayUI {
                         true, FancyMenu.getOptions().customWindowIcon16.getDefaultValue(),
                         file -> {
                             if (file.getName().toLowerCase().endsWith(".png")) {
-                                LocalTexture t = TextureHandler.INSTANCE.getTexture(file);
+                                ITexture t = TextureHandler.INSTANCE.getTexture(file);
                                 return ((t != null) && (t.getWidth() == 16) && (t.getHeight() == 16));
                             }
                             return false;
@@ -470,7 +471,7 @@ public class CustomizationOverlayUI {
                         true, FancyMenu.getOptions().customWindowIcon32.getDefaultValue(),
                         file -> {
                             if (file.getName().toLowerCase().endsWith(".png")) {
-                                LocalTexture t = TextureHandler.INSTANCE.getTexture(file);
+                                ITexture t = TextureHandler.INSTANCE.getTexture(file);
                                 return ((t != null) && (t.getWidth() == 32) && (t.getHeight() == 32));
                             }
                             return false;

@@ -79,7 +79,7 @@ public class ChooseFileScreen extends AbstractFileBrowserScreen {
             }
             if (this.file.isFile()) {
                 ChooseFileScreen.this.updateTextPreview(this.file);
-                if (FileFilter.IMAGE_FILE_FILTER.checkFile(this.file)) {
+                if (FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.file)) {
                     ChooseFileScreen.this.previewTexture = TextureHandler.INSTANCE.getTexture(this.file);
                 } else {
                     ChooseFileScreen.this.previewTexture = null;
