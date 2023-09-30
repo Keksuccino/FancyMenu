@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.util.patches.WidgetifiedScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.WidgetifiedScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.TextWidget;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.ReceivingLevelScreen;

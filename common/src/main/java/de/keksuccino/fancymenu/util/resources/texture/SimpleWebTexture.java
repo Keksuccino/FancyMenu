@@ -17,41 +17,41 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
-public class WebTexture implements ITexture {
+public class SimpleWebTexture implements ITexture {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
     @NotNull
-    private final String url;
+    protected final String url;
     @Nullable
-    private ResourceLocation textureLocation;
-    private int width = 10;
-    private int height = 10;
-    private AspectRatio aspectRatio = new AspectRatio(10, 10);
-    private volatile NativeImage nativeImage;
-    private volatile boolean isLoading = false;
+    protected ResourceLocation textureLocation;
+    protected int width = 10;
+    protected int height = 10;
+    protected AspectRatio aspectRatio = new AspectRatio(10, 10);
+    protected volatile NativeImage nativeImage;
+    protected volatile boolean isLoading = false;
 
-    /** Returns a new {@link WebTexture} instance and automatically asynchronously loads the texture. **/
+    /** Returns a new {@link SimpleWebTexture} instance and automatically asynchronously loads the texture. **/
     @NotNull
-    public static WebTexture of(@NotNull String sourceURL) {
+    public static SimpleWebTexture of(@NotNull String sourceURL) {
         Objects.requireNonNull(sourceURL);
-        WebTexture t = new WebTexture(sourceURL);
+        SimpleWebTexture t = new SimpleWebTexture(sourceURL);
         t.downloadAndLoadAsynchronously();
         return t;
     }
 
-    /** Returns a new {@link WebTexture} instance. **/
+    /** Returns a new {@link SimpleWebTexture} instance. **/
     @NotNull
-    public static WebTexture of(@NotNull String sourceURL, boolean autoLoadTextureAsynchronously) {
+    public static SimpleWebTexture of(@NotNull String sourceURL, boolean autoLoadTextureAsynchronously) {
         Objects.requireNonNull(sourceURL);
-        WebTexture t = new WebTexture(sourceURL);
+        SimpleWebTexture t = new SimpleWebTexture(sourceURL);
         if (autoLoadTextureAsynchronously) {
             t.downloadAndLoadAsynchronously();
         }
         return t;
     }
 
-    protected WebTexture(@NotNull String url) {
+    protected SimpleWebTexture(@NotNull String url) {
         this.url = url;
     }
 
@@ -75,8 +75,7 @@ public class WebTexture implements ITexture {
             }
         } catch (Exception ex) {
             this.nativeImage = null;
-            LOGGER.error("[FANCYMENU] Failed to download WebTexture: " + this.url);
-            ex.printStackTrace();
+            LOGGER.error("[FANCYMENU] Failed to download WebTexture: " + this.url, ex);
         }
         IOUtils.closeQuietly(input);
     }
@@ -98,8 +97,7 @@ public class WebTexture implements ITexture {
                 this.aspectRatio = new AspectRatio(this.width, this.height);
             } catch (Exception ex) {
                 this.textureLocation = null;
-                LOGGER.error("[FANCYMENU] Failed to load WebTexture: " + this.url);
-                ex.printStackTrace();
+                LOGGER.error("[FANCYMENU] Failed to load WebTexture: " + this.url, ex);
             }
             this.nativeImage = null;
         }
@@ -147,6 +145,10 @@ public class WebTexture implements ITexture {
 
     public boolean isReady() {
         return this.textureLocation != null;
+    }
+
+    @Override
+    public void reset() {
     }
 
 }

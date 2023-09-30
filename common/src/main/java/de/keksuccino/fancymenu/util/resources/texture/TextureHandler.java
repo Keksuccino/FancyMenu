@@ -51,7 +51,7 @@ public class TextureHandler {
 
     /**
      * Supports PNG, JPEG and GIF.<br>
-     * In case of PNG or JPEG, a new {@link WebTexture} will get wrapped into a new {@link WrappedWebTexture}.<br>
+     * In case of PNG or JPEG, a new {@link SimpleWebTexture} will get wrapped into a new {@link WrappedWebTexture}.<br>
      * In case of GIF, a new {@link GifTexture} will get wrapped into a new {@link WrappedWebTexture}.<br><br>
      *
      * It is possible that this method returns different texture types than {@link WrappedWebTexture}.
@@ -65,7 +65,7 @@ public class TextureHandler {
 
     /**
      * Supports PNG, JPEG and GIF.<br>
-     * In case of PNG or JPEG, a new {@link WebTexture} will get wrapped into a new {@link WrappedWebTexture}.<br>
+     * In case of PNG or JPEG, a new {@link SimpleWebTexture} will get wrapped into a new {@link WrappedWebTexture}.<br>
      * In case of GIF, a new {@link GifTexture} will get wrapped into a new {@link WrappedWebTexture}.<br><br>
      *
      * It is possible that this method returns different texture types than {@link WrappedWebTexture}.
@@ -93,7 +93,7 @@ public class TextureHandler {
     @NotNull
     public ITexture getSimpleWebTexture(@NotNull String url, boolean autoLoad) {
         if (!textures.containsKey(url)) {
-            WebTexture texture = WebTexture.of(url, autoLoad);
+            SimpleWebTexture texture = SimpleWebTexture.of(url, autoLoad);
             this.textures.put(url, texture);
             return texture;
         } else {
@@ -147,6 +147,8 @@ public class TextureHandler {
 
     public static boolean isGifUrl(@NotNull String gifUrl) {
         if (!TextValidators.BASIC_URL_TEXT_VALIDATOR.get(gifUrl)) return false;
+        if (gifUrl.toLowerCase().endsWith(".jpg") || gifUrl.toLowerCase().endsWith(".jpeg") || gifUrl.toLowerCase().endsWith(".png")) return false;
+        if (gifUrl.toLowerCase().endsWith(".jpg/") || gifUrl.toLowerCase().endsWith(".jpeg/") || gifUrl.toLowerCase().endsWith(".png/")) return false;
         if (gifUrl.toLowerCase().endsWith(".gif")) return true;
         if (gifUrl.toLowerCase().endsWith(".gif/")) return true;
         try {

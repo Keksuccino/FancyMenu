@@ -22,6 +22,7 @@
     "client.IMixinSuggestionsList",
     "client.MixinAbstractButton",
     "client.MixinAbstractSelectionList",
+    "client.MixinAbstractSliderButton",
     "client.MixinAbstractWidget",
     "client.MixinConnectScreen",
     "client.MixinGameRenderer",

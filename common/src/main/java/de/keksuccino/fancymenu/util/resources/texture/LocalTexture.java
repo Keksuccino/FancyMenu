@@ -23,14 +23,14 @@ public class LocalTexture implements ITexture {
     public static final LocalTexture EMPTY = new LocalTexture(null, null);
 
     @Nullable
-    private ResourceLocation textureLocation;
+    protected ResourceLocation textureLocation;
     @Nullable
-    private final String path;
+    protected final String path;
     @Nullable
-    private InputStream inputStream;
-    private int width = 10;
-    private int height = 10;
-    private AspectRatio aspectRatio = new AspectRatio(10, 10);
+    protected InputStream inputStream;
+    protected int width = 10;
+    protected int height = 10;
+    protected AspectRatio aspectRatio = new AspectRatio(10, 10);
 
     /** Returns a new {@link LocalTexture} instance. **/
     @NotNull
@@ -120,6 +120,10 @@ public class LocalTexture implements ITexture {
 
     public boolean isReady() {
         return this.textureLocation != null;
+    }
+
+    @Override
+    public void reset() {
     }
 
 }

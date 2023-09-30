@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.Objects;
 
 public class WrappedWebTexture implements ITexture {
@@ -16,7 +15,7 @@ public class WrappedWebTexture implements ITexture {
 
     /**
      * Supports PNG, JPEG and GIF.<br>
-     * In case of PNG or JPEG, a new {@link WebTexture} will get wrapped into the {@link WrappedWebTexture}.<br>
+     * In case of PNG or JPEG, a new {@link SimpleWebTexture} will get wrapped into the {@link WrappedWebTexture}.<br>
      * In case of GIF, a new {@link GifTexture} will get wrapped into the {@link WrappedWebTexture}.
      *
      * @param imageUrl The image URL.
@@ -35,7 +34,7 @@ public class WrappedWebTexture implements ITexture {
                 if (TextureHandler.isGifUrl(imageUrl))  {
                     texture.setWrappedTexture(GifTexture.web(imageUrl));
                 } else {
-                    texture.setWrappedTexture(WebTexture.of(imageUrl, autoLoadPngAndJpeg));
+                    texture.setWrappedTexture(SimpleWebTexture.of(imageUrl, autoLoadPngAndJpeg));
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -77,6 +76,11 @@ public class WrappedWebTexture implements ITexture {
     @Override
     public boolean isReady() {
         return (this.texture != null) && this.texture.isReady();
+    }
+
+    @Override
+    public void reset() {
+        if (this.texture != null) this.texture.reset();
     }
 
     public void setWrappedTexture(@Nullable ITexture texture) {

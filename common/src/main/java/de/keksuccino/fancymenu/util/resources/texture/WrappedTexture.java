@@ -1,16 +1,15 @@
 package de.keksuccino.fancymenu.util.resources.texture;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
-import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.io.InputStream;
 import java.util.Objects;
 import java.util.Optional;
@@ -20,12 +19,12 @@ public class WrappedTexture implements ITexture {
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Nullable
-    private ResourceLocation textureLocation;
+    protected ResourceLocation textureLocation;
     @Nullable
-    private InputStream inputStream;
-    private int width = 10;
-    private int height = 10;
-    private AspectRatio aspectRatio = new AspectRatio(10, 10);
+    protected InputStream inputStream;
+    protected int width = 10;
+    protected int height = 10;
+    protected AspectRatio aspectRatio = new AspectRatio(10, 10);
 
     /**
      * Will wrap an existing texture into an {@link ITexture} to get its size and potentially other meta-level stuff.<br>
@@ -64,17 +63,12 @@ public class WrappedTexture implements ITexture {
                     }
                 }
             }
-        } catch (Exception e) {
-            LOGGER.error("[FANCYMENU] Failed to wrap texture: " + this.textureLocation);
-            e.printStackTrace();
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to wrap texture: " + this.textureLocation, ex);
             this.textureLocation = null;
         }
-        try {
-            if (i != null) {
-                i.close();
-            }
-        } catch (Exception ignored) {}
-        IOUtils.closeQuietly(this.inputStream);
+        CloseableUtils.closeQuietly(i);
+        CloseableUtils.closeQuietly(this.inputStream);
         this.aspectRatio = new AspectRatio(this.width, this.height);
     }
 
@@ -98,6 +92,10 @@ public class WrappedTexture implements ITexture {
 
     public boolean isReady() {
         return this.textureLocation != null;
+    }
+
+    @Override
+    public void reset() {
     }
 
 }

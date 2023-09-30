@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.element.elements.playerentity.text
 
 import com.mojang.blaze3d.platform.NativeImage;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resources.texture.LocalTexture;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.SelfcleaningDynamicTexture;
 import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;

@@ -19,6 +19,15 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO Vanilla widget size + pos customization nach CustomizableWidget verschieben
+
+	//TODO Customizations aus CustomizableSlider interface in AbstractSliderButton implementieren
+
+	//TODO FIXEN: Vanilla element resizing broken
+
+	//TODO FIXEN: Neues element wird bei last mouse right-click pos geaddet, wenn man per menu bar addet (sollte oben links geaddet werden)
+	// - Bei Menu Bar click cached mouse pos auf X30 Y30 setzen ??
+
 	//TODO Altes GIF handling in button element entfernen und dafür neues nutzen
 
 	//TODO FIXEN: eventuell aktualisieren Forge Deep elements in title screen ihre position nicht richtig (checken)

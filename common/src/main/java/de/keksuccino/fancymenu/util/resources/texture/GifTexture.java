@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.NativeImage;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.resources.RenderableResource;
 import de.keksuccino.konkrete.rendering.GifDecoder;
 import de.keksuccino.konkrete.resources.SelfcleaningDynamicTexture;
 import net.minecraft.client.Minecraft;
@@ -24,7 +25,6 @@ import java.util.Objects;
 public class GifTexture implements ITexture {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ResourceLocation FULLY_TRANSPARENT = new ResourceLocation("fancymenu", "textures/fully_transparent.png");
 
     public static final GifTexture EMPTY = new GifTexture();
 
@@ -214,7 +214,7 @@ public class GifTexture implements ITexture {
             frame.loaded = true;
             if (frame.resourceLocation != null) return frame.resourceLocation;
         }
-        return FULLY_TRANSPARENT;
+        return RenderableResource.FULLY_TRANSPARENT_TEXTURE;
     }
 
     @Override
