@@ -34,7 +34,8 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
             if ((CustomizationOverlay.getCurrentMenuBarInstance() == null) || !CustomizationOverlay.getCurrentMenuBarInstance().isUserNavigatingInMenuBar()) {
                 element.getExecutableBlock().execute();
             }
-        }).setFocusable(false);
+        });
+        ((ExtendedButton)element.button).setFocusable(false);
         return element;
     }
 
@@ -74,7 +75,8 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
 
         element.button = new ExtendedButton(0, 0, 0, 0, Component.literal(""), (press) -> {
             element.getExecutableBlock().execute();
-        }).setFocusable(false);
+        });
+        ((ExtendedButton)element.button).setFocusable(false);
 
         element.clickSound = serialized.getValue("clicksound");
         if (element.clickSound != null) {

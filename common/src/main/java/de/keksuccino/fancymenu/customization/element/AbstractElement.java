@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandl
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
@@ -24,7 +25,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Objects;
 
-public abstract class AbstractElement extends GuiComponent implements Renderable, GuiEventListener, NarratableEntry {
+public abstract class AbstractElement extends GuiComponent implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget {
 
 	/** The {@link AbstractElement#builder} field is NULL for this element! Keep that in mind when using it as placeholder! **/
 	@SuppressWarnings("all")
@@ -285,6 +286,26 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 
 	@Override
 	public void updateNarration(@NotNull NarrationElementOutput narrationElementOutput) {
+	}
+
+	@Override
+	public boolean isFocusable() {
+		return false;
+	}
+
+	@Override
+	public void setFocusable(boolean focusable) {
+		throw new RuntimeException("AbstractElements are not focusable!");
+	}
+
+	@Override
+	public boolean isNavigatable() {
+		return false;
+	}
+
+	@Override
+	public void setNavigatable(boolean navigatable) {
+		throw new RuntimeException("AbstractElements are not navigatable!");
 	}
 
 	public enum Alignment {

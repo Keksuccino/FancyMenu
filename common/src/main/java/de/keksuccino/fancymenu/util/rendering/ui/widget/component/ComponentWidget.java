@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -22,7 +23,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
-public class ComponentWidget extends AbstractWidget {
+public class ComponentWidget extends AbstractWidget implements NavigatableWidget {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -248,6 +249,26 @@ public class ComponentWidget extends AbstractWidget {
     @Override
     public @NotNull Component getMessage() {
         return this.getText();
+    }
+
+    @Override
+    public boolean isFocusable() {
+        return false;
+    }
+
+    @Override
+    public void setFocusable(boolean focusable) {
+        throw new RuntimeException("ComponentWidgets are not focusable!");
+    }
+
+    @Override
+    public boolean isNavigatable() {
+        return false;
+    }
+
+    @Override
+    public void setNavigatable(boolean navigatable) {
+        throw new RuntimeException("ComponentWidgets are not navigatable!");
     }
 
 }

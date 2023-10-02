@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Renderable;
@@ -13,7 +14,7 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class MenuBackground extends GuiComponent implements Renderable, GuiEventListener, NarratableEntry {
+public abstract class MenuBackground extends GuiComponent implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget {
 
     public final MenuBackgroundBuilder<?> builder;
     /** This gets set by the {@link ScreenCustomizationLayer} when screens fade in or out and should only get used as getter. **/
@@ -70,6 +71,26 @@ public abstract class MenuBackground extends GuiComponent implements Renderable,
 
     @Override
     public void updateNarration(@NotNull NarrationElementOutput narrationElementOutput) {
+    }
+
+    @Override
+    public boolean isFocusable() {
+        return false;
+    }
+
+    @Override
+    public void setFocusable(boolean focusable) {
+        throw new RuntimeException("MenuBackgrounds are not focusable!");
+    }
+
+    @Override
+    public boolean isNavigatable() {
+        return false;
+    }
+
+    @Override
+    public void setNavigatable(boolean navigatable) {
+        throw new RuntimeException("MenuBackgrounds are not navigatable!");
     }
 
 }

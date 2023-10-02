@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
@@ -31,7 +32,7 @@ import java.awt.*;
 import java.util.Objects;
 
 @SuppressWarnings("unused")
-public class ExtendedButton extends Button implements UniqueWidget {
+public class ExtendedButton extends Button implements UniqueWidget, NavigatableWidget {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -49,6 +50,7 @@ public class ExtendedButton extends Button implements UniqueWidget {
     @Nullable
     protected ConsumingSupplier<ExtendedButton, Boolean> activeSupplier;
     protected boolean focusable = true;
+    protected boolean navigatable = true;
     @Nullable
     protected String identifier;
 
@@ -182,9 +184,18 @@ public class ExtendedButton extends Button implements UniqueWidget {
         return this.focusable;
     }
 
-    public ExtendedButton setFocusable(boolean focusable) {
+    public void setFocusable(boolean focusable) {
         this.focusable = focusable;
-        return this;
+    }
+
+    @Override
+    public boolean isNavigatable() {
+        return this.navigatable;
+    }
+
+    @Override
+    public void setNavigatable(boolean navigatable) {
+        this.navigatable = navigatable;
     }
 
     @Nullable

@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractSliderBu
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.Util;
@@ -21,7 +22,7 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 import java.util.function.Consumer;
 
-public abstract class ExtendedSliderButton extends AbstractSliderButton implements UniqueWidget {
+public abstract class ExtendedSliderButton extends AbstractSliderButton implements UniqueWidget, NavigatableWidget {
 
     protected static final ResourceLocation SLIDER_LOCATION = new ResourceLocation("textures/gui/slider.png");
 
@@ -49,6 +50,8 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
     protected boolean labelShadow = true;
     @Nullable
     protected String identifier;
+    protected boolean focusable = true;
+    protected boolean navigatable = true;
 
     protected boolean leftDownNotHovered = false;
     protected boolean leftDownThis = false;
@@ -336,6 +339,41 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
     public ExtendedSliderButton setWidgetIdentifierFancyMenu(@Nullable String identifier) {
         this.identifier = identifier;
         return this;
+    }
+
+    @Override
+    public void setFocused(boolean focused) {
+        if (!this.focusable) {
+            super.setFocused(false);
+            return;
+        }
+        super.setFocused(focused);
+    }
+
+    @Override
+    public boolean isFocused() {
+        if (!this.focusable) return false;
+        return super.isFocused();
+    }
+
+    @Override
+    public boolean isFocusable() {
+        return this.focusable;
+    }
+
+    @Override
+    public void setFocusable(boolean focusable) {
+        this.focusable = focusable;
+    }
+
+    @Override
+    public boolean isNavigatable() {
+        return this.navigatable;
+    }
+
+    @Override
+    public void setNavigatable(boolean navigatable) {
+        this.navigatable = navigatable;
     }
 
 }

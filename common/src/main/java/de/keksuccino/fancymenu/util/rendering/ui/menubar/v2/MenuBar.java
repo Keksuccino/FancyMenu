@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.ScreenUtils;
@@ -34,7 +35,7 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
-public class MenuBar extends GuiComponent implements Renderable, GuiEventListener, NarratableEntry {
+public class MenuBar extends GuiComponent implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -505,6 +506,26 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         int width = ScreenUtils.getScreenWidth();
         int scaledHeight = (this.getHeight() != 0) ? (int)((float)this.getHeight() * scale) : 0;
         return UIBase.isXYInArea((int)mouseX, (int)mouseY, 0, 0, width, scaledHeight);
+    }
+
+    @Override
+    public boolean isFocusable() {
+        return false;
+    }
+
+    @Override
+    public void setFocusable(boolean focusable) {
+        throw new RuntimeException("MenuBars are not focusable!");
+    }
+
+    @Override
+    public boolean isNavigatable() {
+        return false;
+    }
+
+    @Override
+    public void setNavigatable(boolean navigatable) {
+        throw new RuntimeException("ContextMenus are not navigatable!");
     }
 
     public static abstract class MenuBarEntry extends GuiComponent implements Renderable, GuiEventListener {

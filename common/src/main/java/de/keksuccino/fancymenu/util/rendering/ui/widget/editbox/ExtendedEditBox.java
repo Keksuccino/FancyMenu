@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.EditBox;
@@ -15,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.Color;
 
 @SuppressWarnings("unused")
-public class ExtendedEditBox extends EditBox implements UniqueWidget {
+public class ExtendedEditBox extends EditBox implements UniqueWidget, NavigatableWidget {
 
     protected CharacterFilter characterFilter;
     protected CharacterRenderFormatter characterRenderFormatter;
@@ -29,6 +30,8 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget {
     protected final Font font;
     @Nullable
     protected String identifier;
+    protected boolean focusable = true;
+    protected boolean navigatable = true;
 
     public ExtendedEditBox(Font font, int x, int y, int width, int height, Component hint) {
         super(font, x, y, width, height, hint);
@@ -294,6 +297,41 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget {
     @Override
     public @Nullable String getWidgetIdentifierFancyMenu() {
         return this.identifier;
+    }
+
+    @Override
+    public void setFocused(boolean focused) {
+        if (!this.focusable) {
+            super.setFocused(false);
+            return;
+        }
+        super.setFocused(focused);
+    }
+
+    @Override
+    public boolean isFocused() {
+        if (!this.focusable) return false;
+        return super.isFocused();
+    }
+
+    @Override
+    public boolean isFocusable() {
+        return this.focusable;
+    }
+
+    @Override
+    public void setFocusable(boolean focusable) {
+        this.focusable = focusable;
+    }
+
+    @Override
+    public boolean isNavigatable() {
+        return this.navigatable;
+    }
+
+    @Override
+    public void setNavigatable(boolean navigatable) {
+        this.navigatable = navigatable;
     }
 
     @FunctionalInterface

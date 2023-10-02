@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -32,7 +33,7 @@ import java.util.List;
 import java.util.Objects;
 
 @SuppressWarnings("all")
-public class ContextMenu extends GuiComponent implements Renderable, GuiEventListener, NarratableEntry {
+public class ContextMenu extends GuiComponent implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -702,6 +703,26 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
     @Override
     public void updateNarration(@NotNull NarrationElementOutput var1) {
+    }
+
+    @Override
+    public boolean isFocusable() {
+        return false;
+    }
+
+    @Override
+    public void setFocusable(boolean focusable) {
+        throw new RuntimeException("ContextMenus are not focusable!");
+    }
+
+    @Override
+    public boolean isNavigatable() {
+        return false;
+    }
+
+    @Override
+    public void setNavigatable(boolean navigatable) {
+        throw new RuntimeException("ContextMenus are not navigatable!");
     }
 
     protected static int getScreenWidth() {

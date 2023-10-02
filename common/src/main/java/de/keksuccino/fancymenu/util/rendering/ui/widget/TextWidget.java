@@ -12,7 +12,7 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class TextWidget extends AbstractWidget implements UniqueWidget {
+public class TextWidget extends AbstractWidget implements UniqueWidget, NavigatableWidget {
 
     @Nullable
     protected String widgetIdentifier;
@@ -123,6 +123,26 @@ public class TextWidget extends AbstractWidget implements UniqueWidget {
 
     @Override
     protected void updateWidgetNarration(@NotNull NarrationElementOutput var1) {
+    }
+
+    @Override
+    public boolean isFocusable() {
+        return false;
+    }
+
+    @Override
+    public void setFocusable(boolean focusable) {
+        throw new RuntimeException("TextWidgets are not focusable!");
+    }
+
+    @Override
+    public boolean isNavigatable() {
+        return false;
+    }
+
+    @Override
+    public void setNavigatable(boolean navigatable) {
+        throw new RuntimeException("TextWidgets are not navigatable!");
     }
 
     public enum TextAlignment {

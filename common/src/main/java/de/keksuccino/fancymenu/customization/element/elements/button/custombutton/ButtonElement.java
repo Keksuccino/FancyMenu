@@ -19,7 +19,6 @@ import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
-import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -115,7 +114,7 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
     @Override
     public @Nullable List<GuiEventListener> getWidgetsToRegister() {
         if (this.getButton() == null) return null;
-        return ListUtils.build(this.getButton());
+        return List.of(this.getButton());
     }
 
     protected void renderTick() {

@@ -7,7 +7,7 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class RendererWidget extends AbstractWidget implements UniqueWidget {
+public class RendererWidget extends AbstractWidget implements UniqueWidget, NavigatableWidget {
 
     @NotNull
     protected RendererWidgetBody body;
@@ -43,6 +43,26 @@ public class RendererWidget extends AbstractWidget implements UniqueWidget {
     public RendererWidget setWidgetIdentifierFancyMenu(@Nullable String identifier) {
         this.identifier = identifier;
         return this;
+    }
+
+    @Override
+    public boolean isFocusable() {
+        return false;
+    }
+
+    @Override
+    public void setFocusable(boolean focusable) {
+        throw new RuntimeException("RendererWidgets are not focusable!");
+    }
+
+    @Override
+    public boolean isNavigatable() {
+        return false;
+    }
+
+    @Override
+    public void setNavigatable(boolean navigatable) {
+        throw new RuntimeException("RendererWidgets are not navigatable!");
     }
 
     @FunctionalInterface
