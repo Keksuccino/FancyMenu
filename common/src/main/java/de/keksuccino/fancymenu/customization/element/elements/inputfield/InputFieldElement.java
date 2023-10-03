@@ -47,8 +47,8 @@ public class InputFieldElement extends AbstractElement {
                 }
             }
 
-            this.editBox.x = this.getAbsoluteX();
-            this.editBox.y = this.getAbsoluteY();
+            this.editBox.setX(this.getAbsoluteX());
+            this.editBox.setY(this.getAbsoluteY());
             this.editBox.setWidth(this.getAbsoluteWidth());
             ((IMixinAbstractWidget)this.editBox).setHeightFancyMenu(this.getAbsoluteHeight());
             this.editBox.render(pose, mouseX, mouseY, partial);

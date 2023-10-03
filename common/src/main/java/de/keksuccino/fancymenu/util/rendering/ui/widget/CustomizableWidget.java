@@ -2,12 +2,10 @@ package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resources.PlayableResource;
 import de.keksuccino.fancymenu.util.resources.RenderableResource;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
@@ -69,6 +67,32 @@ public interface CustomizableWidget {
         return renderVanilla;
     }
 
+    default void resetWidgetCustomizationsFancyMenu() {
+        if (this.getCustomBackgroundNormalFancyMenu() instanceof PlayableResource p) p.pause();
+        if (this.getCustomBackgroundHoverFancyMenu() instanceof PlayableResource p) p.pause();
+        if (this.getCustomBackgroundInactiveFancyMenu() instanceof PlayableResource p) p.pause();
+        this.setCustomBackgroundNormalFancyMenu(null);
+        this.setCustomBackgroundHoverFancyMenu(null);
+        this.setCustomBackgroundInactiveFancyMenu(null);
+        this.setCustomBackgroundResetBehaviorFancyMenu(CustomBackgroundResetBehavior.RESET_NEVER);
+        this.setHoverSoundFancyMenu(null);
+        this.setCustomClickSoundFancyMenu(null);
+        this.setHiddenFancyMenu(false);
+        this.setCustomLabelFancyMenu(null);
+        this.setHoverLabelFancyMenu(null);
+        this.setCustomWidthFancyMenu(null);
+        this.setCustomHeightFancyMenu(null);
+        this.setCustomXFancyMenu(null);
+        this.setCustomYFancyMenu(null);
+    }
+
+    default void resetWidgetSizeAndPositionFancyMenu() {
+        this.setCustomXFancyMenu(null);
+        this.setCustomYFancyMenu(null);
+        this.setCustomWidthFancyMenu(null);
+        this.setCustomHeightFancyMenu(null);
+    }
+
     void setCustomLabelFancyMenu(@Nullable Component label);
 
     @Nullable
@@ -113,9 +137,25 @@ public interface CustomizableWidget {
     @NotNull
     CustomBackgroundResetBehavior getCustomBackgroundResetBehaviorFancyMenu();
 
-    static boolean shouldCustomizeFancyMenu() {
-        return ScreenCustomization.isCustomizationEnabledForScreen(Minecraft.getInstance().screen);
-    }
+    @Nullable
+    Integer getCustomWidthFancyMenu();
+
+    void setCustomWidthFancyMenu(@Nullable Integer width);
+
+    @Nullable
+    Integer getCustomHeightFancyMenu();
+
+    void setCustomHeightFancyMenu(@Nullable Integer height);
+
+    @Nullable
+    Integer getCustomXFancyMenu();
+
+    void setCustomXFancyMenu(@Nullable Integer x);
+
+    @Nullable
+    Integer getCustomYFancyMenu();
+
+    void setCustomYFancyMenu(@Nullable Integer y);
 
     enum CustomBackgroundResetBehavior {
         RESET_NEVER,

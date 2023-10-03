@@ -8,3 +8,8 @@ CHANGELOG | FANCYMENU v3.0.0 CLOSED ALPHA 3
 - The Image background type now supports local and web GIF images
 - Text element grabber textures now support GIF images
 - The File Explorer screens (Choose and Save File) now display previews for GIF images
+ 
+- Fixed: Tab and arrow key navigation broke in menu screens
+- Fixed: Unable to focus custom buttons via tab/arrow key navigation
+- Fixed: Unable to focus custom input fields via tab/arrow key navigation
+- Fixed: Resizing and moving Vanilla widgets is broken

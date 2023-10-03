@@ -1,20 +1,23 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.mojang.datafixers.util.Pair;
+import de.keksuccino.fancymenu.util.UnoptimizedMixin;
 import net.minecraft.client.gui.ComponentPath;
+import net.minecraft.client.gui.components.TabOrderedElement;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.navigation.*;
-import org.apache.logging.log4j.LogManager;
 import org.joml.Vector2i;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import org.spongepowered.asm.mixin.Shadow;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import javax.annotation.Nullable;
+import java.util.*;
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 
+@UnoptimizedMixin("This class overrides methods. At the moment it seems like there's no other way.")
 @Mixin(ContainerEventHandler.class)
 public interface MixinContainerEventHandler {
 
@@ -23,9 +26,45 @@ public interface MixinContainerEventHandler {
      * @reason This is to add handling for {@link NavigatableWidget}s. Since you can't inject into interfaces, this is the only way to achieve that.
      */
     @Overwrite
-    default ComponentPath nextFocusPathInDirection(ScreenRectangle $$0, ScreenDirection $$1, GuiEventListener $$2, FocusNavigationEvent $$3) {
+    default ComponentPath handleTabNavigation(FocusNavigationEvent.TabNavigation navigation) {
 
-        LogManager.getLogger().info("########################## NEXT FOCUS PATH IN DIRECTION");
+        boolean flag = navigation.forward();
+        GuiEventListener guieventlistener = this.getFocused();
+        List<? extends GuiEventListener> list = new ArrayList<>(this.children());
+        list.removeIf(guiEventListener -> (guiEventListener instanceof NavigatableWidget n) && (!n.isFocusable() || !n.isNavigatable()));
+        list.sort(Comparator.comparingInt(TabOrderedElement::getTabOrderGroup));
+        int j = list.indexOf(guieventlistener);
+        int i;
+        if (guieventlistener != null && j >= 0) {
+            i = j + (flag ? 1 : 0);
+        } else if (flag) {
+            i = 0;
+        } else {
+            i = list.size();
+        }
+
+        ListIterator<? extends GuiEventListener> listiterator = list.listIterator(i);
+        BooleanSupplier booleansupplier = flag ? listiterator::hasNext : listiterator::hasPrevious;
+        Supplier<? extends GuiEventListener> supplier = flag ? listiterator::next : listiterator::previous;
+
+        while(booleansupplier.getAsBoolean()) {
+            GuiEventListener guieventlistener1 = supplier.get();
+            ComponentPath componentpath = guieventlistener1.nextFocusPath(navigation);
+            if (componentpath != null) {
+                return ComponentPath.path((ContainerEventHandler)((Object)this), componentpath);
+            }
+        }
+
+        return null;
+
+    }
+
+    /**
+     * @author Keksuccino (FancyMenu)
+     * @reason This is to add handling for {@link NavigatableWidget}s. Since you can't inject into interfaces, this is the only way to achieve that.
+     */
+    @Overwrite
+    default ComponentPath nextFocusPathInDirection(ScreenRectangle $$0, ScreenDirection $$1, GuiEventListener $$2, FocusNavigationEvent $$3) {
 
         ScreenAxis $$4 = $$1.getAxis();
         ScreenAxis $$5 = $$4.orthogonal();
@@ -34,7 +73,7 @@ public interface MixinContainerEventHandler {
         List<GuiEventListener> $$8 = new ArrayList<>();
 
         List<GuiEventListener> filteredChildren = new ArrayList<>(this.children());
-        filteredChildren.removeIf(guiEventListener -> (guiEventListener instanceof NavigatableWidget n) && !n.isNavigatable());
+        filteredChildren.removeIf(guiEventListener -> (guiEventListener instanceof NavigatableWidget n) && (!n.isNavigatable() || !n.isFocusable()));
 
         for(GuiEventListener $$9 : filteredChildren) {
             if ($$9 != $$2) {
@@ -65,18 +104,11 @@ public interface MixinContainerEventHandler {
             }
         }
 
-        return this.nextFocusPathVaguelyInDirection($$0, $$1, $$2, $$3);
+        return this.nextFocusPathVaguelyInDirectionFancyMenu($$0, $$1, $$2, $$3);
 
     }
 
-    /**
-     * @author Keksuccino (FancyMenu)
-     * @reason This is to add handling for {@link NavigatableWidget}s. Since you can't inject into interfaces, this is the only way to achieve that.
-     */
-    @Overwrite
-    default ComponentPath nextFocusPathVaguelyInDirection(ScreenRectangle $$0, ScreenDirection $$1, GuiEventListener $$2, FocusNavigationEvent $$3) {
-
-        LogManager.getLogger().info("########################## NEXT FOCUS PATH VAGUELY IN DIRECTION");
+    default ComponentPath nextFocusPathVaguelyInDirectionFancyMenu(ScreenRectangle $$0, ScreenDirection $$1, GuiEventListener $$2, FocusNavigationEvent $$3) {
 
         ScreenAxis $$4 = $$1.getAxis();
         ScreenAxis $$5 = $$4.orthogonal();
@@ -84,7 +116,7 @@ public interface MixinContainerEventHandler {
         ScreenPosition $$7 = ScreenPosition.of($$4, $$0.getBoundInDirection($$1), $$0.getCenterInAxis($$5));
 
         List<GuiEventListener> filteredChildren = new ArrayList<>(this.children());
-        filteredChildren.removeIf(guiEventListener -> (guiEventListener instanceof NavigatableWidget n) && !n.isNavigatable());
+        filteredChildren.removeIf(guiEventListener -> (guiEventListener instanceof NavigatableWidget n) && (!n.isNavigatable() || !n.isFocusable()));
 
         for(GuiEventListener $$8 : filteredChildren) {
             if ($$8 != $$2) {
@@ -109,6 +141,8 @@ public interface MixinContainerEventHandler {
         return null;
 
     }
+
+    @Shadow @Nullable GuiEventListener getFocused();
 
     @Shadow List<? extends GuiEventListener> children();
 

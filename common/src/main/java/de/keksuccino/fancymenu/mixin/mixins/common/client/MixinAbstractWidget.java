@@ -33,6 +33,8 @@ public abstract class MixinAbstractWidget extends GuiComponent implements Custom
 	@Shadow public boolean visible;
 	@Shadow public boolean active;
 	@Shadow protected boolean isHovered;
+	@Shadow protected int height;
+	@Shadow protected int width;
 
 	@Unique @Nullable
 	private String widgetIdentifierFancyMenu;
@@ -56,31 +58,48 @@ public abstract class MixinAbstractWidget extends GuiComponent implements Custom
 	private RenderableResource customBackgroundInactiveFancyMenu;
 	@Unique @NotNull
 	private CustomBackgroundResetBehavior customBackgroundResetBehaviorFancyMenu = CustomBackgroundResetBehavior.RESET_NEVER;
+	@Unique @Nullable
+	private Integer customWidthFancyMenu;
+	@Unique @Nullable
+	private Integer customHeightFancyMenu;
+	@Unique @Nullable
+	private Integer customXFancyMenu;
+	@Unique @Nullable
+	private Integer customYFancyMenu;
+	@Unique @Nullable
+	private Integer cachedOriginalWidth;
+	@Unique @Nullable
+	private Integer cachedOriginalHeight;
 	
 	@Inject(method = "render", at = @At(value = "HEAD"), cancellable = true)
-	private void beforeRenderFancyMenu(PoseStack matrix, int mouseX, int mouseY, float partial, CallbackInfo info) {
+	private void beforeRenderFancyMenu(PoseStack pose, int mouseX, int mouseY, float partial, CallbackInfo info) {
 
-		if (CustomizableWidget.shouldCustomizeFancyMenu()) {
+		if (this.customWidthFancyMenu != null) {
+			if (this.cachedOriginalWidth == null) this.cachedOriginalWidth = this.width;
+			this.width = this.customWidthFancyMenu;
+		}
+		if (this.customHeightFancyMenu != null) {
+			if (this.cachedOriginalHeight == null) this.cachedOriginalHeight = this.height;
+			this.height = this.customHeightFancyMenu;
+		}
 
-			//Handle onHoverStart
-			if (!this.hiddenFancyMenu && this.visible && this.active && this.getWidgetFancyMenu().isHovered() && (this.lastHoverStateFancyMenu != this.getWidgetFancyMenu().isHovered())) {
-				this.onHoverStartFancyMenu();
-			}
-			this.lastHoverStateFancyMenu = this.getWidgetFancyMenu().isHovered();
+		//Handle onHoverStart
+		if (!this.hiddenFancyMenu && this.visible && this.active && this.getWidgetFancyMenu().isHovered() && (this.lastHoverStateFancyMenu != this.getWidgetFancyMenu().isHovered())) {
+			this.onHoverStartFancyMenu();
+		}
+		this.lastHoverStateFancyMenu = this.getWidgetFancyMenu().isHovered();
 
-			//Handle Hidden State
-			if (this.hiddenFancyMenu) {
-				this.isHovered = false;
-				this.setFocused(false);
-				info.cancel();
-				return;
-			}
-
+		//Handle Hidden State
+		if (this.hiddenFancyMenu) {
+			this.isHovered = false;
+			this.setFocused(false);
+			info.cancel();
+			return;
 		}
 
 		//Fire RenderWidgetEvent.Pre
 		try {
-			RenderWidgetEvent.Pre e = new RenderWidgetEvent.Pre(matrix, this.getWidgetFancyMenu(), this.alpha);
+			RenderWidgetEvent.Pre e = new RenderWidgetEvent.Pre(pose, this.getWidgetFancyMenu(), this.alpha);
 			EventHandler.INSTANCE.postEvent(e);
 			this.alpha = e.getAlpha();
 			if (e.isCanceled()) {
@@ -92,20 +111,22 @@ public abstract class MixinAbstractWidget extends GuiComponent implements Custom
 
 	}
 	
-	@Inject(method = "render", at = @At(value = "TAIL"))
-	private void afterRenderFancyMenu(PoseStack matrix, int mouseX, int mouseY, float partial, CallbackInfo info) {
-		if (this.hiddenFancyMenu && CustomizableWidget.shouldCustomizeFancyMenu()) return;
+	@Inject(method = "render", at = @At(value = "RETURN"))
+	private void afterRenderFancyMenu(PoseStack pose, int mouseX, int mouseY, float partial, CallbackInfo info) {
+
+		if (this.hiddenFancyMenu) return;
+
 		try {
-			RenderWidgetEvent.Post e = new RenderWidgetEvent.Post(matrix, this.getWidgetFancyMenu(), this.alpha);
+			RenderWidgetEvent.Post e = new RenderWidgetEvent.Post(pose, this.getWidgetFancyMenu(), this.alpha);
 			EventHandler.INSTANCE.postEvent(e);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
 	}
 	
 	@Inject(method = "playDownSound", at = @At(value = "HEAD"), cancellable = true)
 	private void beforeWidgetClickSoundFancyMenu(SoundManager manager, CallbackInfo info) {
-		if (!CustomizableWidget.shouldCustomizeFancyMenu()) return;
 		if (this.customClickSoundFancyMenu != null) {
 			File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(this.customClickSoundFancyMenu));
 			if (f.isFile() && f.getPath().toLowerCase().endsWith(".wav")) {
@@ -119,7 +140,6 @@ public abstract class MixinAbstractWidget extends GuiComponent implements Custom
 
 	@Inject(method = "getMessage", at = @At("RETURN"), cancellable = true)
 	private void onGetMessageFancyMenu(CallbackInfoReturnable<Component> info) {
-		if (!CustomizableWidget.shouldCustomizeFancyMenu()) return;
 		AbstractWidget w = this.getWidgetFancyMenu();
 		if (w.isHoveredOrFocused() && w.visible && w.active && (this.hoverLabelFancyMenu != null)) info.setReturnValue(this.hoverLabelFancyMenu);
 		if (this.customLabelFancyMenu != null) info.setReturnValue(this.customLabelFancyMenu);
@@ -127,20 +147,45 @@ public abstract class MixinAbstractWidget extends GuiComponent implements Custom
 
 	@Inject(method = "isMouseOver", at = @At("HEAD"), cancellable = true)
 	private void beforeIsMouseOverFancyMenu(double $$0, double $$1, CallbackInfoReturnable<Boolean> info) {
-		if (!CustomizableWidget.shouldCustomizeFancyMenu()) return;
 		if (this.hiddenFancyMenu) info.setReturnValue(false);
 	}
 
 	@Inject(method = "isValidClickButton", at = @At("HEAD"), cancellable = true)
 	private void beforeIsValidClickButtonFancyMenu(int $$0, CallbackInfoReturnable<Boolean> info) {
-		if (!CustomizableWidget.shouldCustomizeFancyMenu()) return;
 		if (this.hiddenFancyMenu) info.setReturnValue(false);
 	}
 
 	@Inject(method = "nextFocusPath", at = @At("HEAD"), cancellable = true)
 	private void beforeNextFocusPathFancyMenu(FocusNavigationEvent $$0, CallbackInfoReturnable<ComponentPath> info) {
-		if (!CustomizableWidget.shouldCustomizeFancyMenu()) return;
 		if (this.hiddenFancyMenu) info.setReturnValue(null);
+	}
+
+	@Inject(method = "getX", at = @At("HEAD"), cancellable = true)
+	private void beforeGetXFancyMenu(CallbackInfoReturnable<Integer> info) {
+		if (this.customXFancyMenu != null) {
+			info.setReturnValue(this.customXFancyMenu);
+		}
+	}
+
+	@Inject(method = "getY", at = @At("HEAD"), cancellable = true)
+	private void beforeGetYFancyMenu(CallbackInfoReturnable<Integer> info) {
+		if (this.customYFancyMenu != null) {
+			info.setReturnValue(this.customYFancyMenu);
+		}
+	}
+
+	@Inject(method = "getWidth", at = @At("HEAD"), cancellable = true)
+	private void beforeGetWidthFancyMenu(CallbackInfoReturnable<Integer> info) {
+		if (this.customWidthFancyMenu != null) {
+			info.setReturnValue(this.customWidthFancyMenu);
+		}
+	}
+
+	@Inject(method = "getHeight", at = @At("HEAD"), cancellable = true)
+	private void beforeGetHeightFancyMenu(CallbackInfoReturnable<Integer> info) {
+		if (this.customHeightFancyMenu != null) {
+			info.setReturnValue(this.customHeightFancyMenu);
+		}
 	}
 
 	@Shadow public abstract void setFocused(boolean bl);
@@ -162,6 +207,24 @@ public abstract class MixinAbstractWidget extends GuiComponent implements Custom
 	@Unique
 	private AbstractWidget getWidgetFancyMenu() {
 		return (AbstractWidget)((Object)this);
+	}
+
+	@Override
+	public void resetWidgetCustomizationsFancyMenu() {
+		CustomizableWidget.super.resetWidgetCustomizationsFancyMenu();
+		if (this.cachedOriginalWidth != null) this.width = this.cachedOriginalWidth;
+		if (this.cachedOriginalHeight != null) this.height = this.cachedOriginalHeight;
+		this.cachedOriginalWidth = null;
+		this.cachedOriginalHeight = null;
+	}
+
+	@Override
+	public void resetWidgetSizeAndPositionFancyMenu() {
+		CustomizableWidget.super.resetWidgetSizeAndPositionFancyMenu();
+		if (this.cachedOriginalWidth != null) this.width = this.cachedOriginalWidth;
+		if (this.cachedOriginalHeight != null) this.height = this.cachedOriginalHeight;
+		this.cachedOriginalWidth = null;
+		this.cachedOriginalHeight = null;
 	}
 
 	@Unique
@@ -274,6 +337,58 @@ public abstract class MixinAbstractWidget extends GuiComponent implements Custom
 	@Override
 	public void setHiddenFancyMenu(boolean hiddenFancyMenu) {
 		this.hiddenFancyMenu = hiddenFancyMenu;
+	}
+
+	@Unique
+	@Nullable
+	@Override
+	public Integer getCustomWidthFancyMenu() {
+		return this.customWidthFancyMenu;
+	}
+
+	@Unique
+	@Override
+	public void setCustomWidthFancyMenu(@Nullable Integer customWidthFancyMenu) {
+		this.customWidthFancyMenu = customWidthFancyMenu;
+	}
+
+	@Unique
+	@Nullable
+	@Override
+	public Integer getCustomHeightFancyMenu() {
+		return this.customHeightFancyMenu;
+	}
+
+	@Unique
+	@Override
+	public void setCustomHeightFancyMenu(@Nullable Integer customHeightFancyMenu) {
+		this.customHeightFancyMenu = customHeightFancyMenu;
+	}
+
+	@Unique
+	@Nullable
+	@Override
+	public Integer getCustomXFancyMenu() {
+		return this.customXFancyMenu;
+	}
+
+	@Unique
+	@Override
+	public void setCustomXFancyMenu(@Nullable Integer customXFancyMenu) {
+		this.customXFancyMenu = customXFancyMenu;
+	}
+
+	@Unique
+	@Nullable
+	@Override
+	public Integer getCustomYFancyMenu() {
+		return this.customYFancyMenu;
+	}
+
+	@Unique
+	@Override
+	public void setCustomYFancyMenu(@Nullable Integer customYFancyMenu) {
+		this.customYFancyMenu = customYFancyMenu;
 	}
 
 	@SuppressWarnings("all")

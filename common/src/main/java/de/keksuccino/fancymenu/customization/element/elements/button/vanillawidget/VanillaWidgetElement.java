@@ -17,13 +17,14 @@ import java.util.List;
 
 public class VanillaWidgetElement extends ButtonElement implements IHideableElement {
 
+    //TODO FIXEN: Vanilla Widgets in modern screens (create world, etc.) broken
+    //TODO FIXEN: Vanilla Widgets in modern screens (create world, etc.) broken
+    //TODO FIXEN: Vanilla Widgets in modern screens (create world, etc.) broken
+    //TODO FIXEN: Vanilla Widgets in modern screens (create world, etc.) broken
+
     private static final Logger LOGGER = LogManager.getLogger();
 
     public WidgetMeta widgetMeta;
-    public int originalX;
-    public int originalY;
-    public int originalWidth;
-    public int originalHeight;
     public boolean vanillaButtonHidden = false;
     public int automatedButtonClicks = 0;
     protected boolean automatedButtonClicksDone = false;
@@ -37,11 +38,41 @@ public class VanillaWidgetElement extends ButtonElement implements IHideableElem
     protected void renderElementWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
         ((CustomizableWidget)this.button).setHiddenFancyMenu((isEditor() || this.isCopyrightButton()) ? false : this.vanillaButtonHidden);
         super.renderElementWidget(pose, mouseX, mouseY, partial);
+        if (this.anchorPoint == ElementAnchorPoints.VANILLA) {
+            this.resetVanillaWidgetSizeAndPosition();
+            this.mirrorVanillaButtonSizeAndPosition();
+        }
     }
 
     @Override
     public @Nullable List<GuiEventListener> getWidgetsToRegister() {
         return null;
+    }
+
+    @Override
+    protected void updateWidgetPosition() {
+        if (this.getButton() instanceof CustomizableWidget w) {
+            if (this.anchorPoint != ElementAnchorPoints.VANILLA) {
+                w.setCustomXFancyMenu(this.getAbsoluteX());
+                w.setCustomYFancyMenu(this.getAbsoluteY());
+            } else {
+                w.setCustomXFancyMenu(null);
+                w.setCustomYFancyMenu(null);
+            }
+        }
+    }
+
+    @Override
+    protected void updateWidgetSize() {
+        if (this.getButton() instanceof CustomizableWidget w) {
+            if (this.anchorPoint != ElementAnchorPoints.VANILLA) {
+                w.setCustomWidthFancyMenu(this.getAbsoluteWidth());
+                w.setCustomHeightFancyMenu(this.getAbsoluteHeight());
+            } else {
+                w.setCustomWidthFancyMenu(null);
+                w.setCustomHeightFancyMenu(null);
+            }
+        }
     }
 
     @Override
@@ -69,52 +100,6 @@ public class VanillaWidgetElement extends ButtonElement implements IHideableElem
     }
 
     @Override
-    public int getAbsoluteX() {
-        if ((this.button != null) && (this.anchorPoint == ElementAnchorPoints.VANILLA)) {
-            int bX = this.posOffsetX;
-            this.posOffsetX = this.originalX;
-            int x = super.getAbsoluteX();
-            this.posOffsetX = bX;
-            return x;
-        }
-        return super.getAbsoluteX();
-    }
-
-    @Override
-    public int getAbsoluteY() {
-        if ((this.button != null) && (this.anchorPoint == ElementAnchorPoints.VANILLA)) {
-            int bY = this.posOffsetY;
-            this.posOffsetY = this.originalY;
-            int y = super.getAbsoluteY();
-            this.posOffsetY = bY;
-            return y;
-        }
-        return super.getAbsoluteY();
-    }
-
-    @Override
-    public int getAbsoluteWidth() {
-        if ((this.button != null) && ((this.anchorPoint == ElementAnchorPoints.VANILLA) || (this.baseWidth == 0))) {
-            this.baseWidth = this.originalWidth;
-            int w = super.getAbsoluteWidth();
-            this.baseWidth = 0;
-            return w;
-        }
-        return super.getAbsoluteWidth();
-    }
-
-    @Override
-    public int getAbsoluteHeight() {
-        if ((this.button != null) && ((this.anchorPoint == ElementAnchorPoints.VANILLA) || (this.baseHeight == 0))) {
-            this.baseHeight = this.originalHeight;
-            int h = super.getAbsoluteHeight();
-            this.baseHeight = 0;
-            return h;
-        }
-        return super.getAbsoluteHeight();
-    }
-
-    @Override
     public @NotNull String getInstanceIdentifier() {
         if (this.widgetMeta != null) {
             return "vanillabtn:" + this.widgetMeta.getIdentifier();
@@ -122,13 +107,33 @@ public class VanillaWidgetElement extends ButtonElement implements IHideableElem
         return super.getInstanceIdentifier();
     }
 
-    public void setVanillaButton(WidgetMeta data) {
+    public void setVanillaButton(WidgetMeta data, boolean mirrorButtonSizeAndPos) {
         this.widgetMeta = data;
         this.button = data.getWidget();
-        this.originalX = this.button.x;
-        this.originalY = this.button.y;
-        this.originalWidth = this.button.getWidth();
-        this.originalHeight = this.button.getHeight();
+        if (mirrorButtonSizeAndPos) this.mirrorVanillaButtonSizeAndPosition();
+    }
+
+    public void mirrorVanillaButtonSizeAndPosition() {
+        this.mirrorVanillaButtonSize();
+        this.mirrorVanillaButtonPosition();
+    }
+
+    public void mirrorVanillaButtonSize() {
+        if (this.getButton() == null) return;
+        this.baseWidth = this.getButton().getWidth();
+        this.baseHeight = this.getButton().getHeight();
+    }
+
+    public void mirrorVanillaButtonPosition() {
+        if (this.getButton() == null) return;
+        this.posOffsetX = this.getButton().getX();
+        this.posOffsetY = this.getButton().getY();
+    }
+
+    public void resetVanillaWidgetSizeAndPosition() {
+        if (this.getButton() instanceof CustomizableWidget w) {
+            w.resetWidgetSizeAndPositionFancyMenu();
+        }
     }
 
     @Override

@@ -190,7 +190,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
             ResourceLocation loc = this.previewTexture.getResourceLocation();
             if (loc != null) {
                 AspectRatio ratio = this.previewTexture.getAspectRatio();
-                int[] size = ratio.getAspectRatioSizeByMaximumSize((this.width / 2) - 40, (this.cancelButton.y - 50) - (50 + 15));
+                int[] size = ratio.getAspectRatioSizeByMaximumSize((this.width / 2) - 40, (this.cancelButton.getY() - 50) - (50 + 15));
                 int w = size[0];
                 int h = size[1];
                 int x = this.width - 20 - w;
@@ -217,8 +217,8 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         int yEnd = y + height;
         fill(pose, x + 1, y + 1, xEnd - 1, yEnd - 1, UIBase.getUIColorTheme().area_background_color.getColorInt());
         UIBase.renderBorder(pose, x, y, xEnd, yEnd, 1, UIBase.getUIColorTheme().element_border_color_normal.getColor(), true, true, true, true);
-        this.currentDirectoryComponent.x = x + 4;
-        this.currentDirectoryComponent.y = y + (height / 2) - (this.currentDirectoryComponent.getHeight() / 2);
+        this.currentDirectoryComponent.setX(x + 4);
+        this.currentDirectoryComponent.setY(y + (height / 2) - (this.currentDirectoryComponent.getHeight() / 2));
         this.currentDirectoryComponent.render(pose, mouseX, mouseY, partial);
         return yEnd;
     }

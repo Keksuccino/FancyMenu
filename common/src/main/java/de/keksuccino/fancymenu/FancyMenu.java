@@ -19,11 +19,23 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO Vanilla widget size + pos customization nach CustomizableWidget verschieben
+	//TODO FIXEN: Modern screen widgets broken (create world, etc.)
 
 	//TODO Customizations aus CustomizableSlider interface in AbstractSliderButton implementieren
 
-	//TODO FIXEN: Vanilla element resizing broken
+	//TODO vanilla button background customization re-implementieren (jetzt via customizable widget)
+
+	//TODO "Open Custom GUI" zu custom GUI context menu und Manage screen adden
+
+	//TODO Neue audio lib schreiben
+	// - Melody
+	// - Nutzt separate audio lib (nach lib suchen, die OGG unterstützt)
+	// - Alle MC audio channel supporten
+	// - Sollte nahtlos mit Channel volume eigenes volume ändern
+
+	//TODO Simple Video Renderer schreiben
+	// - Nach "Video Frame InputStream" googlen
+	// - Evtl. mit Java-eigenen libs arbeiten
 
 	//TODO FIXEN: Neues element wird bei last mouse right-click pos geaddet, wenn man per menu bar addet (sollte oben links geaddet werden)
 	// - Bei Menu Bar click cached mouse pos auf X30 Y30 setzen ??

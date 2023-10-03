@@ -64,8 +64,8 @@ public class VanillaButtonHandler {
             int ay = backgroundAnimation.animationRenderer.getPosY();
             backgroundAnimation.animationRenderer.setWidth(w.getWidth());
             backgroundAnimation.animationRenderer.setHeight(w.getHeight());
-            backgroundAnimation.animationRenderer.setPosX(w.x);
-            backgroundAnimation.animationRenderer.setPosY(w.y);
+            backgroundAnimation.animationRenderer.setPosX(w.getX());
+            backgroundAnimation.animationRenderer.setPosY(w.getY());
             backgroundAnimation.animationRenderer.setOpacity(backgroundAnimation.opacity);
             backgroundAnimation.animationRenderer.setLooped(backgroundAnimation.loop);
             backgroundAnimation.animationRenderer.render(e.getPoseStack());
@@ -81,7 +81,7 @@ public class VanillaButtonHandler {
             if (w instanceof ImageButton) {
                 Component msg = w.getMessage();
                 int j = w.active ? 16777215 : 10526880;
-                GuiComponent.drawCenteredString(e.getPoseStack(), Minecraft.getInstance().font, msg, w.x + w.getWidth() / 2, w.y + (w.getHeight() - 8) / 2, j | Mth.ceil(e.getAlpha() * 255.0F) << 24);
+                GuiComponent.drawCenteredString(e.getPoseStack(), Minecraft.getInstance().font, msg, w.getX() + w.getWidth() / 2, w.getY() + (w.getHeight() - 8) / 2, j | Mth.ceil(e.getAlpha() * 255.0F) << 24);
             }
             e.setCanceled(true);
         }

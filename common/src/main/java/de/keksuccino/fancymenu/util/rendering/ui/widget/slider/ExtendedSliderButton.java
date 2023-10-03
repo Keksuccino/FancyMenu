@@ -116,7 +116,7 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
 
         if (this.visible) {
 
-            this.isHovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
+            this.isHovered = mouseX >= this.getX() && mouseY >= this.getY() && mouseX < this.getX() + this.width && mouseY < this.getY() + this.height;
 
             if (!this.isHoveredOrFocused() && MouseInput.isLeftMouseDown()) {
                 this.leftDownNotHovered = true;

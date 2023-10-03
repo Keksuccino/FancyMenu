@@ -85,19 +85,19 @@ public class TextInputScreen extends Screen {
         int titleWidth = Minecraft.getInstance().font.width(t);
         this.font.draw(pose, t, (int)(this.width / 2) - (int)(titleWidth / 2), (int)(this.height / 2) - 30, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
 
-        this.input.x = (this.width / 2) - (this.input.getWidth() / 2);
-        this.input.y = (this.height / 2) - (this.input.getHeight() / 2);
+        this.input.setX((this.width / 2) - (this.input.getWidth() / 2));
+        this.input.setY((this.height / 2) - (this.input.getHeight() / 2));
         this.input.render(pose, mouseX, mouseY, partial);
 
-        this.cancelButton.x = (this.width / 2) - 5 - this.cancelButton.getWidth();
-        this.cancelButton.y = this.height - 40;
+        this.cancelButton.setX((this.width / 2) - 5 - this.cancelButton.getWidth());
+        this.cancelButton.setY(this.height - 40);
         this.cancelButton.render(pose, mouseX, mouseY, partial);
 
         this.doneButton.active = this.isTextValid();
         if (this.textValidatorFeedbackTooltip != null) this.textValidatorFeedbackTooltip.setDefaultStyle();
         this.doneButton.setTooltip(this.textValidatorFeedbackTooltip);
-        this.doneButton.x = (this.width / 2) + 5;
-        this.doneButton.y = this.height - 40;
+        this.doneButton.setX((this.width / 2) + 5);
+        this.doneButton.setY(this.height - 40);
         this.doneButton.render(pose, mouseX, mouseY, partial);
 
     }

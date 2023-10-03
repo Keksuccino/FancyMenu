@@ -40,6 +40,7 @@ import de.keksuccino.fancymenu.util.*;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.SaveFileScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
@@ -69,20 +70,19 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 	public List<AbstractEditorElement> normalEditorElements = new ArrayList<>();
 	public List<VanillaWidgetEditorElement> vanillaWidgetEditorElements = new ArrayList<>();
 	public List<AbstractDeepEditorElement> deepEditorElements = new ArrayList<>();
-
 	public LayoutEditorHistory history = new LayoutEditorHistory(this);
 	public MenuBar menuBar;
 	public AnchorPointOverlay anchorPointOverlay = new AnchorPointOverlay(this);
 	public ContextMenu rightClickMenu;
 	public ContextMenu activeElementContextMenu = null;
 	public List<AbstractLayoutEditorWidget> layoutEditorWidgets = new ArrayList<>();
-
 	protected boolean isMouseSelection = false;
 	protected int mouseSelectionStartX = 0;
 	protected int mouseSelectionStartY = 0;
 	protected int rightClickMenuOpenPosX = -1000;
 	protected int rightClickMenuOpenPosY = -1000;
 	protected LayoutEditorHistory.Snapshot preDragElementSnapshot;
+	public final List<WidgetMeta> cachedVanillaWidgetMetas = new ArrayList<>();
 
 	public LayoutEditorScreen(@NotNull Layout layout) {
 		this(null, layout);
@@ -113,6 +113,12 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 	@Override
 	protected void init() {
+
+		for (WidgetMeta m : this.cachedVanillaWidgetMetas) {
+			if (m.getWidget() instanceof CustomizableWidget w) {
+				w.resetWidgetCustomizationsFancyMenu();
+			}
+		}
 
 		//Build widget instances only once (don't build in constructor to avoid stack overflows in builders)
 		if ((this.layoutEditorWidgets == null) || this.layoutEditorWidgets.isEmpty()) {
@@ -426,9 +432,17 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		List<VanillaWidgetElement> vanillaWidgetElements = (this.layoutTargetScreen != null) ? new ArrayList<>() : null;
 		List<AbstractDeepElement> deepElements = (this.layoutTargetScreen != null) ? new ArrayList<>() : null;
 
-		List<WidgetMeta> vanillaWidgetMetaList = (this.layoutTargetScreen != null) ? ScreenWidgetDiscoverer.getWidgetsOfScreen(this.layoutTargetScreen, true, false) : null;
+		this.cachedVanillaWidgetMetas.clear();
+		if (this.layoutTargetScreen != null) {
+			this.cachedVanillaWidgetMetas.addAll(ScreenWidgetDiscoverer.getWidgetsOfScreen(this.layoutTargetScreen, true, false));
+		}
+		for (WidgetMeta m : this.cachedVanillaWidgetMetas) {
+			if (m.getWidget() instanceof CustomizableWidget w) {
+				w.resetWidgetCustomizationsFancyMenu();
+			}
+		}
 
-		this.constructElementInstances(this.layout.screenIdentifier, vanillaWidgetMetaList, this.layout, normalElements, vanillaWidgetElements, deepElements);
+		this.constructElementInstances(this.layout.screenIdentifier, this.cachedVanillaWidgetMetas, this.layout, normalElements, vanillaWidgetElements, deepElements);
 
 		//Wrap normal elements
 		for (AbstractElement e : ListUtils.mergeLists(normalElements.backgroundElements, normalElements.foregroundElements)) {

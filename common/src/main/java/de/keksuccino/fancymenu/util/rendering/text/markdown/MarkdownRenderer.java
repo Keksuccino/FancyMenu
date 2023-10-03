@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.FocuslessContainerEventHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
@@ -21,7 +22,7 @@ import java.util.List;
 import java.util.Objects;
 
 @SuppressWarnings("unused")
-public class MarkdownRenderer extends GuiComponent implements Renderable, FocuslessContainerEventHandler, NarratableEntry {
+public class MarkdownRenderer extends GuiComponent implements Renderable, FocuslessContainerEventHandler, NarratableEntry, NavigatableWidget {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -524,6 +525,26 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
 
     @Override
     public void updateNarration(@NotNull NarrationElementOutput var1) {
+    }
+
+    @Override
+    public boolean isFocusable() {
+        return false;
+    }
+
+    @Override
+    public void setFocusable(boolean focusable) {
+        throw new RuntimeException("MarkdownRenderers are not focusable.");
+    }
+
+    @Override
+    public boolean isNavigatable() {
+        return false;
+    }
+
+    @Override
+    public void setNavigatable(boolean navigatable) {
+        throw new RuntimeException("MarkdownRenderers are not navigatable.");
     }
 
     public enum TextCase {

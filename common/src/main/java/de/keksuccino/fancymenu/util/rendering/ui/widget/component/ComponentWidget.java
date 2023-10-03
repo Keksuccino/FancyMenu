@@ -83,16 +83,16 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
 
         RenderSystem.enableBlend();
 
-        this.endX = this.x;
+        this.endX = this.getX();
         if (this.shadow) {
-            this.endX = this.font.drawShadow(pose, this.getText(), this.x, this.y, this.getBaseColor().getColorInt());
+            this.endX = this.font.drawShadow(pose, this.getText(), this.getX(), this.getY(), this.getBaseColor().getColorInt());
         } else {
-            this.endX = this.font.draw(pose, this.getText(), this.x, this.y, this.getBaseColor().getColorInt());
+            this.endX = this.font.draw(pose, this.getText(), this.getX(), this.getY(), this.getBaseColor().getColorInt());
         }
 
         for (ComponentWidget c : this.children) {
-            c.x = this.endX;
-            c.y = this.y;
+            c.setX(this.endX);
+            c.setY(this.getY());
             c.render(pose, mouseX, mouseY, partial);
             this.endX = c.endX;
         }

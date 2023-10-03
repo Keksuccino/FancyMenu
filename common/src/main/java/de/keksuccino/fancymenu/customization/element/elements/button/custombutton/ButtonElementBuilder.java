@@ -35,7 +35,8 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
                 element.getExecutableBlock().execute();
             }
         });
-        ((ExtendedButton)element.button).setFocusable(false);
+//        ((ExtendedButton)element.button).setFocusable(false);
+//        ((ExtendedButton)element.button).setNavigatable(false);
         return element;
     }
 
@@ -76,7 +77,8 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         element.button = new ExtendedButton(0, 0, 0, 0, Component.literal(""), (press) -> {
             element.getExecutableBlock().execute();
         });
-        ((ExtendedButton)element.button).setFocusable(false);
+//        ((ExtendedButton)element.button).setFocusable(false);
+//        ((ExtendedButton)element.button).setNavigatable(false);
 
         element.clickSound = serialized.getValue("clicksound");
         if (element.clickSound != null) {

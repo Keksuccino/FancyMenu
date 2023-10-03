@@ -126,7 +126,7 @@ public class MixinMinecraft {
 	private void beforeResizeCurrentScreenFancyMenu(CallbackInfo info) {
 		if (this.screen != null) {
 			RenderingUtils.resetGuiScale();
-			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(screen));
+			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(this.screen));
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(this.screen));
 		}
 	}

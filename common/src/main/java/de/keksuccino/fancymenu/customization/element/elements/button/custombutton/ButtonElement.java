@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
+import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.widget.VanillaButtonHandler;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
@@ -78,10 +79,8 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
         this.renderTick();
 
         this.getButton().setAlpha(this.opacity);
-        this.getButton().setX(this.getAbsoluteX());
-        this.getButton().setY(this.getAbsoluteY());
-        this.getButton().setWidth(this.getAbsoluteWidth());
-        ((IMixinAbstractWidget)this.getButton()).setHeightFancyMenu(this.getAbsoluteHeight());
+        this.updateWidgetPosition();
+        this.updateWidgetSize();
 
         if (isEditor()) {
             this.button.visible = true;
@@ -115,6 +114,18 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
     public @Nullable List<GuiEventListener> getWidgetsToRegister() {
         if (this.getButton() == null) return null;
         return List.of(this.getButton());
+    }
+
+    protected void updateWidgetPosition() {
+        if (this.getButton() == null) return;
+        this.getButton().setX(this.getAbsoluteX());
+        this.getButton().setY(this.getAbsoluteY());
+    }
+
+    protected void updateWidgetSize() {
+        if (this.getButton() == null) return;
+        this.getButton().setWidth(this.getAbsoluteWidth());
+        ((IMixinAbstractWidget) this.getButton()).setHeightFancyMenu(this.getAbsoluteHeight());
     }
 
     protected void renderTick() {

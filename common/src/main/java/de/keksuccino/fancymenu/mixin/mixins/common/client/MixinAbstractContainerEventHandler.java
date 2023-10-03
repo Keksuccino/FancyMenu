@@ -4,7 +4,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import org.apache.logging.log4j.LogManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -17,9 +16,6 @@ public abstract class MixinAbstractContainerEventHandler implements ContainerEve
     private void beforeSetFocusedFancyMenu(GuiEventListener guiEventListener, CallbackInfo info) {
         if ((guiEventListener instanceof NavigatableWidget n) && !n.isFocusable()) {
             info.cancel();
-        } else {
-            //TODO remove debug
-            LogManager.getLogger().info("############### WIDGET FOCUSED: " + guiEventListener, new Throwable());
         }
     }
 

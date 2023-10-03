@@ -1353,7 +1353,7 @@ public class TextEditorScreen extends Screen {
                         if (hoveredLine == null) {
                             TextEditorLine focus = this.getLine(this.getLineCount()-1);
                             for (TextEditorLine t : this.textFieldLines) {
-                                if ((MouseInput.getMouseY() >= t.y) && (MouseInput.getMouseY() <= t.y + t.getHeight())) {
+                                if ((MouseInput.getMouseY() >= t.getY()) && (MouseInput.getMouseY() <= t.getY() + t.getHeight())) {
                                     focus = t;
                                     break;
                                 }
@@ -1524,12 +1524,12 @@ public class TextEditorScreen extends Screen {
 
         if (this.isLineFocused() && (this.getFocusedLine() == line)) {
 
-            int oldX = line.x;
+            int oldX = line.getX();
 
             this.updateCurrentLineWidth();
             this.updateLines(null);
 
-            int newX = line.x;
+            int newX = line.getX();
             String oldValue = line.lastTickValue;
             String newValue = line.getValue();
 
@@ -1658,8 +1658,8 @@ public class TextEditorScreen extends Screen {
             //Update the button colors
             this.buttonBase.setBackground(ExtendedButton.ColorButtonBackground.create(DrawableColor.of(this.backgroundColorIdle), DrawableColor.of(this.backgroundColorHover), DrawableColor.of(this.backgroundColorIdle), DrawableColor.of(this.backgroundColorHover)));
             //Update the button pos
-            this.buttonBase.x = this.x;
-            this.buttonBase.y = this.y;
+            this.buttonBase.setX(this.x);
+            this.buttonBase.setY(this.y);
             int yCenter = this.y + (this.getHeight() / 2);
             //Render the button
             this.buttonBase.render(matrix, mouseX, mouseY, partial);

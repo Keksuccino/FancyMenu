@@ -47,13 +47,13 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
     @Override
     public void renderWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
         int textWidth = this.getTextWidth();
-        int textX = this.x;
-        int textY = this.y;
+        int textX = this.getX();
+        int textY = this.getY();
         if (this.alignment == TextAlignment.CENTER) {
-            textX = this.x + (this.getWidth() / 2) - (textWidth / 2);
+            textX = this.getX() + (this.getWidth() / 2) - (textWidth / 2);
         }
         if (this.alignment == TextAlignment.RIGHT) {
-            textX = this.x + this.getWidth() - textWidth;
+            textX = this.getX() + this.getWidth() - textWidth;
         }
         RenderingUtils.resetShaderColor();
         if (this.shadow) {
