@@ -163,7 +163,7 @@ public class ScreenCustomizationEvents {
 					LOGGER.info("[FANCYMENU] Setting default GUI scale..");
 					Minecraft.getInstance().options.guiScale().set(scale);
 					Minecraft.getInstance().options.save();
-					ScreenCustomization.reInitCurrentScreen();
+					Minecraft.getInstance().resizeDisplay();
 				}
 			}
 		}
