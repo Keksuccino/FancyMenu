@@ -17,11 +17,6 @@ import java.util.List;
 
 public class VanillaWidgetElement extends ButtonElement implements IHideableElement {
 
-    //TODO FIXEN: Vanilla Widgets in modern screens (create world, etc.) broken
-    //TODO FIXEN: Vanilla Widgets in modern screens (create world, etc.) broken
-    //TODO FIXEN: Vanilla Widgets in modern screens (create world, etc.) broken
-    //TODO FIXEN: Vanilla Widgets in modern screens (create world, etc.) broken
-
     private static final Logger LOGGER = LogManager.getLogger();
 
     public WidgetMeta widgetMeta;
@@ -33,14 +28,35 @@ public class VanillaWidgetElement extends ButtonElement implements IHideableElem
         super(builder);
     }
 
+    @Override
+    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+
+        if (!this.shouldRender()) return;
+        if (this.getWidget() == null) return;
+
+        //Auto-click the vanilla button on menu load (don't add this to updateWidget(), because it could break stuff!)
+        if (!isEditor() && !this.automatedButtonClicksDone && (this.automatedButtonClicks > 0)) {
+            for (int i = 0; i < this.automatedButtonClicks; i++) {
+                this.getWidget().onClick(this.getWidget().getX() + 1, this.getWidget().getY() + 1);
+            }
+            this.automatedButtonClicksDone = true;
+        }
+
+        super.render(pose, mouseX, mouseY, partial);
+
+    }
+
     @SuppressWarnings("all")
     @Override
     protected void renderElementWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-        ((CustomizableWidget)this.button).setHiddenFancyMenu((isEditor() || this.isCopyrightButton()) ? false : this.vanillaButtonHidden);
-        super.renderElementWidget(pose, mouseX, mouseY, partial);
+        ((CustomizableWidget)this.getWidget()).setHiddenFancyMenu((isEditor() || this.isCopyrightButton()) ? false : this.vanillaButtonHidden);
+        if (isEditor()) {
+            //Only render button in editor
+            super.renderElementWidget(pose, mouseX, mouseY, partial);
+        }
         if (this.anchorPoint == ElementAnchorPoints.VANILLA) {
             this.resetVanillaWidgetSizeAndPosition();
-            this.mirrorVanillaButtonSizeAndPosition();
+            this.mirrorVanillaWidgetSizeAndPosition();
         }
     }
 
@@ -50,8 +66,20 @@ public class VanillaWidgetElement extends ButtonElement implements IHideableElem
     }
 
     @Override
-    protected void updateWidgetPosition() {
-        if (this.getButton() instanceof CustomizableWidget w) {
+    public void updateWidget() {
+        this.updateWidgetVisibility();
+        super.updateWidget();
+    }
+
+    public void updateWidgetVisibility() {
+        if (this.getWidget() == null) return;
+        boolean forceVisible = isEditor() || this.isCopyrightButton();
+        ((CustomizableWidget)this.getWidget()).setHiddenFancyMenu(!forceVisible && this.vanillaButtonHidden);
+    }
+
+    @Override
+    public void updateWidgetPosition() {
+        if (this.getWidget() instanceof CustomizableWidget w) {
             if (this.anchorPoint != ElementAnchorPoints.VANILLA) {
                 w.setCustomXFancyMenu(this.getAbsoluteX());
                 w.setCustomYFancyMenu(this.getAbsoluteY());
@@ -63,8 +91,8 @@ public class VanillaWidgetElement extends ButtonElement implements IHideableElem
     }
 
     @Override
-    protected void updateWidgetSize() {
-        if (this.getButton() instanceof CustomizableWidget w) {
+    public void updateWidgetSize() {
+        if (this.getWidget() instanceof CustomizableWidget w) {
             if (this.anchorPoint != ElementAnchorPoints.VANILLA) {
                 w.setCustomWidthFancyMenu(this.getAbsoluteWidth());
                 w.setCustomHeightFancyMenu(this.getAbsoluteHeight());
@@ -76,27 +104,10 @@ public class VanillaWidgetElement extends ButtonElement implements IHideableElem
     }
 
     @Override
-    protected void renderTick() {
-
-        super.renderTick();
-
-        if (this.button == null) return;
-
-        //Auto-click the vanilla button on menu load
-        if (!isEditor() && !this.automatedButtonClicksDone && (this.automatedButtonClicks > 0)) {
-            for (int i = 0; i < this.automatedButtonClicks; i++) {
-                this.button.onClick(this.button.getX() + 1, this.button.getY() + 1);
-            }
-            this.automatedButtonClicksDone = true;
-        }
-
-    }
-
-    @Override
-    protected void updateLabels() {
-        if (this.button == null) return;
-        ((CustomizableWidget)this.button).setCustomLabelFancyMenu((this.label != null) ? buildComponent(this.label) : null);
-        ((CustomizableWidget)this.button).setHoverLabelFancyMenu((this.hoverLabel != null) ? buildComponent(this.hoverLabel) : null);
+    public void updateWidgetLabels() {
+        if (this.getWidget() == null) return;
+        ((CustomizableWidget)this.getWidget()).setCustomLabelFancyMenu((this.label != null) ? buildComponent(this.label) : null);
+        ((CustomizableWidget)this.getWidget()).setHoverLabelFancyMenu((this.hoverLabel != null) ? buildComponent(this.hoverLabel) : null);
     }
 
     @Override
@@ -107,31 +118,31 @@ public class VanillaWidgetElement extends ButtonElement implements IHideableElem
         return super.getInstanceIdentifier();
     }
 
-    public void setVanillaButton(WidgetMeta data, boolean mirrorButtonSizeAndPos) {
+    public void setVanillaWidget(WidgetMeta data, boolean mirrorWidgetSizeAndPos) {
         this.widgetMeta = data;
-        this.button = data.getWidget();
-        if (mirrorButtonSizeAndPos) this.mirrorVanillaButtonSizeAndPosition();
+        this.setWidget(data.getWidget());
+        if (mirrorWidgetSizeAndPos) this.mirrorVanillaWidgetSizeAndPosition();
     }
 
-    public void mirrorVanillaButtonSizeAndPosition() {
-        this.mirrorVanillaButtonSize();
-        this.mirrorVanillaButtonPosition();
+    public void mirrorVanillaWidgetSizeAndPosition() {
+        this.mirrorVanillaWidgetSize();
+        this.mirrorVanillaWidgetPosition();
     }
 
-    public void mirrorVanillaButtonSize() {
-        if (this.getButton() == null) return;
-        this.baseWidth = this.getButton().getWidth();
-        this.baseHeight = this.getButton().getHeight();
+    public void mirrorVanillaWidgetSize() {
+        if (this.getWidget() == null) return;
+        this.baseWidth = this.getWidget().getWidth();
+        this.baseHeight = this.getWidget().getHeight();
     }
 
-    public void mirrorVanillaButtonPosition() {
-        if (this.getButton() == null) return;
-        this.posOffsetX = this.getButton().getX();
-        this.posOffsetY = this.getButton().getY();
+    public void mirrorVanillaWidgetPosition() {
+        if (this.getWidget() == null) return;
+        this.posOffsetX = this.getWidget().getX();
+        this.posOffsetY = this.getWidget().getY();
     }
 
     public void resetVanillaWidgetSizeAndPosition() {
-        if (this.getButton() instanceof CustomizableWidget w) {
+        if (this.getWidget() instanceof CustomizableWidget w) {
             w.resetWidgetSizeAndPositionFancyMenu();
         }
     }

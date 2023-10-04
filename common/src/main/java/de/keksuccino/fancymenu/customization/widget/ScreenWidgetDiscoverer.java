@@ -11,15 +11,11 @@ import net.minecraft.client.gui.screens.Screen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 
 public class ScreenWidgetDiscoverer {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	/**
-	 * It is recommended to only call this in {@link InitOrResizeScreenCompletedEvent}s, if the target screen is currently active.
-	 */
 	@NotNull
 	public static List<WidgetMeta> getWidgetsOfScreen(@NotNull Screen screen, boolean updateScreenSize, boolean firstInit) {
 		int newWidth = screen.width;
@@ -31,9 +27,6 @@ public class ScreenWidgetDiscoverer {
 		return getWidgetsOfScreen(screen, newWidth, newHeight, firstInit);
 	}
 
-	/**
-	 * It is recommended to only call this in {@link InitOrResizeScreenCompletedEvent}s, if the target screen is currently active.
-	 */
 	@NotNull
 	public static List<WidgetMeta> getWidgetsOfScreen(@NotNull Screen screen, int newWidth, int newHeight, boolean firstInit) {
 		Map<Long, WidgetMeta> widgetMetas = new LinkedHashMap<>();
@@ -73,8 +66,6 @@ public class ScreenWidgetDiscoverer {
 
 			//This is to avoid NullPointers
 			if (firstInit) {
-//				((IMixinScreen)screen).setItemRendererFancyMenu(Minecraft.getInstance().getItemRenderer());
-//				((IMixinScreen)screen).setFontFancyMenu(Minecraft.getInstance().font);
 				screen.init(Minecraft.getInstance(), screenWidth, screenHeight);
 			} else {
 				screen.resize(Minecraft.getInstance(), screenWidth, screenHeight);

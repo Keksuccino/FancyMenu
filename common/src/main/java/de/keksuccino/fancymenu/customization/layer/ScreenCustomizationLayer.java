@@ -32,7 +32,7 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.ScreenTitleUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
@@ -245,19 +245,26 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 				for (GuiEventListener w : widgetsToRegister) {
 					if ((w instanceof NarratableEntry) && !((IMixinScreen)e.getScreen()).getChildrenFancyMenu().contains(w)) {
 						((IMixinScreen)e.getScreen()).getChildrenFancyMenu().add(0, w);
+						if (e.getScreen() instanceof CustomizableScreen c) c.removeOnInitChildrenFancyMenu().add(w);
 					}
 				}
+			}
+			//Update vanilla widgets before render, so they don't get rendered uncustomized for one tick
+			if (ae instanceof VanillaWidgetElement v) {
+				v.updateWidget();
 			}
 		}
 
 		//Add all elements to the screen's widget list
 		for (AbstractElement ae : Lists.reverse(this.allElements)) {
 			((IMixinScreen)e.getScreen()).getChildrenFancyMenu().add(0, ae);
+			if (e.getScreen() instanceof CustomizableScreen c) c.removeOnInitChildrenFancyMenu().add(ae);
 		}
 
 		//Add menu background to screen's widget list
 		if (this.layoutBase.menuBackground != null) {
 			((IMixinScreen)e.getScreen()).getChildrenFancyMenu().add(0, this.layoutBase.menuBackground);
+			if (e.getScreen() instanceof CustomizableScreen c) c.removeOnInitChildrenFancyMenu().add(this.layoutBase.menuBackground);
 		}
 
 	}
@@ -334,12 +341,12 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 		if (PopupHandler.isPopupActive()) return;
 		if (!this.shouldCustomize(e.getScreen())) return;
 
-		//Remove vanilla widgets from the renderables list before rendering the screen and let the vanilla button elements render them instead
-		if (e.getScreen() != null) {
-			for (WidgetMeta d : this.cachedScreenWidgetMetas) {
-				((IMixinScreen)e.getScreen()).getRenderablesFancyMenu().remove(d.getWidget());
-			}
-		}
+//		//Remove vanilla widgets from the renderables list before rendering the screen and let the vanilla button elements render them instead
+//		if (e.getScreen() != null) {
+//			for (WidgetMeta d : this.cachedScreenWidgetMetas) {
+//				((IMixinScreen)e.getScreen()).getRenderablesFancyMenu().remove(d.getWidget());
+//			}
+//		}
 
 		//Re-init screen if layout-wide loading requirements changed
 		for (Map.Entry<LoadingRequirementContainer, Boolean> m : this.cachedLayoutWideLoadingRequirements.entrySet()) {
@@ -381,13 +388,13 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 			element.render(e.getPoseStack(), e.getMouseX(), e.getMouseY(), e.getPartial());
 		}
 
-		//Add back vanilla widgets after screen rendering
-		//Note: Adding back widgets is important for screens that don't clear their widgets on resize, like the CreateWorldScreen
-		if (e.getScreen() != null) {
-			for (WidgetMeta d : this.cachedScreenWidgetMetas) {
-				((IMixinScreen)e.getScreen()).getRenderablesFancyMenu().add(d.getWidget());
-			}
-		}
+//		//Add back vanilla widgets after screen rendering
+//		//Note: Adding back widgets is important for screens that don't clear their widgets on resize, like the CreateWorldScreen
+//		if (e.getScreen() != null) {
+//			for (WidgetMeta d : this.cachedScreenWidgetMetas) {
+//				((IMixinScreen)e.getScreen()).getRenderablesFancyMenu().add(d.getWidget());
+//			}
+//		}
 
 	}
 

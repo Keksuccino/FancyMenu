@@ -37,6 +37,7 @@ import de.keksuccino.fancymenu.util.resources.texture.WrappedTexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -643,7 +644,8 @@ public class LayoutEditorUI {
 
 				int i = 0;
 				for (VanillaWidgetEditorElement e : hiddenVanillaButtons) {
-					this.addClickableEntry("element_" + i, ((VanillaWidgetElement)e.element).button.getMessage(), (menu1, entry) -> {
+					AbstractWidget w = ((VanillaWidgetElement)e.element).getWidget();
+					this.addClickableEntry("element_" + i, (w != null) ? w.getMessage() : Component.empty(), (menu1, entry) -> {
 						editor.history.saveSnapshot();
 						e.setHidden(false);
 						MainThreadTaskExecutor.executeInMainThread(() -> menu1.removeEntry(entry.getIdentifier()), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);

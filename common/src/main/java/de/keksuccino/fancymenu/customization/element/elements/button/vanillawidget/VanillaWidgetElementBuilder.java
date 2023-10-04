@@ -95,7 +95,7 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
 
         //VanillaButtonElement stuff
         if (e.widgetMeta != null) {
-            stack.setVanillaButton(e.widgetMeta, false);
+            stack.setVanillaWidget(e.widgetMeta, false);
         }
         if (e.vanillaButtonHidden) {
             stack.vanillaButtonHidden = true;

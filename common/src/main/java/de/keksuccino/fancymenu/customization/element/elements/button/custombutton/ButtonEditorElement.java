@@ -46,7 +46,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
 
         ContextMenu buttonBackgroundMenu = new ContextMenu();
         //Only add background settings if element holds AbstractButton
-        if (this.getButtonElement().getButton() instanceof AbstractButton) {
+        if (this.getButtonElement().getWidget() instanceof AbstractButton) {
             this.rightClickMenu.addSubMenuEntry("button_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground"), buttonBackgroundMenu)
                     .setStackable(true);
         }
@@ -221,7 +221,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
                         ButtonEditorElement.class,
                         consumes -> ((ButtonElement)consumes.element).label,
                         (element1, s) -> ((ButtonElement)element1.element).label = s,
-                        null, false, true, Component.translatable((this.getButtonElement().getButton() instanceof AbstractButton) ? "fancymenu.editor.items.button.editlabel" : "fancymenu.editor.items.button.label.generic"),
+                        null, false, true, Component.translatable((this.getButtonElement().getWidget() instanceof AbstractButton) ? "fancymenu.editor.items.button.editlabel" : "fancymenu.editor.items.button.label.generic"),
                         true, null, null, null)
                 .setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("text"));
@@ -230,7 +230,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
                         ButtonEditorElement.class,
                         consumes -> ((ButtonElement)consumes.element).hoverLabel,
                         (element1, s) -> ((ButtonElement)element1.element).hoverLabel = s,
-                        null, false, true, Component.translatable((this.getButtonElement().getButton() instanceof AbstractButton) ? "fancymenu.editor.items.button.hoverlabel" : "fancymenu.editor.items.button.hover_label.generic"),
+                        null, false, true, Component.translatable((this.getButtonElement().getWidget() instanceof AbstractButton) ? "fancymenu.editor.items.button.hoverlabel" : "fancymenu.editor.items.button.hover_label.generic"),
                         true, null, null, null)
                 .setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("text"));

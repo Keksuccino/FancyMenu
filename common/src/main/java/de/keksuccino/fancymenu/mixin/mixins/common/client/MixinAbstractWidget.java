@@ -160,29 +160,29 @@ public abstract class MixinAbstractWidget extends GuiComponent implements Custom
 		if (this.hiddenFancyMenu) info.setReturnValue(null);
 	}
 
-	@Inject(method = "getX", at = @At("HEAD"), cancellable = true)
-	private void beforeGetXFancyMenu(CallbackInfoReturnable<Integer> info) {
+	@Inject(method = "getX", at = @At("RETURN"), cancellable = true)
+	private void atReturnGetXFancyMenu(CallbackInfoReturnable<Integer> info) {
 		if (this.customXFancyMenu != null) {
 			info.setReturnValue(this.customXFancyMenu);
 		}
 	}
 
-	@Inject(method = "getY", at = @At("HEAD"), cancellable = true)
-	private void beforeGetYFancyMenu(CallbackInfoReturnable<Integer> info) {
+	@Inject(method = "getY", at = @At("RETURN"), cancellable = true)
+	private void atReturnGetYFancyMenu(CallbackInfoReturnable<Integer> info) {
 		if (this.customYFancyMenu != null) {
 			info.setReturnValue(this.customYFancyMenu);
 		}
 	}
 
-	@Inject(method = "getWidth", at = @At("HEAD"), cancellable = true)
-	private void beforeGetWidthFancyMenu(CallbackInfoReturnable<Integer> info) {
+	@Inject(method = "getWidth", at = @At("RETURN"), cancellable = true)
+	private void atReturnGetWidthFancyMenu(CallbackInfoReturnable<Integer> info) {
 		if (this.customWidthFancyMenu != null) {
 			info.setReturnValue(this.customWidthFancyMenu);
 		}
 	}
 
-	@Inject(method = "getHeight", at = @At("HEAD"), cancellable = true)
-	private void beforeGetHeightFancyMenu(CallbackInfoReturnable<Integer> info) {
+	@Inject(method = "getHeight", at = @At("RETURN"), cancellable = true)
+	private void atReturnGetHeightFancyMenu(CallbackInfoReturnable<Integer> info) {
 		if (this.customHeightFancyMenu != null) {
 			info.setReturnValue(this.customHeightFancyMenu);
 		}
@@ -225,6 +225,10 @@ public abstract class MixinAbstractWidget extends GuiComponent implements Custom
 		if (this.cachedOriginalHeight != null) this.height = this.cachedOriginalHeight;
 		this.cachedOriginalWidth = null;
 		this.cachedOriginalHeight = null;
+		this.customWidthFancyMenu = null;
+		this.customHeightFancyMenu = null;
+		this.customXFancyMenu = null;
+		this.customYFancyMenu = null;
 	}
 
 	@Unique

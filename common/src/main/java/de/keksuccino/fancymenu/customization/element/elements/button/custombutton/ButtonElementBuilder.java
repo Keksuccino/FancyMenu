@@ -30,13 +30,11 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         element.baseWidth = 100;
         element.baseHeight = 20;
         element.label = "New Button";
-        element.button = new ExtendedButton(0, 0, 0, 0, Component.empty(), (press) -> {
+        element.setWidget(new ExtendedButton(0, 0, 0, 0, Component.empty(), (press) -> {
             if ((CustomizationOverlay.getCurrentMenuBarInstance() == null) || !CustomizationOverlay.getCurrentMenuBarInstance().isUserNavigatingInMenuBar()) {
                 element.getExecutableBlock().execute();
             }
-        });
-//        ((ExtendedButton)element.button).setFocusable(false);
-//        ((ExtendedButton)element.button).setNavigatable(false);
+        }));
         return element;
     }
 
@@ -74,11 +72,9 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
 
         element.tooltip = serialized.getValue("description");
 
-        element.button = new ExtendedButton(0, 0, 0, 0, Component.literal(""), (press) -> {
+        element.setWidget(new ExtendedButton(0, 0, 0, 0, Component.literal(""), (press) -> {
             element.getExecutableBlock().execute();
-        });
-//        ((ExtendedButton)element.button).setFocusable(false);
-//        ((ExtendedButton)element.button).setNavigatable(false);
+        }));
 
         element.clickSound = serialized.getValue("clicksound");
         if (element.clickSound != null) {
@@ -169,8 +165,8 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        if ((element instanceof ButtonElement b) && !b.getButton().getMessage().getString().replace(" ", "").isEmpty()) {
-            return b.getButton().getMessage();
+        if ((element instanceof ButtonElement b) && (b.getWidget() != null) && !b.getWidget().getMessage().getString().replace(" ", "").isEmpty()) {
+            return b.getWidget().getMessage();
         }
         return Component.translatable("fancymenu.editor.add.button");
     }

@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
-import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.widget.VanillaButtonHandler;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
@@ -38,8 +37,8 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public AbstractWidget button;
-
+    @Nullable
+    private AbstractWidget widget;
     public String clickSound;
     public String hoverSound;
     @Nullable
@@ -57,13 +56,11 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
     public boolean restartBackgroundAnimationsOnHover = true;
     @NotNull
     public GenericExecutableBlock actionExecutor = new GenericExecutableBlock();
-
     protected Object lastBackgroundNormal;
     protected Object lastBackgroundHover;
     protected Object lastBackgroundInactive;
     protected boolean lastLoopBackgroundAnimations = true;
     protected boolean lastRestartBackgroundAnimationsOnHover = true;
-
     protected boolean hovered = false;
 
     public ButtonElement(ElementBuilder<ButtonElement, ButtonEditorElement> builder) {
@@ -74,31 +71,27 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
         if (!this.shouldRender()) return;
-        if (this.getButton() == null) return;
+        if (this.getWidget() == null) return;
 
-        this.renderTick();
-
-        this.getButton().setAlpha(this.opacity);
-        this.updateWidgetPosition();
-        this.updateWidgetSize();
+        this.updateWidget();
 
         if (isEditor()) {
-            this.button.visible = true;
-            if (this.button instanceof ExtendedButton) {
-                ((ExtendedButton)this.button).setPressAction((b) -> {});
-                this.button.active = true;
-            } else if (this.button instanceof Button) {
-                ((IMixinButton)this.button).setPressActionFancyMenu((b) -> {});
-                this.button.active = true;
+            this.getWidget().visible = true;
+            if (this.getWidget() instanceof ExtendedButton e) {
+                e.setPressAction((button) -> {});
+                e.active = true;
+            } else if (this.getWidget() instanceof Button b) {
+                ((IMixinButton)b).setPressActionFancyMenu((button) -> {});
+                b.active = true;
             } else {
-                this.button.active = false;
+                this.getWidget().active = false;
             }
-            this.button.setTooltip(null);
+            this.getWidget().setTooltip(null);
         }
 
         //The hover state of buttons gets updated in their render method, so make sure to update this field BEFORE the
         //button gets rendered, because otherwise renderTick() wouldn't work correctly.
-        this.hovered = this.getButton().isHoveredOrFocused();
+        this.hovered = this.getWidget().isHoveredOrFocused();
 
         this.renderElementWidget(pose, mouseX, mouseY, partial);
 
@@ -107,64 +100,78 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
     }
 
     protected void renderElementWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-        this.getButton().render(pose, mouseX, mouseY, partial);
+        if (this.getWidget() != null) {
+            this.getWidget().render(pose, mouseX, mouseY, partial);
+        }
     }
 
     @Override
     public @Nullable List<GuiEventListener> getWidgetsToRegister() {
-        if (this.getButton() == null) return null;
-        return List.of(this.getButton());
+        if (this.getWidget() == null) return null;
+        return List.of(this.getWidget());
     }
 
-    protected void updateWidgetPosition() {
-        if (this.getButton() == null) return;
-        this.getButton().setX(this.getAbsoluteX());
-        this.getButton().setY(this.getAbsoluteY());
+    public void updateWidget() {
+        this.updateWidgetTooltip();
+        this.updateWidgetLabels();
+        this.updateWidgetHoverSound();
+        this.updateWidgetClickSound();
+        this.updateWidgetButtonBackground();
+        this.updateWidgetAlpha();
+        this.updateWidgetSize();
+        this.updateWidgetPosition();
     }
 
-    protected void updateWidgetSize() {
-        if (this.getButton() == null) return;
-        this.getButton().setWidth(this.getAbsoluteWidth());
-        ((IMixinAbstractWidget) this.getButton()).setHeightFancyMenu(this.getAbsoluteHeight());
+    public void updateWidgetAlpha() {
+        if (this.getWidget() == null) return;
+        this.getWidget().setAlpha(this.opacity);
     }
 
-    protected void renderTick() {
-        if ((this.tooltip != null) && (this.getButton() != null) && this.getButton().isHoveredOrFocused() && !isEditor()) {
+    public void updateWidgetPosition() {
+        if (this.getWidget() == null) return;
+        this.getWidget().setX(this.getAbsoluteX());
+        this.getWidget().setY(this.getAbsoluteY());
+    }
+
+    public void updateWidgetSize() {
+        if (this.getWidget() == null) return;
+        this.getWidget().setWidth(this.getAbsoluteWidth());
+        ((IMixinAbstractWidget) this.getWidget()).setHeightFancyMenu(this.getAbsoluteHeight());
+    }
+
+    public void updateWidgetTooltip() {
+        if ((this.tooltip != null) && (this.getWidget() != null) && this.getWidget().isHoveredOrFocused() && !isEditor()) {
             String tooltip = this.tooltip.replace("%n%", "\n");
-            TooltipHandler.INSTANCE.addWidgetTooltip(this.getButton(), Tooltip.of(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(tooltip), "\n")), false, true);
+            TooltipHandler.INSTANCE.addWidgetTooltip(this.getWidget(), Tooltip.of(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(tooltip), "\n")), false, true);
         }
-        this.updateLabels();
-        this.updateHoverSound();
-        this.updateClickSound();
-        this.updateButtonBackground();
     }
 
-    protected void updateLabels() {
-        if (this.button == null) return;
+    public void updateWidgetLabels() {
+        if (this.getWidget() == null) return;
         if (this.label != null) {
-            this.getButton().setMessage(buildComponent(this.label));
+            this.getWidget().setMessage(buildComponent(this.label));
         } else {
-            this.button.setMessage(Component.empty());
+            this.getWidget().setMessage(Component.empty());
         }
-        if ((this.hoverLabel != null) && this.getButton().isHoveredOrFocused() && this.getButton().active) {
-            this.getButton().setMessage(buildComponent(this.hoverLabel));
-        }
-    }
-
-    protected void updateHoverSound() {
-        if (this.button != null) {
-            ((CustomizableWidget)this.button).setHoverSoundFancyMenu(this.hoverSound);
+        if ((this.hoverLabel != null) && this.getWidget().isHoveredOrFocused() && this.getWidget().active) {
+            this.getWidget().setMessage(buildComponent(this.hoverLabel));
         }
     }
 
-    protected void updateClickSound() {
-        if (this.button != null) {
-            ((CustomizableWidget)this.button).setCustomClickSoundFancyMenu(this.clickSound);
+    public void updateWidgetHoverSound() {
+        if (this.getWidget() != null) {
+            ((CustomizableWidget)this.getWidget()).setHoverSoundFancyMenu(this.hoverSound);
         }
     }
 
-    protected void updateButtonBackground() {
-        if (this.button != null) {
+    public void updateWidgetClickSound() {
+        if (this.getWidget() != null) {
+            ((CustomizableWidget)this.getWidget()).setCustomClickSoundFancyMenu(this.clickSound);
+        }
+    }
+
+    public void updateWidgetButtonBackground() {
+        if (this.getWidget() != null) {
             Object backgroundNormal = null;
             Object backgroundHover = null;
             Object backgroundInactive = null;
@@ -174,24 +181,24 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
                     if (f.getPath().toLowerCase().endsWith(".gif")) {
                         IAnimationRenderer ani = TextureHandler.INSTANCE.getGifTexture(f.getPath());
                         if (ani != null) {
-                            if (this.button instanceof ExtendedButton) {
+                            if (this.getWidget() instanceof ExtendedButton) {
                                 backgroundNormal = ani;
                             } else {
-                                if (this.restartBackgroundAnimationsOnHover && this.button.isHoveredOrFocused() && !this.hovered) {
+                                if (this.restartBackgroundAnimationsOnHover && this.getWidget().isHoveredOrFocused() && !this.hovered) {
                                     ani.resetAnimation();
                                 }
-                                if (!this.getButton().isHoveredOrFocused()) {
-                                    VanillaButtonHandler.setRenderTickBackgroundAnimation(this.button, ani, this.loopBackgroundAnimations, this.opacity);
+                                if (!this.getWidget().isHoveredOrFocused()) {
+                                    VanillaButtonHandler.setRenderTickBackgroundAnimation(this.getWidget(), ani, this.loopBackgroundAnimations, this.opacity);
                                 }
                             }
                         }
                     } else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
                         ITexture back = TextureHandler.INSTANCE.getTexture(f.getPath());
                         if (back != null) {
-                            if (this.button instanceof ExtendedButton) {
+                            if (this.getWidget() instanceof ExtendedButton) {
                                 backgroundNormal = back.getResourceLocation();
-                            } else if (!this.getButton().isHoveredOrFocused()) {
-                                VanillaButtonHandler.setRenderTickBackgroundTexture(this.button, back.getResourceLocation());
+                            } else if (!this.getWidget().isHoveredOrFocused()) {
+                                VanillaButtonHandler.setRenderTickBackgroundTexture(this.getWidget(), back.getResourceLocation());
                             }
                         }
                     }
@@ -200,18 +207,18 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
                 if (AnimationHandler.animationExists(this.backgroundAnimationNormal)) {
                     IAnimationRenderer ani = AnimationHandler.getAnimation(this.backgroundAnimationNormal);
                     if (ani != null) {
-                        if (this.button instanceof ExtendedButton) {
+                        if (this.getWidget() instanceof ExtendedButton) {
                             backgroundNormal = ani;
                         } else {
-                            if (this.restartBackgroundAnimationsOnHover && this.button.isHoveredOrFocused() && !this.hovered) {
+                            if (this.restartBackgroundAnimationsOnHover && this.getWidget().isHoveredOrFocused() && !this.hovered) {
                                 if (ani instanceof AdvancedAnimation) {
                                     ((AdvancedAnimation)ani).stopAudio();
                                     ((AdvancedAnimation)ani).resetAudio();
                                 }
                                 ani.resetAnimation();
                             }
-                            if (!this.getButton().isHoveredOrFocused()) {
-                                VanillaButtonHandler.setRenderTickBackgroundAnimation(this.button, ani, this.loopBackgroundAnimations, this.opacity);
+                            if (!this.getWidget().isHoveredOrFocused()) {
+                                VanillaButtonHandler.setRenderTickBackgroundAnimation(this.getWidget(), ani, this.loopBackgroundAnimations, this.opacity);
                             }
                         }
                     }
@@ -223,22 +230,22 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
                     if (f.getPath().toLowerCase().endsWith(".gif")) {
                         IAnimationRenderer ani = TextureHandler.INSTANCE.getGifTexture(f.getPath());
                         if (ani != null) {
-                            if (this.button instanceof ExtendedButton) {
+                            if (this.getWidget() instanceof ExtendedButton) {
                                 backgroundHover = ani;
-                            } else if (this.button.isHoveredOrFocused()) {
-                                if (this.restartBackgroundAnimationsOnHover && this.button.isHoveredOrFocused() && !this.hovered) {
+                            } else if (this.getWidget().isHoveredOrFocused()) {
+                                if (this.restartBackgroundAnimationsOnHover && this.getWidget().isHoveredOrFocused() && !this.hovered) {
                                     ani.resetAnimation();
                                 }
-                                VanillaButtonHandler.setRenderTickBackgroundAnimation(this.button, ani, this.loopBackgroundAnimations, this.opacity);
+                                VanillaButtonHandler.setRenderTickBackgroundAnimation(this.getWidget(), ani, this.loopBackgroundAnimations, this.opacity);
                             }
                         }
                     } else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
                         ITexture back = TextureHandler.INSTANCE.getTexture(f.getPath());
                         if (back != null) {
-                            if (this.button instanceof ExtendedButton) {
+                            if (this.getWidget() instanceof ExtendedButton) {
                                 backgroundHover = back.getResourceLocation();
-                            } else if (this.button.isHoveredOrFocused()) {
-                                VanillaButtonHandler.setRenderTickBackgroundTexture(this.button, back.getResourceLocation());
+                            } else if (this.getWidget().isHoveredOrFocused()) {
+                                VanillaButtonHandler.setRenderTickBackgroundTexture(this.getWidget(), back.getResourceLocation());
                             }
                         }
                     }
@@ -247,17 +254,17 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
                 if (AnimationHandler.animationExists(this.backgroundAnimationHover)) {
                     IAnimationRenderer ani = AnimationHandler.getAnimation(this.backgroundAnimationHover);
                     if (ani != null) {
-                        if (this.button instanceof ExtendedButton) {
+                        if (this.getWidget() instanceof ExtendedButton) {
                             backgroundHover = ani;
-                        } else if (this.button.isHoveredOrFocused()) {
-                            if (this.restartBackgroundAnimationsOnHover && this.button.isHoveredOrFocused() && !this.hovered) {
+                        } else if (this.getWidget().isHoveredOrFocused()) {
+                            if (this.restartBackgroundAnimationsOnHover && this.getWidget().isHoveredOrFocused() && !this.hovered) {
                                 if (ani instanceof AdvancedAnimation) {
                                     ((AdvancedAnimation)ani).stopAudio();
                                     ((AdvancedAnimation)ani).resetAudio();
                                 }
                                 ani.resetAnimation();
                             }
-                            VanillaButtonHandler.setRenderTickBackgroundAnimation(this.button, ani, this.loopBackgroundAnimations, this.opacity);
+                            VanillaButtonHandler.setRenderTickBackgroundAnimation(this.getWidget(), ani, this.loopBackgroundAnimations, this.opacity);
                         }
                     }
                 }
@@ -268,22 +275,22 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
                     if (f.getPath().toLowerCase().endsWith(".gif")) {
                         IAnimationRenderer ani = TextureHandler.INSTANCE.getGifTexture(f.getPath());
                         if (ani != null) {
-                            if (this.button instanceof ExtendedButton) {
+                            if (this.getWidget() instanceof ExtendedButton) {
                                 backgroundInactive = ani;
-                            } else if (!this.button.active) {
-                                if (this.restartBackgroundAnimationsOnHover && this.button.isHoveredOrFocused() && !this.hovered) {
+                            } else if (!this.getWidget().active) {
+                                if (this.restartBackgroundAnimationsOnHover && this.getWidget().isHoveredOrFocused() && !this.hovered) {
                                     ani.resetAnimation();
                                 }
-                                VanillaButtonHandler.setRenderTickBackgroundAnimation(this.button, ani, this.loopBackgroundAnimations, this.opacity);
+                                VanillaButtonHandler.setRenderTickBackgroundAnimation(this.getWidget(), ani, this.loopBackgroundAnimations, this.opacity);
                             }
                         }
                     } else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
                         ITexture back = TextureHandler.INSTANCE.getTexture(f.getPath());
                         if (back != null) {
-                            if (this.button instanceof ExtendedButton) {
+                            if (this.getWidget() instanceof ExtendedButton) {
                                 backgroundInactive = back.getResourceLocation();
-                            } else if (!this.button.active) {
-                                VanillaButtonHandler.setRenderTickBackgroundTexture(this.button, back.getResourceLocation());
+                            } else if (!this.getWidget().active) {
+                                VanillaButtonHandler.setRenderTickBackgroundTexture(this.getWidget(), back.getResourceLocation());
                             }
                         }
                     }
@@ -292,22 +299,22 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
                 if (AnimationHandler.animationExists(this.backgroundAnimationInactive)) {
                     IAnimationRenderer ani = AnimationHandler.getAnimation(this.backgroundAnimationInactive);
                     if (ani != null) {
-                        if (this.button instanceof ExtendedButton) {
+                        if (this.getWidget() instanceof ExtendedButton) {
                             backgroundInactive = ani;
-                        } else if (!this.button.active) {
-                            if (this.restartBackgroundAnimationsOnHover && this.button.isHoveredOrFocused() && !this.hovered) {
+                        } else if (!this.getWidget().active) {
+                            if (this.restartBackgroundAnimationsOnHover && this.getWidget().isHoveredOrFocused() && !this.hovered) {
                                 if (ani instanceof AdvancedAnimation) {
                                     ((AdvancedAnimation)ani).stopAudio();
                                     ((AdvancedAnimation)ani).resetAudio();
                                 }
                                 ani.resetAnimation();
                             }
-                            VanillaButtonHandler.setRenderTickBackgroundAnimation(this.button, ani, this.loopBackgroundAnimations, this.opacity);
+                            VanillaButtonHandler.setRenderTickBackgroundAnimation(this.getWidget(), ani, this.loopBackgroundAnimations, this.opacity);
                         }
                     }
                 }
             }
-            if (this.button instanceof ExtendedButton e) {
+            if (this.getWidget() instanceof ExtendedButton e) {
                 if (!Objects.equals(backgroundNormal, this.lastBackgroundNormal) || !Objects.equals(backgroundHover, this.lastBackgroundHover) || !Objects.equals(backgroundInactive, this.lastBackgroundInactive) || (this.lastLoopBackgroundAnimations != this.loopBackgroundAnimations) || (this.lastRestartBackgroundAnimationsOnHover != this.restartBackgroundAnimationsOnHover)) {
                     e.setBackground(ExtendedButton.MultiTypeButtonBackground.build(backgroundNormal, backgroundHover, backgroundInactive));
                     if (e.getBackground() instanceof ExtendedButton.MultiTypeButtonBackground b) {
@@ -349,8 +356,13 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
         }
     }
 
-    public AbstractWidget getButton() {
-        return this.button;
+    @Nullable
+    public AbstractWidget getWidget() {
+        return this.widget;
+    }
+
+    public void setWidget(@Nullable AbstractWidget widget) {
+        this.widget = widget;
     }
 
     @Override

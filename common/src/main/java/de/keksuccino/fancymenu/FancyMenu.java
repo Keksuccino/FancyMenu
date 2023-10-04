@@ -19,13 +19,13 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO FIXEN: Modern screen widgets broken (create world, etc.)
+	//TODO vanilla button background customization re-implementieren (jetzt via customizable widget)
 
 	//TODO Customizations aus CustomizableSlider interface in AbstractSliderButton implementieren
 
-	//TODO vanilla button background customization re-implementieren (jetzt via customizable widget)
-
 	//TODO "Open Custom GUI" zu custom GUI context menu und Manage screen adden
+
+	//TODO Altes GIF handling in button element entfernen und dafür neues nutzen
 
 	//TODO Neue audio lib schreiben
 	// - Melody
@@ -39,8 +39,6 @@ public class FancyMenu {
 
 	//TODO FIXEN: Neues element wird bei last mouse right-click pos geaddet, wenn man per menu bar addet (sollte oben links geaddet werden)
 	// - Bei Menu Bar click cached mouse pos auf X30 Y30 setzen ??
-
-	//TODO Altes GIF handling in button element entfernen und dafür neues nutzen
 
 	//TODO FIXEN: eventuell aktualisieren Forge Deep elements in title screen ihre position nicht richtig (checken)
 

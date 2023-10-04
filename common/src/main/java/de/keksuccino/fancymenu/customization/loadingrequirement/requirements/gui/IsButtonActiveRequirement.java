@@ -37,8 +37,8 @@ public class IsButtonActiveRequirement extends LoadingRequirement {
                 ScreenCustomizationLayer handler = ScreenCustomizationLayerHandler.getLayerOfScreen(s);
                 if (handler != null) {
                     AbstractElement i = handler.getElementByInstanceIdentifier(value);
-                    if (i instanceof ButtonElement) {
-                        return ((ButtonElement) i).button.active;
+                    if (i instanceof ButtonElement b) {
+                        return (b.getWidget() != null) && b.getWidget().active;
                     }
                 }
             }

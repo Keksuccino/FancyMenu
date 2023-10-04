@@ -55,7 +55,7 @@ public interface IElementFactory {
                 for (VanillaWidgetElement element : layout.buildVanillaButtonElementInstances()) {
                     WidgetMeta d = (vanillaWidgetMetaList != null) ? findWidgetMeta(element.getInstanceIdentifier(), vanillaWidgetMetaList) : null;
                     if (d != null) {
-                        element.setVanillaButton(d, (element.anchorPoint == ElementAnchorPoints.VANILLA));
+                        element.setVanillaWidget(d, (element.anchorPoint == ElementAnchorPoints.VANILLA));
                         if (!unstackedVanillaButtonElements.containsKey(d)) {
                             unstackedVanillaButtonElements.put(d, new ArrayList<>());
                         }
@@ -111,7 +111,7 @@ public interface IElementFactory {
             for (WidgetMeta d : vanillaWidgetMetaList) {
                 if (!unstackedVanillaButtonElements.containsKey(d)) {
                     VanillaWidgetElement element = VanillaWidgetElementBuilder.INSTANCE.buildDefaultInstance();
-                    element.setVanillaButton(d, true);
+                    element.setVanillaWidget(d, true);
                     unstackedVanillaButtonElements.put(d, new ArrayList<>());
                     unstackedVanillaButtonElements.get(d).add(element);
                 }
@@ -123,13 +123,13 @@ public interface IElementFactory {
                         VanillaWidgetElement stacked = VanillaWidgetElementBuilder.INSTANCE.stackElementsInternal(VanillaWidgetElementBuilder.INSTANCE.buildDefaultInstance(), m.getValue().toArray(new VanillaWidgetElement[0]));
                         if (stacked != null) {
                             if (stacked.anchorPoint == ElementAnchorPoints.VANILLA) {
-                                stacked.mirrorVanillaButtonSizeAndPosition();
+                                stacked.mirrorVanillaWidgetSizeAndPosition();
                             }
                             vanillaWidgetElements.add(stacked);
                         }
                     } else {
                         if (m.getValue().get(0).anchorPoint == ElementAnchorPoints.VANILLA) {
-                            m.getValue().get(0).mirrorVanillaButtonSizeAndPosition();
+                            m.getValue().get(0).mirrorVanillaWidgetSizeAndPosition();
                         }
                         vanillaWidgetElements.add(m.getValue().get(0));
                     }

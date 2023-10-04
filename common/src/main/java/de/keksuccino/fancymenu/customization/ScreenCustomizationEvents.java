@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.events.screen.CloseScreenEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.widget.WidgetLocatorHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -15,16 +16,20 @@ import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.events.widget.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.events.ScreenReloadEvent;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.fancymenu.events.ModReloadEvent;
 import de.keksuccino.konkrete.file.FileUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+@SuppressWarnings("unused")
 public class ScreenCustomizationEvents {
 
 	private static final Logger LOGGER = LogManager.getLogger();
@@ -80,6 +85,16 @@ public class ScreenCustomizationEvents {
 				}
 			}
 
+			//Remove all remove-on-init widgets from the screen's widgets
+			if (e.getScreen() instanceof CustomizableScreen c) {
+				for (GuiEventListener l : c.removeOnInitChildrenFancyMenu()) {
+					((IMixinScreen)e.getScreen()).getChildrenFancyMenu().remove(l);
+					if (l instanceof Renderable r) ((IMixinScreen)e.getScreen()).getRenderablesFancyMenu().remove(r);
+					if (l instanceof NarratableEntry n) ((IMixinScreen)e.getScreen()).getNarratablesFancyMenu().remove(n);
+				}
+				c.removeOnInitChildrenFancyMenu().clear();
+			}
+
 			if (this.lastScreen != null) {
 				ScreenCustomization.isNewMenu = !this.lastScreen.getClass().getName().equals(e.getScreen().getClass().getName());
 				if ((this.lastScreen instanceof CustomGuiBaseScreen cLast) && (e.getScreen() instanceof CustomGuiBaseScreen cNow)) {
@@ -115,6 +130,7 @@ public class ScreenCustomizationEvents {
 
 	}
 
+	@SuppressWarnings("all")
 	@EventListener
 	public void onTick(ClientTickEvent.Pre e) {
 

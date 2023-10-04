@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.overlay;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.events.screen.ScreenKeyPressedEvent;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventPriority;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
@@ -9,6 +10,7 @@ import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.Nullable;
 
@@ -41,7 +43,9 @@ public class CustomizationOverlay {
 	public void onInitScreenPost(InitOrResizeScreenCompletedEvent e) {
 		rebuildOverlay();
 		e.getWidgets().add(0, overlayMenuBar);
+		if (e.getScreen() instanceof CustomizableScreen c) c.removeOnInitChildrenFancyMenu().add(overlayMenuBar);
 		e.getWidgets().add(1, debugOverlay);
+		if (e.getScreen() instanceof CustomizableScreen c) c.removeOnInitChildrenFancyMenu().add(debugOverlay);
 	}
 
 	@EventListener(priority = EventPriority.LOW)

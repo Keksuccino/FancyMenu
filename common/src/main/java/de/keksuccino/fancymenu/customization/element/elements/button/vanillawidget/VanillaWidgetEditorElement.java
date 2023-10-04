@@ -41,7 +41,7 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements I
             this.rightClickMenu.removeEntry("edit_hover_label");
         }
 
-        if (this.getButtonElement().getButton() != null) {
+        if (this.getButtonElement().getWidget() != null) {
 
             this.rightClickMenu.addClickableEntryAfter("copy_id", "copy_vanilla_widget_locator", Component.translatable("fancymenu.helper.editor.items.vanilla_button.copy_locator"), (menu, entry) ->
                     {
