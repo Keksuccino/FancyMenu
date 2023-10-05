@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.NativeImage;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.resources.PlayableResource;
 import de.keksuccino.fancymenu.util.resources.RenderableResource;
 import de.keksuccino.konkrete.rendering.GifDecoder;
 import de.keksuccino.konkrete.resources.SelfcleaningDynamicTexture;
@@ -22,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class GifTexture implements ITexture {
+public class GifTexture implements ITexture, PlayableResource {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -263,6 +264,24 @@ public class GifTexture implements ITexture {
             i++;
         }
         return l;
+    }
+
+    @Override
+    public void play() {
+    }
+
+    @Override
+    public void pause() {
+    }
+
+    @Override
+    public void stop() {
+        this.reset();
+    }
+
+    @Override
+    public boolean isPlaying() {
+        return true;
     }
 
     protected static class GifFrame {

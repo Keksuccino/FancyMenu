@@ -2,10 +2,16 @@ package de.keksuccino.fancymenu.customization.animation;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Nullable;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.animation.exceptions.AnimationNotFoundException;
+import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.resources.PlayableResource;
+import de.keksuccino.fancymenu.util.resources.RenderableResource;
 import de.keksuccino.konkrete.rendering.animation.ExternalTextureAnimationRenderer;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
@@ -13,9 +19,13 @@ import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+//TODO Rewrite animations
 
 @SuppressWarnings("all")
-public class AdvancedAnimation implements IAnimationRenderer {
+public class AdvancedAnimation implements IAnimationRenderer, RenderableResource, PlayableResource {
 	
 	private final IAnimationRenderer introRenderer;
 	private final IAnimationRenderer animationRenderer;
@@ -26,6 +36,8 @@ public class AdvancedAnimation implements IAnimationRenderer {
 	private final boolean replayIntro;
 	public String propertiesPath = null;
 	protected boolean prepared = false;
+	//--------------------
+	protected boolean playing = false;
 	
 	/**
 	 * Container to hold a {@link IAnimationRenderer} instance with an optional intro which plays before the main animation starts.
@@ -62,6 +74,11 @@ public class AdvancedAnimation implements IAnimationRenderer {
 	}
 
 	@Override
+	public void reset() {
+
+	}
+
+	@Override
 	public void prepareAnimation() {
 		if (!this.prepared) {
 			if (this.animationRenderer != null) {
@@ -93,10 +110,14 @@ public class AdvancedAnimation implements IAnimationRenderer {
 	public boolean hasStarted() {
 		return this.started;
 	}
-	
+
+	@Deprecated
 	@Override
-	public void render(PoseStack matrix) {
+	public void render(PoseStack pose) {
 		if (this.isReady()) {
+
+			//This is to force-start playing the animation if the (deprecated) render method is used
+			this.playing = true;
 
 			this.started = true;
 			
@@ -130,16 +151,16 @@ public class AdvancedAnimation implements IAnimationRenderer {
 				this.introRenderer.setLooped(false);
 				if (!this.introRenderer.isFinished()) {
 					if (canRenderFrameOf(this.introRenderer, this.introRenderer.currentFrame())) {
-						this.introRenderer.render(matrix);
+						this.introRenderer.render(pose);
 					}
 				} else {
 					if (canRenderFrameOf(this.animationRenderer, this.animationRenderer.currentFrame())) {
-						this.animationRenderer.render(matrix);
+						this.animationRenderer.render(pose);
 					}
 				}
 			} else {
 				if (canRenderFrameOf(this.animationRenderer, this.animationRenderer.currentFrame())) {
-					this.animationRenderer.render(matrix);
+					this.animationRenderer.render(pose);
 				}
 			}
 
@@ -148,6 +169,7 @@ public class AdvancedAnimation implements IAnimationRenderer {
 		if (this.isFinished() || this.muted) {
 			this.stopAudio();
 		}
+
 	}
 
 	@Override
@@ -303,6 +325,11 @@ public class AdvancedAnimation implements IAnimationRenderer {
 	}
 
 	@Override
+	public @NotNull AspectRatio getAspectRatio() {
+		return null;
+	}
+
+	@Override
 	public int getPosX() {
 		return this.animationRenderer.getPosX();
 	}
@@ -360,7 +387,99 @@ public class AdvancedAnimation implements IAnimationRenderer {
 		}
 	}
 
-	public static boolean canRenderFrameOf(IAnimationRenderer renderer, int frame) {
+	protected static void tickRenderer(@NotNull IAnimationRenderer renderer) {
+
+		List<ResourceLocation> frames = getFramesOf(renderer);
+		int fps = renderer.getFPS();
+
+		if (frames.isEmpty()) {
+			return;
+		}
+
+		//A value of -1 sets the max fps to unlimited
+		if (fps <= 0) {
+			fps = -1;
+		}
+
+		//Reset animation if last frame reached
+		if ((renderer.currentFrame() >= frames.size()) && renderer.isGettingLooped()) {
+			renderer.resetAnimation();
+		}
+
+		Consumer<Long> updateFrameInvoker = time -> {
+			if (renderer.currentFrame() >= frames.size()) return;
+			try {
+				if (renderer instanceof ResourcePackAnimationRenderer r) {
+					r.updateFrame(time);
+				} else if (renderer instanceof ExternalTextureAnimationRenderer e) {
+					Method m = ExternalTextureAnimationRenderer.class.getDeclaredMethod("updateFrame", long.class);
+					m.setAccessible(true);
+					m.invoke(e, time);
+				}
+			} catch (Exception ignore) {}
+		};
+
+		Supplier<Long> prevTimeSupplier = () -> {
+			try {
+				if (renderer instanceof ResourcePackAnimationRenderer r) {
+					return r.prevTime;
+				} else if (renderer instanceof ExternalTextureAnimationRenderer e) {
+					Field f = ExternalTextureAnimationRenderer.class.getDeclaredField("prevTime");
+					f.setAccessible(true);
+					return (Long) f.get(e);
+				}
+			} catch (Exception ignore) {}
+			return 0L;
+		};
+
+		//Updating the current frame based on the fps value
+		long time = System.currentTimeMillis();
+		if (fps == -1) {
+			updateFrameInvoker.accept(time);
+		} else {
+			if ((prevTimeSupplier.get() + (1000 / fps)) <= time) {
+				updateFrameInvoker.accept(time);
+			}
+		}
+
+	}
+
+	@NotNull
+	protected static List<ResourceLocation> getFramesOf(@NotNull IAnimationRenderer renderer) {
+		try {
+			if (renderer.isReady()) {
+				if (renderer instanceof ResourcePackAnimationRenderer r) {
+					return r.resources;
+				} else if (renderer instanceof ExternalTextureAnimationRenderer e) {
+					Field f = ExternalTextureAnimationRenderer.class.getDeclaredField("resources");
+					f.setAccessible(true);
+					List<ExternalTextureResourceLocation> resources = (List<ExternalTextureResourceLocation>) f.get(renderer);
+					List<ResourceLocation> locations = new ArrayList<>();
+					for (ExternalTextureResourceLocation external : resources) {
+						ResourceLocation loc = external.getResourceLocation();
+						if (loc == null) loc = FULLY_TRANSPARENT_TEXTURE;
+						locations.add(loc);
+					}
+					return locations;
+				}
+			}
+		} catch (Exception ignore) {}
+		return new ArrayList<>();
+	}
+
+	@Nullable
+	protected static ResourceLocation getCurrentFrameOf(@NotNull IAnimationRenderer renderer) {
+		List<ResourceLocation> locations = getFramesOf(renderer);
+		if (!locations.isEmpty()) {
+			if (renderer.currentFrame() < locations.size()) {
+				return locations.get(renderer.currentFrame());
+			}
+			return locations.get(locations.size()-1);
+		}
+		return null;
+	}
+
+	protected static boolean canRenderFrameOf(@NotNull IAnimationRenderer renderer, int frame) {
 		try {
 			if (renderer.isReady()) {
 				if (renderer instanceof ResourcePackAnimationRenderer) {
@@ -393,6 +512,76 @@ public class AdvancedAnimation implements IAnimationRenderer {
 			}
 		} catch (Exception e) {}
 		return false;
+	}
+
+	//------------------- RenderableResource + PlayableResource stuff
+
+	@Override
+	public void play() {
+		this.playing = true;
+		this.started = true;
+	}
+
+	@Override
+	public void pause() {
+		this.playing = false;
+		this.stopAudio();
+	}
+
+	@Override
+	public void stop() {
+		this.playing = false;
+		this.started = false;
+		this.resetAnimation();
+		this.stopAudio();
+	}
+
+	@Override
+	public boolean isPlaying() {
+		return this.playing;
+	}
+
+	@Override
+	public @Nullable ResourceLocation getResourceLocation() {
+
+		if (!this.playing) return null;
+
+		//Audio handling
+		if (!this.muted) {
+			if (this.hasIntroAudio() && !this.introRenderer.isFinished() && ((this.introRenderer.currentFrame() == 1) || (this.introRenderer.currentFrame() > 1) && !SoundHandler.isPlaying(introAudioPath))) {
+				SoundHandler.stopSound(mainAudioPath);
+				SoundHandler.registerSound(introAudioPath, introAudioPath);
+				SoundHandler.resetSound(introAudioPath);
+				SoundHandler.playSound(introAudioPath);
+			}
+			if (this.hasIntroAudio() && this.introRenderer.isFinished()) {
+				SoundHandler.stopSound(introAudioPath);
+			}
+			if (this.hasMainAudio() && !this.animationRenderer.isFinished() && ((this.animationRenderer.currentFrame() == 1) || (this.animationRenderer.currentFrame() > 1) && !SoundHandler.isPlaying(mainAudioPath))) {
+				if (this.hasIntroAudio()) {
+					SoundHandler.stopSound(introAudioPath);
+				}
+				SoundHandler.registerSound(mainAudioPath, mainAudioPath);
+				SoundHandler.resetSound(mainAudioPath);
+				SoundHandler.playSound(mainAudioPath);
+				SoundHandler.setLooped(mainAudioPath, true);
+			}
+		}
+
+		//Get and return current frame + tick renderers
+		if (this.hasIntro()) {
+			this.introRenderer.setFPS(this.animationRenderer.getFPS());
+			this.introRenderer.setLooped(false);
+			if (!this.introRenderer.isFinished()) {
+				ResourceLocation current = getCurrentFrameOf(this.introRenderer);
+				tickRenderer(this.introRenderer);
+				return current;
+			}
+		}
+		ResourceLocation current = getCurrentFrameOf(this.animationRenderer);
+		tickRenderer(this.animationRenderer);
+		return current;
+
 	}
 
 }

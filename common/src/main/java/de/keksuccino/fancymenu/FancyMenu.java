@@ -19,13 +19,23 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO vanilla button background customization re-implementieren (jetzt via customizable widget)
+	//TODO VanillaWidgetElement background handling auf neues System bringen
 
-	//TODO Customizations aus CustomizableSlider interface in AbstractSliderButton implementieren
+	//TODO in VanillaWidgetElement settings für Slider backgrounds adden (if widget is slider)
+
+	//TODO in VanillaWidgetElement -> wenn widget ist slider, dann Background settings zu "Slider Handle" settings umbenennen, weil Background für slider = handle texture
 
 	//TODO "Open Custom GUI" zu custom GUI context menu und Manage screen adden
 
-	//TODO Altes GIF handling in button element entfernen und dafür neues nutzen
+	//TODO Einige der currently active layouts (nur enabled) als entries zu erster Ebene von Layout Context Menu adden
+	// - Universal + Current Screen layouts kombinieren
+	// - Nur 5-8 zeigen, dann entry "... (and X more)" (nicht clickable)
+
+	//TODO Add short delay before elements can be moved in the editor (after left-clicking them)
+
+	//TODO split Debug overlay into toggleable groups
+
+	//TODO Keep context menus open when opening layout in system text editor, etc.
 
 	//TODO Neue audio lib schreiben
 	// - Melody
@@ -36,6 +46,8 @@ public class FancyMenu {
 	//TODO Simple Video Renderer schreiben
 	// - Nach "Video Frame InputStream" googlen
 	// - Evtl. mit Java-eigenen libs arbeiten
+
+	//TODO Animations rewriten
 
 	//TODO FIXEN: Neues element wird bei last mouse right-click pos geaddet, wenn man per menu bar addet (sollte oben links geaddet werden)
 	// - Bei Menu Bar click cached mouse pos auf X30 Y30 setzen ??

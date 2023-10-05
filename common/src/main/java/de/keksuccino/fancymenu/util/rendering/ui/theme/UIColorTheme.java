@@ -4,7 +4,6 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
-
 import java.awt.*;
 
 public class UIColorTheme {

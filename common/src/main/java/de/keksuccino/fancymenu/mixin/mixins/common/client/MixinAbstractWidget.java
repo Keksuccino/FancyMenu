@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
+import de.keksuccino.fancymenu.util.resources.PlayableResource;
 import de.keksuccino.fancymenu.util.resources.RenderableResource;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.gui.ComponentPath;
@@ -21,13 +22,15 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import de.keksuccino.fancymenu.events.widget.RenderWidgetEvent;
-import net.minecraft.client.gui.GuiComponent;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 @Mixin(value = AbstractWidget.class)
-public abstract class MixinAbstractWidget extends GuiComponent implements CustomizableWidget, UniqueWidget {
+public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueWidget {
 
 	@Shadow protected float alpha;
 	@Shadow public boolean visible;
@@ -48,8 +51,6 @@ public abstract class MixinAbstractWidget extends GuiComponent implements Custom
 	private String hoverSoundFancyMenu;
 	@Unique
 	private boolean hiddenFancyMenu = false;
-	@Unique
-	private boolean lastHoverStateFancyMenu = false;
 	@Unique @Nullable
 	private RenderableResource customBackgroundNormalFancyMenu;
 	@Unique @Nullable
@@ -67,35 +68,56 @@ public abstract class MixinAbstractWidget extends GuiComponent implements Custom
 	@Unique @Nullable
 	private Integer customYFancyMenu;
 	@Unique @Nullable
-	private Integer cachedOriginalWidth;
+	private Integer cachedOriginalWidthFancyMenu;
 	@Unique @Nullable
-	private Integer cachedOriginalHeight;
+	private Integer cachedOriginalHeightFancyMenu;
+	@Unique
+	private final List<Consumer<Boolean>> hoverStateListenersFancyMenu = new ArrayList<>();
+	@Unique
+	private final List<Consumer<Boolean>> focusStateListenersFancyMenu = new ArrayList<>();
+	@Unique
+	private final List<Consumer<Boolean>> hoverOrFocusStateListenersFancyMenu = new ArrayList<>();
+	@Unique
+	private boolean lastHoverStateFancyMenu = false;
+	@Unique
+	private boolean lastFocusStateFancyMenu = false;
+	@Unique
+	private boolean lastHoverOrFocusStateFancyMenu = false;
+	@Unique
+	private boolean widgetInitializedFancyMenu = false;
+	@Unique
+	private final List<Runnable> resetCustomizationsListenersFancyMenu = new ArrayList<>();
 	
 	@Inject(method = "render", at = @At(value = "HEAD"), cancellable = true)
 	private void beforeRenderFancyMenu(PoseStack pose, int mouseX, int mouseY, float partial, CallbackInfo info) {
 
+		if (!this.widgetInitializedFancyMenu) this.initWidgetFancyMenu();
+		this.widgetInitializedFancyMenu = true;
+
+		//Manually update isHovered before AbstractWidget, to correctly notify hover listeners
+		this.isHovered = mouseX >= this.getX() && mouseY >= this.getY() && mouseX < this.getX() + this.width && mouseY < this.getY() + this.height;
+
 		if (this.customWidthFancyMenu != null) {
-			if (this.cachedOriginalWidth == null) this.cachedOriginalWidth = this.width;
+			if (this.cachedOriginalWidthFancyMenu == null) this.cachedOriginalWidthFancyMenu = this.width;
 			this.width = this.customWidthFancyMenu;
 		}
 		if (this.customHeightFancyMenu != null) {
-			if (this.cachedOriginalHeight == null) this.cachedOriginalHeight = this.height;
+			if (this.cachedOriginalHeightFancyMenu == null) this.cachedOriginalHeightFancyMenu = this.height;
 			this.height = this.customHeightFancyMenu;
 		}
-
-		//Handle onHoverStart
-		if (!this.hiddenFancyMenu && this.visible && this.active && this.getWidgetFancyMenu().isHovered() && (this.lastHoverStateFancyMenu != this.getWidgetFancyMenu().isHovered())) {
-			this.onHoverStartFancyMenu();
-		}
-		this.lastHoverStateFancyMenu = this.getWidgetFancyMenu().isHovered();
 
 		//Handle Hidden State
 		if (this.hiddenFancyMenu) {
 			this.isHovered = false;
 			this.setFocused(false);
 			info.cancel();
-			return;
 		}
+
+		this.tickHoverStateListenersFancyMenu(this.isHovered);
+		this.tickFocusStateListenersFancyMenu(this.isFocused());
+		this.tickHoverOrFocusStateListenersFancyMenu(this.isHoveredOrFocused());
+
+		if (this.hiddenFancyMenu) return;
 
 		//Fire RenderWidgetEvent.Pre
 		try {
@@ -190,9 +212,41 @@ public abstract class MixinAbstractWidget extends GuiComponent implements Custom
 
 	@Shadow public abstract void setFocused(boolean bl);
 
+	@Shadow public abstract boolean isFocused();
+
+	@Shadow public abstract boolean isHoveredOrFocused();
+
+	@Shadow public abstract int getX();
+
+	@Shadow public abstract int getY();
+
 	@Unique
-	private void onHoverStartFancyMenu() {
-		//Handle Hover Sound
+	private void initWidgetFancyMenu() {
+
+		this.addHoverOrFocusStateListenerFancyMenu(hoveredOrFocused -> {
+			if (hoveredOrFocused && !this.hiddenFancyMenu && this.visible && this.active) {
+				this.handleHoverSoundFancyMenu();
+			}
+		});
+
+		this.addHoverOrFocusStateListenerFancyMenu(hoveredOrFocused -> {
+			CustomBackgroundResetBehavior behavior = this.getCustomBackgroundResetBehaviorFancyMenu();
+			if (hoveredOrFocused && ((behavior == CustomBackgroundResetBehavior.RESET_ON_HOVER) || (behavior == CustomBackgroundResetBehavior.RESET_ON_HOVER_AND_UNHOVER))) {
+				if (this.getCustomBackgroundNormalFancyMenu() instanceof PlayableResource p) p.stop();
+				if (this.getCustomBackgroundHoverFancyMenu() instanceof PlayableResource p) p.stop();
+				if (this.getCustomBackgroundInactiveFancyMenu() instanceof PlayableResource p) p.stop();
+			}
+			if (!hoveredOrFocused && ((behavior == CustomBackgroundResetBehavior.RESET_ON_UNHOVER) || (behavior == CustomBackgroundResetBehavior.RESET_ON_HOVER_AND_UNHOVER))) {
+				if (this.getCustomBackgroundNormalFancyMenu() instanceof PlayableResource p) p.stop();
+				if (this.getCustomBackgroundHoverFancyMenu() instanceof PlayableResource p) p.stop();
+				if (this.getCustomBackgroundInactiveFancyMenu() instanceof PlayableResource p) p.stop();
+			}
+		});
+
+	}
+
+	@Unique
+	private void handleHoverSoundFancyMenu() {
 		if (this.hoverSoundFancyMenu != null) {
 			File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(this.hoverSoundFancyMenu));
 			if (f.isFile() && f.getPath().toLowerCase().endsWith(".wav")) {
@@ -210,21 +264,105 @@ public abstract class MixinAbstractWidget extends GuiComponent implements Custom
 	}
 
 	@Override
-	public void resetWidgetCustomizationsFancyMenu() {
-		CustomizableWidget.super.resetWidgetCustomizationsFancyMenu();
-		if (this.cachedOriginalWidth != null) this.width = this.cachedOriginalWidth;
-		if (this.cachedOriginalHeight != null) this.height = this.cachedOriginalHeight;
-		this.cachedOriginalWidth = null;
-		this.cachedOriginalHeight = null;
+	public void addResetCustomizationsListenerFancyMenu(@NotNull Runnable listener) {
+		this.resetCustomizationsListenersFancyMenu.add(listener);
 	}
 
 	@Override
+	public @NotNull List<Runnable> getResetCustomizationsListenersFancyMenu() {
+		return this.resetCustomizationsListenersFancyMenu;
+	}
+
+	@Unique
+	@Override
+	public void addHoverStateListenerFancyMenu(@NotNull Consumer<Boolean> listener) {
+		this.hoverStateListenersFancyMenu.add(listener);
+	}
+
+	@Unique
+	@Override
+	public void addFocusStateListenerFancyMenu(@NotNull Consumer<Boolean> listener) {
+		this.focusStateListenersFancyMenu.add(listener);
+	}
+
+	@Unique
+	@Override
+	public void addHoverOrFocusStateListenerFancyMenu(@NotNull Consumer<Boolean> listener) {
+		this.hoverOrFocusStateListenersFancyMenu.add(listener);
+	}
+
+	@Unique
+	@NotNull
+	@Override
+	public List<Consumer<Boolean>> getHoverStateListenersFancyMenu() {
+		return this.hoverStateListenersFancyMenu;
+	}
+
+	@Unique
+	@NotNull
+	@Override
+	public List<Consumer<Boolean>> getFocusStateListenersFancyMenu() {
+		return this.focusStateListenersFancyMenu;
+	}
+
+	@NotNull
+	@Override
+	public List<Consumer<Boolean>> getHoverOrFocusStateListenersFancyMenu() {
+		return this.hoverOrFocusStateListenersFancyMenu;
+	}
+
+	@Unique
+	@Override
+	public boolean getLastHoverStateFancyMenu() {
+		return this.lastHoverStateFancyMenu;
+	}
+
+	@Unique
+	@Override
+	public void setLastHoverStateFancyMenu(boolean hovered) {
+		this.lastHoverStateFancyMenu = hovered;
+	}
+
+	@Unique
+	@Override
+	public boolean getLastFocusStateFancyMenu() {
+		return this.lastFocusStateFancyMenu;
+	}
+
+	@Unique
+	@Override
+	public void setLastFocusStateFancyMenu(boolean focused) {
+		this.lastFocusStateFancyMenu = focused;
+	}
+
+	@Override
+	public boolean getLastHoverOrFocusStateFancyMenu() {
+		return this.lastHoverOrFocusStateFancyMenu;
+	}
+
+	@Override
+	public void setLastHoverOrFocusStateFancyMenu(boolean hoveredOrFocused) {
+		this.lastHoverOrFocusStateFancyMenu = hoveredOrFocused;
+	}
+
+	@Unique
+	@Override
+	public void resetWidgetCustomizationsFancyMenu() {
+		CustomizableWidget.super.resetWidgetCustomizationsFancyMenu();
+		if (this.cachedOriginalWidthFancyMenu != null) this.width = this.cachedOriginalWidthFancyMenu;
+		if (this.cachedOriginalHeightFancyMenu != null) this.height = this.cachedOriginalHeightFancyMenu;
+		this.cachedOriginalWidthFancyMenu = null;
+		this.cachedOriginalHeightFancyMenu = null;
+	}
+
+	@Unique
+	@Override
 	public void resetWidgetSizeAndPositionFancyMenu() {
 		CustomizableWidget.super.resetWidgetSizeAndPositionFancyMenu();
-		if (this.cachedOriginalWidth != null) this.width = this.cachedOriginalWidth;
-		if (this.cachedOriginalHeight != null) this.height = this.cachedOriginalHeight;
-		this.cachedOriginalWidth = null;
-		this.cachedOriginalHeight = null;
+		if (this.cachedOriginalWidthFancyMenu != null) this.width = this.cachedOriginalWidthFancyMenu;
+		if (this.cachedOriginalHeightFancyMenu != null) this.height = this.cachedOriginalHeightFancyMenu;
+		this.cachedOriginalWidthFancyMenu = null;
+		this.cachedOriginalHeightFancyMenu = null;
 		this.customWidthFancyMenu = null;
 		this.customHeightFancyMenu = null;
 		this.customXFancyMenu = null;

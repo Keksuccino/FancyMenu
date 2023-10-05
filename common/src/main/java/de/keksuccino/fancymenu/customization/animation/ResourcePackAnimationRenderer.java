@@ -2,20 +2,16 @@ package de.keksuccino.fancymenu.customization.animation;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
-
 import com.mojang.blaze3d.systems.RenderSystem;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import javax.annotation.Nullable;
 
 public class ResourcePackAnimationRenderer implements IAnimationRenderer {
@@ -34,12 +30,9 @@ public class ResourcePackAnimationRenderer implements IAnimationRenderer {
     protected boolean stretch = false;
     protected boolean hide = false;
     protected volatile boolean done = false;
-
     private int frame = 0;
-    private long prevTime = 0;
-
+    public long prevTime = 0;
     protected float opacity = 1.0F;
-
     protected boolean ready = false;
     protected boolean sizeSet = false;
 
@@ -134,7 +127,7 @@ public class ResourcePackAnimationRenderer implements IAnimationRenderer {
         this.opacity = opacity;
     }
 
-    private void updateFrame(long time) {
+    public void updateFrame(long time) {
         this.frame++;
         this.prevTime = time;
     }

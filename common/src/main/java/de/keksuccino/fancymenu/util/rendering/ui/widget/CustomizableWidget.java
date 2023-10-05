@@ -12,6 +12,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * This interface gets applied to the {@link AbstractWidget} class to add a bunch of helper methods for easier customization.
@@ -32,6 +34,9 @@ public interface CustomizableWidget {
         return original;
     }
 
+    /**
+     * Returns if the widget should render its Vanilla background (true) or not (false).
+     */
     default boolean renderCustomBackgroundFancyMenu(@NotNull AbstractWidget widget, @NotNull PoseStack pose, int x, int y, int width, int height) {
         RenderableResource customBackground;
         RenderableResource customBackgroundNormal = this.getCustomBackgroundNormalFancyMenu();
@@ -68,9 +73,9 @@ public interface CustomizableWidget {
     }
 
     default void resetWidgetCustomizationsFancyMenu() {
-        if (this.getCustomBackgroundNormalFancyMenu() instanceof PlayableResource p) p.pause();
-        if (this.getCustomBackgroundHoverFancyMenu() instanceof PlayableResource p) p.pause();
-        if (this.getCustomBackgroundInactiveFancyMenu() instanceof PlayableResource p) p.pause();
+        if (this.getCustomBackgroundNormalFancyMenu() instanceof PlayableResource p) p.stop();
+        if (this.getCustomBackgroundHoverFancyMenu() instanceof PlayableResource p) p.stop();
+        if (this.getCustomBackgroundInactiveFancyMenu() instanceof PlayableResource p) p.stop();
         this.setCustomBackgroundNormalFancyMenu(null);
         this.setCustomBackgroundHoverFancyMenu(null);
         this.setCustomBackgroundInactiveFancyMenu(null);
@@ -84,6 +89,12 @@ public interface CustomizableWidget {
         this.setCustomHeightFancyMenu(null);
         this.setCustomXFancyMenu(null);
         this.setCustomYFancyMenu(null);
+        this.tickHoverStateListenersFancyMenu(false);
+        this.tickFocusStateListenersFancyMenu(false);
+        this.tickHoverOrFocusStateListenersFancyMenu(false);
+        for (Runnable listener : this.getResetCustomizationsListenersFancyMenu()) {
+            listener.run();
+        }
     }
 
     default void resetWidgetSizeAndPositionFancyMenu() {
@@ -91,6 +102,65 @@ public interface CustomizableWidget {
         this.setCustomYFancyMenu(null);
         this.setCustomWidthFancyMenu(null);
         this.setCustomHeightFancyMenu(null);
+    }
+
+    void addResetCustomizationsListenerFancyMenu(@NotNull Runnable listener);
+
+    @NotNull
+    List<Runnable> getResetCustomizationsListenersFancyMenu();
+
+    void addHoverStateListenerFancyMenu(@NotNull Consumer<Boolean> listener);
+
+    void addFocusStateListenerFancyMenu(@NotNull Consumer<Boolean> listener);
+
+    void addHoverOrFocusStateListenerFancyMenu(@NotNull Consumer<Boolean> listener);
+
+    @NotNull
+    List<Consumer<Boolean>> getHoverStateListenersFancyMenu();
+
+    @NotNull
+    List<Consumer<Boolean>> getFocusStateListenersFancyMenu();
+
+    @NotNull
+    List<Consumer<Boolean>> getHoverOrFocusStateListenersFancyMenu();
+
+    boolean getLastHoverStateFancyMenu();
+
+    void setLastHoverStateFancyMenu(boolean hovered);
+
+    boolean getLastFocusStateFancyMenu();
+
+    void setLastFocusStateFancyMenu(boolean focused);
+
+    boolean getLastHoverOrFocusStateFancyMenu();
+
+    void setLastHoverOrFocusStateFancyMenu(boolean hoveredOrFocused);
+
+    default void tickHoverStateListenersFancyMenu(boolean hovered) {
+        if (this.getLastHoverStateFancyMenu() != hovered) {
+            for (Consumer<Boolean> listener : this.getHoverStateListenersFancyMenu()) {
+                listener.accept(hovered);
+            }
+        }
+        this.setLastHoverStateFancyMenu(hovered);
+    }
+
+    default void tickFocusStateListenersFancyMenu(boolean focused) {
+        if (this.getLastFocusStateFancyMenu() != focused) {
+            for (Consumer<Boolean> listener : this.getFocusStateListenersFancyMenu()) {
+                listener.accept(focused);
+            }
+        }
+        this.setLastFocusStateFancyMenu(focused);
+    }
+
+    default void tickHoverOrFocusStateListenersFancyMenu(boolean hoveredOrFocused) {
+        if (this.getLastHoverOrFocusStateFancyMenu() != hoveredOrFocused) {
+            for (Consumer<Boolean> listener : this.getHoverOrFocusStateListenersFancyMenu()) {
+                listener.accept(hoveredOrFocused);
+            }
+        }
+        this.setLastHoverOrFocusStateFancyMenu(hoveredOrFocused);
     }
 
     void setCustomLabelFancyMenu(@Nullable Component label);

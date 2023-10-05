@@ -78,7 +78,12 @@ public class UIBase extends RenderingUtils {
 	}
 
 	private static ExtendedButton applyDefaultButtonSkinTo(ExtendedButton button) {
-		button.setBackground(ExtendedButton.ColorButtonBackground.create(UIBase.getUIColorTheme().element_background_color_normal, UIBase.getUIColorTheme().element_background_color_hover, UIBase.getUIColorTheme().element_border_color_normal, UIBase.getUIColorTheme().element_border_color_hover, ELEMENT_BORDER_THICKNESS));
+		button.setBackgroundColorNormal(UIBase.getUIColorTheme().element_background_color_normal);
+		button.setBackgroundColorHover(UIBase.getUIColorTheme().element_background_color_hover);
+		button.setBackgroundColorInactive(UIBase.getUIColorTheme().element_background_color_normal);
+		button.setBorderColorNormal(UIBase.getUIColorTheme().element_border_color_normal);
+		button.setBorderColorHover(UIBase.getUIColorTheme().element_border_color_hover);
+		button.setBorderColorInactive(UIBase.getUIColorTheme().element_border_color_normal);
 		button.setLabelBaseColorNormal(UIBase.getUIColorTheme().element_label_color_normal);
 		button.setLabelBaseColorInactive(UIBase.getUIColorTheme().element_label_color_inactive);
 		button.setLabelShadowEnabled(FancyMenu.getOptions().enableUiTextShadow.getValue());

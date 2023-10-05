@@ -14,3 +14,4 @@ CHANGELOG | FANCYMENU v3.0.0 CLOSED ALPHA 3
 - Fixed: Unable to focus custom buttons via tab/arrow key navigation
 - Fixed: Unable to focus custom input fields via tab/arrow key navigation
 - Fixed: Resizing and moving Vanilla widgets is broken
+- Fixed: Vanilla widgets in some screens stay customized after disabling customizations/layouts
