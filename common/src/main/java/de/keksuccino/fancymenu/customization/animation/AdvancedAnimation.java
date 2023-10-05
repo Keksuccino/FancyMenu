@@ -74,11 +74,6 @@ public class AdvancedAnimation implements IAnimationRenderer, RenderableResource
 	}
 
 	@Override
-	public void reset() {
-
-	}
-
-	@Override
 	public void prepareAnimation() {
 		if (!this.prepared) {
 			if (this.animationRenderer != null) {
@@ -582,6 +577,12 @@ public class AdvancedAnimation implements IAnimationRenderer, RenderableResource
 		tickRenderer(this.animationRenderer);
 		return current;
 
+	}
+
+	@Override
+	public void reset() {
+		this.playing = false;
+		this.resetAnimation();
 	}
 
 }
