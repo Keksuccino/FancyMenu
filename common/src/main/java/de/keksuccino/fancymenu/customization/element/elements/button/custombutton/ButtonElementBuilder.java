@@ -4,19 +4,21 @@ import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.action.blocks.ExecutableBlockDeserializer;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
+import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.audio.SoundRegistry;
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.file.ResourceFile;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
-import de.keksuccino.konkrete.sound.SoundHandler;
+import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.io.File;
 
 public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEditorElement> {
 
@@ -58,13 +60,10 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
             element.actionExecutor = g;
         }
 
-        element.hoverSound = serialized.getValue("hoversound");
-        if (element.hoverSound != null) {
-            File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(element.hoverSound));
-            if (f.isFile() && f.getName().toLowerCase().endsWith(".wav")) {
-                SoundRegistry.registerSound(element.hoverSound, element.hoverSound);
-            } else {
-                element.hoverSound = null;
+        element.hoverSound = SerializationUtils.deserializeResourceFile(serialized.getValue("hoversound"));
+        if ((element.hoverSound != null) && element.hoverSound.exists()) {
+            if (element.hoverSound.getType() == ResourceFile.ResourceFileType.AUDIO_WAV) {
+                SoundRegistry.registerSound(element.hoverSound.getAbsolutePath(), element.hoverSound.getAbsolutePath());
             }
         }
 
@@ -76,21 +75,18 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
             element.getExecutableBlock().execute();
         }));
 
-        element.clickSound = serialized.getValue("clicksound");
-        if (element.clickSound != null) {
-            File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(element.clickSound));
-            if (f.exists() && f.isFile() && f.getPath().toLowerCase().endsWith(".wav")) {
-                SoundHandler.registerSound(f.getPath(), f.getPath());
-            } else {
-                element.clickSound = null;
+        element.clickSound = SerializationUtils.deserializeResourceFile(serialized.getValue("clicksound"));
+        if ((element.clickSound != null) && element.clickSound.exists()) {
+            if (element.clickSound.getType() == ResourceFile.ResourceFileType.AUDIO_WAV) {
+                SoundRegistry.registerSound(element.clickSound.getAbsolutePath(), element.clickSound.getAbsolutePath());
             }
         }
 
-        element.backgroundTextureNormal = serialized.getValue("backgroundnormal");
+        element.backgroundTextureNormal = SerializationUtils.deserializeResourceFile(serialized.getValue("backgroundnormal"));
 
-        element.backgroundTextureHover = serialized.getValue("backgroundhovered");
+        element.backgroundTextureHover = SerializationUtils.deserializeResourceFile(serialized.getValue("backgroundhovered"));
 
-        element.backgroundTextureInactive = serialized.getValue("background_texture_inactive");
+        element.backgroundTextureInactive = SerializationUtils.deserializeResourceFile(serialized.getValue("background_texture_inactive"));
 
         String loopBackAnimations = serialized.getValue("loopbackgroundanimations");
         if ((loopBackAnimations != null) && loopBackAnimations.equalsIgnoreCase("false")) {
@@ -119,19 +115,19 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         element.actionExecutor.serializeToExistingPropertyContainer(serializeTo);
 
         if (element.backgroundTextureNormal != null) {
-            serializeTo.putProperty("backgroundnormal", element.backgroundTextureNormal);
+            serializeTo.putProperty("backgroundnormal", element.backgroundTextureNormal.getShortPath());
         }
         if (element.backgroundAnimationNormal != null) {
             serializeTo.putProperty("backgroundanimationnormal", element.backgroundAnimationNormal);
         }
         if (element.backgroundTextureHover != null) {
-            serializeTo.putProperty("backgroundhovered", element.backgroundTextureHover);
+            serializeTo.putProperty("backgroundhovered", element.backgroundTextureHover.getShortPath());
         }
         if (element.backgroundAnimationHover != null) {
             serializeTo.putProperty("backgroundanimationhovered", element.backgroundAnimationHover);
         }
         if (element.backgroundTextureInactive != null) {
-            serializeTo.putProperty("background_texture_inactive", element.backgroundTextureInactive);
+            serializeTo.putProperty("background_texture_inactive", element.backgroundTextureInactive.getShortPath());
         }
         if (element.backgroundAnimationInactive != null) {
             serializeTo.putProperty("background_animation_inactive", element.backgroundAnimationInactive);
@@ -139,13 +135,13 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         serializeTo.putProperty("restartbackgroundanimations", "" + element.restartBackgroundAnimationsOnHover);
         serializeTo.putProperty("loopbackgroundanimations", "" + element.loopBackgroundAnimations);
         if (element.hoverSound != null) {
-            serializeTo.putProperty("hoversound", element.hoverSound);
+            serializeTo.putProperty("hoversound", element.hoverSound.getShortPath());
         }
         if (element.hoverLabel != null) {
             serializeTo.putProperty("hoverlabel", element.hoverLabel);
         }
         if (element.clickSound != null) {
-            serializeTo.putProperty("clicksound", element.clickSound);
+            serializeTo.putProperty("clicksound", element.clickSound.getShortPath());
         }
         if (element.tooltip != null) {
             serializeTo.putProperty("description", element.tooltip);
@@ -167,6 +163,11 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
         if ((element instanceof ButtonElement b) && (b.getWidget() != null) && !b.getWidget().getMessage().getString().replace(" ", "").isEmpty()) {
             return b.getWidget().getMessage();
+        }
+        if (element instanceof VanillaWidgetElement b) {
+            if (b.getWidget() instanceof AbstractButton) return Component.translatable("fancymenu.editor.elements.vanilla_widget.button");
+            if (b.getWidget() instanceof CustomizableSlider) return Component.translatable("fancymenu.editor.elements.vanilla_widget.slider");
+            return Component.translatable("fancymenu.editor.elements.vanilla_widget.generic");
         }
         return Component.translatable("fancymenu.editor.add.button");
     }

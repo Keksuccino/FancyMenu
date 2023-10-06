@@ -5,15 +5,25 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.IHideableElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
+import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonEditorElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
 import de.keksuccino.fancymenu.customization.layout.editor.AnchorPointOverlay;
+import de.keksuccino.fancymenu.customization.layout.editor.ChooseAnimationScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.ListUtils;
+import de.keksuccino.fancymenu.util.ObjectUtils;
+import de.keksuccino.fancymenu.util.file.FileFilter;
+import de.keksuccino.fancymenu.util.file.ResourceFile;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
 
 public class VanillaWidgetEditorElement extends ButtonEditorElement implements IHideableElement {
 
@@ -50,6 +60,120 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements I
                     })
                     .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.vanilla_button.copy_locator.desc")))
                     .setIcon(ContextMenu.IconFactory.getIcon("notes"));
+
+        }
+
+        if (this.getButtonElement().getWidget() instanceof CustomizableSlider) {
+
+            ContextMenu.ContextMenuEntry<?> buttonBackgroundMenuEntry = this.rightClickMenu.getEntry("button_background");
+            if (buttonBackgroundMenuEntry instanceof ContextMenu.SubMenuContextMenuEntry s1) {
+                ContextMenu buttonBackgroundMenu = s1.getSubContextMenu();
+                ContextMenu.ContextMenuEntry<?> setBackMenuEntry = buttonBackgroundMenu.getEntry("set_background");
+                if (setBackMenuEntry instanceof ContextMenu.SubMenuContextMenuEntry s2) {
+
+                    ContextMenu setBackMenu = s2.getSubContextMenu();
+
+                    setBackMenu.addSeparatorEntry("separator_before_slider_background_entries");
+
+                    ContextMenu normalSliderBackMenu = new ContextMenu();
+                    setBackMenu.addSubMenuEntry("set_normal_slider_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.slider.normal"), normalSliderBackMenu)
+                            .setStackable(true);
+
+                    this.addFileChooserContextMenuEntryTo(normalSliderBackMenu, "normal_slider_background_texture",
+                                    VanillaWidgetEditorElement.class,
+                                    null,
+                                    consumes -> (((VanillaWidgetElement)consumes.element).sliderBackgroundTextureNormal != null) ? ((VanillaWidgetElement)consumes.element).sliderBackgroundTextureNormal.getShortPath() : null,
+                                    (element1, s) -> {
+                                        ((VanillaWidgetElement)element1.element).sliderBackgroundTextureNormal = (s != null) ? ResourceFile.of(s) : null;
+                                        ((VanillaWidgetElement)element1.element).sliderBackgroundAnimationNormal = null;
+                                    },
+                                    Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"),
+                                    false,
+                                    FileFilter.IMAGE_AND_GIF_FILE_FILTER)
+                            .setStackable(true);
+
+                    normalSliderBackMenu.addClickableEntry("normal_slider_background_animation", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation"), (menu, entry) -> {
+                        List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof VanillaWidgetEditorElement));
+                        String preSelectedAnimation = null;
+                        List<String> allAnimations = ObjectUtils.getOfAll(String.class, selectedElements, consumes -> ((VanillaWidgetElement)consumes.element).sliderBackgroundAnimationNormal);
+                        if (!allAnimations.isEmpty() && ListUtils.allInListEqual(allAnimations)) {
+                            preSelectedAnimation = allAnimations.get(0);
+                        }
+                        ChooseAnimationScreen s = new ChooseAnimationScreen(preSelectedAnimation, (call) -> {
+                            if (call != null) {
+                                this.editor.history.saveSnapshot();
+                                for (AbstractEditorElement e : selectedElements) {
+                                    ((VanillaWidgetElement)e.element).sliderBackgroundAnimationNormal = call;
+                                    ((VanillaWidgetElement)e.element).sliderBackgroundTextureNormal = null;
+                                }
+                            }
+                            Minecraft.getInstance().setScreen(this.editor);
+                        });
+                        Minecraft.getInstance().setScreen(s);
+                    }).setStackable(true);
+
+                    normalSliderBackMenu.addSeparatorEntry("separator_1").setStackable(true);
+
+                    normalSliderBackMenu.addClickableEntry("reset_normal_slider_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.reset"), (menu, entry) -> {
+                        this.editor.history.saveSnapshot();
+                        List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof VanillaWidgetEditorElement));
+                        for (AbstractEditorElement e : selectedElements) {
+                            ((VanillaWidgetElement)e.element).sliderBackgroundTextureNormal = null;
+                            ((VanillaWidgetElement)e.element).sliderBackgroundAnimationNormal = null;
+                        }
+                    }).setStackable(true);
+
+                    ContextMenu highlightedSliderBackMenu = new ContextMenu();
+                    setBackMenu.addSubMenuEntry("set_highlighted_slider_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.slider.highlighted"), highlightedSliderBackMenu)
+                            .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.buttons.buttonbackground.slider.highlighted.desc")))
+                            .setStackable(true);
+
+                    this.addFileChooserContextMenuEntryTo(highlightedSliderBackMenu, "highlighted_slider_background_texture",
+                                    VanillaWidgetEditorElement.class,
+                                    null,
+                                    consumes -> (((VanillaWidgetElement)consumes.element).sliderBackgroundTextureHighlighted != null) ? ((VanillaWidgetElement)consumes.element).sliderBackgroundTextureHighlighted.getShortPath() : null,
+                                    (element1, s) -> {
+                                        ((VanillaWidgetElement)element1.element).sliderBackgroundTextureHighlighted = (s != null) ? ResourceFile.of(s) : null;
+                                        ((VanillaWidgetElement)element1.element).sliderBackgroundAnimationHighlighted = null;
+                                    },
+                                    Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"),
+                                    false,
+                                    FileFilter.IMAGE_AND_GIF_FILE_FILTER)
+                            .setStackable(true);
+
+                    highlightedSliderBackMenu.addClickableEntry("highlighted_slider_background_animation", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation"), (menu, entry) -> {
+                        List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof VanillaWidgetEditorElement));
+                        String preSelectedAnimation = null;
+                        List<String> allAnimations = ObjectUtils.getOfAll(String.class, selectedElements, consumes -> ((VanillaWidgetElement)consumes.element).sliderBackgroundAnimationHighlighted);
+                        if (!allAnimations.isEmpty() && ListUtils.allInListEqual(allAnimations)) {
+                            preSelectedAnimation = allAnimations.get(0);
+                        }
+                        ChooseAnimationScreen s = new ChooseAnimationScreen(preSelectedAnimation, (call) -> {
+                            if (call != null) {
+                                this.editor.history.saveSnapshot();
+                                for (AbstractEditorElement e : selectedElements) {
+                                    ((VanillaWidgetElement)e.element).sliderBackgroundAnimationHighlighted = call;
+                                    ((VanillaWidgetElement)e.element).sliderBackgroundTextureHighlighted = null;
+                                }
+                            }
+                            Minecraft.getInstance().setScreen(this.editor);
+                        });
+                        Minecraft.getInstance().setScreen(s);
+                    }).setStackable(true);
+
+                    highlightedSliderBackMenu.addSeparatorEntry("separator_1").setStackable(true);
+
+                    highlightedSliderBackMenu.addClickableEntry("reset_highlighted_slider_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.reset"), (menu, entry) -> {
+                        this.editor.history.saveSnapshot();
+                        List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof VanillaWidgetEditorElement));
+                        for (AbstractEditorElement e : selectedElements) {
+                            ((VanillaWidgetElement)e.element).sliderBackgroundTextureHighlighted = null;
+                            ((VanillaWidgetElement)e.element).sliderBackgroundAnimationHighlighted = null;
+                        }
+                    }).setStackable(true);
+
+                }
+            }
 
         }
 

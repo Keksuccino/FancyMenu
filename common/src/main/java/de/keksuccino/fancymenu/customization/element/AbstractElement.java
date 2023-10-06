@@ -76,8 +76,21 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	@Override
 	public abstract void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial);
 
-	/** Gets called every screen tick. **/
+	/** Gets called every {@link Screen} tick, after {@link Screen#tick()} got called. **/
 	public void tick() {
+	}
+
+	/**
+	 * Gets called before a {@link Screen} gets closed.<br>
+	 * A screen gets closed when a new active {@link Screen} gets set via {@link Minecraft#setScreen(Screen)}.
+	 */
+	public void onCloseScreen() {
+	}
+
+	/**
+	 * Gets called after a {@link Screen} got opened via {@link Minecraft#setScreen(Screen)}.
+	 */
+	public void onOpenScreen() {
 	}
 
 	/** Widgets need to extend {@link GuiEventListener} and {@link NarratableEntry}. **/

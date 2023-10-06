@@ -6,17 +6,23 @@ import de.keksuccino.fancymenu.customization.layout.editor.ChooseAnimationScreen
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
 import de.keksuccino.fancymenu.util.file.FileFilter;
+import de.keksuccino.fancymenu.util.file.ResourceFile;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.ObjectUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractButton;
+import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import org.jetbrains.annotations.NotNull;
 import java.util.List;
+import java.util.function.Supplier;
 
 public class ButtonEditorElement extends AbstractEditorElement {
 
@@ -28,6 +34,9 @@ public class ButtonEditorElement extends AbstractEditorElement {
     public void init() {
 
         super.init();
+
+        boolean isButton = (this.getButtonElement().getWidget() instanceof AbstractButton);
+        boolean isSlider = (this.getButtonElement().getWidget() instanceof CustomizableSlider);
 
         this.rightClickMenu.addClickableEntry("manage_actions", Component.translatable("fancymenu.editor.action.screens.manage_screen.manage"), (menu, entry) -> {
             ManageActionsScreen s = new ManageActionsScreen(this.getButtonElement().getExecutableBlock(), (call) -> {
@@ -45,9 +54,8 @@ public class ButtonEditorElement extends AbstractEditorElement {
         this.rightClickMenu.addSeparatorEntry("button_separator_1");
 
         ContextMenu buttonBackgroundMenu = new ContextMenu();
-        //Only add background settings if element holds AbstractButton
-        if (this.getButtonElement().getWidget() instanceof AbstractButton) {
-            this.rightClickMenu.addSubMenuEntry("button_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground"), buttonBackgroundMenu)
+        if (isSlider || isButton) {
+            this.rightClickMenu.addSubMenuEntry("button_background", isButton ? Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground") : Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.alternate.slider"), buttonBackgroundMenu)
                     .setStackable(true);
         }
 
@@ -56,15 +64,15 @@ public class ButtonEditorElement extends AbstractEditorElement {
                 .setStackable(true);
 
         ContextMenu normalBackMenu = new ContextMenu();
-        setBackMenu.addSubMenuEntry("set_normal_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.normal"), normalBackMenu)
+        setBackMenu.addSubMenuEntry("set_normal_background", isButton ? Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.normal") : Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.normal.alternate.slider"), normalBackMenu)
                 .setStackable(true);
 
         this.addGenericFileChooserContextMenuEntryTo(normalBackMenu, "normal_background_texture",
                         consumes -> (consumes instanceof ButtonEditorElement),
                         null,
-                        consumes -> ((ButtonElement)consumes.element).backgroundTextureNormal,
+                        consumes -> (((ButtonElement)consumes.element).backgroundTextureNormal != null) ? ((ButtonElement)consumes.element).backgroundTextureNormal.getShortPath() : null,
                         (element1, s) -> {
-                            ((ButtonElement)element1.element).backgroundTextureNormal = s;
+                            ((ButtonElement)element1.element).backgroundTextureNormal = (s != null) ? ResourceFile.of(s) : null;
                             ((ButtonElement)element1.element).backgroundAnimationNormal = null;
                         },
                         Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"),
@@ -104,15 +112,15 @@ public class ButtonEditorElement extends AbstractEditorElement {
         }).setStackable(true);
 
         ContextMenu hoverBackMenu = new ContextMenu();
-        setBackMenu.addSubMenuEntry("set_hover_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.hover"), hoverBackMenu)
+        setBackMenu.addSubMenuEntry("set_hover_background", isButton ? Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.hover") : Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.hover.alternate.slider"), hoverBackMenu)
                 .setStackable(true);
 
         this.addGenericFileChooserContextMenuEntryTo(hoverBackMenu, "hover_background_texture",
                         consumes -> (consumes instanceof ButtonEditorElement),
                         null,
-                        consumes -> ((ButtonElement)consumes.element).backgroundTextureHover,
+                        consumes -> (((ButtonElement)consumes.element).backgroundTextureHover != null) ? ((ButtonElement)consumes.element).backgroundTextureHover.getShortPath() : null,
                         (element1, s) -> {
-                            ((ButtonElement)element1.element).backgroundTextureHover = s;
+                            ((ButtonElement)element1.element).backgroundTextureHover = (s != null) ? ResourceFile.of(s) : null;
                             ((ButtonElement)element1.element).backgroundAnimationHover = null;
                         },
                         Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"),
@@ -152,15 +160,15 @@ public class ButtonEditorElement extends AbstractEditorElement {
         }).setStackable(true);
 
         ContextMenu inactiveBackMenu = new ContextMenu();
-        setBackMenu.addSubMenuEntry("set_inactive_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.inactive"), inactiveBackMenu)
+        setBackMenu.addSubMenuEntry("set_inactive_background", isButton ? Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.inactive") : Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.inactive.alternate.slider"), inactiveBackMenu)
                 .setStackable(true);
 
         this.addGenericFileChooserContextMenuEntryTo(inactiveBackMenu, "inactive_background_texture",
                         consumes -> (consumes instanceof ButtonEditorElement),
                         null,
-                        consumes -> ((ButtonElement)consumes.element).backgroundTextureInactive,
+                        consumes -> (((ButtonElement)consumes.element).backgroundTextureInactive != null) ? ((ButtonElement)consumes.element).backgroundTextureInactive.getShortPath() : null,
                         (element1, s) -> {
-                            ((ButtonElement)element1.element).backgroundTextureInactive = s;
+                            ((ButtonElement)element1.element).backgroundTextureInactive = (s != null) ? ResourceFile.of(s) : null;
                             ((ButtonElement)element1.element).backgroundAnimationInactive = null;
                         },
                         Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"),
@@ -221,7 +229,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
                         ButtonEditorElement.class,
                         consumes -> ((ButtonElement)consumes.element).label,
                         (element1, s) -> ((ButtonElement)element1.element).label = s,
-                        null, false, true, Component.translatable((this.getButtonElement().getWidget() instanceof AbstractButton) ? "fancymenu.editor.items.button.editlabel" : "fancymenu.editor.items.button.label.generic"),
+                        null, false, true, Component.translatable(isButton ? "fancymenu.editor.items.button.editlabel" : "fancymenu.editor.items.button.label.generic"),
                         true, null, null, null)
                 .setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("text"));
@@ -230,7 +238,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
                         ButtonEditorElement.class,
                         consumes -> ((ButtonElement)consumes.element).hoverLabel,
                         (element1, s) -> ((ButtonElement)element1.element).hoverLabel = s,
-                        null, false, true, Component.translatable((this.getButtonElement().getWidget() instanceof AbstractButton) ? "fancymenu.editor.items.button.hoverlabel" : "fancymenu.editor.items.button.hover_label.generic"),
+                        null, false, true, Component.translatable(isButton ? "fancymenu.editor.items.button.hoverlabel" : "fancymenu.editor.items.button.hover_label.generic"),
                         true, null, null, null)
                 .setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("text"));
@@ -240,8 +248,8 @@ public class ButtonEditorElement extends AbstractEditorElement {
         this.addGenericFileChooserContextMenuEntryTo(this.rightClickMenu, "edit_hover_sound",
                         consumes -> (consumes instanceof ButtonEditorElement),
                         null,
-                        consumes -> ((ButtonElement)consumes.element).hoverSound,
-                        (element1, s) -> ((ButtonElement)element1.element).hoverSound = s,
+                        consumes -> (((ButtonElement)consumes.element).hoverSound != null) ? ((ButtonElement)consumes.element).hoverSound.getShortPath() : null,
+                        (element1, s) -> ((ButtonElement)element1.element).hoverSound = (s != null) ? ResourceFile.of(s) : null,
                         Component.translatable("fancymenu.editor.items.button.hoversound"),
                         true, FileFilter.WAV_AUDIO_FILE_FILTER)
                 .setStackable(true)
@@ -250,8 +258,8 @@ public class ButtonEditorElement extends AbstractEditorElement {
         this.addGenericFileChooserContextMenuEntryTo(this.rightClickMenu, "edit_click_sound",
                         consumes -> (consumes instanceof ButtonEditorElement),
                         null,
-                        consumes -> ((ButtonElement)consumes.element).clickSound,
-                        (element1, s) -> ((ButtonElement)element1.element).clickSound = s,
+                        consumes -> (((ButtonElement)consumes.element).clickSound != null) ? ((ButtonElement)consumes.element).clickSound.getShortPath() : null,
+                        (element1, s) -> ((ButtonElement)element1.element).clickSound = (s != null) ? ResourceFile.of(s) : null,
                         Component.translatable("fancymenu.editor.items.button.clicksound"),
                         true, FileFilter.WAV_AUDIO_FILE_FILTER)
                 .setStackable(true)

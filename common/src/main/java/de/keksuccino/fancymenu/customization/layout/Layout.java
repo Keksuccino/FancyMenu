@@ -37,6 +37,7 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.util.Legacy;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
+import de.keksuccino.fancymenu.util.file.ResourceFile;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -843,15 +844,10 @@ public class Layout extends LayoutBase {
                 boolean addElement = false;
 
                 if (action.equalsIgnoreCase("addhoversound")) {
-                    element.hoverSound = sec.getValue("path");
-                    if (element.hoverSound != null) {
-                        File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(element.hoverSound));
-                        if (f.exists() && f.isFile()) {
-                            SoundRegistry.registerSound(element.hoverSound, element.hoverSound);
-                            addElement = true;
-                        } else {
-                            element.hoverSound = null;
-                        }
+                    element.hoverSound = SerializationUtils.deserializeResourceFile(sec.getValue("path"));
+                    if ((element.hoverSound != null) && element.hoverSound.exists() && (element.hoverSound.getType() == ResourceFile.ResourceFileType.AUDIO_WAV)) {
+                        SoundRegistry.registerSound(element.hoverSound.getAbsolutePath(), element.hoverSound.getAbsolutePath());
+                        addElement = true;
                     }
                 }
 
@@ -944,23 +940,18 @@ public class Layout extends LayoutBase {
                     if ((restartBackAnimationsOnHover != null) && restartBackAnimationsOnHover.equalsIgnoreCase("false")) {
                         element.restartBackgroundAnimationsOnHover = false;
                     }
-                    element.backgroundTextureNormal = sec.getValue("backgroundnormal");
-                    element.backgroundTextureHover = sec.getValue("backgroundhovered");
+                    element.backgroundTextureNormal = SerializationUtils.deserializeResourceFile(sec.getValue("backgroundnormal"));
+                    element.backgroundTextureHover = SerializationUtils.deserializeResourceFile(sec.getValue("backgroundhovered"));
                     element.backgroundAnimationNormal = sec.getValue("backgroundanimationnormal");
                     element.backgroundAnimationHover = sec.getValue("backgroundanimationhovered");
                     addElement = true;
                 }
 
                 if (action.equalsIgnoreCase("setbuttonclicksound")) {
-                    element.clickSound = sec.getValue("path");
-                    if (element.clickSound != null) {
-                        File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(element.clickSound));
-                        if (f.exists() && f.isFile() && f.getPath().toLowerCase().endsWith(".wav")) {
-                            SoundHandler.registerSound(f.getPath(), f.getPath());
-                            addElement = true;
-                        } else {
-                            element.clickSound = null;
-                        }
+                    element.clickSound = SerializationUtils.deserializeResourceFile(sec.getValue("path"));
+                    if ((element.clickSound != null) && element.clickSound.exists() && (element.clickSound.getType() == ResourceFile.ResourceFileType.AUDIO_WAV)) {
+                        SoundHandler.registerSound(element.clickSound.getAbsolutePath(), element.clickSound.getAbsolutePath());
+                        addElement = true;
                     }
                 }
 

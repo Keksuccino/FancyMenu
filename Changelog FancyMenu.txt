@@ -1,3 +1,14 @@
+
+CHANGELOG | FANCYMENU v2.14.9-3 for MC 1.20.X
+ 
+- Fixed: Glitched Title Screen Minecraft Logo element in the editor in MC 1.20.1
+- Fixed: Text input field in the "Build Custom GUI" screen not clickable
+
+%changelog:end%
+
+
+
+
  
 - Fixed loading screen fade-out bug
 
@@ -106,6 +117,9 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - The "Execute Terminal/CMD Command" action now prints its process output to the game log
 - There's now a layout index system to customize the loading order of multi-layout setups (multiple layouts for the same menu)
 - The old overlay to show the screen identifier got replaced with a full debug overlay that shows useful information about performance, loaded layouts and more
+- You can now fully customize Vanilla/Mod Slider handle and background textures
+- The Image menu background type now supports web sources (and allows you to set a local fallback texture in case the web source fails to load)
+- It's now possible to set GIF images as menu background
  
 - Added loading requirement "File/Folder Exists" to check if a file/folder exists
 - Added loading requirement "Is Button Active" to check if a button is active (clickable/not greyed out)

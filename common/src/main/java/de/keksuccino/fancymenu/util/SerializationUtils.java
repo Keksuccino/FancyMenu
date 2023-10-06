@@ -1,10 +1,23 @@
 package de.keksuccino.fancymenu.util;
 
+import de.keksuccino.fancymenu.util.file.ResourceFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("all")
 public class SerializationUtils {
+
+    @Nullable
+    public static ResourceFile deserializeAssetResourceFile(@Nullable String gameDirectoryFilePath) {
+        if (gameDirectoryFilePath == null) return null;
+        else return ResourceFile.asset(gameDirectoryFilePath);
+    }
+
+    @Nullable
+    public static ResourceFile deserializeResourceFile(@Nullable String gameDirectoryFilePath) {
+        if (gameDirectoryFilePath == null) return null;
+        else return ResourceFile.of(gameDirectoryFilePath);
+    }
 
     @NotNull
     public static <T extends Number> T deserializeNumber(@NotNull Class<T> type, @NotNull T fallbackValue, @Nullable String serialized) {

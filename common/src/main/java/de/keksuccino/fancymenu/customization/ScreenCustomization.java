@@ -34,6 +34,7 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
+import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
 import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
@@ -331,34 +332,19 @@ public class ScreenCustomization {
 
 	}
 
+	@Deprecated
 	public static boolean isExistingGameDirectoryPath(@NotNull String path) {
-		Objects.requireNonNull(path);
-		String gameDir = FancyMenu.getGameDirectory().getAbsolutePath().replace("\\", "/");
-		if (!path.startsWith(gameDir)) {
-			path = gameDir + "/" + path;
-		}
-		return new File(path).exists();
+		return GameDirectoryUtils.isExistingGameDirectoryPath(path);
 	}
 
+	@Deprecated
 	public static String getAbsoluteGameDirectoryPath(@NotNull String path) {
-		try {
-			path = path.replace("\\", "/");
-			String gameDir = FancyMenu.getGameDirectory().getAbsolutePath().replace("\\", "/");
-			if (!path.startsWith(gameDir)) {
-				return gameDir + "/" + path;
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return path;
+		return GameDirectoryUtils.getAbsoluteGameDirectoryPath(path);
 	}
 
+	@Deprecated
 	public static String getPathWithoutGameDirectory(@NotNull String path) {
-		Objects.requireNonNull(path, "Path cannot be NULL!");
-		File f = new File(getAbsoluteGameDirectoryPath(path));
-		String p = f.getAbsolutePath().replace("\\", "/").replace(FancyMenu.getGameDirectory().getAbsolutePath().replace("\\", "/"), "");
-		if (p.startsWith("/")) p = p.substring(1);
-		return p;
+		return GameDirectoryUtils.getPathWithoutGameDirectory(path);
 	}
 
 	public static String generateUniqueIdentifier() {

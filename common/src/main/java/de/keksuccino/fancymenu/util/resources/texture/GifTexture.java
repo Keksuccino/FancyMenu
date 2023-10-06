@@ -240,6 +240,9 @@ public class GifTexture implements ITexture, PlayableResource {
 
     public void reset() {
         this.current = null;
+        if (!this.frames.isEmpty()) {
+            this.current = this.frames.get(0);
+        }
     }
 
     @NotNull

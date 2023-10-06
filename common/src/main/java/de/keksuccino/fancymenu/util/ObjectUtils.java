@@ -3,9 +3,14 @@ package de.keksuccino.fancymenu.util;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
 public class ObjectUtils {
+
+    public static <T> T build(@NotNull Supplier<T> builder) {
+        return builder.get();
+    }
 
     public static <T> boolean isTrueForAll(List<T> objects, ConsumingSupplier<T, Boolean> checkFor) {
         for (T object : objects) {

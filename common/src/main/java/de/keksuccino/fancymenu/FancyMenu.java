@@ -4,6 +4,7 @@ import java.io.File;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.file.FileUtils;
+import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.rendering.text.color.colors.TextColorFormatters;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
@@ -18,6 +19,9 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
+
+	//TODO Button: Nine-Slice Background Mode (toggle on/off)
+	// - Option, um Randbreite zu definieren, wenn möglich
 
 	//TODO VanillaWidgetElement background handling auf neues System bringen
 
@@ -161,12 +165,9 @@ public class FancyMenu {
 		return SharedConstants.getCurrentVersion().getName();
 	}
 
+	@Deprecated
 	public static File getGameDirectory() {
-		if (Services.PLATFORM.isOnClient()) {
-			return Minecraft.getInstance().gameDirectory;
-		} else {
-			return new File("");
-		}
+		return GameDirectoryUtils.getGameDirectory();
 	}
 
 	private static File createDirectory(@NotNull File directory) {

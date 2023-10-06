@@ -188,9 +188,39 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 	@Override
 	public void tick() {
+
 		for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
 			w.tick();
 		}
+
+		for (AbstractEditorElement e : this.getAllElements()) {
+			e.element.tick();
+		}
+
+		if (this.layout.menuBackground != null) this.layout.menuBackground.tick();
+
+	}
+
+	@Override
+	public void removed() {
+
+		for (AbstractEditorElement e : this.getAllElements()) {
+			e.element.onCloseScreen();
+		}
+
+		if (this.layout.menuBackground != null) this.layout.menuBackground.onCloseScreen();
+
+	}
+
+	@Override
+	public void added() {
+
+		for (AbstractEditorElement e : this.getAllElements()) {
+			e.element.onOpenScreen();
+		}
+
+		if (this.layout.menuBackground != null) this.layout.menuBackground.onOpenScreen();
+
 	}
 
 	@Override

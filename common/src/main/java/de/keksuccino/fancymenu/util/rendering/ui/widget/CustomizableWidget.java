@@ -72,37 +72,9 @@ public interface CustomizableWidget {
         return renderVanilla;
     }
 
-    default void resetWidgetCustomizationsFancyMenu() {
-        if (this.getCustomBackgroundNormalFancyMenu() instanceof PlayableResource p) p.stop();
-        if (this.getCustomBackgroundHoverFancyMenu() instanceof PlayableResource p) p.stop();
-        if (this.getCustomBackgroundInactiveFancyMenu() instanceof PlayableResource p) p.stop();
-        this.setCustomBackgroundNormalFancyMenu(null);
-        this.setCustomBackgroundHoverFancyMenu(null);
-        this.setCustomBackgroundInactiveFancyMenu(null);
-        this.setCustomBackgroundResetBehaviorFancyMenu(CustomBackgroundResetBehavior.RESET_NEVER);
-        this.setHoverSoundFancyMenu(null);
-        this.setCustomClickSoundFancyMenu(null);
-        this.setHiddenFancyMenu(false);
-        this.setCustomLabelFancyMenu(null);
-        this.setHoverLabelFancyMenu(null);
-        this.setCustomWidthFancyMenu(null);
-        this.setCustomHeightFancyMenu(null);
-        this.setCustomXFancyMenu(null);
-        this.setCustomYFancyMenu(null);
-        this.tickHoverStateListenersFancyMenu(false);
-        this.tickFocusStateListenersFancyMenu(false);
-        this.tickHoverOrFocusStateListenersFancyMenu(false);
-        for (Runnable listener : this.getResetCustomizationsListenersFancyMenu()) {
-            listener.run();
-        }
-    }
+    void resetWidgetCustomizationsFancyMenu();
 
-    default void resetWidgetSizeAndPositionFancyMenu() {
-        this.setCustomXFancyMenu(null);
-        this.setCustomYFancyMenu(null);
-        this.setCustomWidthFancyMenu(null);
-        this.setCustomHeightFancyMenu(null);
-    }
+    void resetWidgetSizeAndPositionFancyMenu();
 
     void addResetCustomizationsListenerFancyMenu(@NotNull Runnable listener);
 

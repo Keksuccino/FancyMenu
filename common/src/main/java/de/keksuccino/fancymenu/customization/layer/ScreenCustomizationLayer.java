@@ -99,16 +99,32 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 
 	@EventListener
 	public void onOpenScreen(OpenScreenEvent e) {
+
+		if (!this.shouldCustomize(e.getScreen())) return;
+
 		//Cache original menu title
 		if (!cachedOriginalMenuTitles.containsKey(e.getScreen().getClass())) {
 			cachedOriginalMenuTitles.put(e.getScreen().getClass(), e.getScreen().getTitle());
 		}
+
+		for (AbstractElement element : this.allElements) {
+			element.onOpenScreen();
+		}
+
+		if (this.layoutBase.menuBackground != null) this.layoutBase.menuBackground.onOpenScreen();
+
 	}
 
 	@EventListener
 	public void onCloseScreen(CloseScreenEvent e) {
 
 		if (!this.shouldCustomize(e.getScreen())) return;
+
+		for (AbstractElement element : this.allElements) {
+			element.onCloseScreen();
+		}
+
+		if (this.layoutBase.menuBackground != null) this.layoutBase.menuBackground.onCloseScreen();
 
 		if (this.layoutBase.closeAudio != null) {
 			SoundHandler.resetSound(this.layoutBase.closeAudio);
@@ -322,7 +338,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 	}
 
 	@EventListener
-	public void onScreenTickPre(ScreenTickEvent.Pre e) {
+	public void onScreenTickPre(ScreenTickEvent.Post e) {
 
 		if (PopupHandler.isPopupActive()) return;
 		if (!this.shouldCustomize(e.getScreen())) return;

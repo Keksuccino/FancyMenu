@@ -111,13 +111,13 @@ public class MixinMinecraft {
 	}
 
 	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;removed()V"))
-	private void beforeCloseScreenFancyMenu(Screen screen, CallbackInfo info) {
+	private void beforeScreenRemovedFancyMenu(Screen screen, CallbackInfo info) {
 		if (this.screen == null) return;
 		EventHandler.INSTANCE.postEvent(new CloseScreenEvent(this.screen));
 	}
 
 	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;added()V"))
-	private void beforeOpenScreenFancyMenu(Screen screen, CallbackInfo info) {
+	private void beforeScreenAddedFancyMenu(Screen screen, CallbackInfo info) {
 		if (this.screen == null) return;
 		EventHandler.INSTANCE.postEvent(new OpenScreenEvent(this.screen));
 	}

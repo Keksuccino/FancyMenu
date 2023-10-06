@@ -204,7 +204,14 @@ public class TextEditorScreen extends Screen {
             this.addWidget(this.placeholderButton);
             UIBase.applyDefaultWidgetSkinTo(this.placeholderButton);
             if (extendedPlaceholderMenu) {
-                this.placeholderButton.setBackground(ExtendedButton.ColorButtonBackground.create(UIBase.getUIColorTheme().element_background_color_normal, UIBase.getUIColorTheme().element_background_color_hover, DrawableColor.of(this.editorAreaBorderColor), DrawableColor.of(this.editorAreaBorderColor)));
+                this.placeholderButton.setBackgroundColor(
+                        UIBase.getUIColorTheme().element_background_color_normal,
+                        UIBase.getUIColorTheme().element_background_color_hover,
+                        UIBase.getUIColorTheme().element_background_color_normal,
+                        DrawableColor.of(this.editorAreaBorderColor),
+                        DrawableColor.of(this.editorAreaBorderColor),
+                        DrawableColor.of(this.editorAreaBorderColor)
+                );
                 ((IMixinAbstractWidget)this.placeholderButton).setHeightFancyMenu(this.getEditorAreaY() - ((this.headerHeight / 2) - 10));
             }
         } else {
@@ -1656,7 +1663,14 @@ public class TextEditorScreen extends Screen {
 
         public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
             //Update the button colors
-            this.buttonBase.setBackground(ExtendedButton.ColorButtonBackground.create(DrawableColor.of(this.backgroundColorIdle), DrawableColor.of(this.backgroundColorHover), DrawableColor.of(this.backgroundColorIdle), DrawableColor.of(this.backgroundColorHover)));
+            this.buttonBase.setBackgroundColor(
+                    DrawableColor.of(this.backgroundColorIdle),
+                    DrawableColor.of(this.backgroundColorHover),
+                    DrawableColor.of(this.backgroundColorIdle),
+                    DrawableColor.of(this.backgroundColorIdle),
+                    DrawableColor.of(this.backgroundColorHover),
+                    DrawableColor.of(this.backgroundColorIdle)
+            );
             //Update the button pos
             this.buttonBase.setX(this.x);
             this.buttonBase.setY(this.y);

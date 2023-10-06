@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElementBuilder;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
@@ -15,6 +16,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements IElementStacker<VanillaWidgetElement> {
+
+    //TODO Wenn Slider background, dann default handle render broken (default texture muss nach custom render neu gesetzt werden)
+    //TODO Slider inactive handle texture entfernen (slider haben keine inactive handle texture)
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -46,6 +50,15 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
                 serialized.putProperty("is_hidden", "" + element.vanillaButtonHidden);
                 serialized.putProperty("automated_button_clicks", "" + element.automatedButtonClicks);
 
+                if (element.sliderBackgroundTextureNormal != null) {
+                    serialized.putProperty("slider_background_texture_normal", element.sliderBackgroundTextureNormal.getShortPath());
+                }
+                if (element.sliderBackgroundTextureHighlighted != null) {
+                    serialized.putProperty("slider_background_texture_highlighted", element.sliderBackgroundTextureHighlighted.getShortPath());
+                }
+                serialized.putProperty("slider_background_animation_normal", element.sliderBackgroundAnimationNormal);
+                serialized.putProperty("slider_background_animation_highlighted", element.sliderBackgroundAnimationHighlighted);
+
                 return serialized;
 
             }
@@ -72,6 +85,11 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
         if ((automatedClicks != null) && MathUtils.isInteger(automatedClicks)) {
             element.automatedButtonClicks = Integer.parseInt(automatedClicks);
         }
+
+        element.sliderBackgroundTextureNormal = SerializationUtils.deserializeResourceFile(serialized.getValue("slider_background_texture_normal"));
+        element.sliderBackgroundTextureHighlighted = SerializationUtils.deserializeResourceFile(serialized.getValue("slider_background_texture_highlighted"));
+        element.sliderBackgroundAnimationNormal = serialized.getValue("slider_background_animation_normal");
+        element.sliderBackgroundAnimationHighlighted = serialized.getValue("slider_background_animation_highlighted");
 
         return element;
 

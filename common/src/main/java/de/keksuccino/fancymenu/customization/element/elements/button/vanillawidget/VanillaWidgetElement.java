@@ -1,13 +1,21 @@
 package de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
+import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.IHideableElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
+import de.keksuccino.fancymenu.util.file.FileFilter;
+import de.keksuccino.fancymenu.util.file.ResourceFile;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
+import de.keksuccino.fancymenu.util.resources.RenderableResource;
+import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
+import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,28 +30,14 @@ public class VanillaWidgetElement extends ButtonElement implements IHideableElem
     public WidgetMeta widgetMeta;
     public boolean vanillaButtonHidden = false;
     public int automatedButtonClicks = 0;
+    public ResourceFile sliderBackgroundTextureNormal;
+    public ResourceFile sliderBackgroundTextureHighlighted;
+    public String sliderBackgroundAnimationNormal;
+    public String sliderBackgroundAnimationHighlighted;
     protected boolean automatedButtonClicksDone = false;
 
     public VanillaWidgetElement(ElementBuilder<ButtonElement, ButtonEditorElement> builder) {
         super(builder);
-    }
-
-    @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-
-        if (!this.shouldRender()) return;
-        if (this.getWidget() == null) return;
-
-        //Auto-click the vanilla button on menu load (don't add this to updateWidget(), because it could break stuff!)
-        if (!isEditor() && !this.automatedButtonClicksDone && (this.automatedButtonClicks > 0)) {
-            for (int i = 0; i < this.automatedButtonClicks; i++) {
-                this.getWidget().onClick(this.getWidget().getX() + 1, this.getWidget().getY() + 1);
-            }
-            this.automatedButtonClicksDone = true;
-        }
-
-        super.render(pose, mouseX, mouseY, partial);
-
     }
 
     @SuppressWarnings("all")
@@ -67,8 +61,57 @@ public class VanillaWidgetElement extends ButtonElement implements IHideableElem
 
     @Override
     public void updateWidget() {
+
+        //Auto-click the vanilla button on menu load (don't add this to updateWidget(), because it could break stuff!)
+        if (!isEditor() && !this.automatedButtonClicksDone && (this.automatedButtonClicks > 0)) {
+            for (int i = 0; i < this.automatedButtonClicks; i++) {
+                if (this.getWidget() != null) this.getWidget().onClick(this.getWidget().getX() + 1, this.getWidget().getY() + 1);
+            }
+            this.automatedButtonClicksDone = true;
+        }
+
         this.updateWidgetVisibility();
+
         super.updateWidget();
+
+    }
+
+    @Override
+    public void updateWidgetTexture() {
+
+        super.updateWidgetTexture();
+
+        RenderableResource backNormal = null;
+        RenderableResource backHighlighted = null;
+
+        //Normal
+        if ((this.sliderBackgroundAnimationNormal != null) && AnimationHandler.animationExists(this.sliderBackgroundAnimationNormal)) {
+            IAnimationRenderer r = AnimationHandler.getAnimation(this.sliderBackgroundAnimationNormal);
+            if (r instanceof AdvancedAnimation a) {
+                a.setLooped(this.loopBackgroundAnimations);
+                backNormal = a;
+            }
+        }
+        if ((backNormal == null) && (this.sliderBackgroundTextureNormal != null) && this.sliderBackgroundTextureNormal.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.sliderBackgroundTextureNormal.getFile())) {
+            backNormal = TextureHandler.INSTANCE.getTexture(this.sliderBackgroundTextureNormal.getAbsolutePath());
+        }
+        //Highlighted
+        if ((this.sliderBackgroundAnimationHighlighted != null) && AnimationHandler.animationExists(this.sliderBackgroundAnimationHighlighted)) {
+            IAnimationRenderer r = AnimationHandler.getAnimation(this.sliderBackgroundAnimationHighlighted);
+            if (r instanceof AdvancedAnimation a) {
+                a.setLooped(this.loopBackgroundAnimations);
+                backHighlighted = a;
+            }
+        }
+        if ((backHighlighted == null) && (this.sliderBackgroundTextureHighlighted != null) && this.sliderBackgroundTextureHighlighted.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.sliderBackgroundTextureHighlighted.getFile())) {
+            backHighlighted = TextureHandler.INSTANCE.getTexture(this.sliderBackgroundTextureHighlighted.getAbsolutePath());
+        }
+
+        if (this.getWidget() instanceof CustomizableSlider w) {
+            w.setCustomSliderBackgroundNormalFancyMenu(backNormal);
+            w.setCustomSliderBackgroundHighlightedFancyMenu(backHighlighted);
+        }
+
     }
 
     public void updateWidgetVisibility() {

@@ -364,6 +364,15 @@ public class ExtendedButton extends Button implements UniqueWidget, NavigatableW
         return this.backgroundColorNormal;
     }
 
+    public void setBackgroundColor(@Nullable DrawableColor backgroundColorNormal, @Nullable DrawableColor backgroundColorHover, @Nullable DrawableColor backgroundColorInactive, @Nullable DrawableColor borderColorNormal, @Nullable DrawableColor borderColorHover, @Nullable DrawableColor borderColorInactive) {
+        this.backgroundColorNormal = backgroundColorNormal;
+        this.backgroundColorHover = backgroundColorHover;
+        this.backgroundColorInactive = backgroundColorInactive;
+        this.borderColorNormal = borderColorNormal;
+        this.borderColorHover = borderColorHover;
+        this.borderColorInactive = borderColorInactive;
+    }
+
     public void setBackgroundColorNormal(@Nullable DrawableColor backgroundColorNormal) {
         this.backgroundColorNormal = backgroundColorNormal;
     }
