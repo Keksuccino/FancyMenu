@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.element.elements.slider;
+package de.keksuccino.fancymenu.customization.element.elements.slider.v1;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;

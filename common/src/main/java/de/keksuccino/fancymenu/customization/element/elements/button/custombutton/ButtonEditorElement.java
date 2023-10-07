@@ -14,15 +14,11 @@ import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.ObjectUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractButton;
-import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import org.jetbrains.annotations.NotNull;
 import java.util.List;
-import java.util.function.Supplier;
 
 public class ButtonEditorElement extends AbstractEditorElement {
 
@@ -225,25 +221,29 @@ public class ButtonEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("button_separator_2").setStackable(true);
 
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "edit_label",
-                        ButtonEditorElement.class,
-                        consumes -> ((ButtonElement)consumes.element).label,
-                        (element1, s) -> ((ButtonElement)element1.element).label = s,
-                        null, false, true, Component.translatable(isButton ? "fancymenu.editor.items.button.editlabel" : "fancymenu.editor.items.button.label.generic"),
-                        true, null, null, null)
-                .setStackable(true)
-                .setIcon(ContextMenu.IconFactory.getIcon("text"));
+        if (!isSlider) {
 
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "edit_hover_label",
-                        ButtonEditorElement.class,
-                        consumes -> ((ButtonElement)consumes.element).hoverLabel,
-                        (element1, s) -> ((ButtonElement)element1.element).hoverLabel = s,
-                        null, false, true, Component.translatable(isButton ? "fancymenu.editor.items.button.hoverlabel" : "fancymenu.editor.items.button.hover_label.generic"),
-                        true, null, null, null)
-                .setStackable(true)
-                .setIcon(ContextMenu.IconFactory.getIcon("text"));
+            this.addStringInputContextMenuEntryTo(this.rightClickMenu, "edit_label",
+                            ButtonEditorElement.class,
+                            consumes -> ((ButtonElement)consumes.element).label,
+                            (element1, s) -> ((ButtonElement)element1.element).label = s,
+                            null, false, true, Component.translatable(isButton ? "fancymenu.editor.items.button.editlabel" : "fancymenu.editor.items.button.label.generic"),
+                            true, null, null, null)
+                    .setStackable(true)
+                    .setIcon(ContextMenu.IconFactory.getIcon("text"));
 
-        this.rightClickMenu.addSeparatorEntry("button_separator_3").setStackable(true);
+            this.addStringInputContextMenuEntryTo(this.rightClickMenu, "edit_hover_label",
+                            ButtonEditorElement.class,
+                            consumes -> ((ButtonElement)consumes.element).hoverLabel,
+                            (element1, s) -> ((ButtonElement)element1.element).hoverLabel = s,
+                            null, false, true, Component.translatable(isButton ? "fancymenu.editor.items.button.hoverlabel" : "fancymenu.editor.items.button.hover_label.generic"),
+                            true, null, null, null)
+                    .setStackable(true)
+                    .setIcon(ContextMenu.IconFactory.getIcon("text"));
+
+            this.rightClickMenu.addSeparatorEntry("button_separator_3").setStackable(true);
+
+        }
 
         this.addGenericFileChooserContextMenuEntryTo(this.rightClickMenu, "edit_hover_sound",
                         consumes -> (consumes instanceof ButtonEditorElement),

@@ -25,8 +25,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(AbstractSliderButton.class)
 public abstract class MixinAbstractSliderButton extends AbstractWidget implements CustomizableSlider {
 
+    private static final ResourceLocation SLIDER_LOCATION_FANCYMENU = new ResourceLocation("textures/gui/slider.png");
+
     @Shadow private boolean canChangeValue;
     @Shadow protected double value;
+
+    @Shadow public abstract void renderWidget(PoseStack p_275635_, int p_275335_, int p_275551_, float p_275511_);
 
     @Unique @Nullable
     private RenderableResource customSliderBackgroundNormalFancyMenu;
@@ -49,13 +53,18 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
     private boolean wrapBlitNineSlicedInRenderWidgetFancyMenu(PoseStack pose, int x, int y, int width, int height, int i5, int i6, int i7, int i8, int i9, int i10) {
         CustomizableWidget cus = this.getAsCustomizableWidgetFancyMenu();
         boolean isHandle = (width == 8);
+        boolean renderVanilla;
         if (isHandle) {
             int handleX = this.getX() + (int)(this.value * (double)(this.getWidth() - 8));
             //For sliders, the normal widget background is the slider handle texture
-            return cus.renderCustomBackgroundFancyMenu(this, pose, handleX, this.getY(), 8, this.getHeight());
+            renderVanilla = cus.renderCustomBackgroundFancyMenu(this, pose, handleX, this.getY(), 8, this.getHeight());
         } else {
-            return this.renderSliderBackgroundFancyMenu(pose);
+            renderVanilla = this.renderSliderBackgroundFancyMenu(pose);
         }
+        //Re-bind default texture after rendering custom
+        RenderSystem.setShaderTexture(0, SLIDER_LOCATION_FANCYMENU);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
+        return renderVanilla;
     }
 
     @Unique

@@ -54,7 +54,6 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
     public boolean restartBackgroundAnimationsOnHover = true;
     @NotNull
     public GenericExecutableBlock actionExecutor = new GenericExecutableBlock();
-    protected boolean hovered = false;
 
     public ButtonElement(ElementBuilder<ButtonElement, ButtonEditorElement> builder) {
         super(builder);
@@ -69,22 +68,15 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
         this.updateWidget();
 
         if (isEditor()) {
-            this.getWidget().visible = true;
             if (this.getWidget() instanceof ExtendedButton e) {
                 e.setPressAction((button) -> {});
-                e.active = true;
             } else if (this.getWidget() instanceof Button b) {
                 ((IMixinButton)b).setPressActionFancyMenu((button) -> {});
-                b.active = true;
-            } else {
-                this.getWidget().active = false;
             }
+            this.getWidget().visible = true;
+            this.getWidget().active = true;
             this.getWidget().setTooltip(null);
         }
-
-        //The hover state of buttons gets updated in their render method, so make sure to update this field BEFORE the
-        //button gets rendered, because otherwise renderTick() wouldn't work correctly.
-        this.hovered = this.getWidget().isHoveredOrFocused();
 
         this.renderElementWidget(pose, mouseX, mouseY, partial);
 

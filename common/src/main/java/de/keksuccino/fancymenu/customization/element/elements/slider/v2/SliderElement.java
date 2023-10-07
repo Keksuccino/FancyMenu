@@ -1,25 +1,26 @@
-package de.keksuccino.fancymenu.customization.element.elements.slider;
+package de.keksuccino.fancymenu.customization.element.elements.slider.v2;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
+import de.keksuccino.fancymenu.customization.variables.VariableHandler;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.ExtendedSliderButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.ListSliderButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.RangeSliderButton;
-import de.keksuccino.fancymenu.customization.variables.VariableHandler;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 public class SliderElement extends AbstractElement {
 
+    public ExtendedSliderButton slider;
     public String linkedVariable;
     public SliderType type = SliderType.RANGE;
     public List<String> listValues = new ArrayList<>();
@@ -27,8 +28,10 @@ public class SliderElement extends AbstractElement {
     public int maxRangeValue = 10;
     public String labelPrefix;
     public String labelSuffix;
+    @NotNull
+    public GenericExecutableBlock executableBlock = new GenericExecutableBlock();
 
-    public ExtendedSliderButton slider;
+    //TODO In actions kann "$value" als placeholder für aktuelles Value genutzt werden
 
     public SliderElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);

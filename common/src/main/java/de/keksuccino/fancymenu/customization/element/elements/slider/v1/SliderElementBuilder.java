@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.element.elements.slider;
+package de.keksuccino.fancymenu.customization.element.elements.slider.v1;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
@@ -17,6 +17,11 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
 
     public SliderElementBuilder() {
         super("fancymenu_customization_item_slider");
+    }
+
+    @Override
+    public boolean isDeprecated() {
+        return true;
     }
 
     @Override

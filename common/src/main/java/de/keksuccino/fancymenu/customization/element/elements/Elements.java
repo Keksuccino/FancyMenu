@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.customization.element.elements.inputfield.InputFi
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.PlayerEntityElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.progressbar.ProgressBarElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.shape.ShapeElementBuilder;
-import de.keksuccino.fancymenu.customization.element.elements.slider.SliderElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.slider.v1.SliderElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.slideshow.SlideshowElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.splash.SplashTextElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.ticker.TickerElementBuilder;

@@ -44,6 +44,7 @@ public class Actions {
     public static final ExecuteTerminalCommandAction EXECUTE_TERMINAL_COMMAND = new ExecuteTerminalCommandAction();
     public static final CopyToClipboardAction COPY_TO_CLIPBOARD = new CopyToClipboardAction();
     public static final MimicButtonAction MIMIC_BUTTON = new MimicButtonAction();
+    public static final EditMinecraftOptionAction EDIT_MINECRAFT_OPTION = new EditMinecraftOptionAction();
 
     public static void registerAll() {
 
@@ -74,6 +75,7 @@ public class Actions {
         ActionRegistry.register(EXECUTE_TERMINAL_COMMAND);
         ActionRegistry.register(COPY_TO_CLIPBOARD);
         ActionRegistry.register(MIMIC_BUTTON);
+        ActionRegistry.register(EDIT_MINECRAFT_OPTION);
 
     }
 

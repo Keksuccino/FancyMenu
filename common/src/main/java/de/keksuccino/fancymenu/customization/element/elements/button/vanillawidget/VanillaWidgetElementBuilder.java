@@ -17,11 +17,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements IElementStacker<VanillaWidgetElement> {
 
-    //TODO Wenn Slider background, dann default handle render broken (default texture muss nach custom render neu gesetzt werden)
-    //TODO Slider inactive handle texture entfernen (slider haben keine inactive handle texture)
-
     private static final Logger LOGGER = LogManager.getLogger();
-
     public static final VanillaWidgetElementBuilder INSTANCE = new VanillaWidgetElementBuilder();
 
     @Override

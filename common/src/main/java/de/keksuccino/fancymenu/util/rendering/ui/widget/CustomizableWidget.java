@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.widget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
+import de.keksuccino.fancymenu.util.ClassExtender;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resources.PlayableResource;
 import de.keksuccino.fancymenu.util.resources.RenderableResource;
@@ -19,6 +20,7 @@ import java.util.function.Consumer;
  * This interface gets applied to the {@link AbstractWidget} class to add a bunch of helper methods for easier customization.
  */
 @SuppressWarnings("unused")
+@ClassExtender(AbstractWidget.class)
 public interface CustomizableWidget {
 
     @Nullable
