@@ -1060,9 +1060,13 @@
   "fancymenu.editor.elements.vanilla_widget.button": "Vanilla/Mod Button",
   "fancymenu.editor.elements.vanilla_widget.slider": "Vanilla/Mod Slider",
   "fancymenu.editor.elements.vanilla_widget.generic": "Vanilla/Mod Widget",
-  "fancymenu.actions.edit_minecraft_option": "Edit Minecraft Config Option",
+  "fancymenu.actions.edit_minecraft_option": "Set Minecraft Option",
   "fancymenu.actions.edit_minecraft_option.desc": "Allows you to edit Minecraft's config options.",
   "fancymenu.actions.edit_minecraft_option.edit.option_name": "Option Name:",
   "fancymenu.actions.edit_minecraft_option.edit.set_to_value": "Set to Value:",
-  "fancymenu.actions.edit_minecraft_option.edit.current_value": "Current Option Value: %s"
+  "fancymenu.actions.edit_minecraft_option.edit.current_value": "Current Option Value: %s",
+  "fancymenu.actions.update_screen": "Update Screen",
+  "fancymenu.actions.update_screen.desc": "Updates the current screen.\nThis is useful if you need to rebuild its\nelements (like images, custom buttons, etc.),\nor after changing the GUI scale or other\noptions that need the screen to get updated.\nIt's basically the same as resizing the window.",
+  "fancymenu.placeholders.minecraft_option_value": "Minecraft Option Value",
+  "fancymenu.placeholders.minecraft_option_value.desc": "Gets the current value of a Minecraft option.\nFor a list of valid option names, take a look at\nthe 'options.txt' file of your Minecraft instance."
 }

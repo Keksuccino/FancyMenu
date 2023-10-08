@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
-import de.keksuccino.fancymenu.util.minecraftoptions.codec.OptionInstanceCodecs;
 import de.keksuccino.fancymenu.util.rendering.text.color.colors.TextColorFormatters;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
@@ -19,11 +18,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
-
-	//TODO FIXEN: OptionInstance holt sich falschen Codec via Codec#isCompatible()??
-	// - Eventuell versuchen, OptionInstance#codec() zu nutzen und eigenes Codec system verwerfen
-
-	//TODO "Get Minecraft Config Option Value" Action adden (ähnlich wie Edit Option action)
 
 	//TODO v2 Slider element fertig machen
 	// - support für actions
@@ -119,8 +113,6 @@ public class FancyMenu {
 		if (Services.PLATFORM.isOnClient()) {
 
 			LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in client-side mode on " + MOD_LOADER.toUpperCase() + "!");
-
-			OptionInstanceCodecs.registerAll();
 
 			UIColorThemes.registerAll();
 

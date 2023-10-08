@@ -22,6 +22,7 @@ public class Placeholders {
     public static final LoadedModsPlaceholder LOADED_MODS = new LoadedModsPlaceholder();
     public static final TotalModsPlaceholder TOTAL_MODS = new TotalModsPlaceholder();
     public static final WorldLoadProgressPlaceholder WORLD_LOAD_PROGRESS = new WorldLoadProgressPlaceholder();
+    public static final MinecraftOptionValuePlaceholder MINECRAFT_OPTION_VALUE = new MinecraftOptionValuePlaceholder();
     public static final ScreenWidthPlaceholder SCREEN_WIDTH = new ScreenWidthPlaceholder();
     public static final ScreenHeightPlaceholder SCREEN_HEIGHT = new ScreenHeightPlaceholder();
     public static final ElementWidthPlaceholder ELEMENT_WIDTH = new ElementWidthPlaceholder();
@@ -66,6 +67,7 @@ public class Placeholders {
         PlaceholderRegistry.register(LOADED_MODS);
         PlaceholderRegistry.register(TOTAL_MODS);
         PlaceholderRegistry.register(WORLD_LOAD_PROGRESS);
+        PlaceholderRegistry.register(MINECRAFT_OPTION_VALUE);
 
         //GUI
         PlaceholderRegistry.register(SCREEN_WIDTH);

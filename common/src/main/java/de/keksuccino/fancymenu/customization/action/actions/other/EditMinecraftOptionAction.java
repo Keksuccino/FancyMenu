@@ -4,7 +4,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.minecraftoptions.MinecraftOptionsUtils;
+import de.keksuccino.fancymenu.util.minecraftoptions.MinecraftOptions;
+import de.keksuccino.fancymenu.util.minecraftoptions.MinecraftOption;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
@@ -42,13 +43,13 @@ public class EditMinecraftOptionAction extends Action {
             String name = value.split(":", 2)[0];
             String setTo = value.split(":", 2)[1];
 
-            MinecraftOptionsUtils.OptionInstanceBundle bundle = MinecraftOptionsUtils.getOptionInstanceWithCodec(name);
-            if (bundle == null) {
+            MinecraftOption instance = MinecraftOptions.getOption(name);
+            if (instance == null) {
                 LOGGER.error("[FANCYMENU] EditMinecraftOptionAction was unable to find Minecraft config option: " + name);
                 return;
             }
             try {
-                bundle.codec().set(bundle.instance(), setTo);
+                instance.set(setTo);
                 Minecraft.getInstance().options.save();
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] EditMinecraftOptionAction failed to set Minecraft config option value '" + setTo + "' to option '" + name + "'.", ex);
@@ -61,7 +62,7 @@ public class EditMinecraftOptionAction extends Action {
     @NotNull
     protected static List<String> getSupportedOptionNames() {
         List<String> names = new ArrayList<>();
-        MinecraftOptionsUtils.getOptionInstancesWithCodec().forEach(optionInstanceBundle -> names.add(optionInstanceBundle.name()));
+        MinecraftOptions.getOptions().values().forEach(optionInstance -> names.add(optionInstance.getName()));
         return names;
     }
 
@@ -148,8 +149,8 @@ public class EditMinecraftOptionAction extends Action {
 
         @NotNull
         protected Component buildCurrentOptionValueComponent() {
-            MinecraftOptionsUtils.OptionInstanceBundle bundle = MinecraftOptionsUtils.getOptionInstanceWithCodec(this.name);
-            String current = (bundle != null) ? bundle.codec().get(bundle.instance()) : "-----";
+            MinecraftOption instance = MinecraftOptions.getOption(this.name);
+            String current = (instance != null) ? instance.get() : "-----";
             if (current == null) current = "-----";
             Component curComp = Component.literal(current).setStyle(Style.EMPTY.withBold(false));
             return Component.translatable("fancymenu.actions.edit_minecraft_option.edit.current_value", curComp).setStyle(Style.EMPTY.withBold(true));

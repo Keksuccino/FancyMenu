@@ -10,6 +10,10 @@ public interface RenderableResource {
     public static final ResourceLocation MISSING_TEXTURE_LOCATION = new ResourceLocation("missing_texture_location_fancymenu");
     public static final ResourceLocation FULLY_TRANSPARENT_TEXTURE = new ResourceLocation("fancymenu", "textures/fully_transparent.png");
 
+    /**
+     * Some resource types asynchronously update their current {@link ResourceLocation},
+     * so make sure to always cache the location returned by this method before using it.
+     */
     @Nullable ResourceLocation getResourceLocation();
 
     int getWidth();

@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.customization.action.actions.level.JoinServerActi
 import de.keksuccino.fancymenu.customization.action.actions.other.*;
 import de.keksuccino.fancymenu.customization.action.actions.screen.CloseScreenAction;
 import de.keksuccino.fancymenu.customization.action.actions.screen.OpenScreenAction;
+import de.keksuccino.fancymenu.customization.action.actions.screen.UpdateScreenAction;
 import de.keksuccino.fancymenu.customization.action.actions.variables.ClearVariablesAction;
 import de.keksuccino.fancymenu.customization.action.actions.variables.SetVariableAction;
 import de.keksuccino.fancymenu.customization.action.ActionRegistry;
@@ -31,6 +32,7 @@ public class Actions {
     public static final DisconnectAction DISCONNECT = new DisconnectAction();
     public static final OpenScreenAction OPEN_SCREEN = new OpenScreenAction();
     public static final CloseScreenAction CLOSE_SCREEN = new CloseScreenAction();
+    public static final UpdateScreenAction UPDATE_SCREEN = new UpdateScreenAction();
     public static final OpenLinkAction OPEN_LINK = new OpenLinkAction();
     public static final OpenFileAction OPEN_FILE = new OpenFileAction();
     public static final MoveFileAction MOVE_FILE = new MoveFileAction();
@@ -62,6 +64,7 @@ public class Actions {
         ActionRegistry.register(DISCONNECT);
         ActionRegistry.register(OPEN_SCREEN);
         ActionRegistry.register(CLOSE_SCREEN);
+        ActionRegistry.register(UPDATE_SCREEN);
         ActionRegistry.register(OPEN_LINK);
         ActionRegistry.register(OPEN_FILE);
         ActionRegistry.register(MOVE_FILE);

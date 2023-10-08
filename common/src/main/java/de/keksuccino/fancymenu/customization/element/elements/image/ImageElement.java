@@ -54,7 +54,10 @@ public class ImageElement extends AbstractElement {
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
 
             if ((this.texture != null) && this.texture.isReady()) {
-                RenderUtils.bindTexture(this.texture.getResourceLocation());
+                ResourceLocation loc = this.texture.getResourceLocation();
+                if (loc != null) {
+                    RenderUtils.bindTexture(loc);
+                }
                 blit(pose, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
             } else if (isEditor()) {
                 RenderUtils.bindTexture(MISSING);

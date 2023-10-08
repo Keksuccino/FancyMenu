@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resources.PlayableResource;
-import de.keksuccino.fancymenu.util.resources.RenderableResource;
 import de.keksuccino.konkrete.rendering.GifDecoder;
 import de.keksuccino.konkrete.resources.SelfcleaningDynamicTexture;
 import net.minecraft.client.Minecraft;
@@ -26,7 +25,6 @@ import java.util.Objects;
 public class GifTexture implements ITexture, PlayableResource {
 
     private static final Logger LOGGER = LogManager.getLogger();
-
     public static final GifTexture EMPTY = new GifTexture();
 
     @NotNull
@@ -51,7 +49,7 @@ public class GifTexture implements ITexture, PlayableResource {
 
         GifTexture gifTexture = new GifTexture();
 
-        //Decode GIF image
+        //Download and decode GIF image
         new Thread(() -> {
             InputStream in = null;
             ByteArrayInputStream byteIn = null;
@@ -67,22 +65,7 @@ public class GifTexture implements ITexture, PlayableResource {
             }
             if (byteIn != null) {
                 try {
-                    List<GifFrame> f = extractFrames(byteIn, gifUrl);
-                    for (GifFrame frame : f) {
-                        frame.nativeImage = NativeImage.read(frame.frameInputStream);
-                        CloseableUtils.closeQuietly(frame.closeAfterLoading);
-                        CloseableUtils.closeQuietly(frame.frameInputStream);
-                    }
-                    if (!f.isEmpty()) {
-                        GifFrame first = f.get(0);
-                        if (first.nativeImage != null) {
-                            gifTexture.width = first.nativeImage.getWidth();
-                            gifTexture.height = first.nativeImage.getHeight();
-                            gifTexture.aspectRatio = new AspectRatio(first.nativeImage.getWidth(), first.nativeImage.getHeight());
-                        }
-                    }
-                    gifTexture.frames = f;
-                    gifTexture.decoded = true;
+                    populateTexture(gifTexture, byteIn, gifUrl);
                 } catch (Exception ex) {
                     LOGGER.error("[FANCYMENU] Failed to load Web GIF image: " + gifUrl, ex);
                 }
@@ -110,22 +93,7 @@ public class GifTexture implements ITexture, PlayableResource {
             InputStream in = null;
             try {
                 in = new FileInputStream(gif);
-                List<GifFrame> f = extractFrames(in, gif.getPath());
-                for (GifFrame frame : f) {
-                    frame.nativeImage = NativeImage.read(frame.frameInputStream);
-                    CloseableUtils.closeQuietly(frame.closeAfterLoading);
-                    CloseableUtils.closeQuietly(frame.frameInputStream);
-                }
-                if (!f.isEmpty()) {
-                    GifFrame first = f.get(0);
-                    if (first.nativeImage != null) {
-                        gifTexture.width = first.nativeImage.getWidth();
-                        gifTexture.height = first.nativeImage.getHeight();
-                        gifTexture.aspectRatio = new AspectRatio(first.nativeImage.getWidth(), first.nativeImage.getHeight());
-                    }
-                }
-                gifTexture.frames = f;
-                gifTexture.decoded = true;
+                populateTexture(gifTexture, in, gif.getPath());
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to load GIF image: " + gif.getPath(), ex);
             }
@@ -134,6 +102,46 @@ public class GifTexture implements ITexture, PlayableResource {
 
         return gifTexture;
 
+    }
+
+    protected static void populateTexture(@NotNull GifTexture gifTexture, @NotNull InputStream in, @NotNull String gifTextureName) throws IOException {
+        //Decode first frame and set it as temporary frame list to show GIF quicker
+        GifImageBundle bundleAndFirstFrame = extractFrames(in, gifTextureName, 1);
+        boolean sizeSet = false;
+        if (!bundleAndFirstFrame.frames().isEmpty()) {
+            GifFrame first = bundleAndFirstFrame.frames().get(0);
+            first.nativeImage = NativeImage.read(first.frameInputStream);
+            CloseableUtils.closeQuietly(first.closeAfterLoading);
+            CloseableUtils.closeQuietly(first.frameInputStream);
+            if (first.nativeImage != null) {
+                gifTexture.width = first.nativeImage.getWidth();
+                gifTexture.height = first.nativeImage.getHeight();
+                gifTexture.aspectRatio = new AspectRatio(first.nativeImage.getWidth(), first.nativeImage.getHeight());
+                sizeSet = true;
+            }
+            gifTexture.frames = bundleAndFirstFrame.frames();
+            gifTexture.decoded = true;
+        }
+        //Decode the full GIF and set its frames to the GifTexture
+        List<GifFrame> allFrames = extractFrames(bundleAndFirstFrame.image(), gifTextureName, -1).frames();
+        for (GifFrame frame : allFrames) {
+            frame.nativeImage = NativeImage.read(frame.frameInputStream);
+            CloseableUtils.closeQuietly(frame.closeAfterLoading);
+            CloseableUtils.closeQuietly(frame.frameInputStream);
+        }
+        if (!sizeSet && !allFrames.isEmpty()) {
+            GifFrame first = allFrames.get(0);
+            first.nativeImage = NativeImage.read(first.frameInputStream);
+            CloseableUtils.closeQuietly(first.closeAfterLoading);
+            CloseableUtils.closeQuietly(first.frameInputStream);
+            if (first.nativeImage != null) {
+                gifTexture.width = first.nativeImage.getWidth();
+                gifTexture.height = first.nativeImage.getHeight();
+                gifTexture.aspectRatio = new AspectRatio(first.nativeImage.getWidth(), first.nativeImage.getHeight());
+            }
+        }
+        gifTexture.frames = allFrames;
+        gifTexture.decoded = true;
     }
 
     protected GifTexture() {
@@ -198,7 +206,7 @@ public class GifTexture implements ITexture, PlayableResource {
         }
     }
 
-    @NotNull
+    @Nullable
     @Override
     public ResourceLocation getResourceLocation() {
         this.lastResourceLocationCall = System.currentTimeMillis();
@@ -213,9 +221,9 @@ public class GifTexture implements ITexture, PlayableResource {
                 }
             }
             frame.loaded = true;
-            if (frame.resourceLocation != null) return frame.resourceLocation;
+            return (frame.resourceLocation != null) ? frame.resourceLocation : FULLY_TRANSPARENT_TEXTURE;
         }
-        return RenderableResource.FULLY_TRANSPARENT_TEXTURE;
+        return null;
     }
 
     @Override
@@ -245,30 +253,6 @@ public class GifTexture implements ITexture, PlayableResource {
         }
     }
 
-    @NotNull
-    protected static List<GifFrame> extractFrames(@NotNull InputStream in, @NotNull String gifName) throws IOException {
-        List<GifFrame> l = new ArrayList<>();
-        GifDecoder.GifImage gif = GifDecoder.read(in);
-        int gifFrameCount = gif.getFrameCount();
-        int i = 0;
-        int index = 0;
-        while (i < gifFrameCount) {
-            try {
-                int delay = gif.getDelay(i);
-                BufferedImage image = gif.getFrame(i);
-                ByteArrayOutputStream os = new ByteArrayOutputStream();
-                ImageIO.write(image, "PNG", os);
-                ByteArrayInputStream bis = new ByteArrayInputStream(os.toByteArray());
-                l.add(new GifFrame(index, bis, delay, os));
-                index++;
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to get frame '" + i + "' of GIF image '" + gifName + "! This can happen if the GIF is corrupted in some way.", ex);
-            }
-            i++;
-        }
-        return l;
-    }
-
     @Override
     public void play() {
     }
@@ -285,6 +269,42 @@ public class GifTexture implements ITexture, PlayableResource {
     @Override
     public boolean isPlaying() {
         return true;
+    }
+
+    /**
+     * Set max frames to -1 to read all frames.
+     */
+    @NotNull
+    protected static GifImageBundle extractFrames(@NotNull InputStream in, @NotNull String gifName, int maxFrames) throws IOException {
+        GifDecoder.GifImage gif = GifDecoder.read(in);
+        return extractFrames(gif, gifName, maxFrames);
+    }
+
+    /**
+     * Set max frames to -1 to read all frames.
+     */
+    @NotNull
+    protected static GifImageBundle extractFrames(@NotNull GifDecoder.GifImage gif, @NotNull String gifName, int maxFrames) {
+        List<GifFrame> l = new ArrayList<>();
+        int gifFrameCount = gif.getFrameCount();
+        int i = 0;
+        int index = 0;
+        while (i < gifFrameCount) {
+            try {
+                int delay = gif.getDelay(i);
+                BufferedImage image = gif.getFrame(i);
+                ByteArrayOutputStream os = new ByteArrayOutputStream();
+                ImageIO.write(image, "PNG", os);
+                ByteArrayInputStream bis = new ByteArrayInputStream(os.toByteArray());
+                l.add(new GifFrame(index, bis, delay, os));
+                index++;
+                if ((maxFrames != -1) && (maxFrames <= index)) break;
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to get frame '" + i + "' of GIF image '" + gifName + "! This can happen if the GIF is corrupted in some way.", ex);
+            }
+            i++;
+        }
+        return new GifImageBundle(gif, l);
     }
 
     protected static class GifFrame {
@@ -304,6 +324,9 @@ public class GifTexture implements ITexture, PlayableResource {
             this.closeAfterLoading = closeAfterLoading;
         }
 
+    }
+
+    protected record GifImageBundle(@NotNull GifDecoder.GifImage image, @NotNull List<GifFrame> frames) {
     }
 
 }

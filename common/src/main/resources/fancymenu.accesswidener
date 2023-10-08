@@ -10,3 +10,5 @@ extendable method net/minecraft/client/gui/screens/Screen createArrowEvent (Lnet
 extendable method net/minecraft/client/gui/screens/Screen createTabEvent ()Lnet/minecraft/client/gui/navigation/FocusNavigationEvent$TabNavigation;
 
 accessible method net/minecraft/client/gui/components/CommandSuggestions$SuggestionsList <init> (Lnet/minecraft/client/gui/components/CommandSuggestions;IIILjava/util/List;Z)V
+
+accessible class net/minecraft/client/Options$FieldAccess
