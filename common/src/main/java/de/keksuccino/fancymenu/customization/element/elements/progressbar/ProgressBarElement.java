@@ -132,21 +132,21 @@ public class ProgressBarElement extends AbstractElement {
     }
 
     @Override
-    public int getElementAnchorX() {
+    public int getChildElementAnchorPointX() {
         if (this.useProgressForElementAnchor) {
             if (this.direction == BarDirection.RIGHT) return this.getProgressX() + this.getProgressWidth();
             return this.getProgressX();
         }
-        return super.getElementAnchorX();
+        return super.getChildElementAnchorPointX();
     }
 
     @Override
-    public int getElementAnchorY() {
+    public int getChildElementAnchorPointY() {
         if (this.useProgressForElementAnchor) {
             if (this.direction == BarDirection.DOWN) return this.getProgressY() + this.getProgressHeight();
             return this.getProgressY();
         }
-        return super.getElementAnchorY();
+        return super.getChildElementAnchorPointY();
     }
 
     public int getProgressX() {

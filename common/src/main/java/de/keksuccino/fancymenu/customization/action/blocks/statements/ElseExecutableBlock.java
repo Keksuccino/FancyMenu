@@ -20,6 +20,7 @@ public class ElseExecutableBlock extends AbstractExecutableBlock {
         for (Executable e : this.executables) {
             b.addExecutable(e.copy(unique));
         }
+        b.valuePlaceholders.putAll(this.valuePlaceholders);
         return b;
     }
 

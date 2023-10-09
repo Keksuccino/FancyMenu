@@ -1,82 +1,85 @@
 package de.keksuccino.fancymenu.customization.element.elements.slider.v2;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.variables.VariableHandler;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.ExtendedSliderButton;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.ListSliderButton;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.RangeSliderButton;
-import de.keksuccino.konkrete.input.MouseInput;
+import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtendedSlider;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
 import de.keksuccino.konkrete.math.MathUtils;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import net.minecraft.client.gui.screens.Screen;
+import org.jetbrains.annotations.Nullable;
 
 public class SliderElement extends AbstractElement {
 
-    public ExtendedSliderButton slider;
-    public String linkedVariable;
-    public SliderType type = SliderType.RANGE;
+    public static final String VALUE_PLACEHOLDER = "$$value";
+
+    public AbstractExtendedSlider slider;
+    @NotNull
+    public SliderType type = SliderType.INTEGER_RANGE;
+    @Nullable
+    public String preSelectedValue;
+    @NotNull
     public List<String> listValues = new ArrayList<>();
-    public int minRangeValue = 1;
-    public int maxRangeValue = 10;
-    public String labelPrefix;
-    public String labelSuffix;
+    public double minRangeValue = 1;
+    public double maxRangeValue = 10;
+    public String label;
     @NotNull
     public GenericExecutableBlock executableBlock = new GenericExecutableBlock();
 
-    //TODO In actions kann "$value" als placeholder für aktuelles Value genutzt werden
-
     public SliderElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+        this.buildSlider();
+        this.prepareExecutableBlock();
     }
 
-    public void initializeSlider() {
-        String valString = null;
-        if (linkedVariable != null) {
-            if (VariableHandler.variableExists(linkedVariable)) {
-                valString = Objects.requireNonNull(VariableHandler.getVariable(linkedVariable)).getValue();
+    public void prepareExecutableBlock() {
+        this.executableBlock.addValuePlaceholder("slidervalue", () -> (this.slider != null) ? this.slider.getValueDisplayText() : "");
+    }
+
+    /**
+     * This should only get called on init or in the editor, because the new slider will
+     * not get registered as {@link Screen} widget by calling this method.
+     */
+    public void buildSlider() {
+
+        if (this.type == SliderType.INTEGER_RANGE) {
+            int min = (int) this.minRangeValue;
+            int max = (int) this.maxRangeValue;
+            int preSelected = min;
+            String preSelectedString = (this.preSelectedValue != null) ? PlaceholderParser.replacePlaceholders(this.preSelectedValue) : null;
+            if ((preSelectedString != null) && MathUtils.isDouble(preSelectedString)) {
+                preSelected = (int) Double.parseDouble(preSelectedString);
             }
-        }
-        if (this.type == SliderType.RANGE) {
-            int selectedRangeValue = this.minRangeValue;
-            if ((valString != null) && MathUtils.isInteger(valString)) {
-                selectedRangeValue = Integer.parseInt(valString);
-            }
-            this.slider = new RangeSliderButton(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), true, this.minRangeValue, this.maxRangeValue, selectedRangeValue, (apply) -> {
-                if (linkedVariable != null) {
-                    VariableHandler.setVariable(linkedVariable, "" + ((RangeSliderButton)apply).getSelectedRangeValue());
-                }
-            });
+            this.slider = new RangeSlider(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), Component.empty(), min, max, preSelected);
         }
         if (this.type == SliderType.LIST) {
-            int selectedIndex = 0;
-            if (valString != null) {
-                int i = 0;
-                for (String s : this.listValues) {
-                    if (s.equals(valString)) {
-                        selectedIndex = i;
-                        break;
-                    }
-                    i++;
-                }
-            }
-            this.slider = new ListSliderButton(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), true, this.listValues, selectedIndex, (apply) -> {
-                if (linkedVariable != null) {
-                    VariableHandler.setVariable(linkedVariable, ((ListSliderButton)apply).getSelectedListValue());
-                }
-            });
+
         }
-        if (this.slider != null) {
-            this.slider.setLabelPrefix(this.labelPrefix);
-            this.slider.setLabelSuffix(this.labelSuffix);
-        }
+
+    }
+
+    @NotNull
+    protected Component getSliderLabel(@NotNull AbstractExtendedSlider slider) {
+        String labelValueReplaced = (this.label != null) ? this.label.replace(VALUE_PLACEHOLDER, slider.getValueDisplayText()) : "";
+        return buildComponent(labelValueReplaced);
+    }
+
+    protected void onChangeSliderValue(@NotNull String value) {
+
+
+
+    }
+
+    @Override
+    public @Nullable List<GuiEventListener> getWidgetsToRegister() {
+        return !isEditor() ? List.of(this.slider) : null;
     }
 
     @Override
@@ -84,54 +87,9 @@ public class SliderElement extends AbstractElement {
 
         if (this.shouldRender()) {
 
-            RenderSystem.enableBlend();
+            this.slider.updateMessage();
 
-            //Handle editor mode for text field
-            if (isEditor()) {
-                this.slider.active = false;
-            }
-
-            this.slider.setX(this.getAbsoluteX());
-            this.slider.setY(this.getAbsoluteY());
-            this.slider.setWidth(this.getAbsoluteWidth());
-            ((IMixinAbstractWidget)this.slider).setHeightFancyMenu(this.getAbsoluteHeight());
-            this.slider.render(pose, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime());
-
-            //Update variable value on change
-            if (this.linkedVariable != null) {
-                if (VariableHandler.variableExists(this.linkedVariable)) {
-                    String valString = Objects.requireNonNull(VariableHandler.getVariable(this.linkedVariable)).getValue();
-                    if (this.type == SliderType.RANGE) {
-                        if (MathUtils.isInteger(valString)) {
-                            int val = Integer.parseInt(valString);
-                            if (((RangeSliderButton) this.slider).getSelectedRangeValue() != val) {
-                                ((RangeSliderButton) this.slider).setSelectedRangeValue(val);
-                            }
-                        }
-                    }
-                    if (this.type == SliderType.LIST) {
-                        if (!((ListSliderButton)this.slider).getSelectedListValue().equals(valString)) {
-                            int newIndex = 0;
-                            int i = 0;
-                            for (String s : this.listValues) {
-                                if (s.equals(valString)) {
-                                    newIndex = i;
-                                    break;
-                                }
-                                i++;
-                            }
-                            ((ListSliderButton)this.slider).setSelectedIndex(newIndex);
-                        }
-                    }
-                }
-            }
-
-            if (this.type == SliderType.RANGE) {
-                ((RangeSliderButton)this.slider).maxValue = this.maxRangeValue;
-                ((RangeSliderButton)this.slider).minValue = this.minRangeValue;
-            }
-
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+            this.slider.render(pose, mouseX, mouseY, partial);
 
         }
 
@@ -140,7 +98,8 @@ public class SliderElement extends AbstractElement {
     public enum SliderType {
 
         LIST("list"),
-        RANGE("range");
+        INTEGER_RANGE("integer_range"),
+        DECIMAL_RANGE("decimal_range");
 
         final String name;
 

@@ -39,6 +39,7 @@ public class ElseIfExecutableBlock extends AbstractExecutableBlock {
 
     @Override
     public void setAppendedBlock(@Nullable AbstractExecutableBlock appended) {
+        super.setAppendedBlock(appended);
         this.child = appended;
     }
 
@@ -57,6 +58,7 @@ public class ElseIfExecutableBlock extends AbstractExecutableBlock {
             b.addExecutable(e.copy(unique));
         }
         b.body = this.body.copy(unique);
+        b.valuePlaceholders.putAll(this.valuePlaceholders);
         return b;
     }
 

@@ -3,12 +3,10 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.resources.PlayableResource;
 import de.keksuccino.fancymenu.util.resources.RenderableResource;
-import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
@@ -29,8 +27,6 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
 
     @Shadow private boolean canChangeValue;
     @Shadow protected double value;
-
-    @Shadow public abstract void renderWidget(PoseStack p_275635_, int p_275335_, int p_275551_, float p_275511_);
 
     @Unique @Nullable
     private RenderableResource customSliderBackgroundNormalFancyMenu;
@@ -59,7 +55,7 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
             //For sliders, the normal widget background is the slider handle texture
             renderVanilla = cus.renderCustomBackgroundFancyMenu(this, pose, handleX, this.getY(), 8, this.getHeight());
         } else {
-            renderVanilla = this.renderSliderBackgroundFancyMenu(pose);
+            renderVanilla = this.renderSliderBackgroundFancyMenu(pose, (AbstractSliderButton)((Object)this), this.canChangeValue);
         }
         //Re-bind default texture after rendering custom
         RenderSystem.setShaderTexture(0, SLIDER_LOCATION_FANCYMENU);
@@ -91,36 +87,6 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
             }
         });
 
-    }
-
-    /**
-     * Returns if the slider should render its Vanilla background (true) or not (false).
-     */
-    @Unique
-    private boolean renderSliderBackgroundFancyMenu(PoseStack pose) {
-        ResourceLocation location = null;
-        if (this.isFocused() && !this.canChangeValue) {
-            if (this.customSliderBackgroundNormalFancyMenu instanceof PlayableResource p) p.pause();
-            if (this.customSliderBackgroundHighlightedFancyMenu != null) {
-                if (this.customSliderBackgroundHighlightedFancyMenu instanceof PlayableResource p) p.play();
-                location = this.customSliderBackgroundHighlightedFancyMenu.getResourceLocation();
-            }
-        } else {
-            if (this.customSliderBackgroundHighlightedFancyMenu instanceof PlayableResource p) p.pause();
-            if (this.customSliderBackgroundNormalFancyMenu != null) {
-                if (this.customSliderBackgroundNormalFancyMenu instanceof PlayableResource p) p.play();
-                location = this.customSliderBackgroundNormalFancyMenu.getResourceLocation();
-            }
-        }
-        if (location != null) {
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)this).getAlphaFancyMenu());
-            RenderSystem.enableBlend();
-            RenderingUtils.bindTexture(location);
-            GuiComponent.blit(pose, this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
-            RenderingUtils.resetShaderColor();
-            return false;
-        }
-        return true;
     }
 
     @Unique

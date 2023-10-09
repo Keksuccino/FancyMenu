@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util.rendering.ui.widget.slider;
+package de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v1;
 
 import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;

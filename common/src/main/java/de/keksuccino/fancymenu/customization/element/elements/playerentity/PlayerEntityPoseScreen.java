@@ -12,7 +12,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfiguratorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.RangeSliderButton;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v1.RangeSliderButton;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.resources.language.I18n;

@@ -11,15 +11,13 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.IExtendedWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import de.keksuccino.fancymenu.util.resources.RenderableResource;
-import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -27,7 +25,7 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 
 @SuppressWarnings("all")
-public class ExtendedButton extends Button implements UniqueWidget, NavigatableWidget {
+public class ExtendedButton extends Button implements IExtendedWidget, UniqueWidget, NavigatableWidget {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -110,6 +108,7 @@ public class ExtendedButton extends Button implements UniqueWidget, NavigatableW
                 blitNineSliced(pose, this.getX(), this.getY(), this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureY());
                 RenderingUtils.resetShaderColor();
             }
+            RenderingUtils.resetShaderColor();
         }
     }
 
@@ -145,47 +144,13 @@ public class ExtendedButton extends Button implements UniqueWidget, NavigatableW
                 return false;
             }
         }
-        RenderingUtils.resetShaderColor();
         return true;
     }
 
     protected void renderLabelText(@NotNull PoseStack pose) {
         if (this.enableLabel) {
             int k = this.active ? this.labelBaseColorNormal.getColorIntWithAlpha(this.alpha) : this.labelBaseColorInactive.getColorIntWithAlpha(this.alpha);
-            this.renderScrollingLabel(pose, mc.font, 2, k);
-        }
-    }
-
-    protected void renderScrollingLabel(@NotNull PoseStack pose, @NotNull Font font, int spaceLeftRight, int textColor) {
-        int xMin = this.getX() + spaceLeftRight;
-        int xMax = this.getX() + this.getWidth() - spaceLeftRight;
-        //Use getMessage() here to not break custom label handling of CustomizableWidget
-        this.renderScrollingLabelInternal(pose, font, this.getMessage(), xMin, this.getY(), xMax, this.getY() + this.getHeight(), textColor);
-    }
-
-    protected void renderScrollingLabelInternal(@NotNull PoseStack pose, Font font, @NotNull Component text, int xMin, int yMin, int xMax, int yMax, int textColor) {
-        int textWidth = font.width(text);
-        int textPosY = (yMin + yMax - 9) / 2 + 1;
-        int maxTextWidth = xMax - xMin;
-        if (textWidth > maxTextWidth) {
-            int diffTextWidth = textWidth - maxTextWidth;
-            double scrollTime = (double) Util.getMillis() / 1000.0D;
-            double $$13 = Math.max((double)diffTextWidth * 0.5D, 3.0D);
-            double $$14 = Math.sin((Math.PI / 2D) * Math.cos((Math.PI * 2D) * scrollTime / $$13)) / 2.0D + 0.5D;
-            double textPosX = Mth.lerp($$14, 0.0D, diffTextWidth);
-            enableScissor(xMin, yMin, xMax, yMax);
-            if (!this.labelShadow) {
-                font.draw(pose, text, xMin - (int)textPosX, textPosY, textColor);
-            } else {
-                font.drawShadow(pose, text, xMin - (int)textPosX, textPosY, textColor);
-            }
-            disableScissor();
-        } else {
-            if (!this.labelShadow) {
-                font.draw(pose, text, (int)(((xMin + xMax) / 2F) - (font.width(text) / 2F)), textPosY, textColor);
-            } else {
-                font.drawShadow(pose, text, (int)(((xMin + xMax) / 2F) - (font.width(text) / 2F)), textPosY, textColor);
-            }
+            this.renderScrollingLabel(this, pose, mc.font, 2, this.labelShadow, k);
         }
     }
 

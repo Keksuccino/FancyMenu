@@ -19,6 +19,21 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO Layout Listener System
+	// - Auf Layout Ebene (rechtsklick editor back -> Listeners)
+	// - Jeder Listener hat eine ExecutableBlock instanz, die er ausführen kann
+	// - ExecutableBlock value placeholders nutzen, um values von Listeners an actions zu übergeben
+	// - Listeners:
+	//   - First Menu Open (wenn menu type das erste Mal in einer game session geöffnet wird) (checkt auf menu type von layout oder alle, wenn universal)
+	//   - Open Menu (checkt auf menu type von layout oder alle, wenn universal)
+	//   - Close Menu (checkt auf menu type von layout oder alle, wenn universal)
+	//   - Init Or Re-Init Menu (InitOrResize)
+	//   - Element Loaded (mit element identifier) -> dann bei ausführen von listener checken, ob erstelltes element == identifier
+	//   - Key Typed (mit key name) -> bei ausführen check ob pressed key == given key
+	//   - Mouse Clicked (mit mouseX, mouseY)
+	//   - Mouse Moved (mit mouseX, mouseY)
+	//   - Mouse Scrolled (mit scrollDelta)
+
 	//TODO v2 Slider element fertig machen
 	// - support für actions
 	// - full background and handle texture customization (wie für Vanilla Slider)

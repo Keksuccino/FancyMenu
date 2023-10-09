@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.util.input;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import de.keksuccino.fancymenu.util.Legacy;
 import org.jetbrains.annotations.NotNull;
 
@@ -20,6 +19,13 @@ public class CharacterFilter {
     public static CharacterFilter buildIntegerCharacterFiler() {
         CharacterFilter f = new CharacterFilter();
         f.addAllowedCharacters("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "-", "+");
+        return f;
+    }
+
+    @NotNull
+    public static CharacterFilter buildResourceNameCharacterFilter() {
+        CharacterFilter f = new CharacterFilter();
+        f.addAllowedCharacters("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "_", "-");
         return f;
     }
 

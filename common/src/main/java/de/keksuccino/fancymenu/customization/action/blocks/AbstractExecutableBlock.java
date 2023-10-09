@@ -1,21 +1,28 @@
 package de.keksuccino.fancymenu.customization.action.blocks;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.action.Executable;
+import de.keksuccino.fancymenu.customization.action.ValuePlaceholderHolder;
+import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
 
-public abstract class AbstractExecutableBlock implements Executable {
-
-    //TODO Blocks sollten soweit fertig sein, also als nächstes Action Builder UI rewriten und if/else-if/else support adden
-    //TODO Blocks sollten soweit fertig sein, also als nächstes Action Builder UI rewriten und if/else-if/else support adden
-    //TODO Blocks sollten soweit fertig sein, also als nächstes Action Builder UI rewriten und if/else-if/else support adden
-    //TODO Blocks sollten soweit fertig sein, also als nächstes Action Builder UI rewriten und if/else-if/else support adden
+public abstract class AbstractExecutableBlock implements Executable, ValuePlaceholderHolder {
 
     protected final List<Executable> executables = new ArrayList<>();
+    /**
+     * Placeholders do not get serialized, but get copied when calling copy().
+     * They get added at runtime, mostly after creating a new {@link ActionInstance}.
+     */
+    @NotNull
+    protected final Map<String, Supplier<String>> valuePlaceholders = new HashMap<>();
     @NotNull
     public String identifier = ScreenCustomization.generateUniqueIdentifier();
 
@@ -33,12 +40,45 @@ public abstract class AbstractExecutableBlock implements Executable {
         }
     }
 
+    /**
+     * Value placeholders are for replacing parts of the {@link ActionInstance#value}.<br>
+     * Value placeholders added to blocks get automatically added to  all child {@link Executable}s and appended blocks.<br><br>
+     *
+     * Placeholders use the $$ prefix, but don't include this prefix in the placeholder name.
+     *
+     * @param placeholder The placeholder base. Should be all lowercase with no special chars or spaces. Use only [a-z], [0-9], [_], [-].
+     * @param replaceWithSupplier The supplier that returns the actual value this placeholder should get replaced with.
+     */
+    public void addValuePlaceholder(@NotNull String placeholder, @NotNull Supplier<String> replaceWithSupplier) {
+        if (!CharacterFilter.buildResourceNameCharacterFilter().isAllowedText(placeholder)) {
+            throw new RuntimeException("Illegal characters used in placeholder name! Use only [a-z], [0-9], [_], [-]!");
+        }
+        this.valuePlaceholders.put(placeholder, replaceWithSupplier);
+        for (Executable e : this.executables) {
+            if (e instanceof ValuePlaceholderHolder h) {
+                h.addValuePlaceholder(placeholder, replaceWithSupplier);
+            }
+        }
+        if (this.getAppendedBlock() != null) {
+            this.getAppendedBlock().addValuePlaceholder(placeholder, replaceWithSupplier);
+        }
+    }
+
+    @NotNull
+    @Override
+    public Map<String, Supplier<String>> getValuePlaceholders() {
+        return this.valuePlaceholders;
+    }
+
     public List<Executable> getExecutables() {
         return this.executables;
     }
 
     public AbstractExecutableBlock addExecutable(Executable executable) {
         this.executables.add(executable);
+        if (executable instanceof ValuePlaceholderHolder h) {
+            this.valuePlaceholders.forEach(h::addValuePlaceholder);
+        }
         return this;
     }
 
@@ -58,6 +98,9 @@ public abstract class AbstractExecutableBlock implements Executable {
     }
 
     public void setAppendedBlock(@Nullable AbstractExecutableBlock appended) {
+        if (appended != null) {
+            this.valuePlaceholders.forEach(appended::addValuePlaceholder);
+        }
     }
 
     @Override

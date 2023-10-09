@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.action;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.Legacy;
+import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -11,15 +12,24 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.*;
+import java.util.function.Supplier;
 
-public class ActionInstance implements Executable {
+public class ActionInstance implements Executable, ValuePlaceholderHolder {
 
     private static final Logger LOGGER = LogManager.getLogger();
+
+    public static final String VALUE_PLACEHOLDER_PREFIX = "$$";
 
     @NotNull
     public volatile Action action;
     @Nullable
     public volatile String value;
+    /**
+     * Placeholders do not get serialized, but get copied when calling copy().
+     * They get added at runtime, mostly after creating a new {@link ActionInstance}.
+     */
+    @NotNull
+    protected final Map<String, Supplier<String>> valuePlaceholders = new HashMap<>();
     @NotNull
     public String identifier = ScreenCustomization.generateUniqueIdentifier();
 
@@ -37,6 +47,13 @@ public class ActionInstance implements Executable {
         String v = this.value;
         try {
             if (v != null) {
+                //Replace value placeholders in value
+                for (Map.Entry<String, Supplier<String>> m : this.valuePlaceholders.entrySet()) {
+                    String replaceWith = m.getValue().get();
+                    if (replaceWith == null) replaceWith = "";
+                    v = v.replace(VALUE_PLACEHOLDER_PREFIX + m.getKey(), replaceWith);
+                }
+                //Replace normal (system-wide) placeholders in value
                 v = PlaceholderParser.replacePlaceholders(v);
             }
             if (this.action.hasValue()) {
@@ -50,15 +67,36 @@ public class ActionInstance implements Executable {
             LOGGER.error("[FANCYMENU] Action: " + this.action.getIdentifier());
             LOGGER.error("[FANCYMENU] Value Raw: " + this.value);
             LOGGER.error("[FANCYMENU] Value: " + v);
-            LOGGER.error("################################");
-            ex.printStackTrace();
+            LOGGER.error("################################", ex);
         }
+    }
+
+    /**
+     * Value placeholders are for replacing parts of the {@link ActionInstance#value}.<br><br>
+     *
+     * Placeholders use the $$ prefix, but don't include this prefix in the placeholder name.
+     *
+     * @param placeholder The placeholder base. Should be all lowercase with no special chars or spaces. Use only [a-z], [0-9], [_], [-].
+     * @param replaceWithSupplier The supplier that returns the actual value this placeholder should get replaced with.
+     */
+    public void addValuePlaceholder(@NotNull String placeholder, @NotNull Supplier<String> replaceWithSupplier) {
+        if (!CharacterFilter.buildResourceNameCharacterFilter().isAllowedText(placeholder)) {
+            throw new RuntimeException("Illegal characters used in placeholder name! Use only [a-z], [0-9], [_], [-]!");
+        }
+        this.valuePlaceholders.put(placeholder, replaceWithSupplier);
+    }
+
+    @NotNull
+    @Override
+    public Map<String, Supplier<String>> getValuePlaceholders() {
+        return this.valuePlaceholders;
     }
 
     @NotNull
     public ActionInstance copy(boolean unique) {
         ActionInstance i = new ActionInstance(this.action, this.value);
         if (!unique) i.identifier = this.identifier;
+        i.valuePlaceholders.putAll(this.valuePlaceholders);
         return i;
     }
 

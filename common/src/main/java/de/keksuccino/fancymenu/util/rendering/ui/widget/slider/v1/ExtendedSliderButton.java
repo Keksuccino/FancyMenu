@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util.rendering.ui.widget.slider;
+package de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v1;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -22,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 import java.util.function.Consumer;
 
+@Deprecated
 public abstract class ExtendedSliderButton extends AbstractSliderButton implements UniqueWidget, NavigatableWidget {
 
     protected static final ResourceLocation SLIDER_LOCATION = new ResourceLocation("textures/gui/slider.png");
@@ -56,6 +57,7 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
     protected boolean leftDownNotHovered = false;
     protected boolean leftDownThis = false;
 
+    @Deprecated
     public ExtendedSliderButton(int x, int y, int width, int height, boolean handleClick, double value, Consumer<ExtendedSliderButton> applyValueCallback) {
         super(x, y, width, height, CommonComponents.EMPTY, value);
         this.handleClick = handleClick;

@@ -36,7 +36,7 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	public final ElementBuilder<?,?> builder;
 	public ElementAnchorPoint anchorPoint = ElementAnchorPoints.MID_CENTERED;
 	public String anchorPointElementIdentifier = null;
-	protected AbstractElement cachedAnchorPointElement = null;
+	protected AbstractElement cachedElementAnchorPointParent = null;
 	/** Not the same as {@link AbstractElement#getAbsoluteX()}! This is the X-offset from the origin of its anchor! **/
 	public int posOffsetX = 0;
 	/** Not the same as {@link AbstractElement#getAbsoluteY()}! This is the Y-offset from the origin of its anchor! **/
@@ -76,7 +76,9 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	@Override
 	public abstract void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial);
 
-	/** Gets called every {@link Screen} tick, after {@link Screen#tick()} got called. **/
+	/**
+	 * Gets called every {@link Screen} tick, after {@link Screen#tick()} got called.
+	 */
 	public void tick() {
 	}
 
@@ -93,15 +95,28 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	public void onOpenScreen() {
 	}
 
-	/** Widgets need to extend {@link GuiEventListener} and {@link NarratableEntry}. **/
+	/**
+	 * All widgets of the returned list will get registered to {@link Screen#children()}.<br>
+	 * Take in mind the returned widgets will NOT get registered to {@link Screen#renderables}.<br>
+	 * Widgets need to extend {@link GuiEventListener} and {@link NarratableEntry}.
+	 */
+	@SuppressWarnings("all")
 	@Nullable
 	public List<GuiEventListener> getWidgetsToRegister() {
 		return null;
 	}
 
+	@NotNull
+	public String getInstanceIdentifier() {
+		return this.instanceIdentifier;
+	}
+
+	public void setInstanceIdentifier(@NotNull String id) {
+		this.instanceIdentifier = Objects.requireNonNull(id);
+	}
+
 	/**
-	 * Should be used to get the ACTUAL X position of the element.<br>
-	 * Not the same as {@link AbstractElement#posOffsetX}!
+	 * Returns the actual/final X position the element will have when it gets rendered.
 	 */
 	public int getAbsoluteX() {
 		int x = 0;
@@ -126,10 +141,9 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 		}
 		return x;
 	}
-	
+
 	/**
-	 * Should be used to get the ACTUAL Y position of the element.<br>
-	 * Not the same as {@link AbstractElement#posOffsetY}!
+	 * Returns the actual/final Y position the element will have when it gets rendered.
 	 */
 	public int getAbsoluteY() {
 		int y = 0;
@@ -155,42 +169,9 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 		return y;
 	}
 
-	@Nullable
-	public AbstractElement getParentElementAnchorPointElement() {
-		if (this.anchorPointElementIdentifier == null) return null;
-		if (this.cachedAnchorPointElement == null) {
-			this.cachedAnchorPointElement = getElementByInstanceIdentifier(this.anchorPointElementIdentifier);
-		}
-		return this.cachedAnchorPointElement;
-	}
-
-	public void setParentElementAnchorPointElement(AbstractElement element) {
-		this.cachedAnchorPointElement = element;
-	}
-	
-	public boolean shouldRender() {
-		if (!this.loadingRequirementsMet()) {
-			return false;
-		}
-		return this.visible;
-	}
-
-	@NotNull
-	public String getInstanceIdentifier() {
-		return this.instanceIdentifier;
-	}
-
-	public void setInstanceIdentifier(@NotNull String id) {
-		this.instanceIdentifier = Objects.requireNonNull(id);
-	}
-
-	protected boolean loadingRequirementsMet() {
-		if (isEditor()) {
-			return true;
-		}
-		return this.loadingRequirementContainer.requirementsMet();
-	}
-
+	/**
+	 * Returns the actual/final width the element will have when it gets rendered.
+	 */
 	public int getAbsoluteWidth() {
 		if (this.advancedWidth != null) {
 			String s = PlaceholderParser.replacePlaceholders(this.advancedWidth).replace(" ", "");
@@ -204,6 +185,9 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 		return this.baseWidth;
 	}
 
+	/**
+	 * Returns the actual/final height the element will have when it gets rendered.
+	 */
 	public int getAbsoluteHeight() {
 		if (this.advancedHeight != null) {
 			String s = PlaceholderParser.replacePlaceholders(this.advancedHeight).replace(" ", "");
@@ -218,17 +202,50 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	}
 
 	/**
-	 * This is the X position used by the child element if this element is used as {@link ElementAnchorPoints#ELEMENT} anchor.
+	 * Returns this element's PARENT element, if this element uses the {@link ElementAnchorPoints#ELEMENT} anchor.
 	 */
-	public int getElementAnchorX() {
+	@Nullable
+	public AbstractElement getElementAnchorPointParent() {
+		if (this.anchorPointElementIdentifier == null) return null;
+		if (this.cachedElementAnchorPointParent == null) {
+			this.cachedElementAnchorPointParent = getElementByInstanceIdentifier(this.anchorPointElementIdentifier);
+		}
+		return this.cachedElementAnchorPointParent;
+	}
+
+	/**
+	 * This is to set this element's PARENT element, if this element uses the {@link ElementAnchorPoints#ELEMENT} anchor.
+	 */
+	public void setElementAnchorPointParent(@Nullable AbstractElement element) {
+		this.cachedElementAnchorPointParent = element;
+	}
+
+	/**
+	 * This is the X position used by the CHILD element if this element is used as {@link ElementAnchorPoints#ELEMENT} anchor.
+	 */
+	public int getChildElementAnchorPointX() {
 		return this.getAbsoluteX();
 	}
 
 	/**
-	 * This is the Y position used by the child element if this element is used as {@link ElementAnchorPoints#ELEMENT} anchor.
+	 * This is the Y position used by the CHILD element if this element is used as {@link ElementAnchorPoints#ELEMENT} anchor.
 	 */
-	public int getElementAnchorY() {
+	public int getChildElementAnchorPointY() {
 		return this.getAbsoluteY();
+	}
+
+	public boolean shouldRender() {
+		if (!this.loadingRequirementsMet()) {
+			return false;
+		}
+		return this.visible;
+	}
+
+	protected boolean loadingRequirementsMet() {
+		if (isEditor()) {
+			return true;
+		}
+		return this.loadingRequirementContainer.requirementsMet();
 	}
 
 	public static String fixBackslashPath(String path) {
