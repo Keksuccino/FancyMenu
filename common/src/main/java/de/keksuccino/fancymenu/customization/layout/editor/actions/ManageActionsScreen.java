@@ -199,18 +199,18 @@ public class ManageActionsScreen extends Screen {
                     });
                     Minecraft.getInstance().setScreen(s);
                 } else if (selected.executable instanceof IfExecutableBlock b) {
-                    ManageRequirementsScreen s = new ManageRequirementsScreen(b.body.copy(false), container -> {
+                    ManageRequirementsScreen s = new ManageRequirementsScreen(b.condition.copy(false), container -> {
                         if (container != null) {
-                            b.body = container;
+                            b.condition = container;
                             this.updateActionInstanceScrollArea(true);
                         }
                         Minecraft.getInstance().setScreen(this);
                     });
                     Minecraft.getInstance().setScreen(s);
                 } else if (selected.executable instanceof ElseIfExecutableBlock b) {
-                    ManageRequirementsScreen s = new ManageRequirementsScreen(b.body.copy(false), container -> {
+                    ManageRequirementsScreen s = new ManageRequirementsScreen(b.condition.copy(false), container -> {
                         if (container != null) {
-                            b.body = container;
+                            b.condition = container;
                             this.updateActionInstanceScrollArea(true);
                         }
                         Minecraft.getInstance().setScreen(this);
@@ -807,11 +807,11 @@ public class ManageActionsScreen extends Screen {
                 this.valueComponent = Component.literal(I18n.get("fancymenu.editor.action.screens.manage_screen.info.value") + " ").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())).append(Component.literal(valueString).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt())));
             } else if (this.executable instanceof IfExecutableBlock b) {
                 String requirements = "";
-                for (LoadingRequirementGroup g : b.body.getGroups()) {
+                for (LoadingRequirementGroup g : b.condition.getGroups()) {
                     if (!requirements.isEmpty()) requirements += ", ";
                     requirements += g.identifier;
                 }
-                for (LoadingRequirementInstance i : b.body.getInstances()) {
+                for (LoadingRequirementInstance i : b.condition.getInstances()) {
                     if (!requirements.isEmpty()) requirements += ", ";
                     requirements += i.requirement.getDisplayName();
                 }
@@ -819,11 +819,11 @@ public class ManageActionsScreen extends Screen {
                 this.valueComponent = Component.empty();
             } else if (this.executable instanceof ElseIfExecutableBlock b) {
                 String requirements = "";
-                for (LoadingRequirementGroup g : b.body.getGroups()) {
+                for (LoadingRequirementGroup g : b.condition.getGroups()) {
                     if (!requirements.isEmpty()) requirements += ", ";
                     requirements += g.identifier;
                 }
-                for (LoadingRequirementInstance i : b.body.getInstances()) {
+                for (LoadingRequirementInstance i : b.condition.getInstances()) {
                     if (!requirements.isEmpty()) requirements += ", ";
                     requirements += i.requirement.getDisplayName();
                 }

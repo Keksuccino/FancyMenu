@@ -784,7 +784,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			}
 		}
 		fileNamePreset = fileNamePreset.toLowerCase();
-		fileNamePreset = CharacterFilter.buildBasicFilenameCharacterFilter().filterForAllowedChars(fileNamePreset);
+		fileNamePreset = CharacterFilter.buildOnlyLowercaseFileNameFilter().filterForAllowedChars(fileNamePreset);
 		fileNamePreset = FileUtils.generateAvailableFilename(LayoutHandler.LAYOUT_DIR.getAbsolutePath(), fileNamePreset, "txt");
 		if (this.layout.layoutFile != null) {
 			fileNamePreset = this.layout.layoutFile.getName();

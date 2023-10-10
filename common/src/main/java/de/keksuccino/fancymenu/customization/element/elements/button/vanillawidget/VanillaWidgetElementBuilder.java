@@ -38,24 +38,24 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
         try {
 
             VanillaWidgetElement element = (VanillaWidgetElement) elementAbstract;
-            SerializedElement serialized = super.serializeElementInternal(element);
-            if (serialized != null) {
+            SerializedElement serializeTo = super.serializeElementInternal(element);
+            if (serializeTo != null) {
 
-                serialized.setType("vanilla_button");
+                serializeTo.setType("vanilla_button");
 
-                serialized.putProperty("is_hidden", "" + element.vanillaButtonHidden);
-                serialized.putProperty("automated_button_clicks", "" + element.automatedButtonClicks);
+                serializeTo.putProperty("is_hidden", "" + element.vanillaButtonHidden);
+                serializeTo.putProperty("automated_button_clicks", "" + element.automatedButtonClicks);
 
                 if (element.sliderBackgroundTextureNormal != null) {
-                    serialized.putProperty("slider_background_texture_normal", element.sliderBackgroundTextureNormal.getShortPath());
+                    serializeTo.putProperty("slider_background_texture_normal", element.sliderBackgroundTextureNormal.getShortPath());
                 }
                 if (element.sliderBackgroundTextureHighlighted != null) {
-                    serialized.putProperty("slider_background_texture_highlighted", element.sliderBackgroundTextureHighlighted.getShortPath());
+                    serializeTo.putProperty("slider_background_texture_highlighted", element.sliderBackgroundTextureHighlighted.getShortPath());
                 }
-                serialized.putProperty("slider_background_animation_normal", element.sliderBackgroundAnimationNormal);
-                serialized.putProperty("slider_background_animation_highlighted", element.sliderBackgroundAnimationHighlighted);
+                serializeTo.putProperty("slider_background_animation_normal", element.sliderBackgroundAnimationNormal);
+                serializeTo.putProperty("slider_background_animation_highlighted", element.sliderBackgroundAnimationHighlighted);
 
-                return serialized;
+                return serializeTo;
 
             }
 

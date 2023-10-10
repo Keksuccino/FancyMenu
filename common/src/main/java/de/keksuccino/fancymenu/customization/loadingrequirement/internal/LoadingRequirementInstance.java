@@ -1,21 +1,28 @@
 package de.keksuccino.fancymenu.customization.loadingrequirement.internal;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.action.ValuePlaceholderHolder;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirementRegistry;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.function.Supplier;
 
-public class LoadingRequirementInstance {
+@SuppressWarnings("all")
+public class LoadingRequirementInstance implements ValuePlaceholderHolder {
 
     public LoadingRequirementContainer parent;
     public LoadingRequirement requirement;
     @Nullable
     public String value;
+    /**
+     * Placeholders do not get serialized, but get copied when calling copy().
+     * They get added at runtime, mostly after creating a new {@link LoadingRequirementInstance}.
+     */
+    protected final Map<String, Supplier<String>> valuePlaceholders = new HashMap<>();
     /** The group the requirement is part of, if it is part of one. */
     @Nullable
     public LoadingRequirementGroup group;
@@ -30,11 +37,41 @@ public class LoadingRequirementInstance {
     }
 
     public boolean requirementMet() {
-        boolean met = this.requirement.isRequirementMet((this.value != null) ? PlaceholderParser.replacePlaceholders(this.value) : null);
+        String v = this.value;
+        if (v != null) {
+            for (Map.Entry<String, Supplier<String>> m : this.valuePlaceholders.entrySet()) {
+                String replaceWith = m.getValue().get();
+                if (replaceWith == null) replaceWith = "";
+                v = v.replace(VALUE_PLACEHOLDER_PREFIX + m.getKey(), replaceWith);
+            }
+            v = PlaceholderParser.replacePlaceholders(v);
+        }
+        boolean met = this.requirement.isRequirementMet(v);
         if (this.mode == RequirementMode.IF_NOT) {
             return !met;
         }
         return met;
+    }
+
+    /**
+     * Value placeholders are for replacing parts of the {@link LoadingRequirementInstance#value}.<br><br>
+     *
+     * Placeholders use the $$ prefix, but don't include this prefix in the placeholder name.
+     *
+     * @param placeholder The placeholder base. Should be all lowercase with no special chars or spaces. Use only [a-z], [0-9], [_], [-].
+     * @param replaceWithSupplier The supplier that returns the actual value this placeholder should get replaced with.
+     */
+    public void addValuePlaceholder(@NotNull String placeholder, @NotNull Supplier<String> replaceWithSupplier) {
+        if (!CharacterFilter.buildResourceNameFilter().isAllowedText(placeholder)) {
+            throw new RuntimeException("Illegal characters used in placeholder name! Use only [a-z], [0-9], [_], [-]!");
+        }
+        this.valuePlaceholders.put(placeholder, replaceWithSupplier);
+    }
+
+    @NotNull
+    @Override
+    public Map<String, Supplier<String>> getValuePlaceholders() {
+        return this.valuePlaceholders;
     }
 
     @Override
@@ -53,6 +90,7 @@ public class LoadingRequirementInstance {
     public LoadingRequirementInstance copy(boolean unique) {
         LoadingRequirementInstance i = new LoadingRequirementInstance(this.requirement, this.value, this.mode, null);
         if (!unique) i.instanceIdentifier = this.instanceIdentifier;
+        i.valuePlaceholders.putAll(this.valuePlaceholders);
         return i;
     }
 

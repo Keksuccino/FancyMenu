@@ -36,14 +36,14 @@ public class AutoScalingScreen extends ConfiguratorScreen {
         this.addDescriptionEndSeparatorCell();
 
         this.addLabelCell(Component.translatable("fancymenu.editor.auto_scaling.configure.width"));
-        this.addTextInputCell(CharacterFilter.buildIntegerCharacterFiler(), false, false)
+        this.addTextInputCell(CharacterFilter.buildIntegerFiler(), false, false)
                 .setText("" + this.autoScalingWidth)
                 .setEditListener(s -> this.autoScalingWidth = MathUtils.isInteger(s) ? Integer.parseInt(s) : -1000);
 
         this.addCellGroupEndSpacerCell();
 
         this.addLabelCell(Component.translatable("fancymenu.editor.auto_scaling.configure.height"));
-        this.addTextInputCell(CharacterFilter.buildIntegerCharacterFiler(), false, false)
+        this.addTextInputCell(CharacterFilter.buildIntegerFiler(), false, false)
                 .setText("" + this.autoScalingHeight)
                 .setEditListener(s -> this.autoScalingHeight = MathUtils.isInteger(s) ? Integer.parseInt(s) : -1000);
 

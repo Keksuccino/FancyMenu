@@ -1,6 +1,8 @@
 package de.keksuccino.fancymenu.customization.loadingrequirement.internal;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.action.ValuePlaceholderHolder;
+import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.ListUtils;
 import org.apache.logging.log4j.LogManager;
@@ -8,13 +10,20 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.*;
+import java.util.function.Supplier;
 
-public class LoadingRequirementContainer {
+@SuppressWarnings("all")
+public class LoadingRequirementContainer implements ValuePlaceholderHolder {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
     protected final List<LoadingRequirementGroup> groups = new ArrayList<>();
     protected final List<LoadingRequirementInstance> instances = new ArrayList<>();
+    /**
+     * Placeholders do not get serialized, but get copied when calling copy().
+     * They get added at runtime, mostly after creating a new {@link LoadingRequirementInstance}.
+     */
+    protected final Map<String, Supplier<String>> valuePlaceholders = new HashMap<>();
     @NotNull
     public String identifier = ScreenCustomization.generateUniqueIdentifier();
     protected boolean forceRequirementsMet = false;
@@ -51,6 +60,7 @@ public class LoadingRequirementContainer {
         if (!this.groupExists(identifier)) {
             LoadingRequirementGroup g = new LoadingRequirementGroup(identifier, mode, this);
             this.groups.add(g);
+            this.valuePlaceholders.forEach(g::addValuePlaceholder);
             return g;
         }
         return null;
@@ -59,6 +69,7 @@ public class LoadingRequirementContainer {
     public boolean addGroup(@NotNull LoadingRequirementGroup group) {
         if (!this.groupExists(group.identifier)) {
             this.groups.add(group);
+            this.valuePlaceholders.forEach(group::addValuePlaceholder);
             return true;
         }
         return false;
@@ -97,6 +108,7 @@ public class LoadingRequirementContainer {
     public boolean addInstance(@NotNull LoadingRequirementInstance instance) {
         if (!this.instances.contains(instance)) {
             this.instances.add(instance);
+            this.valuePlaceholders.forEach(instance::addValuePlaceholder);
             return true;
         }
         return false;
@@ -108,6 +120,47 @@ public class LoadingRequirementContainer {
 
     public List<LoadingRequirementInstance> getInstances() {
         return new ArrayList<>(this.instances);
+    }
+
+    public LoadingRequirementContainer forceRequirementsMet(boolean forceMet) {
+        this.forceRequirementsMet = forceMet;
+        this.forceRequirementsNotMet = false;
+        return this;
+    }
+
+    public LoadingRequirementContainer forceRequirementsNotMet(boolean forceNotMet) {
+        this.forceRequirementsNotMet = forceNotMet;
+        this.forceRequirementsMet = false;
+        return this;
+    }
+
+    /**
+     * Value placeholders are for replacing parts of the {@link LoadingRequirementInstance#value}.<br>
+     * All placeholders added to containers get automatically added to its child {@link LoadingRequirementGroup}s and
+     * {@link LoadingRequirementInstance}s.<br><br>
+     *
+     * Placeholders use the $$ prefix, but don't include this prefix in the placeholder name.
+     *
+     * @param placeholder The placeholder base. Should be all lowercase with no special chars or spaces. Use only [a-z], [0-9], [_], [-].
+     * @param replaceWithSupplier The supplier that returns the actual value this placeholder should get replaced with.
+     */
+    public void addValuePlaceholder(@NotNull String placeholder, @NotNull Supplier<String> replaceWithSupplier) {
+        if (!CharacterFilter.buildResourceNameFilter().isAllowedText(placeholder)) {
+            throw new RuntimeException("Illegal characters used in placeholder name! Use only [a-z], [0-9], [_], [-]!");
+        }
+        this.valuePlaceholders.put(placeholder, replaceWithSupplier);
+        for (LoadingRequirementInstance i : this.instances) {
+            i.addValuePlaceholder(placeholder, replaceWithSupplier);
+        }
+        for (LoadingRequirementGroup g : this.groups) {
+            g.addValuePlaceholder(placeholder, replaceWithSupplier);
+        }
+    }
+
+    @NotNull
+    @Override
+    public Map<String, Supplier<String>> getValuePlaceholders() {
+        return this.valuePlaceholders;
     }
 
     @Override
@@ -138,19 +191,8 @@ public class LoadingRequirementContainer {
             i.parent = c;
             c.instances.add(i);
         });
+        c.valuePlaceholders.putAll(this.valuePlaceholders);
         return c;
-    }
-
-    public LoadingRequirementContainer forceRequirementsMet(boolean forceMet) {
-        this.forceRequirementsMet = forceMet;
-        this.forceRequirementsNotMet = false;
-        return this;
-    }
-
-    public LoadingRequirementContainer forceRequirementsNotMet(boolean forceNotMet) {
-        this.forceRequirementsNotMet = forceNotMet;
-        this.forceRequirementsMet = false;
-        return this;
     }
 
     public void serializeToExistingPropertyContainer(@NotNull PropertyContainer target) {

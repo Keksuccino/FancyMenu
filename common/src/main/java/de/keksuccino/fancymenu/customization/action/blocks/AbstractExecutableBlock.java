@@ -42,7 +42,8 @@ public abstract class AbstractExecutableBlock implements Executable, ValuePlaceh
 
     /**
      * Value placeholders are for replacing parts of the {@link ActionInstance#value}.<br>
-     * Value placeholders added to blocks get automatically added to  all child {@link Executable}s and appended blocks.<br><br>
+     * Value placeholders added to blocks get automatically added to its child {@link Executable}s,
+     * appended blocks and its conditions, if the block has a condition.<br><br>
      *
      * Placeholders use the $$ prefix, but don't include this prefix in the placeholder name.
      *
@@ -50,7 +51,7 @@ public abstract class AbstractExecutableBlock implements Executable, ValuePlaceh
      * @param replaceWithSupplier The supplier that returns the actual value this placeholder should get replaced with.
      */
     public void addValuePlaceholder(@NotNull String placeholder, @NotNull Supplier<String> replaceWithSupplier) {
-        if (!CharacterFilter.buildResourceNameCharacterFilter().isAllowedText(placeholder)) {
+        if (!CharacterFilter.buildResourceNameFilter().isAllowedText(placeholder)) {
             throw new RuntimeException("Illegal characters used in placeholder name! Use only [a-z], [0-9], [_], [-]!");
         }
         this.valuePlaceholders.put(placeholder, replaceWithSupplier);

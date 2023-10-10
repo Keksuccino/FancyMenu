@@ -128,6 +128,7 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - Added loading requirement "Is Menu Title" to check for the title at the top of some menus like the Options or Pause screen
 - Added action "Leave World or Server" to leave a world or server (allows you to set a screen that should open after leaving)
 - Added action "Set Minecraft Option" to set the value of a Minecraft option
+- Added action "Update Screen" to update/reload the current screen's customizations without reloading the whole mod
 - Added placeholder "Absolute File/Folder Path" to get the absolute path of a file/folder
 - Added placeholder "Random Number" to get a random number in the specified range
 - Added placeholder "World Loading Progress" that reflects the current world loading progress percentage while in a progress screen

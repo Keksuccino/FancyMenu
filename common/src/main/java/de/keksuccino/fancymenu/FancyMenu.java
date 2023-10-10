@@ -19,6 +19,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO "Current Screen Identifier" placeholder
+
 	//TODO Layout Listener System
 	// - Auf Layout Ebene (rechtsklick editor back -> Listeners)
 	// - Jeder Listener hat eine ExecutableBlock instanz, die er ausführen kann

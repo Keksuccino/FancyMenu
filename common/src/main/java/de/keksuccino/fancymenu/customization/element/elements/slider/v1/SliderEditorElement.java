@@ -14,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.List;
 
+@Deprecated
 public class SliderEditorElement extends AbstractEditorElement {
 
     public SliderEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {

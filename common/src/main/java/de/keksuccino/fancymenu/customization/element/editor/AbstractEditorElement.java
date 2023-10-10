@@ -1089,7 +1089,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				(e, s) -> {
 					if (MathUtils.isInteger(s)) targetFieldSetter.accept(e, Integer.valueOf(s));
 				},
-				CharacterFilter.buildIntegerCharacterFiler(), false, false, label, addResetOption, "" + defaultValue,
+				CharacterFilter.buildIntegerFiler(), false, false, label, addResetOption, "" + defaultValue,
 				(textValidator != null) ? textValidator : defaultIntegerValidator, textValidatorUserFeedback);
 	}
 
@@ -1111,7 +1111,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				(e, s) -> {
 					if (MathUtils.isLong(s)) targetFieldSetter.accept(e, Long.valueOf(s));
 				},
-				CharacterFilter.buildIntegerCharacterFiler(), false, false, label, addResetOption, "" + defaultValue,
+				CharacterFilter.buildIntegerFiler(), false, false, label, addResetOption, "" + defaultValue,
 				(textValidator != null) ? textValidator : defaultLongValidator, textValidatorUserFeedback);
 	}
 
@@ -1133,7 +1133,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				(e, s) -> {
 					if (MathUtils.isDouble(s)) targetFieldSetter.accept(e, Double.valueOf(s));
 				},
-				CharacterFilter.buildDoubleCharacterFiler(), false, false, label, addResetOption, "" + defaultValue,
+				CharacterFilter.buildDecimalFiler(), false, false, label, addResetOption, "" + defaultValue,
 				(textValidator != null) ? textValidator : defaultDoubleValidator, textValidatorUserFeedback);
 	}
 
@@ -1155,7 +1155,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				(e, s) -> {
 					if (MathUtils.isFloat(s)) targetFieldSetter.accept(e, Float.valueOf(s));
 				},
-				CharacterFilter.buildDoubleCharacterFiler(), false, false, label, addResetOption, "" + defaultValue,
+				CharacterFilter.buildDecimalFiler(), false, false, label, addResetOption, "" + defaultValue,
 				(textValidator != null) ? textValidator : defaultFloatValidator, textValidatorUserFeedback);
 	}
 

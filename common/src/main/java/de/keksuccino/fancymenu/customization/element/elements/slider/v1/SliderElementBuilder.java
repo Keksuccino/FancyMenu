@@ -9,10 +9,10 @@ import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.List;
 
+@Deprecated
 public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEditorElement> {
 
     public SliderElementBuilder() {

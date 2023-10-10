@@ -6,8 +6,8 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 @SuppressWarnings("all")
 public class TextValidators {
 
-    private static final CharacterFilter INTEGER_CHARACTER_FILTER = CharacterFilter.buildIntegerCharacterFiler();
-    private static final CharacterFilter DOUBLE_CHARACTER_FILTER = CharacterFilter.buildDoubleCharacterFiler();
+    private static final CharacterFilter INTEGER_CHARACTER_FILTER = CharacterFilter.buildIntegerFiler();
+    private static final CharacterFilter DOUBLE_CHARACTER_FILTER = CharacterFilter.buildDecimalFiler();
 
     public static final ConsumingSupplier<String, Boolean> NO_EMPTY_STRING_TEXT_VALIDATOR = consumes -> {
         return (consumes != null) && !consumes.replace(" ", "").isEmpty();

@@ -9,17 +9,19 @@ import de.keksuccino.fancymenu.customization.element.elements.inputfield.InputFi
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.PlayerEntityElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.progressbar.ProgressBarElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.shape.ShapeElementBuilder;
-import de.keksuccino.fancymenu.customization.element.elements.slider.v1.SliderElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.slideshow.SlideshowElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.splash.SplashTextElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.ticker.TickerElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.text.v2.TextElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.slider.v2.SliderElementBuilder;
 
 public class Elements {
 
     public static final ButtonElementBuilder BUTTON = new ButtonElementBuilder();
     public static final InputFieldElementBuilder INPUT_FIELD = new InputFieldElementBuilder();
-    public static final SliderElementBuilder SLIDER = new SliderElementBuilder();
+    @Deprecated
+    public static final de.keksuccino.fancymenu.customization.element.elements.slider.v1.SliderElementBuilder SLIDER_V1 = new de.keksuccino.fancymenu.customization.element.elements.slider.v1.SliderElementBuilder();
+    public static final SliderElementBuilder SLIDER_V2 = new SliderElementBuilder();
     @Deprecated
     public static final de.keksuccino.fancymenu.customization.element.elements.text.v1.TextElementBuilder TEXT_V1 = new de.keksuccino.fancymenu.customization.element.elements.text.v1.TextElementBuilder();
     public static final TextElementBuilder TEXT_V2 = new TextElementBuilder();
@@ -37,7 +39,8 @@ public class Elements {
 
         ElementRegistry.register(BUTTON);
         ElementRegistry.register(INPUT_FIELD);
-        ElementRegistry.register(SLIDER);
+        ElementRegistry.register(SLIDER_V1);
+        ElementRegistry.register(SLIDER_V2);
         ElementRegistry.register(TEXT_V1);
         ElementRegistry.register(TEXT_V2);
         ElementRegistry.register(TICKER);

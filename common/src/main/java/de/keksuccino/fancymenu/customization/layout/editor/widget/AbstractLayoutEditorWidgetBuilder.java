@@ -28,7 +28,7 @@ public abstract class AbstractLayoutEditorWidgetBuilder<T extends AbstractLayout
      * @param identifier Needs to be as unique as possible. Only characters [a-z], [0-9], [-] and [_] are supported. No spaces!
      */
     public AbstractLayoutEditorWidgetBuilder(@NotNull String identifier) {
-        if (!CharacterFilter.buildBasicFilenameCharacterFilter().isAllowedText(identifier)) {
+        if (!CharacterFilter.buildOnlyLowercaseFileNameFilter().isAllowedText(identifier)) {
             throw new RuntimeException("Invalid characters in identifier! Only characters [a-z], [0-9], [-] and [_] are supported. No spaces!");
         }
         this.identifier = identifier;

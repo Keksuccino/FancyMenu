@@ -39,7 +39,7 @@ public class BuildCustomGuiScreen extends ConfiguratorScreen {
         this.addSpacerCell(20);
 
         this.addLabelCell(Component.translatable("fancymenu.custom_guis.build.identifier"));
-        this.addTextInputCell(CharacterFilter.buildBasicFilenameCharacterFilter(), false, false)
+        this.addTextInputCell(CharacterFilter.buildOnlyLowercaseFileNameFilter(), false, false)
                 .setEditListener(s -> this.guiTemp.identifier = s)
                 .setText(this.guiTemp.identifier);
 

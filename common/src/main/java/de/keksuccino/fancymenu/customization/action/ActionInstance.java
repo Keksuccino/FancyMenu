@@ -18,8 +18,6 @@ public class ActionInstance implements Executable, ValuePlaceholderHolder {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public static final String VALUE_PLACEHOLDER_PREFIX = "$$";
-
     @NotNull
     public volatile Action action;
     @Nullable
@@ -80,7 +78,7 @@ public class ActionInstance implements Executable, ValuePlaceholderHolder {
      * @param replaceWithSupplier The supplier that returns the actual value this placeholder should get replaced with.
      */
     public void addValuePlaceholder(@NotNull String placeholder, @NotNull Supplier<String> replaceWithSupplier) {
-        if (!CharacterFilter.buildResourceNameCharacterFilter().isAllowedText(placeholder)) {
+        if (!CharacterFilter.buildResourceNameFilter().isAllowedText(placeholder)) {
             throw new RuntimeException("Illegal characters used in placeholder name! Use only [a-z], [0-9], [_], [-]!");
         }
         this.valuePlaceholders.put(placeholder, replaceWithSupplier);

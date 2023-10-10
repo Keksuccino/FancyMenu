@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.IExecutableElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinButton;
@@ -62,8 +63,14 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
-        if (!this.shouldRender()) return;
         if (this.getWidget() == null) return;
+
+        //So the widget isn't clickable when not getting rendered
+        if (!(this instanceof VanillaWidgetElement)) {
+            this.getWidget().visible = this.shouldRender();
+        }
+
+        if (!this.shouldRender()) return;
 
         this.updateWidget();
 
@@ -125,7 +132,7 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
     }
 
     public void updateWidgetTooltip() {
-        if ((this.tooltip != null) && (this.getWidget() != null) && this.getWidget().isHoveredOrFocused() && !isEditor()) {
+        if ((this.tooltip != null) && (this.getWidget() != null) && this.getWidget().isHovered() && !isEditor()) {
             String tooltip = this.tooltip.replace("%n%", "\n");
             TooltipHandler.INSTANCE.addWidgetTooltip(this.getWidget(), Tooltip.of(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(tooltip), "\n")), false, true);
         }

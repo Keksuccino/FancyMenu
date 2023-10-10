@@ -2,12 +2,28 @@ package de.keksuccino.fancymenu.customization.element.elements.slider.v2;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
+import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
+import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
+import de.keksuccino.fancymenu.customization.element.IExecutableElement;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
+import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
+import de.keksuccino.fancymenu.util.file.FileFilter;
+import de.keksuccino.fancymenu.util.file.ResourceFile;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtendedSlider;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.ListSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
+import de.keksuccino.fancymenu.util.resources.RenderableResource;
+import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
+import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
+import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -16,7 +32,11 @@ import java.util.List;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.Nullable;
 
-public class SliderElement extends AbstractElement {
+public class SliderElement extends AbstractElement implements IExecutableElement {
+
+    //TODO Slider Texture fixen
+
+    //TODO Schauen, warum in Integer Range Mode trotzdem boolean als label $$value gerendert wird
 
     public static final String VALUE_PLACEHOLDER = "$$value";
 
@@ -29,7 +49,21 @@ public class SliderElement extends AbstractElement {
     public List<String> listValues = new ArrayList<>();
     public double minRangeValue = 1;
     public double maxRangeValue = 10;
+    @Nullable
     public String label;
+    public String tooltip;
+    public ResourceFile handleTextureNormal;
+    public ResourceFile handleTextureHover;
+    public ResourceFile handleTextureInactive;
+    public String handleAnimationNormal;
+    public String handleAnimationHover;
+    public String handleAnimationInactive;
+    public ResourceFile sliderBackgroundTextureNormal;
+    public ResourceFile sliderBackgroundTextureHighlighted;
+    public String sliderBackgroundAnimationNormal;
+    public String sliderBackgroundAnimationHighlighted;
+    public boolean loopBackgroundAnimations = true;
+    public boolean restartBackgroundAnimationsOnHover = true;
     @NotNull
     public GenericExecutableBlock executableBlock = new GenericExecutableBlock();
 
@@ -39,8 +73,18 @@ public class SliderElement extends AbstractElement {
         this.prepareExecutableBlock();
     }
 
+    /**
+     * Call this after setting a new block instance.
+     */
     public void prepareExecutableBlock() {
-        this.executableBlock.addValuePlaceholder("slidervalue", () -> (this.slider != null) ? this.slider.getValueDisplayText() : "");
+        this.executableBlock.addValuePlaceholder("value", () -> (this.slider != null) ? this.slider.getValueDisplayText() : "");
+    }
+
+    /**
+     * Call this after setting a new container instance.
+     */
+    public void prepareLoadingRequirementContainer() {
+        this.loadingRequirementContainer.addValuePlaceholder("value", () -> (this.slider != null) ? this.slider.getValueDisplayText() : "");
     }
 
     /**
@@ -49,18 +93,38 @@ public class SliderElement extends AbstractElement {
      */
     public void buildSlider() {
 
+        String preSelectedString = (this.preSelectedValue != null) ? PlaceholderParser.replacePlaceholders(this.preSelectedValue) : null;
+
+        //Build slider instance based on element's slider type
         if (this.type == SliderType.INTEGER_RANGE) {
             int min = (int) this.minRangeValue;
             int max = (int) this.maxRangeValue;
             int preSelected = min;
-            String preSelectedString = (this.preSelectedValue != null) ? PlaceholderParser.replacePlaceholders(this.preSelectedValue) : null;
             if ((preSelectedString != null) && MathUtils.isDouble(preSelectedString)) {
                 preSelected = (int) Double.parseDouble(preSelectedString);
             }
             this.slider = new RangeSlider(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), Component.empty(), min, max, preSelected);
         }
+        if (this.type == SliderType.DECIMAL_RANGE) {
+            double preSelected = this.minRangeValue;
+            if ((preSelectedString != null) && MathUtils.isDouble(preSelectedString)) {
+                preSelected = Double.parseDouble(preSelectedString);
+            }
+            this.slider = new RangeSlider(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), Component.empty(), this.minRangeValue, this.maxRangeValue, preSelected);
+            ((RangeSlider)this.slider).setShowRounded(false);
+        }
         if (this.type == SliderType.LIST) {
+            if (this.listValues.isEmpty()) this.listValues.addAll(List.of("placeholder_1", "placeholder_2"));
+            if (this.listValues.size() < 2) this.listValues.add("placeholder_1");
+            int preSelectedIndex = (preSelectedString != null) ? this.listValues.indexOf(preSelectedString) : 0;
+            if (preSelectedIndex < 0) preSelectedIndex = 0;
+            this.slider = new ListSlider<>(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), Component.empty(), this.listValues, preSelectedIndex);
+        }
 
+        //Set label supplier and value update listener
+        if (this.slider != null) {
+            this.slider.setLabelSupplier(this::getSliderLabel);
+            this.slider.setSliderValueUpdateListener((slider1, valueDisplayText, value) -> this.onChangeSliderValue());
         }
 
     }
@@ -71,10 +135,8 @@ public class SliderElement extends AbstractElement {
         return buildComponent(labelValueReplaced);
     }
 
-    protected void onChangeSliderValue(@NotNull String value) {
-
-
-
+    protected void onChangeSliderValue() {
+        this.executableBlock.execute();
     }
 
     @Override
@@ -85,17 +147,124 @@ public class SliderElement extends AbstractElement {
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
-        if (this.shouldRender()) {
+        if (this.slider == null) return;
 
-            this.slider.updateMessage();
+        //So the slider isn't clickable when not getting rendered
+        this.slider.visible = this.shouldRender();
 
-            this.slider.render(pose, mouseX, mouseY, partial);
+        if (!this.shouldRender()) return;
 
+        this.slider.setX(this.getAbsoluteX());
+        this.slider.setY(this.getAbsoluteY());
+        this.slider.setWidth(this.getAbsoluteWidth());
+        ((IMixinAbstractWidget)this.slider).setHeightFancyMenu(this.getAbsoluteHeight());
+
+        this.updateWidget();
+
+        this.slider.render(pose, mouseX, mouseY, partial);
+
+    }
+
+    public void updateWidget() {
+        if (this.slider == null) return;
+        this.updateWidgetTooltip();
+        this.updateWidgetTexture();
+        this.slider.updateMessage();
+    }
+
+    public void updateWidgetTooltip() {
+        if ((this.tooltip != null) && (this.slider != null) && this.slider.isHovered() && !isEditor()) {
+            String tooltip = this.tooltip.replace("%n%", "\n");
+            TooltipHandler.INSTANCE.addWidgetTooltip(this.slider, Tooltip.of(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(tooltip), "\n")), false, true);
+        }
+    }
+
+    public void updateWidgetTexture() {
+
+        RenderableResource sliderBackNormal = null;
+        RenderableResource sliderBackHighlighted = null;
+
+        //Normal Slider Background
+        if ((this.sliderBackgroundAnimationNormal != null) && AnimationHandler.animationExists(this.sliderBackgroundAnimationNormal)) {
+            IAnimationRenderer r = AnimationHandler.getAnimation(this.sliderBackgroundAnimationNormal);
+            if (r instanceof AdvancedAnimation a) {
+                a.setLooped(this.loopBackgroundAnimations);
+                sliderBackNormal = a;
+            }
+        }
+        if ((sliderBackNormal == null) && (this.sliderBackgroundTextureNormal != null) && this.sliderBackgroundTextureNormal.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.sliderBackgroundTextureNormal.getFile())) {
+            sliderBackNormal = TextureHandler.INSTANCE.getTexture(this.sliderBackgroundTextureNormal.getAbsolutePath());
+        }
+        //Highlighted Slider Background
+        if ((this.sliderBackgroundAnimationHighlighted != null) && AnimationHandler.animationExists(this.sliderBackgroundAnimationHighlighted)) {
+            IAnimationRenderer r = AnimationHandler.getAnimation(this.sliderBackgroundAnimationHighlighted);
+            if (r instanceof AdvancedAnimation a) {
+                a.setLooped(this.loopBackgroundAnimations);
+                sliderBackHighlighted = a;
+            }
+        }
+        if ((sliderBackHighlighted == null) && (this.sliderBackgroundTextureHighlighted != null) && this.sliderBackgroundTextureHighlighted.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.sliderBackgroundTextureHighlighted.getFile())) {
+            sliderBackHighlighted = TextureHandler.INSTANCE.getTexture(this.sliderBackgroundTextureHighlighted.getAbsolutePath());
+        }
+
+        if (this.slider instanceof CustomizableSlider w) {
+            w.setCustomSliderBackgroundNormalFancyMenu(sliderBackNormal);
+            w.setCustomSliderBackgroundHighlightedFancyMenu(sliderBackHighlighted);
+        }
+
+        RenderableResource handleTextureNormal = null;
+        RenderableResource handleTextureHover = null;
+        RenderableResource handleTextureInactive = null;
+
+        //Normal
+        if ((this.handleAnimationNormal != null) && AnimationHandler.animationExists(this.handleAnimationNormal)) {
+            IAnimationRenderer r = AnimationHandler.getAnimation(this.handleAnimationNormal);
+            if (r instanceof AdvancedAnimation a) {
+                a.setLooped(this.loopBackgroundAnimations);
+                handleTextureNormal = a;
+            }
+        }
+        if ((handleTextureNormal == null) && (this.handleTextureNormal != null) && this.handleTextureNormal.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.handleTextureNormal.getFile())) {
+            handleTextureNormal = TextureHandler.INSTANCE.getTexture(this.handleTextureNormal.getAbsolutePath());
+        }
+        //Hover
+        if ((this.handleAnimationHover != null) && AnimationHandler.animationExists(this.handleAnimationHover)) {
+            IAnimationRenderer r = AnimationHandler.getAnimation(this.handleAnimationHover);
+            if (r instanceof AdvancedAnimation a) {
+                a.setLooped(this.loopBackgroundAnimations);
+                handleTextureHover = a;
+            }
+        }
+        if ((handleTextureHover == null) && (this.handleTextureHover != null) && this.handleTextureHover.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.handleTextureHover.getFile())) {
+            handleTextureHover = TextureHandler.INSTANCE.getTexture(this.handleTextureHover.getAbsolutePath());
+        }
+        //Inactive
+        if ((this.handleAnimationInactive != null) && AnimationHandler.animationExists(this.handleAnimationInactive)) {
+            IAnimationRenderer r = AnimationHandler.getAnimation(this.handleAnimationInactive);
+            if (r instanceof AdvancedAnimation a) {
+                a.setLooped(this.loopBackgroundAnimations);
+                handleTextureInactive = a;
+            }
+        }
+        if ((handleTextureInactive == null) && (this.handleTextureInactive != null) && this.handleTextureInactive.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.handleTextureInactive.getFile())) {
+            handleTextureInactive = TextureHandler.INSTANCE.getTexture(this.handleTextureInactive.getAbsolutePath());
+        }
+
+        if (this.slider instanceof CustomizableWidget w) {
+            w.setCustomBackgroundNormalFancyMenu(handleTextureNormal);
+            w.setCustomBackgroundHoverFancyMenu(handleTextureHover);
+            w.setCustomBackgroundInactiveFancyMenu(handleTextureInactive);
+            w.setCustomBackgroundResetBehaviorFancyMenu(this.restartBackgroundAnimationsOnHover ? CustomizableWidget.CustomBackgroundResetBehavior.RESET_ON_HOVER : CustomizableWidget.CustomBackgroundResetBehavior.RESET_NEVER);
         }
 
     }
 
-    public enum SliderType {
+    @Override
+    public @NotNull GenericExecutableBlock getExecutableBlock() {
+        return this.executableBlock;
+    }
+
+    public enum SliderType implements LocalizedCycleEnum<SliderType> {
 
         LIST("list"),
         INTEGER_RANGE("integer_range"),
@@ -107,17 +276,35 @@ public class SliderElement extends AbstractElement {
             this.name = name;
         }
 
+        @NotNull
         public String getName() {
             return this.name;
         }
 
-        public static SliderType getByName(String name) {
+        @Override
+        public @NotNull SliderType[] getValues() {
+            return SliderType.values();
+        }
+
+        @Override
+        @Nullable
+        public SliderType getByNameInternal(@NotNull String name) {
+            return getByName(name);
+        }
+
+        @Nullable
+        public static SliderType getByName(@NotNull String name) {
             for (SliderType i : SliderType.values()) {
                 if (i.getName().equals(name)) {
                     return i;
                 }
             }
             return null;
+        }
+
+        @Override
+        public @NotNull String getLocalizationKeyBase() {
+            return "fancymenu.elements.slider.v2.type";
         }
 
     }

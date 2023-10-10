@@ -8,19 +8,20 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 public class IfExecutableBlock extends AbstractExecutableBlock {
 
     @NotNull
-    public LoadingRequirementContainer body = new LoadingRequirementContainer().forceRequirementsMet(true);
+    public LoadingRequirementContainer condition = new LoadingRequirementContainer().forceRequirementsMet(true);
     @Nullable
     protected AbstractExecutableBlock child;
 
     public IfExecutableBlock() {
     }
 
-    public IfExecutableBlock(@NotNull LoadingRequirementContainer body) {
-        this.body = Objects.requireNonNull(body);
+    public IfExecutableBlock(@NotNull LoadingRequirementContainer condition) {
+        this.condition = Objects.requireNonNull(condition);
     }
 
     @Override
@@ -50,6 +51,12 @@ public class IfExecutableBlock extends AbstractExecutableBlock {
     }
 
     @Override
+    public void addValuePlaceholder(@NotNull String placeholder, @NotNull Supplier<String> replaceWithSupplier) {
+        super.addValuePlaceholder(placeholder, replaceWithSupplier);
+        this.condition.addValuePlaceholder(placeholder, replaceWithSupplier);
+    }
+
+    @Override
     public @NotNull IfExecutableBlock copy(boolean unique) {
         IfExecutableBlock b = new IfExecutableBlock();
         if (!unique) b.identifier = this.identifier;
@@ -57,21 +64,21 @@ public class IfExecutableBlock extends AbstractExecutableBlock {
         for (Executable e : this.executables) {
             b.addExecutable(e.copy(unique));
         }
-        b.body = this.body.copy(unique);
+        b.condition = this.condition.copy(unique);
         b.valuePlaceholders.putAll(this.valuePlaceholders);
         return b;
     }
 
     public boolean check() {
-        return this.body.requirementsMet();
+        return this.condition.requirementsMet();
     }
 
     @Override
     public @NotNull PropertyContainer serialize() {
         PropertyContainer container = super.serialize();
         String key = "[if_executable_block_body:" + this.getIdentifier() + "]";
-        container.putProperty(key, this.body.identifier);
-        this.body.serializeToExistingPropertyContainer(container);
+        container.putProperty(key, this.condition.identifier);
+        this.condition.serializeToExistingPropertyContainer(container);
         return container;
     }
 
@@ -82,7 +89,7 @@ public class IfExecutableBlock extends AbstractExecutableBlock {
             if (m.getKey().equals("[if_executable_block_body:" + identifier + "]")) {
                 LoadingRequirementContainer lrc = LoadingRequirementContainer.deserializeWithIdentifier(m.getValue(), serialized);
                 if (lrc != null) {
-                    b.body = lrc;
+                    b.condition = lrc;
                 }
                 break;
             }

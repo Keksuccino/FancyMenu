@@ -28,7 +28,7 @@ public class MarkdownParser {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final CharacterFilter RESOURCE_NAME_FILTER = CharacterFilter.buildBasicFilenameCharacterFilter();
+    private static final CharacterFilter RESOURCE_NAME_FILTER = CharacterFilter.buildOnlyLowercaseFileNameFilter();
 
     @NotNull
     public static List<MarkdownTextFragment> parse(@NotNull MarkdownRenderer renderer, @NotNull String markdownText) {

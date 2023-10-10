@@ -251,7 +251,7 @@ public class NonStackableOverlayUI {
                 () -> String.valueOf(Objects.requireNonNullElse(getter.get(), "")),
                 s -> {
                     if (MathUtils.isInteger(s)) setter.accept(Integer.valueOf(s));
-                }, addResetOption, "" + defaultValue, CharacterFilter.buildIntegerCharacterFiler(),
+                }, addResetOption, "" + defaultValue, CharacterFilter.buildIntegerFiler(),
                 false, false, (textValidator != null) ? textValidator : defaultIntegerValidator, textValidatorUserFeedback);
     }
 
@@ -262,7 +262,7 @@ public class NonStackableOverlayUI {
                 () -> String.valueOf(Objects.requireNonNullElse(getter.get(), "")),
                 s -> {
                     if (MathUtils.isDouble(s)) setter.accept(Double.valueOf(s));
-                }, addResetOption, "" + defaultValue, CharacterFilter.buildDoubleCharacterFiler(),
+                }, addResetOption, "" + defaultValue, CharacterFilter.buildDecimalFiler(),
                 false, false, (textValidator != null) ? textValidator : defaultDoubleValidator, textValidatorUserFeedback);
     }
 
@@ -273,7 +273,7 @@ public class NonStackableOverlayUI {
                 () -> String.valueOf(Objects.requireNonNullElse(getter.get(), "")),
                 s -> {
                     if (MathUtils.isFloat(s)) setter.accept(Float.valueOf(s));
-                }, addResetOption, "" + defaultValue, CharacterFilter.buildDoubleCharacterFiler(),
+                }, addResetOption, "" + defaultValue, CharacterFilter.buildDecimalFiler(),
                 false, false, (textValidator != null) ? textValidator : defaultFloatValidator, textValidatorUserFeedback);
     }
 
@@ -284,7 +284,7 @@ public class NonStackableOverlayUI {
                 () -> String.valueOf(Objects.requireNonNullElse(getter.get(), "")),
                 s -> {
                     if (MathUtils.isLong(s)) setter.accept(Long.valueOf(s));
-                }, addResetOption, "" + defaultValue, CharacterFilter.buildIntegerCharacterFiler(),
+                }, addResetOption, "" + defaultValue, CharacterFilter.buildIntegerFiler(),
                 false, false, (textValidator != null) ? textValidator : defaultLongValidator, textValidatorUserFeedback);
     }
 

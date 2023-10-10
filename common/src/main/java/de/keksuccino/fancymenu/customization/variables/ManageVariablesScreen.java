@@ -50,7 +50,7 @@ public class ManageVariablesScreen extends Screen {
         super.init();
 
         this.addVariableButton = new ExtendedButton(0, 0, 220, 20, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.add_variable"), (button) -> {
-            TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.overlay.menu_bar.variables.manage.add_variable.input_name"), CharacterFilter.buildBasicFilenameCharacterFilter(), (call) -> {
+            TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.overlay.menu_bar.variables.manage.add_variable.input_name"), CharacterFilter.buildOnlyLowercaseFileNameFilter(), (call) -> {
                 if (call != null) {
                     if (!VariableHandler.variableExists(call)) {
                         VariableHandler.setVariable(call, "");

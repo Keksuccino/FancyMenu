@@ -109,6 +109,19 @@ public class LayoutEditorUI {
 		layoutMenu.addSubMenuEntry("layout_settings", Component.translatable("fancymenu.editor.layout.properties"), buildRightClickContextMenu(editor))
 				.setIcon(ContextMenu.IconFactory.getIcon("settings"));
 
+		layoutMenu.addSeparatorEntry("separator_after_layout_settings");
+
+		layoutMenu.addClickableEntry("close_editor", Component.translatable("fancymenu.editor.close"), (menu, entry) -> {
+			displayUnsavedWarning(call -> {
+				if (call) {
+					editor.saveWidgetSettings();
+					Minecraft.getInstance().setScreen(editor.layoutTargetScreen);
+				} else {
+					Minecraft.getInstance().setScreen(editor);
+				}
+			});
+		}).setIcon(ContextMenu.IconFactory.getIcon("close"));
+
 		//EDIT
 		ContextMenu editMenu = new ContextMenu();
 		menuBar.addContextMenuEntry("edit_tab", Component.translatable("fancymenu.editor.edit"), editMenu);
@@ -374,7 +387,7 @@ public class LayoutEditorUI {
 		menu.addSeparatorEntry("separator_after_scroll_list_customizations");
 
 		menu.addClickableEntry("layout_index", Component.translatable("fancymenu.editor.layout.index"), (menu1, entry) -> {
-			TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.editor.layout.index"), CharacterFilter.buildIntegerCharacterFiler(), s1 -> {
+			TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.editor.layout.index"), CharacterFilter.buildIntegerFiler(), s1 -> {
 				if ((s1 != null) && MathUtils.isInteger(s1)) {
 					editor.history.saveSnapshot();
 					editor.layout.layoutIndex = Integer.parseInt(s1);
@@ -396,7 +409,7 @@ public class LayoutEditorUI {
 				.setIcon(ContextMenu.IconFactory.getIcon("random"));
 
 		menu.addClickableEntry("random_mode_group", Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"), (menu1, entry) -> {
-			Minecraft.getInstance().setScreen(TextInputScreen.build(Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"), CharacterFilter.buildIntegerCharacterFiler(), call -> {
+			Minecraft.getInstance().setScreen(TextInputScreen.build(Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"), CharacterFilter.buildIntegerFiler(), call -> {
 				if (call != null) {
 					if (!MathUtils.isInteger(call)) {
 						call = "1";

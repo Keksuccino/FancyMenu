@@ -10,7 +10,9 @@ CHANGELOG | FANCYMENU v3.0.0 CLOSED ALPHA 3
 - The File Explorer screens (Choose and Save File) now display previews for GIF images
 - Improved customizability of modern screens like the "Create World" or "Credits and Attribution" screen
 - You can now fully customize Vanilla/Mod Slider handle and background textures
+- Added back the "Close Editor" entry to the "Layout" tab of the Layout Editor's menu bar
  
+- Added: "Update Screen" action to update/reload the current screen's customizations without reloading the whole mod
 - Added: "Set Minecraft Option" action to set the value of a Minecraft option
 - Added: "Minecraft Option Value" placeholder to get the value of a Minecraft option
  

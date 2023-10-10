@@ -81,35 +81,35 @@ public class VanillaWidgetElement extends ButtonElement implements IHideableElem
 
         super.updateWidgetTexture();
 
-        RenderableResource backNormal = null;
-        RenderableResource backHighlighted = null;
+        RenderableResource sliderBackNormal = null;
+        RenderableResource sliderBackHighlighted = null;
 
         //Normal
         if ((this.sliderBackgroundAnimationNormal != null) && AnimationHandler.animationExists(this.sliderBackgroundAnimationNormal)) {
             IAnimationRenderer r = AnimationHandler.getAnimation(this.sliderBackgroundAnimationNormal);
             if (r instanceof AdvancedAnimation a) {
                 a.setLooped(this.loopBackgroundAnimations);
-                backNormal = a;
+                sliderBackNormal = a;
             }
         }
-        if ((backNormal == null) && (this.sliderBackgroundTextureNormal != null) && this.sliderBackgroundTextureNormal.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.sliderBackgroundTextureNormal.getFile())) {
-            backNormal = TextureHandler.INSTANCE.getTexture(this.sliderBackgroundTextureNormal.getAbsolutePath());
+        if ((sliderBackNormal == null) && (this.sliderBackgroundTextureNormal != null) && this.sliderBackgroundTextureNormal.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.sliderBackgroundTextureNormal.getFile())) {
+            sliderBackNormal = TextureHandler.INSTANCE.getTexture(this.sliderBackgroundTextureNormal.getAbsolutePath());
         }
         //Highlighted
         if ((this.sliderBackgroundAnimationHighlighted != null) && AnimationHandler.animationExists(this.sliderBackgroundAnimationHighlighted)) {
             IAnimationRenderer r = AnimationHandler.getAnimation(this.sliderBackgroundAnimationHighlighted);
             if (r instanceof AdvancedAnimation a) {
                 a.setLooped(this.loopBackgroundAnimations);
-                backHighlighted = a;
+                sliderBackHighlighted = a;
             }
         }
-        if ((backHighlighted == null) && (this.sliderBackgroundTextureHighlighted != null) && this.sliderBackgroundTextureHighlighted.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.sliderBackgroundTextureHighlighted.getFile())) {
-            backHighlighted = TextureHandler.INSTANCE.getTexture(this.sliderBackgroundTextureHighlighted.getAbsolutePath());
+        if ((sliderBackHighlighted == null) && (this.sliderBackgroundTextureHighlighted != null) && this.sliderBackgroundTextureHighlighted.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.sliderBackgroundTextureHighlighted.getFile())) {
+            sliderBackHighlighted = TextureHandler.INSTANCE.getTexture(this.sliderBackgroundTextureHighlighted.getAbsolutePath());
         }
 
         if (this.getWidget() instanceof CustomizableSlider w) {
-            w.setCustomSliderBackgroundNormalFancyMenu(backNormal);
-            w.setCustomSliderBackgroundHighlightedFancyMenu(backHighlighted);
+            w.setCustomSliderBackgroundNormalFancyMenu(sliderBackNormal);
+            w.setCustomSliderBackgroundHighlightedFancyMenu(sliderBackHighlighted);
         }
 
     }

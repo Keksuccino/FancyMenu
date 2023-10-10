@@ -1,19 +1,26 @@
 package de.keksuccino.fancymenu.customization.loadingrequirement.internal;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.action.ValuePlaceholderHolder;
+import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.ListUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.function.Supplier;
 
-public class LoadingRequirementGroup {
+@SuppressWarnings("all")
+public class LoadingRequirementGroup implements ValuePlaceholderHolder {
 
     public LoadingRequirementContainer parent;
     public String identifier;
     public GroupMode mode;
+    /**
+     * Placeholders do not get serialized, but get copied when calling copy().
+     * They get added at runtime, mostly after creating a new {@link LoadingRequirementInstance}.
+     */
+    protected final Map<String, Supplier<String>> valuePlaceholders = new HashMap<>();
     protected final List<LoadingRequirementInstance> instances = new ArrayList<>();
 
     public LoadingRequirementGroup(@NotNull String identifier, @NotNull GroupMode mode, @NotNull LoadingRequirementContainer parent) {
@@ -41,6 +48,7 @@ public class LoadingRequirementGroup {
     public void addInstance(LoadingRequirementInstance instance) {
         if (!this.instances.contains(instance)) {
             this.instances.add(instance);
+            this.valuePlaceholders.forEach(instance::addValuePlaceholder);
         }
         instance.group = this;
     }
@@ -56,6 +64,31 @@ public class LoadingRequirementGroup {
 
     public List<LoadingRequirementInstance> getInstances() {
         return new ArrayList<>(this.instances);
+    }
+
+    /**
+     * Value placeholders are for replacing parts of the {@link LoadingRequirementInstance#value}.<br>
+     * All placeholders added to groups get automatically added to its child {@link LoadingRequirementInstance}s.<br><br>
+     *
+     * Placeholders use the $$ prefix, but don't include this prefix in the placeholder name.
+     *
+     * @param placeholder The placeholder base. Should be all lowercase with no special chars or spaces. Use only [a-z], [0-9], [_], [-].
+     * @param replaceWithSupplier The supplier that returns the actual value this placeholder should get replaced with.
+     */
+    public void addValuePlaceholder(@NotNull String placeholder, @NotNull Supplier<String> replaceWithSupplier) {
+        if (!CharacterFilter.buildResourceNameFilter().isAllowedText(placeholder)) {
+            throw new RuntimeException("Illegal characters used in placeholder name! Use only [a-z], [0-9], [_], [-]!");
+        }
+        this.valuePlaceholders.put(placeholder, replaceWithSupplier);
+        for (LoadingRequirementInstance i : this.instances) {
+            i.addValuePlaceholder(placeholder, replaceWithSupplier);
+        }
+    }
+
+    @NotNull
+    @Override
+    public Map<String, Supplier<String>> getValuePlaceholders() {
+        return this.valuePlaceholders;
     }
 
     @Override
@@ -78,6 +111,7 @@ public class LoadingRequirementGroup {
             i.group = g;
             g.instances.add(i);
         });
+        g.valuePlaceholders.putAll(this.valuePlaceholders);
         return g;
     }
 

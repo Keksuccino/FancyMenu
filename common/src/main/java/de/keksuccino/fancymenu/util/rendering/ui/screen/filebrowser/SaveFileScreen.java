@@ -194,7 +194,7 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
         if (!this.forceResourceFriendlyFileNames) {
             this.fileNameEditBox.setCharacterFilter(null);
         } else {
-            this.fileNameEditBox.setCharacterFilter(CharacterFilter.buildBasicFilenameCharacterFilter());
+            this.fileNameEditBox.setCharacterFilter(CharacterFilter.buildOnlyLowercaseFileNameFilter());
         }
         return this;
     }
