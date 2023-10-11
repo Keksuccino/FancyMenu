@@ -2,6 +2,9 @@ package de.keksuccino.fancymenu.util.file;
 
 import com.google.common.io.Files;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.util.file.type.FileMediaType;
+import de.keksuccino.fancymenu.util.file.type.FileType;
+import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -16,7 +19,7 @@ public class ResourceFile {
 
     protected String shortPath;
     protected File file;
-    protected ResourceFileType type;
+    protected FileType type;
 
     /**
      * Returns a new {@link ResourceFile} instance for the given asset.<br>
@@ -71,7 +74,10 @@ public class ResourceFile {
         }
         resourceFile.file = new File(GameDirectoryUtils.getGameDirectory(), gameDirectoryFilePath);
         resourceFile.shortPath = gameDirectoryFilePath;
-        resourceFile.type = ResourceFileType.getTypeForFile(resourceFile.file);
+        resourceFile.type = FileTypes.getTypeOfLocalFile(resourceFile.file);
+        if (resourceFile.type == null) {
+            resourceFile.type = FileTypes.UNKNOWN;
+        }
         return resourceFile;
     }
 
@@ -138,47 +144,16 @@ public class ResourceFile {
     }
 
     /**
-     * Returns the {@link ResourceFileType} of the file or {@link ResourceFileType#UNKNOWN} if the file does not have a known type.
+     * Returns the {@link FileType} of the file or {@link FileTypes#UNKNOWN} if the file does not have a known type.
      */
     @NotNull
-    public ResourceFileType getType() {
+    public FileType getType() {
         return this.type;
     }
 
-    public enum ResourceFileType {
-
-        UNKNOWN("unknown"),
-        IMAGE_PNG("png"),
-        IMAGE_JPEG_JPG("jpeg", "jpg"),
-        IMAGE_GIF("gif"),
-        AUDIO_OGG("ogg"),
-        AUDIO_WAV("wav"),
-        AUDIO_MP3("mp3"),
-        VIDEO_MP4("mp4"),
-        VIDEO_MKV("mkv"),
-        TEXT_TXT("txt");
-
-        private final String[] extensions;
-
-        ResourceFileType(@NotNull String... extensions) {
-            this.extensions = extensions;
-        }
-
-        public String[] getExtensions() {
-            return this.extensions;
-        }
-
-        @NotNull
-        public static ResourceFileType getTypeForFile(@NotNull File file) {
-            if (!file.exists() || file.isDirectory()) return UNKNOWN;
-            for (ResourceFileType type : ResourceFileType.values()) {
-                for (String extension : type.getExtensions()) {
-                    if (file.getPath().toLowerCase().endsWith("." + extension)) return type;
-                }
-            }
-            return UNKNOWN;
-        }
-
+    @NotNull
+    public FileMediaType getMediaType() {
+        return this.type.getMediaType();
     }
 
 }

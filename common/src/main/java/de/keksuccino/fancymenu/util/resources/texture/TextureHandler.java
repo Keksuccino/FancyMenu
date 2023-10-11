@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.resources.texture;
 
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.konkrete.rendering.animation.ExternalGifAnimationRenderer;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -9,11 +8,10 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+@SuppressWarnings("unused")
 public class TextureHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -25,7 +23,7 @@ public class TextureHandler {
 
     @Nullable
     public ITexture getTexture(@NotNull String path) {
-        File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(path));
+        File f = new File(GameDirectoryUtils.getAbsoluteGameDirectoryPath(path));
         return this.getTexture(f);
     }
 
@@ -112,26 +110,8 @@ public class TextureHandler {
         return null;
     }
 
-    @Deprecated
-    @Nullable
-    public ExternalGifAnimationRenderer getGifTexture(@NotNull String path) {
-        File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(path));
-        if (!gifs.containsKey(f.getAbsolutePath())) {
-            if (f.exists() && f.isFile() && f.getPath().toLowerCase().replace(" ", "").endsWith(".gif")) {
-                ExternalGifAnimationRenderer r = new ExternalGifAnimationRenderer(f.getPath(), true, 0, 0, 0, 0);
-                r.prepareAnimation();
-                gifs.put(f.getAbsolutePath(), r);
-                return r;
-            } else {
-                return null;
-            }
-        } else {
-            return gifs.get(f.getAbsolutePath());
-        }
-    }
-
     public void removeResource(@NotNull String pathOrUrl) {
-        File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(pathOrUrl));
+        File f = new File(GameDirectoryUtils.getAbsoluteGameDirectoryPath(pathOrUrl));
         textures.remove(f.getAbsolutePath());
         textures.remove(pathOrUrl);
     }
@@ -143,22 +123,6 @@ public class TextureHandler {
             g.resetAnimation();
         }
         this.gifs.clear();
-    }
-
-    public static boolean isGifUrl(@NotNull String gifUrl) {
-        if (!TextValidators.BASIC_URL_TEXT_VALIDATOR.get(gifUrl)) return false;
-        if (gifUrl.toLowerCase().endsWith(".jpg") || gifUrl.toLowerCase().endsWith(".jpeg") || gifUrl.toLowerCase().endsWith(".png")) return false;
-        if (gifUrl.toLowerCase().endsWith(".jpg/") || gifUrl.toLowerCase().endsWith(".jpeg/") || gifUrl.toLowerCase().endsWith(".png/")) return false;
-        if (gifUrl.toLowerCase().endsWith(".gif")) return true;
-        if (gifUrl.toLowerCase().endsWith(".gif/")) return true;
-        try {
-            URL url = new URL(gifUrl);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            String mimeType = connection.getContentType();
-            connection.disconnect();
-            if ((mimeType != null) && mimeType.equalsIgnoreCase("image/gif")) return true;
-        } catch (Exception ignore) {}
-        return false;
     }
 
 }

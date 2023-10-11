@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.IExecutableElement;
-import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinButton;
@@ -66,7 +65,7 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
         if (this.getWidget() == null) return;
 
         //So the widget isn't clickable when not getting rendered
-        if (!(this instanceof VanillaWidgetElement)) {
+        if (this.getWidget() instanceof ExtendedButton) {
             this.getWidget().visible = this.shouldRender();
         }
 

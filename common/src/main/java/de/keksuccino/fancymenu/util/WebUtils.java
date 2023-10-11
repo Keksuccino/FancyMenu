@@ -1,15 +1,28 @@
 package de.keksuccino.fancymenu.util;
 
 import net.minecraft.client.Minecraft;
-
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Locale;
 
 public class WebUtils {
 
-    public static boolean isValidUrl(String url) {
-        if (url != null && (url.startsWith("http://") || url.startsWith("https://"))) {
+    @Nullable
+    public static String getMimeType(@NotNull String url) {
+        try {
+            URL url2 = new URL(url);
+            HttpURLConnection connection = (HttpURLConnection) url2.openConnection();
+            String mimeType = connection.getContentType();
+            connection.disconnect();
+            return mimeType;
+        } catch (Exception ignore) {}
+        return null;
+    }
+
+    public static boolean isValidUrl(@Nullable String url) {
+        if ((url != null) && (url.startsWith("http://") || url.startsWith("https://"))) {
             try {
                 URL u = new URL(url);
                 HttpURLConnection c = (HttpURLConnection)u.openConnection();
@@ -35,7 +48,7 @@ public class WebUtils {
         return false;
     }
 
-    public static void openWebLink(String url) {
+    public static void openWebLink(@NotNull String url) {
         try {
             String s = System.getProperty("os.name").toLowerCase(Locale.ROOT);
             URL u = new URL(url);

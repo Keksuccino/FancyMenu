@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.resources.texture;
 
+import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import net.minecraft.resources.ResourceLocation;
@@ -7,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
+@SuppressWarnings("unused")
 public class WrappedWebTexture implements ITexture {
 
     @Nullable
@@ -31,7 +33,7 @@ public class WrappedWebTexture implements ITexture {
         new Thread(() -> {
             try {
                 if (!TextValidators.BASIC_URL_TEXT_VALIDATOR.get(imageUrl)) return;
-                if (TextureHandler.isGifUrl(imageUrl))  {
+                if (FileTypes.GIF_IMAGE.isFileTypeWeb(imageUrl)) {
                     texture.setWrappedTexture(GifTexture.web(imageUrl));
                 } else {
                     texture.setWrappedTexture(SimpleWebTexture.of(imageUrl, autoLoadPngAndJpeg));

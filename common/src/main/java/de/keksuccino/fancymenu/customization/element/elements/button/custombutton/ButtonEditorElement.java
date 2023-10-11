@@ -52,6 +52,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
         ContextMenu buttonBackgroundMenu = new ContextMenu();
         if (isSlider || isButton) {
             this.rightClickMenu.addSubMenuEntry("button_background", isButton ? Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground") : Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.alternate.slider"), buttonBackgroundMenu)
+                    .setIcon(ContextMenu.IconFactory.getIcon("image"))
                     .setStackable(true);
         }
 

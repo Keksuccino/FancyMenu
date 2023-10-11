@@ -34,10 +34,6 @@ import org.jetbrains.annotations.Nullable;
 
 public class SliderElement extends AbstractElement implements IExecutableElement {
 
-    //TODO Slider Texture fixen
-
-    //TODO Schauen, warum in Integer Range Mode trotzdem boolean als label $$value gerendert wird
-
     public static final String VALUE_PLACEHOLDER = "$$value";
 
     public AbstractExtendedSlider slider;
@@ -49,6 +45,7 @@ public class SliderElement extends AbstractElement implements IExecutableElement
     public List<String> listValues = new ArrayList<>();
     public double minRangeValue = 1;
     public double maxRangeValue = 10;
+    public int roundingDecimalPlace = 2;
     @Nullable
     public String label;
     public String tooltip;
@@ -104,6 +101,7 @@ public class SliderElement extends AbstractElement implements IExecutableElement
                 preSelected = (int) Double.parseDouble(preSelectedString);
             }
             this.slider = new RangeSlider(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), Component.empty(), min, max, preSelected);
+            ((RangeSlider)this.slider).setShowAsInteger(true);
         }
         if (this.type == SliderType.DECIMAL_RANGE) {
             double preSelected = this.minRangeValue;
@@ -111,7 +109,7 @@ public class SliderElement extends AbstractElement implements IExecutableElement
                 preSelected = Double.parseDouble(preSelectedString);
             }
             this.slider = new RangeSlider(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), Component.empty(), this.minRangeValue, this.maxRangeValue, preSelected);
-            ((RangeSlider)this.slider).setShowRounded(false);
+            ((RangeSlider)this.slider).setRoundingDecimalPlace(this.roundingDecimalPlace);
         }
         if (this.type == SliderType.LIST) {
             if (this.listValues.isEmpty()) this.listValues.addAll(List.of("placeholder_1", "placeholder_2"));

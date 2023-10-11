@@ -69,8 +69,7 @@ public class SliderEditorElement extends AbstractEditorElement {
                             return false;
                         }, null)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.type.list.set_list_values.desc")))
-                .setIsVisibleSupplier((menu, entry) -> ((SliderElement)this.element).type == SliderElement.SliderType.LIST)
-                .setIcon(ContextMenu.IconFactory.getIcon("edit"));
+                .setIsVisibleSupplier((menu, entry) -> ((SliderElement)this.element).type == SliderElement.SliderType.LIST);
 
         this.addDoubleInputContextMenuEntryTo(this.rightClickMenu, "set_min_range_value",
                         SliderEditorElement.class,
@@ -81,9 +80,8 @@ public class SliderEditorElement extends AbstractEditorElement {
                         },
                         Component.translatable("fancymenu.elements.slider.v2.type.range.set_min"),
                         false, 0, null, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.type.range.set_min")))
-                .setIsVisibleSupplier((menu, entry) -> (((SliderElement)this.element).type == SliderElement.SliderType.DECIMAL_RANGE) || (((SliderElement)this.element).type == SliderElement.SliderType.INTEGER_RANGE))
-                .setIcon(ContextMenu.IconFactory.getIcon("edit"));
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.type.range.set_min.desc")))
+                .setIsVisibleSupplier((menu, entry) -> (((SliderElement)this.element).type == SliderElement.SliderType.DECIMAL_RANGE) || (((SliderElement)this.element).type == SliderElement.SliderType.INTEGER_RANGE));
 
         this.addDoubleInputContextMenuEntryTo(this.rightClickMenu, "set_max_range_value",
                         SliderEditorElement.class,
@@ -94,9 +92,20 @@ public class SliderEditorElement extends AbstractEditorElement {
                         },
                         Component.translatable("fancymenu.elements.slider.v2.type.range.set_max"),
                         false, 0, null, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.type.range.set_max")))
-                .setIsVisibleSupplier((menu, entry) -> (((SliderElement)this.element).type == SliderElement.SliderType.DECIMAL_RANGE) || (((SliderElement)this.element).type == SliderElement.SliderType.INTEGER_RANGE))
-                .setIcon(ContextMenu.IconFactory.getIcon("edit"));
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.type.range.set_max.desc")))
+                .setIsVisibleSupplier((menu, entry) -> (((SliderElement)this.element).type == SliderElement.SliderType.DECIMAL_RANGE) || (((SliderElement)this.element).type == SliderElement.SliderType.INTEGER_RANGE));
+
+        this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "rounding_decimal_place",
+                        SliderEditorElement.class,
+                        consumes -> ((SliderElement)consumes.element).roundingDecimalPlace,
+                        (element, range) -> {
+                            ((SliderElement)element.element).roundingDecimalPlace = range;
+                            ((SliderElement)element.element).buildSlider();
+                        },
+                        Component.translatable("fancymenu.elements.slider.v2.type.range.decimal.round"),
+                        true, 2, null, null)
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.type.range.decimal.round.desc")))
+                .setIsVisibleSupplier((menu, entry) -> ((SliderElement)this.element).type == SliderElement.SliderType.DECIMAL_RANGE);
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_pre_selected_value",
                         SliderEditorElement.class,
@@ -128,6 +137,7 @@ public class SliderEditorElement extends AbstractEditorElement {
 
         ContextMenu buttonBackgroundMenu = new ContextMenu();
         this.rightClickMenu.addSubMenuEntry("button_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.alternate.slider"), buttonBackgroundMenu)
+                .setIcon(ContextMenu.IconFactory.getIcon("image"))
                 .setStackable(true);
 
         ContextMenu setBackMenu = new ContextMenu();

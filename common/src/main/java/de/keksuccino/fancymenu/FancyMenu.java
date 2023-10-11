@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
+import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.rendering.text.color.colors.TextColorFormatters;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
@@ -18,6 +19,8 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
+
+	//TODO Make progress bars smoother (calculate progress with float value)
 
 	//TODO "Current Screen Identifier" placeholder
 
@@ -128,8 +131,14 @@ public class FancyMenu {
 	public static void init() {
 
 		if (Services.PLATFORM.isOnClient()) {
-
 			LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in client-side mode on " + MOD_LOADER.toUpperCase() + "!");
+		} else {
+			LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in server-side mode on " + MOD_LOADER.toUpperCase() + "!");
+		}
+
+		FileTypes.registerAll();
+
+		if (Services.PLATFORM.isOnClient()) {
 
 			UIColorThemes.registerAll();
 
@@ -140,8 +149,6 @@ public class FancyMenu {
 			//TODO remove debug
 			EventHandler.INSTANCE.registerListenersOf(new Test());
 
-		} else {
-			LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in server-side mode on " + MOD_LOADER.toUpperCase() + "!");
 		}
 
 		Compat.printInfoLog();

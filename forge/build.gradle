@@ -68,6 +68,7 @@ dependencies {
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
     implementation fg.deobf("curse.maven:konkrete-410295:4514916")
     implementation fg.deobf("curse.maven:load-my-resources-forge-534502:4203277")
+    implementation(jarJar(group: 'ar.com.hjg', name: 'pngj', version: '2.1.0'))
 }
 
 tasks.withType(JavaCompile).configureEach {

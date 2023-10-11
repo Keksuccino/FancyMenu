@@ -55,6 +55,8 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
         element.minRangeValue = deserializeNumber(Double.class, element.minRangeValue, serialized.getValue("min_range_value"));
         element.maxRangeValue = deserializeNumber(Double.class, element.maxRangeValue, serialized.getValue("max_range_value"));
 
+        element.roundingDecimalPlace = deserializeNumber(Integer.class, element.roundingDecimalPlace, serialized.getValue("rounding_decimal_place"));
+
         List<List<String>> listValueEntries = new ArrayList<>();
         serialized.getProperties().forEach((key, value) -> {
             if (key.startsWith("slider_list_value_")) {
@@ -121,6 +123,8 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
 
         serializeTo.putProperty("min_range_value", "" + element.minRangeValue);
         serializeTo.putProperty("max_range_value", "" + element.maxRangeValue);
+
+        serializeTo.putProperty("rounding_decimal_place", "" + element.roundingDecimalPlace);
 
         int i = 0;
         for (String s : element.listValues) {

@@ -23,15 +23,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class GifTexture implements ITexture, PlayableResource {
+public class ApngTexture implements ITexture, PlayableResource {
+
+    //TODO APNG support adden (PNGJ lib testen)
 
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final GifTexture EMPTY = new GifTexture();
+    public static final ApngTexture EMPTY = new ApngTexture();
 
     @NotNull
-    protected volatile List<GifFrame> frames = new ArrayList<>();
+    protected volatile List<ApngFrame> frames = new ArrayList<>();
     @Nullable
-    protected volatile GifFrame current = null;
+    protected volatile ApngTexture.ApngFrame current = null;
     @NotNull
     protected volatile AspectRatio aspectRatio = new AspectRatio(10, 10);
     protected volatile int width = 10;
@@ -41,111 +43,111 @@ public class GifTexture implements ITexture, PlayableResource {
     protected volatile boolean decoded = false;
 
     @NotNull
-    public static GifTexture web(@NotNull String gifUrl) {
+    public static ApngTexture web(@NotNull String apngUrl) {
 
-        if (!TextValidators.BASIC_URL_TEXT_VALIDATOR.get(Objects.requireNonNull(gifUrl))) {
-            LOGGER.error("[FANCYMENU] Unable to load Web GIF image! Invalid URL: " + gifUrl);
+        if (!TextValidators.BASIC_URL_TEXT_VALIDATOR.get(Objects.requireNonNull(apngUrl))) {
+            LOGGER.error("[FANCYMENU] Unable to load Web APNG image! Invalid URL: " + apngUrl);
             return EMPTY;
         }
 
-        GifTexture gifTexture = new GifTexture();
+        ApngTexture apngTexture = new ApngTexture();
 
-        //Download and decode GIF image
+        //Download and decode APNG image
         new Thread(() -> {
             InputStream in = null;
             ByteArrayInputStream byteIn = null;
             try {
-                URL url = new URL(gifUrl);
+                URL url = new URL(apngUrl);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.addRequestProperty("User-Agent", "Mozilla/4.0");
                 in = connection.getInputStream();
                 //The extract method seems to struggle with a direct web input stream, so read all bytes of it and wrap them into a ByteArrayInputStream
                 byteIn = new ByteArrayInputStream(in.readAllBytes());
             } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to download Web GIF image: " + gifUrl, ex);
+                LOGGER.error("[FANCYMENU] Failed to download Web APNG image: " + apngUrl, ex);
             }
             if (byteIn != null) {
                 try {
-                    populateTexture(gifTexture, byteIn, gifUrl);
+                    populateTexture(apngTexture, byteIn, apngUrl);
                 } catch (Exception ex) {
-                    LOGGER.error("[FANCYMENU] Failed to load Web GIF image: " + gifUrl, ex);
+                    LOGGER.error("[FANCYMENU] Failed to load Web APNG image: " + apngUrl, ex);
                 }
             }
             CloseableUtils.closeQuietly(in);
             CloseableUtils.closeQuietly(byteIn);
         }).start();
 
-        return gifTexture;
+        return apngTexture;
 
     }
 
     @NotNull
-    public static GifTexture local(@NotNull File gif) {
+    public static ApngTexture local(@NotNull File apng) {
 
-        if (!FileTypes.GIF_IMAGE.isFileTypeLocal(gif)) {
-            LOGGER.error("[FANCYMENU] GIF image not found or not a valid GIF: " + gif.getPath());
+        if (!FileTypes.APNG_IMAGE.isFileTypeLocal(apng)) {
+            LOGGER.error("[FANCYMENU] APNG image not found or not a valid APNG: " + apng.getPath());
             return EMPTY;
         }
 
-        GifTexture gifTexture = new GifTexture();
+        ApngTexture apngTexture = new ApngTexture();
 
-        //Decode GIF image
+        //Decode APNG image
         new Thread(() -> {
             InputStream in = null;
             try {
-                in = new FileInputStream(gif);
-                populateTexture(gifTexture, in, gif.getPath());
+                in = new FileInputStream(apng);
+                populateTexture(apngTexture, in, apng.getPath());
             } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to load GIF image: " + gif.getPath(), ex);
+                LOGGER.error("[FANCYMENU] Failed to load APNG image: " + apng.getPath(), ex);
             }
             CloseableUtils.closeQuietly(in);
         }).start();
 
-        return gifTexture;
+        return apngTexture;
 
     }
 
-    protected static void populateTexture(@NotNull GifTexture gifTexture, @NotNull InputStream in, @NotNull String gifTextureName) throws IOException {
-        //Decode first frame and set it as temporary frame list to show GIF quicker
-        ExtractedGifImage imageAndFirstFrame = extractFrames(in, gifTextureName, 1);
+    protected static void populateTexture(@NotNull ApngTexture apngTexture, @NotNull InputStream in, @NotNull String apngTextureName) throws IOException {
+        //Decode first frame and set it as temporary frame list to show APNG quicker
+        ExtractedApngImage imageAndFirstFrame = extractFrames(in, apngTextureName, 1);
         boolean sizeSet = false;
         if (!imageAndFirstFrame.frames().isEmpty()) {
-            GifFrame first = imageAndFirstFrame.frames().get(0);
+            ApngFrame first = imageAndFirstFrame.frames().get(0);
             first.nativeImage = NativeImage.read(first.frameInputStream);
             CloseableUtils.closeQuietly(first.closeAfterLoading);
             CloseableUtils.closeQuietly(first.frameInputStream);
             if (first.nativeImage != null) {
-                gifTexture.width = first.nativeImage.getWidth();
-                gifTexture.height = first.nativeImage.getHeight();
-                gifTexture.aspectRatio = new AspectRatio(first.nativeImage.getWidth(), first.nativeImage.getHeight());
+                apngTexture.width = first.nativeImage.getWidth();
+                apngTexture.height = first.nativeImage.getHeight();
+                apngTexture.aspectRatio = new AspectRatio(first.nativeImage.getWidth(), first.nativeImage.getHeight());
                 sizeSet = true;
             }
-            gifTexture.frames = imageAndFirstFrame.frames();
-            gifTexture.decoded = true;
+            apngTexture.frames = imageAndFirstFrame.frames();
+            apngTexture.decoded = true;
         }
-        //Decode the full GIF and set its frames to the GifTexture
-        List<GifFrame> allFrames = extractFrames(imageAndFirstFrame.image(), gifTextureName, -1).frames();
-        for (GifFrame frame : allFrames) {
+        //Decode the full APNG and set its frames to the ApngTexture
+        List<ApngFrame> allFrames = extractFrames(imageAndFirstFrame.image(), apngTextureName, -1).frames();
+        for (ApngFrame frame : allFrames) {
             frame.nativeImage = NativeImage.read(frame.frameInputStream);
             CloseableUtils.closeQuietly(frame.closeAfterLoading);
             CloseableUtils.closeQuietly(frame.frameInputStream);
         }
         if (!sizeSet && !allFrames.isEmpty()) {
-            GifFrame first = allFrames.get(0);
+            ApngFrame first = allFrames.get(0);
             first.nativeImage = NativeImage.read(first.frameInputStream);
             CloseableUtils.closeQuietly(first.closeAfterLoading);
             CloseableUtils.closeQuietly(first.frameInputStream);
             if (first.nativeImage != null) {
-                gifTexture.width = first.nativeImage.getWidth();
-                gifTexture.height = first.nativeImage.getHeight();
-                gifTexture.aspectRatio = new AspectRatio(first.nativeImage.getWidth(), first.nativeImage.getHeight());
+                apngTexture.width = first.nativeImage.getWidth();
+                apngTexture.height = first.nativeImage.getHeight();
+                apngTexture.aspectRatio = new AspectRatio(first.nativeImage.getWidth(), first.nativeImage.getHeight());
             }
         }
-        gifTexture.frames = allFrames;
-        gifTexture.decoded = true;
+        apngTexture.frames = allFrames;
+        apngTexture.decoded = true;
     }
 
-    protected GifTexture() {
+    protected ApngTexture() {
     }
 
     @SuppressWarnings("all")
@@ -157,12 +159,12 @@ public class GifTexture implements ITexture, PlayableResource {
 
             new Thread(() -> {
 
-                //Automatically stop thread if GIF was inactive for 10 seconds
+                //Automatically stop thread if APNG was inactive for 10 seconds
                 while ((this.lastResourceLocationCall + 10000) > System.currentTimeMillis()) {
                     boolean sleep = false;
                     try {
                         //Cache frames to avoid possible concurrent modification exceptions
-                        List<GifFrame> cachedFrames = new ArrayList<>(this.frames);
+                        List<ApngFrame> cachedFrames = new ArrayList<>(this.frames);
                         if (!cachedFrames.isEmpty()) {
                             //Set initial (first) frame if current is NULL
                             if (this.current == null) {
@@ -170,10 +172,10 @@ public class GifTexture implements ITexture, PlayableResource {
                                 Thread.sleep(Math.max(20, cachedFrames.get(0).delay * 10L));
                             }
                             //Cache current frame to make sure it stays the same instance while working with it
-                            GifFrame cachedCurrent = this.current;
+                            ApngFrame cachedCurrent = this.current;
                             if (cachedCurrent != null) {
                                 //Go to the next frame if current frame display time is over
-                                GifFrame newCurrent;
+                                ApngFrame newCurrent;
                                 if ((cachedCurrent.index + 1) < cachedFrames.size()) {
                                     newCurrent = cachedFrames.get(cachedCurrent.index + 1);
                                 } else {
@@ -212,11 +214,11 @@ public class GifTexture implements ITexture, PlayableResource {
     public ResourceLocation getResourceLocation() {
         this.lastResourceLocationCall = System.currentTimeMillis();
         this.startTickerIfNeeded();
-        GifFrame frame = this.current;
+        ApngFrame frame = this.current;
         if (frame != null) {
             if ((frame.resourceLocation == null) && !frame.loaded && (frame.nativeImage != null)) {
                 try {
-                    frame.resourceLocation = Minecraft.getInstance().getTextureManager().register("fancymenu_gif_texture", new SelfcleaningDynamicTexture(frame.nativeImage));
+                    frame.resourceLocation = Minecraft.getInstance().getTextureManager().register("fancymenu_apng_texture", new SelfcleaningDynamicTexture(frame.nativeImage));
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -276,7 +278,7 @@ public class GifTexture implements ITexture, PlayableResource {
      * Set max frames to -1 to read all frames.
      */
     @NotNull
-    protected static GifTexture.ExtractedGifImage extractFrames(@NotNull InputStream in, @NotNull String gifName, int maxFrames) throws IOException {
+    protected static ApngTexture.ExtractedApngImage extractFrames(@NotNull InputStream in, @NotNull String gifName, int maxFrames) throws IOException {
         GifDecoder.GifImage gif = GifDecoder.read(in);
         return extractFrames(gif, gifName, maxFrames);
     }
@@ -285,8 +287,8 @@ public class GifTexture implements ITexture, PlayableResource {
      * Set max frames to -1 to read all frames.
      */
     @NotNull
-    protected static GifTexture.ExtractedGifImage extractFrames(@NotNull GifDecoder.GifImage gif, @NotNull String gifName, int maxFrames) {
-        List<GifFrame> l = new ArrayList<>();
+    protected static ApngTexture.ExtractedApngImage extractFrames(@NotNull GifDecoder.GifImage gif, @NotNull String gifName, int maxFrames) {
+        List<ApngFrame> l = new ArrayList<>();
         int gifFrameCount = gif.getFrameCount();
         int i = 0;
         int index = 0;
@@ -297,18 +299,18 @@ public class GifTexture implements ITexture, PlayableResource {
                 ByteArrayOutputStream os = new ByteArrayOutputStream();
                 ImageIO.write(image, "PNG", os);
                 ByteArrayInputStream bis = new ByteArrayInputStream(os.toByteArray());
-                l.add(new GifFrame(index, bis, delay, os));
+                l.add(new ApngFrame(index, bis, delay, os));
                 index++;
                 if ((maxFrames != -1) && (maxFrames <= index)) break;
             } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to get frame '" + i + "' of GIF image '" + gifName + "! This can happen if the GIF is corrupted in some way.", ex);
+                LOGGER.error("[FANCYMENU] Failed to get frame '" + i + "' of APNG image '" + gifName + "! This can happen if the APNG is corrupted in some way.", ex);
             }
             i++;
         }
-        return new ExtractedGifImage(gif, l);
+        return new ExtractedApngImage(gif, l);
     }
 
-    protected static class GifFrame {
+    protected static class ApngFrame {
 
         protected final int index;
         protected final ByteArrayInputStream frameInputStream;
@@ -318,7 +320,7 @@ public class GifTexture implements ITexture, PlayableResource {
         protected ResourceLocation resourceLocation;
         protected boolean loaded = false;
 
-        protected GifFrame(int index, ByteArrayInputStream frameInputStream, int delay, ByteArrayOutputStream closeAfterLoading) {
+        protected ApngFrame(int index, ByteArrayInputStream frameInputStream, int delay, ByteArrayOutputStream closeAfterLoading) {
             this.index = index;
             this.frameInputStream = frameInputStream;
             this.delay = delay;
@@ -327,7 +329,7 @@ public class GifTexture implements ITexture, PlayableResource {
 
     }
 
-    protected record ExtractedGifImage(@NotNull GifDecoder.GifImage image, @NotNull List<GifFrame> frames) {
+    protected record ExtractedApngImage(@NotNull GifDecoder.GifImage image, @NotNull List<ApngFrame> frames) {
     }
 
 }

@@ -59,7 +59,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
         this.renderBackground(pose, mouseX, mouseY, partial);
         RenderingUtils.resetShaderColor();
 
-        this.renderVanillaHandle(pose, mouseX, mouseY, partial);
+        this.renderHandle(pose, mouseX, mouseY, partial);
         RenderingUtils.resetShaderColor();
 
         this.renderLabel(pose, mouseX, mouseY, partial);
@@ -68,8 +68,8 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     }
 
     protected void renderBackground(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-        boolean renderVanilla = !this.renderColorBackground(pose, mouseX, mouseY, partial);
-        if (renderVanilla) this.getAsCustomizableSlider().renderSliderBackgroundFancyMenu(pose, this, this.getAccessor().getCanChangeValueFancyMenu());
+        boolean renderVanilla = this.renderColorBackground(pose, mouseX, mouseY, partial);
+        if (renderVanilla) renderVanilla = this.getAsCustomizableSlider().renderSliderBackgroundFancyMenu(pose, this, this.getAccessor().getCanChangeValueFancyMenu());
         if (renderVanilla) this.renderVanillaBackground(pose, mouseX, mouseY, partial);
     }
 
@@ -110,8 +110,8 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     }
 
     protected void renderHandle(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-        boolean renderVanilla = !this.renderColorHandle(pose, mouseX, mouseY, partial);
-        if (renderVanilla) this.getAsCustomizableWidget().renderCustomBackgroundFancyMenu(this, pose, this.getHandleX(), this.getY(), this.getHandleWidth(), this.getHeight());
+        boolean renderVanilla = this.renderColorHandle(pose, mouseX, mouseY, partial);
+        if (renderVanilla) renderVanilla = this.getAsCustomizableWidget().renderCustomBackgroundFancyMenu(this, pose, this.getHandleX(), this.getY(), this.getHandleWidth(), this.getHeight());
         if (renderVanilla) this.renderVanillaHandle(pose, mouseX, mouseY, partial);
     }
 
