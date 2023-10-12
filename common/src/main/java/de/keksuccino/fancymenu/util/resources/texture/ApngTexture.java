@@ -1,7 +1,12 @@
 package de.keksuccino.fancymenu.util.resources.texture;
 
+import ar.com.hjg.pngj.PngReaderApng;
+import ar.com.hjg.pngj.PngWriter;
+import ar.com.hjg.pngj.chunks.ChunkHelper;
+import ar.com.hjg.pngj.chunks.ChunkPredicate;
 import com.mojang.blaze3d.platform.NativeImage;
 import de.keksuccino.fancymenu.util.CloseableUtils;
+import de.keksuccino.fancymenu.util.file.ResourceFile;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
@@ -109,30 +114,31 @@ public class ApngTexture implements ITexture, PlayableResource {
 
     protected static void populateTexture(@NotNull ApngTexture apngTexture, @NotNull InputStream in, @NotNull String apngTextureName) throws IOException {
         //Decode first frame and set it as temporary frame list to show APNG quicker
-        ExtractedApngImage imageAndFirstFrame = extractFrames(in, apngTextureName, 1);
-        boolean sizeSet = false;
-        if (!imageAndFirstFrame.frames().isEmpty()) {
-            ApngFrame first = imageAndFirstFrame.frames().get(0);
-            first.nativeImage = NativeImage.read(first.frameInputStream);
-            CloseableUtils.closeQuietly(first.closeAfterLoading);
-            CloseableUtils.closeQuietly(first.frameInputStream);
-            if (first.nativeImage != null) {
-                apngTexture.width = first.nativeImage.getWidth();
-                apngTexture.height = first.nativeImage.getHeight();
-                apngTexture.aspectRatio = new AspectRatio(first.nativeImage.getWidth(), first.nativeImage.getHeight());
-                sizeSet = true;
-            }
-            apngTexture.frames = imageAndFirstFrame.frames();
-            apngTexture.decoded = true;
-        }
+//        ExtractedApngImage imageAndFirstFrame = extractFrames(in, apngTextureName, 1);
+//        boolean sizeSet = false;
+//        if (!imageAndFirstFrame.frames().isEmpty()) {
+//            ApngFrame first = imageAndFirstFrame.frames().get(0);
+//            first.nativeImage = NativeImage.read(first.frameInputStream);
+//            CloseableUtils.closeQuietly(first.closeAfterLoading);
+//            CloseableUtils.closeQuietly(first.frameInputStream);
+//            if (first.nativeImage != null) {
+//                apngTexture.width = first.nativeImage.getWidth();
+//                apngTexture.height = first.nativeImage.getHeight();
+//                apngTexture.aspectRatio = new AspectRatio(first.nativeImage.getWidth(), first.nativeImage.getHeight());
+//                sizeSet = true;
+//            }
+//            apngTexture.frames = imageAndFirstFrame.frames();
+//            apngTexture.decoded = true;
+//        }
         //Decode the full APNG and set its frames to the ApngTexture
-        List<ApngFrame> allFrames = extractFrames(imageAndFirstFrame.image(), apngTextureName, -1).frames();
+        List<ApngFrame> allFrames = readApng(in, apngTextureName, -1);
         for (ApngFrame frame : allFrames) {
             frame.nativeImage = NativeImage.read(frame.frameInputStream);
             CloseableUtils.closeQuietly(frame.closeAfterLoading);
             CloseableUtils.closeQuietly(frame.frameInputStream);
         }
-        if (!sizeSet && !allFrames.isEmpty()) {
+//        if (!sizeSet && !allFrames.isEmpty()) {
+        if (!allFrames.isEmpty()) {
             ApngFrame first = allFrames.get(0);
             first.nativeImage = NativeImage.read(first.frameInputStream);
             CloseableUtils.closeQuietly(first.closeAfterLoading);
@@ -272,6 +278,80 @@ public class ApngTexture implements ITexture, PlayableResource {
     @Override
     public boolean isPlaying() {
         return true;
+    }
+
+    @NotNull
+    public static List<ApngFrame> readApng(@NotNull InputStream in, @NotNull String apngName, int maxFrames) {
+        List<ApngFrame> frames = new ArrayList<>();
+        PngReaderApng reader = null;
+        PngWriter[] frameWriters = null;
+        int frameCount = 0;
+        try {
+            reader = new PngReaderApng(in);
+            frameCount = reader.getApngNumFrames();
+            frameWriters = new PngWriter[frameCount];
+            ChunkPredicate copyPolicy = chunk -> {
+                if (chunk.safe) return true;
+                switch(chunk.id) {
+                    case ChunkHelper.PLTE:
+                    case ChunkHelper.tRNS:
+                    case ChunkHelper.bKGD:
+                    case ChunkHelper.gAMA:
+                    case ChunkHelper.iCCP:
+                    case ChunkHelper.cHRM:
+                    case ChunkHelper.sBIT:
+                    case ChunkHelper.sPLT:
+                    case ChunkHelper.sRGB:
+                        return true;
+                    default:
+                        return false;
+                }
+            };
+            int index = 0;
+            for (int i = reader.hasExtraStillImage() ? -1 : 0 ; i < frameCount; i++) {
+                ByteArrayOutputStream frameOut = new ByteArrayOutputStream();
+                File folder = new File("frames_of_apng");
+                if (!folder.isDirectory()) {
+                    folder.mkdirs();
+                }
+                File dest = new File(folder, "frame_" + i + ".png");
+                PngWriter writer = new PngWriter(dest, reader.imgInfo);
+                try {
+                    reader.advanceToFrame(i);
+                    LOGGER.info("writing frame " + i);
+                    writer.copyChunksFrom(reader.getChunksList(), copyPolicy);
+                    for (int row = 0; row < reader.imgInfo.rows; row++) {
+                        writer.writeRow(reader.readRow(), row);
+                    }
+                    int delay = 0; //TODO get actual delay if APNG has something like that
+                    ByteArrayInputStream byteArrayIn = new ByteArrayInputStream(frameOut.toByteArray());
+                    frames.add(new ApngFrame(index, byteArrayIn, delay, frameOut));
+                    index++;
+                    if ((maxFrames != -1) && (maxFrames <= index)) break;
+                } catch (Exception ex) {
+                    LOGGER.error("[FANCYMENU] Failed to get frame '" + i + "' of APNG image '" + apngName + "! This can happen if the APNG is corrupted in some way.", ex);
+                    CloseableUtils.closeQuietly(frameOut);
+                }
+                frameWriters[i] = writer;
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        try {
+            if (reader != null) reader.end();
+        } catch (Exception ignore) {
+            CloseableUtils.closeQuietly(reader);
+        }
+        if (frameWriters != null) {
+            for(int i = 0; i < frameCount; i++) {
+                try {
+                    frameWriters[i].end();
+                } catch (Exception ignore) {
+                    CloseableUtils.closeQuietly(frameWriters[i]);
+                }
+            }
+        }
+        return frames;
     }
 
     /**

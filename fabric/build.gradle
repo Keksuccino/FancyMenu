@@ -18,7 +18,7 @@ dependencies {
     modImplementation "maven.modrinth:modmenu:6.3.1"
     implementation fileTree('libs') { include '*.jar' }
     include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.2.0-rc.4")))
-    include(implementation group: 'ar.com.hjg', name: 'pngj', version: '2.1.0')
+    include(implementation 'com.github.Keksuccino:pngj-mc:b73231a')
 }
 
 loom {

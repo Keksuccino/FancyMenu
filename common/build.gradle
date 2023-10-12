@@ -22,7 +22,7 @@ dependencies {
 //    implementation "curse.maven:konkrete-fabric-416797:4514891"
     implementation "curse.maven:load-my-resources-fabric-534835:4203280"
     implementation fileTree('libs') { include '*.jar' }
-    implementation group: 'ar.com.hjg', name: 'pngj', version: '2.1.0'
+    implementation 'com.github.Keksuccino:pngj-mc:b73231a'
 }
 
 publishing {

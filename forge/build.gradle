@@ -14,6 +14,8 @@ mixin {
     config("${mod_id}.forge.mixins.json")
 }
 
+jarJar.enable()
+
 minecraft {
     mappings channel: 'official', version: minecraft_version
 
@@ -68,7 +70,10 @@ dependencies {
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
     implementation fg.deobf("curse.maven:konkrete-410295:4514916")
     implementation fg.deobf("curse.maven:load-my-resources-forge-534502:4203277")
-    implementation(jarJar(group: 'ar.com.hjg', name: 'pngj', version: '2.1.0'))
+    //Both jarJar and implementation needed to not break workspace compiling
+    implementation(jarJar("com.github.Keksuccino:pngj-mc:b73231a")) {
+        jarJar.pin(it, "b73231a")
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {

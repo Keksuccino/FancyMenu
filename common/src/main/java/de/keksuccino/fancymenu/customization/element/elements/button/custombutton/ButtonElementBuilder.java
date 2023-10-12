@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.file.ResourceFile;
+import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.client.gui.components.AbstractButton;
@@ -62,7 +63,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
 
         element.hoverSound = SerializationUtils.deserializeResourceFile(serialized.getValue("hoversound"));
         if ((element.hoverSound != null) && element.hoverSound.exists()) {
-            if (element.hoverSound.getType() == ResourceFile.ResourceFileType.AUDIO_WAV) {
+            if (element.hoverSound.getType() == FileTypes.WAV_AUDIO) {
                 SoundRegistry.registerSound(element.hoverSound.getAbsolutePath(), element.hoverSound.getAbsolutePath());
             }
         }
@@ -77,7 +78,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
 
         element.clickSound = SerializationUtils.deserializeResourceFile(serialized.getValue("clicksound"));
         if ((element.clickSound != null) && element.clickSound.exists()) {
-            if (element.clickSound.getType() == ResourceFile.ResourceFileType.AUDIO_WAV) {
+            if (element.clickSound.getType() == FileTypes.WAV_AUDIO) {
                 SoundRegistry.registerSound(element.clickSound.getAbsolutePath(), element.clickSound.getAbsolutePath());
             }
         }

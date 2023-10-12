@@ -38,6 +38,7 @@ import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.util.Legacy;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.file.ResourceFile;
+import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -845,7 +846,7 @@ public class Layout extends LayoutBase {
 
                 if (action.equalsIgnoreCase("addhoversound")) {
                     element.hoverSound = SerializationUtils.deserializeResourceFile(sec.getValue("path"));
-                    if ((element.hoverSound != null) && element.hoverSound.exists() && (element.hoverSound.getType() == ResourceFile.ResourceFileType.AUDIO_WAV)) {
+                    if ((element.hoverSound != null) && element.hoverSound.exists() && (element.hoverSound.getType() == FileTypes.WAV_AUDIO)) {
                         SoundRegistry.registerSound(element.hoverSound.getAbsolutePath(), element.hoverSound.getAbsolutePath());
                         addElement = true;
                     }
@@ -949,7 +950,7 @@ public class Layout extends LayoutBase {
 
                 if (action.equalsIgnoreCase("setbuttonclicksound")) {
                     element.clickSound = SerializationUtils.deserializeResourceFile(sec.getValue("path"));
-                    if ((element.clickSound != null) && element.clickSound.exists() && (element.clickSound.getType() == ResourceFile.ResourceFileType.AUDIO_WAV)) {
+                    if ((element.clickSound != null) && element.clickSound.exists() && (element.clickSound.getType() == FileTypes.WAV_AUDIO)) {
                         SoundHandler.registerSound(element.clickSound.getAbsolutePath(), element.clickSound.getAbsolutePath());
                         addElement = true;
                     }
