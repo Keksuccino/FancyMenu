@@ -26,7 +26,7 @@ public class Test {
             RenderSystem.enableBlend();
             RenderingUtils.resetShaderColor();
             RenderingUtils.bindTexture(loc);
-            GuiComponent.blit(e.getPoseStack(), 20, 20, 0.0F, 0.0F, 100, 100, 100, 100);
+            GuiComponent.blit(e.getPoseStack(), 20, 20, 0.0F, 0.0F, apng.getWidth(), apng.getHeight(), apng.getWidth(), apng.getHeight());
             RenderingUtils.resetShaderColor();
         }
 

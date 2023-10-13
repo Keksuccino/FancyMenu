@@ -132,9 +132,9 @@ public class GifTexture implements ITexture, PlayableResource {
         }
         if (!sizeSet && !allFrames.isEmpty()) {
             GifFrame first = allFrames.get(0);
-            first.nativeImage = NativeImage.read(first.frameInputStream);
-            CloseableUtils.closeQuietly(first.closeAfterLoading);
-            CloseableUtils.closeQuietly(first.frameInputStream);
+//            first.nativeImage = NativeImage.read(first.frameInputStream);
+//            CloseableUtils.closeQuietly(first.closeAfterLoading);
+//            CloseableUtils.closeQuietly(first.frameInputStream);
             if (first.nativeImage != null) {
                 gifTexture.width = first.nativeImage.getWidth();
                 gifTexture.height = first.nativeImage.getHeight();

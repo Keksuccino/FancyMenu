@@ -3,13 +3,22 @@ package de.keksuccino.fancymenu.util.file.type.types;
 import de.keksuccino.fancymenu.util.file.type.FileMediaType;
 import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.FileTypeRegistry;
+import de.keksuccino.fancymenu.util.resources.texture.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FileTypes {
 
-    public static final FileType UNKNOWN = new FileType() {
+    //TODO Full APNG support adden
+
+    //TODO TextureManager texture type identification durch getAllForMediaType() ersetzen
+
+    //TODO TextureManager texture instance construction über FileTypes regeln
+
+    public static final FileType<Object> UNKNOWN = new FileType<>() {
         @Override
         public boolean isFileTypeLocal(@NotNull File file) {
             return true;
@@ -20,21 +29,29 @@ public class FileTypes {
         }
     };
 
-    public static final FileType JPEG_IMAGE = new FileType("image/jpeg", FileMediaType.IMAGE, "jpg", "jpeg");
-    public static final FileType PNG_IMAGE = new FileType("image/png", FileMediaType.IMAGE, "png");
-    public static final FileType GIF_IMAGE = new FileType("image/gif", FileMediaType.IMAGE, "gif");
-    public static final FileType APNG_IMAGE = new FileType("image/apng", FileMediaType.IMAGE, "apng");
+    public static final FileType<ITexture> JPEG_IMAGE = new FileType<ITexture>("image/jpeg", FileMediaType.IMAGE, "jpg", "jpeg")
+            .setLocalCodec(LocalTexture::of)
+            .setWebCodec(SimpleWebTexture::of);
+    public static final FileType<ITexture> PNG_IMAGE = new FileType<ITexture>("image/png", FileMediaType.IMAGE, "png")
+            .setLocalCodec(LocalTexture::of)
+            .setWebCodec(SimpleWebTexture::of);
+    public static final FileType<ITexture> GIF_IMAGE = new FileType<ITexture>("image/gif", FileMediaType.IMAGE, "gif")
+            .setLocalCodec(consumes -> GifTexture.local(new File(consumes)))
+            .setWebCodec(GifTexture::web);
+    public static final FileType<ITexture> APNG_IMAGE = new FileType<ITexture>("image/apng", FileMediaType.IMAGE, "apng")
+            .setLocalCodec(consumes -> ApngTexture.local(new File(consumes)))
+            .setWebCodec(ApngTexture::web);
 
-    public static final FileType OGG_AUDIO = new FileType("audio/ogg", FileMediaType.AUDIO, "ogg");
-    public static final FileType MP3_AUDIO = new FileType("audio/mpeg", FileMediaType.AUDIO, "mp3");
-    public static final FileType WAV_AUDIO = new FileType("audio/wav", FileMediaType.AUDIO, "wav");
+    public static final FileType<Object> OGG_AUDIO = new FileType<>("audio/ogg", FileMediaType.AUDIO, "ogg");
+    public static final FileType<Object> MP3_AUDIO = new FileType<>("audio/mpeg", FileMediaType.AUDIO, "mp3");
+    public static final FileType<Object> WAV_AUDIO = new FileType<>("audio/wav", FileMediaType.AUDIO, "wav");
 
-    public static final FileType MPEG_VIDEO = new FileType("video/mpeg", FileMediaType.VIDEO, "mpeg", "mpg");
-    public static final FileType MP4_VIDEO = new FileType("video/mp4", FileMediaType.VIDEO, "mp4");
-    public static final FileType AVI_VIDEO = new FileType("video/x-msvideo", FileMediaType.VIDEO, "avi");
+    public static final FileType<Object> MPEG_VIDEO = new FileType<>("video/mpeg", FileMediaType.VIDEO, "mpeg", "mpg");
+    public static final FileType<Object> MP4_VIDEO = new FileType<>("video/mp4", FileMediaType.VIDEO, "mp4");
+    public static final FileType<Object> AVI_VIDEO = new FileType<>("video/x-msvideo", FileMediaType.VIDEO, "avi");
 
-    public static final FileType TXT_TEXT = new FileType("text/plain", FileMediaType.TEXT, "txt");
-    public static final FileType MARKDOWN_TEXT = new FileType("text/markdown", FileMediaType.TEXT, "md", "markdown");
+    public static final FileType<List<String>> TXT_TEXT = new FileType<>("text/plain", FileMediaType.TEXT, "txt");
+    public static final FileType<List<String>> MARKDOWN_TEXT = new FileType<>("text/markdown", FileMediaType.TEXT, "md", "markdown");
 
     public static void registerAll() {
 
@@ -56,17 +73,26 @@ public class FileTypes {
 
     }
 
+    @NotNull
+    public static List<FileType<?>> getAllForMediaType(@NotNull FileMediaType mediaType) {
+        List<FileType<?>> types = new ArrayList<>();
+        for (FileType<?> type : FileTypeRegistry.getFileTypes()) {
+            if (type.getMediaType() == mediaType) types.add(type);
+        }
+        return types;
+    }
+
     @Nullable
-    public static FileType getTypeOfLocalFile(@NotNull File file) {
-        for (FileType type : FileTypeRegistry.getFileTypes()) {
+    public static FileType<?> getTypeOfLocalFile(@NotNull File file) {
+        for (FileType<?> type : FileTypeRegistry.getFileTypes()) {
             if (type.isFileTypeLocal(file)) return type;
         }
         return null;
     }
 
     @Nullable
-    public static FileType getTypeOfWebFile(@NotNull String fileUrl) {
-        for (FileType type : FileTypeRegistry.getFileTypes()) {
+    public static FileType<?> getTypeOfWebFile(@NotNull String fileUrl) {
+        for (FileType<?> type : FileTypeRegistry.getFileTypes()) {
             if (type.isFileTypeWeb(fileUrl)) return type;
         }
         return null;

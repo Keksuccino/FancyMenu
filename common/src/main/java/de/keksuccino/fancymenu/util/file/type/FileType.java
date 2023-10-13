@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.file.type;
 
 import com.google.common.io.Files;
+import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import org.jetbrains.annotations.NotNull;
@@ -13,16 +14,23 @@ import java.util.Objects;
 
 /**
  * Defines a specific file type.<br>
- * Has methods to identify local and web sources as the defined file type.
+ * Has methods to identify local and web sources as the defined file type.<br>
+ * Is used to decode files of the defined file type.
+ *
+ * @param <T> The class used for decoded instances of files of the defined file type.
  */
 @SuppressWarnings("unused")
-public class FileType {
+public class FileType<T> {
 
     protected final List<String> extensions = new ArrayList<>();
     @NotNull
     protected FileMediaType mediaType;
     @Nullable
     protected String mimeType;
+    @NotNull
+    protected ConsumingSupplier<String, T> localCodec = consumes -> null;
+    @NotNull
+    protected ConsumingSupplier<String, T> webCodec = consumes -> null;
 
     public FileType() {
         this.mediaType = FileMediaType.OTHER;
@@ -32,6 +40,36 @@ public class FileType {
         Arrays.asList(extensions).forEach(s -> this.extensions.add(s.toLowerCase().replace(".", "").replace(" ", "")));
         this.mediaType = mediaType;
         this.mimeType = mimeType;
+    }
+
+    @Nullable
+    public T decodeLocal(@NotNull String filePath) {
+        try {
+            return this.localCodec.get(filePath);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    @Nullable
+    public T decodeWeb(@NotNull String fileUrl) {
+        try {
+            return this.webCodec.get(fileUrl);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    public FileType<T> setLocalCodec(@NotNull ConsumingSupplier<String, T> codec) {
+        this.localCodec = codec;
+        return this;
+    }
+
+    public FileType<T> setWebCodec(@NotNull ConsumingSupplier<String, T> codec) {
+        this.webCodec = codec;
+        return this;
     }
 
     public boolean isFileTypeLocal(@NotNull File file) {
