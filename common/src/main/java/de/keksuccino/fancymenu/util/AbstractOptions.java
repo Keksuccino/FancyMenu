@@ -43,7 +43,7 @@ public abstract class AbstractOptions {
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
-            if (unsupported) throw new UnsupportedOptionTypeException("Tried to register Option of unsupported type: " + this.key + " (" + this.defaultValue.getClass().getName() + ")");
+            if (unsupported) throw new UnsupportedOptionTypeException("Tried to register Option with unsupported type: " + this.key + " (" + this.defaultValue.getClass().getName() + ")");
         }
 
         @NotNull

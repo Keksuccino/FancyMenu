@@ -18,6 +18,8 @@ public class WrappedTexture implements ITexture {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    public static final WrappedTexture FULLY_TRANSPARENT_WRAPPED_TEXTURE = WrappedTexture.of(FULLY_TRANSPARENT_TEXTURE);
+
     @Nullable
     protected ResourceLocation textureLocation;
     @Nullable

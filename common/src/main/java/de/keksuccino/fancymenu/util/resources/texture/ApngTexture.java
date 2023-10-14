@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.util.resources.texture;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import de.keksuccino.fancymenu.util.CloseableUtils;
-import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
+import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resources.PlayableResource;
@@ -19,8 +19,6 @@ import org.jetbrains.annotations.Nullable;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -28,7 +26,6 @@ import java.util.Objects;
 public class ApngTexture implements ITexture, PlayableResource {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final ApngTexture EMPTY = new ApngTexture();
 
     @NotNull
     protected volatile List<ApngFrame> frames = new ArrayList<>();
@@ -47,36 +44,30 @@ public class ApngTexture implements ITexture, PlayableResource {
     @NotNull
     public static ApngTexture web(@NotNull String apngUrl) {
 
+        ApngTexture apngTexture = new ApngTexture();
+
         if (!TextValidators.BASIC_URL_TEXT_VALIDATOR.get(Objects.requireNonNull(apngUrl))) {
             LOGGER.error("[FANCYMENU] Unable to load Web APNG image! Invalid URL: " + apngUrl);
-            return EMPTY;
+            return apngTexture;
         }
-
-        ApngTexture apngTexture = new ApngTexture();
 
         //Download and decode APNG image
         new Thread(() -> {
             InputStream in = null;
             ByteArrayInputStream byteIn = null;
             try {
-                URL url = new URL(apngUrl);
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.addRequestProperty("User-Agent", "Mozilla/4.0");
-                in = connection.getInputStream();
+                in = WebUtils.openResourceStream(apngUrl);
+                if (in == null) throw new NullPointerException("Web resource input stream was NULL!");
                 //The extract method seems to struggle with a direct web input stream, so read all bytes of it and wrap them into a ByteArrayInputStream
                 byteIn = new ByteArrayInputStream(in.readAllBytes());
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to download Web APNG image: " + apngUrl, ex);
             }
             if (byteIn != null) {
-                try {
-                    populateTexture(apngTexture, byteIn, apngUrl);
-                } catch (Exception ex) {
-                    LOGGER.error("[FANCYMENU] Failed to load Web APNG image: " + apngUrl, ex);
-                }
+                of(byteIn, apngUrl, apngTexture);
             }
+            //"byteIn" gets closed in of(), so only close "in" here
             CloseableUtils.closeQuietly(in);
-            CloseableUtils.closeQuietly(byteIn);
         }).start();
 
         return apngTexture;
@@ -86,30 +77,55 @@ public class ApngTexture implements ITexture, PlayableResource {
     @NotNull
     public static ApngTexture local(@NotNull File apng) {
 
-        if (!FileTypes.APNG_IMAGE.isFileTypeLocal(apng)) {
-            LOGGER.error("[FANCYMENU] APNG image not found or not a valid APNG: " + apng.getPath());
-            return EMPTY;
-        }
-
         ApngTexture apngTexture = new ApngTexture();
+
+        if (!apng.isFile()) {
+            LOGGER.error("[FANCYMENU] APNG image not found: " + apng.getPath());
+            return apngTexture;
+        }
 
         //Decode APNG image
         new Thread(() -> {
-            InputStream in = null;
             try {
-                in = new FileInputStream(apng);
-                populateTexture(apngTexture, in, apng.getPath());
+                InputStream in = new FileInputStream(apng);
+                of(in, apng.getPath(), apngTexture);
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to load APNG image: " + apng.getPath(), ex);
             }
-            CloseableUtils.closeQuietly(in);
         }).start();
 
         return apngTexture;
 
     }
 
-    protected static void populateTexture(@NotNull ApngTexture apngTexture, @NotNull InputStream in, @NotNull String apngTextureName) throws IOException {
+    /**
+     * Closes the passed {@link InputStream}!
+     */
+    @NotNull
+    public static ApngTexture of(@NotNull InputStream in, @Nullable String apngTextureName, @Nullable ApngTexture writeTo) {
+
+        Objects.requireNonNull(in);
+
+        ApngTexture apngTexture = (writeTo != null) ? writeTo : new ApngTexture();
+
+        //Decode APNG image
+        new Thread(() -> {
+            populateTexture(apngTexture, in, (apngTextureName != null) ? apngTextureName : "[Generic InputStream Source]");
+        }).start();
+
+        return apngTexture;
+
+    }
+
+    /**
+     * Closes the passed {@link InputStream}!
+     */
+    @NotNull
+    public static ApngTexture of(@NotNull InputStream in) {
+        return of(in, null, null);
+    }
+
+    protected static void populateTexture(@NotNull ApngTexture apngTexture, @NotNull InputStream in, @NotNull String apngTextureName) {
         //Decode first frame and set it as temporary frame list to show APNG quicker
         DecodedApngImage imageAndFirstFrame = readApng(in, apngTextureName, true);
         if (imageAndFirstFrame == null) {
@@ -122,22 +138,38 @@ public class ApngTexture implements ITexture, PlayableResource {
         apngTexture.aspectRatio = new AspectRatio(imageAndFirstFrame.imageWidth, imageAndFirstFrame.imageHeight);
         if (!imageAndFirstFrame.frames().isEmpty()) {
             ApngFrame first = imageAndFirstFrame.frames().get(0);
-            first.nativeImage = NativeImage.read(first.frameInputStream);
+            try {
+                first.nativeImage = NativeImage.read(first.frameInputStream);
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to read preview frame of APNG image into NativeImage: " + apngTextureName, ex);
+            }
             CloseableUtils.closeQuietly(first.closeAfterLoading);
             CloseableUtils.closeQuietly(first.frameInputStream);
             apngTexture.frames = imageAndFirstFrame.frames();
             apngTexture.decoded = true;
         }
         //Decode the full APNG and set its frames to the ApngTexture
-        List<ApngFrame> allFrames = readApng(imageAndFirstFrame.sequence(), apngTextureName, false).frames();
-        for (ApngFrame frame : allFrames) {
-            frame.nativeImage = NativeImage.read(frame.frameInputStream);
-            CloseableUtils.closeQuietly(frame.closeAfterLoading);
-            CloseableUtils.closeQuietly(frame.frameInputStream);
+        DecodedApngImage allFrames = null;
+        try {
+            allFrames = readApng(imageAndFirstFrame.sequence(), apngTextureName, false);
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to read APNG image: " + apngTextureName, ex);
         }
-        apngTexture.frames = allFrames;
+        if (allFrames != null) {
+            for (ApngFrame frame : allFrames.frames()) {
+                try {
+                    frame.nativeImage = NativeImage.read(frame.frameInputStream);
+                } catch (Exception ex) {
+                    LOGGER.error("[FANCYMENU] Failed to read frame of APNG image into NativeImage: " + apngTextureName, ex);
+                }
+                CloseableUtils.closeQuietly(frame.closeAfterLoading);
+                CloseableUtils.closeQuietly(frame.frameInputStream);
+            }
+            apngTexture.frames = allFrames.frames();
+        }
         apngTexture.numPlays = imageAndFirstFrame.numPlays;
         apngTexture.decoded = true;
+        CloseableUtils.closeQuietly(in);
     }
 
     protected ApngTexture() {
@@ -215,6 +247,7 @@ public class ApngTexture implements ITexture, PlayableResource {
         if (frame != null) {
             if ((frame.resourceLocation == null) && !frame.loaded && (frame.nativeImage != null)) {
                 try {
+                    //TODO better close NativeImage after this???
                     frame.resourceLocation = Minecraft.getInstance().getTextureManager().register("fancymenu_apng_texture", new SelfcleaningDynamicTexture(frame.nativeImage));
                 } catch (Exception ex) {
                     ex.printStackTrace();

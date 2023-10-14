@@ -3,11 +3,25 @@ package de.keksuccino.fancymenu.util;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Locale;
 
 public class WebUtils {
+
+    @Nullable
+    public static InputStream openResourceStream(@NotNull String resourceURL) {
+        try {
+            URL actualURL = new URL(resourceURL);
+            HttpURLConnection connection = (HttpURLConnection)actualURL.openConnection();
+            connection.addRequestProperty("User-Agent", "Mozilla/4.0");
+            return connection.getInputStream();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
 
     @Nullable
     public static String getMimeType(@NotNull String url) {

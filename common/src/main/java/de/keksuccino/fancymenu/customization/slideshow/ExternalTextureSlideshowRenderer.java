@@ -11,7 +11,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resources.texture.LocalTexture;
+import de.keksuccino.fancymenu.util.resources.texture.SimpleLocalTexture;
 import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
@@ -23,8 +23,8 @@ import net.minecraft.resources.ResourceLocation;
 
 public class ExternalTextureSlideshowRenderer extends GuiComponent {
 	
-	protected List<LocalTexture> images = new ArrayList<>();
-	protected LocalTexture overlayTexture;
+	protected List<SimpleLocalTexture> images = new ArrayList<>();
+	protected SimpleLocalTexture overlayTexture;
 	protected String name = null;
 	public String dir;
 	protected boolean prepared = false;
@@ -46,8 +46,8 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 
 	public float slideshowOpacity = 1.0F;
 	
-	protected LocalTexture previous;
-	protected LocalTexture current;
+	protected SimpleLocalTexture previous;
+	protected SimpleLocalTexture current;
 
 	public ExternalTextureSlideshowRenderer(String slideshowDir) {
 		this.dir = slideshowDir;
@@ -120,7 +120,7 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 						File f = new File(imagesDir.getPath() + "/" + s);
 						if (f.exists() && f.isFile() && (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".png"))) {
 							ITexture r = TextureHandler.INSTANCE.getTexture(f.getPath());
-							if (r instanceof LocalTexture l) {
+							if (r instanceof SimpleLocalTexture l) {
 								this.images.add(l);
 							}
 						}
@@ -132,7 +132,7 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 					
 					File overlay = new File(this.dir + "/overlay.png");
 					if (overlay.exists()) {
-						this.overlayTexture = LocalTexture.of(overlay.getPath());
+						this.overlayTexture = SimpleLocalTexture.of(overlay.getPath());
 					}
 					
 				}

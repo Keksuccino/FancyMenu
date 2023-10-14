@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.file.FilenameComparator;
+import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.component.ComponentWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -33,7 +34,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -59,6 +59,14 @@ public abstract class AbstractFileBrowserScreen extends Screen {
     protected File currentDir;
     @Nullable
     protected FileFilter fileFilter;
+
+    //TODO Implement file types (if not null, filter files by allowed types + show allowed types in GUI)
+    //TODO Implement file types (if not null, filter files by allowed types + show allowed types in GUI)
+    //TODO Implement file types (if not null, filter files by allowed types + show allowed types in GUI)
+    //TODO Implement file types (if not null, filter files by allowed types + show allowed types in GUI)
+
+    @Nullable
+    protected List<FileType<?>> fileTypes;
     @NotNull
     protected Consumer<File> callback;
     protected int visibleDirectoryLevelsAboveRoot = 0;

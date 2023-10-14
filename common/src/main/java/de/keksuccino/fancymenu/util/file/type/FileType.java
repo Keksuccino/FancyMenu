@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.file.type;
 
 import com.google.common.io.Files;
-import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import org.jetbrains.annotations.NotNull;
@@ -17,7 +16,7 @@ import java.util.Objects;
  * Has methods to identify local and web sources as the defined file type.<br>
  * Is used to decode files of the defined file type.
  *
- * @param <T> The class used for decoded instances of files of the defined file type.
+ * @param <T> The object type returned by the read() methods of the {@link FileCodec} of this {@link FileType}.
  */
 @SuppressWarnings("unused")
 public class FileType<T> {
@@ -28,48 +27,18 @@ public class FileType<T> {
     @Nullable
     protected String mimeType;
     @NotNull
-    protected ConsumingSupplier<String, T> localCodec = consumes -> null;
-    @NotNull
-    protected ConsumingSupplier<String, T> webCodec = consumes -> null;
+    protected final FileCodec<T> codec;
 
-    public FileType() {
+    public FileType(@NotNull FileCodec<T> codec) {
         this.mediaType = FileMediaType.OTHER;
+        this.codec = codec;
     }
 
-    public FileType(@Nullable String mimeType, @NotNull FileMediaType mediaType, @NotNull String... extensions) {
+    public FileType(@NotNull FileCodec<T> codec, @Nullable String mimeType, @NotNull FileMediaType mediaType, @NotNull String... extensions) {
         Arrays.asList(extensions).forEach(s -> this.extensions.add(s.toLowerCase().replace(".", "").replace(" ", "")));
         this.mediaType = mediaType;
         this.mimeType = mimeType;
-    }
-
-    @Nullable
-    public T decodeLocal(@NotNull String filePath) {
-        try {
-            return this.localCodec.get(filePath);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return null;
-    }
-
-    @Nullable
-    public T decodeWeb(@NotNull String fileUrl) {
-        try {
-            return this.webCodec.get(fileUrl);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return null;
-    }
-
-    public FileType<T> setLocalCodec(@NotNull ConsumingSupplier<String, T> codec) {
-        this.localCodec = codec;
-        return this;
-    }
-
-    public FileType<T> setWebCodec(@NotNull ConsumingSupplier<String, T> codec) {
-        this.webCodec = codec;
-        return this;
+        this.codec = codec;
     }
 
     public boolean isFileTypeLocal(@NotNull File file) {
@@ -107,6 +76,11 @@ public class FileType<T> {
     @Nullable
     public String getMimeType() {
         return this.mimeType;
+    }
+
+    @NotNull
+    public FileCodec<T> getCodec() {
+        return this.codec;
     }
 
 }

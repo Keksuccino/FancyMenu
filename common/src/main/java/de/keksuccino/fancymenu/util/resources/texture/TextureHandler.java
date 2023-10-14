@@ -1,7 +1,8 @@
 package de.keksuccino.fancymenu.util.resources.texture;
 
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
-import de.keksuccino.konkrete.rendering.animation.ExternalGifAnimationRenderer;
+import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
+import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -10,98 +11,92 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @SuppressWarnings("unused")
 public class TextureHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();
-
     public static final TextureHandler INSTANCE = new TextureHandler();
 
     private final Map<String, ITexture> textures = new HashMap<>();
-    private final Map<String, ExternalGifAnimationRenderer> gifs = new HashMap<>();
 
-    @Nullable
-    public ITexture getTexture(@NotNull String path) {
-        File f = new File(GameDirectoryUtils.getAbsoluteGameDirectoryPath(path));
-        return this.getTexture(f);
-    }
-
-    @Nullable
-    public ITexture getTexture(@NotNull File file) {
-        if (!textures.containsKey(file.getAbsolutePath())) {
-            if (file.exists() && file.isFile()) {
-                ITexture t;
-                if (file.getPath().toLowerCase().endsWith(".gif")) {
-                    t = GifTexture.local(file);
-                } else {
-                    t = LocalTexture.of(file.getAbsolutePath());
+    /**
+     * Supports all {@link ImageFileType}s.<br>
+     */
+    @NotNull
+    public ITexture getLocalTexture(@NotNull File imageFile) {
+        Objects.requireNonNull(imageFile);
+        if (!textures.containsKey(imageFile.getAbsolutePath())) {
+            ITexture texture = null;
+            try {
+                for (ImageFileType type : FileTypes.getAllImageFileTypes()) {
+                    if (type.isFileTypeLocal(imageFile)) {
+                        texture = type.getCodec().readLocal(imageFile);
+                        break;
+                    }
                 }
-                textures.put(file.getAbsolutePath(), t);
-                return t;
-            } else {
-                return null;
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to load local texture: " + imageFile.getPath(), ex);
             }
-        } else {
-            return textures.get(file.getAbsolutePath());
-        }
-    }
-
-    /**
-     * Supports PNG, JPEG and GIF.<br>
-     * In case of PNG or JPEG, a new {@link SimpleWebTexture} will get wrapped into a new {@link WrappedWebTexture}.<br>
-     * In case of GIF, a new {@link GifTexture} will get wrapped into a new {@link WrappedWebTexture}.<br><br>
-     *
-     * It is possible that this method returns different texture types than {@link WrappedWebTexture}.
-     *
-     * @param url The image URL.
-     */
-    @NotNull
-    public ITexture getWebTexture(@NotNull String url) {
-        return getWebTexture(url, true);
-    }
-
-    /**
-     * Supports PNG, JPEG and GIF.<br>
-     * In case of PNG or JPEG, a new {@link SimpleWebTexture} will get wrapped into a new {@link WrappedWebTexture}.<br>
-     * In case of GIF, a new {@link GifTexture} will get wrapped into a new {@link WrappedWebTexture}.<br><br>
-     *
-     * It is possible that this method returns different texture types than {@link WrappedWebTexture}.
-     *
-     * @param url The image URL.
-     * @param autoLoadPngAndJpeg If PNG and JPEG images should automatically (asynchronously) load. GIF images will always load automatically.
-     */
-    @NotNull
-    public ITexture getWebTexture(@NotNull String url, boolean autoLoadPngAndJpeg) {
-        if (!textures.containsKey(url)) {
-            WrappedWebTexture t = WrappedWebTexture.of(url, autoLoadPngAndJpeg);
-            this.textures.put(url, t);
-            return t;
-        } else {
-            return textures.get(url);
-        }
-    }
-
-    /**
-     * Supports PNG and JPEG.<br>
-     * For GIFs, use {@link TextureHandler#getWebTexture(String, boolean)} instead!
-     *
-     * @param autoLoad If the texture should automatically (asynchronously) load.
-     */
-    @NotNull
-    public ITexture getSimpleWebTexture(@NotNull String url, boolean autoLoad) {
-        if (!textures.containsKey(url)) {
-            SimpleWebTexture texture = SimpleWebTexture.of(url, autoLoad);
-            this.textures.put(url, texture);
+            if (texture == null) {
+                LOGGER.error("[FANCYMENU] Failed to load web texture! FileCodec returned NULL for: " + imageFile.getPath());
+                texture = WrappedTexture.FULLY_TRANSPARENT_WRAPPED_TEXTURE;
+            }
+            this.textures.put(imageFile.getAbsolutePath(), texture);
             return texture;
         } else {
-            return textures.get(url);
+            return textures.get(imageFile.getAbsolutePath());
         }
     }
 
-    /** Will not register the texture! Only returns textures that are already registered and loaded! **/
+    /**
+     * Supports all {@link ImageFileType}s.<br>
+     */
+    @NotNull
+    public ITexture getLocalTexture(@NotNull String imageFilePath) {
+        Objects.requireNonNull(imageFilePath);
+        return this.getLocalTexture(new File(GameDirectoryUtils.getAbsoluteGameDirectoryPath(imageFilePath)));
+    }
+
+    /**
+     * Supports all {@link ImageFileType}s.<br>
+     */
+    @NotNull
+    public ITexture getWebTexture(@NotNull String imageUrl) {
+        Objects.requireNonNull(imageUrl);
+        if (!textures.containsKey(imageUrl)) {
+            ITexture texture = null;
+            try {
+                for (ImageFileType type : FileTypes.getAllImageFileTypes()) {
+                    if (type.isFileTypeWeb(imageUrl)) {
+                        texture = type.getCodec().readWeb(imageUrl);
+                        break;
+                    }
+                }
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to load web texture: " + imageUrl, ex);
+            }
+            if (texture == null) {
+                LOGGER.error("[FANCYMENU] Failed to load web texture! FileCodec returned NULL for: " + imageUrl);
+                texture = WrappedTexture.FULLY_TRANSPARENT_WRAPPED_TEXTURE;
+            }
+            this.textures.put(imageUrl, texture);
+            return texture;
+        } else {
+            return textures.get(imageUrl);
+        }
+    }
+
+    /**
+     * Tries to find a registered {@link ITexture} by its current {@link ResourceLocation}.<br>
+     * Due to the nature of some types of {@link ITexture}s, their {@link ResourceLocation} can change, so this it NOT A SAFE WAY to get a registered texture!<br><br>
+     *
+     * Will not register the texture! Only returns textures that are already registered and loaded!
+     */
     @Nullable
-    public ITexture getLoadedTextureByResourceLocation(ResourceLocation location) {
+    public ITexture getLoadedTextureByResourceLocation(@NotNull ResourceLocation location) {
+        Objects.requireNonNull(location);
         for (ITexture t : this.textures.values()) {
             if (t.isReady() && (t.getResourceLocation() == location)) {
                 return t;
@@ -118,11 +113,6 @@ public class TextureHandler {
 
     public void clearResources() {
         this.textures.clear();
-        for (ExternalGifAnimationRenderer g : this.gifs.values()) {
-            g.setLooped(false);
-            g.resetAnimation();
-        }
-        this.gifs.clear();
     }
 
 }

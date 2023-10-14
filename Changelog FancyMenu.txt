@@ -156,6 +156,13 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 --> Special markdown formatting code to colorize text parts with HEX colors
 --> Special markdown formatting codes to make text parts centered or right-sided
  
+- Reworked Slider elements
+--> Sliders now execute actions (just like buttons) when their value gets changed
+--> To get the current value of a Slider for use in its loading requirements and actions, use $$value as placeholder
+--> Sliders now have 3 modes: List (pre-defined value list), Integer Range (range of whole numbers) and Decimal Range (range of decimals)
+--> Just like Vanilla Sliders, custom ones have fully customizable textures now (handle and background)
+--> Old Slider elements are deprecated now
+ 
 - Reworked Custom GUIs
 --> OLD SCREEN OVERRIDES DON'T WORK ANYMORE! You need to override screens again (sorry >.<)
 --> They should now be way more stable and shouldn't cause so many issues anymore

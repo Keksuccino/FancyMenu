@@ -11,6 +11,7 @@ CHANGELOG | FANCYMENU v3.0.0 CLOSED ALPHA 3
 - Improved customizability of modern screens like the "Create World" or "Credits and Attribution" screen
 - You can now fully customize Vanilla/Mod Slider handle and background textures
 - Added back the "Close Editor" entry to the "Layout" tab of the Layout Editor's menu bar
+- Reworked Slider element (old Slider now deprecated)
  
 - Added: "Update Screen" action to update/reload the current screen's customizations without reloading the whole mod
 - Added: "Set Minecraft Option" action to set the value of a Minecraft option
