@@ -5,13 +5,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Objects;
+import java.util.Optional;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
-import de.keksuccino.konkrete.resources.SelfcleaningDynamicTexture;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.Resource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -21,6 +23,7 @@ import org.jetbrains.annotations.Nullable;
 public class SimpleTexture implements ITexture {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    public static final SimpleTexture FULLY_TRANSPARENT_SIMPLE_TEXTURE = SimpleTexture.location(FULLY_TRANSPARENT_TEXTURE);
 
     @Nullable
     protected ResourceLocation resourceLocation;
@@ -30,6 +33,39 @@ public class SimpleTexture implements ITexture {
     protected volatile boolean decoded = false;
     protected volatile boolean loaded = false;
     protected volatile NativeImage nativeImage;
+    protected DynamicTexture dynamicTexture;
+    protected boolean createdByLocation = false;
+    protected boolean closed = false;
+
+    /**
+     * Supports JPEG and PNG textures.
+     */
+    @NotNull
+    public static SimpleTexture location(@NotNull ResourceLocation location) {
+
+        Objects.requireNonNull(location);
+        SimpleTexture texture = new SimpleTexture();
+
+        texture.createdByLocation = true;
+        try {
+            Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(location);
+            if (resource.isPresent()) {
+                NativeImage image = NativeImage.read(resource.get().open());
+                texture.width = image.getWidth();
+                texture.height = image.getHeight();
+                texture.aspectRatio = new AspectRatio(texture.width, texture.height);
+                CloseableUtils.closeQuietly(image);
+            }
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to load texture by ResourceLocation: " + location, ex);
+        }
+        texture.loaded = true;
+        texture.decoded = true;
+        texture.resourceLocation = location;
+
+        return texture;
+
+    }
 
     /**
      * Supports JPEG and PNG textures.
@@ -135,8 +171,8 @@ public class SimpleTexture implements ITexture {
     public ResourceLocation getResourceLocation() {
         if ((this.resourceLocation == null) && !this.loaded && (this.nativeImage != null)) {
             try {
-                //TODO better close NativeImage after this???
-                this.resourceLocation = Minecraft.getInstance().getTextureManager().register("fancymenu_simple_texture", new SelfcleaningDynamicTexture(this.nativeImage));
+                this.dynamicTexture = new DynamicTexture(this.nativeImage);
+                this.resourceLocation = Minecraft.getInstance().getTextureManager().register("fancymenu_simple_texture", this.dynamicTexture);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -164,6 +200,43 @@ public class SimpleTexture implements ITexture {
 
     @Override
     public void reset() {
+    }
+
+    /**
+     * Only reloads textures loaded via ResourceLocation.
+     */
+    @Override
+    public void reload() {
+        if (this.createdByLocation && (this.resourceLocation != null)) {
+            try {
+                Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(this.resourceLocation);
+                if (resource.isPresent()) {
+                    NativeImage image = NativeImage.read(resource.get().open());
+                    this.width = image.getWidth();
+                    this.height = image.getHeight();
+                    this.aspectRatio = new AspectRatio(this.width, this.height);
+                    CloseableUtils.closeQuietly(image);
+                }
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to reload ResourceLocation texture: " + this.resourceLocation, ex);
+            }
+        }
+    }
+
+    /**
+     * Only really closes textures that are NOT loaded via ResourceLocation.<br>
+     * Does basically nothing for ResourceLocation textures, because these are handled by Minecraft.
+     */
+    @Override
+    public void close() {
+        this.closed = true;
+        this.createdByLocation = false;
+        //Closes NativeImage and DynamicTexture
+        if (this.dynamicTexture != null) CloseableUtils.closeQuietly(this.dynamicTexture);
+        this.nativeImage = null;
+        this.resourceLocation = null;
+        this.decoded = false;
+        this.loaded = true;
     }
 
 }

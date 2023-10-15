@@ -20,6 +20,22 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO Neues Resource System weiter machen und in Elemente und anderen Kram implementieren (besonders ResourceSupplier)
+
+	//TODO allowWeb(boolean), allowLocal(boolean) und allowLocation(boolean) methoden in FileType
+	// - In TextureHandler (und anderen handlern checken, ob file type den gewünschten Type unterstützt)
+
+	//TODO Add ChooseResource Screen
+	// - Screen nimmt MediaType als param
+	// - Support für Web, Local und Location in einem Screen
+	// - Web und Location haben auch Preview
+	// - Web Input hat hint: " http://.. or https://.. "
+	// - Web Input hat Placeholder Support
+
+	//TODO Add support for FileTypes to FileChooser screens and show supported file types in Chooser GUI
+
+	//TODO Bei Resource Reload (MC Resource Pack changed, etc.) alle resources per Resource#reload() reloaden
+
 	//TODO Make progress bars smoother (calculate progress with float value)
 
 	//TODO "Current Screen Identifier" placeholder

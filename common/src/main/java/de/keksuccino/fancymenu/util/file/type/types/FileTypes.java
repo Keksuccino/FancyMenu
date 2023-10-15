@@ -2,12 +2,12 @@ package de.keksuccino.fancymenu.util.file.type.types;
 
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.file.type.FileCodec;
-import de.keksuccino.fancymenu.util.file.type.FileMediaType;
 import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.FileTypeRegistry;
 import de.keksuccino.fancymenu.util.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resources.texture.*;
 import de.keksuccino.fancymenu.util.resources.video.IVideo;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
@@ -16,13 +16,7 @@ import java.util.List;
 
 public class FileTypes {
 
-    //TODO Full APNG support adden
-
-    //TODO TextureManager texture type identification durch getAllForMediaType() ersetzen
-
-    //TODO TextureManager texture instance construction über FileTypes regeln
-
-    public static final FileType<Object> UNKNOWN = new FileType<>(FileCodec.basic(Object.class, consumes -> null)) {
+    public static final FileType<Object> UNKNOWN = new FileType<>(FileCodec.basic(Object.class, consumes -> null, consumes -> null)) {
         @Override
         public boolean isFileTypeLocal(@NotNull File file) {
             return true;
@@ -34,29 +28,29 @@ public class FileTypes {
     };
 
     public static final ImageFileType JPEG_IMAGE = new ImageFileType(
-            FileCodec.advanced(ITexture.class, SimpleTexture::of, SimpleTexture::local, SimpleTexture::web),
+            FileCodec.advanced(ITexture.class, SimpleTexture::of, SimpleTexture::location, SimpleTexture::local, SimpleTexture::web),
             "image/jpeg", "jpg", "jpeg");
     public static final ImageFileType PNG_IMAGE = new ImageFileType(
-            FileCodec.advanced(ITexture.class, SimpleTexture::of, SimpleTexture::local, SimpleTexture::web),
+            FileCodec.advanced(ITexture.class, SimpleTexture::of, SimpleTexture::location, SimpleTexture::local, SimpleTexture::web),
             "image/png", "png");
     public static final ImageFileType GIF_IMAGE = new ImageFileType(
-            FileCodec.advanced(ITexture.class, GifTexture::of, GifTexture::local, GifTexture::web),
+            FileCodec.advanced(ITexture.class, GifTexture::of, GifTexture::location, GifTexture::local, GifTexture::web),
             "image/gif", "gif");
     public static final ImageFileType APNG_IMAGE = new ImageFileType(
-            FileCodec.advanced(ITexture.class, ApngTexture::of, ApngTexture::local, ApngTexture::web),
+            FileCodec.advanced(ITexture.class, ApngTexture::of, ApngTexture::location, ApngTexture::local, ApngTexture::web),
             "image/apng", "apng");
 
     //TODO implement audio codecs (and remove file types that have no codec)
-    public static final AudioFileType OGG_AUDIO = new AudioFileType(FileCodec.basic(IAudio.class, consumes -> null), "audio/ogg", "ogg");
-    public static final AudioFileType MP3_AUDIO = new AudioFileType(FileCodec.basic(IAudio.class, consumes -> null), "audio/mpeg", "mp3");
-    public static final AudioFileType WAV_AUDIO = new AudioFileType(FileCodec.basic(IAudio.class, consumes -> null), "audio/wav", "wav");
+    public static final AudioFileType OGG_AUDIO = new AudioFileType(FileCodec.basic(IAudio.class, consumes -> null, consumes -> null), "audio/ogg", "ogg");
+    public static final AudioFileType MP3_AUDIO = new AudioFileType(FileCodec.basic(IAudio.class, consumes -> null, consumes -> null), "audio/mpeg", "mp3");
+    public static final AudioFileType WAV_AUDIO = new AudioFileType(FileCodec.basic(IAudio.class, consumes -> null, consumes -> null), "audio/wav", "wav");
 
     //TODO implement video codecs (and remove file types that have no codec)
-    public static final VideoFileType MPEG_VIDEO = new VideoFileType(FileCodec.basic(IVideo.class, consumes -> null), "video/mpeg", "mpeg", "mpg");
-    public static final VideoFileType MP4_VIDEO = new VideoFileType(FileCodec.basic(IVideo.class, consumes -> null), "video/mp4", "mp4");
-    public static final VideoFileType AVI_VIDEO = new VideoFileType(FileCodec.basic(IVideo.class, consumes -> null), "video/x-msvideo", "avi");
+    public static final VideoFileType MPEG_VIDEO = new VideoFileType(FileCodec.basic(IVideo.class, consumes -> null, consumes -> null), "video/mpeg", "mpeg", "mpg");
+    public static final VideoFileType MP4_VIDEO = new VideoFileType(FileCodec.basic(IVideo.class, consumes -> null, consumes -> null), "video/mp4", "mp4");
+    public static final VideoFileType AVI_VIDEO = new VideoFileType(FileCodec.basic(IVideo.class, consumes -> null, consumes -> null), "video/x-msvideo", "avi");
 
-    private static final FileCodec<TextFileType.PlainText> PLAIN_TEXT_CODEC = FileCodec.basic(
+    private static final FileCodec<TextFileType.PlainText> PLAIN_TEXT_CODEC = FileCodec.generic(
             TextFileType.PlainText.class, consumes -> new TextFileType.PlainText(FileUtils.readTextLinesFrom(consumes)));
 
     public static final TextFileType TXT_TEXT = new TextFileType(PLAIN_TEXT_CODEC, "text/plain", "txt");
@@ -138,13 +132,12 @@ public class FileTypes {
         return types;
     }
 
-    @NotNull
-    public static List<FileType<?>> getAllForMediaType(@NotNull FileMediaType mediaType) {
-        List<FileType<?>> types = new ArrayList<>();
+    @Nullable
+    public static FileType<?> getTypeOfLocationFile(@NotNull ResourceLocation location) {
         for (FileType<?> type : FileTypeRegistry.getFileTypes()) {
-            if (type.getMediaType() == mediaType) types.add(type);
+            if (type.isFileTypeLocation(location)) return type;
         }
-        return types;
+        return null;
     }
 
     @Nullable

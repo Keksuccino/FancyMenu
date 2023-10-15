@@ -24,14 +24,21 @@ public class PlaceholderParser {
 
     private static final Map<String, Long> LOG_COOLDOWN = new HashMap<>();
 
-    @SuppressWarnings("all")
     @NotNull
     public static String replacePlaceholders(@NotNull String in) {
+        return replacePlaceholders(in, true);
+    }
+
+    @SuppressWarnings("all")
+    @NotNull
+    public static String replacePlaceholders(@NotNull String in, boolean convertFormatCodes) {
         if (in == null) {
             in = "";
         }
         updateLogHandler();
-        in = StringUtils.convertFormatCodes(in, "&", "§");
+        if (convertFormatCodes) {
+            in = StringUtils.convertFormatCodes(in, "&", "§");
+        }
         in = replaceVariableReferences(in);
         String original = in;
         String replaced = null;

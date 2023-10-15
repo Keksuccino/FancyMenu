@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.file.type;
 import com.google.common.io.Files;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
@@ -10,11 +11,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import de.keksuccino.fancymenu.util.file.type.types.*;
 
 /**
  * Defines a specific file type.<br>
  * Has methods to identify local and web sources as the defined file type.<br>
- * Is used to decode files of the defined file type.
+ * Is used to decode files of the defined file type.<br><br>
+ *
+ * It is not recommended to create subclasses of this class.<br>
+ * Instead, use the already defined subclasses for all {@link FileMediaType}s:<br>
+ * {@link ImageFileType}, {@link AudioFileType}, {@link VideoFileType}, {@link TextFileType}
  *
  * @param <T> The object type returned by the read() methods of the {@link FileCodec} of this {@link FileType}.
  */
@@ -29,16 +35,20 @@ public class FileType<T> {
     @NotNull
     protected final FileCodec<T> codec;
 
-    public FileType(@NotNull FileCodec<T> codec) {
+    protected FileType(@NotNull FileCodec<T> codec) {
         this.mediaType = FileMediaType.OTHER;
         this.codec = codec;
     }
 
-    public FileType(@NotNull FileCodec<T> codec, @Nullable String mimeType, @NotNull FileMediaType mediaType, @NotNull String... extensions) {
+    protected FileType(@NotNull FileCodec<T> codec, @Nullable String mimeType, @NotNull FileMediaType mediaType, @NotNull String... extensions) {
         Arrays.asList(extensions).forEach(s -> this.extensions.add(s.toLowerCase().replace(".", "").replace(" ", "")));
         this.mediaType = mediaType;
         this.mimeType = mimeType;
         this.codec = codec;
+    }
+
+    public boolean isFileTypeLocation(@NotNull ResourceLocation location) {
+        return this.extensions.contains(Files.getFileExtension(location.getPath()).toLowerCase());
     }
 
     public boolean isFileTypeLocal(@NotNull File file) {

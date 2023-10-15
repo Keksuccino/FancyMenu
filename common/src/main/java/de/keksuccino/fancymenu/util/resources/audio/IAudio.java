@@ -1,4 +1,6 @@
 package de.keksuccino.fancymenu.util.resources.audio;
 
-public interface IAudio extends PlayableResourceWithAudio {
+import de.keksuccino.fancymenu.util.resources.Resource;
+
+public interface IAudio extends PlayableResourceWithAudio, Resource {
 }

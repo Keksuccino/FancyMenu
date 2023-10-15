@@ -6,12 +6,13 @@ import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resources.PlayableResource;
-import de.keksuccino.konkrete.resources.SelfcleaningDynamicTexture;
 import net.ellerton.japng.Png;
 import net.ellerton.japng.argb8888.Argb8888Bitmap;
 import net.ellerton.japng.argb8888.Argb8888BitmapSequence;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.Resource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -22,6 +23,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public class ApngTexture implements ITexture, PlayableResource {
 
@@ -40,6 +42,29 @@ public class ApngTexture implements ITexture, PlayableResource {
     protected volatile boolean decoded = false;
     protected volatile int cycles = 0;
     protected volatile int numPlays = -1;
+    protected volatile ResourceLocation sourceLocation;
+    protected volatile boolean closed = false;
+
+    @NotNull
+    public static ApngTexture location(@NotNull ResourceLocation location) {
+
+        Objects.requireNonNull(location);
+        ApngTexture texture = new ApngTexture();
+
+        texture.sourceLocation = location;
+        try {
+            Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(location);
+            if (resource.isPresent()) {
+                InputStream in = resource.get().open();
+                of(in, location.toString(), texture);
+            }
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to load APNG image by ResourceLocation: " + location, ex);
+        }
+
+        return texture;
+
+    }
 
     @NotNull
     public static ApngTexture web(@NotNull String apngUrl) {
@@ -177,7 +202,7 @@ public class ApngTexture implements ITexture, PlayableResource {
 
     @SuppressWarnings("all")
     protected void startTickerIfNeeded() {
-        if (!this.tickerThreadRunning && !this.frames.isEmpty()) {
+        if (!this.tickerThreadRunning && !this.frames.isEmpty() && !this.closed) {
 
             this.tickerThreadRunning = true;
             this.lastResourceLocationCall = System.currentTimeMillis();
@@ -186,6 +211,7 @@ public class ApngTexture implements ITexture, PlayableResource {
 
                 //Automatically stop thread if APNG was inactive for 10 seconds
                 while ((this.lastResourceLocationCall + 10000) > System.currentTimeMillis()) {
+                    if (this.frames.isEmpty() || this.closed) break;
                     //Don't tick frame if max loops reached
                     if ((this.numPlays >= 0) && (this.cycles >= this.numPlays)) return;
                     boolean sleep = false;
@@ -247,8 +273,8 @@ public class ApngTexture implements ITexture, PlayableResource {
         if (frame != null) {
             if ((frame.resourceLocation == null) && !frame.loaded && (frame.nativeImage != null)) {
                 try {
-                    //TODO better close NativeImage after this???
-                    frame.resourceLocation = Minecraft.getInstance().getTextureManager().register("fancymenu_apng_texture", new SelfcleaningDynamicTexture(frame.nativeImage));
+                    frame.dynamicTexture = new DynamicTexture(frame.nativeImage);
+                    frame.resourceLocation = Minecraft.getInstance().getTextureManager().register("fancymenu_apng_texture_frame", frame.dynamicTexture);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -303,6 +329,49 @@ public class ApngTexture implements ITexture, PlayableResource {
     @Override
     public boolean isPlaying() {
         return true;
+    }
+
+    /**
+     * Only reloads textures loaded via ResourceLocation.
+     */
+    @Override
+    public void reload() {
+        if (this.sourceLocation != null) {
+            for (ApngFrame frame : this.frames) {
+                //Closes NativeImage and DynamicTexture
+                CloseableUtils.closeQuietly(frame.dynamicTexture);
+                frame.dynamicTexture = null;
+                frame.nativeImage = null;
+            }
+            this.decoded = false;
+            this.frames.clear();
+            this.current = null;
+            this.cycles = 0;
+            this.lastResourceLocationCall = -1;
+            try {
+                Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(this.sourceLocation);
+                if (resource.isPresent()) {
+                    InputStream in = resource.get().open();
+                    of(in, this.sourceLocation.toString(), this);
+                }
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to reload ResourceLocation APNG image: " + this.sourceLocation, ex);
+            }
+        }
+    }
+
+    @Override
+    public void close() {
+        this.closed = true;
+        this.sourceLocation = null;
+        for (ApngFrame frame : this.frames) {
+            //Closes NativeImage and DynamicTexture
+            CloseableUtils.closeQuietly(frame.dynamicTexture);
+            frame.dynamicTexture = null;
+            frame.nativeImage = null;
+        }
+        this.frames.clear();
+        this.current = null;
     }
 
     @Nullable
@@ -375,6 +444,7 @@ public class ApngTexture implements ITexture, PlayableResource {
         protected final ByteArrayInputStream frameInputStream;
         protected  final int delayMs;
         protected final ByteArrayOutputStream closeAfterLoading;
+        protected DynamicTexture dynamicTexture;
         protected NativeImage nativeImage;
         protected ResourceLocation resourceLocation;
         protected boolean loaded = false;

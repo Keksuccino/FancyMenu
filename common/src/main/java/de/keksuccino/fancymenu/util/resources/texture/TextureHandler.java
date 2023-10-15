@@ -1,8 +1,10 @@
 package de.keksuccino.fancymenu.util.resources.texture;
 
+import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
+import de.keksuccino.fancymenu.util.resources.ResourceSourceType;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,7 +24,52 @@ public class TextureHandler {
     private final Map<String, ITexture> textures = new HashMap<>();
 
     /**
-     * Supports all {@link ImageFileType}s.<br>
+     * Supports all {@link ImageFileType}s.
+     *
+     * @param resourceSource Can be a URL to a web resource, a path to a local resource or a ResourceLocation (namespace:path).
+     */
+    @NotNull
+    public ITexture getTexture(@NotNull String resourceSource) {
+        ResourceSourceType sourceType = ResourceSourceType.getSourceTypeOf(resourceSource);
+        if (sourceType == ResourceSourceType.WEB) return this.getWebTexture(resourceSource);
+        if (sourceType == ResourceSourceType.LOCATION) {
+            ResourceLocation loc = ResourceLocation.tryParse(resourceSource);
+            if (loc != null) return this.getLocationTexture(loc);
+        }
+        return this.getLocalTexture(GameDirectoryUtils.getAbsoluteGameDirectoryPath(resourceSource));
+    }
+
+    /**
+     * Supports all {@link ImageFileType}s.
+     */
+    @NotNull
+    public ITexture getLocationTexture(@NotNull ResourceLocation location) {
+        Objects.requireNonNull(location);
+        if (!textures.containsKey(location.toString())) {
+            ITexture texture = null;
+            try {
+                for (ImageFileType type : FileTypes.getAllImageFileTypes()) {
+                    if (type.isFileTypeLocation(location)) {
+                        texture = type.getCodec().readLocation(location);
+                        break;
+                    }
+                }
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to load ResourceLocation texture: " + location, ex);
+            }
+            if (texture == null) {
+                LOGGER.error("[FANCYMENU] Failed to load ResourceLocation texture! FileCodec returned NULL for: " + location);
+                texture = SimpleTexture.FULLY_TRANSPARENT_SIMPLE_TEXTURE;
+            }
+            this.textures.put(location.toString(), texture);
+            return texture;
+        } else {
+            return textures.get(location.toString());
+        }
+    }
+
+    /**
+     * Supports all {@link ImageFileType}s.
      */
     @NotNull
     public ITexture getLocalTexture(@NotNull File imageFile) {
@@ -41,7 +88,7 @@ public class TextureHandler {
             }
             if (texture == null) {
                 LOGGER.error("[FANCYMENU] Failed to load web texture! FileCodec returned NULL for: " + imageFile.getPath());
-                texture = WrappedTexture.FULLY_TRANSPARENT_WRAPPED_TEXTURE;
+                texture = SimpleTexture.FULLY_TRANSPARENT_SIMPLE_TEXTURE;
             }
             this.textures.put(imageFile.getAbsolutePath(), texture);
             return texture;
@@ -51,7 +98,7 @@ public class TextureHandler {
     }
 
     /**
-     * Supports all {@link ImageFileType}s.<br>
+     * Supports all {@link ImageFileType}s.
      */
     @NotNull
     public ITexture getLocalTexture(@NotNull String imageFilePath) {
@@ -60,7 +107,7 @@ public class TextureHandler {
     }
 
     /**
-     * Supports all {@link ImageFileType}s.<br>
+     * Supports all {@link ImageFileType}s.
      */
     @NotNull
     public ITexture getWebTexture(@NotNull String imageUrl) {
@@ -79,7 +126,7 @@ public class TextureHandler {
             }
             if (texture == null) {
                 LOGGER.error("[FANCYMENU] Failed to load web texture! FileCodec returned NULL for: " + imageUrl);
-                texture = WrappedTexture.FULLY_TRANSPARENT_WRAPPED_TEXTURE;
+                texture = SimpleTexture.FULLY_TRANSPARENT_SIMPLE_TEXTURE;
             }
             this.textures.put(imageUrl, texture);
             return texture;
@@ -105,13 +152,23 @@ public class TextureHandler {
         return null;
     }
 
-    public void removeResource(@NotNull String pathOrUrl) {
-        File f = new File(GameDirectoryUtils.getAbsoluteGameDirectoryPath(pathOrUrl));
-        textures.remove(f.getAbsolutePath());
-        textures.remove(pathOrUrl);
+    public void remove(@NotNull String resourceSource) {
+        Objects.requireNonNull(resourceSource);
+        ResourceSourceType sourceType = ResourceSourceType.getSourceTypeOf(resourceSource);
+        if (sourceType == ResourceSourceType.LOCAL) {
+            resourceSource = GameDirectoryUtils.getAbsoluteGameDirectoryPath(resourceSource);
+        }
+        ITexture texture = textures.get(resourceSource);
+        if (texture != null) {
+            CloseableUtils.closeQuietly(texture);
+        }
+        textures.remove(resourceSource);
     }
 
-    public void clearResources() {
+    public void clear() {
+        for (ITexture t : this.textures.values()) {
+            CloseableUtils.closeQuietly(t);
+        }
         this.textures.clear();
     }
 

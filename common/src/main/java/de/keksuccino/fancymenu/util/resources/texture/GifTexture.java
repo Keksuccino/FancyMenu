@@ -7,9 +7,10 @@ import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resources.PlayableResource;
 import de.keksuccino.konkrete.rendering.GifDecoder;
-import de.keksuccino.konkrete.resources.SelfcleaningDynamicTexture;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.Resource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -20,6 +21,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public class GifTexture implements ITexture, PlayableResource {
 
@@ -36,6 +38,29 @@ public class GifTexture implements ITexture, PlayableResource {
     protected volatile long lastResourceLocationCall = -1;
     protected volatile boolean tickerThreadRunning = false;
     protected volatile boolean decoded = false;
+    protected ResourceLocation sourceLocation = null;
+    protected volatile boolean closed = false;
+
+    @NotNull
+    public static GifTexture location(@NotNull ResourceLocation location) {
+
+        Objects.requireNonNull(location);
+        GifTexture texture = new GifTexture();
+
+        texture.sourceLocation = location;
+        try {
+            Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(location);
+            if (resource.isPresent()) {
+                InputStream in = resource.get().open();
+                of(in, location.toString(), texture);
+            }
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to load GIF image by ResourceLocation: " + location, ex);
+        }
+
+        return texture;
+
+    }
 
     @NotNull
     public static GifTexture web(@NotNull String gifUrl) {
@@ -187,7 +212,7 @@ public class GifTexture implements ITexture, PlayableResource {
 
     @SuppressWarnings("all")
     protected void startTickerIfNeeded() {
-        if (!this.tickerThreadRunning && !this.frames.isEmpty()) {
+        if (!this.tickerThreadRunning && !this.frames.isEmpty() && !this.closed) {
 
             this.tickerThreadRunning = true;
             this.lastResourceLocationCall = System.currentTimeMillis();
@@ -196,6 +221,7 @@ public class GifTexture implements ITexture, PlayableResource {
 
                 //Automatically stop thread if GIF was inactive for 10 seconds
                 while ((this.lastResourceLocationCall + 10000) > System.currentTimeMillis()) {
+                    if (this.frames.isEmpty() || this.closed) break;
                     boolean sleep = false;
                     try {
                         //Cache frames to avoid possible concurrent modification exceptions
@@ -253,8 +279,8 @@ public class GifTexture implements ITexture, PlayableResource {
         if (frame != null) {
             if ((frame.resourceLocation == null) && !frame.loaded && (frame.nativeImage != null)) {
                 try {
-                    //TODO better close NativeImage after this???
-                    frame.resourceLocation = Minecraft.getInstance().getTextureManager().register("fancymenu_gif_texture", new SelfcleaningDynamicTexture(frame.nativeImage));
+                    frame.dynamicTexture = new DynamicTexture(frame.nativeImage);
+                    frame.resourceLocation = Minecraft.getInstance().getTextureManager().register("fancymenu_gif_texture_frame", frame.dynamicTexture);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -311,6 +337,48 @@ public class GifTexture implements ITexture, PlayableResource {
     }
 
     /**
+     * Only reloads textures loaded via ResourceLocation.
+     */
+    @Override
+    public void reload() {
+        if (this.sourceLocation != null) {
+            for (GifFrame frame : this.frames) {
+                //Closes NativeImage and DynamicTexture
+                CloseableUtils.closeQuietly(frame.dynamicTexture);
+                frame.dynamicTexture = null;
+                frame.nativeImage = null;
+            }
+            this.decoded = false;
+            this.frames.clear();
+            this.current = null;
+            this.lastResourceLocationCall = -1;
+            try {
+                Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(this.sourceLocation);
+                if (resource.isPresent()) {
+                    InputStream in = resource.get().open();
+                    of(in, this.sourceLocation.toString(), this);
+                }
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to reload ResourceLocation GIF image: " + this.sourceLocation, ex);
+            }
+        }
+    }
+
+    @Override
+    public void close() {
+        this.closed = true;
+        this.sourceLocation = null;
+        for (GifFrame frame : this.frames) {
+            //Closes NativeImage and DynamicTexture
+            CloseableUtils.closeQuietly(frame.dynamicTexture);
+            frame.dynamicTexture = null;
+            frame.nativeImage = null;
+        }
+        this.frames.clear();
+        this.current = null;
+    }
+
+    /**
      * Set max frames to -1 to read all frames.
      */
     @NotNull
@@ -353,6 +421,7 @@ public class GifTexture implements ITexture, PlayableResource {
         protected  final int delay;
         protected final ByteArrayOutputStream closeAfterLoading;
         protected NativeImage nativeImage;
+        protected DynamicTexture dynamicTexture;
         protected ResourceLocation resourceLocation;
         protected boolean loaded = false;
 

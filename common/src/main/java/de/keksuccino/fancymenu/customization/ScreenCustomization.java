@@ -272,7 +272,7 @@ public class ScreenCustomization {
 
 	public static void reloadFancyMenu() {
 		FancyMenu.reloadOptions();
-		TextureHandler.INSTANCE.clearResources();
+		TextureHandler.INSTANCE.clear();
 		UIColorThemes.reloadThemes();
 		SoundRegistry.resetSounds();
 		SoundRegistry.stopSounds();
