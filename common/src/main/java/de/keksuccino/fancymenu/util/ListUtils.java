@@ -80,7 +80,8 @@ public class ListUtils {
     }
 
     @SafeVarargs
-    public static <T> List<T> build(T... entries) {
+    @NotNull
+    public static <T> List<T> of(T... entries) {
         return new ArrayList<>(Arrays.asList(entries));
     }
 

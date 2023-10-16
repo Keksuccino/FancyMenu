@@ -31,7 +31,7 @@ public class TextEditorElement extends AbstractEditorElement {
         super.init();
 
         this.addGenericCycleContextMenuEntryTo(this.rightClickMenu, "set_mode",
-                        ListUtils.build(TextElement.SourceMode.DIRECT, TextElement.SourceMode.LOCAL_SOURCE, TextElement.SourceMode.WEB_SOURCE),
+                        ListUtils.of(TextElement.SourceMode.DIRECT, TextElement.SourceMode.LOCAL_SOURCE, TextElement.SourceMode.WEB_SOURCE),
                         consumes -> (consumes instanceof TextEditorElement),
                         consumes -> ((TextElement)consumes.element).sourceMode,
                         (element1, sourceMode) -> {
@@ -112,7 +112,7 @@ public class TextEditorElement extends AbstractEditorElement {
         this.rightClickMenu.addSeparatorEntry("text_separator_1");
 
         this.addGenericCycleContextMenuEntryTo(this.rightClickMenu, "set_case_mode",
-                ListUtils.build(TextElement.CaseMode.NORMAL, TextElement.CaseMode.ALL_LOWER, TextElement.CaseMode.ALL_UPPER),
+                ListUtils.of(TextElement.CaseMode.NORMAL, TextElement.CaseMode.ALL_LOWER, TextElement.CaseMode.ALL_UPPER),
                 consumes -> (consumes instanceof TextEditorElement),
                 consumes -> ((TextElement)consumes.element).caseMode,
                 (element1, caseMode) -> {
@@ -152,7 +152,7 @@ public class TextEditorElement extends AbstractEditorElement {
                 .setStackable(true);
 
         this.addGenericCycleContextMenuEntryTo(this.rightClickMenu, "set_alignment",
-                        ListUtils.build(AbstractElement.Alignment.LEFT, AbstractElement.Alignment.CENTERED, AbstractElement.Alignment.RIGHT),
+                        ListUtils.of(AbstractElement.Alignment.LEFT, AbstractElement.Alignment.CENTERED, AbstractElement.Alignment.RIGHT),
                         consumes -> (consumes instanceof TextEditorElement),
                         consumes -> ((TextElement)consumes.element).alignment,
                         (element1, alignment) -> {

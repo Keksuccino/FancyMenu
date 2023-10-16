@@ -1,10 +1,11 @@
 package de.keksuccino.fancymenu.util.file.type.types;
 
-import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.file.type.FileCodec;
 import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.FileTypeRegistry;
 import de.keksuccino.fancymenu.util.resources.audio.IAudio;
+import de.keksuccino.fancymenu.util.resources.text.IText;
+import de.keksuccino.fancymenu.util.resources.text.PlainText;
 import de.keksuccino.fancymenu.util.resources.texture.*;
 import de.keksuccino.fancymenu.util.resources.video.IVideo;
 import net.minecraft.resources.ResourceLocation;
@@ -16,7 +17,7 @@ import java.util.List;
 
 public class FileTypes {
 
-    public static final FileType<Object> UNKNOWN = new FileType<>(FileCodec.basic(Object.class, consumes -> null, consumes -> null)) {
+    public static final FileType<Object> UNKNOWN = new FileType<>(FileCodec.generic(Object.class, consumes -> null)) {
         @Override
         public boolean isFileTypeLocal(@NotNull File file) {
             return true;
@@ -50,21 +51,42 @@ public class FileTypes {
     public static final VideoFileType MP4_VIDEO = new VideoFileType(FileCodec.basic(IVideo.class, consumes -> null, consumes -> null), "video/mp4", "mp4");
     public static final VideoFileType AVI_VIDEO = new VideoFileType(FileCodec.basic(IVideo.class, consumes -> null, consumes -> null), "video/x-msvideo", "avi");
 
-    private static final FileCodec<TextFileType.PlainText> PLAIN_TEXT_CODEC = FileCodec.generic(
-            TextFileType.PlainText.class, consumes -> new TextFileType.PlainText(FileUtils.readTextLinesFrom(consumes)));
-
-    public static final TextFileType TXT_TEXT = new TextFileType(PLAIN_TEXT_CODEC, "text/plain", "txt");
-    public static final TextFileType MARKDOWN_TEXT = new TextFileType(PLAIN_TEXT_CODEC, "text/markdown", "md", "markdown");
-    public static final TextFileType JSON_TEXT = new TextFileType(PLAIN_TEXT_CODEC, "application/json", "json");
-    public static final TextFileType LOG_TEXT = new TextFileType(PLAIN_TEXT_CODEC, null, "log");
-    public static final TextFileType LANG_TEXT = new TextFileType(PLAIN_TEXT_CODEC, null, "lang");
-    public static final TextFileType LOCAL_TEXT = new TextFileType(PLAIN_TEXT_CODEC, null, "local");
-    public static final TextFileType PROPERTIES_TEXT = new TextFileType(PLAIN_TEXT_CODEC, null, "properties");
-    public static final TextFileType XML_TEXT = new TextFileType(PLAIN_TEXT_CODEC, "application/xml", "xml");
-    public static final TextFileType JAVASCRIPT_TEXT = new TextFileType(PLAIN_TEXT_CODEC, "text/javascript", "js");
-    public static final TextFileType HTML_TEXT = new TextFileType(PLAIN_TEXT_CODEC, "text/html", "htm", "html", "shtml");
-    public static final TextFileType CSS_TEXT = new TextFileType(PLAIN_TEXT_CODEC, "text/css", "css");
-    public static final TextFileType CSV_TEXT = new TextFileType(PLAIN_TEXT_CODEC, "text/csv", "csv");
+    public static final TextFileType TXT_TEXT = new TextFileType(
+            FileCodec.advanced(IText.class, PlainText::of, PlainText::location, PlainText::local, PlainText::web),
+            "text/plain", "txt");
+    public static final TextFileType MARKDOWN_TEXT = new TextFileType(
+            FileCodec.advanced(IText.class, PlainText::of, PlainText::location, PlainText::local, PlainText::web),
+            "text/markdown", "md", "markdown");
+    public static final TextFileType JSON_TEXT = new TextFileType(
+            FileCodec.advanced(IText.class, PlainText::of, PlainText::location, PlainText::local, PlainText::web),
+            "application/json", "json");
+    public static final TextFileType LOG_TEXT = new TextFileType(
+            FileCodec.advanced(IText.class, PlainText::of, PlainText::location, PlainText::local, PlainText::web),
+            null, "log");
+    public static final TextFileType LANG_TEXT = new TextFileType(
+            FileCodec.advanced(IText.class, PlainText::of, PlainText::location, PlainText::local, PlainText::web),
+            null, "lang");
+    public static final TextFileType LOCAL_TEXT = new TextFileType(
+            FileCodec.advanced(IText.class, PlainText::of, PlainText::location, PlainText::local, PlainText::web),
+            null, "local");
+    public static final TextFileType PROPERTIES_TEXT = new TextFileType(
+            FileCodec.advanced(IText.class, PlainText::of, PlainText::location, PlainText::local, PlainText::web),
+            null, "properties");
+    public static final TextFileType XML_TEXT = new TextFileType(
+            FileCodec.advanced(IText.class, PlainText::of, PlainText::location, PlainText::local, PlainText::web),
+            "application/xml", "xml");
+    public static final TextFileType JAVASCRIPT_TEXT = new TextFileType(
+            FileCodec.advanced(IText.class, PlainText::of, PlainText::location, PlainText::local, PlainText::web),
+            "text/javascript", "js");
+    public static final TextFileType HTML_TEXT = new TextFileType(
+            FileCodec.advanced(IText.class, PlainText::of, PlainText::location, PlainText::local, PlainText::web),
+            "text/html", "htm", "html", "shtml");
+    public static final TextFileType CSS_TEXT = new TextFileType(
+            FileCodec.advanced(IText.class, PlainText::of, PlainText::location, PlainText::local, PlainText::web),
+            "text/css", "css");
+    public static final TextFileType CSV_TEXT = new TextFileType(
+            FileCodec.advanced(IText.class, PlainText::of, PlainText::location, PlainText::local, PlainText::web),
+            "text/csv", "csv");
 
     public static void registerAll() {
 

@@ -150,7 +150,7 @@ public interface IElementFactory {
      * @param deepElements All {@link AbstractDeepElement} instances will get added to this list. If this is NULL, no {@link AbstractDeepElement}s will get constructed.
      */
     default void constructElementInstances(@Nullable String menuIdentifier, @Nullable List<WidgetMeta> vanillaWidgetMetaList, @NotNull Layout layout, @NotNull Layout.OrderedElementCollection normalElements, @Nullable List<VanillaWidgetElement> vanillaWidgetElements, @Nullable List<AbstractDeepElement> deepElements) {
-        this.constructElementInstances(menuIdentifier, vanillaWidgetMetaList, ListUtils.build(layout), normalElements, vanillaWidgetElements, deepElements);
+        this.constructElementInstances(menuIdentifier, vanillaWidgetMetaList, ListUtils.of(layout), normalElements, vanillaWidgetElements, deepElements);
     }
 
     /**

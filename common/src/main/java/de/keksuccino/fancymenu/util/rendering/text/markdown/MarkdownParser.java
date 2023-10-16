@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
+import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -453,13 +453,13 @@ public class MarkdownParser {
 
     protected static void setImageToBuilder(@NotNull FragmentBuilder builder, @NotNull String imageLink) {
         if (TextValidators.BASIC_URL_TEXT_VALIDATOR.get(imageLink)) {
-            builder.image = TextureHandler.INSTANCE.getWebTexture(imageLink);
+            builder.image = ImageResourceHandler.INSTANCE.getWebTexture(imageLink);
             builder.text = "Image";
         } else {
             String s = ScreenCustomization.getAbsoluteGameDirectoryPath(imageLink);
             File f = new File(s);
             if (f.isFile() && f.getPath().startsWith(LayoutHandler.ASSETS_DIR.getAbsolutePath()) && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(f)) {
-                builder.image = TextureHandler.INSTANCE.getTexture(f);
+                builder.image = ImageResourceHandler.INSTANCE.getTexture(f);
                 if (builder.image == null) {
                     builder.text = I18n.get("fancymenu.markdown.missing_local_image");
                 } else {
@@ -548,7 +548,7 @@ public class MarkdownParser {
                 }
             }
             if ((imageLink != null) && (hyperLink != null)) {
-                return ListUtils.build(imageLink, hyperLink);
+                return ListUtils.of(imageLink, hyperLink);
             }
         }
         return null;

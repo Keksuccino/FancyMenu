@@ -12,7 +12,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resources.texture.SimpleLocalTexture;
-import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
+import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
@@ -119,7 +119,7 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 					for (String s : images) {
 						File f = new File(imagesDir.getPath() + "/" + s);
 						if (f.exists() && f.isFile() && (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".png"))) {
-							ITexture r = TextureHandler.INSTANCE.getTexture(f.getPath());
+							ITexture r = ImageResourceHandler.INSTANCE.getTexture(f.getPath());
 							if (r instanceof SimpleLocalTexture l) {
 								this.images.add(l);
 							}

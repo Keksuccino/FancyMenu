@@ -10,7 +10,7 @@ import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
+import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.network.chat.Style;
@@ -47,14 +47,14 @@ public class ImageMenuBackground extends MenuBackground {
         AspectRatio ratio = new AspectRatio(10, 10);
         if (this.imagePathOrUrl != null) {
             String finalImagePathOrUrl = StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(this.imagePathOrUrl), "§", "&");
-            ITexture background = (this.type == BackgroundImageType.WEB) ? TextureHandler.INSTANCE.getWebTexture(finalImagePathOrUrl) : TextureHandler.INSTANCE.getTexture(finalImagePathOrUrl);
+            ITexture background = (this.type == BackgroundImageType.WEB) ? ImageResourceHandler.INSTANCE.getWebTexture(finalImagePathOrUrl) : ImageResourceHandler.INSTANCE.getTexture(finalImagePathOrUrl);
             if (background != null) {
                 ratio = background.getAspectRatio();
                 resourceLocation = background.getResourceLocation();
             }
         }
         if ((resourceLocation == null) && (this.type == BackgroundImageType.WEB) && (this.webImageFallbackPath != null)) {
-            ITexture fallback = TextureHandler.INSTANCE.getTexture(this.webImageFallbackPath);
+            ITexture fallback = ImageResourceHandler.INSTANCE.getTexture(this.webImageFallbackPath);
             if (fallback != null) {
                 ratio = fallback.getAspectRatio();
                 resourceLocation = fallback.getResourceLocation();

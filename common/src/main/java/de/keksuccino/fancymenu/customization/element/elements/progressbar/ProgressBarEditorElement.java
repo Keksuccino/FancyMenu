@@ -65,7 +65,7 @@ public class ProgressBarEditorElement extends AbstractEditorElement {
         this.rightClickMenu.addSeparatorEntry("separator_after_background_entries");
 
         this.addCycleContextMenuEntryTo(this.rightClickMenu, "set_progress_value_mode",
-                        ListUtils.build(ProgressBarElement.ProgressValueMode.PERCENTAGE, ProgressBarElement.ProgressValueMode.FLOATING_POINT),
+                        ListUtils.of(ProgressBarElement.ProgressValueMode.PERCENTAGE, ProgressBarElement.ProgressValueMode.FLOATING_POINT),
                         ProgressBarEditorElement.class,
                         element -> ((ProgressBarElement)element.element).progressValueMode,
                         (element, progressValueMode) -> ((ProgressBarElement)element.element).progressValueMode = progressValueMode,
@@ -83,7 +83,7 @@ public class ProgressBarEditorElement extends AbstractEditorElement {
         this.rightClickMenu.addSeparatorEntry("separator_after_progress_source");
 
         this.addCycleContextMenuEntryTo(this.rightClickMenu, "set_direction",
-                        ListUtils.build(ProgressBarElement.BarDirection.RIGHT, ProgressBarElement.BarDirection.LEFT, ProgressBarElement.BarDirection.UP, ProgressBarElement.BarDirection.DOWN),
+                        ListUtils.of(ProgressBarElement.BarDirection.RIGHT, ProgressBarElement.BarDirection.LEFT, ProgressBarElement.BarDirection.UP, ProgressBarElement.BarDirection.DOWN),
                         ProgressBarEditorElement.class,
                         element -> ((ProgressBarElement)element.element).direction,
                         (element, barDirection) -> ((ProgressBarElement)element.element).direction = barDirection,

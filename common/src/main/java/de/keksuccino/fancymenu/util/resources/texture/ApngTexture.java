@@ -12,7 +12,6 @@ import net.ellerton.japng.argb8888.Argb8888BitmapSequence;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.Resource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -23,7 +22,6 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 public class ApngTexture implements ITexture, PlayableResource {
 
@@ -42,24 +40,28 @@ public class ApngTexture implements ITexture, PlayableResource {
     protected volatile boolean decoded = false;
     protected volatile int cycles = 0;
     protected volatile int numPlays = -1;
-    protected volatile ResourceLocation sourceLocation;
+    protected ResourceLocation sourceLocation;
+    protected File sourceFile;
+    protected String sourceURL;
     protected volatile boolean closed = false;
 
     @NotNull
     public static ApngTexture location(@NotNull ResourceLocation location) {
+        return location(location, null);
+    }
+
+    @NotNull
+    public static ApngTexture location(@NotNull ResourceLocation location, @Nullable ApngTexture writeTo) {
 
         Objects.requireNonNull(location);
-        ApngTexture texture = new ApngTexture();
+        ApngTexture texture = (writeTo != null) ? writeTo : new ApngTexture();
 
         texture.sourceLocation = location;
+
         try {
-            Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(location);
-            if (resource.isPresent()) {
-                InputStream in = resource.get().open();
-                of(in, location.toString(), texture);
-            }
+            of(Minecraft.getInstance().getResourceManager().open(location), location.toString(), texture);
         } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to load APNG image by ResourceLocation: " + location, ex);
+            LOGGER.error("[FANCYMENU] Failed to read APNG image from ResourceLocation: " + location, ex);
         }
 
         return texture;
@@ -67,13 +69,53 @@ public class ApngTexture implements ITexture, PlayableResource {
     }
 
     @NotNull
-    public static ApngTexture web(@NotNull String apngUrl) {
+    public static ApngTexture local(@NotNull File apngFile) {
+        return local(apngFile, null);
+    }
 
-        ApngTexture apngTexture = new ApngTexture();
+    @NotNull
+    public static ApngTexture local(@NotNull File apngFile, @Nullable ApngTexture writeTo) {
+
+        Objects.requireNonNull(apngFile);
+        ApngTexture texture = (writeTo != null) ? writeTo : new ApngTexture();
+
+        texture.sourceFile = apngFile;
+
+        if (!apngFile.isFile()) {
+            LOGGER.error("[FANCYMENU] Failed to read APNG image from file! File not found: " + apngFile.getPath());
+            return texture;
+        }
+
+        //Decode APNG image
+        new Thread(() -> {
+            try {
+                InputStream in = new FileInputStream(apngFile);
+                of(in, apngFile.getPath(), texture);
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to read APNG image from file: " + apngFile.getPath(), ex);
+            }
+        }).start();
+
+        return texture;
+
+    }
+
+    @NotNull
+    public static ApngTexture web(@NotNull String apngUrl) {
+        return web(apngUrl, null);
+    }
+
+    @NotNull
+    public static ApngTexture web(@NotNull String apngUrl, @Nullable ApngTexture writeTo) {
+
+        Objects.requireNonNull(apngUrl);
+        ApngTexture texture = (writeTo != null) ? writeTo : new ApngTexture();
+
+        texture.sourceURL = apngUrl;
 
         if (!TextValidators.BASIC_URL_TEXT_VALIDATOR.get(Objects.requireNonNull(apngUrl))) {
-            LOGGER.error("[FANCYMENU] Unable to load Web APNG image! Invalid URL: " + apngUrl);
-            return apngTexture;
+            LOGGER.error("[FANCYMENU] Failed to read APNG image from URL! Invalid URL: " + apngUrl);
+            return texture;
         }
 
         //Download and decode APNG image
@@ -86,40 +128,16 @@ public class ApngTexture implements ITexture, PlayableResource {
                 //The extract method seems to struggle with a direct web input stream, so read all bytes of it and wrap them into a ByteArrayInputStream
                 byteIn = new ByteArrayInputStream(in.readAllBytes());
             } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to download Web APNG image: " + apngUrl, ex);
+                LOGGER.error("[FANCYMENU] Failed to read APNG image from URL: " + apngUrl, ex);
             }
             if (byteIn != null) {
-                of(byteIn, apngUrl, apngTexture);
+                of(byteIn, apngUrl, texture);
             }
             //"byteIn" gets closed in of(), so only close "in" here
             CloseableUtils.closeQuietly(in);
         }).start();
 
-        return apngTexture;
-
-    }
-
-    @NotNull
-    public static ApngTexture local(@NotNull File apng) {
-
-        ApngTexture apngTexture = new ApngTexture();
-
-        if (!apng.isFile()) {
-            LOGGER.error("[FANCYMENU] APNG image not found: " + apng.getPath());
-            return apngTexture;
-        }
-
-        //Decode APNG image
-        new Thread(() -> {
-            try {
-                InputStream in = new FileInputStream(apng);
-                of(in, apng.getPath(), apngTexture);
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to load APNG image: " + apng.getPath(), ex);
-            }
-        }).start();
-
-        return apngTexture;
+        return texture;
 
     }
 
@@ -331,32 +349,26 @@ public class ApngTexture implements ITexture, PlayableResource {
         return true;
     }
 
-    /**
-     * Only reloads textures loaded via ResourceLocation.
-     */
     @Override
     public void reload() {
+        if (this.closed) return;
+        for (ApngFrame frame : this.frames) {
+            //Closes NativeImage and DynamicTexture
+            CloseableUtils.closeQuietly(frame.dynamicTexture);
+            frame.dynamicTexture = null;
+            frame.nativeImage = null;
+        }
+        this.decoded = false;
+        this.frames.clear();
+        this.current = null;
+        this.cycles = 0;
+        this.lastResourceLocationCall = -1;
         if (this.sourceLocation != null) {
-            for (ApngFrame frame : this.frames) {
-                //Closes NativeImage and DynamicTexture
-                CloseableUtils.closeQuietly(frame.dynamicTexture);
-                frame.dynamicTexture = null;
-                frame.nativeImage = null;
-            }
-            this.decoded = false;
-            this.frames.clear();
-            this.current = null;
-            this.cycles = 0;
-            this.lastResourceLocationCall = -1;
-            try {
-                Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(this.sourceLocation);
-                if (resource.isPresent()) {
-                    InputStream in = resource.get().open();
-                    of(in, this.sourceLocation.toString(), this);
-                }
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to reload ResourceLocation APNG image: " + this.sourceLocation, ex);
-            }
+            location(this.sourceLocation, this);
+        } else if (this.sourceFile != null) {
+            local(this.sourceFile, this);
+        } else if (this.sourceURL != null) {
+            web(this.sourceURL, this);
         }
     }
 

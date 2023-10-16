@@ -34,7 +34,7 @@ public class InputFieldEditorElement extends AbstractEditorElement {
         this.rightClickMenu.addSeparatorEntry("input_field_separator_1");
 
         this.addGenericCycleContextMenuEntryTo(this.rightClickMenu, "set_type",
-                        ListUtils.build(InputFieldElement.InputFieldType.TEXT, InputFieldElement.InputFieldType.URL, InputFieldElement.InputFieldType.INTEGER_ONLY, InputFieldElement.InputFieldType.DECIMAL_ONLY),
+                        ListUtils.of(InputFieldElement.InputFieldType.TEXT, InputFieldElement.InputFieldType.URL, InputFieldElement.InputFieldType.INTEGER_ONLY, InputFieldElement.InputFieldType.DECIMAL_ONLY),
                         consumes -> (consumes instanceof InputFieldEditorElement),
                         consumes -> ((InputFieldElement)consumes.element).type,
                         (element, type) -> ((InputFieldElement)element.element).type = type,

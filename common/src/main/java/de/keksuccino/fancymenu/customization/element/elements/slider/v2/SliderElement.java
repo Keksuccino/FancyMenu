@@ -20,7 +20,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtend
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.ListSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
 import de.keksuccino.fancymenu.util.resources.RenderableResource;
-import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
+import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
@@ -191,7 +191,7 @@ public class SliderElement extends AbstractElement implements IExecutableElement
             }
         }
         if ((sliderBackNormal == null) && (this.sliderBackgroundTextureNormal != null) && this.sliderBackgroundTextureNormal.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.sliderBackgroundTextureNormal.getFile())) {
-            sliderBackNormal = TextureHandler.INSTANCE.getTexture(this.sliderBackgroundTextureNormal.getAbsolutePath());
+            sliderBackNormal = ImageResourceHandler.INSTANCE.getTexture(this.sliderBackgroundTextureNormal.getAbsolutePath());
         }
         //Highlighted Slider Background
         if ((this.sliderBackgroundAnimationHighlighted != null) && AnimationHandler.animationExists(this.sliderBackgroundAnimationHighlighted)) {
@@ -202,7 +202,7 @@ public class SliderElement extends AbstractElement implements IExecutableElement
             }
         }
         if ((sliderBackHighlighted == null) && (this.sliderBackgroundTextureHighlighted != null) && this.sliderBackgroundTextureHighlighted.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.sliderBackgroundTextureHighlighted.getFile())) {
-            sliderBackHighlighted = TextureHandler.INSTANCE.getTexture(this.sliderBackgroundTextureHighlighted.getAbsolutePath());
+            sliderBackHighlighted = ImageResourceHandler.INSTANCE.getTexture(this.sliderBackgroundTextureHighlighted.getAbsolutePath());
         }
 
         if (this.slider instanceof CustomizableSlider w) {
@@ -223,7 +223,7 @@ public class SliderElement extends AbstractElement implements IExecutableElement
             }
         }
         if ((handleTextureNormal == null) && (this.handleTextureNormal != null) && this.handleTextureNormal.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.handleTextureNormal.getFile())) {
-            handleTextureNormal = TextureHandler.INSTANCE.getTexture(this.handleTextureNormal.getAbsolutePath());
+            handleTextureNormal = ImageResourceHandler.INSTANCE.getTexture(this.handleTextureNormal.getAbsolutePath());
         }
         //Hover
         if ((this.handleAnimationHover != null) && AnimationHandler.animationExists(this.handleAnimationHover)) {
@@ -234,7 +234,7 @@ public class SliderElement extends AbstractElement implements IExecutableElement
             }
         }
         if ((handleTextureHover == null) && (this.handleTextureHover != null) && this.handleTextureHover.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.handleTextureHover.getFile())) {
-            handleTextureHover = TextureHandler.INSTANCE.getTexture(this.handleTextureHover.getAbsolutePath());
+            handleTextureHover = ImageResourceHandler.INSTANCE.getTexture(this.handleTextureHover.getAbsolutePath());
         }
         //Inactive
         if ((this.handleAnimationInactive != null) && AnimationHandler.animationExists(this.handleAnimationInactive)) {
@@ -245,7 +245,7 @@ public class SliderElement extends AbstractElement implements IExecutableElement
             }
         }
         if ((handleTextureInactive == null) && (this.handleTextureInactive != null) && this.handleTextureInactive.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.handleTextureInactive.getFile())) {
-            handleTextureInactive = TextureHandler.INSTANCE.getTexture(this.handleTextureInactive.getAbsolutePath());
+            handleTextureInactive = ImageResourceHandler.INSTANCE.getTexture(this.handleTextureInactive.getAbsolutePath());
         }
 
         if (this.slider instanceof CustomizableWidget w) {

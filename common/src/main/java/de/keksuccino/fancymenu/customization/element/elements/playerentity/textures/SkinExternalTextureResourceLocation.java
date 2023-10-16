@@ -4,7 +4,7 @@ import com.mojang.blaze3d.platform.NativeImage;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.SelfcleaningDynamicTexture;
-import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
+import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.io.IOUtils;
@@ -37,7 +37,7 @@ public class SkinExternalTextureResourceLocation extends ExternalTextureResource
         if (!this.loaded) {
             try {
 
-                ITexture exRL = TextureHandler.INSTANCE.getTexture(this.path);
+                ITexture exRL = ImageResourceHandler.INSTANCE.getTexture(this.path);
                 if (exRL != null) {
                     ResourceLocation loc = exRL.getResourceLocation();
                     if (loc != null) {

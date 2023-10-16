@@ -38,24 +38,28 @@ public class GifTexture implements ITexture, PlayableResource {
     protected volatile long lastResourceLocationCall = -1;
     protected volatile boolean tickerThreadRunning = false;
     protected volatile boolean decoded = false;
-    protected ResourceLocation sourceLocation = null;
+    protected ResourceLocation sourceLocation;
+    protected File sourceFile;
+    protected String sourceURL;
     protected volatile boolean closed = false;
 
     @NotNull
     public static GifTexture location(@NotNull ResourceLocation location) {
+        return location(location, null);
+    }
+
+    @NotNull
+    public static GifTexture location(@NotNull ResourceLocation location, @Nullable GifTexture writeTo) {
 
         Objects.requireNonNull(location);
-        GifTexture texture = new GifTexture();
+        GifTexture texture = (writeTo != null) ? writeTo : new GifTexture();
 
         texture.sourceLocation = location;
+
         try {
-            Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(location);
-            if (resource.isPresent()) {
-                InputStream in = resource.get().open();
-                of(in, location.toString(), texture);
-            }
+            of(Minecraft.getInstance().getResourceManager().open(location), location.toString(), texture);
         } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to load GIF image by ResourceLocation: " + location, ex);
+            LOGGER.error("[FANCYMENU] Failed to read GIF image from ResourceLocation: " + location, ex);
         }
 
         return texture;
@@ -63,13 +67,53 @@ public class GifTexture implements ITexture, PlayableResource {
     }
 
     @NotNull
-    public static GifTexture web(@NotNull String gifUrl) {
+    public static GifTexture local(@NotNull File gif) {
+        return local(gif, null);
+    }
 
-        GifTexture gifTexture = new GifTexture();
+    @NotNull
+    public static GifTexture local(@NotNull File gif, @Nullable GifTexture writeTo) {
+
+        Objects.requireNonNull(gif);
+        GifTexture texture = (writeTo != null) ? writeTo : new GifTexture();
+
+        texture.sourceFile = gif;
+
+        if (!gif.isFile()) {
+            LOGGER.error("[FANCYMENU] Failed to read GIF image from file! File not found: " + gif.getPath());
+            return texture;
+        }
+
+        //Decode APNG image
+        new Thread(() -> {
+            try {
+                InputStream in = new FileInputStream(gif);
+                of(in, gif.getPath(), texture);
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to read GIF image from file: " + gif.getPath(), ex);
+            }
+        }).start();
+
+        return texture;
+
+    }
+
+    @NotNull
+    public static GifTexture web(@NotNull String gifUrl) {
+        return web(gifUrl, null);
+    }
+
+    @NotNull
+    public static GifTexture web(@NotNull String gifUrl, @Nullable GifTexture writeTo) {
+
+        Objects.requireNonNull(gifUrl);
+        GifTexture texture = (writeTo != null) ? writeTo : new GifTexture();
+
+        texture.sourceURL = gifUrl;
 
         if (!TextValidators.BASIC_URL_TEXT_VALIDATOR.get(Objects.requireNonNull(gifUrl))) {
-            LOGGER.error("[FANCYMENU] Unable to load Web GIF image! Invalid URL: " + gifUrl);
-            return gifTexture;
+            LOGGER.error("[FANCYMENU] Failed to read GIF image from URL! Invalid URL: " + gifUrl);
+            return texture;
         }
 
         //Download and decode GIF image
@@ -82,41 +126,25 @@ public class GifTexture implements ITexture, PlayableResource {
                 //The extract method seems to struggle with a direct web input stream, so read all bytes of it and wrap them into a ByteArrayInputStream
                 byteIn = new ByteArrayInputStream(in.readAllBytes());
             } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to download Web GIF image: " + gifUrl, ex);
+                LOGGER.error("[FANCYMENU] Failed to read GIF image from URL: " + gifUrl, ex);
             }
             if (byteIn != null) {
-                of(byteIn, gifUrl, gifTexture);
+                of(byteIn, gifUrl, texture);
             }
             //"byteIn" gets closed in of(), so only close "in" here
             CloseableUtils.closeQuietly(in);
         }).start();
 
-        return gifTexture;
+        return texture;
 
     }
 
+    /**
+     * Closes the passed {@link InputStream}!
+     */
     @NotNull
-    public static GifTexture local(@NotNull File gif) {
-
-        GifTexture gifTexture = new GifTexture();
-
-        if (!gif.isFile()) {
-            LOGGER.error("[FANCYMENU] GIF image not found: " + gif.getPath());
-            return gifTexture;
-        }
-
-        //Decode APNG image
-        new Thread(() -> {
-            try {
-                InputStream in = new FileInputStream(gif);
-                of(in, gif.getPath(), gifTexture);
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to load GIF image: " + gif.getPath(), ex);
-            }
-        }).start();
-
-        return gifTexture;
-
+    public static GifTexture of(@NotNull InputStream in) {
+        return of(in, null, null);
     }
 
     /**
@@ -137,14 +165,6 @@ public class GifTexture implements ITexture, PlayableResource {
 
         return gifTexture;
 
-    }
-
-    /**
-     * Closes the passed {@link InputStream}!
-     */
-    @NotNull
-    public static GifTexture of(@NotNull InputStream in) {
-        return of(in, null, null);
     }
 
     protected static void populateTexture(@NotNull GifTexture gifTexture, @NotNull InputStream in, @NotNull String gifTextureName) {
@@ -336,31 +356,25 @@ public class GifTexture implements ITexture, PlayableResource {
         return true;
     }
 
-    /**
-     * Only reloads textures loaded via ResourceLocation.
-     */
     @Override
     public void reload() {
+        if (this.closed) return;
+        for (GifFrame frame : this.frames) {
+            //Closes NativeImage and DynamicTexture
+            CloseableUtils.closeQuietly(frame.dynamicTexture);
+            frame.dynamicTexture = null;
+            frame.nativeImage = null;
+        }
+        this.decoded = false;
+        this.frames.clear();
+        this.current = null;
+        this.lastResourceLocationCall = -1;
         if (this.sourceLocation != null) {
-            for (GifFrame frame : this.frames) {
-                //Closes NativeImage and DynamicTexture
-                CloseableUtils.closeQuietly(frame.dynamicTexture);
-                frame.dynamicTexture = null;
-                frame.nativeImage = null;
-            }
-            this.decoded = false;
-            this.frames.clear();
-            this.current = null;
-            this.lastResourceLocationCall = -1;
-            try {
-                Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(this.sourceLocation);
-                if (resource.isPresent()) {
-                    InputStream in = resource.get().open();
-                    of(in, this.sourceLocation.toString(), this);
-                }
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to reload ResourceLocation GIF image: " + this.sourceLocation, ex);
-            }
+            location(this.sourceLocation, this);
+        } else if (this.sourceFile != null) {
+            local(this.sourceFile, this);
+        } else if (this.sourceURL != null) {
+            web(this.sourceURL, this);
         }
     }
 
@@ -407,7 +421,7 @@ public class GifTexture implements ITexture, PlayableResource {
                 index++;
                 if ((maxFrames != -1) && (maxFrames <= index)) break;
             } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to get frame '" + i + "' of GIF image '" + gifName + "! This can happen if the GIF is corrupted in some way.", ex);
+                LOGGER.error("[FANCYMENU] Failed to get frame '" + i + "' of GIF image '" + gifName + "!", ex);
             }
             i++;
         }

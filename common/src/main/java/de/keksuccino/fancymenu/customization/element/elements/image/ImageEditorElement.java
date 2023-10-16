@@ -26,7 +26,7 @@ public class ImageEditorElement extends AbstractEditorElement {
 
         super.init();
 
-        this.addGenericCycleContextMenuEntryTo(this.rightClickMenu, "set_mode", ListUtils.build(ImageElement.SourceMode.WEB, ImageElement.SourceMode.LOCAL),
+        this.addGenericCycleContextMenuEntryTo(this.rightClickMenu, "set_mode", ListUtils.of(ImageElement.SourceMode.WEB, ImageElement.SourceMode.LOCAL),
                 consumes -> (consumes instanceof ImageEditorElement),
                 consumes -> ((ImageElement)consumes.element).sourceMode,
                 (element1, sourceMode) -> {

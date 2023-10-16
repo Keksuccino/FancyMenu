@@ -42,7 +42,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.SaveFileScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
+import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
@@ -326,8 +326,8 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			int y0 = 48;
 			int y1 = this.height - 64;
 
-			ITexture headerTexture = (this.layout.scrollListHeaderTexture != null) ? TextureHandler.INSTANCE.getTexture(ScreenCustomization.getAbsoluteGameDirectoryPath(this.layout.scrollListHeaderTexture)) : null;
-			ITexture footerTexture = (this.layout.scrollListFooterTexture != null) ? TextureHandler.INSTANCE.getTexture(ScreenCustomization.getAbsoluteGameDirectoryPath(this.layout.scrollListFooterTexture)) : null;
+			ITexture headerTexture = (this.layout.scrollListHeaderTexture != null) ? ImageResourceHandler.INSTANCE.getTexture(ScreenCustomization.getAbsoluteGameDirectoryPath(this.layout.scrollListHeaderTexture)) : null;
+			ITexture footerTexture = (this.layout.scrollListFooterTexture != null) ? ImageResourceHandler.INSTANCE.getTexture(ScreenCustomization.getAbsoluteGameDirectoryPath(this.layout.scrollListFooterTexture)) : null;
 
 			//Header Texture
 			if ((headerTexture != null) && (headerTexture.getResourceLocation() != null)) {

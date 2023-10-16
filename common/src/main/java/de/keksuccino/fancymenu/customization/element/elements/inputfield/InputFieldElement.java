@@ -84,7 +84,7 @@ public class InputFieldElement extends AbstractElement {
 
     @Override
     public @Nullable List<GuiEventListener> getWidgetsToRegister() {
-        return ListUtils.build(this.editBox);
+        return ListUtils.of(this.editBox);
     }
 
     public enum InputFieldType {

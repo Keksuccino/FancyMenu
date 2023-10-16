@@ -246,7 +246,7 @@ public class LoadingRequirementContainer implements ValuePlaceholderHolder {
         List<List<String>> containerMetas = new ArrayList<>();
         for (Map.Entry<String, String> m : Objects.requireNonNull(serialized).getProperties().entrySet()) {
             if (m.getKey().startsWith("[loading_requirement_container_meta:")) {
-                containerMetas.add(ListUtils.build(m.getKey(), m.getValue()));
+                containerMetas.add(ListUtils.of(m.getKey(), m.getValue()));
             }
         }
         LoadingRequirementContainer combined = deserializeToSingleContainer(serialized);

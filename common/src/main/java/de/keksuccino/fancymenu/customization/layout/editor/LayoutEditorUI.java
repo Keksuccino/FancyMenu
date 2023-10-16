@@ -186,7 +186,7 @@ public class LayoutEditorUI {
 		if ((preSelectedGridSize != 10) && (preSelectedGridSize != 20) && (preSelectedGridSize != 30) && (preSelectedGridSize != 40)) {
 			preSelectedGridSize = 10;
 		}
-		windowMenu.addValueCycleEntry("grid_size", CommonCycles.cycle("fancymenu.editor.menu_bar.window.grid_size", ListUtils.build(10,20,30,40), preSelectedGridSize)
+		windowMenu.addValueCycleEntry("grid_size", CommonCycles.cycle("fancymenu.editor.menu_bar.window.grid_size", ListUtils.of(10,20,30,40), preSelectedGridSize)
 				.addCycleListener(integer -> {
 					FancyMenu.getOptions().layoutEditorGridSize.setValue(integer);
 				}))

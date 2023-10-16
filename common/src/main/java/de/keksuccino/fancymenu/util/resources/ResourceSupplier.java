@@ -1,10 +1,9 @@
 package de.keksuccino.fancymenu.util.resources;
 
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
-import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.file.type.FileMediaType;
-import de.keksuccino.fancymenu.util.file.type.types.TextFileType;
 import de.keksuccino.fancymenu.util.resources.audio.IAudio;
+import de.keksuccino.fancymenu.util.resources.text.IText;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resources.video.IVideo;
 import org.apache.logging.log4j.LogManager;
@@ -14,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
 @SuppressWarnings("unused")
-public class ResourceSupplier<T> {
+public class ResourceSupplier<T extends Resource> {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -69,8 +68,8 @@ public class ResourceSupplier<T> {
      *               Sources support placeholders and the {@link ResourceSupplier} will update itself when the placeholders change.
      */
     @NotNull
-    public static ResourceSupplier<TextFileType.PlainText> text(@NotNull String source) {
-        return new ResourceSupplier<>(TextFileType.PlainText.class, FileMediaType.TEXT, source);
+    public static ResourceSupplier<IText> text(@NotNull String source) {
+        return new ResourceSupplier<>(IText.class, FileMediaType.TEXT, source);
     }
 
     protected ResourceSupplier(@NotNull Class<T> resourceType, @NotNull FileMediaType mediaType, @NotNull String source) {
@@ -89,23 +88,23 @@ public class ResourceSupplier<T> {
         this.lastGetterSource = getterSource;
         if (this.current == null) {
             try {
-                ConsumingSupplier<String, ?> factory = this.getResourceFactory();
-                if (factory != null) {
-                    this.current = (T) factory.get(getterSource);
+                ResourceHandler<?,?> handler = this.getResourceHandler();
+                if (handler != null) {
+                    this.current = (T) handler.get(getterSource);
                 }
             } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to get resource: " + this.source, ex);
+                LOGGER.error("[FANCYMENU] Failed to get resource: " + getterSource + " (" + this.source + ")", ex);
             }
         }
         return this.current;
     }
 
     @Nullable
-    public ConsumingSupplier<String, ?> getResourceFactory() {
-        if (this.mediaType == FileMediaType.IMAGE) return ResourceFactories.getImageFactory();
-        if (this.mediaType == FileMediaType.AUDIO) return ResourceFactories.getAudioFactory();
-        if (this.mediaType == FileMediaType.VIDEO) return ResourceFactories.getVideoFactory();
-        if (this.mediaType == FileMediaType.TEXT) return ResourceFactories.getTextFactory();
+    public ResourceHandler<?,?> getResourceHandler() {
+        if (this.mediaType == FileMediaType.IMAGE) return ResourceHandlers.getImageHandler();
+        if (this.mediaType == FileMediaType.AUDIO) return ResourceHandlers.getAudioHandler();
+        if (this.mediaType == FileMediaType.VIDEO) return ResourceHandlers.getVideoHandler();
+        if (this.mediaType == FileMediaType.TEXT) return ResourceHandlers.getTextHandler();
         return null;
     }
 

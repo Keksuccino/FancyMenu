@@ -11,7 +11,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resources.texture.SimpleLocalTexture;
-import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
+import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -73,7 +73,7 @@ public class CursorElement extends AbstractElement {
 
         if (this.source != null) {
             if (!this.source.equals(this.lastSource) || (this.lastHotspotX != this.hotspotX) || (this.lastHotspotY != this.hotspotY)) {
-                ITexture t = TextureHandler.INSTANCE.getTexture(ScreenCustomization.getAbsoluteGameDirectoryPath(this.source));
+                ITexture t = ImageResourceHandler.INSTANCE.getTexture(ScreenCustomization.getAbsoluteGameDirectoryPath(this.source));
                 if (t instanceof SimpleLocalTexture l) {
                     this.texture = l;
                 } else {

@@ -14,7 +14,7 @@ import de.keksuccino.fancymenu.util.file.ResourceFile;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.resources.RenderableResource;
-import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
+import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import org.apache.logging.log4j.LogManager;
@@ -93,7 +93,7 @@ public class VanillaWidgetElement extends ButtonElement implements IHideableElem
             }
         }
         if ((sliderBackNormal == null) && (this.sliderBackgroundTextureNormal != null) && this.sliderBackgroundTextureNormal.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.sliderBackgroundTextureNormal.getFile())) {
-            sliderBackNormal = TextureHandler.INSTANCE.getTexture(this.sliderBackgroundTextureNormal.getAbsolutePath());
+            sliderBackNormal = ImageResourceHandler.INSTANCE.getTexture(this.sliderBackgroundTextureNormal.getAbsolutePath());
         }
         //Highlighted
         if ((this.sliderBackgroundAnimationHighlighted != null) && AnimationHandler.animationExists(this.sliderBackgroundAnimationHighlighted)) {
@@ -104,7 +104,7 @@ public class VanillaWidgetElement extends ButtonElement implements IHideableElem
             }
         }
         if ((sliderBackHighlighted == null) && (this.sliderBackgroundTextureHighlighted != null) && this.sliderBackgroundTextureHighlighted.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.sliderBackgroundTextureHighlighted.getFile())) {
-            sliderBackHighlighted = TextureHandler.INSTANCE.getTexture(this.sliderBackgroundTextureHighlighted.getAbsolutePath());
+            sliderBackHighlighted = ImageResourceHandler.INSTANCE.getTexture(this.sliderBackgroundTextureHighlighted.getAbsolutePath());
         }
 
         if (this.getWidget() instanceof CustomizableSlider w) {

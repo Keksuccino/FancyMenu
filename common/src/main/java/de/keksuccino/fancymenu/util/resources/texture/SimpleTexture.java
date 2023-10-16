@@ -34,7 +34,9 @@ public class SimpleTexture implements ITexture {
     protected volatile boolean loaded = false;
     protected volatile NativeImage nativeImage;
     protected DynamicTexture dynamicTexture;
-    protected boolean createdByLocation = false;
+    protected ResourceLocation sourceLocation;
+    protected File sourceFile;
+    protected String sourceURL;
     protected boolean closed = false;
 
     /**
@@ -42,11 +44,20 @@ public class SimpleTexture implements ITexture {
      */
     @NotNull
     public static SimpleTexture location(@NotNull ResourceLocation location) {
+        return location(location, null);
+    }
+
+    /**
+     * Supports JPEG and PNG textures.
+     */
+    @NotNull
+    public static SimpleTexture location(@NotNull ResourceLocation location, @Nullable SimpleTexture writeTo) {
 
         Objects.requireNonNull(location);
-        SimpleTexture texture = new SimpleTexture();
+        SimpleTexture texture = (writeTo != null) ? writeTo : new SimpleTexture();
 
-        texture.createdByLocation = true;
+        texture.sourceLocation = location;
+
         try {
             Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(location);
             if (resource.isPresent()) {
@@ -57,7 +68,7 @@ public class SimpleTexture implements ITexture {
                 CloseableUtils.closeQuietly(image);
             }
         } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to load texture by ResourceLocation: " + location, ex);
+            LOGGER.error("[FANCYMENU] Failed to read texture from ResourceLocation: " + location, ex);
         }
         texture.loaded = true;
         texture.decoded = true;
@@ -72,12 +83,22 @@ public class SimpleTexture implements ITexture {
      */
     @NotNull
     public static SimpleTexture local(@NotNull File textureFile) {
+        return local(textureFile, null);
+    }
+
+    /**
+     * Supports JPEG and PNG textures.
+     */
+    @NotNull
+    public static SimpleTexture local(@NotNull File textureFile, @Nullable SimpleTexture writeTo) {
 
         Objects.requireNonNull(textureFile);
-        SimpleTexture texture = new SimpleTexture();
+        SimpleTexture texture = (writeTo != null) ? writeTo : new SimpleTexture();
+
+        texture.sourceFile = textureFile;
 
         if (!textureFile.isFile()) {
-            LOGGER.error("[FANCYMENU] Failed to load local texture! File not found: " + textureFile.getPath());
+            LOGGER.error("[FANCYMENU] Failed to read texture from file! File not found: " + textureFile.getPath());
             return texture;
         }
 
@@ -85,7 +106,7 @@ public class SimpleTexture implements ITexture {
             InputStream in = new FileInputStream(textureFile);
             of(in, textureFile.getPath(), texture);
         } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to load local texture: " + textureFile.getPath(), ex);
+            LOGGER.error("[FANCYMENU] Failed to read texture from file: " + textureFile.getPath(), ex);
         }
 
         return texture;
@@ -97,12 +118,22 @@ public class SimpleTexture implements ITexture {
      */
     @NotNull
     public static SimpleTexture web(@NotNull String textureURL) {
+        return web(textureURL, null);
+    }
+
+    /**
+     * Supports JPEG and PNG textures.
+     */
+    @NotNull
+    public static SimpleTexture web(@NotNull String textureURL, @Nullable SimpleTexture writeTo) {
 
         Objects.requireNonNull(textureURL);
-        SimpleTexture texture = new SimpleTexture();
+        SimpleTexture texture = (writeTo != null) ? writeTo : new SimpleTexture();
+
+        texture.sourceURL = textureURL;
 
         if (!TextValidators.BASIC_URL_TEXT_VALIDATOR.get(textureURL)) {
-            LOGGER.error("[FANCYMENU] Failed to load web texture! Invalid URL: " + textureURL);
+            LOGGER.error("[FANCYMENU] Failed to read texture from URL! Invalid URL: " + textureURL);
             return texture;
         }
 
@@ -112,7 +143,7 @@ public class SimpleTexture implements ITexture {
                 if (in == null) throw new NullPointerException("Web resource input stream was NULL!");
                 of(in, textureURL, texture);
             } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to load web texture: " + textureURL, ex);
+                LOGGER.error("[FANCYMENU] Failed to read texture from URL: " + textureURL, ex);
             }
         }).start();
 
@@ -202,24 +233,21 @@ public class SimpleTexture implements ITexture {
     public void reset() {
     }
 
-    /**
-     * Only reloads textures loaded via ResourceLocation.
-     */
     @Override
     public void reload() {
-        if (this.createdByLocation && (this.resourceLocation != null)) {
-            try {
-                Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(this.resourceLocation);
-                if (resource.isPresent()) {
-                    NativeImage image = NativeImage.read(resource.get().open());
-                    this.width = image.getWidth();
-                    this.height = image.getHeight();
-                    this.aspectRatio = new AspectRatio(this.width, this.height);
-                    CloseableUtils.closeQuietly(image);
-                }
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to reload ResourceLocation texture: " + this.resourceLocation, ex);
-            }
+        if (this.closed) return;
+        //Closes NativeImage and DynamicTexture
+        if (this.dynamicTexture != null) CloseableUtils.closeQuietly(this.dynamicTexture);
+        this.nativeImage = null;
+        this.resourceLocation = null;
+        this.decoded = false;
+        this.loaded = false;
+        if (this.sourceLocation != null) {
+            location(this.sourceLocation, this);
+        } else if (this.sourceFile != null) {
+            local(this.sourceFile, this);
+        } else if (this.sourceURL != null) {
+            web(this.sourceURL, this);
         }
     }
 
@@ -230,7 +258,6 @@ public class SimpleTexture implements ITexture {
     @Override
     public void close() {
         this.closed = true;
-        this.createdByLocation = false;
         //Closes NativeImage and DynamicTexture
         if (this.dynamicTexture != null) CloseableUtils.closeQuietly(this.dynamicTexture);
         this.nativeImage = null;

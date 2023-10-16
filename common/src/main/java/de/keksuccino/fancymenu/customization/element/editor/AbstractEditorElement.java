@@ -432,7 +432,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 					.setIcon(ContextMenu.IconFactory.getIcon("timer"));
 
 			this.addGenericCycleContextMenuEntryTo(appearanceDelayMenu, "appearance_delay_type",
-							ListUtils.build(AbstractElement.AppearanceDelay.NO_DELAY, AbstractElement.AppearanceDelay.FIRST_TIME, AbstractElement.AppearanceDelay.EVERY_TIME),
+							ListUtils.of(AbstractElement.AppearanceDelay.NO_DELAY, AbstractElement.AppearanceDelay.FIRST_TIME, AbstractElement.AppearanceDelay.EVERY_TIME),
 							consumes -> consumes.settings.isDelayable(),
 							consumes -> consumes.element.appearanceDelay,
 							(element, switcherValue) -> element.element.appearanceDelay = switcherValue,
@@ -1200,7 +1200,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	protected <E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addToggleContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, @NotNull ConsumingSupplier<E, Boolean> targetFieldGetter, @NotNull BiConsumer<E, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
 		ConsumingSupplier<AbstractEditorElement, Boolean> getter = (ConsumingSupplier<AbstractEditorElement, Boolean>) targetFieldGetter;
 		BiConsumer<AbstractEditorElement, Boolean> setter = (BiConsumer<AbstractEditorElement, Boolean>) targetFieldSetter;
-		return addGenericCycleContextMenuEntryTo(addTo, entryIdentifier, ListUtils.build(false, true), consumes -> elementType.isAssignableFrom(consumes.getClass()), getter, setter, (menu, entry, switcherValue) -> {
+		return addGenericCycleContextMenuEntryTo(addTo, entryIdentifier, ListUtils.of(false, true), consumes -> elementType.isAssignableFrom(consumes.getClass()), getter, setter, (menu, entry, switcherValue) -> {
 			if (switcherValue && entry.isActive()) {
 				MutableComponent enabled = Component.translatable("fancymenu.general.cycle.enabled_disabled.enabled").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
 				return Component.translatable(labelLocalizationKeyBase, enabled);
@@ -1217,7 +1217,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	@Deprecated
 	@Legacy("This is to be able to use old .on/.off localizations. Remove this in the future and update localizations.")
 	protected ContextMenu.ClickableContextMenuEntry<?> addGenericBooleanSwitcherContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, Boolean> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
-		return addGenericCycleContextMenuEntryTo(addTo, entryIdentifier, ListUtils.build(false, true), selectedElementsFilter, targetFieldGetter, targetFieldSetter, (menu, entry, switcherValue) -> {
+		return addGenericCycleContextMenuEntryTo(addTo, entryIdentifier, ListUtils.of(false, true), selectedElementsFilter, targetFieldGetter, targetFieldSetter, (menu, entry, switcherValue) -> {
 			if (switcherValue && entry.isActive()) {
 				return Component.translatable(labelLocalizationKeyBase + ".on");
 			}

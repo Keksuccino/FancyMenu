@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
+import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.network.chat.Style;
@@ -82,7 +82,7 @@ public class ProgressBarElement extends AbstractElement {
 
         RenderSystem.enableBlend();
         if (this.barTexturePath != null) {
-            ITexture t = TextureHandler.INSTANCE.getTexture(this.barTexturePath);
+            ITexture t = ImageResourceHandler.INSTANCE.getTexture(this.barTexturePath);
             if ((t != null) && (t.getResourceLocation() != null)) {
                 RenderUtils.bindTexture(t.getResourceLocation());
                 RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
@@ -100,7 +100,7 @@ public class ProgressBarElement extends AbstractElement {
     protected void renderBackground(@NotNull PoseStack pose) {
         RenderSystem.enableBlend();
         if (this.backgroundTexturePath != null) {
-            ITexture t = TextureHandler.INSTANCE.getTexture(this.backgroundTexturePath);
+            ITexture t = ImageResourceHandler.INSTANCE.getTexture(this.backgroundTexturePath);
             if ((t != null) && (t.getResourceLocation() != null)) {
                 RenderUtils.bindTexture(t.getResourceLocation());
                 RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);

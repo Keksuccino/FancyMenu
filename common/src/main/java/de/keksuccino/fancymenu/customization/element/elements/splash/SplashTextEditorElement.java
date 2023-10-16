@@ -26,7 +26,7 @@ public class SplashTextEditorElement extends AbstractEditorElement {
         super.init();
 
         this.addGenericCycleContextMenuEntryTo(this.rightClickMenu, "set_mode",
-                ListUtils.build(SplashTextElement.SourceMode.VANILLA, SplashTextElement.SourceMode.DIRECT_TEXT, SplashTextElement.SourceMode.TEXT_FILE),
+                ListUtils.of(SplashTextElement.SourceMode.VANILLA, SplashTextElement.SourceMode.DIRECT_TEXT, SplashTextElement.SourceMode.TEXT_FILE),
                 consumes -> (consumes instanceof SplashTextEditorElement),
                 consumes -> ((SplashTextElement)consumes.element).sourceMode,
                 (element1, sourceMode) -> {

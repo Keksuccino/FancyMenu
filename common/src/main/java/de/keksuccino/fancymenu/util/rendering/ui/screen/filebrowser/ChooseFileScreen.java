@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
-import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
+import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -80,7 +80,7 @@ public class ChooseFileScreen extends AbstractFileBrowserScreen {
             if (this.file.isFile()) {
                 ChooseFileScreen.this.updateTextPreview(this.file);
                 if (FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.file)) {
-                    ChooseFileScreen.this.previewTexture = TextureHandler.INSTANCE.getTexture(this.file);
+                    ChooseFileScreen.this.previewTexture = ImageResourceHandler.INSTANCE.getTexture(this.file);
                 } else {
                     ChooseFileScreen.this.previewTexture = null;
                 }

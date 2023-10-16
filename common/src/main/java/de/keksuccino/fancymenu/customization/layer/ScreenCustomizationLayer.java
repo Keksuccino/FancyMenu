@@ -34,7 +34,7 @@ import de.keksuccino.fancymenu.util.ScreenTitleUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
+import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -439,8 +439,8 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 
 			IMixinAbstractSelectionList access = e.getAccessor();
 
-			ITexture headerTexture = (this.layoutBase.scrollListHeaderTexture != null) ? TextureHandler.INSTANCE.getTexture(ScreenCustomization.getAbsoluteGameDirectoryPath(this.layoutBase.scrollListHeaderTexture)) : null;
-			ITexture footerTexture = (this.layoutBase.scrollListFooterTexture != null) ? TextureHandler.INSTANCE.getTexture(ScreenCustomization.getAbsoluteGameDirectoryPath(this.layoutBase.scrollListFooterTexture)) : null;
+			ITexture headerTexture = (this.layoutBase.scrollListHeaderTexture != null) ? ImageResourceHandler.INSTANCE.getTexture(ScreenCustomization.getAbsoluteGameDirectoryPath(this.layoutBase.scrollListHeaderTexture)) : null;
+			ITexture footerTexture = (this.layoutBase.scrollListFooterTexture != null) ? ImageResourceHandler.INSTANCE.getTexture(ScreenCustomization.getAbsoluteGameDirectoryPath(this.layoutBase.scrollListFooterTexture)) : null;
 
 			if ((headerTexture != null) && (headerTexture.getResourceLocation() != null)) {
 				RenderingUtils.bindTexture(headerTexture.getResourceLocation());

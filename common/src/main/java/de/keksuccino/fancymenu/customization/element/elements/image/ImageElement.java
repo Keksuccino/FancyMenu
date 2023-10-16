@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
+import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
@@ -82,7 +82,7 @@ public class ImageElement extends AbstractElement {
             if (this.sourceMode == SourceMode.LOCAL) {
                 File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(this.source));
                 if (f.exists() && f.isFile() && (f.getName().endsWith(".png") || f.getName().endsWith(".jpg") || f.getName().endsWith(".jpeg") || f.getName().endsWith(".gif"))) {
-                    this.texture = TextureHandler.INSTANCE.getTexture(this.source);
+                    this.texture = ImageResourceHandler.INSTANCE.getTexture(this.source);
                     if (this.texture != null) {
                         this.originalWidth = this.texture.getWidth();
                         this.originalHeight = this.texture.getHeight();
@@ -92,7 +92,7 @@ public class ImageElement extends AbstractElement {
                 this.webTextureInitialized = false;
                 this.texture = null;
                 if (TextValidators.BASIC_URL_TEXT_VALIDATOR.get(this.source)) {
-                    this.texture = TextureHandler.INSTANCE.getWebTexture(this.source);
+                    this.texture = ImageResourceHandler.INSTANCE.getWebTexture(this.source);
                 }
             }
         }

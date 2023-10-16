@@ -33,7 +33,7 @@ public class TextEditorElement extends AbstractEditorElement {
         super.init();
 
         this.addGenericCycleContextMenuEntryTo(this.rightClickMenu, "set_mode",
-                        ListUtils.build(TextElement.SourceMode.DIRECT, TextElement.SourceMode.LOCAL_SOURCE, TextElement.SourceMode.WEB_SOURCE),
+                        ListUtils.of(TextElement.SourceMode.DIRECT, TextElement.SourceMode.LOCAL_SOURCE, TextElement.SourceMode.WEB_SOURCE),
                         consumes -> (consumes instanceof TextEditorElement),
                         consumes -> ((TextElement)consumes.element).sourceMode,
                         (element1, sourceMode) -> ((TextElement)element1.element).setSource(sourceMode, ""),
@@ -114,7 +114,7 @@ public class TextEditorElement extends AbstractEditorElement {
                 .setStackable(true);
 
         this.addGenericCycleContextMenuEntryTo(this.rightClickMenu, "set_case_mode",
-                ListUtils.build(MarkdownRenderer.TextCase.NORMAL, MarkdownRenderer.TextCase.ALL_UPPER, MarkdownRenderer.TextCase.ALL_LOWER),
+                ListUtils.of(MarkdownRenderer.TextCase.NORMAL, MarkdownRenderer.TextCase.ALL_UPPER, MarkdownRenderer.TextCase.ALL_LOWER),
                 consumes -> (consumes instanceof TextEditorElement),
                 consumes -> ((TextElement)consumes.element).markdownRenderer.getTextCase(),
                 (element1, caseMode) -> ((TextElement)element1.element).markdownRenderer.setTextCase(caseMode),

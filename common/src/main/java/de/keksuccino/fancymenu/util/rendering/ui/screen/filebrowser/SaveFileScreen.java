@@ -12,7 +12,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
-import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
+import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -284,7 +284,7 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
                 SaveFileScreen.this.fileNameEditBox.setValue(this.file.getName());
                 SaveFileScreen.this.updateTextPreview(this.file);
                 if (FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.file)) {
-                    SaveFileScreen.this.previewTexture = TextureHandler.INSTANCE.getTexture(this.file);
+                    SaveFileScreen.this.previewTexture = ImageResourceHandler.INSTANCE.getTexture(this.file);
                 } else {
                     SaveFileScreen.this.previewTexture = null;
                 }

@@ -38,7 +38,7 @@ public class SliderEditorElement extends AbstractEditorElement {
         this.rightClickMenu.addSeparatorEntry("slider_separator_1");
 
         this.addGenericCycleContextMenuEntryTo(this.rightClickMenu, "set_slider_type",
-                        ListUtils.build(SliderElement.SliderType.LIST, SliderElement.SliderType.RANGE),
+                        ListUtils.of(SliderElement.SliderType.LIST, SliderElement.SliderType.RANGE),
                         consumes -> (consumes instanceof SliderEditorElement),
                         consumes -> ((SliderElement)consumes.element).type,
                         (element, type) -> {

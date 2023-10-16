@@ -13,7 +13,7 @@ import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
+import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.web.WebUtils;
@@ -145,7 +145,7 @@ public class TextElement extends AbstractElement {
 
     @Override
     public @Nullable List<GuiEventListener> getWidgetsToRegister() {
-        return ListUtils.build(this.markdownRenderer, this.scrollArea);
+        return ListUtils.of(this.markdownRenderer, this.scrollArea);
     }
 
     protected void renderTick() {
@@ -189,7 +189,7 @@ public class TextElement extends AbstractElement {
 
         //Update scroll grabber textures
         if (this.verticalScrollGrabberTextureNormal != null) {
-            ITexture r = TextureHandler.INSTANCE.getTexture(this.verticalScrollGrabberTextureNormal);
+            ITexture r = ImageResourceHandler.INSTANCE.getTexture(this.verticalScrollGrabberTextureNormal);
             if (r != null) {
                 this.scrollArea.verticalScrollBar.idleBarTexture = r.getResourceLocation();
             }
@@ -197,7 +197,7 @@ public class TextElement extends AbstractElement {
             this.scrollArea.verticalScrollBar.idleBarTexture = null;
         }
         if (this.verticalScrollGrabberTextureHover != null) {
-            ITexture r = TextureHandler.INSTANCE.getTexture(this.verticalScrollGrabberTextureHover);
+            ITexture r = ImageResourceHandler.INSTANCE.getTexture(this.verticalScrollGrabberTextureHover);
             if (r != null) {
                 this.scrollArea.verticalScrollBar.hoverBarTexture = r.getResourceLocation();
             }
@@ -205,7 +205,7 @@ public class TextElement extends AbstractElement {
             this.scrollArea.verticalScrollBar.hoverBarTexture = null;
         }
         if (this.horizontalScrollGrabberTextureNormal != null) {
-            ITexture r = TextureHandler.INSTANCE.getTexture(this.horizontalScrollGrabberTextureNormal);
+            ITexture r = ImageResourceHandler.INSTANCE.getTexture(this.horizontalScrollGrabberTextureNormal);
             if (r != null) {
                 this.scrollArea.horizontalScrollBar.idleBarTexture = r.getResourceLocation();
             }
@@ -213,7 +213,7 @@ public class TextElement extends AbstractElement {
             this.scrollArea.horizontalScrollBar.idleBarTexture = null;
         }
         if (this.horizontalScrollGrabberTextureHover != null) {
-            ITexture r = TextureHandler.INSTANCE.getTexture(this.horizontalScrollGrabberTextureHover);
+            ITexture r = ImageResourceHandler.INSTANCE.getTexture(this.horizontalScrollGrabberTextureHover);
             if (r != null) {
                 this.scrollArea.horizontalScrollBar.hoverBarTexture = r.getResourceLocation();
             }

@@ -61,7 +61,7 @@ public class TickerEditorElement extends AbstractEditorElement {
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.ticker.async.desc")));
 
         this.addGenericCycleContextMenuEntryTo(this.rightClickMenu, "set_tick_mode",
-                        ListUtils.build(TickerElement.TickMode.NORMAL, TickerElement.TickMode.ONCE_PER_SESSION, TickerElement.TickMode.ON_MENU_LOAD),
+                        ListUtils.of(TickerElement.TickMode.NORMAL, TickerElement.TickMode.ONCE_PER_SESSION, TickerElement.TickMode.ON_MENU_LOAD),
                         consumes -> (consumes instanceof TickerEditorElement),
                         consumes -> ((TickerElement)consumes.element).tickMode,
                         (element, mode) -> ((TickerElement)element.element).tickMode = mode,

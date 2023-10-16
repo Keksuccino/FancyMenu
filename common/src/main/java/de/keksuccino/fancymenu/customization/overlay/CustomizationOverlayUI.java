@@ -35,7 +35,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resources.texture.TextureHandler;
+import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
 import de.keksuccino.fancymenu.util.resources.texture.WrappedTexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
@@ -447,7 +447,7 @@ public class CustomizationOverlayUI {
                         true, FancyMenu.getOptions().customWindowIcon16.getDefaultValue(),
                         file -> {
                             if (file.getName().toLowerCase().endsWith(".png")) {
-                                ITexture t = TextureHandler.INSTANCE.getTexture(file);
+                                ITexture t = ImageResourceHandler.INSTANCE.getTexture(file);
                                 return ((t != null) && (t.getWidth() == 16) && (t.getHeight() == 16));
                             }
                             return false;
@@ -470,7 +470,7 @@ public class CustomizationOverlayUI {
                         true, FancyMenu.getOptions().customWindowIcon32.getDefaultValue(),
                         file -> {
                             if (file.getName().toLowerCase().endsWith(".png")) {
-                                ITexture t = TextureHandler.INSTANCE.getTexture(file);
+                                ITexture t = ImageResourceHandler.INSTANCE.getTexture(file);
                                 return ((t != null) && (t.getWidth() == 32) && (t.getHeight() == 32));
                             }
                             return false;
@@ -705,7 +705,7 @@ public class CustomizationOverlayUI {
         if ((preSelectedUiScale != 1) && (preSelectedUiScale != 2) && (preSelectedUiScale != 3) && (preSelectedUiScale != 4)) {
             preSelectedUiScale = 4;
         }
-        userInterfaceMenu.addValueCycleEntry("ui_scale", CommonCycles.cycle("fancymenu.overlay.menu_bar.user_interface.ui_scale", ListUtils.build("1","2","3","4"), "" + preSelectedUiScale)
+        userInterfaceMenu.addValueCycleEntry("ui_scale", CommonCycles.cycle("fancymenu.overlay.menu_bar.user_interface.ui_scale", ListUtils.of("1","2","3","4"), "" + preSelectedUiScale)
                 .addCycleListener(scaleString -> {
                     if (!MathUtils.isFloat(scaleString)) {
                         scaleString = "4";
@@ -737,7 +737,7 @@ public class CustomizationOverlayUI {
         if ((preSelectedContextHoverOpenSpeed != 1) && (preSelectedContextHoverOpenSpeed != 2) && (preSelectedContextHoverOpenSpeed != 3)) {
             preSelectedContextHoverOpenSpeed = 3;
         }
-        userInterfaceMenu.addValueCycleEntry("context_menu_hover_open_speed", CommonCycles.cycle("fancymenu.overlay.menu_bar.user_interface.context_menu_hover_open_speed", ListUtils.build("1","2","3"), "" + preSelectedContextHoverOpenSpeed)
+        userInterfaceMenu.addValueCycleEntry("context_menu_hover_open_speed", CommonCycles.cycle("fancymenu.overlay.menu_bar.user_interface.context_menu_hover_open_speed", ListUtils.of("1","2","3"), "" + preSelectedContextHoverOpenSpeed)
                         .addCycleListener(speedString -> {
                             if (!MathUtils.isInteger(speedString)) {
                                 speedString = "3";
