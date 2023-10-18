@@ -1,18 +1,21 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler;
 
 import com.mojang.blaze3d.platform.Window;
-import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
+import de.keksuccino.fancymenu.events.InitOrResizeScreenStartingEvent;
 import de.keksuccino.fancymenu.events.OpenScreenEvent;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
-import de.keksuccino.konkrete.events.EventPriority;
 import de.keksuccino.konkrete.events.SubscribeEvent;
 import de.keksuccino.konkrete.events.client.ClientTickEvent;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class MenuHandlerEvents {
+
+	private static final Logger LOGGER = LogManager.getLogger();
 	
 	private MenuHandlerBase current;
 	private Screen lastScreen;
@@ -21,9 +24,9 @@ public class MenuHandlerEvents {
 	public void onOpenGui(OpenScreenEvent e) {
 		this.initHandler(e.getScreen());
 	}
-	
-	@SubscribeEvent(priority = EventPriority.HIGH)
-	public void onScreenInitPre(InitOrResizeScreenEvent.Pre e) {
+
+	//TODO übernehmen
+	public void onScreenInitPre(InitOrResizeScreenStartingEvent e) {
 		//Second try to register the menu handler, if onOpenGui failed because of changing the menu by another mod
 		this.initHandler(e.getScreen());
 	}
@@ -67,13 +70,15 @@ public class MenuHandlerEvents {
 			if (MenuCustomization.isBlacklistedMenu(s.getClass().getName())) {
 				return;
 			}
-			if (s instanceof CustomGuiBase) {
-				if (!MenuHandlerRegistry.isHandlerRegistered(((CustomGuiBase)s).getIdentifier())) {
-					MenuHandlerRegistry.registerHandler(new CustomGuiMenuHandlerBase(((CustomGuiBase)s).getIdentifier()));
+			if (s instanceof CustomGuiBase c) {
+				if (!MenuHandlerRegistry.isHandlerRegistered(c.getIdentifier())) {
+					LOGGER.info("[FANCYMENU] Registering MenuHandler for Custom GUI: " + c.getIdentifier());
+					MenuHandlerRegistry.registerHandler(new CustomGuiMenuHandlerBase(c.getIdentifier()));
 				}
 			} else {
 				if (!MenuHandlerRegistry.isHandlerRegistered(s.getClass().getName())) {
 					if (MenuCustomization.isValidScreen(s)) {
+						LOGGER.info("[FANCYMENU] Registering MenuHandler for screen: " + s.getClass().getName());
 						MenuHandlerRegistry.registerHandler(new MenuHandlerBase(s.getClass().getName()));
 					}
 				}

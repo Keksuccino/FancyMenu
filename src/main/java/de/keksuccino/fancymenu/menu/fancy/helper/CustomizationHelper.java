@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import de.keksuccino.fancymenu.events.RenderScreenEvent;
 import de.keksuccino.fancymenu.thread.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.rendering.animation.ExternalGifAnimationRenderer;
 import de.keksuccino.konkrete.resources.ITextureResourceLocation;
@@ -45,7 +46,7 @@ public class CustomizationHelper {
 	}
 
 	@SubscribeEvent(priority = EventPriority.LOW)
-	public void onRenderPost(GuiScreenEvent.DrawScreenEvent.Post e) {
+	public void onRenderPost(RenderScreenEvent.Post e) {
 
 		if (!MenuCustomization.isBlacklistedMenu(e.getGui().getClass().getName())) {
 			if (!e.getGui().getClass().getName().startsWith("de.keksuccino.spiffyhud.")) {

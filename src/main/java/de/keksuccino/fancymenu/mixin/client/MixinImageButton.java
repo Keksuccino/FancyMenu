@@ -30,7 +30,7 @@ public abstract class MixinImageButton {
 		}
 	}
 
-	@Inject(method = "renderWidget", at = @At("TAIL"), cancellable = true)
+	@Inject(method = "renderWidget", at = @At("TAIL"))
 	private void afterRenderWidgetBackground(GuiGraphics graphics, int p_267992_, int p_267950_, float p_268076_, CallbackInfo info) {
 		try {
 			RenderWidgetBackgroundEvent.Post e2 = new RenderWidgetBackgroundEvent.Post(graphics, (AbstractButton)((Object)this), this.getAlpha());

@@ -1,0 +1,25 @@
+{
+  "required": true,
+  "package": "de.keksuccino.drippyloadingscreen.mixin.mixins",
+  "compatibilityLevel": "JAVA_17",
+  "minVersion": "0.8",
+  "client": [
+    "client.IMixinLoadingOverlay",
+    "client.IMixinMinecraft",
+    "client.MixinCustomizationHelper",
+    "client.MixinCustomizationHelperUI",
+    "client.MixinCustomizationItemBase",
+    "client.MixinLayoutEditorScreen",
+    "client.MixinLayoutPropertiesContextMenu",
+    "client.MixinLoadingOverlay",
+    "client.MixinMenuCustomization",
+    "client.MixinMenuCustomizationProperties",
+    "client.MixinMinecraft",
+    "client.MixinNewElementContextMenu"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "refmap": "drippyloadingscreen.mixin-refmap.json",
+  "plugin": "de.keksuccino.drippyloadingscreen.mixin.DrippyMixinPlugin"
+}

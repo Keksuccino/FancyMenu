@@ -75,6 +75,10 @@ public class ChooseFromStringListScreen extends ScrollableScreen {
 
     }
 
+    @Override
+    public void renderBackground(GuiGraphics p_283688_, int p_299421_, int p_298679_, float p_297268_) {
+    }
+
     public static class StringScrollAreaEntry extends ScrollAreaEntry {
 
         protected String entryValue;

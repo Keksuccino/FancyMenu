@@ -5,7 +5,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 
 public class PlayWidgetClickSoundEvent extends EventBase {
 	
-	private AbstractWidget widget;
+	private final AbstractWidget widget;
 	
 	public PlayWidgetClickSoundEvent(AbstractWidget widget) {
 		this.widget = widget;

@@ -5,7 +5,9 @@
   "mixins": [
   ],
   "client": [
+    "IMixinAbstractSliderButton",
     "IMixinAbstractWidget",
+    "IMixinButton",
     "IMixinChatScreen",
     "IMixinEditBox",
     "IMixinLevelLoadingScreen",
@@ -21,7 +23,9 @@
     "MixinAbstractSelectionList",
     "MixinAbstractWidget",
     "MixinConnectScreen",
+    "MixinGameRenderer",
     "MixinImageButton",
+    "MixinLevelLoadingScreen",
     "MixinLevelStorageAccess",
     "MixinLoadingOverlay",
     "MixinMinecraft",

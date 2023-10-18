@@ -1,10 +1,9 @@
 package de.keksuccino.fancymenu.mixin.client;
 
-import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
+import de.keksuccino.fancymenu.events.ScreenBackgroundRenderedEvent;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.konkrete.Konkrete;
-import de.keksuccino.konkrete.events.client.GuiInitCompletedEvent;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
@@ -12,40 +11,23 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+//TODO übernehmen
 @Mixin(Screen.class)
 public class MixinScreen {
 
     @Inject(at = @At("TAIL"), method = "<init>")
-    protected void onConstructInstance(Component title, CallbackInfo info) {
+    protected void onConstructFancyMenu(Component title, CallbackInfo info) {
         MenuHandlerBase.cachedOriginalMenuTitles.put(this.getClass(), title);
     }
 
-    @Inject(method = "init(Lnet/minecraft/client/Minecraft;II)V", at = @At("HEAD"))
-    private void beforeInit(Minecraft minecraft, int width, int height, CallbackInfo info) {
-        InitOrResizeScreenEvent.Pre e = new InitOrResizeScreenEvent.Pre(((Screen)(Object)this));
-        Konkrete.getEventHandler().callEventsFor(e);
+    @Inject(method = "renderTransparentBackground", at = @At("RETURN"))
+    private void afterRenderTransparentBackgroundFancyMenu(GuiGraphics guiGraphics, CallbackInfo info) {
+        Konkrete.getEventHandler().callEventsFor(new ScreenBackgroundRenderedEvent((Screen)((Object)this), guiGraphics));
     }
 
-    @Inject(method = "init(Lnet/minecraft/client/Minecraft;II)V", at = @At("TAIL"))
-    private void afterInit(Minecraft minecraft, int width, int height, CallbackInfo info) {
-        InitOrResizeScreenEvent.Post e = new InitOrResizeScreenEvent.Post(((Screen)(Object)this));
-        Konkrete.getEventHandler().callEventsFor(e);
-        GuiInitCompletedEvent e2 = new GuiInitCompletedEvent((Screen) ((Object)this));
-        Konkrete.getEventHandler().callEventsFor(e2);
-    }
-
-    @Inject(method = "resize", at = @At(value = "HEAD"))
-    private void beforeResize(CallbackInfo info) {
-        InitOrResizeScreenEvent.Pre e = new InitOrResizeScreenEvent.Pre(Minecraft.getInstance().screen);
-        Konkrete.getEventHandler().callEventsFor(e);
-    }
-
-    @Inject(method = "resize", at = @At(value = "TAIL"))
-    private void afterResize(CallbackInfo info) {
-        InitOrResizeScreenEvent.Post e = new InitOrResizeScreenEvent.Post(Minecraft.getInstance().screen);
-        Konkrete.getEventHandler().callEventsFor(e);
-        GuiInitCompletedEvent e2 = new GuiInitCompletedEvent(Minecraft.getInstance().screen);
-        Konkrete.getEventHandler().callEventsFor(e2);
+    @Inject(method = "renderDirtBackground", at = @At("RETURN"))
+    private void afterRenderDirtBackgroundFancyMenu(GuiGraphics guiGraphics, CallbackInfo info) {
+        Konkrete.getEventHandler().callEventsFor(new ScreenBackgroundRenderedEvent((Screen)((Object)this), guiGraphics));
     }
 
 }

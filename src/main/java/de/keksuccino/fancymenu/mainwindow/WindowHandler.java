@@ -2,51 +2,42 @@ package de.keksuccino.fancymenu.mainwindow;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-
-import javax.annotation.Nullable;
 import javax.imageio.ImageIO;
-
 import com.mojang.blaze3d.platform.TextureUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.FancyMenu;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import de.keksuccino.fancymenu.FancyMenu;
 import net.minecraft.server.packs.resources.IoSupplier;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWImage;
 import org.lwjgl.stb.STBImage;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
-public class MainWindowHandler {
+public class WindowHandler {
 
-	private static String windowtitle = null;
-	private static File icondir = new File(FancyMenu.MOD_DIR, "/minecraftwindow/icons");
-	
-	public static void init() {
-		if (!icondir.exists()) {
-			icondir.mkdirs();
-		}
-	}
+	private static final Logger LOGGER = LogManager.getLogger();
+
+	private static final File ICON_DIR = new File(FancyMenu.MOD_DIR, "/minecraftwindow/icons");
+
+	private static String windowTitle = null;
 
 	public static void handleForceFullscreen() {
 		try {
-			if ((Minecraft.getInstance() != null) && (Minecraft.getInstance().getWindow() != null)) {
-				if (FancyMenu.config.getOrDefault("forcefullscreen", false)) {
-					if (!Minecraft.getInstance().getWindow().isFullscreen()) {
-						Minecraft.getInstance().getWindow().toggleFullScreen();
-						FancyMenu.LOGGER.info("[FANCYMENU] Forced window to fullscreen!");
-					}
+			FancyMenu.initConfig();
+			if (FancyMenu.config.getOrDefault("forcefullscreen", false)) {
+				if (!Minecraft.getInstance().getWindow().isFullscreen()) {
+					Minecraft.getInstance().getWindow().toggleFullScreen();
+					LOGGER.info("[FANCYMENU] Forced window to fullscreen!");
 				}
-			} else {
-				//This should basically never happen, but just in case, you know
-				FancyMenu.LOGGER.error("[FANCYMENU] Force fullscreen failed! Instance or window was NULL!");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -54,27 +45,28 @@ public class MainWindowHandler {
 	}
 
 	public static void updateWindowIcon() {
+		FancyMenu.initConfig();
 		if (FancyMenu.config.getOrDefault("customwindowicon", false)) {
 			try {
-				File i16 = new File(icondir.getPath() + "/icon16x16.png");
-				File i32 = new File(icondir.getPath() + "/icon32x32.png");
+				File i16 = new File(ICON_DIR.getPath() + "/icon16x16.png");
+				File i32 = new File(ICON_DIR.getPath() + "/icon32x32.png");
 				if (!i16.exists() || !i32.exists()) {
-					System.out.println("## ERROR ## [FANCYMENU] Unable to set custom icons: 'icon16x16.png' or 'icon32x32.png' missing!");
+					LOGGER.error("[FANCYMENU] Unable to set custom icons: 'icon16x16.png' or 'icon32x32.png' missing!");
 					return;
 				}
 				//Yes, I need to do this to get the image size.
 				BufferedImage i16buff = ImageIO.read(i16);
 				if ((i16buff.getHeight() != 16) || (i16buff.getWidth() != 16)) {
-					System.out.println("'## ERROR ## [FANCYMENU] Unable to set custom icons: 'icon16x16.png' not 16x16!");
+					LOGGER.error("[FANCYMENU] Unable to set custom icons: 'icon16x16.png' not 16x16!");
 					return;
 				}
 				BufferedImage i32buff = ImageIO.read(i32);
 				if ((i32buff.getHeight() != 32) || (i32buff.getWidth() != 32)) {
-					System.out.println("'## ERROR ## [FANCYMENU] Unable to set custom icons: 'icon32x32.png' not 32x32!");
+					LOGGER.error("[FANCYMENU] Unable to set custom icons: 'icon32x32.png' not 32x32!");
 					return;
 				}
 				setIcon(IoSupplier.create(i16.toPath()), IoSupplier.create(i32.toPath()));
-				System.out.println("[FANCYMENU] Custom minecraft icon successfully loaded!");
+				LOGGER.info("[FANCYMENU] Custom minecraft icon successfully loaded!");
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -130,26 +122,23 @@ public class MainWindowHandler {
 	}
 
 	public static void updateWindowTitle() {
-		String s = FancyMenu.config.getOrDefault("customwindowtitle", "");
-		if ((s != null) && (!s.equals(""))) {
-			windowtitle = s;
-			setWindowTitle();
-		} else {
-			windowtitle = null;
-//			MinecraftClient.getInstance().updateWindowTitle();
+		readCustomWindowTitleFromConfig();
+		Minecraft.getInstance().updateTitle();
+	}
+
+	public static void readCustomWindowTitleFromConfig() {
+		FancyMenu.initConfig();
+		windowTitle = FancyMenu.config.getOrDefault("customwindowtitle", "");
+		if ((windowTitle != null) && windowTitle.isEmpty()) {
+			windowTitle = null;
 		}
 	}
 
-	private static void setWindowTitle() {
-		if (windowtitle != null) {
-			Minecraft.getInstance().getWindow().setTitle(windowtitle);
-		}
-	}
-	
+	@org.jetbrains.annotations.Nullable
 	public static String getCustomWindowTitle() {
-		return windowtitle;
+		return windowTitle;
 	}
-	
+
 	/**
 	 * Will return the correct window width <b>while in a GUI</b>.<br>
 	 * <b>Returns 0 if no GUI is active!</b>
@@ -160,7 +149,7 @@ public class MainWindowHandler {
 			double mcScale = Minecraft.getInstance().getWindow().calculateScale((int) Minecraft.getInstance().getWindow().getGuiScale(), Minecraft.getInstance().options.forceUnicodeFont().get());
 			float baseUIScale = 1.0F;
 			float sc = (float) (((double)baseUIScale) * (((double)baseUIScale) / mcScale));
-			
+
 			return (int) (s.width / sc);
 		}
 		return 0;
@@ -176,10 +165,11 @@ public class MainWindowHandler {
 			double mcScale = Minecraft.getInstance().getWindow().calculateScale((int) Minecraft.getInstance().getWindow().getGuiScale(), Minecraft.getInstance().options.forceUnicodeFont().get());
 			float baseUIScale = 1.0F;
 			float sc = (float) (((double)baseUIScale) * (((double)baseUIScale) / mcScale));
-			
+
 			return (int) (s.height / sc);
 		}
 		return 0;
 	}
-	
+
 }
+

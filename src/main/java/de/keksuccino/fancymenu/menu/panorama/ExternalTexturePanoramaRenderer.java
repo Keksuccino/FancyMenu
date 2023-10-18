@@ -3,14 +3,10 @@ package de.keksuccino.fancymenu.menu.panorama;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
-
-import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.PanoramaRenderer;
 import net.minecraft.util.Mth;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
@@ -18,7 +14,6 @@ import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSerializer;
 import de.keksuccino.konkrete.properties.PropertiesSet;
-import de.keksuccino.konkrete.rendering.CurrentScreenHandler;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import org.joml.Matrix4f;
 

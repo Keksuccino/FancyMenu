@@ -54,6 +54,7 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@SuppressWarnings("all")
 public class ButtonScriptEngine {
 
 	private static final List<String> LEGACY_IDENTIFIERS = LegacyButtonActions.getLegacyIdentifiers();
@@ -140,7 +141,7 @@ public class ButtonScriptEngine {
 						}
 					}
 					if (d == null) {
-						d = new ServerData(value.replace(" ", ""), value.replace(" ", ""), false);
+						d = new ServerData(value.replace(" ", ""), value.replace(" ", ""), ServerData.Type.OTHER);
 						l.add(d, false);
 						l.save();
 					}
@@ -358,7 +359,7 @@ public class ButtonScriptEngine {
 							s = new TitleScreen();
 						}
 						if (d == null) {
-							d = new ServerData(ipRaw, ipRaw, false);
+							d = new ServerData(ipRaw, ipRaw, ServerData.Type.OTHER);
 							l.add(d, false);
 							l.save();
 						}

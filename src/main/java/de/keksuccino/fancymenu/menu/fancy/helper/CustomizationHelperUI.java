@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import de.keksuccino.fancymenu.BuildCustomGuiScreen;
 import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.menu.variables.VariableHandler;
 import net.minecraft.client.Minecraft;
@@ -459,11 +460,50 @@ public class CustomizationHelperUI extends UIBase {
 			FMContextMenu customGuiMenu = new FMContextMenu();
 			customGuiMenu.setAutoclose(true);
 			bar.addChild(customGuiMenu, "fm.ui.tab.customguis", ElementAlignment.LEFT);
-			
+
 			CustomizationButton newCustomGuiButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.customguis.new"), true, (press) -> {
 				PopupHandler.displayPopup(new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
 					if (call) {
-						PopupHandler.displayPopup(new CreateCustomGuiPopup());
+						Screen current = Minecraft.getInstance().screen;
+						Minecraft.getInstance().setScreen(new BuildCustomGuiScreen(gui -> {
+							if (gui != null) {
+								try {
+									String name = "";
+									String identifier = gui.identifier;
+									if (identifier != null) {
+										name = FileUtils.generateAvailableFilename(FancyMenu.getCustomGuiPath().getPath(), identifier, "txt");
+
+										File f = new File(FancyMenu.getCustomGuiPath().getPath() + "/" + name);
+										if (!f.exists()) {
+											f.createNewFile();
+										}
+
+										List<String> l = new ArrayList<String>();
+										l.add("identifier = " + identifier);
+										if (gui.title != null) {
+											l.add("title = " + gui.title);
+										}
+										l.add("allowesc = " + gui.allowEsc);
+
+										FileUtils.writeTextToFile(f, false, l.toArray(new String[0]));
+
+										CustomGuiLoader.loadCustomGuis();
+										CustomGuiBase custom = CustomGuiLoader.getGui(identifier, current, null);
+										if (custom != null) {
+											Minecraft.getInstance().setScreen(custom);
+											Minecraft.getInstance().setScreen(new LayoutEditorScreen(custom));
+										} else {
+											Minecraft.getInstance().setScreen(current);
+										}
+									}
+								} catch (Exception e) {
+									Minecraft.getInstance().setScreen(current);
+									e.printStackTrace();
+								}
+							} else {
+								Minecraft.getInstance().setScreen(current);
+							}
+						}));
 					}
 				}, Locals.localize("helper.ui.customguis.new.sure")));
 			});
