@@ -4,13 +4,14 @@ import java.io.File;
 import java.io.IOException;
 
 import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
+import de.keksuccino.fancymenu.events.RenderScreenEvent;
 import de.keksuccino.konkrete.file.FileUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.events.RenderGuiListBackgroundEvent;
+import de.keksuccino.fancymenu.events.RenderListBackgroundEvent;
 import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
-import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
+import de.keksuccino.fancymenu.mainwindow.WindowHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonMimeHandler;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
@@ -18,14 +19,14 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScree
 import de.keksuccino.konkrete.events.EventPriority;
 import de.keksuccino.konkrete.events.SubscribeEvent;
 import de.keksuccino.konkrete.events.client.ClientTickEvent;
-import de.keksuccino.konkrete.events.client.GuiScreenEvent;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+@SuppressWarnings("all")
 public class MenuCustomizationEvents {
 
-	private static final Logger LOGGER = LogManager.getLogger("fancymenu/MenuCustomizationEvents");
+	private static final Logger LOGGER = LogManager.getLogger();
 	
 	private boolean idle = false;
 	private boolean iconSetAfterFullscreen = false;
@@ -37,7 +38,7 @@ public class MenuCustomizationEvents {
 	protected boolean fixedSelectWorldScreen = false;
 
 	@SubscribeEvent
-	public void onRenderScreenPost(GuiScreenEvent.DrawScreenEvent.Post e) {
+	public void onRenderScreenPost(RenderScreenEvent.Post e) {
 
 		//Fix bugged Singleplayer menu in 1.19
 		if ((e.getGui() instanceof SelectWorldScreen) && !this.fixedSelectWorldScreen) {
@@ -131,7 +132,7 @@ public class MenuCustomizationEvents {
 			this.iconSetAfterFullscreen = false;
 		} else {
 			if (!this.iconSetAfterFullscreen) {
-				MainWindowHandler.updateWindowIcon();
+				WindowHandler.updateWindowIcon();
 				this.iconSetAfterFullscreen = true;
 			}
 		}
@@ -171,7 +172,7 @@ public class MenuCustomizationEvents {
 	}
 	
 	@SubscribeEvent
-	public void onRenderListBackground(RenderGuiListBackgroundEvent.Pre e) {
+	public void onRenderListBackgroundPre(RenderListBackgroundEvent.Pre e) {
 		MenuCustomization.isCurrentScrollable = true;
 	}
 	

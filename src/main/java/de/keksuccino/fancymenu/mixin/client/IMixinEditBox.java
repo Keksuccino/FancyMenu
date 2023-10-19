@@ -44,4 +44,6 @@ public interface IMixinEditBox {
 
     @Invoker("renderHighlight") void invokeRenderHighlightFancyMenu(GuiGraphics graphics, int xStart, int yStart, int xEnd, int yEnd);
 
+    @Accessor("isEditable") boolean getIsEditableFancyMenu();
+
 }

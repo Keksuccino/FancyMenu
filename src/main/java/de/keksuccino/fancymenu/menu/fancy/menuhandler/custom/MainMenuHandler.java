@@ -1,10 +1,12 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.konkrete.Konkrete;
 import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.compatibility.MinecraftCompatibilityUtils;
 import de.keksuccino.fancymenu.events.*;
@@ -23,12 +25,9 @@ import de.keksuccino.konkrete.events.EventPriority;
 import de.keksuccino.konkrete.events.SubscribeEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent.BackgroundDrawnEvent;
-import de.keksuccino.konkrete.events.client.GuiScreenEvent.DrawScreenEvent.Post;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.properties.PropertiesSection;
-import de.keksuccino.konkrete.rendering.CurrentScreenHandler;
-import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
@@ -41,19 +40,16 @@ import net.minecraft.client.renderer.CubeMap;
 import net.minecraft.client.renderer.PanoramaRenderer;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.NotNull;
 
-@SuppressWarnings("resource")
+@SuppressWarnings("all")
 public class MainMenuHandler extends MenuHandlerBase {
 	
 	private static final CubeMap PANORAMA_CUBE_MAP = new CubeMap(new ResourceLocation("textures/gui/title/background/panorama"));
 	private static final ResourceLocation PANORAMA_OVERLAY = new ResourceLocation("textures/gui/title/background/panorama_overlay.png");
-//	private static final ResourceLocation MINECRAFT_TITLE_TEXTURE = new ResourceLocation("textures/gui/title/minecraft.png");
-//	private static final ResourceLocation EDITION_TITLE_TEXTURE = new ResourceLocation("textures/gui/title/edition.png");
 	private static final LogoRenderer LOGO_RENDERER = new LogoRenderer(false);
 	private static final Random RANDOM = new Random();
-	
 	private PanoramaRenderer panorama = new PanoramaRenderer(PANORAMA_CUBE_MAP);
-
 	protected boolean showLogo = true;
 	protected boolean showBranding = true;
 	protected boolean showRealmsNotification = true;
@@ -162,32 +158,51 @@ public class MainMenuHandler extends MenuHandlerBase {
 	
 	@SubscribeEvent
 	@Override
-	public void onRenderPost(Post e) {
+	public void onRenderPost(RenderScreenEvent.Post e) {
 		super.onRenderPost(e);
 	}
-	
+
+	//TODO übernehmen
 	@SubscribeEvent
-	public void onRender(GuiScreenEvent.DrawScreenEvent.Pre e) {
-		if (this.shouldCustomize(e.getGui())) {
-			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
-				e.setCanceled(true);
-				e.getGui().renderBackground(e.getGuiGraphics());
-			}
-		}
+	public void onRender(RenderScreenEvent.Pre e) {
+//		if (this.shouldCustomize(e.getGui())) {
+			//This got moved to MixinTitleScreen as an even uglier workaround until FMv3 arrives
+//			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
+//				e.setCanceled(true);
+//				//Ugly workaround because Minecraft overrides Screen#renderBackground() in 1.20.2
+//				this.renderBackground(e.getGuiGraphics(), e.getMouseX(), e.getMouseY(), e.getRenderPartialTicks());
+//			}
+//		}
 	}
-	
+
+	//TODO übernehmen
+//	public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+//		if (Minecraft.getInstance().level != null) {
+//			this.renderTransparentBackground(graphics);
+//			Konkrete.getEventHandler().callEventsFor(new BackgroundDrawnEvent(this.getCurrentScreen(), graphics));
+//		} else {
+//			this.renderDirtBackground(graphics);
+//		}
+//	}
+
+	@NotNull
+	private Screen getCurrentScreen() {
+		return Objects.requireNonNullElse(Minecraft.getInstance().screen, new TitleScreen());
+	}
+
+	//TODO übernehmen
 	/**
 	 * Mimic the original main menu to be able to customize it easier
 	 */
 	@SubscribeEvent
 	@Override
-	public void drawToBackground(BackgroundDrawnEvent e) {
+	public void drawToBackground(ScreenBackgroundRenderedEvent e) {
 		
-		if (this.shouldCustomize(e.getGui())) {
+		if (this.shouldCustomize(e.getScreen())) {
 			
 			Font font = Minecraft.getInstance().font;
-			int width = e.getGui().width;
-			int height = e.getGui().height;
+			int width = e.getScreen().width;
+			int height = e.getScreen().height;
 			int j = width / 2 - 137;
 			float minecraftLogoSpelling = RANDOM.nextFloat();
 			int mouseX = MouseInput.getMouseX();
@@ -202,15 +217,19 @@ public class MainMenuHandler extends MenuHandlerBase {
 //				RenderUtils.bindTexture(PANORAMA_OVERLAY);
 				RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-				e.getGuiGraphics().blit(PANORAMA_OVERLAY, 0, 0, e.getGui().width, e.getGui().height, 0.0F, 0.0F, 16, 128, 16, 128);
+				e.getGuiGraphics().blit(PANORAMA_OVERLAY, 0, 0, e.getScreen().width, e.getScreen().height, 0.0F, 0.0F, 16, 128, 16, 128);
 			}
 			
 			super.drawToBackground(e);
+
+			RenderSystem.enableBlend();
 			
 			//Draw minecraft logo and edition textures if not disabled in the config
 			if (this.showLogo) {
 				LOGO_RENDERER.renderLogo(e.getGuiGraphics(), e.getScreen().width, 1.0F);
 			}
+
+			RenderSystem.enableBlend();
 
 			//Draw branding strings to the main menu if not disabled in the config
 			if (this.showBranding) {
@@ -225,21 +244,26 @@ public class MainMenuHandler extends MenuHandlerBase {
 					string = string + I18n.get("menu.modded");
 				}
 
-				e.getGuiGraphics().drawString(font, string, 2, e.getGui().height - 10, -1);
+				e.getGuiGraphics().drawString(font, string, 2, e.getScreen().height - 10, -1);
 			}
 
 			if (!PopupHandler.isPopupActive()) {
 				this.renderButtons(e, mouseX, mouseY);
 			}
 
+			RenderSystem.enableBlend();
+
 			//Draw notification indicators to the "Realms" button if not disabled in the config
 			if (this.showRealmsNotification) {
-				this.drawRealmsNotification(e.getGuiGraphics(), e.getGui());
+				this.drawRealmsNotification(e.getGuiGraphics(), e.getScreen());
 			}
 
-			this.renderSplash(e.getGuiGraphics(), e.getGui());
+			RenderSystem.enableBlend();
+
+			this.renderSplash(e.getGuiGraphics(), e.getScreen());
 
 		}
+
 	}
 	
 	@SubscribeEvent
@@ -256,28 +280,25 @@ public class MainMenuHandler extends MenuHandlerBase {
 	
 	@SubscribeEvent
 	@Override
-	public void onRenderListBackground(RenderGuiListBackgroundEvent.Post e) {
+	public void onRenderListBackground(RenderListBackgroundEvent.Post e) {
 		super.onRenderListBackground(e);
 	}
 
 	protected void renderSplash(GuiGraphics graphics, Screen s) {
-
 		try {
-			if (this.splashItem != null) {
-				this.splashItem.render(graphics, s);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
+			if (this.splashItem != null) this.splashItem.render(graphics, s);
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
-
 	}
-	
-	private void renderButtons(GuiScreenEvent.BackgroundDrawnEvent e, int mouseX, int mouseY) {
-		List<Renderable> buttons = this.getButtonList(e.getGui());
+
+	//TODO übernehmen
+	private void renderButtons(ScreenBackgroundRenderedEvent e, int mouseX, int mouseY) {
+		List<Renderable> buttons = this.getButtonList(e.getScreen());
 		float partial = Minecraft.getInstance().getFrameTime();
-		
 		if (buttons != null) {
 			for(int i = 0; i < buttons.size(); ++i) {
+				RenderSystem.enableBlend();
 				buttons.get(i).render(e.getGuiGraphics(), mouseX, mouseY, partial);
 			}
 		}
@@ -306,7 +327,7 @@ public class MainMenuHandler extends MenuHandlerBase {
 	}
 
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
-	public void onRenderPre(GuiScreenEvent.DrawScreenEvent.Pre e) {
+	public void onRenderPre(RenderScreenEvent.Pre e) {
 		super.onRenderPre(e);
 	}
 

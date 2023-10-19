@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
+import de.keksuccino.fancymenu.events.RenderScreenEvent;
 import net.minecraft.client.Minecraft;
 
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -13,7 +14,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.events.EventPriority;
 import de.keksuccino.konkrete.events.SubscribeEvent;
-import de.keksuccino.konkrete.events.client.GuiScreenEvent.DrawScreenEvent;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 
@@ -31,7 +31,7 @@ public class VanillaButtonDescriptionHandler {
 	}
 	
 	@SubscribeEvent(priority = EventPriority.LOWEST)
-	public void onDrawScreen(DrawScreenEvent.Post e) {
+	public void onDrawScreen(RenderScreenEvent.Post e) {
 		for (Map.Entry<AbstractWidget, String> m : descriptions.entrySet()) {
 			if (m.getKey().isHoveredOrFocused()) {
 				renderDescription(e.getGuiGraphics(), e.getMouseX(), e.getMouseY(), m.getValue());

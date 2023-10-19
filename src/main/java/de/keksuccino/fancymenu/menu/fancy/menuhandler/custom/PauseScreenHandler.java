@@ -58,13 +58,13 @@ public class PauseScreenHandler extends MenuHandlerBase {
 
     @SubscribeEvent
     @Override
-    public void onRenderPost(GuiScreenEvent.DrawScreenEvent.Post e) {
+    public void onRenderPost(RenderScreenEvent.Post e) {
         super.onRenderPost(e);
     }
 
     @SubscribeEvent
     @Override
-    public void drawToBackground(GuiScreenEvent.BackgroundDrawnEvent e) {
+    public void drawToBackground(ScreenBackgroundRenderedEvent e) {
         super.drawToBackground(e);
     }
 
@@ -82,7 +82,7 @@ public class PauseScreenHandler extends MenuHandlerBase {
 
     @SubscribeEvent
     @Override
-    public void onRenderListBackground(RenderGuiListBackgroundEvent.Post e) {
+    public void onRenderListBackground(RenderListBackgroundEvent.Post e) {
         super.onRenderListBackground(e);
     }
 
@@ -97,7 +97,7 @@ public class PauseScreenHandler extends MenuHandlerBase {
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
-    public void onRenderPre(GuiScreenEvent.DrawScreenEvent.Pre e) {
+    public void onRenderPre(RenderScreenEvent.Pre e) {
         super.onRenderPre(e);
     }
 

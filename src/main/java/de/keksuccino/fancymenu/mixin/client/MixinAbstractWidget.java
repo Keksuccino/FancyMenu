@@ -32,7 +32,7 @@ public abstract class MixinAbstractWidget {
 		}
 	}
 
-	@Inject(at = @At(value = "TAIL"), method = "render", cancellable = true)
+	@Inject(at = @At(value = "TAIL"), method = "render")
 	private void onRenderPost(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
 		try {
 			RenderWidgetEvent.Post e = new RenderWidgetEvent.Post(graphics, (AbstractWidget)((Object)this), this.alpha);

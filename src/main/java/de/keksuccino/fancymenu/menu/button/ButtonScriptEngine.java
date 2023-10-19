@@ -60,7 +60,7 @@ public class ButtonScriptEngine {
 
 	private static Map<String, ButtonScript> scripts = new HashMap<String, ButtonScriptEngine.ButtonScript>();
 	private static boolean init = false;
-	
+
 	public static void init() {
 		if (!init) {
 			init = true;
@@ -68,7 +68,7 @@ public class ButtonScriptEngine {
 			updateButtonScripts();
 		}
 	}
-	
+
 	public static void updateButtonScripts() {
 		scripts.clear();
 
@@ -82,17 +82,17 @@ public class ButtonScriptEngine {
 			}
 		}
 	}
-	
+
 	public static void runButtonScript(String name) {
 		if (scripts.containsKey(name)) {
 			scripts.get(name).runScript();
 		}
 	}
-	
+
 	public static Map<String, ButtonScript> getButtonScripts() {
 		return scripts;
 	}
-	
+
 	@SuppressWarnings("resource")
 	public static void runButtonAction(String action, String value) {
 		try {
@@ -227,7 +227,7 @@ public class ButtonScriptEngine {
 					String to = cleanPath(value.split("[;]", 2)[1]);
 					File toFile = new File(to);
 					File fromFile = new File(from);
-					
+
 					FileUtils.moveFile(fromFile, toFile);
 				}
 			}
@@ -237,7 +237,7 @@ public class ButtonScriptEngine {
 					String to = cleanPath(value.split("[;]", 2)[1]);
 					File toFile = new File(to);
 					File fromFile = new File(from);
-					
+
 					FileUtils.copyFile(fromFile, toFile);
 				}
 			}
@@ -380,7 +380,7 @@ public class ButtonScriptEngine {
 					c.execute(null);
 				}
 			}
-			
+
 		} catch (Exception e) {
 			System.out.println("################ ERROR [FANCYMENU] ################");
 			System.out.println("An error happened while trying to execute a button action!");
@@ -419,7 +419,7 @@ public class ButtonScriptEngine {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private  static boolean isMacOS() {
 		return Minecraft.ON_OSX;
 	}
@@ -432,12 +432,12 @@ public class ButtonScriptEngine {
 	private static void runCMD(String cmd) {
 		try {
 			if (cmd != null) {
-				
+
 				cmd = cmd.replace("];", "%e%;");
 				cmd = cmd.replace("[windows:", "%s%windows:");
 				cmd = cmd.replace("[macos:", "%s%macos:");
 				cmd = cmd.replace("[linux:", "%s%linux:");
-				
+
 				if (cmd.contains("%s%") && cmd.contains("%e%;")) {
 					String s = null;
 					if (isMacOS()) {
@@ -491,7 +491,7 @@ public class ButtonScriptEngine {
 
 		return "";
 	}
-	
+
 	@SubscribeEvent
 	public void onMenuReload(MenuReloadedEvent e) {
 		updateButtonScripts();

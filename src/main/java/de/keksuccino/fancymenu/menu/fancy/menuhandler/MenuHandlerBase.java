@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import de.keksuccino.fancymenu.RenderUtils;
 import de.keksuccino.fancymenu.events.*;
 import de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal.LoadingRequirementContainer;
@@ -16,7 +15,6 @@ import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.fancymenu.screen.ScreenTitleHandler;
 import de.keksuccino.konkrete.events.EventPriority;
 import net.minecraft.client.Minecraft;
-
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.screens.Screen;
@@ -33,14 +31,13 @@ import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.api.item.CustomizationItemRegistry;
-import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
+import de.keksuccino.fancymenu.mainwindow.WindowHandler;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.button.VanillaButtonDescriptionHandler;
-import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomizationProperties;
 import de.keksuccino.fancymenu.menu.fancy.gameintro.GameIntroHandler;
@@ -64,13 +61,11 @@ import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.menu.slideshow.ExternalTextureSlideshowRenderer;
 import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
 import de.keksuccino.konkrete.events.SubscribeEvent;
-import de.keksuccino.konkrete.events.client.GuiScreenEvent;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSet;
-import de.keksuccino.konkrete.rendering.CurrentScreenHandler;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.TextureHandler;
@@ -83,7 +78,6 @@ public class MenuHandlerBase {
 
 	public List<CustomizationItemBase> frontRenderItems = new ArrayList<CustomizationItemBase>();
 	public List<CustomizationItemBase> backgroundRenderItems = new ArrayList<CustomizationItemBase>();
-
 	protected Map<String, Boolean> audio = new HashMap<String, Boolean>();
 	protected IAnimationRenderer backgroundAnimation = null;
 	protected IAnimationRenderer lastBackgroundAnimation = null;
@@ -100,37 +94,27 @@ public class MenuHandlerBase {
 	protected boolean keepBackgroundAspectRatio = false;
 	protected String customMenuTitle = null;
 	protected boolean forceDisableCustomMenuTitle = false;
-
 	protected ExternalTexturePanoramaRenderer panoramacube;
-
 	protected ExternalTextureSlideshowRenderer slideshow;
-
 	protected MenuBackground customMenuBackground = null;
 	public float backgroundOpacity = 1.0F;
-
 	protected List<ButtonData> hidden = new ArrayList<ButtonData>();
 	protected Map<AbstractWidget, ButtonCustomizationContainer> vanillaButtonCustomizations = new HashMap<AbstractWidget, ButtonCustomizationContainer>();
 	protected Map<AbstractWidget, LoadingRequirementContainer> vanillaButtonLoadingRequirementContainers = new HashMap<>();
-
 	protected Map<ButtonData, Float> delayAppearanceVanilla = new HashMap<ButtonData, Float>();
 	protected Map<ButtonData, Float> fadeInVanilla = new HashMap<ButtonData, Float>();
 	protected List<String> delayAppearanceFirstTime = new ArrayList<String>();
 	protected List<Long> delayAppearanceFirstTimeVanilla = new ArrayList<Long>();
 	protected List<ThreadCaller> delayThreads = new ArrayList<ThreadCaller>();
-
 	protected boolean preinit = false;
-
 	protected Map<String, RandomLayoutContainer> randomLayoutGroups = new HashMap<String, RandomLayoutContainer>();
 	protected List<PropertiesSet> normalLayouts = new ArrayList<PropertiesSet>();
 	protected SharedLayoutProperties sharedLayoutProps = new SharedLayoutProperties();
-
 	protected String closeAudio;
 	protected String openAudio;
-
 	protected Map<LoadingRequirementContainer, Boolean> cachedLayoutWideLoadingRequirements = new HashMap<>();
 
 	protected static Screen scaleChangedIn = null;
-
 	public static Map<Class, Component> cachedOriginalMenuTitles = new HashMap<>();
 
 	/**
@@ -268,7 +252,7 @@ public class MenuHandlerBase {
 				biggerthanwidth = biggerthanwidth.replace(" ", "");
 				if (MathUtils.isInteger(biggerthanwidth)) {
 					int i = Integer.parseInt(biggerthanwidth);
-					if (MainWindowHandler.getWindowGuiWidth() < i) {
+					if (WindowHandler.getWindowGuiWidth() < i) {
 						continue;
 					}
 				}
@@ -278,7 +262,7 @@ public class MenuHandlerBase {
 				biggerthanheight = biggerthanheight.replace(" ", "");
 				if (MathUtils.isInteger(biggerthanheight)) {
 					int i = Integer.parseInt(biggerthanheight);
-					if (MainWindowHandler.getWindowGuiHeight() < i) {
+					if (WindowHandler.getWindowGuiHeight() < i) {
 						continue;
 					}
 				}
@@ -288,7 +272,7 @@ public class MenuHandlerBase {
 				smallerthanwidth = smallerthanwidth.replace(" ", "");
 				if (MathUtils.isInteger(smallerthanwidth)) {
 					int i = Integer.parseInt(smallerthanwidth);
-					if (MainWindowHandler.getWindowGuiWidth() > i) {
+					if (WindowHandler.getWindowGuiWidth() > i) {
 						continue;
 					}
 				}
@@ -298,7 +282,7 @@ public class MenuHandlerBase {
 				smallerthanheight = smallerthanheight.replace(" ", "");
 				if (MathUtils.isInteger(smallerthanheight)) {
 					int i = Integer.parseInt(smallerthanheight);
-					if (MainWindowHandler.getWindowGuiHeight() > i) {
+					if (WindowHandler.getWindowGuiHeight() > i) {
 						continue;
 					}
 				}
@@ -460,17 +444,18 @@ public class MenuHandlerBase {
 			return;
 		}
 
-		if (!this.preinit) {
-//			System.out.println("################ WARNING [FANCYMENU] ################");
-//			System.out.println("MenuHandler pre-init skipped! Trying to re-initialize menu!");
-//			System.out.println("Menu Type: " + e.getGui().getClass().getName());
-//			System.out.println("Menu Handler: " + this.getClass().getName());
-//			System.out.println("This probably happened because a mod has overridden a menu with this one.");
-//			System.out.println("#####################################################");
-
-			e.getGui().resize(Minecraft.getInstance(), e.getGui().width, e.getGui().height);
-			return;
-		}
+		//TODO übernehmen
+//		if (!this.preinit) {
+////			System.out.println("################ WARNING [FANCYMENU] ################");
+////			System.out.println("MenuHandler pre-init skipped! Trying to re-initialize menu!");
+////			System.out.println("Menu Type: " + e.getGui().getClass().getName());
+////			System.out.println("Menu Handler: " + this.getClass().getName());
+////			System.out.println("This probably happened because a mod has overridden a menu with this one.");
+////			System.out.println("#####################################################");
+//
+//			e.getGui().resize(Minecraft.getInstance(), e.getGui().width, e.getGui().height);
+//			return;
+//		}
 
 		this.hidden.clear();
 		this.delayAppearanceVanilla.clear();
@@ -1250,7 +1235,7 @@ public class MenuHandlerBase {
 	}
 
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
-	public void onRenderPre(GuiScreenEvent.DrawScreenEvent.Pre e) {
+	public void onRenderPre(RenderScreenEvent.Pre e) {
 
 		if (PopupHandler.isPopupActive()) {
 			return;
@@ -1265,7 +1250,8 @@ public class MenuHandlerBase {
 		//Re-init screen if layout-wide requirements changed
 		for (Map.Entry<LoadingRequirementContainer, Boolean> m : this.cachedLayoutWideLoadingRequirements.entrySet()) {
 			if (m.getKey().requirementsMet() != m.getValue()) {
-				e.getGui().resize(Minecraft.getInstance(), e.getGui().width, e.getGui().height);
+				//TODO übernehmen
+				MenuCustomization.reInitCurrentScreen();
 				break;
 			}
 		}
@@ -1273,7 +1259,7 @@ public class MenuHandlerBase {
 	}
 
 	@SubscribeEvent
-	public void onRenderPost(GuiScreenEvent.DrawScreenEvent.Post e) {
+	public void onRenderPost(RenderScreenEvent.Post e) {
 		if (PopupHandler.isPopupActive()) {
 			return;
 		}
@@ -1311,12 +1297,14 @@ public class MenuHandlerBase {
 				e1.printStackTrace();
 			}
 		}
+
 	}
 
+	//TODO übernehmen
 	@SubscribeEvent
-	public void drawToBackground(GuiScreenEvent.BackgroundDrawnEvent e) {
+	public void drawToBackground(ScreenBackgroundRenderedEvent e) {
 		if (!MenuCustomization.isCurrentMenuScrollable()) {
-			this.renderBackground(e.getGuiGraphics(), e.getGui());
+			this.renderBackground(e.getGuiGraphics(), e.getScreen());
 		}
 	}
 
@@ -1349,7 +1337,7 @@ public class MenuHandlerBase {
 							this.backgroundAnimation.setPosY(0);
 						}
 					}
-					//TODO übernehmen
+					// ----- 
 					this.backgroundAnimation.setOpacity(this.backgroundOpacity);
 					this.backgroundAnimation.render(graphics);
 					this.backgroundAnimation.setWidth(wOri);
@@ -1357,7 +1345,7 @@ public class MenuHandlerBase {
 					this.backgroundAnimation.setPosX(xOri);
 					this.backgroundAnimation.setPosY(yOri);
 					this.backgroundAnimation.setStretchImageToScreensize(b);
-					//TODO übernehmen
+					// ----- 
 					this.backgroundAnimation.setOpacity(1.0F);
 				} else if (this.backgroundTexture != null) {
 					RenderSystem.enableBlend();
@@ -1449,7 +1437,7 @@ public class MenuHandlerBase {
 					int sh = this.slideshow.height;
 					int sx = this.slideshow.x;
 					int sy = this.slideshow.y;
-					//TODO übernehmen
+					// ----- 
 					float opacity = this.slideshow.slideshowOpacity;
 
 					if (!this.keepBackgroundAspectRatio) {
@@ -1471,7 +1459,7 @@ public class MenuHandlerBase {
 						}
 					}
 					this.slideshow.y = 0;
-					//TODO übernehmen
+					// ----- 
 					this.slideshow.slideshowOpacity = this.backgroundOpacity;
 
 					this.slideshow.render(graphics);
@@ -1480,11 +1468,11 @@ public class MenuHandlerBase {
 					this.slideshow.height = sh;
 					this.slideshow.x = sx;
 					this.slideshow.y = sy;
-					//TODO übernehmen
+					// ----- 
 					this.slideshow.slideshowOpacity = opacity;
 				} else if (this.customMenuBackground != null) {
 
-					//TODO übernehmen
+					// ----- 
 					this.customMenuBackground.opacity = this.backgroundOpacity;
 					this.customMenuBackground.render(graphics, s, this.keepBackgroundAspectRatio);
 					this.customMenuBackground.opacity = 1.0F;
@@ -1768,24 +1756,13 @@ public class MenuHandlerBase {
 		return true;
 	}
 
+	//TODO übernehmen
 	@SubscribeEvent
-	public void onRenderListBackground(RenderGuiListBackgroundEvent.Post e) {
-
-		Screen s = Minecraft.getInstance().screen;
-
-		if (this.shouldCustomize(s)) {
-			if (MenuCustomization.isMenuCustomizable(s)) {
-
-				//Allow background stuff to be rendered in scrollable GUIs
-				if (Minecraft.getInstance().screen != null) {
-
-					this.renderBackground(e.getGuiGraphics(), s);
-
-				}
-
-			}
+	public void onRenderListBackground(RenderListBackgroundEvent.Post e) {
+		Screen current = Minecraft.getInstance().screen;
+		if ((current != null) && this.shouldCustomize(current) && MenuCustomization.isMenuCustomizable(current)) {
+			this.renderBackground(e.getGuiGraphics(), current);
 		}
-
 	}
 
 	private static ButtonData getButton(String identifier) {

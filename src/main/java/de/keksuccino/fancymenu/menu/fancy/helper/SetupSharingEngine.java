@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy.helper;
 
 import com.google.common.io.Files;
+import de.keksuccino.fancymenu.TextInputScreen;
 import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
@@ -25,6 +26,7 @@ import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.io.FileUtils;
 
@@ -166,7 +168,9 @@ public class SetupSharingEngine {
             FMYesNoPopup exportConfirmPopup = new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
                 if (call) {
                     String setupNameDefault = "exported_fm_setup_" + getTimestamp();
-                    FMTextInputPopup pop = new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("fancymenu.helper.setupsharing.export.entername"), null, 240, (call2) -> {
+                    Screen current = Minecraft.getInstance().screen;
+                    TextInputScreen s = new TextInputScreen(Component.literal(Locals.localize("fancymenu.helper.setupsharing.export.entername")), null, call2 -> {
+                        Minecraft.getInstance().setScreen(current);
                         if (call2 != null) {
                             new Thread(() -> {
                                 String setupName = call2;
@@ -195,8 +199,8 @@ public class SetupSharingEngine {
                             }).start();
                         }
                     });
-                    pop.setText(setupNameDefault);
-                    PopupHandler.displayPopup(pop);
+                    s.setText(setupNameDefault);
+                    Minecraft.getInstance().setScreen(s);
                 }
             }, Locals.localize("fancymenu.helper.setupsharing.export.confirm"));
             PopupHandler.displayPopup(exportConfirmPopup);

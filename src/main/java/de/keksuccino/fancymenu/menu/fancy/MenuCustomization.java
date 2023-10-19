@@ -7,10 +7,14 @@ import java.util.UUID;
 
 import com.google.common.io.Files;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.events.InitOrResizeScreenCompletedEvent;
+import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
+import de.keksuccino.fancymenu.events.InitOrResizeScreenStartingEvent;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.ConfirmationScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.item.items.playerentity.PlayerEntityRotationScreen;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.*;
+import de.keksuccino.fancymenu.v3.rendering.RenderingUtils;
 import de.keksuccino.konkrete.file.FileUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -28,6 +32,7 @@ import de.keksuccino.konkrete.properties.PropertiesSerializer;
 import de.keksuccino.konkrete.properties.PropertiesSet;
 import de.keksuccino.konkrete.sound.SoundHandler;
 
+@SuppressWarnings("all")
 public class MenuCustomization {
 	
 	private static PropertiesSet customizableMenus;
@@ -266,6 +271,18 @@ public class MenuCustomization {
 				Konkrete.getEventHandler().callEventsFor(e);
 				Minecraft.getInstance().setScreen(s);
 			}
+		}
+	}
+
+	//TODO übernehmen
+	public static void reInitCurrentScreen() {
+		if (Minecraft.getInstance().screen != null) {
+			RenderingUtils.resetGuiScale();
+			Konkrete.getEventHandler().callEventsFor(new InitOrResizeScreenStartingEvent(Minecraft.getInstance().screen));
+			Konkrete.getEventHandler().callEventsFor(new InitOrResizeScreenEvent.Pre(Minecraft.getInstance().screen));
+			Minecraft.getInstance().screen.resize(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
+			Konkrete.getEventHandler().callEventsFor(new InitOrResizeScreenEvent.Post(Minecraft.getInstance().screen));
+			Konkrete.getEventHandler().callEventsFor(new InitOrResizeScreenCompletedEvent(Minecraft.getInstance().screen));
 		}
 	}
 

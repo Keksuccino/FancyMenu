@@ -5,8 +5,6 @@ import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.konkrete.events.SubscribeEvent;
-import de.keksuccino.konkrete.events.client.GuiScreenEvent.BackgroundDrawnEvent;
-import de.keksuccino.konkrete.events.client.GuiScreenEvent.DrawScreenEvent.Post;
 import net.minecraft.client.gui.screens.Screen;
 
 public class CustomGuiMenuHandlerBase  extends MenuHandlerBase {
@@ -41,13 +39,13 @@ public class CustomGuiMenuHandlerBase  extends MenuHandlerBase {
 	
 	@SubscribeEvent
 	@Override
-	public void onRenderPost(Post e) {
+	public void onRenderPost(RenderScreenEvent.Post e) {
 		super.onRenderPost(e);
 	}
 	
 	@SubscribeEvent
 	@Override
-	public void drawToBackground(BackgroundDrawnEvent e) {
+	public void drawToBackground(ScreenBackgroundRenderedEvent e) {
 		super.drawToBackground(e);
 	}
 	
@@ -65,7 +63,7 @@ public class CustomGuiMenuHandlerBase  extends MenuHandlerBase {
 	
 	@SubscribeEvent
 	@Override
-	public void onRenderListBackground(RenderGuiListBackgroundEvent.Post e) {
+	public void onRenderListBackground(RenderListBackgroundEvent.Post e) {
 		super.onRenderListBackground(e);
 	}
 	

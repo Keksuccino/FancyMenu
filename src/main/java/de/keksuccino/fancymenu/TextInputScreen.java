@@ -12,7 +12,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.function.Consumer;
 
 public class TextInputScreen extends Screen {
@@ -93,6 +92,11 @@ public class TextInputScreen extends Screen {
 
         return super.keyPressed(button, p_96553_, p_96554_);
 
+    }
+
+    public void setText(@Nullable String text) {
+        if (text == null) text = "";
+        this.input.setValue(text);
     }
 
     @Override

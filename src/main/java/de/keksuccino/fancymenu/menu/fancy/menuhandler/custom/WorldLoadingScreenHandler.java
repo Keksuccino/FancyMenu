@@ -6,22 +6,17 @@ import de.keksuccino.konkrete.events.EventPriority;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-
 import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.progress.StoringChunkProgressListener;
 import net.minecraft.util.Mth;
 import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
-import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.konkrete.events.SubscribeEvent;
-import de.keksuccino.konkrete.events.client.GuiScreenEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent.BackgroundDrawnEvent;
-import de.keksuccino.konkrete.events.client.GuiScreenEvent.DrawScreenEvent.Post;
 
 public class WorldLoadingScreenHandler extends MenuHandlerBase {
 
@@ -32,21 +27,23 @@ public class WorldLoadingScreenHandler extends MenuHandlerBase {
 	}
 	
 	@SubscribeEvent
-	public void onRender(GuiScreenEvent.DrawScreenEvent.Pre e) {
+	public void onRender(RenderScreenEvent.Pre e) {
 		if (this.shouldCustomize(e.getGui())) {
-			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
-				e.setCanceled(true);
-				
-				e.getGui().renderBackground(e.getGuiGraphics());
-				
-				this.renderMenu(e.getGuiGraphics(), e.getGui());
-			}
+			//TODO übernehmen
+			//Moved to MixinLevelLoadingScreen until FMv3 arrives
+//			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
+//				e.setCanceled(true);
+//
+//				e.getGui().renderBackground(e.getGuiGraphics(), e.getMouseX(), e.getMouseY(), e.getRenderPartialTicks());
+//
+//				this.renderMenu(e.getGuiGraphics(), e.getGui());
+//			}
 		}
 	}
 	
 	@SubscribeEvent
 	@Override
-	public void drawToBackground(BackgroundDrawnEvent e) {
+	public void drawToBackground(ScreenBackgroundRenderedEvent e) {
 		super.drawToBackground(e);
 	}
 	
@@ -76,7 +73,7 @@ public class WorldLoadingScreenHandler extends MenuHandlerBase {
 	
 	@SubscribeEvent
 	@Override
-	public void onRenderPost(Post e) {
+	public void onRenderPost(RenderScreenEvent.Post e) {
 		super.onRenderPost(e);
 	}
 	
@@ -94,11 +91,12 @@ public class WorldLoadingScreenHandler extends MenuHandlerBase {
 	
 	@SubscribeEvent
 	@Override
-	public void onRenderListBackground(RenderGuiListBackgroundEvent.Post e) {
+	public void onRenderListBackground(RenderListBackgroundEvent.Post e) {
 		super.onRenderListBackground(e);
 	}
-	
-	private void renderMenu(GuiGraphics graphics, Screen screen) {
+
+	//TODO übernehmen
+	public void renderMenu(GuiGraphics graphics, Screen screen) {
 		
 		StoringChunkProgressListener tracker = getTracker(screen);
 		Font font = Minecraft.getInstance().font;
@@ -130,7 +128,7 @@ public class WorldLoadingScreenHandler extends MenuHandlerBase {
 	}
 
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
-	public void onRenderPre(GuiScreenEvent.DrawScreenEvent.Pre e) {
+	public void onRenderPre(RenderScreenEvent.Pre e) {
 		super.onRenderPre(e);
 	}
 

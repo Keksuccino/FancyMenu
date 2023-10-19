@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import de.keksuccino.fancymenu.events.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.mixin.client.IMixinScreen;
@@ -18,10 +18,10 @@ import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.events.SubscribeEvent;
-import de.keksuccino.konkrete.events.client.GuiInitCompletedEvent;
 import de.keksuccino.konkrete.localization.LocaleUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 
+@SuppressWarnings("all")
 public class ButtonCache {
 
 	private static Map<Long, ButtonData> buttons = new HashMap<Long, ButtonData>();
@@ -40,8 +40,8 @@ public class ButtonCache {
 	}
 	
 	@SubscribeEvent
-	public void onInitCompleted(GuiInitCompletedEvent e) {
-		cache(e.getGui());
+	public void onInitCompleted(InitOrResizeScreenCompletedEvent e) {
+		cache(e.getScreen());
 	}
 	
 	private static void cache(Screen s) {
@@ -161,13 +161,9 @@ public class ButtonCache {
 		List<Long> ids = new ArrayList<Long>();
 		try {
 
-			//Reset the button list
-//			((IMixinScreen)s).getRenderablesFancyMenu().clear();
-
 			//Set all important variables and init screen
 			((IMixinScreen)s).setFontFancyMenu(Minecraft.getInstance().font);
 
-//			s.init(Minecraft.getInstance(), screenWidth, screenHeight);
 			s.resize(Minecraft.getInstance(), screenWidth, screenHeight);
 
 			//Reflecting the buttons list field to cache all buttons of the menu
