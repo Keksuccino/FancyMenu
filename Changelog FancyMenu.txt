@@ -1,4 +1,20 @@
 
+CHANGELOG | FANCYMENU v2.14.10
+ 
+- IMPORTANT: This update contains breaking changes that could make mods crash that were made with older versions of FancyMenu!
+ 
+- Fixed: Setup name input field not clickable when exporting a setup
+- Fixed: Appearance Delay not working when opening the Title screen for the first time
+- Fixed: Background customizations not working for some scrollable screens
+- Fixed: Incompatibility with Axiom mod
+- Fixed: Incompatibility with owo-lib mod
+
+%changelog:end%
+
+
+
+
+
 CHANGELOG | FANCYMENU v2.14.9-3 for MC 1.20.X
  
 - Fixed: Glitched Title Screen Minecraft Logo element in the editor in MC 1.20.1
