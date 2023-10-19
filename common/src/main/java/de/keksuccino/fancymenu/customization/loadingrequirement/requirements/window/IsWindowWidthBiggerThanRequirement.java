@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
@@ -34,7 +35,7 @@ public class IsWindowWidthBiggerThanRequirement extends LoadingRequirement {
     }
 
     @Override
-    public String getDisplayName() {
+    public @NotNull String getDisplayName() {
         return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.windowwidthbiggerthan");
     }
 

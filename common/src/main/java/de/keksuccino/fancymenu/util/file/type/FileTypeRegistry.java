@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
+@SuppressWarnings("unused")
 public class FileTypeRegistry {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -14,8 +15,7 @@ public class FileTypeRegistry {
 
     public static void register(@NotNull String fileTypeName, @NotNull FileType<?> fileType) {
         if (FILE_TYPES.containsKey(Objects.requireNonNull(fileTypeName))) {
-            LOGGER.error("[FANCYMENU] Failed to register FileType! FileType name already registered: " + fileTypeName);
-            return;
+            throw new RuntimeException("[FANCYMENU] Failed to register FileType! FileType name already registered: " + fileTypeName);
         }
         FILE_TYPES.put(fileTypeName, Objects.requireNonNull(fileType));
     }

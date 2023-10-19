@@ -64,7 +64,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
     //TODO Implement file types (if not null, filter files by allowed types + show allowed types in GUI)
     //TODO Implement file types (if not null, filter files by allowed types + show allowed types in GUI)
     //TODO Implement file types (if not null, filter files by allowed types + show allowed types in GUI)
-
+    // ------>
     @Nullable
     protected List<FileType<?>> fileTypes;
     @NotNull

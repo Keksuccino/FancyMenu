@@ -969,24 +969,6 @@ public class Layout extends LayoutBase {
                     }
                 }
 
-//                if (addElement) {
-//                    if (identifier.contains("mc_titlescreen_realms_button")) {
-//                        //TODO remove debug
-//                        LogManager.getLogger().info("################# FOUND REALMS BUTTON SECTION: \n" + sec.toString());
-//                    }
-//                    if (!elements.containsKey(identifier)) {
-//                        elements.put(identifier, element);
-//                    } else {
-//                        VanillaWidgetElement stack = VanillaWidgetElementBuilder.INSTANCE.stackElementsInternal(VanillaWidgetElementBuilder.INSTANCE.buildDefaultInstance(), elements.get(identifier), element);
-//                        if (stack != null) {
-//                            elements.put(identifier, stack);
-//                        } else {
-//                            //TODO remove debug
-//                            LogManager.getLogger().error("############## VANILLA ELEMENT STACK WAS NULL: " + identifier);
-//                        }
-//                    }
-//                }
-
                 if (addElement && !elements.containsKey(identifier)) {
                     elements.put(identifier, element);
                 }

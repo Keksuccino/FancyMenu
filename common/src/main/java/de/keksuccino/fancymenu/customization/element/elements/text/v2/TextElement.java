@@ -36,14 +36,6 @@ import java.util.Objects;
 @SuppressWarnings("all")
 public class TextElement extends AbstractElement {
 
-    //TODO FIXEN: (allgemein, nicht nur text element): es werden keine snapshots erstellt, wenn element resized wird
-
-    //TODO FIXEN: Hover bei hyperlink broke
-
-    //TODO FIXEN: multi-line code block background broke
-
-    //TODO add toggle to automatically remove all <br> from source
-
     @NotNull
     protected SourceMode sourceMode = SourceMode.DIRECT;
     protected String source; //direct text, file path, link

@@ -33,7 +33,7 @@ public class FileType<T> {
     @Nullable
     protected String mimeType;
     @NotNull
-    protected final FileCodec<T> codec;
+    protected FileCodec<T> codec;
 
     protected FileType(@NotNull FileCodec<T> codec) {
         this.mediaType = FileMediaType.OTHER;
@@ -41,7 +41,7 @@ public class FileType<T> {
     }
 
     protected FileType(@NotNull FileCodec<T> codec, @Nullable String mimeType, @NotNull FileMediaType mediaType, @NotNull String... extensions) {
-        Arrays.asList(extensions).forEach(s -> this.extensions.add(s.toLowerCase().replace(".", "").replace(" ", "")));
+        Arrays.asList(extensions).forEach(this::addExtension);
         this.mediaType = mediaType;
         this.mimeType = mimeType;
         this.codec = codec;
@@ -78,6 +78,19 @@ public class FileType<T> {
         return new ArrayList<>(this.extensions);
     }
 
+    public void addExtension(@NotNull String extension) {
+        extension = Objects.requireNonNull(extension).toLowerCase().replace(".", "").replace(" ", "");
+        if (this.extensions.contains(extension)) return;
+        this.extensions.add(extension);
+    }
+
+    public void removeExtension(@NotNull String extension) {
+        extension = Objects.requireNonNull(extension).toLowerCase().replace(".", "").replace(" ", "");
+        while (this.extensions.contains(extension)) {
+            this.extensions.remove(extension);
+        }
+    }
+
     @NotNull
     public FileMediaType getMediaType() {
         return this.mediaType;
@@ -91,6 +104,10 @@ public class FileType<T> {
     @NotNull
     public FileCodec<T> getCodec() {
         return this.codec;
+    }
+
+    public void setCodec(@NotNull FileCodec<T> codec) {
+        this.codec = Objects.requireNonNull(codec);
     }
 
 }

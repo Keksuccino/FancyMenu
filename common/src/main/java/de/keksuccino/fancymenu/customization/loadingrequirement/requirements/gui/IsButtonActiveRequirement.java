@@ -12,6 +12,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.Arrays;
 import java.util.List;
@@ -47,7 +48,7 @@ public class IsButtonActiveRequirement extends LoadingRequirement {
     }
 
     @Override
-    public String getDisplayName() {
+    public @NotNull String getDisplayName() {
         return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.is_button_active");
     }
 

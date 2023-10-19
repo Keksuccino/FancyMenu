@@ -20,9 +20,6 @@ import java.util.Objects;
  */
 public abstract class LoadingRequirement {
 
-    //TODO Config Screens für Requirement Values adden
-    // - Basis Screen Class, die einen Consumer<String> nimmt, mit dem bei Schließen des Screens das Requirement Value mitgegeben wird
-
     protected final String identifier;
 
     /**

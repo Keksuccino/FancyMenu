@@ -19,7 +19,7 @@ public class ResourceFile {
 
     protected String shortPath;
     protected File file;
-    protected FileType type;
+    protected FileType<?> type;
 
     /**
      * Returns a new {@link ResourceFile} instance for the given asset.<br>
@@ -147,7 +147,7 @@ public class ResourceFile {
      * Returns the {@link FileType} of the file or {@link FileTypes#UNKNOWN} if the file does not have a known type.
      */
     @NotNull
-    public FileType getType() {
+    public FileType<?> getType() {
         return this.type;
     }
 

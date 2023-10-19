@@ -4,7 +4,6 @@ import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
-import de.keksuccino.fancymenu.mixin.MixinCache;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
@@ -21,13 +20,13 @@ public class MixinFabricGameRenderer {
     private int cachedMouseY = 0;
     private float cachedPartial = 0.0F;
 
+    //I'm wrapping this to easily cache the render() params
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderWithTooltip(Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V"))
     private boolean wrapRenderScreenFancyMenu(Screen instance, PoseStack poseStack, int mouseX, int mouseY, float partial) {
         this.cachedStack = poseStack;
         this.cachedMouseX = mouseX;
         this.cachedMouseY = mouseY;
         this.cachedPartial = partial;
-        MixinCache.currentRenderScreen = instance;
         RenderScreenEvent.Pre e = new RenderScreenEvent.Pre(Minecraft.getInstance().screen, poseStack, mouseX, mouseY, partial);
         EventHandler.INSTANCE.postEvent(e);
         return true;

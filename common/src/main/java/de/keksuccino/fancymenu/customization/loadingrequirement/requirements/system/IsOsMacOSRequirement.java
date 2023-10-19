@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFor
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
@@ -33,7 +34,7 @@ public class IsOsMacOSRequirement extends LoadingRequirement {
     }
 
     @Override
-    public String getDisplayName() {
+    public @NotNull String getDisplayName() {
         return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.osmac");
     }
 

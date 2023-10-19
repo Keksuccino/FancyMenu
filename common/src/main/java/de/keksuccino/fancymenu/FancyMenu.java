@@ -23,7 +23,7 @@ public class FancyMenu {
 	//TODO allowWeb(boolean), allowLocal(boolean) und allowLocation(boolean) methoden in FileType
 	// - In TextureHandler (und anderen handlern checken, ob file type den gewünschten Type unterstützt)
 
-	//TODO Add support for FileTypes to FileChooser screens and show supported file types in Chooser GUI
+	//TODO Add support for FileTypes to FileChooser screens (AbstractFileBrowserScreen) and show supported file types in Chooser GUI
 
 	//TODO Add ChooseResource Screen
 	// - Screen nimmt MediaType als param

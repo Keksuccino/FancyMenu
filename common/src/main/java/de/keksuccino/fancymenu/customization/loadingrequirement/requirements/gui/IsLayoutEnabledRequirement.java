@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequireme
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
@@ -39,7 +40,7 @@ public class IsLayoutEnabledRequirement extends LoadingRequirement {
     }
 
     @Override
-    public String getDisplayName() {
+    public @NotNull String getDisplayName() {
         return I18n.get("fancymenu.helper.visibilityrequirement.is_layout_enabled");
     }
 

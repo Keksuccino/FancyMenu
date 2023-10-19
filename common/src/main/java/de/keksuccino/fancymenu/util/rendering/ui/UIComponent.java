@@ -198,8 +198,6 @@ public abstract class UIComponent extends UIBase implements FocuslessContainerEv
         this.setDragging(false);
         for(GuiEventListener child : this.children()) {
             if (child.mouseReleased(realMouseX, realMouseY, button)) {
-                //TODO remove debug
-                LogManager.getLogger().info("############## uicomp: return true: " + child);
                 return true;
             }
         }
