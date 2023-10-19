@@ -95,6 +95,11 @@ public class TextInputScreen extends Screen {
 
     }
 
+    public void setText(@Nullable String text) {
+        if (text == null) text = "";
+        this.input.setValue(text);
+    }
+
     @Override
     public void onClose() {
         this.callback.accept(null);
