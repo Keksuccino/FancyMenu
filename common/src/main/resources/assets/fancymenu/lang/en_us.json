@@ -1088,5 +1088,13 @@
   "fancymenu.elements.slider.v2.type.range.set_max.desc": "The maximum value the range slider can reach.",
   "fancymenu.elements.slider.v2.manage_actions.desc": "The actions this slider will execute\nwhen its value gets changed.\n\nYou can get the slider's current value\nby using the §x$$value§r placeholder in\naction values or requirement values.",
   "fancymenu.elements.slider.v2.type.range.decimal.round": "Rounding Decimal Place",
-  "fancymenu.elements.slider.v2.type.range.decimal.round.desc": "The decimal place to round the value to.\nOne (1) decimal place is one place\nafter the decimal point.\n\nTo not round the value, set it to §x-1§r."
+  "fancymenu.elements.slider.v2.type.range.decimal.round.desc": "The decimal place to round the value to.\nOne (1) decimal place is one place\nafter the decimal point.\n\nTo not round the value, set it to §x-1§r.",
+  "fancymenu.file_types.apng": "Animated PNG",
+  "fancymenu.file_types.groups.image": "Images",
+  "fancymenu.file_types.groups.audio": "Audio Files",
+  "fancymenu.file_types.groups.video": "Video Files",
+  "fancymenu.file_types.groups.text": "Plain Text Files",
+  "fancymenu.file_browser.save_file.file_name": "File Name:",
+  "fancymenu.file_browser.file_type": "File Type:",
+  "fancymenu.file_browser.file_type.types.all": "All"
 }

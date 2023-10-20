@@ -1,16 +1,13 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
-import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.io.File;
 import java.util.function.Consumer;
 
@@ -77,17 +74,7 @@ public class ChooseFileScreen extends AbstractFileBrowserScreen {
                     ChooseFileScreen.this.setDirectory(this.file, true);
                 }
             }
-            if (this.file.isFile()) {
-                ChooseFileScreen.this.updateTextPreview(this.file);
-                if (FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.file)) {
-                    ChooseFileScreen.this.previewTexture = ImageResourceHandler.INSTANCE.getTexture(this.file);
-                } else {
-                    ChooseFileScreen.this.previewTexture = null;
-                }
-            } else {
-                ChooseFileScreen.this.updateTextPreview(null);
-                ChooseFileScreen.this.previewTexture = null;
-            }
+            ChooseFileScreen.this.updatePreview(this.file);
             this.lastClick = now;
         }
 

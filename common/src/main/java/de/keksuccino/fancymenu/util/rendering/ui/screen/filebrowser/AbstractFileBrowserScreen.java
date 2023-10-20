@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.file.FilenameComparator;
 import de.keksuccino.fancymenu.util.file.type.FileType;
+import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.component.ComponentWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -15,9 +16,10 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.Text
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
+import de.keksuccino.fancymenu.util.resources.ResourceHandlers;
+import de.keksuccino.fancymenu.util.resources.text.IText;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
-import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -49,6 +51,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
     protected static final ResourceLocation GO_UP_ICON_TEXTURE = new ResourceLocation("fancymenu", "textures/go_up_icon.png");
     protected static final ResourceLocation FILE_ICON_TEXTURE = new ResourceLocation("fancymenu", "textures/file_icon.png");
     protected static final ResourceLocation FOLDER_ICON_TEXTURE = new ResourceLocation("fancymenu", "textures/folder_icon.png");
+    protected static final Component FILE_TYPE_PREFIX_TEXT = Component.translatable("fancymenu.file_browser.file_type");
 
     @Nullable
     protected static File lastDirectory;
@@ -59,28 +62,24 @@ public abstract class AbstractFileBrowserScreen extends Screen {
     protected File currentDir;
     @Nullable
     protected FileFilter fileFilter;
-
-    //TODO Implement file types (if not null, filter files by allowed types + show allowed types in GUI)
-    //TODO Implement file types (if not null, filter files by allowed types + show allowed types in GUI)
-    //TODO Implement file types (if not null, filter files by allowed types + show allowed types in GUI)
-    //TODO Implement file types (if not null, filter files by allowed types + show allowed types in GUI)
-    // ------>
     @Nullable
-    protected List<FileType<?>> fileTypes;
+    protected FileTypeGroup<?> fileTypes;
     @NotNull
     protected Consumer<File> callback;
     protected int visibleDirectoryLevelsAboveRoot = 0;
     protected boolean showSubDirectories = true;
     protected boolean blockResourceUnfriendlyFileNames = true;
     protected boolean showBlockedResourceUnfriendlyFiles = true;
-
     protected ScrollArea fileListScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ScrollArea textFilePreviewScrollArea = new ScrollArea(0, 0, 0, 0);
+    protected ScrollArea fileTypeScrollArea = new ScrollArea(0, 0, 0, 20);
     protected ITexture previewTexture;
     protected ExtendedButton confirmButton;
     protected ExtendedButton cancelButton;
     protected ExtendedButton openInExplorerButton;
     protected ComponentWidget currentDirectoryComponent;
+    protected int fileScrollListHeightOffset = 0;
+    protected int fileTypeScrollListYOffset = 0;
 
     public AbstractFileBrowserScreen(@NotNull Component title, @Nullable File rootDirectory, @NotNull File startDirectory, @NotNull Consumer<File> callback) {
 
@@ -125,6 +124,8 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
         this.updateCurrentDirectoryComponent();
 
+        this.updateFileTypeScrollArea();
+
     }
 
     @NotNull
@@ -150,6 +151,8 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         int currentDirFieldYEnd = this.renderCurrentDirectoryField(pose, mouseX, mouseY, partial, 20, 50 + 15, (this.width / 2) - 40, this.font.lineHeight + 6);
 
         this.renderFileScrollArea(pose, mouseX, mouseY, partial, currentDirFieldYEnd);
+
+        this.renderFileTypeScrollArea(pose, mouseX, mouseY, partial);
 
         Component previewLabel = Component.translatable("fancymenu.ui.filechooser.preview");
         int previewLabelWidth = this.font.width(previewLabel);
@@ -185,9 +188,17 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         this.cancelButton.render(pose, mouseX, mouseY, partial);
     }
 
+    protected void renderFileTypeScrollArea(PoseStack pose, int mouseX, int mouseY, float partial) {
+        this.fileTypeScrollArea.setWidth(this.getBelowFileScrollAreaElementWidth());
+        this.fileTypeScrollArea.setX(this.fileListScrollArea.getXWithBorder() + this.fileListScrollArea.getWidthWithBorder() - this.fileTypeScrollArea.getWidthWithBorder());
+        this.fileTypeScrollArea.setY(this.fileListScrollArea.getYWithBorder() + this.fileListScrollArea.getHeightWithBorder() + 5 + this.fileTypeScrollListYOffset);
+        this.fileTypeScrollArea.render(pose, mouseX, mouseY, partial);
+        this.font.draw(pose, FILE_TYPE_PREFIX_TEXT, this.fileTypeScrollArea.getXWithBorder() - Minecraft.getInstance().font.width(FILE_TYPE_PREFIX_TEXT) - 5, this.fileTypeScrollArea.getYWithBorder() + (this.fileTypeScrollArea.getHeightWithBorder() / 2) - (Minecraft.getInstance().font.lineHeight / 2), UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+    }
+
     protected void renderFileScrollArea(PoseStack pose, int mouseX, int mouseY, float partial, int currentDirFieldYEnd) {
         this.fileListScrollArea.setWidth((this.width / 2) - 40, true);
-        this.fileListScrollArea.setHeight(this.height - 85 - (this.font.lineHeight + 6) - 2, true);
+        this.fileListScrollArea.setHeight(this.height - 85 - (this.font.lineHeight + 6) - 2 - 25 + this.fileScrollListHeightOffset, true);
         this.fileListScrollArea.setX(20, true);
         this.fileListScrollArea.setY(currentDirFieldYEnd + 2, true);
         this.fileListScrollArea.render(pose, mouseX, mouseY, partial);
@@ -229,6 +240,10 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         this.currentDirectoryComponent.setY(y + (height / 2) - (this.currentDirectoryComponent.getHeight() / 2));
         this.currentDirectoryComponent.render(pose, mouseX, mouseY, partial);
         return yEnd;
+    }
+
+    protected int getBelowFileScrollAreaElementWidth() {
+        return this.fileListScrollArea.getWidthWithBorder() - Minecraft.getInstance().font.width(FILE_TYPE_PREFIX_TEXT) - 5;
     }
 
     protected void updateCurrentDirectoryComponent() {
@@ -337,6 +352,17 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         return this;
     }
 
+    public boolean shouldShowFile(@NotNull File file) {
+        if ((this.fileFilter != null) && !this.fileFilter.checkFile(file)) return false;
+        if ((this.fileTypes != null)) {
+            for (FileType<?> type : this.fileTypes.getFileTypes()) {
+                if (type.isFileTypeLocal(file)) return true;
+            }
+            return false;
+        }
+        return true;
+    }
+
     public AbstractFileBrowserScreen setDirectory(@NotNull File newDirectory, boolean playSound) {
         Objects.requireNonNull(newDirectory);
         if (!this.isInRootOrSubOfRoot(newDirectory)) return this;
@@ -398,21 +424,69 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         return null;
     }
 
-    protected void updateTextPreview(@Nullable File file) {
-        this.textFilePreviewScrollArea.clearEntries();
-        if ((file != null) && file.isFile() && FileFilter.PLAIN_TEXT_FILE_FILTER.checkFile(file)) {
-            for (String s : FileUtils.getFileLines(file)) {
-                TextScrollAreaEntry e = new TextScrollAreaEntry(this.textFilePreviewScrollArea, Component.literal(s).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), (entry) -> {});
-                e.setSelectable(false);
-                e.setBackgroundColorHover(e.getBackgroundColorIdle());
-                e.setPlayClickSound(false);
-                this.textFilePreviewScrollArea.addEntry(e);
+    public void setFileTypes(@Nullable FileTypeGroup<?> typeGroup) {
+        this.fileTypes = typeGroup;
+        this.updateFileTypeScrollArea();
+    }
+
+    @Nullable
+    public FileTypeGroup<?> getFileTypes() {
+        return this.fileTypes;
+    }
+
+    public void updateFileTypeScrollArea() {
+        this.fileTypeScrollArea.clearEntries();
+        Component c = Component.translatable("fancymenu.file_browser.file_type.types.all").append(" (*)");
+        if (this.fileTypes != null) {
+            String types = "";
+            for (FileType<?> type : this.fileTypes.getFileTypes()) {
+                for (String s : type.getExtensions()) {
+                    if (!types.isEmpty()) types += ";";
+                    types += "*." + s.toUpperCase();
+                }
             }
-            int totalWidth = this.textFilePreviewScrollArea.getTotalEntryWidth();
-            for (ScrollAreaEntry e : this.textFilePreviewScrollArea.getEntries()) {
-                e.setWidth(totalWidth);
+            c = Component.empty().append(this.fileTypes.getDisplayName()).append(Component.literal(" (")).append(Component.literal(types)).append(Component.literal(")"));
+        }
+        TextScrollAreaEntry entry = new TextScrollAreaEntry(this.fileTypeScrollArea, c, textScrollAreaEntry -> {});
+        entry.setPlayClickSound(false);
+        this.fileTypeScrollArea.addEntry(entry);
+    }
+
+    public void updatePreview(@Nullable File file) {
+        if ((file != null) && file.isFile()) {
+            this.updateTextPreview(file);
+            if (FileFilter.IMAGE_FILE_FILTER.checkFile(file)) {
+                this.previewTexture = ResourceHandlers.getImageHandler().get(file.getPath());
+            } else {
+                this.previewTexture = null;
             }
         } else {
+            this.updateTextPreview(null);
+            this.previewTexture = null;
+        }
+    }
+
+    protected void updateTextPreview(@Nullable File file) {
+        this.textFilePreviewScrollArea.clearEntries();
+        boolean textSet = false;
+        if ((file != null) && file.isFile() && FileFilter.TEXT_FILE_FILTER.checkFile(file)) {
+            IText text = ResourceHandlers.getTextHandler().get(file.getPath());
+            if (text != null) {
+                for (String s : text.getTextLines()) {
+                    TextScrollAreaEntry e = new TextScrollAreaEntry(this.textFilePreviewScrollArea, Component.literal(s).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), (entry) -> {});
+                    e.setSelectable(false);
+                    e.setBackgroundColorHover(e.getBackgroundColorIdle());
+                    e.setPlayClickSound(false);
+                    this.textFilePreviewScrollArea.addEntry(e);
+                }
+                int totalWidth = this.textFilePreviewScrollArea.getTotalEntryWidth();
+                for (ScrollAreaEntry e : this.textFilePreviewScrollArea.getEntries()) {
+                    e.setWidth(totalWidth);
+                }
+                textSet = true;
+            }
+        }
+        if (!textSet) {
             TextScrollAreaEntry e = new TextScrollAreaEntry(this.textFilePreviewScrollArea, Component.translatable("fancymenu.ui.filechooser.no_preview").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), (entry) -> {});
             e.setSelectable(false);
             e.setBackgroundColorHover(e.getBackgroundColorIdle());
@@ -454,7 +528,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
                 }
             }
             for (File f : files) {
-                if ((this.fileFilter != null) && !this.fileFilter.checkFile(f)) continue;
+                if (!this.shouldShowFile(f)) continue;
                 AbstractFileScrollAreaEntry e = this.buildFileEntry(f);
                 if (this.blockResourceUnfriendlyFileNames) e.resourceUnfriendlyFileName = !FileFilter.RESOURCE_NAME_FILTER.checkFile(f);
                 if (e.resourceUnfriendlyFileName) e.setSelectable(false);

@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.file.type;
 import com.google.common.io.Files;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -34,6 +35,11 @@ public class FileType<T> {
     protected String mimeType;
     @NotNull
     protected FileCodec<T> codec;
+    protected boolean allowLocation = true;
+    protected boolean allowLocal = true;
+    protected boolean allowWeb = true;
+    @Nullable
+    protected Component customDisplayName;
 
     protected FileType(@NotNull FileCodec<T> codec) {
         this.mediaType = FileMediaType.OTHER;
@@ -78,17 +84,19 @@ public class FileType<T> {
         return new ArrayList<>(this.extensions);
     }
 
-    public void addExtension(@NotNull String extension) {
+    public FileType<T> addExtension(@NotNull String extension) {
         extension = Objects.requireNonNull(extension).toLowerCase().replace(".", "").replace(" ", "");
-        if (this.extensions.contains(extension)) return;
+        if (this.extensions.contains(extension)) return this;
         this.extensions.add(extension);
+        return this;
     }
 
-    public void removeExtension(@NotNull String extension) {
+    public FileType<T> removeExtension(@NotNull String extension) {
         extension = Objects.requireNonNull(extension).toLowerCase().replace(".", "").replace(" ", "");
         while (this.extensions.contains(extension)) {
             this.extensions.remove(extension);
         }
+        return this;
     }
 
     @NotNull
@@ -106,8 +114,60 @@ public class FileType<T> {
         return this.codec;
     }
 
-    public void setCodec(@NotNull FileCodec<T> codec) {
+    public FileType<T> setCodec(@NotNull FileCodec<T> codec) {
         this.codec = Objects.requireNonNull(codec);
+        return this;
+    }
+
+    public boolean isLocationAllowed() {
+        return this.allowLocation;
+    }
+
+    public FileType<T> setLocationAllowed(boolean allowLocation) {
+        this.allowLocation = allowLocation;
+        return this;
+    }
+
+    public boolean isLocalAllowed() {
+        return this.allowLocal;
+    }
+
+    public FileType<T> setLocalAllowed(boolean allowLocal) {
+        this.allowLocal = allowLocal;
+        return this;
+    }
+
+    public boolean isWebAllowed() {
+        return this.allowWeb;
+    }
+
+    public FileType<T> setWebAllowed(boolean allowWeb) {
+        this.allowWeb = allowWeb;
+        return this;
+    }
+
+    @NotNull
+    public Component getDisplayName() {
+        if (this.customDisplayName != null) return this.customDisplayName;
+        if (!this.extensions.isEmpty()) return Component.literal(this.extensions.get(0).toUpperCase());
+        return Component.empty();
+    }
+
+    public FileType<T> setCustomDisplayName(@Nullable Component name) {
+        this.customDisplayName = name;
+        return this;
+    }
+
+    @Override
+    public String toString() {
+        return "FileType{" +
+                "extensions=" + extensions +
+                ", mediaType=" + mediaType +
+                ", mimeType='" + mimeType + '\'' +
+                ", allowLocation=" + allowLocation +
+                ", allowLocal=" + allowLocal +
+                ", allowWeb=" + allowWeb +
+                '}';
     }
 
 }

@@ -46,7 +46,13 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
                         break;
                     }
                 }
-                if (fileType != null) this.putAndReturn((R) fileType.getCodec().readWeb(resourceSource), resourceSource);
+                if (fileType != null) {
+                    if (!fileType.isWebAllowed()) {
+                        LOGGER.error("[FANCYMENU] Failed to get web resource! Web sources are not supported by this file type: " + fileType + " (Source: " + resourceSource + ")");
+                        return null;
+                    }
+                    this.putAndReturn((R) fileType.getCodec().readWeb(resourceSource), resourceSource);
+                }
             } else if (sourceType == ResourceSourceType.LOCATION) {
                 if (this.getResourceMap().containsKey(resourceSource)) return this.getResourceMap().get(resourceSource);
                 ResourceLocation loc = ResourceLocation.tryParse(resourceSource);
@@ -58,7 +64,13 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
                             break;
                         }
                     }
-                    if (fileType != null) return this.putAndReturn((R) fileType.getCodec().readLocation(loc), resourceSource);
+                    if (fileType != null) {
+                        if (!fileType.isLocationAllowed()) {
+                            LOGGER.error("[FANCYMENU] Failed to get location resource! Location sources are not supported by this file type: " + fileType + " (Source: " + resourceSource + ")");
+                            return null;
+                        }
+                        return this.putAndReturn((R) fileType.getCodec().readLocation(loc), resourceSource);
+                    }
                 }
             } else {
                 resourceSource = GameDirectoryUtils.getAbsoluteGameDirectoryPath(resourceSource);
@@ -71,10 +83,16 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
                         break;
                     }
                 }
-                if (fileType != null) return this.putAndReturn((R) fileType.getCodec().readLocal(file), resourceSource);
+                if (fileType != null) {
+                    if (!fileType.isLocalAllowed()) {
+                        LOGGER.error("[FANCYMENU] Failed to get local resource! Local sources are not supported by this file type: " + fileType + " (Source: " + resourceSource + ")");
+                        return null;
+                    }
+                    return this.putAndReturn((R) fileType.getCodec().readLocal(file), resourceSource);
+                }
             }
         } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to get text resource: " + resourceSource, ex);
+            LOGGER.error("[FANCYMENU] Failed to get resource: " + resourceSource, ex);
         }
         return null;
     }

@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.resources.text.IText;
 import de.keksuccino.fancymenu.util.resources.text.PlainText;
 import de.keksuccino.fancymenu.util.resources.texture.*;
 import de.keksuccino.fancymenu.util.resources.video.IVideo;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -17,7 +18,7 @@ import java.util.List;
 
 public class FileTypes {
 
-    public static final FileType<Object> UNKNOWN = new FileType<>(FileCodec.generic(Object.class, consumes -> null)) {
+    public static final FileType<Object> UNKNOWN = new FileType<>(FileCodec.empty(Object.class)) {
         @Override
         public boolean isFileTypeLocal(@NotNull File file) {
             return true;
@@ -39,7 +40,7 @@ public class FileTypes {
             "image/gif", "gif");
     public static final ImageFileType APNG_IMAGE = new ImageFileType(
             FileCodec.advanced(ITexture.class, ApngTexture::of, ApngTexture::location, ApngTexture::local, ApngTexture::web),
-            "image/apng", "apng");
+            "image/apng", "apng").setCustomDisplayName(Component.translatable("fancymenu.file_types.apng"));
 
     //TODO implement audio codecs (and remove file types that have no codec)
     public static final AudioFileType OGG_AUDIO = new AudioFileType(FileCodec.basic(IAudio.class, consumes -> null, consumes -> null), "audio/ogg", "ogg");
@@ -118,6 +119,10 @@ public class FileTypes {
 
     }
 
+    /**
+     * Returns all {@link ImageFileType}s registered in the {@link FileTypeRegistry}.<br>
+     * Default types listed in {@link FileTypes} are included.
+     */
     @NotNull
     public static List<ImageFileType> getAllImageFileTypes() {
         List<ImageFileType> types = new ArrayList<>();
@@ -127,6 +132,10 @@ public class FileTypes {
         return types;
     }
 
+    /**
+     * Returns all {@link AudioFileType}s registered in the {@link FileTypeRegistry}.<br>
+     * Default types listed in {@link FileTypes} are included.
+     */
     @NotNull
     public static List<AudioFileType> getAllAudioFileTypes() {
         List<AudioFileType> types = new ArrayList<>();
@@ -136,6 +145,10 @@ public class FileTypes {
         return types;
     }
 
+    /**
+     * Returns all {@link VideoFileType}s registered in the {@link FileTypeRegistry}.<br>
+     * Default types listed in {@link FileTypes} are included.
+     */
     @NotNull
     public static List<VideoFileType> getAllVideoFileTypes() {
         List<VideoFileType> types = new ArrayList<>();
@@ -145,6 +158,10 @@ public class FileTypes {
         return types;
     }
 
+    /**
+     * Returns all {@link TextFileType}s registered in the {@link FileTypeRegistry}.<br>
+     * Default types listed in {@link FileTypes} are included.
+     */
     @NotNull
     public static List<TextFileType> getAllTextFileTypes() {
         List<TextFileType> types = new ArrayList<>();
@@ -154,6 +171,9 @@ public class FileTypes {
         return types;
     }
 
+    /**
+     * Tries to find the {@link FileType} of a {@link ResourceLocation} file.
+     */
     @Nullable
     public static FileType<?> getTypeOfLocationFile(@NotNull ResourceLocation location) {
         for (FileType<?> type : FileTypeRegistry.getFileTypes()) {
@@ -162,6 +182,9 @@ public class FileTypes {
         return null;
     }
 
+    /**
+     * Tries to find the {@link FileType} of a local file.
+     */
     @Nullable
     public static FileType<?> getTypeOfLocalFile(@NotNull File file) {
         for (FileType<?> type : FileTypeRegistry.getFileTypes()) {
@@ -170,6 +193,9 @@ public class FileTypes {
         return null;
     }
 
+    /**
+     * Tries to find the {@link FileType} of a web file.
+     */
     @Nullable
     public static FileType<?> getTypeOfWebFile(@NotNull String fileUrl) {
         for (FileType<?> type : FileTypeRegistry.getFileTypes()) {

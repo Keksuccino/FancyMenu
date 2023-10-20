@@ -19,6 +19,30 @@ import java.util.Objects;
 @SuppressWarnings("unused")
 public abstract class FileCodec<T> {
 
+    /**
+     * Should only be used for placeholder-like cases.
+     */
+    @NotNull public static <T> FileCodec<T> empty(@NotNull Class<T> type) {
+        return new FileCodec<T>() {
+            @Override
+            public @Nullable T read(@NotNull InputStream in) {
+                return null;
+            }
+            @Override
+            public @Nullable T readLocation(@NotNull ResourceLocation location) {
+                return null;
+            }
+            @Override
+            public @Nullable T readLocal(@NotNull File file) {
+                return null;
+            }
+            @Override
+            public @Nullable T readWeb(@NotNull String fileUrl) {
+                return null;
+            }
+        };
+    }
+
     @NotNull
     public static <T> FileCodec<T> generic(@NotNull Class<T> type, @NotNull ConsumingSupplier<InputStream, T> streamReader) {
         Objects.requireNonNull(type);

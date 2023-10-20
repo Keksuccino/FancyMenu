@@ -12,7 +12,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
-import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -24,11 +23,12 @@ import java.util.function.Consumer;
 @SuppressWarnings("all")
 public class SaveFileScreen extends AbstractFileBrowserScreen {
 
+    protected static final Component FILE_NAME_PREFIX_TEXT = Component.translatable("fancymenu.file_browser.save_file.file_name");
+
     @Nullable
     protected String forcedFileExtension;
     protected String defaultFileName;
     protected boolean forceResourceFriendlyFileNames = true;
-
     protected ExtendedEditBox fileNameEditBox;
 
     @NotNull
@@ -95,6 +95,9 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
 
         this.setForceResourceFriendlyFileNames(true);
 
+        this.fileScrollListHeightOffset = -25;
+        this.fileTypeScrollListYOffset = 25;
+
     }
 
     @Override
@@ -120,20 +123,22 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
 
         super.render(pose, mouseX, mouseY, partial);
 
-        this.fileNameEditBox.setWidth(this.fileListScrollArea.getWidthWithBorder() - 2);
-        this.fileNameEditBox.setX(21);
-        this.fileNameEditBox.setY(this.fileListScrollArea.getYWithBorder() + this.fileListScrollArea.getHeightWithBorder() + 5);
-        this.fileNameEditBox.render(pose, mouseX, mouseY, partial);
+        this.renderFileNameEditBox(pose, mouseX, mouseY, partial);
 
     }
 
+    protected void renderFileNameEditBox(PoseStack pose, int mouseX, int mouseY, float partial) {
+        this.fileNameEditBox.setWidth(this.getBelowFileScrollAreaElementWidth() - 2);
+        this.fileNameEditBox.setX(this.fileListScrollArea.getXWithBorder() + this.fileListScrollArea.getWidthWithBorder() - this.fileNameEditBox.getWidth());
+        this.fileNameEditBox.setY(this.fileListScrollArea.getYWithBorder() + this.fileListScrollArea.getHeightWithBorder() + 5);
+        this.fileNameEditBox.render(pose, mouseX, mouseY, partial);
+        this.font.draw(pose, FILE_NAME_PREFIX_TEXT, this.fileNameEditBox.getX() - 1 - Minecraft.getInstance().font.width(FILE_NAME_PREFIX_TEXT) - 5, this.fileNameEditBox.getY() - 1 + (this.fileNameEditBox.getHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2), UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+    }
+
     @Override
-    protected void renderFileScrollArea(PoseStack pose, int mouseX, int mouseY, float partial, int currentDirFieldYEnd) {
-        this.fileListScrollArea.setWidth((this.width / 2) - 40, true);
-        this.fileListScrollArea.setHeight(this.height - 85 - (this.font.lineHeight + 6) - 2 - 25, true);
-        this.fileListScrollArea.setX(20, true);
-        this.fileListScrollArea.setY(currentDirFieldYEnd + 2, true);
-        this.fileListScrollArea.render(pose, mouseX, mouseY, partial);
+    protected int getBelowFileScrollAreaElementWidth() {
+        int w = this.fileListScrollArea.getWidthWithBorder() - Minecraft.getInstance().font.width(FILE_NAME_PREFIX_TEXT) - 5;
+        return Math.min(super.getBelowFileScrollAreaElementWidth(), w);
     }
 
     @Override
@@ -229,7 +234,7 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
         if ((e != null) && e.file.isDirectory()) return null;
         if (!this.fileNameEditBox.getValue().replace(" ", "").isEmpty()) {
             File f = new File(this.currentDir, "/" + this.fileNameEditBox.getValue());
-            if ((this.fileFilter != null) && !this.fileFilter.checkFile(f)) return null;
+            if (!this.shouldShowFile(f)) return null;
             return f;
         }
         return null;
@@ -280,18 +285,7 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
                     SaveFileScreen.this.setDirectory(this.file, true);
                 }
             }
-            if (this.file.isFile()) {
-                SaveFileScreen.this.fileNameEditBox.setValue(this.file.getName());
-                SaveFileScreen.this.updateTextPreview(this.file);
-                if (FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.file)) {
-                    SaveFileScreen.this.previewTexture = ImageResourceHandler.INSTANCE.getTexture(this.file);
-                } else {
-                    SaveFileScreen.this.previewTexture = null;
-                }
-            } else {
-                SaveFileScreen.this.updateTextPreview(null);
-                SaveFileScreen.this.previewTexture = null;
-            }
+            SaveFileScreen.this.updatePreview(this.file);
             this.lastClick = now;
         }
 
