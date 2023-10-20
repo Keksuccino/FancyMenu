@@ -1,14 +1,9 @@
 package de.keksuccino.fancymenu.mixin.client;
 
 import de.keksuccino.fancymenu.events.ScreenBackgroundRenderedEvent;
-import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
-import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
-import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.MainMenuHandler;
 import de.keksuccino.konkrete.Konkrete;
 import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.LoadingOverlay;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import org.spongepowered.asm.mixin.Mixin;

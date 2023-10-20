@@ -24,6 +24,7 @@ public class MixinGameRenderer {
     //I'm wrapping this to easily cache the render() params
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderWithTooltip(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
     private boolean wrapRenderScreenFancyMenu(Screen instance, GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        if (Minecraft.getInstance().screen == null) return true;
         this.cachedGuiGraphics = graphics;
         this.cachedMouseX = mouseX;
         this.cachedMouseY = mouseY;
@@ -34,6 +35,7 @@ public class MixinGameRenderer {
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderWithTooltip(Lnet/minecraft/client/gui/GuiGraphics;IIF)V", shift = At.Shift.AFTER))
     private void afterRenderScreenFancyMenu(float $$0, long $$1, boolean $$2, CallbackInfo info) {
+        if (Minecraft.getInstance().screen == null) return;
         Konkrete.getEventHandler().callEventsFor(new RenderScreenEvent.Post(Minecraft.getInstance().screen, this.cachedGuiGraphics, this.cachedMouseX, this.cachedMouseY, this.cachedPartial));
     }
 

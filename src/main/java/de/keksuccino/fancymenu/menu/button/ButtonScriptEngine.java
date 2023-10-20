@@ -4,14 +4,11 @@ import java.awt.Color;
 import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
 import de.keksuccino.fancymenu.compatibility.MinecraftCompatibilityUtils;
 import de.keksuccino.fancymenu.menu.button.buttonactions.LegacyButtonActions;
 import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
@@ -25,12 +22,10 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.packs.PackSelectionScreen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
-import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.ServerList;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import com.google.common.io.Files;
-
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
 import de.keksuccino.fancymenu.api.buttonaction.ButtonActionRegistry;
@@ -51,6 +46,7 @@ import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.network.chat.Component;
+import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -58,8 +54,8 @@ import org.jetbrains.annotations.Nullable;
 public class ButtonScriptEngine {
 
 	private static final List<String> LEGACY_IDENTIFIERS = LegacyButtonActions.getLegacyIdentifiers();
+	private static final Map<String, ButtonScript> SCRIPTS = new HashMap<String, ButtonScriptEngine.ButtonScript>();
 
-	private static Map<String, ButtonScript> scripts = new HashMap<String, ButtonScriptEngine.ButtonScript>();
 	private static boolean init = false;
 	
 	public static void init() {
@@ -71,7 +67,7 @@ public class ButtonScriptEngine {
 	}
 	
 	public static void updateButtonScripts() {
-		scripts.clear();
+		SCRIPTS.clear();
 
 		if (!FancyMenu.getButtonScriptPath().exists()) {
 			FancyMenu.getButtonScriptPath().mkdirs();
@@ -79,19 +75,19 @@ public class ButtonScriptEngine {
 
 		for (File f : FancyMenu.getButtonScriptPath().listFiles()) {
 			if (f.isFile() && f.getPath().toLowerCase().endsWith(".txt")) {
-				scripts.put(Files.getNameWithoutExtension(f.getPath()), new ButtonScript(f));
+				SCRIPTS.put(Files.getNameWithoutExtension(f.getPath()), new ButtonScript(f));
 			}
 		}
 	}
 	
 	public static void runButtonScript(String name) {
-		if (scripts.containsKey(name)) {
-			scripts.get(name).runScript();
+		if (SCRIPTS.containsKey(name)) {
+			SCRIPTS.get(name).runScript();
 		}
 	}
 	
 	public static Map<String, ButtonScript> getButtonScripts() {
-		return scripts;
+		return SCRIPTS;
 	}
 	
 	@SuppressWarnings("resource")
@@ -272,13 +268,18 @@ public class ButtonScriptEngine {
 			if (action.equalsIgnoreCase("downloadfile")) {
 				if (value.contains(";")) {
 					String url = StringUtils.convertFormatCodes(cleanPath(value.split("[;]", 2)[0]), "§", "&");
-					String path = cleanPath(value.split("[;]", 2)[1]);
-					File f = new File(path);
-					if (!f.exists()) {
-						f.mkdirs();
+					String target = cleanPath(value.split("[;]", 2)[1]);
+					File targetFile = new File(target);
+					File targetParentFile = targetFile.getParentFile();
+					if ((targetParentFile != null) && !targetParentFile.isDirectory()) {
+						targetParentFile.mkdirs();
+					}
+					if (targetFile.exists()) {
+						targetFile.delete();
 					}
 					InputStream in = new URL(url).openStream();
-					java.nio.file.Files.copy(in, Paths.get(new File(path).toURI()), StandardCopyOption.REPLACE_EXISTING);
+					Files.write(in.readAllBytes(), targetFile);
+					IOUtils.closeQuietly(in);
 				}
 			}
 			if (action.equalsIgnoreCase("unpackzip")) {
@@ -292,7 +293,7 @@ public class ButtonScriptEngine {
 				CustomizationHelper.reloadSystemAndMenu();
 			}
 			if (action.equalsIgnoreCase("runscript")) {
-				if(scripts.containsKey(value)) {
+				if(SCRIPTS.containsKey(value)) {
 					runButtonScript(value);
 				}
 			}
@@ -413,9 +414,9 @@ public class ButtonScriptEngine {
 		}
 	}
 
-	public static void openFile(File f) {
+	public static void openFile(@NotNull File file) {
 		try {
-			openWebLink(f.toURI().toURL().toString());
+			openWebLink(file.toURI().toURL().toString());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
