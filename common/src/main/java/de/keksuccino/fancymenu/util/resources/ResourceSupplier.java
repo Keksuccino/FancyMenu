@@ -119,8 +119,27 @@ public class ResourceSupplier<T extends Resource> {
     }
 
     @NotNull
-    public String getSource() {
-        return this.source;
+    public ResourceSourceType getResourceSourceType() {
+        return ResourceSourceType.getSourceTypeOf(PlaceholderParser.replacePlaceholders(this.source, false));
+    }
+
+    /**
+     * The source without its {@link ResourceSourceType} prefix.<br>
+     * Should <b>NOT</b> be used for saving/serializing the source! For saving, use {@link ResourceSupplier#getSourceWithPrefix()} instead!
+     */
+    @NotNull
+    public String getSourceWithoutPrefix() {
+        return ResourceSourceType.getWithoutSourcePrefix(this.source);
+    }
+
+    /**
+     * The source with its {@link ResourceSourceType} prefix.<br>
+     * This should be used for saving/serializing the source.
+     */
+    @NotNull
+    public String getSourceWithPrefix() {
+        if (ResourceSourceType.hasSourcePrefix(this.source)) return this.source;
+        return this.getResourceSourceType().getSourcePrefix() + this.source;
     }
 
     public void setSource(@NotNull String source) {

@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
+import java.util.Objects;
 
 public class CycleButton<T> extends ExtendedButton {
 
@@ -22,6 +23,16 @@ public class CycleButton<T> extends ExtendedButton {
     public void click() {
         this.cycle.next();
         this.clickFeedback.onClick(cycle.current(), this);
+    }
+
+    @NotNull
+    public T getSelectedValue() {
+        return this.cycle.current();
+    }
+
+    public CycleButton<T> setSelectedValue(@NotNull T value) {
+        this.cycle.setCurrentValue(Objects.requireNonNull(value));
+        return this;
     }
 
     @Override

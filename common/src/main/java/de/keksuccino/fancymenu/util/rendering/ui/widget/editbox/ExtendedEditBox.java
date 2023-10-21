@@ -3,20 +3,26 @@ package de.keksuccino.fancymenu.util.rendering.ui.widget.editbox;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
+import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.Color;
 
 @SuppressWarnings("unused")
 public class ExtendedEditBox extends EditBox implements UniqueWidget, NavigatableWidget {
+
+    //TODO add text prefix and suffix (non-editable)
 
     protected CharacterFilter characterFilter;
     protected CharacterRenderFormatter characterRenderFormatter;
@@ -32,6 +38,11 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     protected String identifier;
     protected boolean focusable = true;
     protected boolean navigatable = true;
+    protected boolean canConsumeUserInput = true;
+    @Nullable
+    protected String inputPrefix;
+    @Nullable
+    protected String inputSuffix;
 
     public ExtendedEditBox(Font font, int x, int y, int width, int height, Component hint) {
         super(font, x, y, width, height, hint);
@@ -254,6 +265,48 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         return this;
     }
 
+    public boolean canConsumeUserInput() {
+        return this.canConsumeUserInput;
+    }
+
+    public ExtendedEditBox setCanConsumeUserInput(boolean canConsumeUserInput) {
+        this.canConsumeUserInput = canConsumeUserInput;
+        return this;
+    }
+
+    public @Nullable String getInputPrefix() {
+        return inputPrefix;
+    }
+
+    public ExtendedEditBox setInputPrefix(@Nullable String inputPrefix) {
+        this.inputPrefix = inputPrefix;
+        this.setValue(this.getValue());
+        return this;
+    }
+
+    public @Nullable String getInputSuffix() {
+        return inputSuffix;
+    }
+
+    public ExtendedEditBox setInputSuffix(@Nullable String inputSuffix) {
+        this.inputSuffix = inputSuffix;
+        this.setValue(this.getValue());
+        return this;
+    }
+
+    public ExtendedEditBox applyInputPrefixSuffixCharacterRenderFormatter() {
+        this.setCharacterRenderFormatter((editBox, component, characterIndex, character, visiblePartOfLine, fullLine) -> {
+            if ((this.inputSuffix != null) && (characterIndex >= Math.max(0, (editBox.getValue().length() - this.inputSuffix.length())-1))) {
+                component.withStyle(Style.EMPTY.withColor(this.getTextColorUneditable().getColorInt()));
+            }
+            if ((this.inputPrefix != null) && (characterIndex < this.inputPrefix.length())) {
+                component.withStyle(Style.EMPTY.withColor(this.getTextColorUneditable().getColorInt()));
+            }
+            return component;
+        });
+        return this;
+    }
+
     @Deprecated
     @Override
     public void setTextColor(int color) {
@@ -267,7 +320,40 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     }
 
     @Override
+    public void setCursorPosition(int pos) {
+        pos = Mth.clamp(pos, 0, this.getValue().length());
+        if ((this.inputPrefix != null) && (pos < this.inputPrefix.length())) pos = this.inputPrefix.length();
+        if ((this.inputSuffix != null) && (pos >= (this.getValue().length() - this.inputSuffix.length()))) pos = (this.getValue().length() - this.inputSuffix.length());
+        super.setCursorPosition(pos);
+    }
+
+    @Override
+    public void setHighlightPos(int pos) {
+        pos = Mth.clamp(pos, 0, this.getValue().length());
+        if ((this.inputPrefix != null) && (pos < this.inputPrefix.length())) pos = this.inputPrefix.length();
+        if ((this.inputSuffix != null) && (pos >= (this.getValue().length() - this.inputSuffix.length()))) pos = (this.getValue().length() - this.inputSuffix.length());
+        super.setHighlightPos(pos);
+    }
+
+    @Override
+    public void setValue(@NotNull String value) {
+        if ((this.inputPrefix != null) && !value.startsWith(this.inputPrefix)) value = this.inputPrefix + value;
+        if ((this.inputSuffix != null) && !value.endsWith(this.inputSuffix)) value = value + this.inputSuffix;
+        super.setValue(value);
+    }
+
+    @Override
     public boolean charTyped(char character, int modifiers) {
+        if (this.inputSuffix != null) {
+            if (this.getCursorPosition() >= Math.max(0, this.getValue().length() - this.inputSuffix.length())) {
+                return false;
+            }
+        }
+        if (this.inputPrefix != null) {
+            if (this.getCursorPosition() < this.inputPrefix.length()) {
+                return false;
+            }
+        }
         if ((this.characterFilter != null) && !this.characterFilter.isAllowedChar(character)) {
             return false;
         }
@@ -280,6 +366,39 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             textToWrite = this.characterFilter.filterForAllowedChars(textToWrite);
         }
         super.insertText(textToWrite);
+    }
+
+    @Override
+    public boolean keyPressed(int keycode, int scancode, int modifiers) {
+        if (!this.canConsumeUserInput) return false;
+        boolean isNotArrowKeys = (keycode != InputConstants.KEY_LEFT) && (keycode != InputConstants.KEY_RIGHT) && (keycode != InputConstants.KEY_UP) && (keycode != InputConstants.KEY_DOWN);
+        //If select all, only select parts that are not prefix or suffix
+        if (Screen.isSelectAll(keycode) && ((this.inputPrefix != null) || (this.inputSuffix != null))) {
+            if (this.inputSuffix != null) {
+                this.moveCursorTo(this.getValue().length() - this.inputSuffix.length());
+            } else {
+                this.moveCursorToEnd();
+            }
+            this.setHighlightPos((this.inputPrefix != null) ? this.inputPrefix.length() : 0);
+            return true;
+        }
+        if (this.inputSuffix != null) {
+            if (Math.max(0, this.getCursorPosition()) >= Math.max(0, this.getValue().length() - this.inputSuffix.length())) {
+                if (isNotArrowKeys) return false;
+            }
+        }
+        if (this.inputPrefix != null) {
+            if (Math.max(0, this.getCursorPosition()) < this.inputPrefix.length()) {
+                if (isNotArrowKeys) return false;
+            }
+        }
+        return super.keyPressed(keycode, scancode, modifiers);
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (!this.canConsumeUserInput) return false;
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     //This is to make the edit box work in FocuslessEventHandlers

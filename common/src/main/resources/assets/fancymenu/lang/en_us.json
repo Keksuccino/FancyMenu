@@ -1096,5 +1096,19 @@
   "fancymenu.file_types.groups.text": "Plain Text Files",
   "fancymenu.file_browser.save_file.file_name": "File Name:",
   "fancymenu.file_browser.file_type": "File Type:",
-  "fancymenu.file_browser.file_type.types.all": "All"
+  "fancymenu.file_browser.file_type.types.all": "All",
+  "fancymenu.resources.source_type": "Source Type: %s",
+  "fancymenu.resources.source_type.location": "Resource Pack",
+  "fancymenu.resources.source_type.location.desc": "This source type uses Minecraft's own resource\nsystem to get resources, so in other words,\nit can use resources loaded via resource packs,\nVanilla resources and resources loaded by mods.",
+  "fancymenu.resources.source_type.location.desc.input": "Here you need to input the resource location\nof the resource you want to use.\nResource locations consist of two parts.\nThe first part is the namespace and the second\npart is the path.\nThese two parts are separated by a colon (:).\n\nTo learn more about resource locations,\nplease visit resources.fancymenu.net!",
+  "fancymenu.resources.source_type.local": "Local",
+  "fancymenu.resources.source_type.local.desc": "This source type lets you load local resources\nsaved in Minecraft's instance directory.\nYou need to save all of FancyMenu's resources\nto '/config/fancymenu/assets'.",
+  "fancymenu.resources.source_type.web": "Web",
+  "fancymenu.resources.source_type.web.desc": "This source type lets you use web resources via URL.\nResource URLs should ALWAYS be DIRECT URLs,\nwhich means they should point directly to the\nresource and end with the resource's name + extension.\nURLs also need to start with http:// or https://.\n\n§xUsing non-direct URLs will hurt the performance!",
+  "fancymenu.resources.chooser_screen.source": "Resource Source:",
+  "fancymenu.resources.chooser_screen.legacy_local.warning.line1": "This is a non-asset local source!",
+  "fancymenu.resources.chooser_screen.legacy_local.warning.line2": "Most edit features are disabled until you set a valid asset source!",
+  "fancymenu.resources.chooser_screen.legacy_local.warning.line3": "To set an asset source, use the button above.",
+  "fancymenu.resources.chooser_screen.choose_local": "Choose Local Resource File",
+  "fancymenu.resources.chooser_screen.allowed_file_types": "Allowed File Types:"
 }

@@ -1,15 +1,44 @@
 package de.keksuccino.fancymenu.util.resources;
 
+import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
-public enum ResourceSourceType {
+public enum ResourceSourceType implements LocalizedCycleEnum<ResourceSourceType> {
 
-    LOCATION,
-    LOCAL,
-    WEB;
+    LOCATION("location"),
+    LOCAL("local"),
+    WEB("source");
+
+    private final String name;
+
+    ResourceSourceType(@NotNull String name) {
+        this.name = name;
+    }
+
+    @NotNull
+    public String getSourcePrefix() {
+        return "[source:" + this.name + "]";
+    }
+
+    public static boolean hasSourcePrefix(@NotNull String resourceSource) {
+        if (resourceSource.startsWith(LOCATION.getSourcePrefix())) return true;
+        if (resourceSource.startsWith(LOCAL.getSourcePrefix())) return true;
+        if (resourceSource.startsWith(WEB.getSourcePrefix())) return true;
+        return false;
+    }
+
+    @NotNull
+    public static String getWithoutSourcePrefix(@NotNull String resourceSource) {
+        resourceSource = resourceSource.replace(LOCATION.getSourcePrefix(), "");
+        resourceSource = resourceSource.replace(LOCAL.getSourcePrefix(), "");
+        resourceSource = resourceSource.replace(WEB.getSourcePrefix(), "");
+        return resourceSource;
+    }
 
     /**
      * Tries to find the {@link ResourceSourceType} of a resource's source.
@@ -19,11 +48,45 @@ public enum ResourceSourceType {
     @NotNull
     public static ResourceSourceType getSourceTypeOf(@NotNull String resourceSource) {
         Objects.requireNonNull(resourceSource);
-        if (TextValidators.BASIC_URL_TEXT_VALIDATOR.get(resourceSource)) return WEB;
-        if (resourceSource.contains(":")) {
+        if (resourceSource.startsWith(LOCAL.getSourcePrefix())) return LOCAL;
+        if (resourceSource.startsWith(WEB.getSourcePrefix()) || TextValidators.BASIC_URL_TEXT_VALIDATOR.get(resourceSource)) return WEB;
+        if (resourceSource.startsWith(LOCATION.getSourcePrefix()) || resourceSource.contains(":")) {
             if (ResourceLocation.tryParse(resourceSource) != null) return LOCATION;
         }
         return LOCAL;
+    }
+
+    @Override
+    public @NotNull Style getValueComponentStyle() {
+        return WARNING_TEXT_STYLE.get();
+    }
+
+    @Override
+    public @NotNull String getLocalizationKeyBase() {
+        return "fancymenu.resources.source_type";
+    }
+
+    @Override
+    public @NotNull String getName() {
+        return this.name;
+    }
+
+    @Override
+    public @NotNull ResourceSourceType[] getValues() {
+        return ResourceSourceType.values();
+    }
+
+    @Override
+    public @Nullable ResourceSourceType getByNameInternal(@NotNull String name) {
+        return getByName(name);
+    }
+
+    @Nullable
+    public static ResourceSourceType getByName(@NotNull String name) {
+        for (ResourceSourceType t : ResourceSourceType.values()) {
+            if (t.name.equals(name)) return t;
+        }
+        return null;
     }
 
 }

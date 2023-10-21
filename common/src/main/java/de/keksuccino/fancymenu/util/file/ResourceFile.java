@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.file.type.FileMediaType;
 import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
+import de.keksuccino.fancymenu.util.resources.ResourceSourceType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -20,6 +21,8 @@ public class ResourceFile {
     protected String shortPath;
     protected File file;
     protected FileType<?> type;
+    @Nullable
+    protected ResourceSourceType resourceSourceType;
 
     /**
      * Returns a new {@link ResourceFile} instance for the given asset.<br>
@@ -64,6 +67,10 @@ public class ResourceFile {
     @NotNull
     public static ResourceFile of(@NotNull String gameDirectoryFilePath) {
         ResourceFile resourceFile = new ResourceFile();
+        if (ResourceSourceType.hasSourcePrefix(gameDirectoryFilePath)) {
+            resourceFile.resourceSourceType = ResourceSourceType.getSourceTypeOf(gameDirectoryFilePath);
+        }
+        gameDirectoryFilePath = ResourceSourceType.getWithoutSourcePrefix(gameDirectoryFilePath);
         gameDirectoryFilePath = gameDirectoryFilePath.replace("\\", "/");
         gameDirectoryFilePath = GameDirectoryUtils.getPathWithoutGameDirectory(gameDirectoryFilePath).replace("\\", "/");
         if (!gameDirectoryFilePath.startsWith("/")) {
@@ -78,10 +85,24 @@ public class ResourceFile {
         if (resourceFile.type == null) {
             resourceFile.type = FileTypes.UNKNOWN;
         }
+        if (resourceFile.resourceSourceType == null) {
+            resourceFile.resourceSourceType = ResourceSourceType.getSourceTypeOf(gameDirectoryFilePath);
+        }
         return resourceFile;
     }
 
     protected ResourceFile() {
+    }
+
+    @Nullable
+    public ResourceSourceType getResourceSourceType() {
+        return this.resourceSourceType;
+    }
+
+    @NotNull
+    public String getAsResourceSource() {
+        String prefix = (this.resourceSourceType != null) ? this.resourceSourceType.getSourcePrefix() : "";
+        return prefix + this.getShortPath();
     }
 
     @NotNull

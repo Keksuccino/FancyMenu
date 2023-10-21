@@ -4,9 +4,7 @@ import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
 import de.keksuccino.fancymenu.util.resources.ResourceHandler;
 import org.jetbrains.annotations.NotNull;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import de.keksuccino.fancymenu.util.resources.ResourceHandlers;
 
 /**
@@ -21,13 +19,6 @@ public class ImageResourceHandler extends ResourceHandler<ITexture, ImageFileTyp
      * Use {@link ResourceHandlers#getImageHandler()} instead.
      */
     public static final ImageResourceHandler INSTANCE = new ImageResourceHandler();
-
-    private final Map<String, ITexture> textures = new HashMap<>();
-
-    @Override
-    protected @NotNull Map<String, ITexture> getResourceMap() {
-        return this.textures;
-    }
 
     @Override
     public @NotNull List<ImageFileType> getAllowedFileTypes() {

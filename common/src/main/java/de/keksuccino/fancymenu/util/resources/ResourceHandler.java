@@ -9,9 +9,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Constructs usable instances of resources.
@@ -22,6 +20,8 @@ import java.util.Objects;
 public abstract class ResourceHandler<R extends Resource, F extends FileType<R>> {
 
     private static final Logger LOGGER = LogManager.getLogger();
+
+    protected Map<String, R> resources = new HashMap<>();
 
     /**
      * Used to get {@link Resource}s.<br>
@@ -37,11 +37,12 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
         Objects.requireNonNull(resourceSource);
         try {
             ResourceSourceType sourceType = ResourceSourceType.getSourceTypeOf(resourceSource);
+            String resourceSourceWithoutPrefix = ResourceSourceType.getWithoutSourcePrefix(resourceSource);
             if (sourceType == ResourceSourceType.WEB) {
                 if (this.getResourceMap().containsKey(resourceSource)) return this.getResourceMap().get(resourceSource);
                 F fileType = null;
                 for (F type : this.getAllowedFileTypes()) {
-                    if (type.isFileTypeWeb(resourceSource)) {
+                    if (type.isFileTypeWeb(resourceSourceWithoutPrefix)) {
                         fileType = type;
                         break;
                     }
@@ -51,11 +52,11 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
                         LOGGER.error("[FANCYMENU] Failed to get web resource! Web sources are not supported by this file type: " + fileType + " (Source: " + resourceSource + ")");
                         return null;
                     }
-                    this.putAndReturn((R) fileType.getCodec().readWeb(resourceSource), resourceSource);
+                    this.putAndReturn((R) fileType.getCodec().readWeb(resourceSourceWithoutPrefix), resourceSource);
                 }
             } else if (sourceType == ResourceSourceType.LOCATION) {
                 if (this.getResourceMap().containsKey(resourceSource)) return this.getResourceMap().get(resourceSource);
-                ResourceLocation loc = ResourceLocation.tryParse(resourceSource);
+                ResourceLocation loc = ResourceLocation.tryParse(resourceSourceWithoutPrefix);
                 if (loc != null) {
                     F fileType = null;
                     for (F type : this.getAllowedFileTypes()) {
@@ -73,9 +74,10 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
                     }
                 }
             } else {
-                resourceSource = GameDirectoryUtils.getAbsoluteGameDirectoryPath(resourceSource);
+                resourceSourceWithoutPrefix = GameDirectoryUtils.getAbsoluteGameDirectoryPath(resourceSourceWithoutPrefix);
+                resourceSource = sourceType.getSourcePrefix() + resourceSourceWithoutPrefix;
                 if (this.getResourceMap().containsKey(resourceSource)) return this.getResourceMap().get(resourceSource);
-                File file = new File(resourceSource);
+                File file = new File(resourceSourceWithoutPrefix);
                 F fileType = null;
                 for (F type : this.getAllowedFileTypes()) {
                     if (type.isFileTypeLocal(file)) {
@@ -106,7 +108,9 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
     }
 
     @NotNull
-    protected abstract Map<String, R> getResourceMap();
+    protected Map<String, R> getResourceMap() {
+        return this.resources;
+    }
 
     @NotNull
     public abstract List<F> getAllowedFileTypes();
@@ -129,7 +133,8 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
         Objects.requireNonNull(resourceSource);
         ResourceSourceType sourceType = ResourceSourceType.getSourceTypeOf(resourceSource);
         if (sourceType == ResourceSourceType.LOCAL) {
-            resourceSource = GameDirectoryUtils.getAbsoluteGameDirectoryPath(resourceSource);
+            resourceSource = GameDirectoryUtils.getAbsoluteGameDirectoryPath(ResourceSourceType.getWithoutSourcePrefix(resourceSource));
+            resourceSource = sourceType.getSourcePrefix() + resourceSource;
         }
         R resource = this.getResourceMap().get(resourceSource);
         if (resource != null) {

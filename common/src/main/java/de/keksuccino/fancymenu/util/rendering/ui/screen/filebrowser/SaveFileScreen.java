@@ -57,7 +57,7 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
                 return super.charTyped(character, modifiers);
             }
             @Override
-            public boolean keyPressed(int keycode, int scancode, int $$2) {
+            public boolean keyPressed(int keycode, int scancode, int modifiers) {
                 if (isSelectAll(keycode)) return false;
                 if (forcedFileExtension != null) {
                     if (Math.max(0, this.getCursorPosition()) >= Math.max(0, this.getValue().length() - forcedFileExtension.length())) {
@@ -66,7 +66,7 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
                         }
                     }
                 }
-                return super.keyPressed(keycode, scancode, $$2);
+                return super.keyPressed(keycode, scancode, modifiers);
             }
         }.setCharacterRenderFormatter((editBox, component, characterIndex, character, visiblePartOfLine, fullLine) -> {
             if (characterIndex >= Math.max(0, (editBox.getValue().length() - forcedFileExtension.length())-1)) {

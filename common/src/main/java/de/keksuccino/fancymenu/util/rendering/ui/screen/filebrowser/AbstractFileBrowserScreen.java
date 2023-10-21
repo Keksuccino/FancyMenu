@@ -445,7 +445,9 @@ public abstract class AbstractFileBrowserScreen extends Screen {
                     types += "*." + s.toUpperCase();
                 }
             }
-            c = Component.empty().append(this.fileTypes.getDisplayName()).append(Component.literal(" (")).append(Component.literal(types)).append(Component.literal(")"));
+            Component fileTypeDisplayName = this.fileTypes.getDisplayName();
+            if (fileTypeDisplayName == null) fileTypeDisplayName = Component.empty();
+            c = Component.empty().append(fileTypeDisplayName).append(Component.literal(" (")).append(Component.literal(types)).append(Component.literal(")"));
         }
         TextScrollAreaEntry entry = new TextScrollAreaEntry(this.fileTypeScrollArea, c, textScrollAreaEntry -> {});
         entry.setPlayClickSound(false);
