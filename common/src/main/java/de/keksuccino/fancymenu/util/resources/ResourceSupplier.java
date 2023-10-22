@@ -72,7 +72,7 @@ public class ResourceSupplier<T extends Resource> {
         return new ResourceSupplier<>(IText.class, FileMediaType.TEXT, source);
     }
 
-    protected ResourceSupplier(@NotNull Class<T> resourceType, @NotNull FileMediaType mediaType, @NotNull String source) {
+    public ResourceSupplier(@NotNull Class<T> resourceType, @NotNull FileMediaType mediaType, @NotNull String source) {
         this.source = Objects.requireNonNull(source);
         this.resourceType = Objects.requireNonNull(resourceType);
         this.mediaType = Objects.requireNonNull(mediaType);

@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.ClassExtender;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resources.PlayableResource;
 import de.keksuccino.fancymenu.util.resources.RenderableResource;
+import de.keksuccino.fancymenu.util.resources.audio.IAudio;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
@@ -147,15 +148,15 @@ public interface CustomizableWidget {
     @Nullable
     Component getHoverLabelFancyMenu();
 
-    void setCustomClickSoundFancyMenu(@Nullable String wavClickSoundPath);
+    void setCustomClickSoundFancyMenu(@Nullable IAudio sound);
 
     @Nullable
-    String getCustomClickSoundFancyMenu();
+    IAudio getCustomClickSoundFancyMenu();
 
-    void setHoverSoundFancyMenu(@Nullable String wavHoverSoundPath);
+    void setHoverSoundFancyMenu(@Nullable IAudio sound);
 
     @Nullable
-    String getHoverSoundFancyMenu();
+    IAudio getHoverSoundFancyMenu();
 
     void setHiddenFancyMenu(boolean hidden);
 

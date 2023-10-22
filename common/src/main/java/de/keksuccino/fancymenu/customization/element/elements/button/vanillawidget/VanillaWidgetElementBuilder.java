@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElementBuilder;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
@@ -47,10 +46,10 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
                 serializeTo.putProperty("automated_button_clicks", "" + element.automatedButtonClicks);
 
                 if (element.sliderBackgroundTextureNormal != null) {
-                    serializeTo.putProperty("slider_background_texture_normal", element.sliderBackgroundTextureNormal.getShortPath());
+                    serializeTo.putProperty("slider_background_texture_normal", element.sliderBackgroundTextureNormal.getSourceWithPrefix());
                 }
                 if (element.sliderBackgroundTextureHighlighted != null) {
-                    serializeTo.putProperty("slider_background_texture_highlighted", element.sliderBackgroundTextureHighlighted.getShortPath());
+                    serializeTo.putProperty("slider_background_texture_highlighted", element.sliderBackgroundTextureHighlighted.getSourceWithPrefix());
                 }
                 serializeTo.putProperty("slider_background_animation_normal", element.sliderBackgroundAnimationNormal);
                 serializeTo.putProperty("slider_background_animation_highlighted", element.sliderBackgroundAnimationHighlighted);
@@ -82,8 +81,8 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
             element.automatedButtonClicks = Integer.parseInt(automatedClicks);
         }
 
-        element.sliderBackgroundTextureNormal = SerializationUtils.deserializeResourceFile(serialized.getValue("slider_background_texture_normal"));
-        element.sliderBackgroundTextureHighlighted = SerializationUtils.deserializeResourceFile(serialized.getValue("slider_background_texture_highlighted"));
+        element.sliderBackgroundTextureNormal = deserializeImageResourceSupplier(serialized.getValue("slider_background_texture_normal"));
+        element.sliderBackgroundTextureHighlighted = deserializeImageResourceSupplier(serialized.getValue("slider_background_texture_highlighted"));
         element.sliderBackgroundAnimationNormal = serialized.getValue("slider_background_animation_normal");
         element.sliderBackgroundAnimationHighlighted = serialized.getValue("slider_background_animation_highlighted");
 

@@ -1,13 +1,12 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import de.keksuccino.fancymenu.util.resources.PlayableResource;
 import de.keksuccino.fancymenu.util.resources.RenderableResource;
-import de.keksuccino.konkrete.sound.SoundHandler;
+import de.keksuccino.fancymenu.util.resources.audio.IAudio;
 import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
@@ -23,7 +22,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import de.keksuccino.fancymenu.events.widget.RenderWidgetEvent;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -46,9 +44,9 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Unique @Nullable
 	private Component hoverLabelFancyMenu;
 	@Unique @Nullable
-	private String customClickSoundFancyMenu;
+	private IAudio customClickSoundFancyMenu;
 	@Unique @Nullable
-	private String hoverSoundFancyMenu;
+	private IAudio hoverSoundFancyMenu;
 	@Unique
 	private boolean hiddenFancyMenu = false;
 	@Unique @Nullable
@@ -150,13 +148,9 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Inject(method = "playDownSound", at = @At(value = "HEAD"), cancellable = true)
 	private void beforeWidgetClickSoundFancyMenu(SoundManager manager, CallbackInfo info) {
 		if (this.customClickSoundFancyMenu != null) {
-			File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(this.customClickSoundFancyMenu));
-			if (f.isFile() && f.getPath().toLowerCase().endsWith(".wav")) {
-				SoundHandler.registerSound(f.getPath(), f.getPath());
-				SoundHandler.resetSound(f.getPath());
-				SoundHandler.playSound(f.getPath());
-				info.cancel();
-			}
+			this.customClickSoundFancyMenu.stop();
+			this.customClickSoundFancyMenu.play();
+			info.cancel();
 		}
 	}
 
@@ -248,12 +242,8 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Unique
 	private void handleHoverSoundFancyMenu() {
 		if (this.hoverSoundFancyMenu != null) {
-			File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(this.hoverSoundFancyMenu));
-			if (f.isFile() && f.getPath().toLowerCase().endsWith(".wav")) {
-				SoundHandler.registerSound(f.getPath(), f.getPath());
-				SoundHandler.resetSound(f.getPath());
-				SoundHandler.playSound(f.getPath());
-			}
+			this.hoverSoundFancyMenu.stop();
+			this.hoverSoundFancyMenu.play();
 		}
 	}
 
@@ -421,28 +411,30 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 
 	@Unique
 	@Override
-	public void setCustomClickSoundFancyMenu(@Nullable String customClickSoundFancyMenu) {
-		this.customClickSoundFancyMenu = customClickSoundFancyMenu;
+	public void setCustomClickSoundFancyMenu(@Nullable IAudio sound) {
+		if (this.customClickSoundFancyMenu != null) this.customClickSoundFancyMenu.stop();
+		this.customClickSoundFancyMenu = sound;
 	}
 
 	@Unique
 	@Nullable
 	@Override
-	public String getCustomClickSoundFancyMenu() {
+	public IAudio getCustomClickSoundFancyMenu() {
 		return this.customClickSoundFancyMenu;
 	}
 
 	@Unique
 	@Nullable
 	@Override
-	public String getHoverSoundFancyMenu() {
+	public IAudio getHoverSoundFancyMenu() {
 		return this.hoverSoundFancyMenu;
 	}
 
 	@Unique
 	@Override
-	public void setHoverSoundFancyMenu(@Nullable String hoverSoundFancyMenu) {
-		this.hoverSoundFancyMenu = hoverSoundFancyMenu;
+	public void setHoverSoundFancyMenu(@Nullable IAudio sound) {
+		if (this.hoverSoundFancyMenu != null) this.hoverSoundFancyMenu.stop();
+		this.hoverSoundFancyMenu = sound;
 	}
 
 	@Unique

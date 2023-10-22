@@ -7,6 +7,11 @@ import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
+import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroups;
+import de.keksuccino.fancymenu.util.file.type.types.AudioFileType;
+import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
+import de.keksuccino.fancymenu.util.file.type.types.TextFileType;
+import de.keksuccino.fancymenu.util.file.type.types.VideoFileType;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfiguratorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseFileScreen;
@@ -17,6 +22,10 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.resources.Resource;
 import de.keksuccino.fancymenu.util.resources.ResourceSourceType;
+import de.keksuccino.fancymenu.util.resources.audio.IAudio;
+import de.keksuccino.fancymenu.util.resources.text.IText;
+import de.keksuccino.fancymenu.util.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.resources.video.IVideo;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -44,8 +53,51 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
     protected ResourceSourceType resourceSourceType = ResourceSourceType.LOCATION;
     protected CycleButton<ResourceSourceType> resourceSourceTypeCycleButton;
     protected ExtendedEditBox editBox;
+    protected LabelCell warningNoExtensionLine1;
+    protected LabelCell warningNoExtensionLine2;
+    protected LabelCell warningNoExtensionLine3;
 
-    protected ResourceChooserScreen(@NotNull Component title, @Nullable FileTypeGroup<F> allowedFileTypes, @Nullable FileFilter fileFilter, @NotNull Consumer<String> resourceSourceCallback) {
+    @NotNull
+    public static ResourceChooserScreen<ITexture, ImageFileType> image(@NotNull Component title, @Nullable FileFilter fileFilter, @NotNull Consumer<String> resourceSourceCallback) {
+        return new ResourceChooserScreen<>(title, FileTypeGroups.IMAGE_TYPES, fileFilter, resourceSourceCallback);
+    }
+
+    @NotNull
+    public static ResourceChooserScreen<ITexture, ImageFileType> image(@Nullable FileFilter fileFilter, @NotNull Consumer<String> resourceSourceCallback) {
+        return image(Component.translatable("fancymenu.resources.chooser_screen.choose.image"), fileFilter, resourceSourceCallback);
+    }
+
+    @NotNull
+    public static ResourceChooserScreen<IAudio, AudioFileType> audio(@NotNull Component title, @Nullable FileFilter fileFilter, @NotNull Consumer<String> resourceSourceCallback) {
+        return new ResourceChooserScreen<>(title, FileTypeGroups.AUDIO_TYPES, fileFilter, resourceSourceCallback);
+    }
+
+    @NotNull
+    public static ResourceChooserScreen<IAudio, AudioFileType> audio(@Nullable FileFilter fileFilter, @NotNull Consumer<String> resourceSourceCallback) {
+        return audio(Component.translatable("fancymenu.resources.chooser_screen.choose.audio"), fileFilter, resourceSourceCallback);
+    }
+
+    @NotNull
+    public static ResourceChooserScreen<IVideo, VideoFileType> video(@NotNull Component title, @Nullable FileFilter fileFilter, @NotNull Consumer<String> resourceSourceCallback) {
+        return new ResourceChooserScreen<>(title, FileTypeGroups.VIDEO_TYPES, fileFilter, resourceSourceCallback);
+    }
+
+    @NotNull
+    public static ResourceChooserScreen<IVideo, VideoFileType> video(@Nullable FileFilter fileFilter, @NotNull Consumer<String> resourceSourceCallback) {
+        return video(Component.translatable("fancymenu.resources.chooser_screen.choose.video"), fileFilter, resourceSourceCallback);
+    }
+
+    @NotNull
+    public static ResourceChooserScreen<IText, TextFileType> text(@NotNull Component title, @Nullable FileFilter fileFilter, @NotNull Consumer<String> resourceSourceCallback) {
+        return new ResourceChooserScreen<>(title, FileTypeGroups.TEXT_TYPES, fileFilter, resourceSourceCallback);
+    }
+
+    @NotNull
+    public static ResourceChooserScreen<IText, TextFileType> text(@Nullable FileFilter fileFilter, @NotNull Consumer<String> resourceSourceCallback) {
+        return text(Component.translatable("fancymenu.resources.chooser_screen.choose.text"), fileFilter, resourceSourceCallback);
+    }
+
+    public ResourceChooserScreen(@NotNull Component title, @Nullable FileTypeGroup<F> allowedFileTypes, @Nullable FileFilter fileFilter, @NotNull Consumer<String> resourceSourceCallback) {
         super(title);
         this.allowedFileTypes = allowedFileTypes;
         this.fileFilter = fileFilter;
@@ -86,7 +138,10 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
         this.addLabelCell(Component.translatable("fancymenu.resources.chooser_screen.source"));
 
         this.editBox = this.addTextInputCell(null, !isLegacyLocal, !isLegacyLocal).editBox;
-        this.editBox.setResponder(s -> this.resourceSource = s);
+        this.editBox.setResponder(s -> {
+            this.resourceSource = s;
+            this.updateNoExtensionWarning();
+        });
         if (isLocal && !isLegacyLocal) this.editBox.setInputPrefix("/config/fancymenu/assets/");
         if (this.resourceSource != null) this.editBox.setValue(this.resourceSource);
         this.editBox.setEditable(!isLegacyLocal);
@@ -140,6 +195,13 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
         }
         this.addLabelCell(typesComponent.setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
 
+        this.addCellGroupEndSpacerCell();
+
+        this.warningNoExtensionLine1 = this.addLabelCell(Component.empty());
+        this.warningNoExtensionLine2 = this.addLabelCell(Component.empty());
+        this.warningNoExtensionLine3 = this.addLabelCell(Component.empty());
+        this.updateNoExtensionWarning();
+
         this.addStartEndSpacerCell();
 
     }
@@ -159,12 +221,72 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
     }
 
-    public ResourceChooserScreen<R,F> setSource(@NotNull String resourceSource) {
-        this.resourceSourceType = ResourceSourceType.getSourceTypeOf(Objects.requireNonNull(resourceSource));
-        //Remove the prefix for easier handling inside the chooser screen (source type is saved as variable)
-        this.resourceSource = ResourceSourceType.getWithoutSourcePrefix(resourceSource);
+    protected void updateNoExtensionWarning() {
+        if ((this.warningNoExtensionLine1 == null) || (this.warningNoExtensionLine2 == null) || (this.warningNoExtensionLine3 == null)) return;
+        if ((this.resourceSource != null) && !this.resourceSource.replace(" ", "").isEmpty()) {
+            if ((this.resourceSourceType == ResourceSourceType.LOCATION) || (this.resourceSourceType == ResourceSourceType.WEB)) {
+                boolean extensionFound = false;
+                if (this.allowedFileTypes != null) {
+                    for (FileType<?> fileType : this.allowedFileTypes.getFileTypes()) {
+                        for (String extension : fileType.getExtensions()) {
+                            if (this.resourceSource.toLowerCase().endsWith("." + extension)) {
+                                extensionFound = true;
+                                break;
+                            }
+                        }
+                        if (extensionFound) break;
+                    }
+                } else {
+                    extensionFound = true;
+                }
+                if (!extensionFound) {
+                    this.warningNoExtensionLine1.setText(Component.translatable("fancymenu.resources.chooser_screen.no_extension.warning.line1"));
+                    this.warningNoExtensionLine2.setText(Component.translatable("fancymenu.resources.chooser_screen.no_extension.warning.line2"));
+                    this.warningNoExtensionLine3.setText(Component.translatable("fancymenu.resources.chooser_screen.no_extension.warning.line3"));
+                    return;
+                }
+            }
+        }
+        this.warningNoExtensionLine1.setText(Component.empty());
+        this.warningNoExtensionLine2.setText(Component.empty());
+        this.warningNoExtensionLine3.setText(Component.empty());
+    }
+
+    public ResourceChooserScreen<R,F> setSource(@Nullable String resourceSource) {
+        if (resourceSource == null) {
+            this.resourceSource = null;
+            this.resourceSourceType = ResourceSourceType.LOCATION;
+        } else {
+            this.resourceSourceType = ResourceSourceType.getSourceTypeOf(Objects.requireNonNull(resourceSource));
+            //Remove the prefix for easier handling inside the chooser screen (source type is saved as variable)
+            this.resourceSource = ResourceSourceType.getWithoutSourcePrefix(resourceSource);
+        }
         this.init();
         return this;
+    }
+
+    public ResourceChooserScreen<R,F> setAllowedFileTypes(@Nullable FileTypeGroup<F> allowedFileTypes) {
+        this.allowedFileTypes = allowedFileTypes;
+        this.init();
+        return this;
+    }
+
+    public ResourceChooserScreen<R,F> setFileFilter(@Nullable FileFilter fileFilter) {
+        this.fileFilter = fileFilter;
+        this.init();
+        return this;
+    }
+
+    public ResourceChooserScreen<R,F> setResourceSourceCallback(@NotNull Consumer<String> resourceSourceCallback) {
+        this.resourceSourceCallback = Objects.requireNonNull(resourceSourceCallback);
+        return this;
+    }
+
+    @Override
+    public boolean allowDone() {
+        if ((this.resourceSource == null)  || this.resourceSource.replace(" ", "").isEmpty()) return false;
+        if ((this.resourceSourceType == ResourceSourceType.LOCAL) && this.resourceSource.equals("/config/fancymenu/assets/")) return false;
+        return true;
     }
 
     @Override

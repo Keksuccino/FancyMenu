@@ -10,15 +10,15 @@ import de.keksuccino.fancymenu.customization.element.IExecutableElement;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinButton;
-import de.keksuccino.fancymenu.util.file.FileFilter;
-import de.keksuccino.fancymenu.util.file.ResourceFile;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.resources.RenderableResource;
-import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
+import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
+import de.keksuccino.fancymenu.util.resources.audio.IAudio;
+import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -37,16 +37,16 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
 
     @Nullable
     private AbstractWidget widget;
-    public ResourceFile clickSound;
-    public ResourceFile hoverSound;
+    public ResourceSupplier<IAudio> clickSound;
+    public ResourceSupplier<IAudio> hoverSound;
     @Nullable
     public String label;
     @Nullable
     public String hoverLabel;
     public String tooltip;
-    public ResourceFile backgroundTextureNormal;
-    public ResourceFile backgroundTextureHover;
-    public ResourceFile backgroundTextureInactive;
+    public ResourceSupplier<ITexture> backgroundTextureNormal;
+    public ResourceSupplier<ITexture> backgroundTextureHover;
+    public ResourceSupplier<ITexture> backgroundTextureInactive;
     public String backgroundAnimationNormal;
     public String backgroundAnimationHover;
     public String backgroundAnimationInactive;
@@ -151,13 +151,13 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
 
     public void updateWidgetHoverSound() {
         if (this.getWidget() instanceof CustomizableWidget w) {
-            w.setHoverSoundFancyMenu((this.hoverSound != null) ? this.hoverSound.getAbsolutePath() : null);
+            w.setHoverSoundFancyMenu((this.hoverSound != null) ? this.hoverSound.get() : null);
         }
     }
 
     public void updateWidgetClickSound() {
         if (this.getWidget() instanceof CustomizableWidget w) {
-            w.setCustomClickSoundFancyMenu((this.clickSound != null) ? this.clickSound.getAbsolutePath() : null);
+            w.setCustomClickSoundFancyMenu((this.clickSound != null) ? this.clickSound.get() : null);
         }
     }
 
@@ -175,8 +175,8 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
                 backNormal = a;
             }
         }
-        if ((backNormal == null) && (this.backgroundTextureNormal != null) && this.backgroundTextureNormal.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.backgroundTextureNormal.getFile())) {
-            backNormal = ImageResourceHandler.INSTANCE.getTexture(this.backgroundTextureNormal.getAbsolutePath());
+        if ((backNormal == null) && (this.backgroundTextureNormal != null)) {
+            backNormal = this.backgroundTextureNormal.get();
         }
         //Hover
         if ((this.backgroundAnimationHover != null) && AnimationHandler.animationExists(this.backgroundAnimationHover)) {
@@ -186,8 +186,8 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
                 backHover = a;
             }
         }
-        if ((backHover == null) && (this.backgroundTextureHover != null) && this.backgroundTextureHover.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.backgroundTextureHover.getFile())) {
-            backHover = ImageResourceHandler.INSTANCE.getTexture(this.backgroundTextureHover.getAbsolutePath());
+        if ((backHover == null) && (this.backgroundTextureHover != null)) {
+            backHover = this.backgroundTextureHover.get();
         }
         //Inactive
         if ((this.backgroundAnimationInactive != null) && AnimationHandler.animationExists(this.backgroundAnimationInactive)) {
@@ -197,8 +197,8 @@ public class ButtonElement extends AbstractElement implements IExecutableElement
                 backInactive = a;
             }
         }
-        if ((backInactive == null) && (this.backgroundTextureInactive != null) && this.backgroundTextureInactive.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.backgroundTextureInactive.getFile())) {
-            backInactive = ImageResourceHandler.INSTANCE.getTexture(this.backgroundTextureInactive.getAbsolutePath());
+        if ((backInactive == null) && (this.backgroundTextureInactive != null)) {
+            backInactive = this.backgroundTextureInactive.get();
         }
 
         if (this.getWidget() instanceof CustomizableWidget w) {

@@ -8,6 +8,12 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.internal.Loading
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.file.ResourceFile;
+import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
+import de.keksuccino.fancymenu.util.resources.audio.IAudio;
+import de.keksuccino.fancymenu.util.resources.text.IText;
+import de.keksuccino.fancymenu.util.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.resources.video.IVideo;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -212,6 +218,31 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
         return null;
 
+    }
+
+    @Nullable
+    public static ResourceSupplier<ITexture> deserializeImageResourceSupplier(@Nullable String resourceSource) {
+        return SerializationUtils.deserializeImageResourceSupplier(resourceSource);
+    }
+
+    @Nullable
+    public static ResourceSupplier<IAudio> deserializeAudioResourceSupplier(@Nullable String resourceSource) {
+        return SerializationUtils.deserializeAudioResourceSupplier(resourceSource);
+    }
+
+    @Nullable
+    public static ResourceSupplier<IVideo> deserializeVideoResourceSupplier(@Nullable String resourceSource) {
+        return SerializationUtils.deserializeVideoResourceSupplier(resourceSource);
+    }
+
+    @Nullable
+    public static ResourceSupplier<IText> deserializeTextResourceSupplier(@Nullable String resourceSource) {
+        return SerializationUtils.deserializeTextResourceSupplier(resourceSource);
+    }
+
+    @Nullable
+    public static ResourceFile deserializeResourceFile(@Nullable String gameDirectoryFilePath) {
+        return SerializationUtils.deserializeResourceFile(gameDirectoryFilePath);
     }
 
     @NotNull

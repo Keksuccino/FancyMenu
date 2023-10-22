@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
-import de.keksuccino.fancymenu.util.resources.texture.SimpleLocalTexture;
+import de.keksuccino.fancymenu.util.resources.texture.SimpleTexture;
 import net.minecraft.client.Minecraft;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -109,7 +109,7 @@ public class CursorHandler {
         public final int hotspotX;
         public final int hotspotY;
         @NotNull
-        public final SimpleLocalTexture texture;
+        public final SimpleTexture texture; //TODO <---- Hier weiter; jetzt versuchen, mit SimpleTexture zu arbeiten
         @NotNull
         public final String texturePath;
 

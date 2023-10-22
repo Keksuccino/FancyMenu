@@ -1,11 +1,40 @@
 package de.keksuccino.fancymenu.util;
 
 import de.keksuccino.fancymenu.util.file.ResourceFile;
+import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
+import de.keksuccino.fancymenu.util.resources.audio.IAudio;
+import de.keksuccino.fancymenu.util.resources.text.IText;
+import de.keksuccino.fancymenu.util.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.resources.video.IVideo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("all")
 public class SerializationUtils {
+
+    @Nullable
+    public static ResourceSupplier<ITexture> deserializeImageResourceSupplier(@Nullable String resourceSource) {
+        if (resourceSource != null) return ResourceSupplier.image(resourceSource);
+        return null;
+    }
+
+    @Nullable
+    public static ResourceSupplier<IAudio> deserializeAudioResourceSupplier(@Nullable String resourceSource) {
+        if (resourceSource != null) return ResourceSupplier.audio(resourceSource);
+        return null;
+    }
+
+    @Nullable
+    public static ResourceSupplier<IVideo> deserializeVideoResourceSupplier(@Nullable String resourceSource) {
+        if (resourceSource != null) return ResourceSupplier.video(resourceSource);
+        return null;
+    }
+
+    @Nullable
+    public static ResourceSupplier<IText> deserializeTextResourceSupplier(@Nullable String resourceSource) {
+        if (resourceSource != null) return ResourceSupplier.text(resourceSource);
+        return null;
+    }
 
     @Nullable
     public static ResourceFile deserializeAssetResourceFile(@Nullable String gameDirectoryFilePath) {

@@ -1,15 +1,12 @@
 package de.keksuccino.fancymenu.customization.element.elements.image;
 
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
-import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseFileScreen;
 import de.keksuccino.fancymenu.util.ListUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
+import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -26,41 +23,14 @@ public class ImageEditorElement extends AbstractEditorElement {
 
         super.init();
 
-        this.addGenericCycleContextMenuEntryTo(this.rightClickMenu, "set_mode", ListUtils.of(ImageElement.SourceMode.WEB, ImageElement.SourceMode.LOCAL),
-                consumes -> (consumes instanceof ImageEditorElement),
-                consumes -> ((ImageElement)consumes.element).sourceMode,
-                (element1, sourceMode) -> {
-                    ((ImageElement)element1.element).sourceMode = sourceMode;
-                    ((ImageElement)element1.element).source = null;
-                },
-                (menu, entry, switcherValue) -> {
-                    if (switcherValue == ImageElement.SourceMode.LOCAL) {
-                        return Component.translatable("fancymenu.elements.image.source_mode.local");
-                    } else {
-                        return Component.translatable("fancymenu.elements.image.source_mode.web");
-                    }
-                });
-
         this.rightClickMenu.addClickableEntry("set_source", Component.translatable("fancymenu.elements.image.set_source"), (menu, entry) -> {
-            if (((ImageElement)this.element).sourceMode == ImageElement.SourceMode.LOCAL) {
-                ChooseFileScreen s = new ChooseFileScreen(LayoutHandler.ASSETS_DIR, LayoutHandler.ASSETS_DIR, (call) -> {
-                    if (call != null) {
-                        this.editor.history.saveSnapshot();
-                        ((ImageElement)this.element).source = ScreenCustomization.getPathWithoutGameDirectory(call.getAbsolutePath());
-                    }
-                    Minecraft.getInstance().setScreen(this.editor);
-                });
-                s.setFileFilter(FileFilter.IMAGE_AND_GIF_FILE_FILTER);
-                Minecraft.getInstance().setScreen(s);
-            } else {
-                Minecraft.getInstance().setScreen(TextInputScreen.build(Component.translatable("fancymenu.elements.image.set_source"), null, s -> {
-                    if (s != null) {
-                        this.editor.history.saveSnapshot();
-                        ((ImageElement)this.element).source = s;
-                    }
-                    Minecraft.getInstance().setScreen(this.editor);
-                }).setText(((ImageElement)this.element).source));
-            }
+            Minecraft.getInstance().setScreen(ResourceChooserScreen.image(null, source -> {
+                if (source != null) {
+                    this.editor.history.saveSnapshot();
+                    this.getElement().textureSupplier = ResourceSupplier.image(source);
+                }
+                Minecraft.getInstance().setScreen(this.editor);
+            }).setSource((this.getElement().textureSupplier != null) ? this.getElement().textureSupplier.getSourceWithPrefix() : null));
         }).setIcon(ContextMenu.IconFactory.getIcon("image"));
 
         this.rightClickMenu.addSeparatorEntry("image_separator_1");
@@ -74,6 +44,10 @@ public class ImageEditorElement extends AbstractEditorElement {
         }).setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("aspect_ratio"));
 
+    }
+
+    public ImageElement getElement() {
+        return (ImageElement) this.element;
     }
 
 }

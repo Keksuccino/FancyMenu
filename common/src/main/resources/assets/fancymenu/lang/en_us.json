@@ -764,9 +764,7 @@
   "fancymenu.ui.save_file.save.override_warning": "Override File?\n\nDo you want to override the existing file?",
   "fancymenu.elements.animation.set_animation": "Set Animation",
   "fancymenu.elements.animation.restore_aspect_ratio": "Restore Aspect Ratio",
-  "fancymenu.elements.image.source_mode.local": "Source Mode: §zLocal",
-  "fancymenu.elements.image.source_mode.web": "Source Mode: §zWeb",
-  "fancymenu.elements.image.set_source": "Source [Path/URL]",
+  "fancymenu.elements.image.set_source": "Image Source",
   "fancymenu.elements.image.restore_aspect_ratio": "Restore Aspect Ratio",
   "fancymenu.elements.slideshow.set_slideshow": "Set Slideshow",
   "fancymenu.elements.slideshow.restore_aspect_ratio": "Restore Aspect Ratio",
@@ -1110,5 +1108,15 @@
   "fancymenu.resources.chooser_screen.legacy_local.warning.line2": "Most edit features are disabled until you set a valid asset source!",
   "fancymenu.resources.chooser_screen.legacy_local.warning.line3": "To set an asset source, use the button above.",
   "fancymenu.resources.chooser_screen.choose_local": "Choose Local Resource File",
-  "fancymenu.resources.chooser_screen.allowed_file_types": "Allowed File Types:"
+  "fancymenu.resources.chooser_screen.allowed_file_types": "Allowed File Types:",
+  "fancymenu.resources.chooser_screen.no_extension.warning.line1": "The source has no file extension suffix!",
+  "fancymenu.resources.chooser_screen.no_extension.warning.line2": "This could mean you're using placeholders that dynamically build the source.",
+  "fancymenu.resources.chooser_screen.no_extension.warning.line3": "Make sure to only use ALLOWED file types from the list above!",
+  "fancymenu.resources.chooser_screen.choose.image": "Choose Image Resource",
+  "fancymenu.resources.chooser_screen.choose.audio": "Choose Audio Resource",
+  "fancymenu.resources.chooser_screen.choose.video": "Choose Video Resource",
+  "fancymenu.resources.chooser_screen.choose.text": "Choose Text Resource",
+  "fancymenu.ui.resources.choose": "Choose Resource",
+  "fancymenu.ui.resources.reset": "Reset to Default",
+  "fancymenu.ui.resources.current": "Current: %s"
 }

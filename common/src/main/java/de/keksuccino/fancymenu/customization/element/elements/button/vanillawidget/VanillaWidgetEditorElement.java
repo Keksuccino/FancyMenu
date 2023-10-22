@@ -12,8 +12,6 @@ import de.keksuccino.fancymenu.customization.layout.editor.ChooseAnimationScreen
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.ObjectUtils;
-import de.keksuccino.fancymenu.util.file.FileFilter;
-import de.keksuccino.fancymenu.util.file.ResourceFile;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -49,7 +47,7 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements I
             this.rightClickMenu.removeEntry("edit_hover_label");
         }
 
-        if (this.getButtonElement().getWidget() != null) {
+        if (this.getElement().getWidget() != null) {
 
             this.rightClickMenu.addClickableEntryAfter("copy_id", "copy_vanilla_widget_locator", Component.translatable("fancymenu.helper.editor.items.vanilla_button.copy_locator"), (menu, entry) ->
                     {
@@ -61,7 +59,7 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements I
 
         }
 
-        if (this.getButtonElement().getWidget() instanceof CustomizableSlider) {
+        if (this.getElement().getWidget() instanceof CustomizableSlider) {
 
             ContextMenu.ContextMenuEntry<?> buttonBackgroundMenuEntry = this.rightClickMenu.getEntry("button_background");
             if (buttonBackgroundMenuEntry instanceof ContextMenu.SubMenuContextMenuEntry s1) {
@@ -77,18 +75,14 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements I
                     setBackMenu.addSubMenuEntry("set_normal_slider_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.slider.normal"), normalSliderBackMenu)
                             .setStackable(true);
 
-                    this.addFileChooserContextMenuEntryTo(normalSliderBackMenu, "normal_slider_background_texture",
-                                    VanillaWidgetEditorElement.class,
-                                    null,
-                                    consumes -> (((VanillaWidgetElement)consumes.element).sliderBackgroundTextureNormal != null) ? ((VanillaWidgetElement)consumes.element).sliderBackgroundTextureNormal.getShortPath() : null,
-                                    (element1, s) -> {
-                                        ((VanillaWidgetElement)element1.element).sliderBackgroundTextureNormal = (s != null) ? ResourceFile.of(s) : null;
-                                        ((VanillaWidgetElement)element1.element).sliderBackgroundAnimationNormal = null;
-                                    },
-                                    Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"),
-                                    false,
-                                    FileFilter.IMAGE_AND_GIF_FILE_FILTER)
-                            .setStackable(true);
+                    this.addImageResourceChooserContextMenuEntryTo(normalSliderBackMenu, "normal_slider_background_texture",
+                            VanillaWidgetEditorElement.class,
+                            null,
+                            consumes -> consumes.getElement().sliderBackgroundTextureNormal,
+                            (buttonEditorElement, iTextureResourceSupplier) -> {
+                                buttonEditorElement.getElement().sliderBackgroundTextureNormal = iTextureResourceSupplier;
+                                buttonEditorElement.getElement().sliderBackgroundAnimationNormal = null;
+                            }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null);
 
                     normalSliderBackMenu.addClickableEntry("normal_slider_background_animation", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation"), (menu, entry) -> {
                         List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof VanillaWidgetEditorElement));
@@ -126,18 +120,14 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements I
                             .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.buttons.buttonbackground.slider.highlighted.desc")))
                             .setStackable(true);
 
-                    this.addFileChooserContextMenuEntryTo(highlightedSliderBackMenu, "highlighted_slider_background_texture",
-                                    VanillaWidgetEditorElement.class,
-                                    null,
-                                    consumes -> (((VanillaWidgetElement)consumes.element).sliderBackgroundTextureHighlighted != null) ? ((VanillaWidgetElement)consumes.element).sliderBackgroundTextureHighlighted.getShortPath() : null,
-                                    (element1, s) -> {
-                                        ((VanillaWidgetElement)element1.element).sliderBackgroundTextureHighlighted = (s != null) ? ResourceFile.of(s) : null;
-                                        ((VanillaWidgetElement)element1.element).sliderBackgroundAnimationHighlighted = null;
-                                    },
-                                    Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"),
-                                    false,
-                                    FileFilter.IMAGE_AND_GIF_FILE_FILTER)
-                            .setStackable(true);
+                    this.addImageResourceChooserContextMenuEntryTo(highlightedSliderBackMenu, "highlighted_slider_background_texture",
+                            VanillaWidgetEditorElement.class,
+                            null,
+                            consumes -> consumes.getElement().sliderBackgroundTextureHighlighted,
+                            (buttonEditorElement, iTextureResourceSupplier) -> {
+                                buttonEditorElement.getElement().sliderBackgroundTextureHighlighted = iTextureResourceSupplier;
+                                buttonEditorElement.getElement().sliderBackgroundAnimationHighlighted = null;
+                            }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null);
 
                     highlightedSliderBackMenu.addClickableEntry("highlighted_slider_background_animation", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation"), (menu, entry) -> {
                         List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof VanillaWidgetEditorElement));
@@ -302,6 +292,10 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements I
     public boolean isCopyrightButton() {
         String compId = ((VanillaWidgetElement)this.element).widgetMeta.getUniversalIdentifier();
         return ((compId != null) && compId.equals("mc_titlescreen_copyright_button"));
+    }
+
+    public VanillaWidgetElement getElement() {
+        return (VanillaWidgetElement) this.element;
     }
 
 }

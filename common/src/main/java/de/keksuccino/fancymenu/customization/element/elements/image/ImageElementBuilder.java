@@ -32,15 +32,7 @@ public class ImageElementBuilder extends ElementBuilder<ImageElement, ImageEdito
 
         ImageElement element = this.buildDefaultInstance();
 
-        element.source = serialized.getValue("source");
-
-        String sourceMode = serialized.getValue("source_mode");
-        if (sourceMode != null) {
-            element.sourceMode = ImageElement.SourceMode.getByName(sourceMode);
-            if (element.sourceMode == null) {
-                element.sourceMode = ImageElement.SourceMode.LOCAL;
-            }
-        }
+        element.textureSupplier = deserializeImageResourceSupplier(serialized.getValue("source"));
 
         return element;
 
@@ -49,12 +41,8 @@ public class ImageElementBuilder extends ElementBuilder<ImageElement, ImageEdito
     @Override
     protected SerializedElement serializeElement(@NotNull ImageElement element, @NotNull SerializedElement serializeTo) {
 
-        if (element.source != null) {
-            serializeTo.putProperty("source", element.source);
-        }
-
-        if (element.sourceMode != null) {
-            serializeTo.putProperty("source_mode", element.sourceMode.name);
+        if (element.textureSupplier != null) {
+            serializeTo.putProperty("source", element.textureSupplier.getSourceWithPrefix());
         }
 
         return serializeTo;

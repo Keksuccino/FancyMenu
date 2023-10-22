@@ -9,12 +9,11 @@ import de.keksuccino.fancymenu.customization.element.IHideableElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
-import de.keksuccino.fancymenu.util.file.FileFilter;
-import de.keksuccino.fancymenu.util.file.ResourceFile;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.resources.RenderableResource;
-import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
+import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
+import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import org.apache.logging.log4j.LogManager;
@@ -30,8 +29,8 @@ public class VanillaWidgetElement extends ButtonElement implements IHideableElem
     public WidgetMeta widgetMeta;
     public boolean vanillaButtonHidden = false;
     public int automatedButtonClicks = 0;
-    public ResourceFile sliderBackgroundTextureNormal;
-    public ResourceFile sliderBackgroundTextureHighlighted;
+    public ResourceSupplier<ITexture> sliderBackgroundTextureNormal;
+    public ResourceSupplier<ITexture> sliderBackgroundTextureHighlighted;
     public String sliderBackgroundAnimationNormal;
     public String sliderBackgroundAnimationHighlighted;
     protected boolean automatedButtonClicksDone = false;
@@ -92,8 +91,8 @@ public class VanillaWidgetElement extends ButtonElement implements IHideableElem
                 sliderBackNormal = a;
             }
         }
-        if ((sliderBackNormal == null) && (this.sliderBackgroundTextureNormal != null) && this.sliderBackgroundTextureNormal.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.sliderBackgroundTextureNormal.getFile())) {
-            sliderBackNormal = ImageResourceHandler.INSTANCE.getTexture(this.sliderBackgroundTextureNormal.getAbsolutePath());
+        if ((sliderBackNormal == null) && (this.sliderBackgroundTextureNormal != null)) {
+            sliderBackNormal = this.sliderBackgroundTextureNormal.get();
         }
         //Highlighted
         if ((this.sliderBackgroundAnimationHighlighted != null) && AnimationHandler.animationExists(this.sliderBackgroundAnimationHighlighted)) {
@@ -103,8 +102,8 @@ public class VanillaWidgetElement extends ButtonElement implements IHideableElem
                 sliderBackHighlighted = a;
             }
         }
-        if ((sliderBackHighlighted == null) && (this.sliderBackgroundTextureHighlighted != null) && this.sliderBackgroundTextureHighlighted.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.sliderBackgroundTextureHighlighted.getFile())) {
-            sliderBackHighlighted = ImageResourceHandler.INSTANCE.getTexture(this.sliderBackgroundTextureHighlighted.getAbsolutePath());
+        if ((sliderBackHighlighted == null) && (this.sliderBackgroundTextureHighlighted != null)) {
+            sliderBackHighlighted = this.sliderBackgroundTextureHighlighted.get();
         }
 
         if (this.getWidget() instanceof CustomizableSlider w) {
