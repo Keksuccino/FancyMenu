@@ -69,7 +69,7 @@ public class ServerVariableCommand {
                     ExecuteCommandPacketMessage msg = new ExecuteCommandPacketMessage();
                     msg.direction = "client";
                     msg.command = "/fmvariable get " + variableName;
-                    PacketHandler.send(PacketDistributor.PLAYER.with(() -> sender), msg);
+                    PacketHandler.send(PacketDistributor.PLAYER.with(sender), msg);
                 }
             }
         } catch (Exception e) {
@@ -87,7 +87,7 @@ public class ServerVariableCommand {
                     ExecuteCommandPacketMessage msg = new ExecuteCommandPacketMessage();
                     msg.direction = "client";
                     msg.command = "/fmvariable set " + variableName + " " + setToValue + " " + sendFeedback;
-                    PacketHandler.send(PacketDistributor.PLAYER.with(() -> sender), msg);
+                    PacketHandler.send(PacketDistributor.PLAYER.with(sender), msg);
                 }
             }
         } catch (Exception e) {

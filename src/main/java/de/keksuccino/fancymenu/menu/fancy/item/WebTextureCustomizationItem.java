@@ -6,9 +6,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-
 import com.mojang.blaze3d.systems.RenderSystem;
-
 import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.fancy.helper.CustomizationHelper;
@@ -16,7 +14,6 @@ import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.konkrete.annotations.OptifineFix;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
-import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.resources.TextureHandler;
 import de.keksuccino.konkrete.resources.WebTextureResourceLocation;
 import net.minecraft.client.Minecraft;
@@ -111,27 +108,28 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 	}
 
 	protected void calculateAspectRatio() {
-		if ((this.texture == null) || !this.texture.isReady()) {
-			if (this.getWidth() <= 0) {
-				this.setWidth(100);
-			}
-			if (this.getHeight() <= 0) {
-				this.setHeight(100);
-			}
-			this.ready = true;
-			return;
-		}
-		int w = this.texture.getWidth();
-		int h = this.texture.getHeight();
-		double ratio = (double) w / (double) h;
-		//Calculate missing width
-		if ((this.getWidth() < 0) && (this.getHeight() >= 0)) {
-			this.setWidth((int)(this.getHeight() * ratio));
-		}
-		//Calculate missing height
-		if ((this.getHeight() < 0) && (this.getWidth() >= 0)) {
-			this.setHeight((int)(this.getWidth() / ratio));
-		}
+		//TODO experimental (trying to fix the log spam bug when advanced sizing/positioning is used)
+//		if ((this.texture == null) || !this.texture.isReady()) {
+//			if (this.getWidth() <= 0) {
+//				this.setWidth(100);
+//			}
+//			if (this.getHeight() <= 0) {
+//				this.setHeight(100);
+//			}
+//			this.ready = true;
+//			return;
+//		}
+//		int w = this.texture.getWidth();
+//		int h = this.texture.getHeight();
+//		double ratio = (double) w / (double) h;
+//		//Calculate missing width
+//		if ((this.getWidth() < 0) && (this.getHeight() >= 0)) {
+//			this.setWidth((int)(this.getHeight() * ratio));
+//		}
+//		//Calculate missing height
+//		if ((this.getHeight() < 0) && (this.getWidth() >= 0)) {
+//			this.setHeight((int)(this.getWidth() / ratio));
+//		}
 	}
 
 	@Override

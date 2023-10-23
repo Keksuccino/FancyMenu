@@ -158,7 +158,7 @@ public class ScrollBar {
     protected void handleWheelScrolling(ScreenEvent.MouseScrolled.Pre e) {
         if (this.active && this.allowScrollWheel && this.isMouseInsideScrollArea(true) && !this.grabbed) {
             float scrollOffset = 0.1F * this.wheelScrollSpeed;
-            if (e.getScrollDelta() > 0) {
+            if (e.getDeltaY() > 0) {
                 scrollOffset = -(scrollOffset);
             }
             this.setScroll(this.getScroll() + scrollOffset);

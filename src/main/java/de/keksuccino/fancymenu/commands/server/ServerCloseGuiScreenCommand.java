@@ -24,7 +24,8 @@ public class ServerCloseGuiScreenCommand {
             ExecuteCommandPacketMessage msg = new ExecuteCommandPacketMessage();
             msg.direction = "client";
             msg.command = "/closeguiscreen";
-            PacketHandler.send(PacketDistributor.PLAYER.with(() -> sender), msg);
+//            PacketHandler.send(PacketDistributor.PLAYER.with(() -> sender), msg);
+            PacketHandler.send(PacketDistributor.PLAYER.with(sender), msg);
         } catch (Exception e) {
             stack.sendFailure(Component.literal("Error while executing command!"));
             e.printStackTrace();

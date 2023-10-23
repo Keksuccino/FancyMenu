@@ -13,12 +13,11 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-
 @Mixin(AbstractButton.class)
 public class MixinAbstractButton {
 
-    @Redirect(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitNineSliced(Lnet/minecraft/resources/ResourceLocation;IIIIIIIIII)V"))
-    private void redirectRenderWidgetBackground(GuiGraphics instance, ResourceLocation p_282543_, int p_281513_, int p_281865_, int p_282482_, int p_282661_, int p_282068_, int p_281294_, int p_281681_, int p_281957_, int p_282300_, int p_282769_) {
+    @Redirect(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lnet/minecraft/resources/ResourceLocation;IIII)V"))
+    private void redirectRenderWidgetBackground(GuiGraphics instance, ResourceLocation resourceLocation, int x, int y, int width, int height) {
         AbstractWidget w = ((AbstractWidget)((Object)this));
         RenderWidgetBackgroundEvent.Pre e = new RenderWidgetBackgroundEvent.Pre(instance, w, this.getAlpha());
         try {
@@ -28,7 +27,7 @@ public class MixinAbstractButton {
             ex.printStackTrace();
         }
         if (!e.isCanceled()) {
-            instance.blitNineSliced(p_282543_, p_281513_, p_281865_, p_282482_, p_282661_, p_282068_, p_281294_, p_281681_, p_281957_, p_282300_, p_282769_);
+            instance.blitSprite(resourceLocation, x, y, width, height);
         }
         try {
             RenderWidgetBackgroundEvent.Post e2 = new RenderWidgetBackgroundEvent.Post(instance, w, this.getAlpha());

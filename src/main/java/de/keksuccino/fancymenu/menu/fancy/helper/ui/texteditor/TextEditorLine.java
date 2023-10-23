@@ -1,14 +1,13 @@
-
 package de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.mixin.client.IMixinEditBox;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.gui.Font;
-
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -16,10 +15,10 @@ import net.minecraft.network.chat.Style;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("all")
 public class TextEditorLine extends AdvancedTextField {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -99,7 +98,8 @@ public class TextEditorLine extends AdvancedTextField {
 //                String text = this.font2.plainSubstrByWidth(this.getValue().substring(this.getAsAccessor().getDisplayPosFancyMenu()), this.getInnerWidth());
             String text = this.getValue();
             boolean isCursorNotAtStartOrEnd = cursorPos >= 0 && cursorPos <= text.length();
-            boolean renderCursor = this.isFocused() && this.getAsAccessor().getFrameFancyMenu() / 6 % 2 == 0 && isCursorNotAtStartOrEnd;
+//            boolean renderCursor = this.isFocused() && this.getAsAccessor().getFrameFancyMenu() / 6 % 2 == 0 && isCursorNotAtStartOrEnd;
+            boolean renderCursor = this.isFocused() && (Util.getMillis() - this.getAsAccessor().getFocusedTimeFancyMenu()) / 300L % 2L == 0L && isCursorNotAtStartOrEnd;
             int textX = this.getAsAccessor().getBorderedFancyMenu() ? this.getX() + 4 : this.getX() + 1;
             int textY = this.getAsAccessor().getBorderedFancyMenu() ? this.getY() + (this.height - 8) / 2 : (this.getY() + Math.max(0, (this.getHeight() / 2)) - (this.font2.lineHeight / 2));
             int textXRender = textX;
@@ -197,14 +197,13 @@ public class TextEditorLine extends AdvancedTextField {
 
     }
 
-    @Override
     public void tick() {
 
         if (!MouseInput.isLeftMouseDown() && this.isInMouseHighlightingMode) {
             this.isInMouseHighlightingMode = false;
         }
 
-        super.tick();
+//        super.tick();
 
         leftRightArrowWasDown = false;
 
@@ -230,7 +229,7 @@ public class TextEditorLine extends AdvancedTextField {
                 if (this.parent.isLineFocused() && (this.parent.getFocusedLine() == this) && (this.getCursorPosition() <= 0) && (this.parent.getLineIndex(this) > 0)) {
                     leftRightArrowWasDown = true;
                     this.parent.goUpLine();
-                    this.parent.getFocusedLine().moveCursorTo(this.parent.getFocusedLine().getValue().length());
+                    this.parent.getFocusedLine().moveCursorTo(this.parent.getFocusedLine().getValue().length(), Screen.hasShiftDown());
                     this.parent.correctYScroll(0);
                     return true;
                 }
@@ -244,7 +243,7 @@ public class TextEditorLine extends AdvancedTextField {
                 if (this.parent.isLineFocused() && (this.parent.getFocusedLine() == this) && (this.getCursorPosition() >= this.getValue().length()) && (this.parent.getLineIndex(this) < this.parent.getLineCount() - 1)) {
                     leftRightArrowWasDown = true;
                     this.parent.goDownLine(false);
-                    this.parent.getFocusedLine().moveCursorTo(0);
+                    this.parent.getFocusedLine().moveCursorTo(0, Screen.hasShiftDown());
                     this.parent.correctYScroll(0);
                     return true;
                 }
@@ -264,7 +263,7 @@ public class TextEditorLine extends AdvancedTextField {
                 int lastLineIndex = this.parent.getFocusedLineIndex();
                 this.parent.justSwitchedLineByWordDeletion = true;
                 this.parent.goUpLine();
-                this.parent.getFocusedLine().moveCursorToEnd();
+                this.parent.getFocusedLine().moveCursorToEnd(Screen.hasShiftDown());
                 this.parent.getFocusedLine().insertText(this.getValue());
                 this.parent.getFocusedLine().setCursorPosition(this.parent.getFocusedLine().getCursorPosition()-this.getValue().length());
                 this.parent.getFocusedLine().setHighlightPos(this.parent.getFocusedLine().getCursorPosition());
@@ -293,7 +292,8 @@ public class TextEditorLine extends AdvancedTextField {
             this.isInMouseHighlightingMode = true;
             this.parent.setFocusedLine(Math.max(0, this.parent.getLineIndex(this)));
             super.mouseClicked(mouseX, mouseY, mouseButton);
-            this.getAsAccessor().setShiftPressedFancyMenu(false);
+            //TODO EXPERIMENTAL
+//            this.getAsAccessor().setShiftPressedFancyMenu(false);
             this.setHighlightPos(this.getCursorPosition());
         } else if ((mouseButton == 0) && !this.isHovered()) {
             //Clear highlighting when left-clicked in another line, etc.

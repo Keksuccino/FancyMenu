@@ -141,7 +141,7 @@ public class ButtonScriptEngine {
 						}
 					}
 					if (d == null) {
-						d = new ServerData(value.replace(" ", ""), value.replace(" ", ""), false);
+						d = new ServerData(value.replace(" ", ""), value.replace(" ", ""), ServerData.Type.OTHER);
 						l.add(d, false);
 						l.save();
 					}
@@ -299,11 +299,11 @@ public class ButtonScriptEngine {
 			if (action.equalsIgnoreCase("mutebackgroundsounds")) {
 				if (value != null) {
 					if (value.equalsIgnoreCase("true")) {
-						FancyMenu.config.setValue("playbackgroundsounds", false);
+						FancyMenu.getConfig().setValue("playbackgroundsounds", false);
 						MenuCustomization.stopSounds();
 					}
 					if (value.equalsIgnoreCase("false")) {
-						FancyMenu.config.setValue("playbackgroundsounds", true);
+						FancyMenu.getConfig().setValue("playbackgroundsounds", true);
 						CustomizationHelper.reloadSystemAndMenu();
 					}
 				}
@@ -355,7 +355,7 @@ public class ButtonScriptEngine {
 							}
 						}
 						if (d == null) {
-							d = new ServerData(ipRaw, ipRaw, false);
+							d = new ServerData(ipRaw, ipRaw, ServerData.Type.OTHER);
 							l.add(d, false);
 							l.save();
 						}

@@ -8,16 +8,14 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
 import de.keksuccino.fancymenu.events.PlayWidgetClickSoundEvent;
 import de.keksuccino.fancymenu.events.RenderWidgetEvent;
 import net.minecraftforge.common.MinecraftForge;
 
-
 @Mixin(value = AbstractWidget.class)
 public abstract class MixinAbstractWidget {
 
-	@Shadow float alpha;
+	@Shadow protected float alpha;
 	
 	@Inject(at = @At(value = "HEAD"), method = "render", cancellable = true)
 	private void onRenderPre(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {

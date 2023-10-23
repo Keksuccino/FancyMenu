@@ -55,7 +55,7 @@ public class ServerCache {
 
     public static ServerData getServer(String ip) {
         if (!servers.containsKey(ip)) {
-            cacheServer(new ServerData(ip, ip, false), new ServerData(ip, ip, false));
+            cacheServer(new ServerData(ip, ip, ServerData.Type.OTHER), new ServerData(ip, ip, ServerData.Type.OTHER));
         }
 
         //Copy server data from old to new array only when server is done pinging

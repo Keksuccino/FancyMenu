@@ -125,7 +125,7 @@ public class ButtonCache {
 				if (!buttons.containsKey(id.getId())) {
 					buttons.put(id.getId(), new ButtonData(button.getButton(), id.getId(), LocaleUtils.getKeyForString(button.getButton().getMessage().getString()), s));
 				} else {
-					if (FancyMenu.config.getOrDefault("showdebugwarnings", true)) {
+					if (FancyMenu.getConfig().getOrDefault("showdebugwarnings", true)) {
 						System.out.println("");
 						System.out.println("## WARNING [FANCYMENU]: Overlapping buttons found! ##");
 						System.out.println("At: X=" + button.x + " Y=" + button.y);

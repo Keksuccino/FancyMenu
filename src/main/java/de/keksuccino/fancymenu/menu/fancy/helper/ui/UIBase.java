@@ -50,7 +50,7 @@ public class UIBase {
 
 	public static float getUIScale() {
 
-		float uiScale = FancyMenu.config.getOrDefault("uiscale", 1.0F);
+		float uiScale = FancyMenu.getConfig().getOrDefault("uiscale", 1.0F);
 		double mcScale = Minecraft.getInstance().getWindow().getGuiScale();
 
 		return (float) ((((double)UI_SCALE_BASE) * (((double)UI_SCALE_BASE) / mcScale)) * uiScale);

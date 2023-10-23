@@ -19,7 +19,7 @@ public class PlayerUuidPlaceholder extends Placeholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-        return Minecraft.getInstance().getUser().getUuid();
+        return Minecraft.getInstance().getUser().getProfileId().toString();
     }
 
     @Override

@@ -1,34 +1,36 @@
 package de.keksuccino.fancymenu.networking;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.network.NetworkRegistry;
+import net.minecraftforge.event.network.CustomPayloadEvent;
+import net.minecraftforge.network.ChannelBuilder;
+import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.PacketDistributor;
-import net.minecraftforge.network.simple.SimpleChannel;
-
+import net.minecraftforge.network.SimpleChannel;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 public class PacketHandler {
 
-    public static final String PROTOCOL_VERSION = "1";
-    public static final SimpleChannel INSTANCE = NetworkRegistry.newSimpleChannel(new ResourceLocation("fancymenu", "play"), () -> PROTOCOL_VERSION, s -> true, s -> true);
+    public static final int PROTOCOL_VERSION = 1;
+    public static final SimpleChannel INSTANCE = ChannelBuilder.named(new ResourceLocation("fancymenu", "play")).networkProtocolVersion(PROTOCOL_VERSION).acceptedVersions((status, version) -> true).simpleChannel();
 
-    private static int messageIndex = -1;
+    public static <MSG> void registerMessage(Class<MSG> messageType, BiConsumer<MSG, FriendlyByteBuf> encoder, Function<FriendlyByteBuf, MSG> decoder, BiConsumer<MSG, CustomPayloadEvent.Context> messageConsumer) {
+        INSTANCE.messageBuilder(messageType).encoder(encoder).decoder(decoder).consumerMainThread(messageConsumer).add();
+    }
 
-    public static <MSG> void registerMessage(Class<MSG> messageType, BiConsumer<MSG, FriendlyByteBuf> encoder, Function<FriendlyByteBuf, MSG> decoder, BiConsumer<MSG, Supplier<NetworkEvent.Context>> messageConsumer) {
-        messageIndex++;
-        INSTANCE.registerMessage(messageIndex, messageType, encoder, decoder, messageConsumer);
+    public static <MSG> void registerMessage(Class<MSG> messageType, NetworkDirection direction, BiConsumer<MSG, FriendlyByteBuf> encoder, Function<FriendlyByteBuf, MSG> decoder, BiConsumer<MSG, CustomPayloadEvent.Context> messageConsumer) {
+        INSTANCE.messageBuilder(messageType, direction).encoder(encoder).decoder(decoder).consumerMainThread(messageConsumer).add();
     }
 
     public static void sendToServer(Object message) {
-        INSTANCE.sendToServer(message);
+        if (Minecraft.getInstance().getConnection() == null) return;
+        INSTANCE.send(message, Minecraft.getInstance().getConnection().getConnection());
     }
 
     public static void send(PacketDistributor.PacketTarget target, Object message) {
-        INSTANCE.send(target, message);
+        INSTANCE.send(message, target);
     }
 
 }

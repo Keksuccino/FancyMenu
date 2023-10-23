@@ -87,7 +87,7 @@ public abstract class DeepCustomizationLayoutEditorElement extends LayoutElement
                     this.dragMouseY = mY;
                 }
                 if ((mX != this.dragMouseX) || (mY != this.dragMouseY)) {
-                    if (FancyMenu.config.getOrDefault("showvanillamovewarning", true)) {
+                    if (FancyMenu.getConfig().getOrDefault("showvanillamovewarning", true)) {
                         FMNotificationPopup p;
                         if (this.orientationCanBeChanged) {
                             p = new FMNotificationPopup(300, new Color(0, 0, 0, 0), 240, null, StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.element.vanilla.orientation_needed"), "%n%"));
@@ -143,7 +143,7 @@ public abstract class DeepCustomizationLayoutEditorElement extends LayoutElement
     @Override
     public void destroyObject() {
         if (this.isDestroyable()) {
-            if (FancyMenu.config.getOrDefault("editordeleteconfirmation", true)) {
+            if (FancyMenu.getConfig().getOrDefault("editordeleteconfirmation", true)) {
                 FMNotificationPopup pop = new FMNotificationPopup(300, new Color(0,0,0,0), 240, null, StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.element.vanilla.delete.confirm"), "%n%"));
                 PopupHandler.displayPopup(pop);
             }

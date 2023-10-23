@@ -100,6 +100,10 @@ public class ScrollableScreen extends Screen {
 
     }
 
+    @Override
+    public void renderBackground(GuiGraphics p_283688_, int p_299421_, int p_298679_, float p_297268_) {
+    }
+
     protected static void renderDescription(GuiGraphics graphics, List<String> desc, int mouseX, int mouseY) {
         if (desc != null) {
             int width = 10;

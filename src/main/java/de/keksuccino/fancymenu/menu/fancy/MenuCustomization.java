@@ -7,6 +7,8 @@ import java.util.UUID;
 
 import com.google.common.io.Files;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.events.GuiInitCompletedEvent;
+import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
@@ -36,17 +38,11 @@ public class MenuCustomization {
 	private static boolean initDone = false;
 	private static List<String> sounds = new ArrayList<String>();
 
-	public static final File CUSTOMIZABLE_MENUS_FILE = new File("config/fancymenu/customizablemenus.txt");
+	public static final File CUSTOMIZABLE_MENUS_FILE = new File(FancyMenu.MOD_DIR, "/customizablemenus.txt");
 
 	protected static boolean isCurrentScrollable = false;
 	protected static boolean isNewMenu = true;
 	protected static MenuCustomizationEvents eventsInstance = new MenuCustomizationEvents();
-
-	
-	public static boolean allowScreenCustomization = false;
-
-	
-	//public static boolean isLoadingScreen = true;
 	
 	public static void init() {
 		if (!initDone) {
@@ -152,11 +148,7 @@ public class MenuCustomization {
 	}
 
 	public static boolean isMenuCustomizable(Screen menu) {
-		
-		if (!allowScreenCustomization) {
-			return false;
-		}
-		//------------------------
+
 		if (menu != null) {
 			if (menu instanceof CustomGuiBase) {
 				return true;
@@ -359,6 +351,15 @@ public class MenuCustomization {
 			e.printStackTrace();
 		}
 		return path;
+	}
+
+	public static void reInitCurrentScreen() {
+		if (Minecraft.getInstance().screen != null) {
+			MinecraftForge.EVENT_BUS.post(new InitOrResizeScreenEvent.Pre(Minecraft.getInstance().screen));
+			Minecraft.getInstance().screen.resize(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
+			MinecraftForge.EVENT_BUS.post(new InitOrResizeScreenEvent.Post(Minecraft.getInstance().screen));
+			MinecraftForge.EVENT_BUS.post(new GuiInitCompletedEvent(Minecraft.getInstance().screen));
+		}
 	}
 	
 }

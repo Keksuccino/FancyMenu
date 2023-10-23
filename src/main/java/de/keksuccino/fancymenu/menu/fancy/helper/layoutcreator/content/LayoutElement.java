@@ -1312,7 +1312,7 @@ public abstract class LayoutElement {
 		if (!this.destroyable) {
 			return;
 		}
-		if (FancyMenu.config.getOrDefault("editordeleteconfirmation", true)) {
+		if (FancyMenu.getConfig().getOrDefault("editordeleteconfirmation", true)) {
 			PopupHandler.displayPopup(new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
 				if (call) {
 					this.handler.deleteContentQueue.add(this);

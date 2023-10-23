@@ -699,12 +699,17 @@ public class LayoutEditorScreen extends Screen {
 
 	}
 
+	@Override
+	public void renderBackground(GuiGraphics p_283688_, int p_299421_, int p_298679_, float p_297268_) {
+		//This method gets called in render() now, so override it with empty body
+	}
+
 	protected void drawGrid(GuiGraphics graphics) {
-		if (FancyMenu.config.getOrDefault("showgrid", false)) {
+		if (FancyMenu.getConfig().getOrDefault("showgrid", false)) {
 
 			Color cNormal = new Color(255, 255, 255, 100);
 			Color cCenter = new Color(150, 105, 255, 100);
-			int gridSize = FancyMenu.config.getOrDefault("gridsize", 10);
+			int gridSize = FancyMenu.getConfig().getOrDefault("gridsize", 10);
 			int lineThickness = 1;
 
 			//Draw centered vertical line
@@ -1410,7 +1415,7 @@ public class LayoutEditorScreen extends Screen {
 				}
 			}
 			if (l.size() > 1) {
-				if (FancyMenu.config.getOrDefault("editordeleteconfirmation", true)) {
+				if (FancyMenu.getConfig().getOrDefault("editordeleteconfirmation", true)) {
 					PopupHandler.displayPopup(new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
 						if (call) {
 							this.deleteContentQueue.addAll(l);
@@ -1721,10 +1726,10 @@ public class LayoutEditorScreen extends Screen {
 			if (d.keycode == 71) {
 				if (KeyboardHandler.isCtrlPressed()) {
 					try {
-						if (FancyMenu.config.getOrDefault("showgrid", false)) {
-							FancyMenu.config.setValue("showgrid", false);
+						if (FancyMenu.getConfig().getOrDefault("showgrid", false)) {
+							FancyMenu.getConfig().setValue("showgrid", false);
 						} else {
-							FancyMenu.config.setValue("showgrid", true);
+							FancyMenu.getConfig().setValue("showgrid", true);
 						}
 					} catch (Exception e) {
 						e.printStackTrace();

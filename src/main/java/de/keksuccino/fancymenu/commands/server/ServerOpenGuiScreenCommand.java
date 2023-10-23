@@ -31,7 +31,8 @@ public class ServerOpenGuiScreenCommand {
             ExecuteCommandPacketMessage msg = new ExecuteCommandPacketMessage();
             msg.direction = "client";
             msg.command = "/openguiscreen " + menuIdentifierOrCustomGuiName;
-            PacketHandler.send(PacketDistributor.PLAYER.with(() -> sender), msg);
+//            PacketHandler.send(PacketDistributor.PLAYER.with(() -> sender), msg);
+            PacketHandler.send(PacketDistributor.PLAYER.with(sender), msg);
         } catch (Exception e) {
             stack.sendFailure(Component.literal("Error while trying to execute command!"));
             e.printStackTrace();

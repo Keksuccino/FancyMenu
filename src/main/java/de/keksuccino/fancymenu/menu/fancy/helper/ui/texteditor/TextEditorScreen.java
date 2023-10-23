@@ -314,6 +314,10 @@ public class TextEditorScreen extends Screen {
 
     }
 
+    @Override
+    public void renderBackground(GuiGraphics p_283688_, int p_299421_, int p_298679_, float p_297268_) {
+    }
+
     protected void renderMultilineNotSupportedNotification(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         long now = System.currentTimeMillis();
         if (!this.multilineMode && (this.multilineNotSupportedNotificationDisplayStart + 3000L >= now)) {
@@ -557,15 +561,15 @@ public class TextEditorScreen extends Screen {
                     this.setFocusedLine(this.getLineIndex(hovered));
                     if (!hovered.isInMouseHighlightingMode) {
                         hovered.isInMouseHighlightingMode = true;
-                        hovered.getAsAccessor().setShiftPressedFancyMenu(false);
-                        hovered.moveCursorTo(hovered.getValue().length());
+//                        hovered.getAsAccessor().setShiftPressedFancyMenu(false);
+                        hovered.moveCursorTo(hovered.getValue().length(), false);
                     }
                 } else if (firstIsBeforeHovered) {
                     this.setFocusedLine(this.getLineIndex(hovered));
                     if (!hovered.isInMouseHighlightingMode) {
                         hovered.isInMouseHighlightingMode = true;
-                        hovered.getAsAccessor().setShiftPressedFancyMenu(false);
-                        hovered.moveCursorTo(0);
+//                        hovered.getAsAccessor().setShiftPressedFancyMenu(false);
+                        hovered.moveCursorTo(0, false);
                     }
                 } else if (first == hovered) {
                     this.setFocusedLine(this.getLineIndex(first));
@@ -587,8 +591,8 @@ public class TextEditorScreen extends Screen {
                             t.setHighlightPos(0);
                         }
                     } else {
-                        t.getAsAccessor().setShiftPressedFancyMenu(false);
-                        t.moveCursorTo(0);
+//                        t.getAsAccessor().setShiftPressedFancyMenu(false);
+                        t.moveCursorTo(0, false);
                         t.isInMouseHighlightingMode = false;
                     }
                 }
@@ -598,13 +602,13 @@ public class TextEditorScreen extends Screen {
             this.endHighlightLineIndex = endIndex;
 
             if (first != hovered) {
-                first.getAsAccessor().setShiftPressedFancyMenu(true);
+//                first.getAsAccessor().setShiftPressedFancyMenu(true);
                 if (firstIsAfterHovered) {
-                    first.moveCursorTo(0);
+                    first.moveCursorTo(0, true);
                 } else if (firstIsBeforeHovered) {
-                    first.moveCursorTo(first.getValue().length());
+                    first.moveCursorTo(first.getValue().length(), true);
                 }
-                first.getAsAccessor().setShiftPressedFancyMenu(false);
+//                first.getAsAccessor().setShiftPressedFancyMenu(false);
             }
 
         }
@@ -620,9 +624,9 @@ public class TextEditorScreen extends Screen {
                 i -= 4;
             }
             String s = this.font.plainSubstrByWidth(focused.getValue().substring(focused.getAsAccessor().getDisplayPosFancyMenu()), focused.getInnerWidth());
-            focused.getAsAccessor().setShiftPressedFancyMenu(true);
-            focused.moveCursorTo(this.font.plainSubstrByWidth(s, i).length() + focused.getAsAccessor().getDisplayPosFancyMenu());
-            focused.getAsAccessor().setShiftPressedFancyMenu(false);
+//            focused.getAsAccessor().setShiftPressedFancyMenu(true);
+            focused.moveCursorTo(this.font.plainSubstrByWidth(s, i).length() + focused.getAsAccessor().getDisplayPosFancyMenu(), true);
+//            focused.getAsAccessor().setShiftPressedFancyMenu(false);
             if ((focused.getAsAccessor().getHighlightPosFancyMenu() == focused.getCursorPosition()) && (this.startHighlightLineIndex == this.endHighlightLineIndex)) {
                 this.resetHighlighting();
             }
@@ -817,7 +821,7 @@ public class TextEditorScreen extends Screen {
                 TextEditorLine currentLine = this.getLine(current);
                 this.setFocusedLine(current - 1);
                 if (currentLine != null) {
-                    this.getFocusedLine().moveCursorTo(this.lastCursorPosSetByUser);
+                    this.getFocusedLine().moveCursorTo(this.lastCursorPosSetByUser, Screen.hasShiftDown());
                 }
             }
         }
@@ -839,7 +843,7 @@ public class TextEditorScreen extends Screen {
                     String textAfterCursor = currentLine.getValue().substring(currentLine.getCursorPosition());
                     currentLine.setValue(textBeforeCursor);
                     nextLine.setValue(textAfterCursor);
-                    nextLine.moveCursorTo(0);
+                    nextLine.moveCursorTo(0, Screen.hasShiftDown());
                     //Add amount of spaces of the beginning of the old line to the beginning of the new line
                     if (textBeforeCursor.startsWith(" ")) {
                         int spaces = 0;
@@ -851,10 +855,10 @@ public class TextEditorScreen extends Screen {
                             }
                         }
                         nextLine.setValue(textBeforeCursor.substring(0, spaces) + nextLine.getValue());
-                        nextLine.moveCursorTo(spaces);
+                        nextLine.moveCursorTo(spaces, Screen.hasShiftDown());
                     }
                 } else {
-                    nextLine.moveCursorTo(this.lastCursorPosSetByUser);
+                    nextLine.moveCursorTo(this.lastCursorPosSetByUser, Screen.hasShiftDown());
                 }
             }
         }
@@ -866,7 +870,7 @@ public class TextEditorScreen extends Screen {
             TextEditorLine n = new TextEditorLine(this.font, 0, 0, 0, 0, false, this.characterFilter, this);
             n.setValue(t.getValue());
             n.setFocused(t.isFocused());
-            n.moveCursorTo(t.getCursorPosition());
+            n.moveCursorTo(t.getCursorPosition(), Screen.hasShiftDown());
             l.add(n);
         }
         return l;
@@ -982,7 +986,7 @@ public class TextEditorScreen extends Screen {
                 }
                 if (!this.isLineFocused()) {
                     this.setFocusedLine(this.getLineCount()-1);
-                    this.getFocusedLine().moveCursorToEnd();
+                    this.getFocusedLine().moveCursorToEnd(Screen.hasShiftDown());
                 }
                 TextEditorLine focusedLine = this.getFocusedLine();
                 //These two strings are for correctly pasting text within a char sequence (if the cursor is not at the end or beginning of the line)
@@ -1037,10 +1041,10 @@ public class TextEditorScreen extends Screen {
         this.textFieldLines.add(t);
         this.setFocusedLine(0);
         t.setValue("");
-        t.moveCursorTo(0);
+        t.moveCursorTo(0, Screen.hasShiftDown());
         this.pasteText(text);
         this.setFocusedLine(0);
-        t.moveCursorTo(0);
+        t.moveCursorTo(0, Screen.hasShiftDown());
         this.verticalScrollBar.setScroll(0.0F);
     }
 
@@ -1181,9 +1185,9 @@ public class TextEditorScreen extends Screen {
                 } else {
                     if (this.isLineFocused()) {
                         TextEditorLine focused = this.getFocusedLine();
-                        focused.getAsAccessor().setShiftPressedFancyMenu(false);
+//                        focused.getAsAccessor().setShiftPressedFancyMenu(false);
                         focused.getAsAccessor().invokeDeleteTextFancyMenu(-1);
-                        focused.getAsAccessor().setShiftPressedFancyMenu(Screen.hasShiftDown());
+//                        focused.getAsAccessor().setShiftPressedFancyMenu(Screen.hasShiftDown());
                     }
                 }
                 this.resetHighlighting();
@@ -1267,14 +1271,14 @@ public class TextEditorScreen extends Screen {
                                 }
                             }
                             this.setFocusedLine(this.getLineIndex(focus));
-                            this.getFocusedLine().moveCursorToEnd();
+                            this.getFocusedLine().moveCursorToEnd(Screen.hasShiftDown());
                             this.correctYScroll(0);
                         } else if ((button == 1) && !isHighlightedHovered) {
                             //Focus line in case it is right-clicked
                             this.setFocusedLine(this.getLineIndex(hoveredLine));
                             //Set cursor in case line is right-clicked
                             String s = this.font.plainSubstrByWidth(hoveredLine.getValue().substring(hoveredLine.getAsAccessor().getDisplayPosFancyMenu()), hoveredLine.getInnerWidth());
-                            hoveredLine.moveCursorTo(this.font.plainSubstrByWidth(s, MouseInput.getMouseX() - hoveredLine.getX()).length() + hoveredLine.getAsAccessor().getDisplayPosFancyMenu());
+                            hoveredLine.moveCursorTo(this.font.plainSubstrByWidth(s, MouseInput.getMouseX() - hoveredLine.getX()).length() + hoveredLine.getAsAccessor().getDisplayPosFancyMenu(), Screen.hasShiftDown());
                         }
                     }
                     if (button == 1) {

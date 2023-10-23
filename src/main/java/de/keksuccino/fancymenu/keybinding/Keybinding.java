@@ -47,12 +47,12 @@ public class Keybinding {
 
 			if ((KeyToggleHelper.getKey().getValue() == c.keycode) && KeyboardHandler.isCtrlPressed() && KeyboardHandler.isAltPressed()) {
 				try {
-					if (FancyMenu.config.getOrDefault("showcustomizationbuttons", true)) {
-						FancyMenu.config.setValue("showcustomizationbuttons", false);
+					if (FancyMenu.getConfig().getOrDefault("showcustomizationbuttons", true)) {
+						FancyMenu.getConfig().setValue("showcustomizationbuttons", false);
 					} else {
-						FancyMenu.config.setValue("showcustomizationbuttons", true);
+						FancyMenu.getConfig().setValue("showcustomizationbuttons", true);
 					}
-					FancyMenu.config.syncConfig();
+					FancyMenu.getConfig().syncConfig();
 					CustomizationHelper.updateUI();
 				} catch (InvalidValueException e) {
 					e.printStackTrace();

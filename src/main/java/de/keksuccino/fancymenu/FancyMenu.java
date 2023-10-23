@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu;
 
 import java.io.File;
-
+import java.util.List;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundTypeRegistry;
 import de.keksuccino.fancymenu.commands.client.ClientExecutor;
 import de.keksuccino.fancymenu.commands.client.CloseGuiScreenCommand;
@@ -10,7 +10,7 @@ import de.keksuccino.fancymenu.commands.client.VariableCommand;
 import de.keksuccino.fancymenu.commands.server.ServerCloseGuiScreenCommand;
 import de.keksuccino.fancymenu.commands.server.ServerOpenGuiScreenCommand;
 import de.keksuccino.fancymenu.commands.server.ServerVariableCommand;
-import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
+import de.keksuccino.fancymenu.mainwindow.WindowHandler;
 import de.keksuccino.fancymenu.menu.button.buttonactions.ButtonActions;
 import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.menu.loadingrequirement.v2.requirements.LoadingRequirements;
@@ -23,9 +23,9 @@ import de.keksuccino.fancymenu.menu.servers.ServerCache;
 import de.keksuccino.fancymenu.menu.variables.VariableHandler;
 import de.keksuccino.fancymenu.menu.world.LastWorldHandler;
 import de.keksuccino.fancymenu.networking.Packets;
+import de.keksuccino.konkrete.file.FileUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
-
 import de.keksuccino.fancymenu.keybinding.Keybinding;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
@@ -51,19 +51,20 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.versions.mcp.MCPVersion;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("all")
 @Mod("fancymenu")
 public class FancyMenu {
 
-	public static final String VERSION = "2.14.7";
+	public static final String VERSION = "2.14.9";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
 	
-	public static Config config;
+	protected static Config config;
 
-	public static final File MOD_DIR = new File(getGameDirectory(), "/config/fancymenu");
+	public static final File MOD_DIR = buildModDirFile();
 	public static final File INSTANCE_DATA_DIR = new File(getGameDirectory(), "/fancymenu_data");
 	public static final File INSTANCE_TEMP_DATA_DIR = new File(INSTANCE_DATA_DIR, "/temp");
 
@@ -73,6 +74,32 @@ public class FancyMenu {
 	private static File buttonscriptPath = new File(MOD_DIR, "/buttonscripts");
 	private static File panoramaPath = new File(MOD_DIR, "/panoramas");
 	private static File slideshowPath = new File(MOD_DIR, "/slideshows");
+
+	private static File buildModDirFile() {
+		try {
+			File overrideDirFile = new File(getGameDirectory(), "/fancymenu_overridden_config_dir.txt");
+			if (overrideDirFile.isFile()) {
+				List<String> lines = FileUtils.getFileLines(overrideDirFile);
+				if ((lines != null) && !lines.isEmpty()) {
+					String path = lines.get(0);
+					if (!path.replace(" ", "").isEmpty()) {
+						if (!path.startsWith("/")) path = "/" + path;
+						File overridden = new File(getGameDirectory(), path);
+						overridden.mkdirs();
+						return overridden;
+					}
+				}
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		//Return default dir
+		return new File(getGameDirectory(), "/config/fancymenu");
+	}
+
+	public static boolean isModDirOverridden() {
+		return !MOD_DIR.getAbsolutePath().replace("\\", "/").endsWith("/config/fancymenu") && !MOD_DIR.getAbsolutePath().replace("\\", "/").endsWith("/config/fancymenu/");
+	}
 
 	public FancyMenu() {
 		try {
@@ -116,8 +143,8 @@ public class FancyMenu {
 
 				ButtonIdentificator.init();
 
-	    		AnimationHandler.init();
-	    		AnimationHandler.loadCustomAnimations();
+				AnimationHandler.init();
+				AnimationHandler.discoverAndRegisterExternalAnimations();
 
 	    		PanoramaHandler.init();
 
@@ -129,7 +156,7 @@ public class FancyMenu {
 	    		
 	        	MenuCustomization.init();
 
-				if (config.getOrDefault("enablehotkeys", true)) {
+				if (FancyMenu.getConfig().getOrDefault("enablehotkeys", true)) {
 					Keybinding.init();
 				}
 
@@ -139,7 +166,7 @@ public class FancyMenu {
 
 	        	VanillaButtonDescriptionHandler.init();
 
-				MainWindowHandler.handleForceFullscreen();
+				WindowHandler.handleForceFullscreen();
 
 				MenuBackgroundTypeRegistry.init();
 
@@ -155,7 +182,7 @@ public class FancyMenu {
 
 				LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in client-side mode!");
 
-				if (FancyMenu.config.getOrDefault("allow_level_registry_interactions", false)) {
+				if (FancyMenu.getConfig().getOrDefault("allow_level_registry_interactions", false)) {
 					LOGGER.info("[FANCYMENU] Level registry interactions allowed!");
 				}
 
@@ -228,12 +255,16 @@ public class FancyMenu {
 		Locals.getLocalsFromDir(f.getPath());
 	}
 
-	
-	public static void initConfig() {
+	@NotNull
+	public static Config getConfig() {
 		if (config == null) {
 			updateConfig();
 		}
+		return config;
 	}
+
+	@Deprecated
+	public static void initConfig() {}
 
 	public static void updateConfig() {
     	try {

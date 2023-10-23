@@ -223,6 +223,10 @@ public class ManageRequirementsScreen extends Screen {
 
     }
 
+    @Override
+    public void renderBackground(GuiGraphics p_283688_, int p_299421_, int p_298679_, float p_297268_) {
+    }
+
     @Nullable
     protected LoadingRequirementInstance getSelectedInstance() {
         ScrollAreaEntry e = this.requirementsScrollArea.getFocusedEntry();

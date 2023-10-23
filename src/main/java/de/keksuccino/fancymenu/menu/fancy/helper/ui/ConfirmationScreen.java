@@ -81,6 +81,10 @@ public class ConfirmationScreen extends Screen {
     }
 
     @Override
+    public void renderBackground(GuiGraphics p_283688_, int p_299421_, int p_298679_, float p_297268_) {
+    }
+
+    @Override
     public boolean keyPressed(int button, int p_96553_, int p_96554_) {
 
         //ENTER

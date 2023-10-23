@@ -12,6 +12,7 @@ import java.util.*;
 import com.google.common.io.Files;
 import com.mojang.blaze3d.systems.RenderSystem;
 
+import de.keksuccino.fancymenu.BuildCustomGuiScreen;
 import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
@@ -255,7 +256,7 @@ public class CustomizationHelperUI extends UIBase {
 				advancedButton.active = false;
 			}
 			advancedButton.setDescription(StringUtils.splitLines(Locals.localize("helper.ui.current.advanced.desc"), "%n%"));
-			if (FancyMenu.config.getOrDefault("advancedmode", false)) {
+			if (FancyMenu.getConfig().getOrDefault("advancedmode", false)) {
 				currentMenu.addContent(advancedButton);
 			}
 
@@ -322,6 +323,10 @@ public class CustomizationHelperUI extends UIBase {
 				setupMenu.setParentButton((AdvancedButton) press);
 				setupMenu.openMenuAt(press.x, press.y + press.getHeight());
 			});
+			if (FancyMenu.isModDirOverridden()) {
+				setupTab.active = false;
+				setupTab.setDescription("§cThis feature is disabled when overriding", "§cFancyMenu's config directory!");
+			}
 			bar.addElement(setupTab, "fm.ui.tab.setup_import_export", ElementAlignment.LEFT, false);
 
 			//Export Button
@@ -462,7 +467,46 @@ public class CustomizationHelperUI extends UIBase {
 			CustomizationButton newCustomGuiButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("helper.ui.customguis.new"), true, (press) -> {
 				PopupHandler.displayPopup(new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call) -> {
 					if (call) {
-						PopupHandler.displayPopup(new CreateCustomGuiPopup());
+						Screen current = Minecraft.getInstance().screen;
+						Minecraft.getInstance().setScreen(new BuildCustomGuiScreen(gui -> {
+							if (gui != null) {
+								try {
+									String name = "";
+									String identifier = gui.identifier;
+									if (identifier != null) {
+										name = FileUtils.generateAvailableFilename(FancyMenu.getCustomGuiPath().getPath(), identifier, "txt");
+
+										File f = new File(FancyMenu.getCustomGuiPath().getPath() + "/" + name);
+										if (!f.exists()) {
+											f.createNewFile();
+										}
+
+										List<String> l = new ArrayList<String>();
+										l.add("identifier = " + identifier);
+										if (gui.title != null) {
+											l.add("title = " + gui.title);
+										}
+										l.add("allowesc = " + gui.allowEsc);
+
+										FileUtils.writeTextToFile(f, false, l.toArray(new String[0]));
+
+										CustomGuiLoader.loadCustomGuis();
+										CustomGuiBase custom = CustomGuiLoader.getGui(identifier, current, null);
+										if (custom != null) {
+											Minecraft.getInstance().setScreen(custom);
+											Minecraft.getInstance().setScreen(new LayoutEditorScreen(custom));
+										} else {
+											Minecraft.getInstance().setScreen(current);
+										}
+									}
+								} catch (Exception e) {
+									Minecraft.getInstance().setScreen(current);
+									e.printStackTrace();
+								}
+							} else {
+								Minecraft.getInstance().setScreen(current);
+							}
+						}));
 					}
 				}, Locals.localize("helper.ui.customguis.new.sure")));
 			});
@@ -484,7 +528,7 @@ public class CustomizationHelperUI extends UIBase {
 				customGuiMenu.setParentButton((AdvancedButton) press);
 				customGuiMenu.openMenuAt(press.x, press.y + press.getHeight());
 			});
-			if (FancyMenu.config.getOrDefault("advancedmode", false)) {
+			if (FancyMenu.getConfig().getOrDefault("advancedmode", false)) {
 				bar.addElement(customGuiTab, "fm.ui.tab.customguis", ElementAlignment.LEFT, false);
 			}
 			/** CUSTOM GUI TAB END **/
@@ -684,7 +728,7 @@ public class CustomizationHelperUI extends UIBase {
 
 			if (bar != null) {
 				if (!PopupHandler.isPopupActive()) {
-					if (FancyMenu.config.getOrDefault("showcustomizationbuttons", true)) {
+					if (FancyMenu.getConfig().getOrDefault("showcustomizationbuttons", true)) {
 						if (!(screen instanceof LayoutEditorScreen) && !(screen instanceof ConfigScreen) && !(screen instanceof GameIntroScreen) && AnimationHandler.isReady() && MenuCustomization.isValidScreen(screen)) {
 
 							RenderUtils.setZLevelPre(graphics.pose(), 400);
@@ -914,7 +958,7 @@ public class CustomizationHelperUI extends UIBase {
 	}
 
 	protected static void renderUnicodeWarning(GuiGraphics graphics, Screen screen) {
-		if (!FancyMenu.config.getOrDefault("show_unicode_warning", true)) {
+		if (!FancyMenu.getConfig().getOrDefault("show_unicode_warning", true)) {
 			return;
 		}
 		if (Minecraft.getInstance().options.forceUnicodeFont().get()) {
@@ -961,7 +1005,7 @@ public class CustomizationHelperUI extends UIBase {
 		try {
 
 			if (e.getScreen() != null) {
-				if (FancyMenu.config.getOrDefault("showcustomizationbuttons", true)) {
+				if (FancyMenu.getConfig().getOrDefault("showcustomizationbuttons", true)) {
 
 					updateUI();
 

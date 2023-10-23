@@ -1201,7 +1201,7 @@ public class LayoutEditorUI extends UIBase {
 
 			animationMenu.addSeparator();
 
-			for (String s : AnimationHandler.getCustomAnimationNames()) {
+			for (String s : AnimationHandler.getExternalAnimationNames()) {
 				AdvancedButton aniB = new AdvancedButton(0, 0, 0, 20, s, true, (press) -> {
 					this.parent.addAnimation(s);
 				});

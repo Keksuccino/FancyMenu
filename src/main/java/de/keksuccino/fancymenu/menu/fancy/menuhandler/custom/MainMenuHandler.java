@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -39,6 +40,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.internal.BrandingControl;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("all")
 public class MainMenuHandler extends MenuHandlerBase {
@@ -173,9 +175,36 @@ public class MainMenuHandler extends MenuHandlerBase {
 		if (this.shouldCustomize(e.getScreen())) {
 			if (MenuCustomization.isMenuCustomizable(e.getScreen())) {
 				e.setCanceled(true);
-				e.getScreen().renderBackground(e.getGuiGraphics());
+				//Minecraft overrides Screen#renderBackground() in 1.20.2, so this is the ungly-looking workaround for the last days of FMv2.
+				this.renderBackground(e.getGuiGraphics(), e.getMouseX(), e.getMouseY(), e.getPartialTick());
 			}
 		}
+	}
+
+	private void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+		if (Minecraft.getInstance().level != null) {
+			this.renderTransparentBackground(graphics);
+			net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.ScreenEvent.BackgroundRendered(this.getCurrentScreen(), graphics));
+		} else {
+			this.renderDirtBackground(graphics);
+		}
+	}
+
+	private void renderTransparentBackground(GuiGraphics graphics) {
+		graphics.fillGradient(0, 0, this.getCurrentScreen().width, this.getCurrentScreen().height, -1072689136, -804253680);
+	}
+
+	private void renderDirtBackground(GuiGraphics graphics) {
+		graphics.setColor(0.25F, 0.25F, 0.25F, 1.0F);
+		int i = 32;
+		graphics.blit(Screen.BACKGROUND_LOCATION, 0, 0, 0, 0.0F, 0.0F, this.getCurrentScreen().width, this.getCurrentScreen().height, 32, 32);
+		graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+		net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.ScreenEvent.BackgroundRendered(this.getCurrentScreen(), graphics));
+	}
+
+	@NotNull
+	private Screen getCurrentScreen() {
+		return Objects.requireNonNullElse(Minecraft.getInstance().screen, new TitleScreen());
 	}
 
 	/**

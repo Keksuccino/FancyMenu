@@ -3,7 +3,9 @@
   "package": "de.keksuccino.fancymenu.mixin.client",
   "compatibilityLevel": "JAVA_17",
   "client": [
+    "IMixinAbstractSliderButton",
     "IMixinAbstractWidget",
+    "IMixinButton",
     "IMixinChatScreen",
     "IMixinEditBox",
     "IMixinMinecraft",
@@ -17,6 +19,7 @@
     "MixinAbstractSelectionList",
     "MixinAbstractWidget",
     "MixinConnectScreen",
+    "MixinForgeLoadingOverlay",
     "MixinImageButton",
     "MixinLevelStorageAccess",
     "MixinLoadingOverlay",

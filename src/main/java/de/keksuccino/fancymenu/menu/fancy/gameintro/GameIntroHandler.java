@@ -17,10 +17,10 @@ public class GameIntroHandler {
 	 * Returns the game intro or null if no animation was set or the animation was not found.
 	 */
 	public static IAnimationRenderer getGameIntroAnimation() {
-		if (!FancyMenu.config.valueExists("gameintroanimation")) {
+		if (!FancyMenu.getConfig().valueExists("gameintroanimation")) {
 			return null;
 		}
-		String name = FancyMenu.config.getOrDefault("gameintroanimation", "");
+		String name = FancyMenu.getConfig().getOrDefault("gameintroanimation", "");
 		if (AnimationHandler.animationExists(name)) {
 			return AnimationHandler.getAnimation(name);
 		}

@@ -4,12 +4,13 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.konkrete.config.ConfigEntry;
 import de.keksuccino.konkrete.gui.screens.ConfigScreen;
 import de.keksuccino.konkrete.localization.Locals;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 
 public class FMConfigScreen extends ConfigScreen {
 
 	public FMConfigScreen(Screen parent) {
-		super(FancyMenu.config, Locals.localize("fancymenu.config"), parent);
+		super(FancyMenu.getConfig(), Locals.localize("fancymenu.config"), parent);
 	}
 	
 	@Override
@@ -25,6 +26,10 @@ public class FMConfigScreen extends ConfigScreen {
 			this.setValueDescription(e.getName(), Locals.localize("fancymenu.config." + e.getName() + ".desc"));
 		}
 		
+	}
+
+	@Override
+	public void renderBackground(GuiGraphics p_283688_, int p_299421_, int p_298679_, float p_297268_) {
 	}
 	
 }

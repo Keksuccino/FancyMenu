@@ -1365,13 +1365,19 @@ fancymenu.editor.action.screens.manage_screen.actions = Actions
 fancymenu.editor.action.screens.move_action_up = Move Action Up
 fancymenu.editor.action.screens.move_action_up.desc = Move this action up in the list,%n%so it gets executed earlier.
 fancymenu.editor.action.screens.move_action_down = Move Action Down
-fancymenu.editor.action.screens.move_action_down.desc = Move this action down in the list,%n%so it gets executed later.
-
+facymenu.editor.action.screens.move_action_down.desc = Move this action down in the list,%n%so it gets executed later.
 fancymenu.editor.elements.button.manage_actions.desc = Manage the actions this button%n%should execute when clicked.
-
 fancymenu.editor.elements.ticker.manage_actions.desc = Manage the actions this ticker%n%should execute.
-
 fancymenu.guicomponents.confirm = Confirm
+fancymenu.custom_guis.build = Build Custom GUI
+fancymenu.custom_guis.build.identifier = Custom GUI Identifier:
+fancymenu.custom_guis.build.identifier.already_in_use = Identifier already in use! Identifiers need to be unique!
+fancymenu.custom_guis.build.identifier.invalid = Invalid Identifier!
+fancymenu.custom_guis.build.title = Menu Title (Optional):
+fancymenu.custom_guis.build.allow_esc.enabled = Allow ESC to Close GUI: §aEnabled
+fancymenu.custom_guis.build.allow_esc.disabled = Allow ESC to Close GUI: §cDisabled
+fancymenu.ui.screens.string_builder_screen.edit_in_editor = Open in Editor
+
 
 
 

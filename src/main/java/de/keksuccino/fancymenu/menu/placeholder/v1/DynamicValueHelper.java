@@ -33,7 +33,7 @@ public class DynamicValueHelper {
 		int width = 0;
 		int height = 0;
 		String playername = Minecraft.getInstance().getUser().getName();
-		String playeruuid = Minecraft.getInstance().getUser().getUuid();
+		String playeruuid = Minecraft.getInstance().getUser().getProfileId().toString();
 		String mcversion = MCPVersion.getMCVersion();
 		if (Minecraft.getInstance().screen != null) {
 			width = Minecraft.getInstance().screen.width;

@@ -25,7 +25,7 @@ import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.api.item.CustomizationItemRegistry;
 import de.keksuccino.fancymenu.events.*;
-import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
+import de.keksuccino.fancymenu.mainwindow.WindowHandler;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
@@ -274,7 +274,7 @@ public class MenuHandlerBase {
 				biggerthanwidth = biggerthanwidth.replace(" ", "");
 				if (MathUtils.isInteger(biggerthanwidth)) {
 					int i = Integer.parseInt(biggerthanwidth);
-					if (MainWindowHandler.getWindowGuiWidth() < i) {
+					if (WindowHandler.getWindowGuiWidth() < i) {
 						continue;
 					}
 				}
@@ -284,7 +284,7 @@ public class MenuHandlerBase {
 				biggerthanheight = biggerthanheight.replace(" ", "");
 				if (MathUtils.isInteger(biggerthanheight)) {
 					int i = Integer.parseInt(biggerthanheight);
-					if (MainWindowHandler.getWindowGuiHeight() < i) {
+					if (WindowHandler.getWindowGuiHeight() < i) {
 						continue;
 					}
 				}
@@ -294,7 +294,7 @@ public class MenuHandlerBase {
 				smallerthanwidth = smallerthanwidth.replace(" ", "");
 				if (MathUtils.isInteger(smallerthanwidth)) {
 					int i = Integer.parseInt(smallerthanwidth);
-					if (MainWindowHandler.getWindowGuiWidth() > i) {
+					if (WindowHandler.getWindowGuiWidth() > i) {
 						continue;
 					}
 				}
@@ -304,7 +304,7 @@ public class MenuHandlerBase {
 				smallerthanheight = smallerthanheight.replace(" ", "");
 				if (MathUtils.isInteger(smallerthanheight)) {
 					int i = Integer.parseInt(smallerthanheight);
-					if (MainWindowHandler.getWindowGuiHeight() > i) {
+					if (WindowHandler.getWindowGuiHeight() > i) {
 						continue;
 					}
 				}
@@ -998,8 +998,8 @@ public class MenuHandlerBase {
 			}
 
 			if (action.equalsIgnoreCase("addaudio")) {
-				if (FancyMenu.config.getOrDefault("playbackgroundsounds", true)) {
-					if ((Minecraft.getInstance().level == null) || FancyMenu.config.getOrDefault("playbackgroundsoundsinworld", false)) {
+				if (FancyMenu.getConfig().getOrDefault("playbackgroundsounds", true)) {
+					if ((Minecraft.getInstance().level == null) || FancyMenu.getConfig().getOrDefault("playbackgroundsoundsinworld", false)) {
 						String path = CustomizationItemBase.fixBackslashPath(sec.getEntryValue("path"));
 						String loopString = sec.getEntryValue("loop");
 
