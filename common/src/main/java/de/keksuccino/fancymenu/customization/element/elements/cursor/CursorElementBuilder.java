@@ -33,7 +33,7 @@ public class CursorElementBuilder extends ElementBuilder<CursorElement, CursorEd
 
         CursorElement element = this.buildDefaultInstance();
 
-        element.source = serialized.getValue("source");
+        element.textureSupplier = deserializeImageResourceSupplier(serialized.getValue("source"));
 
         String hotspotX = serialized.getValue("hotspot_x");
         if ((hotspotX != null) && MathUtils.isInteger(hotspotX)) {
@@ -58,8 +58,8 @@ public class CursorElementBuilder extends ElementBuilder<CursorElement, CursorEd
     @Override
     protected SerializedElement serializeElement(@NotNull CursorElement element, @NotNull SerializedElement serializeTo) {
 
-        if (element.source != null) {
-            serializeTo.putProperty("source", element.source);
+        if (element.textureSupplier != null) {
+            serializeTo.putProperty("source", element.textureSupplier.getSourceWithPrefix());
         }
 
         serializeTo.putProperty("hotspot_x", "" + element.hotspotX);

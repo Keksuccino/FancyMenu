@@ -20,16 +20,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO Add support for FileTypes to FileChooser screens (AbstractFileBrowserScreen) and show supported file types in Chooser GUI
-
-	//TODO Add ChooseResource Screen
-	// - Screen nimmt MediaType als param
-	// - Support für Web, Local und Location in einem Screen
-	// - Web und Location haben auch Preview
-	// - Web Input hat hint: " http://.. or https://.. "
-	// - Web Input hat Placeholder Support
-
-	//TODO Neues Resource System in Elemente und anderen Kram implementieren (besonders ResourceSupplier)
+	//TODO Player Entity element auf neues resource handling updaten (skin und cape textures)
 
 	//TODO Bei Resource Reload (MC Resource Pack changed, etc.) alle resources per ResourceHandler#reload() reloaden
 
@@ -51,10 +42,6 @@ public class FancyMenu {
 	//   - Mouse Clicked (mit mouseX, mouseY)
 	//   - Mouse Moved (mit mouseX, mouseY)
 	//   - Mouse Scrolled (mit scrollDelta)
-
-	//TODO v2 Slider element fertig machen
-	// - support für actions
-	// - full background and handle texture customization (wie für Vanilla Slider)
 
 	//TODO Button: Nine-Slice Background Mode (toggle on/off)
 	// - Option, um Randbreite zu definieren, wenn möglich
@@ -125,8 +112,6 @@ public class FancyMenu {
 	//TODO Möglichkeit adden, Custom GUIs zu kopieren (bei kopieren öffnet sich input screen, um neuen identifier einzugeben)
 
 	//TODO add setAlpha() support to Vanilla ImageButtons (language button, accessibility button)
-
-	//TODO FIXEN: Slider elemente nutzen element opacity nicht (Vanilla bug oder in element vergessen?)
 
 	private static final Logger LOGGER = LogManager.getLogger();
 

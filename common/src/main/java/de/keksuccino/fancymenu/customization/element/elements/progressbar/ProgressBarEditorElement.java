@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -33,12 +32,13 @@ public class ProgressBarEditorElement extends AbstractEditorElement {
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.elements.progress_bar.bar_color.desc")));
 
-        this.addFileChooserContextMenuEntryTo(this.rightClickMenu, "set_bar_texture",
+        this.addImageResourceChooserContextMenuEntryTo(this.rightClickMenu, "set_bar_texture",
                         ProgressBarEditorElement.class,
                         null,
-                        element -> ((ProgressBarElement)element.element).barTexturePath,
-                        (element, s) -> ((ProgressBarElement)element.element).barTexturePath = s,
-                        Component.translatable("fancymenu.editor.elements.progress_bar.bar_texture"), true, FileFilter.IMAGE_AND_GIF_FILE_FILTER)
+                        consumes -> consumes.getElement().barTextureSupplier,
+                        (progressBarEditorElement, iTextureResourceSupplier) -> progressBarEditorElement.getElement().barTextureSupplier = iTextureResourceSupplier,
+                        Component.translatable("fancymenu.editor.elements.progress_bar.bar_texture"),
+                        true, null, true, true, true)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.elements.progress_bar.bar_texture.desc")));
 
@@ -53,12 +53,13 @@ public class ProgressBarEditorElement extends AbstractEditorElement {
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.elements.progress_bar.background_color.desc")));
 
-        this.addFileChooserContextMenuEntryTo(this.rightClickMenu, "set_background_texture",
+        this.addImageResourceChooserContextMenuEntryTo(this.rightClickMenu, "set_background_texture",
                         ProgressBarEditorElement.class,
                         null,
-                        element -> ((ProgressBarElement)element.element).backgroundTexturePath,
-                        (element, s) -> ((ProgressBarElement)element.element).backgroundTexturePath = s,
-                        Component.translatable("fancymenu.editor.elements.progress_bar.background_texture"), true, FileFilter.IMAGE_AND_GIF_FILE_FILTER)
+                        consumes -> consumes.getElement().backgroundTextureSupplier,
+                        (progressBarEditorElement, iTextureResourceSupplier) -> progressBarEditorElement.getElement().backgroundTextureSupplier = iTextureResourceSupplier,
+                        Component.translatable("fancymenu.editor.elements.progress_bar.background_texture"),
+                        true, null, true, true, true)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.elements.progress_bar.background_texture.desc")));
 
@@ -98,6 +99,10 @@ public class ProgressBarEditorElement extends AbstractEditorElement {
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.elements.progress_bar.progress_for_element_anchor.desc")));
 
+    }
+
+    public ProgressBarElement getElement() {
+        return (ProgressBarElement) this.element;
     }
 
 }

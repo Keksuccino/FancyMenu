@@ -1,4 +1,31 @@
 
+- Fixed a bug related to the Element Size and Position placeholders leading to " Failed to parse '"' " log spam in combination with the Calculator placeholder
+
+%changelog:end%
+
+
+
+
+
+- Added some debug stuff for the " Failed to parse '"' " error in Calculator placeholders
+- Implemented some potential fixes for the " Failed to parse '"' " error
+
+%changelog:end%
+
+
+
+
+
+CHANGELOG | FANCYMENU v2.14.10-2
+ 
+- Fixed: Game sometimes crashing when joining a server
+
+%changelog:end%
+
+
+
+
+
 CHANGELOG | FANCYMENU v2.14.10
  
 - IMPORTANT: This update contains breaking changes that could make mods crash that were made with older versions of FancyMenu!

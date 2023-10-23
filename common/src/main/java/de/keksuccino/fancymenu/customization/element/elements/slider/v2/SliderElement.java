@@ -10,8 +10,6 @@ import de.keksuccino.fancymenu.customization.element.IExecutableElement;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
-import de.keksuccino.fancymenu.util.file.FileFilter;
-import de.keksuccino.fancymenu.util.file.ResourceFile;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
@@ -20,7 +18,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtend
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.ListSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
 import de.keksuccino.fancymenu.util.resources.RenderableResource;
-import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
+import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
+import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
@@ -49,14 +48,14 @@ public class SliderElement extends AbstractElement implements IExecutableElement
     @Nullable
     public String label;
     public String tooltip;
-    public ResourceFile handleTextureNormal;
-    public ResourceFile handleTextureHover;
-    public ResourceFile handleTextureInactive;
+    public ResourceSupplier<ITexture> handleTextureNormal;
+    public ResourceSupplier<ITexture> handleTextureHover;
+    public ResourceSupplier<ITexture> handleTextureInactive;
     public String handleAnimationNormal;
     public String handleAnimationHover;
     public String handleAnimationInactive;
-    public ResourceFile sliderBackgroundTextureNormal;
-    public ResourceFile sliderBackgroundTextureHighlighted;
+    public ResourceSupplier<ITexture> sliderBackgroundTextureNormal;
+    public ResourceSupplier<ITexture> sliderBackgroundTextureHighlighted;
     public String sliderBackgroundAnimationNormal;
     public String sliderBackgroundAnimationHighlighted;
     public boolean loopBackgroundAnimations = true;
@@ -190,8 +189,8 @@ public class SliderElement extends AbstractElement implements IExecutableElement
                 sliderBackNormal = a;
             }
         }
-        if ((sliderBackNormal == null) && (this.sliderBackgroundTextureNormal != null) && this.sliderBackgroundTextureNormal.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.sliderBackgroundTextureNormal.getFile())) {
-            sliderBackNormal = ImageResourceHandler.INSTANCE.getTexture(this.sliderBackgroundTextureNormal.getAbsolutePath());
+        if ((sliderBackNormal == null) && (this.sliderBackgroundTextureNormal != null)) {
+            sliderBackNormal = this.sliderBackgroundTextureNormal.get();
         }
         //Highlighted Slider Background
         if ((this.sliderBackgroundAnimationHighlighted != null) && AnimationHandler.animationExists(this.sliderBackgroundAnimationHighlighted)) {
@@ -201,8 +200,8 @@ public class SliderElement extends AbstractElement implements IExecutableElement
                 sliderBackHighlighted = a;
             }
         }
-        if ((sliderBackHighlighted == null) && (this.sliderBackgroundTextureHighlighted != null) && this.sliderBackgroundTextureHighlighted.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.sliderBackgroundTextureHighlighted.getFile())) {
-            sliderBackHighlighted = ImageResourceHandler.INSTANCE.getTexture(this.sliderBackgroundTextureHighlighted.getAbsolutePath());
+        if ((sliderBackHighlighted == null) && (this.sliderBackgroundTextureHighlighted != null)) {
+            sliderBackHighlighted = this.sliderBackgroundTextureHighlighted.get();
         }
 
         if (this.slider instanceof CustomizableSlider w) {
@@ -222,8 +221,8 @@ public class SliderElement extends AbstractElement implements IExecutableElement
                 handleTextureNormal = a;
             }
         }
-        if ((handleTextureNormal == null) && (this.handleTextureNormal != null) && this.handleTextureNormal.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.handleTextureNormal.getFile())) {
-            handleTextureNormal = ImageResourceHandler.INSTANCE.getTexture(this.handleTextureNormal.getAbsolutePath());
+        if ((handleTextureNormal == null) && (this.handleTextureNormal != null)) {
+            handleTextureNormal = this.handleTextureNormal.get();
         }
         //Hover
         if ((this.handleAnimationHover != null) && AnimationHandler.animationExists(this.handleAnimationHover)) {
@@ -233,8 +232,8 @@ public class SliderElement extends AbstractElement implements IExecutableElement
                 handleTextureHover = a;
             }
         }
-        if ((handleTextureHover == null) && (this.handleTextureHover != null) && this.handleTextureHover.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.handleTextureHover.getFile())) {
-            handleTextureHover = ImageResourceHandler.INSTANCE.getTexture(this.handleTextureHover.getAbsolutePath());
+        if ((handleTextureHover == null) && (this.handleTextureHover != null)) {
+            handleTextureHover = this.handleTextureHover.get();
         }
         //Inactive
         if ((this.handleAnimationInactive != null) && AnimationHandler.animationExists(this.handleAnimationInactive)) {
@@ -244,8 +243,8 @@ public class SliderElement extends AbstractElement implements IExecutableElement
                 handleTextureInactive = a;
             }
         }
-        if ((handleTextureInactive == null) && (this.handleTextureInactive != null) && this.handleTextureInactive.exists() && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(this.handleTextureInactive.getFile())) {
-            handleTextureInactive = ImageResourceHandler.INSTANCE.getTexture(this.handleTextureInactive.getAbsolutePath());
+        if ((handleTextureInactive == null) && (this.handleTextureInactive != null)) {
+            handleTextureInactive = this.handleTextureInactive.get();
         }
 
         if (this.slider instanceof CustomizableWidget w) {

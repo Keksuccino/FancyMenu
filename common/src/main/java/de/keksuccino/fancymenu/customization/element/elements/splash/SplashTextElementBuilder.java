@@ -1,4 +1,3 @@
-
 package de.keksuccino.fancymenu.customization.element.elements.splash;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
@@ -16,7 +15,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -64,6 +62,9 @@ public class SplashTextElementBuilder extends ElementBuilder<SplashTextElement, 
         }
 
         element.source = serialized.getValue("source");
+        if (element.sourceMode == SplashTextElement.SourceMode.TEXT_FILE) {
+            element.textFileSupplier = deserializeTextResourceSupplier(element.source);
+        }
 
         String rotation = serialized.getValue("rotation");
         if ((rotation != null) && MathUtils.isFloat(rotation)) {
@@ -104,7 +105,11 @@ public class SplashTextElementBuilder extends ElementBuilder<SplashTextElement, 
     @Override
     protected SerializedElement serializeElement(@NotNull SplashTextElement element, @NotNull SerializedElement serializeTo) {
 
-        serializeTo.putProperty("source", "" + element.source);
+        if ((element.sourceMode == SplashTextElement.SourceMode.TEXT_FILE) && (element.textFileSupplier != null)) {
+            serializeTo.putProperty("source", "" + element.textFileSupplier.getSourceWithPrefix());
+        } else {
+            serializeTo.putProperty("source", "" + element.source);
+        }
         serializeTo.putProperty("source_mode", element.sourceMode.name);
         serializeTo.putProperty("scale", "" + element.scale);
         serializeTo.putProperty("shadow", "" + element.shadow);

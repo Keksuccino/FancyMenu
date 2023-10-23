@@ -6,11 +6,13 @@ import de.keksuccino.fancymenu.util.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resources.text.IText;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resources.video.IVideo;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 
 @SuppressWarnings("unused")
 public class ResourceSupplier<T extends Resource> {
@@ -106,6 +108,23 @@ public class ResourceSupplier<T extends Resource> {
         if (this.mediaType == FileMediaType.VIDEO) return ResourceHandlers.getVideoHandler();
         if (this.mediaType == FileMediaType.TEXT) return ResourceHandlers.getTextHandler();
         return null;
+    }
+
+    /**
+     * Only works if this {@link ResourceSupplier}'s resource type is a {@link RenderableResource}.<br>
+     * The {@link BiConsumer}'s {@link Resource} and {@link ResourceLocation} is never NULL!<br><br>
+     *
+     * The {@link BiConsumer}'s {@link ResourceLocation} is the {@link RenderableResource}'s
+     * current {@link ResourceLocation} ({@link RenderableResource#getResourceLocation()}).
+     * You should always use the provided location instead of calling {@link RenderableResource#getResourceLocation()},
+     * because some types of resources asynchronously change that method's return value.
+     */
+    public void forRenderable(@NotNull BiConsumer<T, ResourceLocation> task) {
+        T resource = this.get();
+        if (resource instanceof RenderableResource r) {
+            ResourceLocation loc = r.getResourceLocation();
+            if (loc != null) task.accept(resource, loc);
+        }
     }
 
     @NotNull

@@ -11,7 +11,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.Objects;
 
 public class ProgressBarElementBuilder extends ElementBuilder<ProgressBarElement, ProgressBarEditorElement> {
@@ -43,14 +42,14 @@ public class ProgressBarElementBuilder extends ElementBuilder<ProgressBarElement
             element.barColor = DrawableColor.of(barHex);
         }
 
-        element.barTexturePath = serialized.getValue("bar_texture");
+        element.barTextureSupplier = deserializeImageResourceSupplier(serialized.getValue("bar_texture"));
 
         String backgroundHex = serialized.getValue("background_color");
         if ((backgroundHex != null) && !backgroundHex.replace(" ", "").equals("")) {
             element.backgroundColor = DrawableColor.of(backgroundHex);
         }
 
-        element.backgroundTexturePath = serialized.getValue("background_texture");
+        element.backgroundTextureSupplier = deserializeImageResourceSupplier(serialized.getValue("background_texture"));
 
         String barDirection = serialized.getValue("direction");
         if (barDirection != null) {
@@ -72,12 +71,12 @@ public class ProgressBarElementBuilder extends ElementBuilder<ProgressBarElement
     protected SerializedElement serializeElement(@NotNull ProgressBarElement element, @NotNull SerializedElement serializeTo) {
 
         serializeTo.putProperty("bar_color", element.barColor.getHex());
-        if (element.barTexturePath != null) {
-            serializeTo.putProperty("bar_texture", element.barTexturePath);
+        if (element.barTextureSupplier != null) {
+            serializeTo.putProperty("bar_texture", element.barTextureSupplier.getSourceWithPrefix());
         }
         serializeTo.putProperty("background_color", element.backgroundColor.getHex());
-        if (element.backgroundTexturePath != null) {
-            serializeTo.putProperty("background_texture", element.backgroundTexturePath);
+        if (element.backgroundTextureSupplier != null) {
+            serializeTo.putProperty("background_texture", element.backgroundTextureSupplier.getSourceWithPrefix());
         }
         serializeTo.putProperty("direction", element.direction.getName());
         serializeTo.putProperty("progress_for_element_anchor", "" + element.useProgressForElementAnchor);

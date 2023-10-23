@@ -3,12 +3,12 @@ package de.keksuccino.fancymenu.customization.element.elements.splash;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.konkrete.file.FileUtils;
+import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
+import de.keksuccino.fancymenu.util.resources.text.IText;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -17,8 +17,8 @@ import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.awt.*;
-import java.io.File;
 import java.util.List;
 import java.util.Objects;
 
@@ -28,6 +28,8 @@ public class SplashTextElement extends AbstractElement {
 
     public SourceMode sourceMode = SourceMode.DIRECT_TEXT;
     public String source = "Splash Text";
+    @Nullable
+    public ResourceSupplier<IText> textFileSupplier;
     public float scale = 1.0F;
     public boolean shadow = true;
     public boolean bounce = true;
@@ -86,23 +88,28 @@ public class SplashTextElement extends AbstractElement {
         }
 
         if (this.renderText == null) {
+            //VANILLA
             if (this.sourceMode == SourceMode.VANILLA) {
                 this.renderText = Minecraft.getInstance().getSplashManager().getSplash();
             }
+            //TEXT FILE
             if (this.sourceMode == SourceMode.TEXT_FILE) {
-                File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(this.source));
-                if (f.isFile()) {
-                    List<String> l = FileUtils.getFileLines(f);
-                    if (!l.isEmpty() && ((l.size() > 1) || (l.get(0).replace(" ", "").length() > 0))) {
-                        int i = MathUtils.getRandomNumberInRange(0, l.size()-1);
-                        this.renderText = l.get(i);
-                    } else {
-                        this.renderText = "§cERROR: SPLASH FILE IS EMPTY";
+                if (this.textFileSupplier != null) {
+                    IText text = this.textFileSupplier.get();
+                    if (text != null) {
+                        List<String> l = text.getTextLines();
+                        if (l != null) {
+                            if (!l.isEmpty() && ((l.size() > 1) || (l.get(0).replace(" ", "").length() > 0))) {
+                                int i = MathUtils.getRandomNumberInRange(0, l.size() - 1);
+                                this.renderText = l.get(i);
+                            } else {
+                                this.renderText = "§cERROR: SPLASH FILE IS EMPTY";
+                            }
+                        }
                     }
-                } else {
-                    this.renderText = "§cERROR: MISSING SPLASH FILE";
                 }
             }
+            //DIRECT
             if (this.sourceMode == SourceMode.DIRECT_TEXT) {
                 this.renderText = this.source;
             }

@@ -1,10 +1,8 @@
-
 package de.keksuccino.fancymenu.customization.element.elements.splash;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -43,16 +41,18 @@ public class SplashTextEditorElement extends AbstractEditorElement {
                     return Component.translatable("fancymenu.elements.splash.source_mode.text_file");
                 });
 
-        this.addGenericFileChooserContextMenuEntryTo(this.rightClickMenu, "set_source_file",
-                        consumes -> (consumes instanceof SplashTextEditorElement),
+        this.addTextResourceChooserContextMenuEntryTo(this.rightClickMenu, "set_source_file",
+                        SplashTextEditorElement.class,
                         null,
-                        consumes -> ((SplashTextElement)consumes.element).source,
-                        (element1, s) -> {
-                            ((SplashTextElement)element1.element).source = s;
-                            ((SplashTextElement)element1.element).updateSplash();
+                        consumes -> consumes.getElement().textFileSupplier,
+                        (splashTextEditorElement, iTextResourceSupplier) -> {
+                            splashTextEditorElement.getElement().textFileSupplier = iTextResourceSupplier;
+                            if (iTextResourceSupplier != null) splashTextEditorElement.getElement().source = iTextResourceSupplier.getSourceWithPrefix();
+                            splashTextEditorElement.getElement().refresh();
+                            splashTextEditorElement.getElement().updateSplash();
                         },
                         Component.translatable("fancymenu.elements.splash.source_mode.text_file.set_source"),
-                        false, FileFilter.TXT_FILE_FILTER)
+                        false, null, true, true, true)
                 .setIsVisibleSupplier((menu, entry) -> ((SplashTextElement)this.element).sourceMode == SplashTextElement.SourceMode.TEXT_FILE)
                 .setIcon(ContextMenu.IconFactory.getIcon("text"));
 
@@ -127,6 +127,10 @@ public class SplashTextEditorElement extends AbstractEditorElement {
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.splash.refresh.desc")));
 
+    }
+
+    public SplashTextElement getElement() {
+        return (SplashTextElement) this.element;
     }
 
 }

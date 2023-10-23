@@ -71,7 +71,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
                 (buttonEditorElement, iTextureResourceSupplier) -> {
                     buttonEditorElement.getElement().backgroundTextureNormal = iTextureResourceSupplier;
                     buttonEditorElement.getElement().backgroundAnimationNormal = null;
-                }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null);
+                }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null, true, true, true);
 
         normalBackMenu.addClickableEntry("normal_background_animation", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation"), (menu, entry) -> {
             List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof ButtonEditorElement));
@@ -115,7 +115,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
                 (buttonEditorElement, iTextureResourceSupplier) -> {
                     buttonEditorElement.getElement().backgroundTextureHover = iTextureResourceSupplier;
                     buttonEditorElement.getElement().backgroundAnimationHover = null;
-                }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null);
+                }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null, true, true, true);
 
         hoverBackMenu.addClickableEntry("hover_background_animation", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation"), (menu, entry) -> {
             List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof ButtonEditorElement));
@@ -159,7 +159,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
                 (buttonEditorElement, iTextureResourceSupplier) -> {
                     buttonEditorElement.getElement().backgroundTextureInactive = iTextureResourceSupplier;
                     buttonEditorElement.getElement().backgroundAnimationInactive = null;
-                }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null);
+                }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null, true, true, true);
 
         inactiveBackMenu.addClickableEntry("inactive_background_animation", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation"), (menu, entry) -> {
             List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof ButtonEditorElement));
@@ -239,7 +239,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
                         null,
                         consumes -> consumes.getElement().hoverSound,
                         (buttonEditorElement, supplier) -> buttonEditorElement.getElement().hoverSound = supplier,
-                        Component.translatable("fancymenu.editor.items.button.hoversound"), true, null)
+                        Component.translatable("fancymenu.editor.items.button.hoversound"), true, null, true, true, true)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
         this.addAudioResourceChooserContextMenuEntryTo(this.rightClickMenu, "click_sound",
@@ -247,7 +247,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
                         null,
                         consumes -> consumes.getElement().clickSound,
                         (buttonEditorElement, supplier) -> buttonEditorElement.getElement().clickSound = supplier,
-                        Component.translatable("fancymenu.editor.items.button.clicksound"), true, null)
+                        Component.translatable("fancymenu.editor.items.button.clicksound"), true, null, true, true, true)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
         this.rightClickMenu.addSeparatorEntry("button_separator_4").setStackable(true);

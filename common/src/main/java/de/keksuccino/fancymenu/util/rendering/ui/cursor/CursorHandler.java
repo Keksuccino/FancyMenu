@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.util.resources.texture.SimpleTexture;
 import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -49,7 +50,7 @@ public class CursorHandler {
 
     public static void registerCustomCursor(@NotNull String uniqueCursorName, @NotNull CustomCursor cursor) {
         if (!initialized) throw new RuntimeException("[FANCYMENU] CursorHandler accessed too early!");
-        LOGGER.info("[FANCYMENU] Registering GLFW custom cursor: NAME: " + uniqueCursorName + " | TEXTURE PATH: " + cursor.texturePath);
+        LOGGER.info("[FANCYMENU] Registering GLFW custom cursor: NAME: " + uniqueCursorName + " | TEXTURE CONTEXT: " + cursor.textureName);
         CUSTOM_CURSORS.put(Objects.requireNonNull(uniqueCursorName), Objects.requireNonNull(cursor));
     }
 
@@ -109,20 +110,26 @@ public class CursorHandler {
         public final int hotspotX;
         public final int hotspotY;
         @NotNull
-        public final SimpleTexture texture; //TODO <---- Hier weiter; jetzt versuchen, mit SimpleTexture zu arbeiten
+        public final SimpleTexture texture;
         @NotNull
-        public final String texturePath;
+        public final String textureName;
 
         @Nullable
-        public static CustomCursor create(@NotNull SimpleLocalTexture texture, int hotspotX, int hotspotY) {
+        public static CustomCursor create(@NotNull SimpleTexture texture, int hotspotX, int hotspotY, @NotNull String textureName) {
             CustomCursor customCursor = null;
             InputStream in = null;
             MemoryStack memStack = null;
             ByteBuffer texResourceBuffer = null;
             ByteBuffer stbBuffer = null;
             try {
-                if ((Objects.requireNonNull(texture).getResourceLocation() != null) && (texture.getPath() != null)) {
-                    in = Objects.requireNonNull(texture.tryOpen());
+                ResourceLocation loc = Objects.requireNonNull(texture).getResourceLocation();
+                long start = System.currentTimeMillis();
+                //Wait for the texture to load (Timeout = 5000ms)
+                while((loc == null) && ((start + 5000) > System.currentTimeMillis())) {
+                    loc = Objects.requireNonNull(texture).getResourceLocation();
+                }
+                if (loc != null) {
+                    in = Objects.requireNonNull(Minecraft.getInstance().getResourceManager().open(loc));
                     texResourceBuffer = TextureUtil.readResource(in);
                     texResourceBuffer.rewind();
                     if (MemoryUtil.memAddress(texResourceBuffer) != 0L) {
@@ -136,7 +143,7 @@ public class CursorHandler {
                             image = image.set(texture.getWidth(), texture.getHeight(), stbBuffer);
                             long lid = GLFW.glfwCreateCursor(image, hotspotX, hotspotY);
                             if (lid != 0L) {
-                                customCursor = new CustomCursor(lid, hotspotX, hotspotY, texture, texture.getPath());
+                                customCursor = new CustomCursor(lid, hotspotX, hotspotY, texture, textureName);
                             } else {
                                 throw new IllegalArgumentException("Failed to create custom cursor! Cursor handle was NULL!");
                             }
@@ -169,12 +176,12 @@ public class CursorHandler {
             return customCursor;
         }
 
-        protected CustomCursor(long id_long, int hotspotX, int hotspotY, @NotNull SimpleLocalTexture texture, @NotNull String texturePath) {
+        protected CustomCursor(long id_long, int hotspotX, int hotspotY, @NotNull SimpleTexture texture, @NotNull String textureName) {
             this.id_long = id_long;
             this.hotspotX = hotspotX;
             this.hotspotY = hotspotY;
             this.texture = texture;
-            this.texturePath = texturePath;
+            this.textureName = textureName;
         }
 
         /** Does nothing. **/

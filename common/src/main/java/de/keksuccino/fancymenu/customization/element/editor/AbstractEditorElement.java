@@ -8,7 +8,6 @@ import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
@@ -881,34 +880,41 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	}
 
 	@SuppressWarnings("all")
-	protected <E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addImageResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, ResourceSupplier<ITexture> defaultValue, @NotNull ConsumingSupplier<E, ResourceSupplier<ITexture>> targetFieldGetter, @NotNull BiConsumer<E, ResourceSupplier<ITexture>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter) {
+	protected <E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addImageResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, ResourceSupplier<ITexture> defaultValue, @NotNull ConsumingSupplier<E, ResourceSupplier<ITexture>> targetFieldGetter, @NotNull BiConsumer<E, ResourceSupplier<ITexture>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
 		ConsumingSupplier<AbstractEditorElement, ResourceSupplier<ITexture>> getter = (ConsumingSupplier<AbstractEditorElement, ResourceSupplier<ITexture>>) targetFieldGetter;
 		BiConsumer<AbstractEditorElement, ResourceSupplier<ITexture>> setter = (BiConsumer<AbstractEditorElement, ResourceSupplier<ITexture>>) targetFieldSetter;
-		return addGenericResourceChooserContextMenuEntryTo(addTo, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), () -> ResourceChooserScreen.image(null, file -> {}), ResourceSupplier::image, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.IMAGE_TYPES, fileFilter);
+		return addGenericResourceChooserContextMenuEntryTo(addTo, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), () -> ResourceChooserScreen.image(null, file -> {}), ResourceSupplier::image, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.IMAGE_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
 	}
 
 	@SuppressWarnings("all")
-	protected <E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addAudioResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, ResourceSupplier<IAudio> defaultValue, @NotNull ConsumingSupplier<E, ResourceSupplier<IAudio>> targetFieldGetter, @NotNull BiConsumer<E, ResourceSupplier<IAudio>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter) {
+	protected <E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addAudioResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, ResourceSupplier<IAudio> defaultValue, @NotNull ConsumingSupplier<E, ResourceSupplier<IAudio>> targetFieldGetter, @NotNull BiConsumer<E, ResourceSupplier<IAudio>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
 		ConsumingSupplier<AbstractEditorElement, ResourceSupplier<IAudio>> getter = (ConsumingSupplier<AbstractEditorElement, ResourceSupplier<IAudio>>) targetFieldGetter;
 		BiConsumer<AbstractEditorElement, ResourceSupplier<IAudio>> setter = (BiConsumer<AbstractEditorElement, ResourceSupplier<IAudio>>) targetFieldSetter;
-		return addGenericResourceChooserContextMenuEntryTo(addTo, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), () -> ResourceChooserScreen.audio(null, file -> {}), ResourceSupplier::audio, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.AUDIO_TYPES, fileFilter);
+		return addGenericResourceChooserContextMenuEntryTo(addTo, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), () -> ResourceChooserScreen.audio(null, file -> {}), ResourceSupplier::audio, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.AUDIO_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
 	}
 
 	@SuppressWarnings("all")
-	protected <E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addVideoResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, ResourceSupplier<IVideo> defaultValue, @NotNull ConsumingSupplier<E, ResourceSupplier<IVideo>> targetFieldGetter, @NotNull BiConsumer<E, ResourceSupplier<IVideo>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter) {
+	protected <E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addVideoResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, ResourceSupplier<IVideo> defaultValue, @NotNull ConsumingSupplier<E, ResourceSupplier<IVideo>> targetFieldGetter, @NotNull BiConsumer<E, ResourceSupplier<IVideo>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
 		ConsumingSupplier<AbstractEditorElement, ResourceSupplier<IVideo>> getter = (ConsumingSupplier<AbstractEditorElement, ResourceSupplier<IVideo>>) targetFieldGetter;
 		BiConsumer<AbstractEditorElement, ResourceSupplier<IVideo>> setter = (BiConsumer<AbstractEditorElement, ResourceSupplier<IVideo>>) targetFieldSetter;
-		return addGenericResourceChooserContextMenuEntryTo(addTo, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), () -> ResourceChooserScreen.video(null, file -> {}), ResourceSupplier::video, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.VIDEO_TYPES, fileFilter);
+		return addGenericResourceChooserContextMenuEntryTo(addTo, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), () -> ResourceChooserScreen.video(null, file -> {}), ResourceSupplier::video, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.VIDEO_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
 	}
 
 	@SuppressWarnings("all")
-	protected <E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addTextResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, ResourceSupplier<IText> defaultValue, @NotNull ConsumingSupplier<E, ResourceSupplier<IText>> targetFieldGetter, @NotNull BiConsumer<E, ResourceSupplier<IText>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter) {
+	protected <E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addTextResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, ResourceSupplier<IText> defaultValue, @NotNull ConsumingSupplier<E, ResourceSupplier<IText>> targetFieldGetter, @NotNull BiConsumer<E, ResourceSupplier<IText>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
 		ConsumingSupplier<AbstractEditorElement, ResourceSupplier<IText>> getter = (ConsumingSupplier<AbstractEditorElement, ResourceSupplier<IText>>) targetFieldGetter;
 		BiConsumer<AbstractEditorElement, ResourceSupplier<IText>> setter = (BiConsumer<AbstractEditorElement, ResourceSupplier<IText>>) targetFieldSetter;
-		return addGenericResourceChooserContextMenuEntryTo(addTo, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), () -> ResourceChooserScreen.text(null, file -> {}), ResourceSupplier::text, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.TEXT_TYPES, fileFilter);
+		return addGenericResourceChooserContextMenuEntryTo(addTo, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), () -> ResourceChooserScreen.text(null, file -> {}), ResourceSupplier::text, defaultValue, getter, setter, label, addResetOption, FileTypeGroups.TEXT_TYPES, fileFilter, allowLocation, allowLocal, allowWeb);
 	}
 
-	protected <R extends Resource, F extends FileType<R>> ContextMenu.ClickableContextMenuEntry<?> addGenericResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull Supplier<ResourceChooserScreen<R,F>> resourceChooserScreenBuilder, @NotNull ConsumingSupplier<String, ResourceSupplier<R>> resourceSupplierBuilder, ResourceSupplier<R> defaultValue, @NotNull ConsumingSupplier<AbstractEditorElement, ResourceSupplier<R>> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, ResourceSupplier<R>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileTypeGroup<F> fileTypes, @Nullable FileFilter fileFilter) {
+	@SuppressWarnings("all")
+	protected <R extends Resource, F extends FileType<R>, E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addGenericResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, @NotNull Supplier<ResourceChooserScreen<R,F>> resourceChooserScreenBuilder, @NotNull ConsumingSupplier<String, ResourceSupplier<R>> resourceSupplierBuilder, ResourceSupplier<R> defaultValue, @NotNull ConsumingSupplier<E, ResourceSupplier<R>> targetFieldGetter, @NotNull BiConsumer<E, ResourceSupplier<R>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileTypeGroup<F> fileTypes, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
+		ConsumingSupplier<AbstractEditorElement, ResourceSupplier<R>> getter = (ConsumingSupplier<AbstractEditorElement, ResourceSupplier<R>>) targetFieldGetter;
+		BiConsumer<AbstractEditorElement, ResourceSupplier<R>> setter = (BiConsumer<AbstractEditorElement, ResourceSupplier<R>>) targetFieldSetter;
+		return addGenericResourceChooserContextMenuEntryTo(addTo, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), resourceChooserScreenBuilder, resourceSupplierBuilder, defaultValue, getter, setter, label, addResetOption, fileTypes, fileFilter, allowLocation, allowLocal, allowWeb);
+	}
+
+	protected <R extends Resource, F extends FileType<R>> ContextMenu.ClickableContextMenuEntry<?> addGenericResourceChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull Supplier<ResourceChooserScreen<R,F>> resourceChooserScreenBuilder, @NotNull ConsumingSupplier<String, ResourceSupplier<R>> resourceSupplierBuilder, ResourceSupplier<R> defaultValue, @NotNull ConsumingSupplier<AbstractEditorElement, ResourceSupplier<R>> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, ResourceSupplier<R>> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileTypeGroup<F> fileTypes, @Nullable FileFilter fileFilter, boolean allowLocation, boolean allowLocal, boolean allowWeb) {
 
 		ContextMenu subMenu = new ContextMenu();
 
@@ -929,6 +935,9 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 						chooserScreen.setFileFilter(fileFilter);
 						chooserScreen.setAllowedFileTypes(fileTypes);
 						chooserScreen.setSource(preSelectedSource);
+						chooserScreen.setLocationSourceAllowed(allowLocation);
+						chooserScreen.setLocalSourceAllowed(allowLocal);
+						chooserScreen.setWebSourceAllowed(allowWeb);
 						chooserScreen.setResourceSourceCallback(source -> {
 							if (source != null) {
 								this.editor.history.saveSnapshot();
@@ -1003,7 +1012,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				if (ListUtils.allInListEqual(allPaths)) {
 					String path = allPaths.get(0);
 					if (path != null) {
-						startDir = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(allPaths.get(0))).getParentFile();
+						startDir = new File(GameDirectoryUtils.getAbsoluteGameDirectoryPath(allPaths.get(0))).getParentFile();
 						if (startDir == null) startDir = LayoutHandler.ASSETS_DIR;
 					}
 				}
@@ -1011,7 +1020,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 					if (call != null) {
 						this.editor.history.saveSnapshot();
 						for (AbstractEditorElement e : selectedElements) {
-							targetFieldSetter.accept(e, ScreenCustomization.getPathWithoutGameDirectory(call.getAbsolutePath()));
+							targetFieldSetter.accept(e, GameDirectoryUtils.getPathWithoutGameDirectory(call.getAbsolutePath()));
 						}
 					}
 					Minecraft.getInstance().setScreen(this.editor);
@@ -1043,7 +1052,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				if (val == null) {
 					valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
 				} else {
-					val = ScreenCustomization.getPathWithoutGameDirectory(val);
+					val = GameDirectoryUtils.getPathWithoutGameDirectory(val);
 					if (Minecraft.getInstance().font.width(val) > 150) {
 						val = new StringBuilder(val).reverse().toString();
 						val = Minecraft.getInstance().font.plainSubstrByWidth(val, 150);
@@ -1155,7 +1164,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				if (val == null) {
 					valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
 				} else {
-					val = ScreenCustomization.getPathWithoutGameDirectory(val);
+					val = GameDirectoryUtils.getPathWithoutGameDirectory(val);
 					if (Minecraft.getInstance().font.width(val) > 150) {
 						val = new StringBuilder(val).reverse().toString();
 						val = Minecraft.getInstance().font.plainSubstrByWidth(val, 150);

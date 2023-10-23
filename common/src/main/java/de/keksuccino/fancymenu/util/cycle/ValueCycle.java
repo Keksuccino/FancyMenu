@@ -1,7 +1,8 @@
 package de.keksuccino.fancymenu.util.cycle;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,6 +11,8 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 public class ValueCycle<T> implements IValueCycle<T> {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     protected List<T> values = new ArrayList<>();
     protected int currentIndex = 0;
@@ -44,6 +47,16 @@ public class ValueCycle<T> implements IValueCycle<T> {
 
     public List<T> getValues() {
         return new ArrayList<>(this.values);
+    }
+
+    public ValueCycle<T> removeValue(@NotNull T value) {
+        if (this.values.size() == 2) {
+            LOGGER.error("Unable to remove value! At least 2 values needed!");
+            return this;
+        }
+        this.values.remove(value);
+        this.setCurrentValueByIndex(0, false);
+        return this;
     }
 
     /**

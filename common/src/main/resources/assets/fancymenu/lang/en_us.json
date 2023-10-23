@@ -1118,5 +1118,8 @@
   "fancymenu.resources.chooser_screen.choose.text": "Choose Text Resource",
   "fancymenu.ui.resources.choose": "Choose Resource",
   "fancymenu.ui.resources.reset": "Reset to Default",
-  "fancymenu.ui.resources.current": "Current: %s"
+  "fancymenu.ui.resources.current": "Current: %s",
+  "fancymenu.elements.text.v2.source_mode": "Source Mode: %s",
+  "fancymenu.elements.text.v2.source_mode.direct": "Direct",
+  "fancymenu.elements.text.v2.source_mode.resource": "Resource"
 }

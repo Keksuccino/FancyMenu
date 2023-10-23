@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.cycle;
 
 import org.jetbrains.annotations.NotNull;
-
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -9,6 +8,8 @@ import java.util.function.Consumer;
 public interface IValueCycle<T> {
 
     List<T> getValues();
+
+    IValueCycle<T> removeValue(@NotNull T value);
 
     /**
      * Returns the current value.

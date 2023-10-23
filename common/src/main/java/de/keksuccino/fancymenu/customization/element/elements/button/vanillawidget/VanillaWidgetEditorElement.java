@@ -82,7 +82,7 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements I
                             (buttonEditorElement, iTextureResourceSupplier) -> {
                                 buttonEditorElement.getElement().sliderBackgroundTextureNormal = iTextureResourceSupplier;
                                 buttonEditorElement.getElement().sliderBackgroundAnimationNormal = null;
-                            }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null);
+                            }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null, true, true, true);
 
                     normalSliderBackMenu.addClickableEntry("normal_slider_background_animation", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation"), (menu, entry) -> {
                         List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof VanillaWidgetEditorElement));
@@ -127,7 +127,7 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements I
                             (buttonEditorElement, iTextureResourceSupplier) -> {
                                 buttonEditorElement.getElement().sliderBackgroundTextureHighlighted = iTextureResourceSupplier;
                                 buttonEditorElement.getElement().sliderBackgroundAnimationHighlighted = null;
-                            }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null);
+                            }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null, true, true, true);
 
                     highlightedSliderBackMenu.addClickableEntry("highlighted_slider_background_animation", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation"), (menu, entry) -> {
                         List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof VanillaWidgetEditorElement));

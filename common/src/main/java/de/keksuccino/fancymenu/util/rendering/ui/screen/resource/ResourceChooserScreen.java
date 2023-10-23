@@ -3,6 +3,8 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen.resource;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
+import de.keksuccino.fancymenu.util.cycle.LocalizedGenericValueCycle;
 import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.file.type.FileType;
@@ -51,6 +53,9 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
     protected String resourceSource;
     @NotNull
     protected ResourceSourceType resourceSourceType = ResourceSourceType.LOCATION;
+    protected boolean allowLocation = true;
+    protected boolean allowLocal = true;
+    protected boolean allowWeb = true;
     protected CycleButton<ResourceSourceType> resourceSourceTypeCycleButton;
     protected ExtendedEditBox editBox;
     protected LabelCell warningNoExtensionLine1;
@@ -119,7 +124,11 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
         this.addStartEndSpacerCell();
 
-        this.resourceSourceTypeCycleButton = new CycleButton<>(0, 0, 20, 20, ResourceSourceType.LOCATION.cycle(), (value, button) -> {
+        LocalizedGenericValueCycle<ResourceSourceType> sourceTypeCycle = ResourceSourceType.LOCATION.cycle();
+        if (!this.allowLocation) sourceTypeCycle.removeValue(ResourceSourceType.LOCATION);
+        if (!this.allowLocal) sourceTypeCycle.removeValue(ResourceSourceType.LOCAL);
+        if (!this.allowWeb) sourceTypeCycle.removeValue(ResourceSourceType.WEB);
+        this.resourceSourceTypeCycleButton = new CycleButton<>(0, 0, 20, 20, sourceTypeCycle, (value, button) -> {
             this.resourceSourceType = value;
             //Reset the source when changing the source type, because it is not valid anymore
             this.resourceSource = null;
@@ -279,6 +288,36 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
     public ResourceChooserScreen<R,F> setResourceSourceCallback(@NotNull Consumer<String> resourceSourceCallback) {
         this.resourceSourceCallback = Objects.requireNonNull(resourceSourceCallback);
+        return this;
+    }
+
+    public boolean isLocationSourceAllowed() {
+        return this.allowLocation;
+    }
+
+    public ResourceChooserScreen<R,F> setLocationSourceAllowed(boolean allowLocation) {
+        this.allowLocation = allowLocation;
+        this.init();
+        return this;
+    }
+
+    public boolean isLocalSourceAllowed() {
+        return this.allowLocal;
+    }
+
+    public ResourceChooserScreen<R,F> setLocalSourceAllowed(boolean allowLocal) {
+        this.allowLocal = allowLocal;
+        this.init();
+        return this;
+    }
+
+    public boolean isWebSourceAllowed() {
+        return this.allowWeb;
+    }
+
+    public ResourceChooserScreen<R,F> setWebSourceAllowed(boolean allowWeb) {
+        this.allowWeb = allowWeb;
+        this.init();
         return this;
     }
 

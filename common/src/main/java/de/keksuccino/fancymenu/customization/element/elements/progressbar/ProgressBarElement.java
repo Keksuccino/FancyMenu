@@ -8,11 +8,13 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.network.chat.Style;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -25,9 +27,11 @@ public class ProgressBarElement extends AbstractElement {
 
     public BarDirection direction = BarDirection.RIGHT;
     public DrawableColor barColor = DrawableColor.of(new Color(82, 149, 255));
-    public String barTexturePath;
+    @Nullable
+    public ResourceSupplier<ITexture> barTextureSupplier;
     public DrawableColor backgroundColor = DrawableColor.of(new Color(171, 200, 247));
-    public String backgroundTexturePath;
+    @Nullable
+    public ResourceSupplier<ITexture> backgroundTextureSupplier;
     public boolean useProgressForElementAnchor = false;
     public String progressSource = null;
     public ProgressValueMode progressValueMode = ProgressValueMode.PERCENTAGE;
@@ -81,13 +85,16 @@ public class ProgressBarElement extends AbstractElement {
         this.lastProgressHeight = progressHeight;
 
         RenderSystem.enableBlend();
-        if (this.barTexturePath != null) {
-            ITexture t = ImageResourceHandler.INSTANCE.getTexture(this.barTexturePath);
-            if ((t != null) && (t.getResourceLocation() != null)) {
-                RenderUtils.bindTexture(t.getResourceLocation());
-                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
-                blit(pose, progressX, progressY, offsetX, offsetY, progressWidth, progressHeight, this.getAbsoluteWidth(), this.getAbsoluteHeight());
-                RenderingUtils.resetShaderColor();
+        if (this.barTextureSupplier != null) {
+            ITexture t = this.barTextureSupplier.get();
+            if (t != null) {
+                ResourceLocation loc = t.getResourceLocation();
+                if (loc != null) {
+                    RenderUtils.bindTexture(loc);
+                    RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
+                    blit(pose, progressX, progressY, offsetX, offsetY, progressWidth, progressHeight, this.getAbsoluteWidth(), this.getAbsoluteHeight());
+                    RenderingUtils.resetShaderColor();
+                }
             }
         } else if (this.barColor != null) {
             RenderingUtils.resetShaderColor();
@@ -99,14 +106,13 @@ public class ProgressBarElement extends AbstractElement {
 
     protected void renderBackground(@NotNull PoseStack pose) {
         RenderSystem.enableBlend();
-        if (this.backgroundTexturePath != null) {
-            ITexture t = ImageResourceHandler.INSTANCE.getTexture(this.backgroundTexturePath);
-            if ((t != null) && (t.getResourceLocation() != null)) {
-                RenderUtils.bindTexture(t.getResourceLocation());
+        if (this.backgroundTextureSupplier != null) {
+            this.backgroundTextureSupplier.forRenderable((iTexture, location) -> {
+                RenderUtils.bindTexture(location);
                 RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
                 blit(pose, this.getAbsoluteX(), this.getAbsoluteY(), 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
                 RenderingUtils.resetShaderColor();
-            }
+            });
         } else if (this.backgroundColor != null) {
             RenderingUtils.resetShaderColor();
             fill(pose, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), RenderingUtils.replaceAlphaInColor(this.backgroundColor.getColorInt(), this.opacity));

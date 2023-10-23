@@ -8,7 +8,6 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -82,16 +81,16 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
 
         element.tooltip = serialized.getValue("tooltip");
 
-        element.handleTextureNormal = SerializationUtils.deserializeResourceFile(serialized.getValue("handle_texture_normal"));
-        element.handleTextureHover = SerializationUtils.deserializeResourceFile(serialized.getValue("handle_texture_hovered"));
-        element.handleTextureInactive = SerializationUtils.deserializeResourceFile(serialized.getValue("handle_texture_inactive"));
+        element.handleTextureNormal = deserializeImageResourceSupplier(serialized.getValue("handle_texture_normal"));
+        element.handleTextureHover = deserializeImageResourceSupplier(serialized.getValue("handle_texture_hovered"));
+        element.handleTextureInactive = deserializeImageResourceSupplier(serialized.getValue("handle_texture_inactive"));
 
         element.handleAnimationNormal = serialized.getValue("handle_animation_normal");
         element.handleAnimationHover = serialized.getValue("handle_animation_hovered");
         element.handleAnimationInactive = serialized.getValue("handle_animation_inactive");
 
-        element.sliderBackgroundTextureNormal = SerializationUtils.deserializeResourceFile(serialized.getValue("slider_background_texture_normal"));
-        element.sliderBackgroundTextureHighlighted = SerializationUtils.deserializeResourceFile(serialized.getValue("slider_background_texture_highlighted"));
+        element.sliderBackgroundTextureNormal = deserializeImageResourceSupplier(serialized.getValue("slider_background_texture_normal"));
+        element.sliderBackgroundTextureHighlighted = deserializeImageResourceSupplier(serialized.getValue("slider_background_texture_highlighted"));
         element.sliderBackgroundAnimationNormal = serialized.getValue("slider_background_animation_normal");
         element.sliderBackgroundAnimationHighlighted = serialized.getValue("slider_background_animation_highlighted");
 
@@ -138,13 +137,13 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
         serializeTo.putProperty("tooltip", element.tooltip);
 
         if (element.handleTextureNormal != null) {
-            serializeTo.putProperty("handle_texture_normal", element.handleTextureNormal.getShortPath());
+            serializeTo.putProperty("handle_texture_normal", element.handleTextureNormal.getSourceWithPrefix());
         }
         if (element.handleTextureHover != null) {
-            serializeTo.putProperty("handle_texture_hovered", element.handleTextureHover.getShortPath());
+            serializeTo.putProperty("handle_texture_hovered", element.handleTextureHover.getSourceWithPrefix());
         }
         if (element.handleTextureInactive != null) {
-            serializeTo.putProperty("handle_texture_inactive", element.handleTextureInactive.getShortPath());
+            serializeTo.putProperty("handle_texture_inactive", element.handleTextureInactive.getSourceWithPrefix());
         }
 
         serializeTo.putProperty("handle_animation_normal", element.handleAnimationNormal);
@@ -155,10 +154,10 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
         serializeTo.putProperty("loop_background_animations", "" + element.loopBackgroundAnimations);
 
         if (element.sliderBackgroundTextureNormal != null) {
-            serializeTo.putProperty("slider_background_texture_normal", element.sliderBackgroundTextureNormal.getShortPath());
+            serializeTo.putProperty("slider_background_texture_normal", element.sliderBackgroundTextureNormal.getSourceWithPrefix());
         }
         if (element.sliderBackgroundTextureHighlighted != null) {
-            serializeTo.putProperty("slider_background_texture_highlighted", element.sliderBackgroundTextureHighlighted.getShortPath());
+            serializeTo.putProperty("slider_background_texture_highlighted", element.sliderBackgroundTextureHighlighted.getSourceWithPrefix());
         }
 
         serializeTo.putProperty("slider_background_animation_normal", element.sliderBackgroundAnimationNormal);

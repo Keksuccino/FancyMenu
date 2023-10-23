@@ -28,6 +28,7 @@ public class ElementPosXPlaceholder extends Placeholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
+        if (Minecraft.getInstance().screen == null) return "1";
         String id = dps.values.get("id");
         if (id != null) {
             AbstractElement element = findElement(id);

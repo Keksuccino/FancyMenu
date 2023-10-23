@@ -7,11 +7,13 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.ListUtils;
+import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
+import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
 import de.keksuccino.konkrete.file.FileUtils;
@@ -20,6 +22,7 @@ import de.keksuccino.konkrete.web.WebUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Style;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -43,10 +46,10 @@ public class TextElement extends AbstractElement {
     @Nullable
     protected volatile String text = null;
     protected String lastText = null;
-    public String verticalScrollGrabberTextureNormal = null;
-    public String verticalScrollGrabberTextureHover = null;
-    public String horizontalScrollGrabberTextureNormal = null;
-    public String horizontalScrollGrabberTextureHover = null;
+    public ResourceSupplier<ITexture> verticalScrollGrabberTextureNormal = null;
+    public ResourceSupplier<ITexture> verticalScrollGrabberTextureHover = null;
+    public ResourceSupplier<ITexture> horizontalScrollGrabberTextureNormal = null;
+    public ResourceSupplier<ITexture> horizontalScrollGrabberTextureHover = null;
     public String scrollGrabberColorHexNormal = null;
     public String scrollGrabberColorHexHover = null;
     public boolean enableScrolling = true;
@@ -309,22 +312,33 @@ public class TextElement extends AbstractElement {
         this.updateContent();
     }
 
-    public static enum SourceMode {
+    public static enum SourceMode implements LocalizedCycleEnum<SourceMode> {
 
         DIRECT("direct"),
-        LOCAL_SOURCE("local"),
-        WEB_SOURCE("web");
+        RESOURCE("resource");
 
         final String name;
 
-        SourceMode(String name) {
+        SourceMode(@NotNull String name) {
             this.name = name;
         }
 
+        @NotNull
         public String getName() {
             return this.name;
         }
 
+        @Override
+        public @NotNull SourceMode[] getValues() {
+            return SourceMode.values();
+        }
+
+        @Override
+        public @Nullable SourceMode getByNameInternal(@NotNull String name) {
+            return getByName(name);
+        }
+
+        @Nullable
         public static SourceMode getByName(String name) {
             for (SourceMode i : SourceMode.values()) {
                 if (i.getName().equals(name)) {
@@ -332,6 +346,16 @@ public class TextElement extends AbstractElement {
                 }
             }
             return null;
+        }
+
+        @Override
+        public @NotNull String getLocalizationKeyBase() {
+            return "fancymenu.elements.text.v2.source_mode";
+        }
+
+        @Override
+        public @NotNull Style getValueComponentStyle() {
+            return WARNING_TEXT_STYLE.get();
         }
 
     }

@@ -44,9 +44,13 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
 
         String sourceModeString = serialized.getValue("source_mode");
         if (sourceModeString != null) {
-            TextElement.SourceMode s = TextElement.SourceMode.getByName(sourceModeString);
-            if (s != null) {
-                element.sourceMode = s;
+            if (sourceModeString.equals("local") || sourceModeString.equals("web")) {
+                element.sourceMode = TextElement.SourceMode.RESOURCE;
+            } else {
+                TextElement.SourceMode s = TextElement.SourceMode.getByName(sourceModeString);
+                if (s != null) {
+                    element.sourceMode = s;
+                }
             }
         }
 
