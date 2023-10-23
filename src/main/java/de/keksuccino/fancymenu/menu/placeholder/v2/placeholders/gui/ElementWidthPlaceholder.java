@@ -12,14 +12,17 @@ import de.keksuccino.fancymenu.menu.placeholder.v2.Placeholder;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.client.Minecraft;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class ElementWidthPlaceholder extends Placeholder {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public ElementWidthPlaceholder() {
         super("elementwidth");
@@ -35,6 +38,8 @@ public class ElementWidthPlaceholder extends Placeholder {
                     return "" + ((VanillaButtonCustomizationItem) element).parent.getButton().getWidth();
                 }
                 return "" + element.getWidth();
+            } else {
+                LOGGER.error("[FANCYMENU] Failed to get width of element via 'Element Width' placeholder! Element not found: " + id);
             }
         }
         return null;

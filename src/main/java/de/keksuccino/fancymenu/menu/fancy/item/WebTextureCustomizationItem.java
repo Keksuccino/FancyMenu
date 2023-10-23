@@ -110,27 +110,28 @@ public class WebTextureCustomizationItem extends CustomizationItemBase {
 	}
 
 	protected void calculateAspectRatio() {
-		if ((this.texture == null) || !this.texture.isReady()) {
-			if (this.getWidth() <= 0) {
-				this.setWidth(100);
-			}
-			if (this.getHeight() <= 0) {
-				this.setHeight(100);
-			}
-			this.ready = true;
-			return;
-		}
-		int w = this.texture.getWidth();
-		int h = this.texture.getHeight();
-		double ratio = (double) w / (double) h;
-		//Calculate missing width
-		if ((this.getWidth() < 0) && (this.getHeight() >= 0)) {
-			this.setWidth((int)(this.getHeight() * ratio));
-		}
-		//Calculate missing height
-		if ((this.getHeight() < 0) && (this.getWidth() >= 0)) {
-			this.setHeight((int)(this.getWidth() / ratio));
-		}
+		//TODO experimental (trying to fix the log spam bug when advanced sizing/positioning is used)
+//		if ((this.texture == null) || !this.texture.isReady()) {
+//			if (this.getWidth() <= 0) {
+//				this.setWidth(100);
+//			}
+//			if (this.getHeight() <= 0) {
+//				this.setHeight(100);
+//			}
+//			this.ready = true;
+//			return;
+//		}
+//		int w = this.texture.getWidth();
+//		int h = this.texture.getHeight();
+//		double ratio = (double) w / (double) h;
+//		//Calculate missing width
+//		if ((this.getWidth() < 0) && (this.getHeight() >= 0)) {
+//			this.setWidth((int)(this.getHeight() * ratio));
+//		}
+//		//Calculate missing height
+//		if ((this.getHeight() < 0) && (this.getWidth() >= 0)) {
+//			this.setHeight((int)(this.getWidth() / ratio));
+//		}
 	}
 
 	public void render(GuiGraphics graphics, Screen menu) throws IOException {

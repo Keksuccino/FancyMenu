@@ -1,4 +1,3 @@
-
 package de.keksuccino.fancymenu.menu.placeholder.v2.placeholders.advanced;
 
 import de.keksuccino.fancymenu.menu.placeholder.v2.DeserializedPlaceholderString;
@@ -7,12 +6,15 @@ import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.objecthunter.exp4j.Expression;
 import de.keksuccino.konkrete.objecthunter.exp4j.ExpressionBuilder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.*;
 
 public class CalculatorPlaceholder extends Placeholder {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public CalculatorPlaceholder() {
         super("calc");
@@ -35,8 +37,8 @@ public class CalculatorPlaceholder extends Placeholder {
                     }
                     return "" + Math.round(expression.evaluate());
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (Exception exception) {
+                LOGGER.error("[FANCYMENU] Failed to parse expression in Calculator placeholder: Placeholder: " + dps + " | Original String: " + dps.originalString, exception);
             }
         }
         return null;

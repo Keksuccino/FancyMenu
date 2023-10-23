@@ -1,5 +1,4 @@
 
-
 //Copyright (c) 2022 Keksuccino.
 //This code is licensed under DSMSL.
 //For more information about the license, see this: https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md
@@ -8,7 +7,6 @@ package de.keksuccino.fancymenu.menu.placeholder.v2;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 

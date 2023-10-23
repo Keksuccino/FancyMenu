@@ -5,7 +5,6 @@ import java.io.IOException;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.GameRenderer;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.konkrete.properties.PropertiesSection;
@@ -51,17 +50,18 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 								h = this.texture.getHeight();
 							}
 						}
-						
-						ratio = (double) w / (double) h;
 
-						//Calculate missing width
-						if ((this.getWidth() < 0) && (this.getHeight() >= 0)) {
-							this.setWidth((int)(this.getHeight() * ratio));
-						}
-						//Calculate missing height
-						if ((this.getHeight() < 0) && (this.getWidth() >= 0)) {
-							this.setHeight((int)(this.getWidth() / ratio));
-						}
+						//TODO experimental (trying to fix the log spam bug when advanced sizing/positioning is used)
+//						ratio = (double) w / (double) h;
+//
+//						//Calculate missing width
+//						if ((this.getWidth() < 0) && (this.getHeight() >= 0)) {
+//							this.setWidth((int)(this.getHeight() * ratio));
+//						}
+//						//Calculate missing height
+//						if ((this.getHeight() < 0) && (this.getWidth() >= 0)) {
+//							this.setHeight((int)(this.getWidth() / ratio));
+//						}
 						
 					} catch (Exception e) {
 						e.printStackTrace();
