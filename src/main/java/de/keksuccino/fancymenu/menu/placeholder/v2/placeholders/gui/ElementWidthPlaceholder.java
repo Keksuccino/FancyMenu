@@ -29,6 +29,7 @@ public class ElementWidthPlaceholder extends Placeholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
+        if (Minecraft.getInstance().screen == null) return "1";
         String id = dps.values.get("id");
         if (id != null) {
             CustomizationItemBase element = findCustomizationItemForId(id);
