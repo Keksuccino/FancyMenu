@@ -5,7 +5,7 @@ import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface RenderableResource {
+public interface RenderableResource extends Resource {
 
     public static final ResourceLocation MISSING_TEXTURE_LOCATION = new ResourceLocation("missing_texture_location_fancymenu");
     public static final ResourceLocation FULLY_TRANSPARENT_TEXTURE = new ResourceLocation("fancymenu", "textures/fully_transparent.png");
@@ -21,8 +21,6 @@ public interface RenderableResource {
     int getHeight();
 
     @NotNull AspectRatio getAspectRatio();
-
-    boolean isReady();
 
     void reset();
 

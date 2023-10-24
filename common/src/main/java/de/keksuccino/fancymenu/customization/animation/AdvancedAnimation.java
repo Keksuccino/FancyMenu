@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.animation;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -70,6 +71,15 @@ public class AdvancedAnimation implements IAnimationRenderer, RenderableResource
 			return this.animationRenderer.isReady();
 		}
 		
+		return false;
+	}
+
+	@Override
+	public void reload() {
+	}
+
+	@Override
+	public boolean isClosed() {
 		return false;
 	}
 
@@ -583,6 +593,10 @@ public class AdvancedAnimation implements IAnimationRenderer, RenderableResource
 	public void reset() {
 		this.playing = false;
 		this.resetAnimation();
+	}
+
+	@Override
+	public void close() throws IOException {
 	}
 
 }

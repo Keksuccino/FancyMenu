@@ -49,6 +49,7 @@ import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -326,24 +327,27 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 			int y0 = 48;
 			int y1 = this.height - 64;
 
-			ITexture headerTexture = (this.layout.scrollListHeaderTexture != null) ? ImageResourceHandler.INSTANCE.getTexture(ScreenCustomization.getAbsoluteGameDirectoryPath(this.layout.scrollListHeaderTexture)) : null;
-			ITexture footerTexture = (this.layout.scrollListFooterTexture != null) ? ImageResourceHandler.INSTANCE.getTexture(ScreenCustomization.getAbsoluteGameDirectoryPath(this.layout.scrollListFooterTexture)) : null;
+			ITexture headerTexture = (this.layout.scrollListHeaderTexture != null) ? this.layout.scrollListHeaderTexture.get() : null;
+			ITexture footerTexture = (this.layout.scrollListFooterTexture != null) ? this.layout.scrollListFooterTexture.get() : null;
 
 			//Header Texture
-			if ((headerTexture != null) && (headerTexture.getResourceLocation() != null)) {
-				RenderingUtils.bindTexture(headerTexture.getResourceLocation());
-				RenderingUtils.resetShaderColor();
-				if (this.layout.preserveScrollListHeaderFooterAspectRatio) {
-					int[] headerSize = headerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(this.width, y0);
-					int headerWidth = headerSize[0];
-					int headerHeight = headerSize[1];
-					int headerX = x0 + (this.width / 2) - (headerWidth / 2);
-					int headerY = (y0 / 2) - (headerHeight / 2);
-					enableScissor(x0, 0, x0 + this.width, y0);
-					blit(pose, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
-					disableScissor();
-				} else {
-					blit(pose, x0, 0, 0.0F, 0.0F, this.width, y0, this.width, y0);
+			if (headerTexture != null) {
+				ResourceLocation loc = headerTexture.getResourceLocation();
+				if (loc != null) {
+					RenderingUtils.bindTexture(loc);
+					RenderingUtils.resetShaderColor();
+					if (this.layout.preserveScrollListHeaderFooterAspectRatio) {
+						int[] headerSize = headerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(this.width, y0);
+						int headerWidth = headerSize[0];
+						int headerHeight = headerSize[1];
+						int headerX = x0 + (this.width / 2) - (headerWidth / 2);
+						int headerY = (y0 / 2) - (headerHeight / 2);
+						enableScissor(x0, 0, x0 + this.width, y0);
+						blit(pose, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
+						disableScissor();
+					} else {
+						blit(pose, x0, 0, 0.0F, 0.0F, this.width, y0, this.width, y0);
+					}
 				}
 			} else {
 				RenderSystem.setShaderTexture(0, GuiComponent.BACKGROUND_LOCATION);
@@ -351,22 +355,25 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 				blit(pose, x0, 0, 0.0F, 0.0F, this.width, y0, 32, 32);
 			}
 			//Footer Texture
-			if ((footerTexture != null) && (footerTexture.getResourceLocation() != null)) {
-				RenderingUtils.bindTexture(footerTexture.getResourceLocation());
-				RenderingUtils.resetShaderColor();
-				if (this.layout.preserveScrollListHeaderFooterAspectRatio) {
-					int footerOriginalHeight = this.height - y1;
-					int[] footerSize = footerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(this.width, footerOriginalHeight);
-					int footerWidth = footerSize[0];
-					int footerHeight = footerSize[1];
-					int footerX = x0 + (this.width / 2) - (footerWidth / 2);
-					int footerY = y1 + (footerOriginalHeight / 2) - (footerHeight / 2);
-					enableScissor(x0, y1, x0 + this.width, y1 + footerOriginalHeight);
-					blit(pose, footerX, footerY, 0.0F, 0.0F, footerWidth, footerHeight, footerWidth, footerHeight);
-					disableScissor();
-				} else {
-					int footerHeight = this.height - y1;
-					blit(pose, x0, y1, 0.0F, 0.0F, this.width, footerHeight, this.width, footerHeight);
+			if (footerTexture != null) {
+				ResourceLocation loc = footerTexture.getResourceLocation();
+				if (loc != null) {
+					RenderingUtils.bindTexture(loc);
+					RenderingUtils.resetShaderColor();
+					if (this.layout.preserveScrollListHeaderFooterAspectRatio) {
+						int footerOriginalHeight = this.height - y1;
+						int[] footerSize = footerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(this.width, footerOriginalHeight);
+						int footerWidth = footerSize[0];
+						int footerHeight = footerSize[1];
+						int footerX = x0 + (this.width / 2) - (footerWidth / 2);
+						int footerY = y1 + (footerOriginalHeight / 2) - (footerHeight / 2);
+						enableScissor(x0, y1, x0 + this.width, y1 + footerOriginalHeight);
+						blit(pose, footerX, footerY, 0.0F, 0.0F, footerWidth, footerHeight, footerWidth, footerHeight);
+						disableScissor();
+					} else {
+						int footerHeight = this.height - y1;
+						blit(pose, x0, y1, 0.0F, 0.0F, this.width, footerHeight, this.width, footerHeight);
+					}
 				}
 			} else {
 				RenderSystem.setShaderTexture(0, GuiComponent.BACKGROUND_LOCATION);

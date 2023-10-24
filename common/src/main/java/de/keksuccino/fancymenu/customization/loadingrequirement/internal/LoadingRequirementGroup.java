@@ -98,7 +98,7 @@ public class LoadingRequirementGroup implements ValuePlaceholderHolder {
         if (o instanceof LoadingRequirementGroup other) {
             if (!Objects.equals(this.identifier, other.identifier)) return false;
             if (this.mode != other.mode) return false;
-            if (!ListUtils.contentEqual(this.instances, other.instances)) return false;
+            if (!ListUtils.contentEqualIgnoreOrder(this.instances, other.instances)) return false;
             return true;
         }
         return false;

@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.element.elements.playerentity.textures;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import de.keksuccino.fancymenu.util.resources.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.resources.SelfcleaningDynamicTexture;
@@ -10,7 +11,6 @@ import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -37,13 +37,14 @@ public class SkinExternalTextureResourceLocation extends ExternalTextureResource
         if (!this.loaded) {
             try {
 
-                ITexture exRL = ImageResourceHandler.INSTANCE.getTexture(this.path);
-                if (exRL != null) {
-                    ResourceLocation loc = exRL.getResourceLocation();
+                ITexture t = ResourceHandlers.getImageHandler().get(this.path);
+                if (t != null) {
+                    t.waitForReady(5000);
+                    ResourceLocation loc = t.getResourceLocation();
                     if (loc != null) {
-                        if (exRL.getHeight() >= 64) {
-                            this.width = exRL.getWidth();
-                            this.height = exRL.getHeight();
+                        if (t.getHeight() >= 64) {
+                            this.width = t.getWidth();
+                            this.height = t.getHeight();
                             this.location = loc;
                             this.loaded = true;
                             return;

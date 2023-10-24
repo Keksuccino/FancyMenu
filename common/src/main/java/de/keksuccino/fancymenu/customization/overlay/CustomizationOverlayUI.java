@@ -35,8 +35,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
-import de.keksuccino.fancymenu.util.resources.texture.WrappedTexture;
+import de.keksuccino.fancymenu.util.resources.texture.SimpleTexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -60,8 +59,8 @@ public class CustomizationOverlayUI {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final WrappedTexture FM_LOGO_ICON_TEXTURE = WrappedTexture.of(new ResourceLocation("fancymenu", "textures/menubar/icons/fancymenu_logo.png"));
-    private static final WrappedTexture LEAVE_CURRENT_SCREEN_TEXTURE = WrappedTexture.of(new ResourceLocation("fancymenu", "textures/menubar/icons/exit.png"));
+    private static final SimpleTexture FM_LOGO_ICON_TEXTURE = SimpleTexture.location(new ResourceLocation("fancymenu", "textures/menubar/icons/fancymenu_logo.png"));
+    private static final SimpleTexture LEAVE_CURRENT_SCREEN_TEXTURE = SimpleTexture.location(new ResourceLocation("fancymenu", "textures/menubar/icons/exit.png"));
 
     private static MenuBar grandfatheredMenuBar = null;
 
@@ -447,8 +446,11 @@ public class CustomizationOverlayUI {
                         true, FancyMenu.getOptions().customWindowIcon16.getDefaultValue(),
                         file -> {
                             if (file.getName().toLowerCase().endsWith(".png")) {
-                                ITexture t = ImageResourceHandler.INSTANCE.getTexture(file);
-                                return ((t != null) && (t.getWidth() == 16) && (t.getHeight() == 16));
+                                ITexture t = SimpleTexture.local(file);
+                                t.waitForReady(5000);
+                                boolean b = ((t.getWidth() == 16) && (t.getHeight() == 16));
+                                CloseableUtils.closeQuietly(t);
+                                return b;
                             }
                             return false;
                         })
@@ -470,8 +472,11 @@ public class CustomizationOverlayUI {
                         true, FancyMenu.getOptions().customWindowIcon32.getDefaultValue(),
                         file -> {
                             if (file.getName().toLowerCase().endsWith(".png")) {
-                                ITexture t = ImageResourceHandler.INSTANCE.getTexture(file);
-                                return ((t != null) && (t.getWidth() == 32) && (t.getHeight() == 32));
+                                ITexture t = SimpleTexture.local(file);
+                                t.waitForReady(5000);
+                                boolean b = ((t.getWidth() == 16) && (t.getHeight() == 16));
+                                CloseableUtils.closeQuietly(t);
+                                return b;
                             }
                             return false;
                         })

@@ -11,7 +11,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.UIComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resources.texture.WrappedTexture;
+import de.keksuccino.fancymenu.util.resources.texture.SimpleTexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -21,7 +21,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -69,11 +68,11 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
         this.children.clear();
         this.headerButtons.clear();
 
-        this.addHeaderButton(new HeaderButton(this, consumes -> WrappedTexture.of(HIDE_BUTTON_ICON_TEXTURE), button -> {
+        this.addHeaderButton(new HeaderButton(this, consumes -> SimpleTexture.location(HIDE_BUTTON_ICON_TEXTURE), button -> {
             this.setVisible(false);
         }));
 
-        this.addHeaderButton(new HeaderButton(this, consumes -> WrappedTexture.of(this.isExpanded() ? COLLAPSE_BUTTON_ICON_TEXTURE : EXPAND_BUTTON_ICON_TEXTURE), button -> {
+        this.addHeaderButton(new HeaderButton(this, consumes -> SimpleTexture.location(this.isExpanded() ? COLLAPSE_BUTTON_ICON_TEXTURE : EXPAND_BUTTON_ICON_TEXTURE), button -> {
             this.setExpanded(!this.isExpanded());
         }));
 
@@ -310,7 +309,6 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     }
 
     protected float getMaxTranslatedX() {
-        Minecraft.getInstance().getWindow();
         return this.getScreenWidth() - this.getScreenEdgeBorderThickness() - this.getWidth();
     }
 

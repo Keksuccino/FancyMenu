@@ -1,15 +1,10 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.util.ListUtils;
-import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
-import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,7 +14,7 @@ import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.Hyperlink;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.QuoteContext;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.CodeBlockContext;
-import java.io.File;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -255,7 +250,7 @@ public class MarkdownParser {
                         builder.hyperlink.link = hyperlinkImage.get(1);
                         setImageToBuilder(builder, hyperlinkImage.get(0));
                         lastBuiltFragment = addFragment(fragments, builder.build(true, true));
-                        builder.image = null;
+                        builder.imageSupplier = null;
                         builder.hyperlink = null;
                         skipLine = true;
                         continue;
@@ -270,7 +265,7 @@ public class MarkdownParser {
                     if (imageLink != null) {
                         setImageToBuilder(builder, imageLink);
                         lastBuiltFragment = addFragment(fragments, builder.build(true, true));
-                        builder.image = null;
+                        builder.imageSupplier = null;
                         skipLine = true;
                         continue;
                     }
@@ -451,24 +446,25 @@ public class MarkdownParser {
         return fragment;
     }
 
-    protected static void setImageToBuilder(@NotNull FragmentBuilder builder, @NotNull String imageLink) {
-        if (TextValidators.BASIC_URL_TEXT_VALIDATOR.get(imageLink)) {
-            builder.image = ImageResourceHandler.INSTANCE.getWebTexture(imageLink);
-            builder.text = "Image";
-        } else {
-            String s = ScreenCustomization.getAbsoluteGameDirectoryPath(imageLink);
-            File f = new File(s);
-            if (f.isFile() && f.getPath().startsWith(LayoutHandler.ASSETS_DIR.getAbsolutePath()) && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(f)) {
-                builder.image = ImageResourceHandler.INSTANCE.getTexture(f);
-                if (builder.image == null) {
-                    builder.text = I18n.get("fancymenu.markdown.missing_local_image");
-                } else {
-                    builder.text = "Image";
-                }
-            } else {
-                builder.text = I18n.get("fancymenu.markdown.missing_local_image");
-            }
-        }
+    protected static void setImageToBuilder(@NotNull FragmentBuilder builder, @NotNull String imageSource) {
+//        if (TextValidators.BASIC_URL_TEXT_VALIDATOR.get(imageLink)) {
+//            builder.image = ImageResourceHandler.INSTANCE.getWebTexture(imageLink);
+//            builder.text = "Image";
+//        } else {
+//            String s = ScreenCustomization.getAbsoluteGameDirectoryPath(imageLink);
+//            File f = new File(s);
+//            if (f.isFile() && f.getPath().startsWith(LayoutHandler.ASSETS_DIR.getAbsolutePath()) && FileFilter.IMAGE_AND_GIF_FILE_FILTER.checkFile(f)) {
+//                builder.image = ImageResourceHandler.INSTANCE.getTexture(f);
+//                if (builder.image == null) {
+//                    builder.text = I18n.get("fancymenu.markdown.missing_local_image");
+//                } else {
+//                    builder.text = "Image";
+//                }
+//            } else {
+//                builder.text = I18n.get("fancymenu.markdown.missing_local_image");
+//            }
+//        }
+        builder.imageSupplier = ResourceSupplier.image(imageSource);
     }
 
     @NotNull
@@ -651,7 +647,7 @@ public class MarkdownParser {
         protected final MarkdownRenderer renderer;
         protected String text = "";
         protected DrawableColor textColor = null;
-        protected ITexture image = null;
+        protected ResourceSupplier<ITexture> imageSupplier = null;
         protected boolean separationLine = false;
         protected boolean bold = false;
         protected boolean italic = false;
@@ -676,7 +672,7 @@ public class MarkdownParser {
             MarkdownTextFragment frag = new MarkdownTextFragment(this.renderer, text);
             frag.font = font;
             frag.textColor = textColor;
-            frag.image = image;
+            frag.imageSupplier = imageSupplier;
             frag.separationLine = separationLine;
             if (separationLine) {
                 frag.unscaledTextHeight = 1;

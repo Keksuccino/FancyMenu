@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
+import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Renderable;
@@ -36,7 +37,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     public boolean naturalLineBreakAfter;
     public boolean autoLineBreakAfter;
     public boolean endOfWord;
-    public ITexture image = null;
+    public ResourceSupplier<ITexture> imageSupplier = null;
     public boolean separationLine;
     public DrawableColor textColor = null;
     public boolean bold;
@@ -73,16 +74,14 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             CursorHandler.setClientTickCursor(CursorHandler.CURSOR_POINTING_HAND);
         }
 
-        if (this.image != null) {
-
-            if (this.image.getResourceLocation() != null) {
+        if (this.imageSupplier != null) {
+            this.imageSupplier.forRenderable((iTexture, location) -> {
                 RenderSystem.enableBlend();
-                RenderingUtils.bindTexture(this.image.getResourceLocation());
+                RenderingUtils.bindTexture(location);
                 RenderingUtils.resetShaderColor();
                 RenderingUtils.blitF(pose, this.x, this.y, 0.0F, 0.0F, this.getRenderWidth(), this.getRenderHeight(), this.getRenderWidth(), this.getRenderHeight());
                 RenderingUtils.resetShaderColor();
-            }
-
+            });
         } else if (this.separationLine) {
 
             RenderSystem.enableBlend();
@@ -269,10 +268,11 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
     public float getRenderWidth() {
 
-        if (this.image != null) {
-            if (this.image.getResourceLocation() == null) return 10;
-            if (this.image.getWidth() <= (this.parent.getRealWidth() - this.parent.border - this.parent.border)) {
-                return this.image.getWidth();
+        if (this.imageSupplier != null) {
+            ITexture t = this.imageSupplier.get();
+            if (t == null) return 10;
+            if (t.getWidth() <= (this.parent.getRealWidth() - this.parent.border - this.parent.border)) {
+                return t.getWidth();
             }
             return this.parent.getRealWidth() - this.parent.border - this.parent.border;
         }
@@ -305,9 +305,10 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
     public float getRenderHeight() {
 
-        if (this.image != null) {
-            if (this.image.getResourceLocation() == null) return 10;
-            return this.image.getAspectRatio().getAspectRatioHeight((int)this.getRenderWidth());
+        if (this.imageSupplier != null) {
+            ITexture t = this.imageSupplier.get();
+            if (t == null) return 10;
+            return t.getAspectRatio().getAspectRatioHeight((int)this.getRenderWidth());
         }
 
         float f = this.getTextRenderHeight();
@@ -366,7 +367,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
     @Override
     public boolean isMouseOver(double mouseX, double mouseY) {
-        if ((this.image != null) && (this.image.getResourceLocation() != null)) {
+        if ((this.imageSupplier != null) && (this.imageSupplier.get() != null)) {
             return RenderingUtils.isXYInArea(mouseX, mouseY, this.x, this.y, this.getRenderWidth(), this.getRenderHeight());
         }
         return RenderingUtils.isXYInArea(mouseX, mouseY, this.getTextX(), this.getTextY(), this.getTextWidth(), this.getTextHeight());

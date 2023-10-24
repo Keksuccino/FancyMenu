@@ -39,7 +39,8 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
             ResourceSourceType sourceType = ResourceSourceType.getSourceTypeOf(resourceSource);
             String resourceSourceWithoutPrefix = ResourceSourceType.getWithoutSourcePrefix(resourceSource);
             if (sourceType == ResourceSourceType.WEB) {
-                if (this.getResourceMap().containsKey(resourceSource)) return this.getResourceMap().get(resourceSource);
+                R cached = this.getFromMapAndClearClosed(resourceSource);
+                if (cached != null) return cached;
                 F fileType = null;
                 for (F type : this.getAllowedFileTypes()) {
                     if (type.isFileTypeWeb(resourceSourceWithoutPrefix)) {
@@ -55,7 +56,8 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
                     this.putAndReturn((R) fileType.getCodec().readWeb(resourceSourceWithoutPrefix), resourceSource);
                 }
             } else if (sourceType == ResourceSourceType.LOCATION) {
-                if (this.getResourceMap().containsKey(resourceSource)) return this.getResourceMap().get(resourceSource);
+                R cached = this.getFromMapAndClearClosed(resourceSource);
+                if (cached != null) return cached;
                 ResourceLocation loc = ResourceLocation.tryParse(resourceSourceWithoutPrefix);
                 if (loc != null) {
                     F fileType = null;
@@ -76,7 +78,8 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
             } else {
                 resourceSourceWithoutPrefix = GameDirectoryUtils.getAbsoluteGameDirectoryPath(resourceSourceWithoutPrefix);
                 resourceSource = sourceType.getSourcePrefix() + resourceSourceWithoutPrefix;
-                if (this.getResourceMap().containsKey(resourceSource)) return this.getResourceMap().get(resourceSource);
+                R cached = this.getFromMapAndClearClosed(resourceSource);
+                if (cached != null) return cached;
                 File file = new File(resourceSourceWithoutPrefix);
                 F fileType = null;
                 for (F type : this.getAllowedFileTypes()) {
@@ -95,6 +98,20 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to get resource: " + resourceSource, ex);
+        }
+        return null;
+    }
+
+    @Nullable
+    protected R getFromMapAndClearClosed(@Nullable String resourceSource) {
+        if (resourceSource == null) return null;
+        if (this.getResourceMap().containsKey(resourceSource)) {
+            R resource = this.getResourceMap().get(resourceSource);
+            if (resource.isClosed()) {
+                this.getResourceMap().remove(resourceSource);
+            } else {
+                return resource;
+            }
         }
         return null;
     }
@@ -141,6 +158,24 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
             CloseableUtils.closeQuietly(resource);
         }
         this.getResourceMap().remove(resourceSource);
+    }
+
+    /**
+     * Releases a resource.<br>
+     * This will unregister the resource, remove it from any possible caches and close it.
+     */
+    public void release(@NotNull R resource) {
+        String key = null;
+        for (Map.Entry<String, R> m : this.getResourceMap().entrySet()) {
+            if (m.getValue() == resource) {
+                key = m.getKey();
+                break;
+            }
+        }
+        if (key != null) {
+            CloseableUtils.closeQuietly(resource);
+            this.getResourceMap().remove(key);
+        }
     }
 
     /**

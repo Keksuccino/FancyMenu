@@ -220,31 +220,31 @@ public class TextEditorElement extends AbstractEditorElement {
         this.rightClickMenu.addSubMenuEntry("grabber_texture", Component.translatable("fancymenu.customization.items.text.scroll_grabber_texture"), grabberTextureMenu)
                 .setStackable(true);
 
-        this.addGenericFileChooserContextMenuEntryTo(grabberTextureMenu, "normal_grabber_texture",
-                        consumes -> (consumes instanceof TextEditorElement),
-                        null,
-                        consumes -> ((TextElement)consumes.element).scrollGrabberTextureNormal,
-                        (element1, s) -> {
-                            ((TextElement)element1.element).scrollGrabberTextureNormal = s;
-                            ((TextElement)element1.element).updateContent();
-                        },
-                        Component.translatable("fancymenu.customization.items.text.scroll_grabber_texture.normal"),
-                        true,
-                        FileFilter.IMAGE_FILE_FILTER)
-                .setStackable(true);
-
-        this.addGenericFileChooserContextMenuEntryTo(grabberTextureMenu, "hover_grabber_texture",
-                        consumes -> (consumes instanceof TextEditorElement),
-                        null,
-                        consumes -> ((TextElement)consumes.element).scrollGrabberTextureHover,
-                        (element1, s) -> {
-                            ((TextElement)element1.element).scrollGrabberTextureHover = s;
-                            ((TextElement)element1.element).updateContent();
-                        },
-                        Component.translatable("fancymenu.customization.items.text.scroll_grabber_texture.hover"),
-                        true,
-                        FileFilter.IMAGE_FILE_FILTER)
-                .setStackable(true);
+//        this.addGenericFileChooserContextMenuEntryTo(grabberTextureMenu, "normal_grabber_texture",
+//                        consumes -> (consumes instanceof TextEditorElement),
+//                        null,
+//                        consumes -> ((TextElement)consumes.element).scrollGrabberTextureNormal,
+//                        (element1, s) -> {
+//                            ((TextElement)element1.element).scrollGrabberTextureNormal = s;
+//                            ((TextElement)element1.element).updateContent();
+//                        },
+//                        Component.translatable("fancymenu.customization.items.text.scroll_grabber_texture.normal"),
+//                        true,
+//                        FileFilter.IMAGE_FILE_FILTER)
+//                .setStackable(true);
+//
+//        this.addGenericFileChooserContextMenuEntryTo(grabberTextureMenu, "hover_grabber_texture",
+//                        consumes -> (consumes instanceof TextEditorElement),
+//                        null,
+//                        consumes -> ((TextElement)consumes.element).scrollGrabberTextureHover,
+//                        (element1, s) -> {
+//                            ((TextElement)element1.element).scrollGrabberTextureHover = s;
+//                            ((TextElement)element1.element).updateContent();
+//                        },
+//                        Component.translatable("fancymenu.customization.items.text.scroll_grabber_texture.hover"),
+//                        true,
+//                        FileFilter.IMAGE_FILE_FILTER)
+//                .setStackable(true);
 
         ContextMenu grabberColorMenu = new ContextMenu();
         this.rightClickMenu.addSubMenuEntry("grabber_color", Component.translatable("fancymenu.customization.items.text.scroll_grabber_color"), grabberColorMenu)

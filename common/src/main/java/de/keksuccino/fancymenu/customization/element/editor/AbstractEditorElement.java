@@ -918,7 +918,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		ContextMenu subMenu = new ContextMenu();
 
-		ContextMenu.ClickableContextMenuEntry<?> chooseEntry = subMenu.addClickableEntry("choose_file", Component.translatable("fancymenu.ui.resources.choose"),
+		subMenu.addClickableEntry("choose_file", Component.translatable("fancymenu.ui.resources.choose"),
 				(menu, entry) -> {
 					List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
 					if (entry.getStackMeta().isFirstInStack() && !selectedElements.isEmpty()) {
@@ -999,90 +999,91 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 	}
 
-	protected ContextMenu.ClickableContextMenuEntry<?> addGenericFileChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, String defaultValue, @NotNull ConsumingSupplier<AbstractEditorElement, String> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, String> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter) {
-
-		ContextMenu subMenu = new ContextMenu();
-
-		ContextMenu.ClickableContextMenuEntry<?> chooseEntry = subMenu.addClickableEntry("choose_file", Component.translatable("fancymenu.ui.filechooser.choose.file"), (menu, entry) ->
-		{
-			List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
-			if (entry.getStackMeta().isFirstInStack() && !selectedElements.isEmpty()) {
-				File startDir = LayoutHandler.ASSETS_DIR;
-				List<String> allPaths = ObjectUtils.getOfAll(String.class, selectedElements, targetFieldGetter);
-				if (ListUtils.allInListEqual(allPaths)) {
-					String path = allPaths.get(0);
-					if (path != null) {
-						startDir = new File(GameDirectoryUtils.getAbsoluteGameDirectoryPath(allPaths.get(0))).getParentFile();
-						if (startDir == null) startDir = LayoutHandler.ASSETS_DIR;
-					}
-				}
-				ChooseFileScreen fileChooser = new ChooseFileScreen(LayoutHandler.ASSETS_DIR, startDir, (call) -> {
-					if (call != null) {
-						this.editor.history.saveSnapshot();
-						for (AbstractEditorElement e : selectedElements) {
-							targetFieldSetter.accept(e, GameDirectoryUtils.getPathWithoutGameDirectory(call.getAbsolutePath()));
-						}
-					}
-					Minecraft.getInstance().setScreen(this.editor);
-				});
-				fileChooser.setVisibleDirectoryLevelsAboveRoot(2);
-				fileChooser.setFileFilter(fileFilter);
-				Minecraft.getInstance().setScreen(fileChooser);
-			}
-		}).setStackable(true);
-
-		if (addResetOption) {
-			subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.editor.filechooser.reset"), (menu, entry) ->
-			{
-				if (entry.getStackMeta().isFirstInStack()) {
-					List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
-					this.editor.history.saveSnapshot();
-					for (AbstractEditorElement e : selectedElements) {
-						targetFieldSetter.accept(e, defaultValue);
-					}
-				}
-			}).setStackable(true);
-		}
-
-		Supplier<Component> currentValueDisplayLabelSupplier = () -> {
-			List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
-			if (selectedElements.size() == 1) {
-				Component valueComponent;
-				String val = targetFieldGetter.get(selectedElements.get(0));
-				if (val == null) {
-					valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
-				} else {
-					val = GameDirectoryUtils.getPathWithoutGameDirectory(val);
-					if (Minecraft.getInstance().font.width(val) > 150) {
-						val = new StringBuilder(val).reverse().toString();
-						val = Minecraft.getInstance().font.plainSubstrByWidth(val, 150);
-						val = new StringBuilder(val).reverse().toString();
-						val = ".." + val;
-					}
-					valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
-				}
-				return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
-			}
-			return Component.empty();
-		};
-		subMenu.addSeparatorEntry("separator_before_current_value_display")
-				.setIsVisibleSupplier((menu, entry) -> this.getFilteredSelectedElementList(selectedElementsFilter).size() == 1);
-		subMenu.addClickableEntry("current_value_display", Component.empty(), (menu, entry) -> {})
-				.setLabelSupplier((menu, entry) -> currentValueDisplayLabelSupplier.get())
-				.setClickSoundEnabled(false)
-				.setHoverable(false)
-				.setIsVisibleSupplier((menu, entry) -> this.getFilteredSelectedElementList(selectedElementsFilter).size() == 1)
-				.setIcon(ContextMenu.IconFactory.getIcon("info"));
-
-		return addTo.addSubMenuEntry(entryIdentifier, label, subMenu).setStackable(true);
-	}
-
-	@SuppressWarnings("all")
-	protected <E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addFileChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, String defaultValue, @NotNull ConsumingSupplier<E, String> targetFieldGetter, @NotNull BiConsumer<E, String> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter) {
-		ConsumingSupplier<AbstractEditorElement, String> getter = (ConsumingSupplier<AbstractEditorElement, String>) targetFieldGetter;
-		BiConsumer<AbstractEditorElement, String> setter = (BiConsumer<AbstractEditorElement, String>) targetFieldSetter;
-		return addGenericFileChooserContextMenuEntryTo(addTo, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), defaultValue, getter, setter, label, addResetOption, fileFilter);
-	}
+//	protected ContextMenu.ClickableContextMenuEntry<?> addGenericFileChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, String defaultValue, @NotNull ConsumingSupplier<AbstractEditorElement, String> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, String> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter) {
+//
+//		ContextMenu subMenu = new ContextMenu();
+//
+//		subMenu.addClickableEntry("choose_file", Component.translatable("fancymenu.ui.filechooser.choose.file"),
+//				(menu, entry) ->
+//				{
+//					List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
+//					if (entry.getStackMeta().isFirstInStack() && !selectedElements.isEmpty()) {
+//						File startDir = LayoutHandler.ASSETS_DIR;
+//						List<String> allPaths = ObjectUtils.getOfAll(String.class, selectedElements, targetFieldGetter);
+//						if (ListUtils.allInListEqual(allPaths)) {
+//							String path = allPaths.get(0);
+//							if (path != null) {
+//								startDir = new File(GameDirectoryUtils.getAbsoluteGameDirectoryPath(allPaths.get(0))).getParentFile();
+//								if (startDir == null) startDir = LayoutHandler.ASSETS_DIR;
+//							}
+//						}
+//						ChooseFileScreen fileChooser = new ChooseFileScreen(LayoutHandler.ASSETS_DIR, startDir, (call) -> {
+//							if (call != null) {
+//								this.editor.history.saveSnapshot();
+//								for (AbstractEditorElement e : selectedElements) {
+//									targetFieldSetter.accept(e, GameDirectoryUtils.getPathWithoutGameDirectory(call.getAbsolutePath()));
+//								}
+//							}
+//							Minecraft.getInstance().setScreen(this.editor);
+//						});
+//						fileChooser.setVisibleDirectoryLevelsAboveRoot(2);
+//						fileChooser.setFileFilter(fileFilter);
+//						Minecraft.getInstance().setScreen(fileChooser);
+//					}
+//				}).setStackable(true);
+//
+//		if (addResetOption) {
+//			subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.editor.filechooser.reset"), (menu, entry) ->
+//			{
+//				if (entry.getStackMeta().isFirstInStack()) {
+//					List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
+//					this.editor.history.saveSnapshot();
+//					for (AbstractEditorElement e : selectedElements) {
+//						targetFieldSetter.accept(e, defaultValue);
+//					}
+//				}
+//			}).setStackable(true);
+//		}
+//
+//		Supplier<Component> currentValueDisplayLabelSupplier = () -> {
+//			List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
+//			if (selectedElements.size() == 1) {
+//				Component valueComponent;
+//				String val = targetFieldGetter.get(selectedElements.get(0));
+//				if (val == null) {
+//					valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+//				} else {
+//					val = GameDirectoryUtils.getPathWithoutGameDirectory(val);
+//					if (Minecraft.getInstance().font.width(val) > 150) {
+//						val = new StringBuilder(val).reverse().toString();
+//						val = Minecraft.getInstance().font.plainSubstrByWidth(val, 150);
+//						val = new StringBuilder(val).reverse().toString();
+//						val = ".." + val;
+//					}
+//					valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+//				}
+//				return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
+//			}
+//			return Component.empty();
+//		};
+//		subMenu.addSeparatorEntry("separator_before_current_value_display")
+//				.setIsVisibleSupplier((menu, entry) -> this.getFilteredSelectedElementList(selectedElementsFilter).size() == 1);
+//		subMenu.addClickableEntry("current_value_display", Component.empty(), (menu, entry) -> {})
+//				.setLabelSupplier((menu, entry) -> currentValueDisplayLabelSupplier.get())
+//				.setClickSoundEnabled(false)
+//				.setHoverable(false)
+//				.setIsVisibleSupplier((menu, entry) -> this.getFilteredSelectedElementList(selectedElementsFilter).size() == 1)
+//				.setIcon(ContextMenu.IconFactory.getIcon("info"));
+//
+//		return addTo.addSubMenuEntry(entryIdentifier, label, subMenu).setStackable(true);
+//	}
+//
+//	@SuppressWarnings("all")
+//	protected <E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addFileChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, String defaultValue, @NotNull ConsumingSupplier<E, String> targetFieldGetter, @NotNull BiConsumer<E, String> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter) {
+//		ConsumingSupplier<AbstractEditorElement, String> getter = (ConsumingSupplier<AbstractEditorElement, String>) targetFieldGetter;
+//		BiConsumer<AbstractEditorElement, String> setter = (BiConsumer<AbstractEditorElement, String>) targetFieldSetter;
+//		return addGenericFileChooserContextMenuEntryTo(addTo, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), defaultValue, getter, setter, label, addResetOption, fileFilter);
+//	}
 
 	protected ContextMenu.ClickableContextMenuEntry<?> addInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, String> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
 		ContextMenu subMenu = new ContextMenu();

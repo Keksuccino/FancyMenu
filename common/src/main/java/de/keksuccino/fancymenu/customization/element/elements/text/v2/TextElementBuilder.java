@@ -37,10 +37,7 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
         element.baseHeight = 40;
 
         element.source = serialized.getValue("source");
-        if (element.source == null) {
-            element.source = "";
-        }
-        element.source = element.source.replace("%n%", "\n");
+        if (element.source != null) element.source = element.source.replace("%n%", "\n");
 
         String sourceModeString = serialized.getValue("source_mode");
         if (sourceModeString != null) {
@@ -96,10 +93,10 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
         element.scrollGrabberColorHexNormal = serialized.getValue("grabber_color_normal");
         element.scrollGrabberColorHexHover = serialized.getValue("grabber_color_hover");
 
-        element.verticalScrollGrabberTextureNormal = serialized.getValue("grabber_texture_normal");
-        element.verticalScrollGrabberTextureHover = serialized.getValue("grabber_texture_hover");
-        element.horizontalScrollGrabberTextureNormal = serialized.getValue("horizontal_grabber_texture_normal");
-        element.horizontalScrollGrabberTextureHover = serialized.getValue("horizontal_grabber_texture_hover");
+        element.verticalScrollGrabberTextureNormal = deserializeImageResourceSupplier(serialized.getValue("grabber_texture_normal"));
+        element.verticalScrollGrabberTextureHover = deserializeImageResourceSupplier(serialized.getValue("grabber_texture_hover"));
+        element.horizontalScrollGrabberTextureNormal = deserializeImageResourceSupplier(serialized.getValue("horizontal_grabber_texture_normal"));
+        element.horizontalScrollGrabberTextureHover = deserializeImageResourceSupplier(serialized.getValue("horizontal_grabber_texture_hover"));
 
         String enableScrollingString = serialized.getValue("enable_scrolling");
         if ((enableScrollingString != null) && enableScrollingString.equals("false")) {
@@ -171,7 +168,7 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
 
         element.markdownRenderer.refreshRenderer();
 
-        element.updateContent();
+        element.setSource(element.sourceMode, element.source);
 
         return element;
 
@@ -201,16 +198,16 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
             serializeTo.putProperty("grabber_color_hover", element.scrollGrabberColorHexHover);
         }
         if (element.verticalScrollGrabberTextureNormal != null) {
-            serializeTo.putProperty("grabber_texture_normal", element.verticalScrollGrabberTextureNormal);
+            serializeTo.putProperty("grabber_texture_normal", element.verticalScrollGrabberTextureNormal.getSourceWithPrefix());
         }
         if (element.verticalScrollGrabberTextureHover != null) {
-            serializeTo.putProperty("grabber_texture_hover", element.verticalScrollGrabberTextureHover);
+            serializeTo.putProperty("grabber_texture_hover", element.verticalScrollGrabberTextureHover.getSourceWithPrefix());
         }
         if (element.horizontalScrollGrabberTextureNormal != null) {
-            serializeTo.putProperty("horizontal_grabber_texture_normal", element.horizontalScrollGrabberTextureNormal);
+            serializeTo.putProperty("horizontal_grabber_texture_normal", element.horizontalScrollGrabberTextureNormal.getSourceWithPrefix());
         }
         if (element.horizontalScrollGrabberTextureHover != null) {
-            serializeTo.putProperty("horizontal_grabber_texture_hover", element.horizontalScrollGrabberTextureHover);
+            serializeTo.putProperty("horizontal_grabber_texture_hover", element.horizontalScrollGrabberTextureHover.getSourceWithPrefix());
         }
         serializeTo.putProperty("enable_scrolling", "" + element.enableScrolling);
         serializeTo.putProperty("auto_line_wrapping", "" + element.markdownRenderer.isAutoLineBreakingEnabled());

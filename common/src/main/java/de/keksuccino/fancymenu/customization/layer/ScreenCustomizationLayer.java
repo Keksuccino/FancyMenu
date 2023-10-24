@@ -33,6 +33,7 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.ScreenTitleUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
+import de.keksuccino.fancymenu.util.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
@@ -45,6 +46,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -127,8 +129,11 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 		if (this.layoutBase.menuBackground != null) this.layoutBase.menuBackground.onCloseScreen();
 
 		if (this.layoutBase.closeAudio != null) {
-			SoundHandler.resetSound(this.layoutBase.closeAudio);
-			SoundHandler.playSound(this.layoutBase.closeAudio);
+			IAudio audio = this.layoutBase.closeAudio.get();
+			if (audio != null) {
+				audio.stop();
+				audio.play();
+			}
 		}
 
 	}
@@ -236,8 +241,11 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 		if (!this.shouldCustomize(e.getScreen())) return;
 
 		if (ScreenCustomization.isNewMenu() && (this.layoutBase.openAudio != null)) {
-			SoundHandler.resetSound(this.layoutBase.openAudio);
-			SoundHandler.playSound(this.layoutBase.openAudio);
+			IAudio audio = this.layoutBase.openAudio.get();
+			if (audio != null) {
+				audio.stop();
+				audio.play();
+			}
 		}
 
 		this.cachedScreenWidgetMetas = ScreenWidgetDiscoverer.getWidgetsOfScreen(e.getScreen(), false, false);
@@ -439,23 +447,26 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 
 			IMixinAbstractSelectionList access = e.getAccessor();
 
-			ITexture headerTexture = (this.layoutBase.scrollListHeaderTexture != null) ? ImageResourceHandler.INSTANCE.getTexture(ScreenCustomization.getAbsoluteGameDirectoryPath(this.layoutBase.scrollListHeaderTexture)) : null;
-			ITexture footerTexture = (this.layoutBase.scrollListFooterTexture != null) ? ImageResourceHandler.INSTANCE.getTexture(ScreenCustomization.getAbsoluteGameDirectoryPath(this.layoutBase.scrollListFooterTexture)) : null;
+			ITexture headerTexture = (this.layoutBase.scrollListHeaderTexture != null) ? this.layoutBase.scrollListHeaderTexture.get() : null;
+			ITexture footerTexture = (this.layoutBase.scrollListFooterTexture != null) ? this.layoutBase.scrollListFooterTexture.get() : null;
 
-			if ((headerTexture != null) && (headerTexture.getResourceLocation() != null)) {
-				RenderingUtils.bindTexture(headerTexture.getResourceLocation());
-				RenderingUtils.resetShaderColor();
-				if (this.layoutBase.preserveScrollListHeaderFooterAspectRatio) {
-					int[] headerSize = headerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(access.getWidthFancyMenu(), access.getY0FancyMenu());
-					int headerWidth = headerSize[0];
-					int headerHeight = headerSize[1];
-					int headerX = access.getX0FancyMenu() + (access.getWidthFancyMenu() / 2) - (headerWidth / 2);
-					int headerY = (access.getY0FancyMenu() / 2) - (headerHeight / 2);
-					enableScissor(access.getX0FancyMenu(), 0, access.getX0FancyMenu() + access.getWidthFancyMenu(), access.getY0FancyMenu());
-					blit(e.getPoseStack(), headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
-					disableScissor();
-				} else {
-					blit(e.getPoseStack(), access.getX0FancyMenu(), 0, 0.0F, 0.0F, access.getWidthFancyMenu(), access.getY0FancyMenu(), access.getWidthFancyMenu(), access.getY0FancyMenu());
+			if (headerTexture != null) {
+				ResourceLocation loc = headerTexture.getResourceLocation();
+				if (loc != null) {
+					RenderingUtils.bindTexture(loc);
+					RenderingUtils.resetShaderColor();
+					if (this.layoutBase.preserveScrollListHeaderFooterAspectRatio) {
+						int[] headerSize = headerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(access.getWidthFancyMenu(), access.getY0FancyMenu());
+						int headerWidth = headerSize[0];
+						int headerHeight = headerSize[1];
+						int headerX = access.getX0FancyMenu() + (access.getWidthFancyMenu() / 2) - (headerWidth / 2);
+						int headerY = (access.getY0FancyMenu() / 2) - (headerHeight / 2);
+						enableScissor(access.getX0FancyMenu(), 0, access.getX0FancyMenu() + access.getWidthFancyMenu(), access.getY0FancyMenu());
+						blit(e.getPoseStack(), headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
+						disableScissor();
+					} else {
+						blit(e.getPoseStack(), access.getX0FancyMenu(), 0, 0.0F, 0.0F, access.getWidthFancyMenu(), access.getY0FancyMenu(), access.getWidthFancyMenu(), access.getY0FancyMenu());
+					}
 				}
 			} else {
 				RenderSystem.setShaderTexture(0, GuiComponent.BACKGROUND_LOCATION);
@@ -463,22 +474,25 @@ public class ScreenCustomizationLayer extends GuiComponent implements IElementFa
 				blit(e.getPoseStack(), access.getX0FancyMenu(), 0, 0.0F, 0.0F, access.getWidthFancyMenu(), access.getY0FancyMenu(), 32, 32);
 			}
 
-			if ((footerTexture != null) && (footerTexture.getResourceLocation() != null)) {
-				RenderingUtils.bindTexture(footerTexture.getResourceLocation());
-				RenderingUtils.resetShaderColor();
-				if (this.layoutBase.preserveScrollListHeaderFooterAspectRatio) {
-					int footerOriginalHeight = access.getHeightFancyMenu() - access.getY1FancyMenu();
-					int[] footerSize = footerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(access.getWidthFancyMenu(), footerOriginalHeight);
-					int footerWidth = footerSize[0];
-					int footerHeight = footerSize[1];
-					int footerX = access.getX0FancyMenu() + (access.getWidthFancyMenu() / 2) - (footerWidth / 2);
-					int footerY = access.getY1FancyMenu() + (footerOriginalHeight / 2) - (footerHeight / 2);
-					enableScissor(access.getX0FancyMenu(), access.getY1FancyMenu(), access.getX0FancyMenu() + access.getWidthFancyMenu(), access.getY1FancyMenu() + footerOriginalHeight);
-					blit(e.getPoseStack(), footerX, footerY, 0.0F, 0.0F, footerWidth, footerHeight, footerWidth, footerHeight);
-					disableScissor();
-				} else {
-					int footerHeight = access.getHeightFancyMenu() - access.getY1FancyMenu();
-					blit(e.getPoseStack(), access.getX0FancyMenu(), access.getY1FancyMenu(), 0.0F, 0.0F, access.getWidthFancyMenu(), footerHeight, access.getWidthFancyMenu(), footerHeight);
+			if (footerTexture != null) {
+				ResourceLocation loc = footerTexture.getResourceLocation();
+				if (loc != null) {
+					RenderingUtils.bindTexture(loc);
+					RenderingUtils.resetShaderColor();
+					if (this.layoutBase.preserveScrollListHeaderFooterAspectRatio) {
+						int footerOriginalHeight = access.getHeightFancyMenu() - access.getY1FancyMenu();
+						int[] footerSize = footerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(access.getWidthFancyMenu(), footerOriginalHeight);
+						int footerWidth = footerSize[0];
+						int footerHeight = footerSize[1];
+						int footerX = access.getX0FancyMenu() + (access.getWidthFancyMenu() / 2) - (footerWidth / 2);
+						int footerY = access.getY1FancyMenu() + (footerOriginalHeight / 2) - (footerHeight / 2);
+						enableScissor(access.getX0FancyMenu(), access.getY1FancyMenu(), access.getX0FancyMenu() + access.getWidthFancyMenu(), access.getY1FancyMenu() + footerOriginalHeight);
+						blit(e.getPoseStack(), footerX, footerY, 0.0F, 0.0F, footerWidth, footerHeight, footerWidth, footerHeight);
+						disableScissor();
+					} else {
+						int footerHeight = access.getHeightFancyMenu() - access.getY1FancyMenu();
+						blit(e.getPoseStack(), access.getX0FancyMenu(), access.getY1FancyMenu(), 0.0F, 0.0F, access.getWidthFancyMenu(), footerHeight, access.getWidthFancyMenu(), footerHeight);
+					}
 				}
 			} else {
 				RenderSystem.setShaderTexture(0, GuiComponent.BACKGROUND_LOCATION);

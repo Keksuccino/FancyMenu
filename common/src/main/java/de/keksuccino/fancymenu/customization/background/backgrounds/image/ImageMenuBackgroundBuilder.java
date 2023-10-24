@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.background.backgrounds.image;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.SerializedMenuBackground;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.SerializationUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -38,20 +39,17 @@ public class ImageMenuBackgroundBuilder extends MenuBackgroundBuilder<ImageMenuB
 
         ImageMenuBackground b = new ImageMenuBackground(this);
 
-        b.imagePathOrUrl = serializedMenuBackground.getValue("image_path");
+        b.textureSupplier = SerializationUtils.deserializeImageResourceSupplier(serializedMenuBackground.getValue("image_path"));
 
         String slide = serializedMenuBackground.getValue("slide");
         if ((slide != null) && slide.equals("true")) {
             b.slideLeftRight = true;
         }
 
-        String type = serializedMenuBackground.getValue("background_image_type");
-        if (type != null) {
-            ImageMenuBackground.BackgroundImageType imgType = ImageMenuBackground.BackgroundImageType.getByName(type);
-            if (imgType != null) b.type = imgType;
+        b.fallbackTextureSupplier = SerializationUtils.deserializeImageResourceSupplier(serializedMenuBackground.getValue("fallback_path"));
+        if (b.fallbackTextureSupplier == null) {
+            b.fallbackTextureSupplier = SerializationUtils.deserializeImageResourceSupplier(serializedMenuBackground.getValue("web_image_fallback_path"));
         }
-
-        b.webImageFallbackPath = serializedMenuBackground.getValue("web_image_fallback_path");
 
         return b;
 
@@ -62,13 +60,15 @@ public class ImageMenuBackgroundBuilder extends MenuBackgroundBuilder<ImageMenuB
 
         SerializedMenuBackground serialized = new SerializedMenuBackground();
 
-        serialized.putProperty("image_path", background.imagePathOrUrl);
-
-        serialized.putProperty("background_image_type", background.type.getName());
+        if (background.textureSupplier != null) {
+            serialized.putProperty("image_path", background.textureSupplier.getSourceWithPrefix());
+        }
 
         serialized.putProperty("slide", "" + background.slideLeftRight);
 
-        serialized.putProperty("web_image_fallback_path", background.webImageFallbackPath);
+        if (background.fallbackTextureSupplier != null) {
+            serialized.putProperty("fallback_path", background.fallbackTextureSupplier.getSourceWithPrefix());
+        }
 
         return serialized;
 

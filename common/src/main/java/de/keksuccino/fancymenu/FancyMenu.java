@@ -20,7 +20,21 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO Player Entity element auf neues resource handling updaten (skin und cape textures)
+	//TODO WICHTIG: Player Entity element auf neues resource handling updaten (skin und cape textures) !!!!!!!!!!!!!!!!!
+
+	//TODO FIXEN: ResourceChooserScreen noch broken
+
+	//TODO FIXEN: Manche Images haben in FileChooserScreen keine Preview
+
+	//TODO FIXEN: FileChooserScreen FileTypes Anzeige ist buggy
+
+	//TODO WAV (und OGG??) Audio FileType Codec implementieren
+
+	//TODO ALLE UNGENUTZTEN FileTypes entfernen (ungenutzte audio und video types)
+
+
+
+
 
 	//TODO Bei Resource Reload (MC Resource Pack changed, etc.) alle resources per ResourceHandler#reload() reloaden
 

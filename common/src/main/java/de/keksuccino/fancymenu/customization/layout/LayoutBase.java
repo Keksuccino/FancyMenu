@@ -4,6 +4,9 @@ import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.SerializedMenuBackground;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
+import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
+import de.keksuccino.fancymenu.util.resources.audio.IAudio;
+import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import org.jetbrains.annotations.NotNull;
 import java.util.Map;
 
@@ -14,15 +17,15 @@ public class LayoutBase {
 
     public MenuBackground menuBackground;
     public boolean preserveBackgroundAspectRatio = false;
-    public String openAudio;
-    public String closeAudio;
+    public ResourceSupplier<IAudio> openAudio;
+    public ResourceSupplier<IAudio> closeAudio;
     public float forcedScale = 0;
     public int autoScalingWidth = 0;
     public int autoScalingHeight = 0;
     public String customMenuTitle;
     public boolean preserveScrollListHeaderFooterAspectRatio = true;
-    public String scrollListHeaderTexture;
-    public String scrollListFooterTexture;
+    public ResourceSupplier<ITexture> scrollListHeaderTexture;
+    public ResourceSupplier<ITexture> scrollListFooterTexture;
     public boolean renderScrollListHeaderShadow = true;
     public boolean renderScrollListFooterShadow = true;
     public boolean showScrollListHeaderFooterPreviewInEditor = false;

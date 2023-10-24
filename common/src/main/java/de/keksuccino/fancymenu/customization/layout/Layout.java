@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.layout;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.util.SerializationUtils;
-import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
@@ -37,25 +36,21 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.util.Legacy;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
-import de.keksuccino.fancymenu.util.file.ResourceFile;
-import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
+import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
-import de.keksuccino.konkrete.sound.SoundHandler;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
-import java.nio.file.Files;
 import java.util.*;
 import java.util.function.Supplier;
 
-@SuppressWarnings("all")
+@SuppressWarnings("unused")
 public class Layout extends LayoutBase {
 
     public static final String UNIVERSAL_LAYOUT_IDENTIFIER = "%fancymenu:universal_layout%";
@@ -173,14 +168,14 @@ public class Layout extends LayoutBase {
         if (this.openAudio != null) {
             PropertyContainer ps = new PropertyContainer("customization");
             ps.putProperty("action", "setopenaudio");
-            ps.putProperty("path", this.openAudio);
+            ps.putProperty("path", this.openAudio.getSourceWithPrefix());
             set.putContainer(ps);
         }
 
         if (this.closeAudio != null) {
             PropertyContainer ps = new PropertyContainer("customization");
             ps.putProperty("action", "setcloseaudio");
-            ps.putProperty("path", this.closeAudio);
+            ps.putProperty("path", this.closeAudio.getSourceWithPrefix());
             set.putContainer(ps);
         }
 
@@ -194,10 +189,10 @@ public class Layout extends LayoutBase {
         PropertyContainer scrollListContainer = new PropertyContainer("scroll_list_customization");
         scrollListContainer.putProperty("preserve_scroll_list_header_footer_aspect_ratio", "" + this.preserveScrollListHeaderFooterAspectRatio);
         if (this.scrollListHeaderTexture != null) {
-            scrollListContainer.putProperty("scroll_list_header_texture", this.scrollListHeaderTexture);
+            scrollListContainer.putProperty("scroll_list_header_texture", this.scrollListHeaderTexture.getSourceWithPrefix());
         }
         if (this.scrollListFooterTexture != null) {
-            scrollListContainer.putProperty("scroll_list_footer_texture", this.scrollListFooterTexture);
+            scrollListContainer.putProperty("scroll_list_footer_texture", this.scrollListFooterTexture.getSourceWithPrefix());
         }
         scrollListContainer.putProperty("render_scroll_list_header_shadow", "" + this.renderScrollListHeaderShadow);
         scrollListContainer.putProperty("render_scroll_list_footer_shadow", "" + this.renderScrollListFooterShadow);
@@ -406,8 +401,8 @@ public class Layout extends LayoutBase {
                     if (preserveScrollHeaderFooterAspect.equals("true")) layout.preserveScrollListHeaderFooterAspectRatio = true;
                     if (preserveScrollHeaderFooterAspect.equals("false")) layout.preserveScrollListHeaderFooterAspectRatio = false;
                 }
-                layout.scrollListHeaderTexture = scrollListCustomizations.getValue("scroll_list_header_texture");
-                layout.scrollListFooterTexture = scrollListCustomizations.getValue("scroll_list_footer_texture");
+                layout.scrollListHeaderTexture = SerializationUtils.deserializeImageResourceSupplier(scrollListCustomizations.getValue("scroll_list_header_texture"));
+                layout.scrollListFooterTexture = SerializationUtils.deserializeImageResourceSupplier(scrollListCustomizations.getValue("scroll_list_footer_texture"));
                 String renderScrollHeaderShadow = scrollListCustomizations.getValue("render_scroll_list_header_shadow");
                 if (renderScrollHeaderShadow != null) {
                     if (renderScrollHeaderShadow.equals("true")) layout.renderScrollListHeaderShadow = true;
@@ -444,11 +439,11 @@ public class Layout extends LayoutBase {
                 if ((action != null) && action.equals("autoscale")) {
                     String baseWidth = sec.getValue("basewidth");
                     if (MathUtils.isInteger(baseWidth)) {
-                        layout.autoScalingWidth = Integer.parseInt(baseWidth);
+                        layout.autoScalingWidth = Integer.parseInt(Objects.requireNonNull(baseWidth));
                     }
                     String baseHeight = sec.getValue("baseheight");
                     if (MathUtils.isInteger(baseHeight)) {
-                        layout.autoScalingHeight = Integer.parseInt(baseHeight);
+                        layout.autoScalingHeight = Integer.parseInt(Objects.requireNonNull(baseHeight));
                     }
                 }
 
@@ -460,41 +455,11 @@ public class Layout extends LayoutBase {
                 }
 
                 if ((action != null) && action.equalsIgnoreCase("setcloseaudio")) {
-                    String path = AbstractElement.fixBackslashPath(sec.getValue("path"));
-                    if (path != null) {
-                        File f = new File(path);
-                        if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
-                            path = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + path;
-                            f = new File(path);
-                        }
-                        if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
-                            try {
-                                layout.closeAudio = "closesound_" + path + Files.size(f.toPath());
-                                SoundRegistry.registerSound(layout.closeAudio, path);
-                            } catch (Exception ex) {
-                                ex.printStackTrace();
-                            }
-                        }
-                    }
+                    layout.closeAudio = SerializationUtils.deserializeAudioResourceSupplier(sec.getValue("path"));
                 }
 
                 if ((action != null) && action.equalsIgnoreCase("setopenaudio")) {
-                    String path = AbstractElement.fixBackslashPath(sec.getValue("path"));
-                    if (path != null) {
-                        File f = new File(path);
-                        if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
-                            path = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + path;
-                            f = new File(path);
-                        }
-                        if (f.isFile() && f.exists() && f.getName().endsWith(".wav")) {
-                            try {
-                                layout.openAudio = "opensound_" + path + Files.size(f.toPath());
-                                SoundRegistry.registerSound(layout.openAudio, path);
-                            } catch (Exception ex) {
-                                ex.printStackTrace();
-                            }
-                        }
-                    }
+                    layout.openAudio = SerializationUtils.deserializeAudioResourceSupplier(sec.getValue("path"));
                 }
 
             }
@@ -509,7 +474,7 @@ public class Layout extends LayoutBase {
 
     public boolean saveToFileIfPossible() {
         if (this.layoutFile != null) {
-            return LayoutHandler.saveLayoutToFile(this, ScreenCustomization.getAbsoluteGameDirectoryPath(this.layoutFile.getAbsolutePath()));
+            return LayoutHandler.saveLayoutToFile(this, GameDirectoryUtils.getAbsoluteGameDirectoryPath(this.layoutFile.getAbsolutePath()));
         }
         return false;
     }
@@ -650,10 +615,9 @@ public class Layout extends LayoutBase {
                     ImageElement e = Elements.IMAGE.deserializeElementInternal(convertContainerToSerializedElement(sec));
                     if (e != null) {
                         e.stayOnScreen = false;
-                        e.sourceMode = ImageElement.SourceMode.LOCAL;
-                        e.source = sec.getValue("path");
+                        e.textureSupplier = SerializationUtils.deserializeImageResourceSupplier(sec.getValue("path"));
                         elements.add(Elements.IMAGE.serializeElementInternal(e));
-                        if (e.getInstanceIdentifier() != null) elementOrder.add(e.getInstanceIdentifier());
+                        elementOrder.add(e.getInstanceIdentifier());
                     }
                 }
 
@@ -661,10 +625,9 @@ public class Layout extends LayoutBase {
                     ImageElement e = Elements.IMAGE.deserializeElementInternal(convertContainerToSerializedElement(sec));
                     if (e != null) {
                         e.stayOnScreen = false;
-                        e.sourceMode = ImageElement.SourceMode.WEB;
-                        e.source = sec.getValue("url");
+                        e.textureSupplier = SerializationUtils.deserializeImageResourceSupplier(sec.getValue("url"));
                         elements.add(Elements.IMAGE.serializeElementInternal(e));
-                        if (e.getInstanceIdentifier() != null) elementOrder.add(e.getInstanceIdentifier());
+                        elementOrder.add(e.getInstanceIdentifier());
                     }
                 }
 
@@ -674,7 +637,7 @@ public class Layout extends LayoutBase {
                         e.stayOnScreen = false;
                         e.animationName = sec.getValue("name");
                         elements.add(Elements.ANIMATION.serializeElementInternal(e));
-                        if (e.getInstanceIdentifier() != null) elementOrder.add(e.getInstanceIdentifier());
+                        elementOrder.add(e.getInstanceIdentifier());
                     }
                 }
 
@@ -682,9 +645,10 @@ public class Layout extends LayoutBase {
                     ShapeElement e = Elements.SHAPE.deserializeElementInternal(convertContainerToSerializedElement(sec));
                     if (e != null) {
                         e.stayOnScreen = false;
-                        e.color = DrawableColor.of(sec.getValue("color"));
+                        String c = sec.getValue("color");
+                        if (c != null) e.color = DrawableColor.of(c);
                         elements.add(Elements.SHAPE.serializeElementInternal(e));
-                        if (e.getInstanceIdentifier() != null) elementOrder.add(e.getInstanceIdentifier());
+                        elementOrder.add(e.getInstanceIdentifier());
                     }
                 }
 
@@ -694,7 +658,7 @@ public class Layout extends LayoutBase {
                         e.stayOnScreen = false;
                         e.slideshowName = sec.getValue("name");
                         elements.add(Elements.SLIDESHOW.serializeElementInternal(e));
-                        if (e.getInstanceIdentifier() != null) elementOrder.add(e.getInstanceIdentifier());
+                        elementOrder.add(e.getInstanceIdentifier());
                     }
                 }
 
@@ -703,7 +667,7 @@ public class Layout extends LayoutBase {
                     if (e != null) {
                         e.stayOnScreen = false;
                         elements.add(Elements.BUTTON.serializeElementInternal(e));
-                        if (e.getInstanceIdentifier() != null) elementOrder.add(e.getInstanceIdentifier());
+                        elementOrder.add(e.getInstanceIdentifier());
                     }
                 }
 
@@ -731,7 +695,7 @@ public class Layout extends LayoutBase {
                         }
                         e.stayOnScreen = false;
                         elements.add(Elements.SPLASH_TEXT.serializeElementInternal(e));
-                        if (e.getInstanceIdentifier() != null) elementOrder.add(e.getInstanceIdentifier());
+                        elementOrder.add(e.getInstanceIdentifier());
                     }
                 }
 
@@ -783,15 +747,12 @@ public class Layout extends LayoutBase {
                     String value = AbstractElement.fixBackslashPath(sec.getValue("path"));
                     String pano = sec.getValue("wideformat");
                     if (value != null) {
-                        File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(value));
-                        if (f.exists() && f.isFile() && (f.getName().toLowerCase().endsWith(".jpg") || f.getName().toLowerCase().endsWith(".jpeg") || f.getName().toLowerCase().endsWith(".png"))) {
-                            MenuBackgroundBuilder<?> builder = MenuBackgroundRegistry.getBuilder("image");
-                            if (builder != null) {
-                                ImageMenuBackground b = new ImageMenuBackground((MenuBackgroundBuilder<ImageMenuBackground>)builder);
-                                b.imagePathOrUrl = value;
-                                b.slideLeftRight = (pano != null) && pano.equalsIgnoreCase("true");
-                                return b;
-                            }
+                        MenuBackgroundBuilder<?> builder = MenuBackgroundRegistry.getBuilder("image");
+                        if (builder != null) {
+                            ImageMenuBackground b = new ImageMenuBackground((MenuBackgroundBuilder<ImageMenuBackground>)builder);
+                            b.textureSupplier = SerializationUtils.deserializeImageResourceSupplier(value);
+                            b.slideLeftRight = (pano != null) && pano.equalsIgnoreCase("true");
+                            return b;
                         }
                     }
                 }
@@ -845,9 +806,8 @@ public class Layout extends LayoutBase {
                 boolean addElement = false;
 
                 if (action.equalsIgnoreCase("addhoversound")) {
-                    element.hoverSound = SerializationUtils.deserializeResourceFile(sec.getValue("path"));
-                    if ((element.hoverSound != null) && element.hoverSound.exists() && (element.hoverSound.getType() == FileTypes.WAV_AUDIO)) {
-                        SoundRegistry.registerSound(element.hoverSound.getAbsolutePath(), element.hoverSound.getAbsolutePath());
+                    element.hoverSound = SerializationUtils.deserializeAudioResourceSupplier(sec.getValue("path"));
+                    if (element.hoverSound != null) {
                         addElement = true;
                     }
                 }
@@ -941,17 +901,16 @@ public class Layout extends LayoutBase {
                     if ((restartBackAnimationsOnHover != null) && restartBackAnimationsOnHover.equalsIgnoreCase("false")) {
                         element.restartBackgroundAnimationsOnHover = false;
                     }
-                    element.backgroundTextureNormal = SerializationUtils.deserializeResourceFile(sec.getValue("backgroundnormal"));
-                    element.backgroundTextureHover = SerializationUtils.deserializeResourceFile(sec.getValue("backgroundhovered"));
+                    element.backgroundTextureNormal = SerializationUtils.deserializeImageResourceSupplier(sec.getValue("backgroundnormal"));
+                    element.backgroundTextureHover = SerializationUtils.deserializeImageResourceSupplier(sec.getValue("backgroundhovered"));
                     element.backgroundAnimationNormal = sec.getValue("backgroundanimationnormal");
                     element.backgroundAnimationHover = sec.getValue("backgroundanimationhovered");
                     addElement = true;
                 }
 
                 if (action.equalsIgnoreCase("setbuttonclicksound")) {
-                    element.clickSound = SerializationUtils.deserializeResourceFile(sec.getValue("path"));
-                    if ((element.clickSound != null) && element.clickSound.exists() && (element.clickSound.getType() == FileTypes.WAV_AUDIO)) {
-                        SoundHandler.registerSound(element.clickSound.getAbsolutePath(), element.clickSound.getAbsolutePath());
+                    element.clickSound = SerializationUtils.deserializeAudioResourceSupplier(sec.getValue("path"));
+                    if (element.clickSound != null) {
                         addElement = true;
                     }
                 }

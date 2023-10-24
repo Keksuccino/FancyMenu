@@ -106,24 +106,26 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                     return Tooltip.of("");
                 });
 
-        this.addFileChooserContextMenuEntryTo(setSkinMenu, "set_local_skin", PlayerEntityEditorElement.class,
-                null,
-                element -> element.getElement().skinPath,
-                (element, path) -> {
-                    element.getElement().skinPath = path;
-                    element.getElement().setSkinTextureBySource(ScreenCustomization.getAbsoluteGameDirectoryPath(path), false);
-                },
-                Component.translatable("fancymenu.helper.editor.items.playerentity.skin.set.local"), true,
-                file -> file.getAbsolutePath().toLowerCase().endsWith(".png") && FileFilter.RESOURCE_NAME_FILTER.checkFile(file));
+        //TODO Skin Setter auf neues Resource system updaten
 
-        this.addStringInputContextMenuEntryTo(setSkinMenu, "set_web_skin", PlayerEntityEditorElement.class,
-                element -> element.getElement().skinUrl,
-                (element, url) -> {
-                    element.getElement().skinUrl = url;
-                    element.getElement().setSkinTextureBySource(url, true);
-                },
-                null, false, true, Component.translatable("fancymenu.helper.editor.items.playerentity.skin.set.web"),
-                true, null, TextValidators.BASIC_URL_TEXT_VALIDATOR, null);
+//        this.addFileChooserContextMenuEntryTo(setSkinMenu, "set_local_skin", PlayerEntityEditorElement.class,
+//                null,
+//                element -> element.getElement().skinPath,
+//                (element, path) -> {
+//                    element.getElement().skinPath = path;
+//                    element.getElement().setSkinTextureBySource(ScreenCustomization.getAbsoluteGameDirectoryPath(path), false);
+//                },
+//                Component.translatable("fancymenu.helper.editor.items.playerentity.skin.set.local"), true,
+//                file -> file.getAbsolutePath().toLowerCase().endsWith(".png") && FileFilter.RESOURCE_NAME_FILTER.checkFile(file));
+//
+//        this.addStringInputContextMenuEntryTo(setSkinMenu, "set_web_skin", PlayerEntityEditorElement.class,
+//                element -> element.getElement().skinUrl,
+//                (element, url) -> {
+//                    element.getElement().skinUrl = url;
+//                    element.getElement().setSkinTextureBySource(url, true);
+//                },
+//                null, false, true, Component.translatable("fancymenu.helper.editor.items.playerentity.skin.set.web"),
+//                true, null, TextValidators.BASIC_URL_TEXT_VALIDATOR, null);
 
         this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "slim_skin",
                         consumes -> (consumes instanceof PlayerEntityEditorElement),
@@ -184,26 +186,28 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                     return Tooltip.of("");
                 });
 
-        this.addFileChooserContextMenuEntryTo(setCapeMenu, "set_local_cape", PlayerEntityEditorElement.class,
-                null,
-                element -> element.getElement().capePath,
-                (element, s) -> {
-                    element.getElement().capePath = s;
-                    element.getElement().setCapeTextureBySource(ScreenCustomization.getAbsoluteGameDirectoryPath(s), false);
-                },
-                Component.translatable("fancymenu.helper.editor.items.playerentity.cape.set.local"),
-                false,
-                file -> file.getAbsolutePath().toLowerCase().endsWith(".png") && FileFilter.RESOURCE_NAME_FILTER.checkFile(file));
+        //TODO Cape chooser auf neues resource system updaten
 
-        this.addStringInputContextMenuEntryTo(setCapeMenu, "set_web_cape",
-                PlayerEntityEditorElement.class,
-                consumes -> consumes.getElement().capeUrl,
-                (element, s) -> {
-                    element.getElement().capeUrl = s;
-                    element.getElement().setCapeTextureBySource(s, false);
-                },
-                null, false, true, Component.translatable("fancymenu.helper.editor.items.playerentity.cape.set.web"),
-                true, null, TextValidators.BASIC_URL_TEXT_VALIDATOR, null);
+//        this.addFileChooserContextMenuEntryTo(setCapeMenu, "set_local_cape", PlayerEntityEditorElement.class,
+//                null,
+//                element -> element.getElement().capePath,
+//                (element, s) -> {
+//                    element.getElement().capePath = s;
+//                    element.getElement().setCapeTextureBySource(ScreenCustomization.getAbsoluteGameDirectoryPath(s), false);
+//                },
+//                Component.translatable("fancymenu.helper.editor.items.playerentity.cape.set.local"),
+//                false,
+//                file -> file.getAbsolutePath().toLowerCase().endsWith(".png") && FileFilter.RESOURCE_NAME_FILTER.checkFile(file));
+//
+//        this.addStringInputContextMenuEntryTo(setCapeMenu, "set_web_cape",
+//                PlayerEntityEditorElement.class,
+//                consumes -> consumes.getElement().capeUrl,
+//                (element, s) -> {
+//                    element.getElement().capeUrl = s;
+//                    element.getElement().setCapeTextureBySource(s, false);
+//                },
+//                null, false, true, Component.translatable("fancymenu.helper.editor.items.playerentity.cape.set.web"),
+//                true, null, TextValidators.BASIC_URL_TEXT_VALIDATOR, null);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_set_web_cape");
 

@@ -8,6 +8,7 @@ package de.keksuccino.fancymenu.customization.placeholder;
 import de.keksuccino.fancymenu.customization.variables.Variable;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.konkrete.input.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -21,41 +22,56 @@ import java.util.*;
 public class PlaceholderParser {
 
     private static final Logger LOGGER = LogManager.getLogger();
-
     private static final Map<String, Long> LOG_COOLDOWN = new HashMap<>();
+    private static final Map<String, Pair<String, Long>> PLACEHOLDER_CACHE = new HashMap<>();
 
     @NotNull
     public static String replacePlaceholders(@NotNull String in) {
         return replacePlaceholders(in, true);
     }
 
-    @SuppressWarnings("all")
     @NotNull
-    public static String replacePlaceholders(@NotNull String in, boolean convertFormatCodes) {
-        if (in == null) {
-            in = "";
-        }
+    public static String replacePlaceholders(String in, boolean convertFormatCodes) {
+
+        if (in == null) return "";
+        if (in.replace(" ", "").isEmpty()) return in;
+        if (in.length() <= 1) return in;
+
         updateLogHandler();
+
+        String original = in;
+        if (PLACEHOLDER_CACHE.containsKey(in)) {
+            Pair<String, Long> cache = PLACEHOLDER_CACHE.get(in);
+            //30ms cooldown before parsing the same String again (thanks to danorris for the idea!)
+            if ((cache.getValue() + 30) <= System.currentTimeMillis()) {
+                PLACEHOLDER_CACHE.remove(in);
+            } else {
+                return cache.getKey();
+            }
+        }
         if (convertFormatCodes) {
             in = StringUtils.convertFormatCodes(in, "&", "§");
         }
         in = replaceVariableReferences(in);
-        String original = in;
+        String beforeReplacing = in;
         String replaced = null;
         //Replace placeholders and cover placeholders added by other placeholders (like when getting content from elsewhere containing a placeholder that wasn't part of the original string)
-        while ((replaced == null) || !replaced.equals(original)) {
+        while ((replaced == null) || !replaced.equals(beforeReplacing)) {
             if (replaced != null) {
-                original = replaced;
+                beforeReplacing = replaced;
             }
-            replaced = innerReplacePlaceholders(original);
+            replaced = innerReplacePlaceholders(beforeReplacing);
             if (replaced == null) {
                 break;
             }
         }
         if (replaced != null) {
             replaced = StringUtils.convertFormatCodes(replaced, "&", "§");
-            return replaced.replace("\\\"", "\"").replace("\\{", "{").replace("\\}", "}");
+            replaced = replaced.replace("\\\"", "\"").replace("\\{", "{").replace("\\}", "}");
+            PLACEHOLDER_CACHE.put(original, Pair.of(replaced, System.currentTimeMillis()));
+            return replaced;
         }
+        PLACEHOLDER_CACHE.put(original, Pair.of(in, System.currentTimeMillis()));
         return in;
     }
 

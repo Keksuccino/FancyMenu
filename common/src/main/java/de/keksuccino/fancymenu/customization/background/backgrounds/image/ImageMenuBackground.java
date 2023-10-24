@@ -4,28 +4,21 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
-import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
-import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
-import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.rendering.RenderUtils;
-import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class ImageMenuBackground extends MenuBackground {
 
     private static final DrawableColor BACKGROUND_COLOR = DrawableColor.BLACK;
 
-    public String imagePathOrUrl;
-    @NotNull
-    public BackgroundImageType type = BackgroundImageType.LOCAL;
-    public String webImageFallbackPath;
+    public ResourceSupplier<ITexture> textureSupplier;
+    public ResourceSupplier<ITexture> fallbackTextureSupplier;
     public boolean slideLeftRight = false;
     protected double slidePos = 0.0D;
     protected boolean slideMoveBack = false;
@@ -45,16 +38,15 @@ public class ImageMenuBackground extends MenuBackground {
 
         ResourceLocation resourceLocation = null;
         AspectRatio ratio = new AspectRatio(10, 10);
-        if (this.imagePathOrUrl != null) {
-            String finalImagePathOrUrl = StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(this.imagePathOrUrl), "§", "&");
-            ITexture background = (this.type == BackgroundImageType.WEB) ? ImageResourceHandler.INSTANCE.getWebTexture(finalImagePathOrUrl) : ImageResourceHandler.INSTANCE.getTexture(finalImagePathOrUrl);
+        if (this.textureSupplier != null) {
+            ITexture background = this.textureSupplier.get();
             if (background != null) {
                 ratio = background.getAspectRatio();
                 resourceLocation = background.getResourceLocation();
             }
         }
-        if ((resourceLocation == null) && (this.type == BackgroundImageType.WEB) && (this.webImageFallbackPath != null)) {
-            ITexture fallback = ImageResourceHandler.INSTANCE.getTexture(this.webImageFallbackPath);
+        if ((resourceLocation == null) && (this.fallbackTextureSupplier != null)) {
+            ITexture fallback = this.fallbackTextureSupplier.get();
             if (fallback != null) {
                 ratio = fallback.getAspectRatio();
                 resourceLocation = fallback.getResourceLocation();
@@ -132,52 +124,6 @@ public class ImageMenuBackground extends MenuBackground {
         }
 
         RenderingUtils.resetShaderColor();
-
-    }
-
-    public enum BackgroundImageType implements LocalizedCycleEnum<BackgroundImageType> {
-
-        LOCAL("local"),
-        WEB("web");
-
-        private final String name;
-
-        BackgroundImageType(@NotNull String name) {
-            this.name = name;
-        }
-
-        @Override
-        public @NotNull String getLocalizationKeyBase() {
-            return "fancymenu.background.image.type";
-        }
-
-        @Override
-        public @NotNull String getName() {
-            return this.name;
-        }
-
-        @Override
-        public @NotNull Style getValueComponentStyle() {
-            return WARNING_TEXT_STYLE.get();
-        }
-
-        @Override
-        public @NotNull BackgroundImageType[] getValues() {
-            return BackgroundImageType.values();
-        }
-
-        @Override
-        public @Nullable BackgroundImageType getByNameInternal(@NotNull String name) {
-            return getByName(name);
-        }
-
-        @Nullable
-        public static BackgroundImageType getByName(@NotNull String name) {
-            for (BackgroundImageType type : BackgroundImageType.values()) {
-                if (type.name.equals(name)) return type;
-            }
-            return null;
-        }
 
     }
 

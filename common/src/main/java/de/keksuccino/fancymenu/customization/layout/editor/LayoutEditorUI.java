@@ -21,7 +21,6 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
-import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.TextValidators;
@@ -33,7 +32,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
-import de.keksuccino.fancymenu.util.resources.texture.WrappedTexture;
+import de.keksuccino.fancymenu.util.resources.texture.SimpleTexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
@@ -50,7 +49,7 @@ import java.util.function.Consumer;
 
 public class LayoutEditorUI {
 
-	private static final WrappedTexture CLOSE_EDITOR_TEXTURE = WrappedTexture.of(new ResourceLocation("fancymenu", "textures/menubar/icons/close.png"));
+	private static final SimpleTexture CLOSE_EDITOR_TEXTURE = SimpleTexture.location(new ResourceLocation("fancymenu", "textures/menubar/icons/close.png"));
 
 	private static MenuBar grandfatheredMenuBar = null;
 
@@ -492,21 +491,27 @@ public class LayoutEditorUI {
 
 		menu.addSeparatorEntry("separator_after_forced_scale");
 
-		NonStackableOverlayUI.addFileChooserContextMenuEntryTo(menu, "open_audio", Component.translatable("fancymenu.editor.open_audio"),
+		NonStackableOverlayUI.addAudioResourceChooserContextMenuEntryTo(menu, "open_audio",
+						null,
 						() -> editor.layout.openAudio,
-						s -> {
+						iAudioResourceSupplier -> {
 							editor.history.saveSnapshot();
-							editor.layout.openAudio = s;
-						}, true, null, FileFilter.WAV_AUDIO_FILE_FILTER)
+							editor.layout.openAudio = iAudioResourceSupplier;
+						},
+						Component.translatable("fancymenu.editor.open_audio"),
+						true, null, true, true, true)
 				.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.open_audio.desc")))
 				.setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
-		NonStackableOverlayUI.addFileChooserContextMenuEntryTo(menu, "close_audio", Component.translatable("fancymenu.editor.close_audio"),
+		NonStackableOverlayUI.addAudioResourceChooserContextMenuEntryTo(menu, "close_audio",
+						null,
 						() -> editor.layout.closeAudio,
-						s -> {
+						iAudioResourceSupplier -> {
 							editor.history.saveSnapshot();
-							editor.layout.closeAudio = s;
-						}, true, null, FileFilter.WAV_AUDIO_FILE_FILTER)
+							editor.layout.closeAudio = iAudioResourceSupplier;
+						},
+						Component.translatable("fancymenu.editor.close_audio"),
+						true, null, true, true, true)
 				.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.close_audio.desc")))
 				.setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
@@ -551,20 +556,26 @@ public class LayoutEditorUI {
 
 		menu.addSeparatorEntry("separator_after_preserve_aspect_ratio");
 
-		NonStackableOverlayUI.addFileChooserContextMenuEntryTo(menu, "header_texture", Component.translatable("fancymenu.customization.scroll_lists.header_texture"),
-				() -> editor.layout.scrollListHeaderTexture,
-				s -> {
-					editor.history.saveSnapshot();
-					editor.layout.scrollListHeaderTexture = s;
-				}, true, null, FileFilter.IMAGE_FILE_FILTER)
+		NonStackableOverlayUI.addImageResourceChooserContextMenuEntryTo(menu, "header_texture",
+						null,
+						() -> editor.layout.scrollListHeaderTexture,
+						iTextureResourceSupplier -> {
+							editor.history.saveSnapshot();
+							editor.layout.scrollListHeaderTexture = iTextureResourceSupplier;
+						},
+						Component.translatable("fancymenu.customization.scroll_lists.header_texture"),
+						true, null, true, true, true)
 				.setIcon(ContextMenu.IconFactory.getIcon("image"));
 
-		NonStackableOverlayUI.addFileChooserContextMenuEntryTo(menu, "footer_texture", Component.translatable("fancymenu.customization.scroll_lists.footer_texture"),
-				() -> editor.layout.scrollListFooterTexture,
-				s -> {
-					editor.history.saveSnapshot();
-					editor.layout.scrollListFooterTexture = s;
-				}, true, null, FileFilter.IMAGE_FILE_FILTER)
+		NonStackableOverlayUI.addImageResourceChooserContextMenuEntryTo(menu, "footer_texture",
+						null,
+						() -> editor.layout.scrollListFooterTexture,
+						iTextureResourceSupplier -> {
+							editor.history.saveSnapshot();
+							editor.layout.scrollListFooterTexture = iTextureResourceSupplier;
+						},
+						Component.translatable("fancymenu.customization.scroll_lists.footer_texture"),
+						true, null, true, true, true)
 				.setIcon(ContextMenu.IconFactory.getIcon("image"));
 
 		menu.addSeparatorEntry("separator_after_footer_texture");

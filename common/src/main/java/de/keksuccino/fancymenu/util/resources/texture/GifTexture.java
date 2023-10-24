@@ -326,6 +326,7 @@ public class GifTexture implements ITexture, PlayableResource {
 
     @Override
     public boolean isReady() {
+        //Everything important (like size) is set at this point, so it is considered ready
         return this.decoded;
     }
 
@@ -374,6 +375,11 @@ public class GifTexture implements ITexture, PlayableResource {
         } else if (this.sourceURL != null) {
             web(this.sourceURL, this);
         }
+    }
+
+    @Override
+    public boolean isClosed() {
+        return this.closed;
     }
 
     @Override

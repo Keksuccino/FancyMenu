@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.util.resources;
 
-public interface PlayableResource {
+public interface PlayableResource extends Resource {
 
     /**
      * Starts playing the resource.

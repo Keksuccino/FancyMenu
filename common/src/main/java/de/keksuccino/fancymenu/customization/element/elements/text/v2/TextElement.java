@@ -2,10 +2,8 @@ package de.keksuccino.fancymenu.customization.element.elements.text.v2;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -14,49 +12,43 @@ import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
+import de.keksuccino.fancymenu.util.resources.text.IText;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
-import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.konkrete.input.StringUtils;
-import de.keksuccino.konkrete.web.WebUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Style;
-import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-@SuppressWarnings("all")
 public class TextElement extends AbstractElement {
 
     @NotNull
     protected SourceMode sourceMode = SourceMode.DIRECT;
-    protected String source; //direct text, file path, link
-    protected String lastWebOrLocalSource = null;
     @Nullable
-    protected volatile String text = null;
-    protected String lastText = null;
-    public ResourceSupplier<ITexture> verticalScrollGrabberTextureNormal = null;
-    public ResourceSupplier<ITexture> verticalScrollGrabberTextureHover = null;
-    public ResourceSupplier<ITexture> horizontalScrollGrabberTextureNormal = null;
-    public ResourceSupplier<ITexture> horizontalScrollGrabberTextureHover = null;
-    public String scrollGrabberColorHexNormal = null;
-    public String scrollGrabberColorHexHover = null;
+    protected String source; //direct text, file path, link
+    protected volatile String text;
+    protected String lastText;
+    @Nullable
+    public ResourceSupplier<IText> textResourceSupplier;
+    public ResourceSupplier<ITexture> verticalScrollGrabberTextureNormal;
+    public ResourceSupplier<ITexture> verticalScrollGrabberTextureHover;
+    public ResourceSupplier<ITexture> horizontalScrollGrabberTextureNormal;
+    public ResourceSupplier<ITexture> horizontalScrollGrabberTextureHover;
+    public String scrollGrabberColorHexNormal;
+    public String scrollGrabberColorHexHover;
     public boolean enableScrolling = true;
     @NotNull
     public volatile MarkdownRenderer markdownRenderer = new MarkdownRenderer();
     @NotNull
     public volatile ScrollArea scrollArea;
+    protected List<String> lastLines;
+    protected IText lastIText;
 
     public TextElement(@NotNull ElementBuilder<?, ?> builder) {
 
@@ -99,7 +91,7 @@ public class TextElement extends AbstractElement {
 
         this.scrollArea.addEntry(new MarkdownRendererEntry(this.scrollArea, this.markdownRenderer));
 
-        //Don't render markdown lines outside of visible area (for performance reasons)
+        //Don't render markdown lines outside visible area (for performance reasons)
         this.markdownRenderer.addLineRenderValidator(line -> {
             if ((line.parent.getY() + line.offsetY + line.getLineHeight()) < this.getAbsoluteY()) {
                 return false;
@@ -145,15 +137,16 @@ public class TextElement extends AbstractElement {
 
     protected void renderTick() {
 
-        //If placeholders used in the URL or path change, update content
-        if ((this.sourceMode == SourceMode.WEB_SOURCE) || (this.sourceMode == SourceMode.LOCAL_SOURCE)) {
-            String source = (this.source != null) ? StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(this.source), "§", "&") : null;
-            if ((this.lastWebOrLocalSource != null) && (source != null) && !this.lastWebOrLocalSource.equals(source)) {
+        //If IText instance or its content changes, update element
+        if (this.sourceMode == SourceMode.RESOURCE) {
+            IText iText = (this.textResourceSupplier != null) ? this.textResourceSupplier.get() : null;
+            List<String> lines = (iText != null) ? iText.getTextLines() : null;
+            if (lines != null) lines = new ArrayList<>(lines);
+            if (!Objects.equals(this.lastIText, iText) || !Objects.equals(this.lastLines, lines)) {
                 this.updateContent();
             }
-            this.lastWebOrLocalSource = source;
-        } else {
-            this.lastWebOrLocalSource = null;
+            this.lastLines = lines;
+            this.lastIText = iText;
         }
 
         //Update markdown renderer text if changed
@@ -184,7 +177,7 @@ public class TextElement extends AbstractElement {
 
         //Update scroll grabber textures
         if (this.verticalScrollGrabberTextureNormal != null) {
-            ITexture r = ImageResourceHandler.INSTANCE.getTexture(this.verticalScrollGrabberTextureNormal);
+            ITexture r = this.verticalScrollGrabberTextureNormal.get();
             if (r != null) {
                 this.scrollArea.verticalScrollBar.idleBarTexture = r.getResourceLocation();
             }
@@ -192,7 +185,7 @@ public class TextElement extends AbstractElement {
             this.scrollArea.verticalScrollBar.idleBarTexture = null;
         }
         if (this.verticalScrollGrabberTextureHover != null) {
-            ITexture r = ImageResourceHandler.INSTANCE.getTexture(this.verticalScrollGrabberTextureHover);
+            ITexture r = this.verticalScrollGrabberTextureHover.get();
             if (r != null) {
                 this.scrollArea.verticalScrollBar.hoverBarTexture = r.getResourceLocation();
             }
@@ -200,7 +193,7 @@ public class TextElement extends AbstractElement {
             this.scrollArea.verticalScrollBar.hoverBarTexture = null;
         }
         if (this.horizontalScrollGrabberTextureNormal != null) {
-            ITexture r = ImageResourceHandler.INSTANCE.getTexture(this.horizontalScrollGrabberTextureNormal);
+            ITexture r = this.horizontalScrollGrabberTextureNormal.get();
             if (r != null) {
                 this.scrollArea.horizontalScrollBar.idleBarTexture = r.getResourceLocation();
             }
@@ -208,7 +201,7 @@ public class TextElement extends AbstractElement {
             this.scrollArea.horizontalScrollBar.idleBarTexture = null;
         }
         if (this.horizontalScrollGrabberTextureHover != null) {
-            ITexture r = ImageResourceHandler.INSTANCE.getTexture(this.horizontalScrollGrabberTextureHover);
+            ITexture r = this.horizontalScrollGrabberTextureHover.get();
             if (r != null) {
                 this.scrollArea.horizontalScrollBar.hoverBarTexture = r.getResourceLocation();
             }
@@ -220,12 +213,16 @@ public class TextElement extends AbstractElement {
 
     public void updateContent() {
 
+        if (this.source == null) {
+            this.markdownRenderer.setText(I18n.get("fancymenu.customization.items.text.placeholder"));
+            return;
+        }
+
         new Thread(() -> {
 
             List<String> linesRaw = new ArrayList<>();
 
             try {
-
                 if ((this.source != null) && !this.source.equals("")) {
                     if (this.sourceMode == SourceMode.DIRECT) {
                         String s = this.source.replace("%n%", "\n").replace("\r", "\n");
@@ -234,51 +231,16 @@ public class TextElement extends AbstractElement {
                         } else {
                             linesRaw.add(s);
                         }
-                    } else if (this.sourceMode == SourceMode.LOCAL_SOURCE) {
-                        File f = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(PlaceholderParser.replacePlaceholders(this.source)));
-                        if (f.isFile()) {
-                            linesRaw.addAll(FileUtils.getFileLines(f));
-                        }
-                    } else if (this.sourceMode == SourceMode.WEB_SOURCE) {
-                        String s = StringUtils.convertFormatCodes(PlaceholderParser.replacePlaceholders(this.source), "§", "&");
-                        if (WebUtils.isValidUrl(s)) {
-                            //Get raw GitHub file
-                            if (s.toLowerCase().contains("/blob/") && (s.toLowerCase().startsWith("http://github.com/")
-                                    || s.toLowerCase().startsWith("https://github.com/")|| s.toLowerCase().startsWith("http://www.github.com/")
-                                    || s.toLowerCase().startsWith("https://www.github.com/"))) {
-                                String path = s.replace("//", "").split("/", 2)[1].replace("/blob/", "/");
-                                s = "https://raw.githubusercontent.com/" + path;
-                            }
-                            //Get raw Pastebin file
-                            if (!s.toLowerCase().contains("/raw/") && (s.toLowerCase().startsWith("http://pastebin.com/")
-                                    || s.toLowerCase().startsWith("https://pastebin.com/")|| s.toLowerCase().startsWith("http://www.pastebin.com/")
-                                    || s.toLowerCase().startsWith("https://www.pastebin.com/"))) {
-                                String path = s.replace("//", "").split("/", 2)[1];
-                                s = "https://pastebin.com/raw/" + path;
-                            }
-                            BufferedReader r = null;
-                            try {
-                                URL url = new URL(s);
-                                r = new BufferedReader(new InputStreamReader(url.openStream(), StandardCharsets.UTF_8));
-                                String s2 = r.readLine();
-                                while(s2 != null) {
-                                    linesRaw.add(s2);
-                                    s2 = r.readLine();
-                                }
-                                IOUtils.closeQuietly(r);
-                            } catch (Exception ex) {
-                                if (r != null) {
-                                    IOUtils.closeQuietly(r);
-                                }
-                                linesRaw.clear();
-                            }
-                        }
+                    } else if (this.textResourceSupplier != null) {
+                        IText iText = this.textResourceSupplier.get();
+                        if (iText != null) linesRaw = iText.getTextLines();
+                        linesRaw = (linesRaw != null) ? new ArrayList<>(linesRaw) : new ArrayList<>();
                     }
                 } else {
                     linesRaw.add(I18n.get("fancymenu.customization.items.text.placeholder"));
                 }
-
             } catch (Exception ex) {
+                if (linesRaw == null) linesRaw = new ArrayList<>();
                 linesRaw.clear();
             }
 
@@ -303,16 +265,21 @@ public class TextElement extends AbstractElement {
 
     }
 
-    public void setSource(@NotNull SourceMode sourceMode, @NotNull String source) {
+    public void setSource(@NotNull SourceMode sourceMode, @Nullable String source) {
         this.sourceMode = Objects.requireNonNull(sourceMode);
-        this.source = Objects.requireNonNull(source);
+        this.source = source;
+        this.textResourceSupplier = null;
+        if ((sourceMode == SourceMode.RESOURCE) && (this.source != null)) {
+            this.textResourceSupplier = ResourceSupplier.text(this.source);
+        }
         this.text = null;
         this.lastText = null;
-        this.lastWebOrLocalSource = null;
+        this.lastIText = null;
+        this.lastLines = null;
         this.updateContent();
     }
 
-    public static enum SourceMode implements LocalizedCycleEnum<SourceMode> {
+    public enum SourceMode implements LocalizedCycleEnum<SourceMode> {
 
         DIRECT("direct"),
         RESOURCE("resource");
@@ -380,7 +347,6 @@ public class TextElement extends AbstractElement {
             this.markdownRenderer.setY(this.y);
             this.setWidth(this.markdownRenderer.getRealWidth());
             this.setHeight(this.markdownRenderer.getRealHeight());
-//            LogManager.getLogger().info("################ SCROLL ENTRY HEIGHT: " + this.getHeight() + " | AREA HEIGHT: " + this.parent.getTotalEntryHeight() + " | AREA SCROLL HEIGHT: " + this.parent.getTotalScrollHeight() + " | MARKDOWN RENDERER HEIGHT: " + this.markdownRenderer.getRealHeight() + " | SCROLL: " + this.parent.verticalScrollBar.getScroll());
             this.markdownRenderer.render(pose, mouseX, mouseY, partial);
         }
 

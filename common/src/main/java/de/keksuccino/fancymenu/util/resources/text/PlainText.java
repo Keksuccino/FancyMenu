@@ -25,6 +25,7 @@ public class PlainText implements IText {
     protected ResourceLocation sourceLocation;
     protected File sourceFile;
     protected String sourceURL;
+    protected volatile boolean decoded = false;
     protected boolean closed = false;
 
     @NotNull
@@ -96,6 +97,21 @@ public class PlainText implements IText {
             return text;
         }
 
+        //Get raw GitHub file
+        if (textFileUrl.toLowerCase().contains("/blob/") && (textFileUrl.toLowerCase().startsWith("http://github.com/")
+                || textFileUrl.toLowerCase().startsWith("https://github.com/")|| textFileUrl.toLowerCase().startsWith("http://www.github.com/")
+                || textFileUrl.toLowerCase().startsWith("https://www.github.com/"))) {
+            String path = textFileUrl.replace("//", "").split("/", 2)[1].replace("/blob/", "/");
+            textFileUrl = "https://raw.githubusercontent.com/" + path;
+        }
+        //Get raw Pastebin file
+        if (!textFileUrl.toLowerCase().contains("/raw/") && (textFileUrl.toLowerCase().startsWith("http://pastebin.com/")
+                || textFileUrl.toLowerCase().startsWith("https://pastebin.com/")|| textFileUrl.toLowerCase().startsWith("http://www.pastebin.com/")
+                || textFileUrl.toLowerCase().startsWith("https://www.pastebin.com/"))) {
+            String path = textFileUrl.replace("//", "").split("/", 2)[1];
+            textFileUrl = "https://pastebin.com/raw/" + path;
+        }
+
         try {
             InputStream in = WebUtils.openResourceStream(textFileUrl);
             if (in != null) {
@@ -132,6 +148,7 @@ public class PlainText implements IText {
 
         try {
             text.lines = FileUtils.readTextLinesFrom(in);
+            text.decoded = true;
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to read text context via InputStream: " + textSourceName, ex);
         }
@@ -151,9 +168,15 @@ public class PlainText implements IText {
     }
 
     @Override
+    public boolean isReady() {
+        return this.decoded;
+    }
+
+    @Override
     public void reload() {
         if (this.closed) return;
         this.lines = null;
+        this.decoded = false;
         if (this.sourceLocation != null) {
             location(this.sourceLocation, this);
         } else if (this.sourceFile != null) {
@@ -164,8 +187,14 @@ public class PlainText implements IText {
     }
 
     @Override
+    public boolean isClosed() {
+        return this.closed;
+    }
+
+    @Override
     public void close() {
         this.closed = true;
+        this.decoded = false;
         this.lines = null;
     }
 

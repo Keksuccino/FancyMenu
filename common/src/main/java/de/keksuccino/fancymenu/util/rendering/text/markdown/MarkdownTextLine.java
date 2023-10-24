@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.util.ListUtils;
 import net.minecraft.client.gui.components.Renderable;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;

@@ -6,7 +6,8 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.resources.texture.WrappedTexture;
+import de.keksuccino.fancymenu.util.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.resources.texture.SimpleTexture;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -46,7 +47,7 @@ public class Tooltip extends GuiComponent implements Renderable {
     protected Integer y = null;
     protected int textBorderSize = 5;
     protected int mouseOffset = 12;
-    protected WrappedTexture backgroundTexture = null;
+    protected ITexture backgroundTexture = null;
     protected DrawableColor backgroundColor = null;
     protected DrawableColor borderColor = null;
     protected boolean vanillaLike = true;
@@ -139,8 +140,11 @@ public class Tooltip extends GuiComponent implements Renderable {
         if (this.vanillaLike || ((this.backgroundTexture == null) && (this.backgroundColor == null))) {
             this.renderVanillaLikeBackground(pose, x, y, this.getWidth(), this.getHeight());
         } else if (this.backgroundTexture != null) {
-            RenderUtils.bindTexture(this.backgroundTexture.getResourceLocation());
-            blit(pose, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+            ResourceLocation loc = this.backgroundTexture.getResourceLocation();
+            if (loc != null) {
+                RenderUtils.bindTexture(loc);
+                blit(pose, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+            }
         } else {
             if (this.borderColor != null) {
                 //BACKGROUND
@@ -324,16 +328,16 @@ public class Tooltip extends GuiComponent implements Renderable {
         return this.mouseOffset;
     }
 
-    public Tooltip setBackgroundTexture(@NotNull ResourceLocation texture) {
-        this.backgroundTexture = WrappedTexture.of(texture);
+    public Tooltip setBackgroundTexture(@NotNull ITexture texture) {
+        this.backgroundTexture = texture;
         this.backgroundColor = null;
         this.vanillaLike = false;
         return this;
     }
 
     @Nullable
-    public WrappedTexture getBackgroundTexture() {
-        return backgroundTexture;
+    public ITexture getBackgroundTexture() {
+        return this.backgroundTexture;
     }
 
     public Tooltip setBackgroundColor(@NotNull DrawableColor backgroundColor, @Nullable DrawableColor borderColor) {

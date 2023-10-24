@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.util;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -40,7 +39,7 @@ public class ListUtils {
     /**
      * Checks if the elements of both lists are equal, but ignores their order.
      */
-    public static <T> boolean contentEqual(@NotNull List<T> list1, @NotNull List<T> list2) {
+    public static <T> boolean contentEqualIgnoreOrder(@NotNull List<T> list1, @NotNull List<T> list2) {
         Objects.requireNonNull(list1);
         Objects.requireNonNull(list2);
         if (list1.size() != list2.size()) {

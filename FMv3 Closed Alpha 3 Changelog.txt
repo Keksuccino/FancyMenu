@@ -1,6 +1,7 @@
 
 CHANGELOG | FANCYMENU v3.0.0 CLOSED ALPHA 3
  
+- Added experimental placeholder parsing cooldown (30ms) to improve performance (placeholders basically get cached and can only update every 30ms)
 - Most GIF images now load way smoother and don't freeze the screen anymore
 - Most elements and backgrounds that support web images also support web GIFs now
 - The Progress Bar element now accepts GIF images as bar and background textures

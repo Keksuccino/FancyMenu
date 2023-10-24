@@ -3,16 +3,12 @@ package de.keksuccino.fancymenu.customization.slideshow;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-
 import com.mojang.blaze3d.systems.RenderSystem;
-
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
+import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resources.texture.SimpleLocalTexture;
-import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
@@ -21,10 +17,11 @@ import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.resources.ResourceLocation;
 
+@SuppressWarnings("unused")
 public class ExternalTextureSlideshowRenderer extends GuiComponent {
 	
-	protected List<SimpleLocalTexture> images = new ArrayList<>();
-	protected SimpleLocalTexture overlayTexture;
+	protected List<ResourceSupplier<ITexture>> images = new ArrayList<>();
+	protected ResourceSupplier<ITexture> overlayTexture;
 	protected String name = null;
 	public String dir;
 	protected boolean prepared = false;
@@ -32,22 +29,18 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 	protected float fadeSpeed = 1.0F;
 	protected int originalWidth = 10;
 	protected int originalHeight = 10;
-	
 	public int width = 50;
 	public int height = 50;
 	public int x = 0;
 	public int y = 0;
-	
 	protected float opacity = 1.0F;
 	protected int imageTick = -1;
 	protected long opacityTick = -1;
 	protected long lastChange = -1;
 	protected boolean firstLoop = true;
-
 	public float slideshowOpacity = 1.0F;
-	
-	protected SimpleLocalTexture previous;
-	protected SimpleLocalTexture current;
+	protected ResourceSupplier<ITexture> previous;
+	protected ResourceSupplier<ITexture> current;
 
 	public ExternalTextureSlideshowRenderer(String slideshowDir) {
 		this.dir = slideshowDir;
@@ -59,7 +52,7 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 			
 			if (s != null) {
 				List<PropertyContainer> l = s.getContainersOfType("slideshow-meta");
-				if ((l != null) && !l.isEmpty()) {
+				if (!l.isEmpty()) {
 					this.name = l.get(0).getValue("name");
 					
 					String dur = l.get(0).getValue("duration");
@@ -105,34 +98,35 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 	public void prepareSlideshow() {
 		if (!this.prepared && (this.name != null)) {
 			
-			File imagesDir = new File(ScreenCustomization.getAbsoluteGameDirectoryPath(this.dir + "/images"));
+			File imagesDir = new File(GameDirectoryUtils.getAbsoluteGameDirectoryPath(this.dir + "/images"));
 			
 			if (imagesDir.exists() && imagesDir.isDirectory()) {
 				
 				String[] list = imagesDir.list();
-				List<String> images = Arrays.asList(list);
+				List<String> images = (list != null) ? Arrays.asList(list) : new ArrayList<>();
 				
 				if (!images.isEmpty()) {
 					
-					Collections.sort(images, String.CASE_INSENSITIVE_ORDER);
+					images.sort(String.CASE_INSENSITIVE_ORDER);
 
 					for (String s : images) {
 						File f = new File(imagesDir.getPath() + "/" + s);
 						if (f.exists() && f.isFile() && (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".png"))) {
-							ITexture r = ImageResourceHandler.INSTANCE.getTexture(f.getPath());
-							if (r instanceof SimpleLocalTexture l) {
-								this.images.add(l);
-							}
+							this.images.add(ResourceSupplier.image(f.getPath()));
 						}
 					}
 					if (!this.images.isEmpty()) {
-						this.originalWidth = this.images.get(0).getWidth();
-						this.originalHeight = this.images.get(0).getHeight();
+						ITexture t = this.images.get(0).get();
+						if (t != null) {
+							t.waitForReady(5000);
+							this.originalWidth = t.getWidth();
+							this.originalHeight = t.getHeight();
+						}
 					}
 					
 					File overlay = new File(this.dir + "/overlay.png");
 					if (overlay.exists()) {
-						this.overlayTexture = SimpleLocalTexture.of(overlay.getPath());
+						this.overlayTexture = ResourceSupplier.image(overlay.getPath());
 					}
 					
 				}
@@ -217,9 +211,10 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 				o = this.slideshowOpacity;
 			}
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, o);
-			ResourceLocation r = this.previous.getResourceLocation();
-			if (r != null) {
-				RenderUtils.bindTexture(r);
+			ITexture t = this.previous.get();
+			ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
+			if (loc != null) {
+				RenderUtils.bindTexture(loc);
 				blit(matrix, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
@@ -231,9 +226,10 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 		if (this.current != null) {
 			RenderSystem.enableBlend();
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.slideshowOpacity);
-			ResourceLocation r = this.current.getResourceLocation();
-			if (r != null) {
-				RenderUtils.bindTexture(r);
+			ITexture t = this.current.get();
+			ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
+			if (loc != null) {
+				RenderUtils.bindTexture(loc);
 				blit(matrix, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
 		}
@@ -243,9 +239,10 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 		if (this.overlayTexture != null) {
 			RenderSystem.enableBlend();
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-			ResourceLocation r = this.overlayTexture.getResourceLocation();
-			if (r != null) {
-				RenderUtils.bindTexture(r);
+			ITexture t = this.overlayTexture.get();
+			ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
+			if (loc != null) {
+				RenderUtils.bindTexture(loc);
 				blit(matrix, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
 		}
