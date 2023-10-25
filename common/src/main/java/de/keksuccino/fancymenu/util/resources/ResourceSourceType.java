@@ -12,7 +12,7 @@ public enum ResourceSourceType implements LocalizedCycleEnum<ResourceSourceType>
 
     LOCATION("location"),
     LOCAL("local"),
-    WEB("source");
+    WEB("web");
 
     private final String name;
 

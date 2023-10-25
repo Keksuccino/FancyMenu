@@ -7,7 +7,10 @@ import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.file.FilenameComparator;
 import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
+import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
+import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.component.ComponentWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
@@ -17,6 +20,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.resources.ResourceHandlers;
+import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resources.text.IText;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
@@ -73,7 +77,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
     protected ScrollArea fileListScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ScrollArea textFilePreviewScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ScrollArea fileTypeScrollArea = new ScrollArea(0, 0, 0, 20);
-    protected ITexture previewTexture;
+    protected ResourceSupplier<ITexture> previewTextureSupplier;
     protected ExtendedButton confirmButton;
     protected ExtendedButton cancelButton;
     protected ExtendedButton openInExplorerButton;
@@ -205,10 +209,11 @@ public abstract class AbstractFileBrowserScreen extends Screen {
     }
 
     protected void renderPreview(PoseStack pose, int mouseX, int mouseY, float partial) {
-        if (this.previewTexture != null) {
-            ResourceLocation loc = this.previewTexture.getResourceLocation();
+        if (this.previewTextureSupplier != null) {
+            ITexture t = this.previewTextureSupplier.get();
+            ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
             if (loc != null) {
-                AspectRatio ratio = this.previewTexture.getAspectRatio();
+                AspectRatio ratio = t.getAspectRatio();
                 int[] size = ratio.getAspectRatioSizeByMaximumSize((this.width / 2) - 40, (this.cancelButton.getY() - 50) - (50 + 15));
                 int w = size[0];
                 int h = size[1];
@@ -216,7 +221,8 @@ public abstract class AbstractFileBrowserScreen extends Screen {
                 int y = 50 + 15;
                 UIBase.resetShaderColor();
                 fill(pose, x, y, x + w, y + h, UIBase.getUIColorTheme().area_background_color.getColorInt());
-                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+                RenderingUtils.resetShaderColor();
+                RenderSystem.enableBlend();
                 RenderUtils.bindTexture(loc);
                 blit(pose, x, y, 0.0F, 0.0F, w, h, w, h);
                 UIBase.resetShaderColor();
@@ -229,6 +235,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
             this.textFilePreviewScrollArea.setY(50 + 15, true);
             this.textFilePreviewScrollArea.render(pose, mouseX, mouseY, partial);
         }
+        UIBase.resetShaderColor();
     }
 
     protected int renderCurrentDirectoryField(PoseStack pose, int mouseX, int mouseY, float partial, int x, int y, int width, int height) {
@@ -367,8 +374,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         Objects.requireNonNull(newDirectory);
         if (!this.isInRootOrSubOfRoot(newDirectory)) return this;
         if (playSound) Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-        this.updateTextPreview(null);
-        this.previewTexture = null;
+        this.updatePreview(null);
         this.currentDir = newDirectory;
         lastDirectory = newDirectory;
         this.updateFilesList();
@@ -457,17 +463,18 @@ public abstract class AbstractFileBrowserScreen extends Screen {
     public void updatePreview(@Nullable File file) {
         if ((file != null) && file.isFile()) {
             this.updateTextPreview(file);
-            if (FileFilter.IMAGE_FILE_FILTER.checkFile(file)) {
-                this.previewTexture = ResourceHandlers.getImageHandler().get(file.getPath());
+            if (FileTypes.getTypeOfLocalFile(file) instanceof ImageFileType) {
+                this.previewTextureSupplier = ResourceSupplier.image(file.getPath());
             } else {
-                this.previewTexture = null;
+                this.previewTextureSupplier = null;
             }
         } else {
             this.updateTextPreview(null);
-            this.previewTexture = null;
+            this.previewTextureSupplier = null;
         }
     }
 
+    //TODO update this to the new resource system
     protected void updateTextPreview(@Nullable File file) {
         this.textFilePreviewScrollArea.clearEntries();
         boolean textSet = false;
@@ -568,8 +575,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
             for (ScrollAreaEntry e : this.fileListScrollArea.getEntries()) {
                 e.setSelected(false);
             }
-            this.updateTextPreview(null);
-            this.previewTexture = null;
+            this.updatePreview(null);
         }
 
         return super.mouseClicked(mouseX, mouseY, button);
@@ -690,8 +696,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
                     }
                 }
             }
-            AbstractFileBrowserScreen.this.updateTextPreview(null);
-            AbstractFileBrowserScreen.this.previewTexture = null;
+            AbstractFileBrowserScreen.this.updatePreview(null);
             this.lastClick = now;
         }
 

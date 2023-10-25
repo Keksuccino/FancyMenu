@@ -13,12 +13,16 @@ import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
 import de.keksuccino.fancymenu.util.resources.video.IVideo;
 import de.keksuccino.fancymenu.util.resources.video.VideoResourceHandler;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.Objects;
 
 @SuppressWarnings("unused")
 public class ResourceHandlers {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     @NotNull
     protected static ResourceHandler<ITexture, ImageFileType> imageHandler = ImageResourceHandler.INSTANCE;
@@ -68,6 +72,11 @@ public class ResourceHandlers {
     @NotNull
     public static List<ResourceHandler<?,?>> getHandlers() {
         return ListUtils.of(imageHandler, audioHandler, videoHandler, textHandler);
+    }
+
+    public static void reloadAll() {
+        LOGGER.info("[FANCYMENU] Reloading resources..");
+        getHandlers().forEach(ResourceHandler::releaseAll);
     }
 
 }

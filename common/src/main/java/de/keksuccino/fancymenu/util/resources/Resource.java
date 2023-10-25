@@ -18,8 +18,6 @@ public interface Resource extends Closeable {
         while(!this.isReady() && ((start + timeoutMs) > System.currentTimeMillis()));
     }
 
-    void reload();
-
     boolean isClosed();
 
 }

@@ -31,6 +31,7 @@ public class GameDirectoryUtils {
             path = path.replace("\\", "/");
             String gameDir = getGameDirectory().getAbsolutePath().replace("\\", "/");
             if (!path.startsWith(gameDir)) {
+                if (path.startsWith("/")) path = path.substring(1);
                 return gameDir + "/" + path;
             }
         } catch (Exception e) {

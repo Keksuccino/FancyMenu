@@ -37,7 +37,6 @@ import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
-import de.keksuccino.fancymenu.util.resources.ResourceHandler;
 import de.keksuccino.fancymenu.util.resources.ResourceHandlers;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
@@ -273,7 +272,7 @@ public class ScreenCustomization {
 
 	public static void reloadFancyMenu() {
 		FancyMenu.reloadOptions();
-		ResourceHandlers.getHandlers().forEach(ResourceHandler::reload);
+		ResourceHandlers.reloadAll();
 		UIColorThemes.reloadThemes();
 		SoundRegistry.resetSounds();
 		SoundRegistry.stopSounds();

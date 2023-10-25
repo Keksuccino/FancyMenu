@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -26,7 +27,7 @@ public class PlainText implements IText {
     protected File sourceFile;
     protected String sourceURL;
     protected volatile boolean decoded = false;
-    protected boolean closed = false;
+    protected volatile boolean closed = false;
 
     @NotNull
     public static PlainText location(@NotNull ResourceLocation location) {
@@ -112,16 +113,19 @@ public class PlainText implements IText {
             textFileUrl = "https://pastebin.com/raw/" + path;
         }
 
-        try {
-            InputStream in = WebUtils.openResourceStream(textFileUrl);
-            if (in != null) {
-                of(in, textFileUrl, text);
-            } else {
-                LOGGER.error("[FANCYMENU] Failed to read text content from URL! InputStream was NULL: " + textFileUrl);
+        String url = textFileUrl;
+        new Thread(() -> {
+            try {
+                InputStream in = WebUtils.openResourceStream(url);
+                if (in != null) {
+                    of(in, url, text);
+                } else {
+                    LOGGER.error("[FANCYMENU] Failed to read text content from URL! InputStream was NULL: " + url);
+                }
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to read text content from URL: " + url, ex);
             }
-        } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to read text content from URL: " + textFileUrl, ex);
-        }
+        }).start();
 
         return text;
 
@@ -146,14 +150,17 @@ public class PlainText implements IText {
 
         if (textSourceName == null) textSourceName = "[Generic InputStream source]";
 
-        try {
-            text.lines = FileUtils.readTextLinesFrom(in);
-            text.decoded = true;
-        } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to read text context via InputStream: " + textSourceName, ex);
-        }
-
-        CloseableUtils.closeQuietly(in);
+        String name = textSourceName;
+        new Thread(() -> {
+            try {
+                text.lines = FileUtils.readTextLinesFrom(in);
+                text.decoded = true;
+                if (text.closed) MainThreadTaskExecutor.executeInMainThread(text::close, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to read text context via InputStream: " + name, ex);
+            }
+            CloseableUtils.closeQuietly(in);
+        }).start();
 
         return text;
 
@@ -170,20 +177,6 @@ public class PlainText implements IText {
     @Override
     public boolean isReady() {
         return this.decoded;
-    }
-
-    @Override
-    public void reload() {
-        if (this.closed) return;
-        this.lines = null;
-        this.decoded = false;
-        if (this.sourceLocation != null) {
-            location(this.sourceLocation, this);
-        } else if (this.sourceFile != null) {
-            local(this.sourceFile, this);
-        } else if (this.sourceURL != null) {
-            web(this.sourceURL, this);
-        }
     }
 
     @Override

@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resources.PlayableResource;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.ellerton.japng.Png;
 import net.ellerton.japng.argb8888.Argb8888Bitmap;
 import net.ellerton.japng.argb8888.Argb8888BitmapSequence;
@@ -149,14 +150,15 @@ public class ApngTexture implements ITexture, PlayableResource {
 
         Objects.requireNonNull(in);
 
-        ApngTexture apngTexture = (writeTo != null) ? writeTo : new ApngTexture();
+        ApngTexture texture = (writeTo != null) ? writeTo : new ApngTexture();
 
         //Decode APNG image
         new Thread(() -> {
-            populateTexture(apngTexture, in, (apngTextureName != null) ? apngTextureName : "[Generic InputStream Source]");
+            populateTexture(texture, in, (apngTextureName != null) ? apngTextureName : "[Generic InputStream Source]");
+            if (texture.closed) MainThreadTaskExecutor.executeInMainThread(texture::close, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
         }).start();
 
-        return apngTexture;
+        return texture;
 
     }
 
@@ -169,48 +171,50 @@ public class ApngTexture implements ITexture, PlayableResource {
     }
 
     protected static void populateTexture(@NotNull ApngTexture apngTexture, @NotNull InputStream in, @NotNull String apngTextureName) {
-        //Decode first frame and set it as temporary frame list to show APNG quicker
-        DecodedApngImage imageAndFirstFrame = readApng(in, apngTextureName, true);
-        if (imageAndFirstFrame == null) {
-            LOGGER.error("[FANCYMENU] Failed to read APNG image, because DecodedApngImage was NULL: " + apngTextureName);
-            apngTexture.decoded = true;
-            return;
-        }
-        apngTexture.width = imageAndFirstFrame.imageWidth;
-        apngTexture.height = imageAndFirstFrame.imageHeight;
-        apngTexture.aspectRatio = new AspectRatio(imageAndFirstFrame.imageWidth, imageAndFirstFrame.imageHeight);
-        if (!imageAndFirstFrame.frames().isEmpty()) {
-            ApngFrame first = imageAndFirstFrame.frames().get(0);
-            try {
-                first.nativeImage = NativeImage.read(first.frameInputStream);
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to read preview frame of APNG image into NativeImage: " + apngTextureName, ex);
+        if (!apngTexture.closed) {
+            //Decode first frame and set it as temporary frame list to show APNG quicker
+            DecodedApngImage imageAndFirstFrame = readApng(in, apngTextureName, true);
+            if (imageAndFirstFrame == null) {
+                LOGGER.error("[FANCYMENU] Failed to read APNG image, because DecodedApngImage was NULL: " + apngTextureName);
+                apngTexture.decoded = true;
+                return;
             }
-            CloseableUtils.closeQuietly(first.closeAfterLoading);
-            CloseableUtils.closeQuietly(first.frameInputStream);
-            apngTexture.frames = imageAndFirstFrame.frames();
-            apngTexture.decoded = true;
-        }
-        //Decode the full APNG and set its frames to the ApngTexture
-        DecodedApngImage allFrames = null;
-        try {
-            allFrames = readApng(imageAndFirstFrame.sequence(), apngTextureName, false);
-        } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to read APNG image: " + apngTextureName, ex);
-        }
-        if (allFrames != null) {
-            for (ApngFrame frame : allFrames.frames()) {
+            apngTexture.width = imageAndFirstFrame.imageWidth;
+            apngTexture.height = imageAndFirstFrame.imageHeight;
+            apngTexture.aspectRatio = new AspectRatio(imageAndFirstFrame.imageWidth, imageAndFirstFrame.imageHeight);
+            if (!imageAndFirstFrame.frames().isEmpty()) {
+                ApngFrame first = imageAndFirstFrame.frames().get(0);
                 try {
-                    frame.nativeImage = NativeImage.read(frame.frameInputStream);
+                    first.nativeImage = NativeImage.read(first.frameInputStream);
                 } catch (Exception ex) {
-                    LOGGER.error("[FANCYMENU] Failed to read frame of APNG image into NativeImage: " + apngTextureName, ex);
+                    LOGGER.error("[FANCYMENU] Failed to read preview frame of APNG image into NativeImage: " + apngTextureName, ex);
                 }
-                CloseableUtils.closeQuietly(frame.closeAfterLoading);
-                CloseableUtils.closeQuietly(frame.frameInputStream);
+                CloseableUtils.closeQuietly(first.closeAfterLoading);
+                CloseableUtils.closeQuietly(first.frameInputStream);
+                apngTexture.frames = imageAndFirstFrame.frames();
+                apngTexture.decoded = true;
             }
-            apngTexture.frames = allFrames.frames();
+            //Decode the full APNG and set its frames to the ApngTexture
+            DecodedApngImage allFrames = null;
+            try {
+                allFrames = readApng(imageAndFirstFrame.sequence(), apngTextureName, false);
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to read APNG image: " + apngTextureName, ex);
+            }
+            if (allFrames != null) {
+                for (ApngFrame frame : allFrames.frames()) {
+                    try {
+                        frame.nativeImage = NativeImage.read(frame.frameInputStream);
+                    } catch (Exception ex) {
+                        LOGGER.error("[FANCYMENU] Failed to read frame of APNG image into NativeImage: " + apngTextureName, ex);
+                    }
+                    CloseableUtils.closeQuietly(frame.closeAfterLoading);
+                    CloseableUtils.closeQuietly(frame.frameInputStream);
+                }
+                apngTexture.frames = allFrames.frames();
+            }
+            apngTexture.numPlays = imageAndFirstFrame.numPlays;
         }
-        apngTexture.numPlays = imageAndFirstFrame.numPlays;
         apngTexture.decoded = true;
         CloseableUtils.closeQuietly(in);
     }
@@ -285,6 +289,7 @@ public class ApngTexture implements ITexture, PlayableResource {
     @Nullable
     @Override
     public ResourceLocation getResourceLocation() {
+        if (this.closed) return FULLY_TRANSPARENT_TEXTURE;
         this.lastResourceLocationCall = System.currentTimeMillis();
         this.startTickerIfNeeded();
         ApngFrame frame = this.current;
@@ -296,8 +301,8 @@ public class ApngTexture implements ITexture, PlayableResource {
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
+                frame.loaded = true;
             }
-            frame.loaded = true;
             return (frame.resourceLocation != null) ? frame.resourceLocation : FULLY_TRANSPARENT_TEXTURE;
         }
         return null;
@@ -326,8 +331,9 @@ public class ApngTexture implements ITexture, PlayableResource {
 
     public void reset() {
         this.current = null;
-        if (!this.frames.isEmpty()) {
-            this.current = this.frames.get(0);
+        List<ApngFrame> l = new ArrayList<>(this.frames);
+        if (!l.isEmpty()) {
+            this.current = l.get(0);
             this.cycles = 0;
         }
     }
@@ -351,29 +357,6 @@ public class ApngTexture implements ITexture, PlayableResource {
     }
 
     @Override
-    public void reload() {
-        if (this.closed) return;
-        for (ApngFrame frame : this.frames) {
-            //Closes NativeImage and DynamicTexture
-            CloseableUtils.closeQuietly(frame.dynamicTexture);
-            frame.dynamicTexture = null;
-            frame.nativeImage = null;
-        }
-        this.decoded = false;
-        this.frames.clear();
-        this.current = null;
-        this.cycles = 0;
-        this.lastResourceLocationCall = -1;
-        if (this.sourceLocation != null) {
-            location(this.sourceLocation, this);
-        } else if (this.sourceFile != null) {
-            local(this.sourceFile, this);
-        } else if (this.sourceURL != null) {
-            web(this.sourceURL, this);
-        }
-    }
-
-    @Override
     public boolean isClosed() {
         return this.closed;
     }
@@ -382,13 +365,21 @@ public class ApngTexture implements ITexture, PlayableResource {
     public void close() {
         this.closed = true;
         this.sourceLocation = null;
-        for (ApngFrame frame : this.frames) {
-            //Closes NativeImage and DynamicTexture
-            CloseableUtils.closeQuietly(frame.dynamicTexture);
+        for (ApngFrame frame : new ArrayList<>(this.frames)) {
+            try {
+                if (frame.dynamicTexture != null) frame.dynamicTexture.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            try {
+                if (frame.nativeImage != null) frame.nativeImage.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
             frame.dynamicTexture = null;
             frame.nativeImage = null;
         }
-        this.frames.clear();
+        this.frames = new ArrayList<>();
         this.current = null;
     }
 
@@ -460,10 +451,10 @@ public class ApngTexture implements ITexture, PlayableResource {
 
         protected final int index;
         protected final ByteArrayInputStream frameInputStream;
-        protected  final int delayMs;
+        protected final int delayMs;
         protected final ByteArrayOutputStream closeAfterLoading;
         protected DynamicTexture dynamicTexture;
-        protected NativeImage nativeImage;
+        protected volatile NativeImage nativeImage;
         protected ResourceLocation resourceLocation;
         protected boolean loaded = false;
 

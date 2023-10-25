@@ -75,10 +75,6 @@ public class AdvancedAnimation implements IAnimationRenderer, RenderableResource
 	}
 
 	@Override
-	public void reload() {
-	}
-
-	@Override
 	public boolean isClosed() {
 		return false;
 	}

@@ -24,9 +24,9 @@ public class FancyMenu {
 
 	//TODO FIXEN: ResourceChooserScreen noch broken
 
-	//TODO FIXEN: Manche Images haben in FileChooserScreen keine Preview
+	//TODO FIXEN: FileChooserScreen: FileTypes Anzeige ist buggy
 
-	//TODO FIXEN: FileChooserScreen FileTypes Anzeige ist buggy
+	//TODO AbstractFileBrowserScreen: updateTextPreview() auf neues resource system updaten
 
 	//TODO WAV (und OGG??) Audio FileType Codec implementieren
 

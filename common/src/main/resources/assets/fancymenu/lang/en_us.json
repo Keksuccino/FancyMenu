@@ -1105,7 +1105,7 @@
   "fancymenu.resources.chooser_screen.legacy_local.warning.line3": "To set an asset source, use the button above.",
   "fancymenu.resources.chooser_screen.choose_local": "Choose Local Resource File",
   "fancymenu.resources.chooser_screen.allowed_file_types": "Allowed File Types:",
-  "fancymenu.resources.chooser_screen.no_extension.warning.line1": "The source has no file extension suffix!",
+  "fancymenu.resources.chooser_screen.no_extension.warning.line1": "The source has no valid file extension suffix!",
   "fancymenu.resources.chooser_screen.no_extension.warning.line2": "This could mean you're using placeholders that dynamically build the source.",
   "fancymenu.resources.chooser_screen.no_extension.warning.line3": "Make sure to only use ALLOWED file types from the list above!",
   "fancymenu.resources.chooser_screen.choose.image": "Choose Image Resource",

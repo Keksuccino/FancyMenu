@@ -17,6 +17,7 @@ import java.util.*;
  * @param <R> The {@link Resource} type returned by the handler.
  * @param <F> The {@link FileType} associated with the type of resource being handled.
  */
+@SuppressWarnings("unused")
 public abstract class ResourceHandler<R extends Resource, F extends FileType<R>> {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -36,7 +37,11 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
     public R get(@NotNull String resourceSource) {
         Objects.requireNonNull(resourceSource);
         try {
+            resourceSource = resourceSource.trim();
             ResourceSourceType sourceType = ResourceSourceType.getSourceTypeOf(resourceSource);
+            if (!ResourceSourceType.hasSourcePrefix(resourceSource)) {
+                resourceSource = sourceType.getSourcePrefix() + resourceSource;
+            }
             String resourceSourceWithoutPrefix = ResourceSourceType.getWithoutSourcePrefix(resourceSource);
             if (sourceType == ResourceSourceType.WEB) {
                 R cached = this.getFromMapAndClearClosed(resourceSource);
@@ -119,6 +124,7 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
     @Nullable
     protected R putAndReturn(@Nullable R resource, @NotNull String resourceSource) {
         if (resource != null) {
+            LOGGER.debug("[FANCYMENU] Registering resource: " + resourceSource);
             this.getResourceMap().put(resourceSource, resource);
         }
         return resource;
@@ -131,14 +137,6 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
 
     @NotNull
     public abstract List<F> getAllowedFileTypes();
-
-    /**
-     * Reloads all resources of the handler.<br>
-     * This gets called when MC reloads its resources.
-     */
-    public void reload() {
-        this.getResourceMap().values().forEach(Resource::reload);
-    }
 
     /**
      * Releases a resource.<br>

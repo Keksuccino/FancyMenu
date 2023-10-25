@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceLocation;
@@ -27,9 +28,9 @@ public class SimpleTexture implements ITexture {
 
     @Nullable
     protected ResourceLocation resourceLocation;
-    protected int width = 10;
-    protected int height = 10;
-    protected AspectRatio aspectRatio = new AspectRatio(10, 10);
+    protected volatile int width = 10;
+    protected volatile int height = 10;
+    protected volatile AspectRatio aspectRatio = new AspectRatio(10, 10);
     protected volatile boolean decoded = false;
     protected volatile boolean loaded = false;
     protected volatile NativeImage nativeImage;
@@ -37,7 +38,7 @@ public class SimpleTexture implements ITexture {
     protected ResourceLocation sourceLocation;
     protected File sourceFile;
     protected String sourceURL;
-    protected boolean closed = false;
+    protected volatile boolean closed = false;
 
     /**
      * Supports JPEG and PNG textures.
@@ -163,6 +164,7 @@ public class SimpleTexture implements ITexture {
 
         new Thread(() -> {
             populateTexture(texture, in, (textureName != null) ? textureName : "[Generic InputStream Source]");
+            if (texture.closed) MainThreadTaskExecutor.executeInMainThread(texture::close, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
         }).start();
 
         return texture;
@@ -182,17 +184,19 @@ public class SimpleTexture implements ITexture {
     }
 
     protected static void populateTexture(@NotNull SimpleTexture texture, @NotNull InputStream in, @NotNull String textureName) {
-        try {
-            texture.nativeImage = NativeImage.read(in);
-            if (texture.nativeImage != null) {
-                texture.width = texture.nativeImage.getWidth();
-                texture.height = texture.nativeImage.getHeight();
-                texture.aspectRatio = new AspectRatio(texture.width, texture.height);
-            } else {
-                LOGGER.error("[FANCYMENU] Failed to read texture, NativeImage was NULL: " + textureName);
+        if (!texture.closed) {
+            try {
+                texture.nativeImage = NativeImage.read(in);
+                if (texture.nativeImage != null) {
+                    texture.width = texture.nativeImage.getWidth();
+                    texture.height = texture.nativeImage.getHeight();
+                    texture.aspectRatio = new AspectRatio(texture.width, texture.height);
+                } else {
+                    LOGGER.error("[FANCYMENU] Failed to read texture, NativeImage was NULL: " + textureName);
+                }
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to load texture: " + textureName, ex);
             }
-        } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to load texture: " + textureName, ex);
         }
         texture.decoded = true;
         CloseableUtils.closeQuietly(in);
@@ -200,6 +204,7 @@ public class SimpleTexture implements ITexture {
 
     @Nullable
     public ResourceLocation getResourceLocation() {
+        if (this.closed) return FULLY_TRANSPARENT_TEXTURE;
         if ((this.resourceLocation == null) && !this.loaded && (this.nativeImage != null)) {
             try {
                 this.dynamicTexture = new DynamicTexture(this.nativeImage);
@@ -207,8 +212,8 @@ public class SimpleTexture implements ITexture {
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
+            this.loaded = true;
         }
-        this.loaded = true;
         return this.resourceLocation;
     }
 
@@ -236,24 +241,6 @@ public class SimpleTexture implements ITexture {
     }
 
     @Override
-    public void reload() {
-        if (this.closed) return;
-        //Closes NativeImage and DynamicTexture
-        if (this.dynamicTexture != null) CloseableUtils.closeQuietly(this.dynamicTexture);
-        this.nativeImage = null;
-        this.resourceLocation = null;
-        this.decoded = false;
-        this.loaded = false;
-        if (this.sourceLocation != null) {
-            location(this.sourceLocation, this);
-        } else if (this.sourceFile != null) {
-            local(this.sourceFile, this);
-        } else if (this.sourceURL != null) {
-            web(this.sourceURL, this);
-        }
-    }
-
-    @Override
     public boolean isClosed() {
         return this.closed;
     }
@@ -265,8 +252,17 @@ public class SimpleTexture implements ITexture {
     @Override
     public void close() {
         this.closed = true;
-        //Closes NativeImage and DynamicTexture
-        if (this.dynamicTexture != null) CloseableUtils.closeQuietly(this.dynamicTexture);
+        try {
+            if (this.dynamicTexture != null) this.dynamicTexture.close();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        try {
+            if (this.nativeImage != null) this.nativeImage.close();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        this.dynamicTexture = null;
         this.nativeImage = null;
         this.resourceLocation = null;
         this.decoded = false;
