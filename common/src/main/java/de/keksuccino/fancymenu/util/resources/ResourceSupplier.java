@@ -15,18 +15,18 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 
 @SuppressWarnings("unused")
-public class ResourceSupplier<T extends Resource> {
+public class ResourceSupplier<R extends Resource> {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
     @NotNull
     protected String source;
     @NotNull
-    protected Class<T> resourceType;
+    protected Class<R> resourceType;
     @NotNull
     FileMediaType mediaType;
     @Nullable
-    protected T current;
+    protected R current;
     @Nullable
     protected String lastGetterSource;
 
@@ -74,7 +74,7 @@ public class ResourceSupplier<T extends Resource> {
         return new ResourceSupplier<>(IText.class, FileMediaType.TEXT, source);
     }
 
-    public ResourceSupplier(@NotNull Class<T> resourceType, @NotNull FileMediaType mediaType, @NotNull String source) {
+    public ResourceSupplier(@NotNull Class<R> resourceType, @NotNull FileMediaType mediaType, @NotNull String source) {
         this.source = Objects.requireNonNull(source);
         this.resourceType = Objects.requireNonNull(resourceType);
         this.mediaType = Objects.requireNonNull(mediaType);
@@ -82,7 +82,7 @@ public class ResourceSupplier<T extends Resource> {
 
     @SuppressWarnings("all")
     @Nullable
-    public T get() {
+    public R get() {
         String getterSource = PlaceholderParser.replacePlaceholders(this.source, false);
         if (!getterSource.equals(this.lastGetterSource)) {
             this.current = null;
@@ -92,7 +92,7 @@ public class ResourceSupplier<T extends Resource> {
             try {
                 ResourceHandler<?,?> handler = this.getResourceHandler();
                 if (handler != null) {
-                    this.current = (T) handler.get(getterSource);
+                    this.current = (R) handler.get(getterSource);
                 }
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to get resource: " + getterSource + " (" + this.source + ")", ex);
@@ -119,8 +119,8 @@ public class ResourceSupplier<T extends Resource> {
      * You should always use the provided location instead of calling {@link RenderableResource#getResourceLocation()},
      * because some types of resources asynchronously change that method's return value.
      */
-    public void forRenderable(@NotNull BiConsumer<T, ResourceLocation> task) {
-        T resource = this.get();
+    public void forRenderable(@NotNull BiConsumer<R, ResourceLocation> task) {
+        R resource = this.get();
         if (resource instanceof RenderableResource r) {
             ResourceLocation loc = r.getResourceLocation();
             if (loc != null) task.accept(resource, loc);
@@ -128,7 +128,7 @@ public class ResourceSupplier<T extends Resource> {
     }
 
     @NotNull
-    public Class<T> getResourceType() {
+    public Class<R> getResourceType() {
         return this.resourceType;
     }
 

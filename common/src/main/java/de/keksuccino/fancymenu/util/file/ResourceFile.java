@@ -81,7 +81,7 @@ public class ResourceFile {
         }
         resourceFile.file = new File(GameDirectoryUtils.getGameDirectory(), gameDirectoryFilePath);
         resourceFile.shortPath = gameDirectoryFilePath;
-        resourceFile.type = FileTypes.getTypeOfLocalFile(resourceFile.file);
+        resourceFile.type = FileTypes.getLocalType(resourceFile.file);
         if (resourceFile.type == null) {
             resourceFile.type = FileTypes.UNKNOWN;
         }

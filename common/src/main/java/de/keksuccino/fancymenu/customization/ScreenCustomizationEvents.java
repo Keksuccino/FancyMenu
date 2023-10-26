@@ -8,7 +8,6 @@ import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.events.screen.CloseScreenEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
-import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.widget.WidgetLocatorHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.event.acara.EventPriority;
@@ -33,8 +32,7 @@ import org.apache.logging.log4j.Logger;
 public class ScreenCustomizationEvents {
 
 	private static final Logger LOGGER = LogManager.getLogger();
-	
-	private boolean idle = false;
+
 	private boolean iconSetAfterFullscreen = false;
 	private boolean scaleChecked = false;
 	private boolean resumeWorldMusic = false;
@@ -113,14 +111,6 @@ public class ScreenCustomizationEvents {
 
 		ScreenCustomization.isCurrentScrollable = false;
 
-		if (!(e.getScreen() instanceof LayoutEditorScreen)) {
-			this.idle = false;
-		}
-		if (!ScreenCustomization.isCustomizationEnabledForScreen(e.getScreen()) && !(e.getScreen() instanceof LayoutEditorScreen)) {
-			SoundRegistry.stopSounds();
-			SoundRegistry.resetSounds();
-		}
-
 		//Stopping menu music when deactivated in config
 		if ((Minecraft.getInstance().level == null)) {
 			if (!FancyMenu.getOptions().playVanillaMenuMusic.getValue()) {
@@ -136,13 +126,6 @@ public class ScreenCustomizationEvents {
 
 		if (Minecraft.getInstance().screen == null) {
 			this.lastScreen = null;
-		}
-
-		//Stopping audio for all menu handlers if no screen is being displayed
-		if ((Minecraft.getInstance().screen == null) && !this.idle) {
-			SoundRegistry.stopSounds();
-			SoundRegistry.resetSounds();
-			this.idle = true;
 		}
 
 		if ((Minecraft.getInstance().level != null) && (Minecraft.getInstance().screen == null) && this.resumeWorldMusic) {

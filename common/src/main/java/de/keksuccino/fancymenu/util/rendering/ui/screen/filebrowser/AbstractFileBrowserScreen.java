@@ -463,7 +463,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
     public void updatePreview(@Nullable File file) {
         if ((file != null) && file.isFile()) {
             this.updateTextPreview(file);
-            if (FileTypes.getTypeOfLocalFile(file) instanceof ImageFileType) {
+            if (FileTypes.getLocalType(file) instanceof ImageFileType) {
                 this.previewTextureSupplier = ResourceSupplier.image(file.getPath());
             } else {
                 this.previewTextureSupplier = null;

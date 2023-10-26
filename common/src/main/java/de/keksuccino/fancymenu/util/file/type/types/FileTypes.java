@@ -175,7 +175,7 @@ public class FileTypes {
      * Tries to find the {@link FileType} of a {@link ResourceLocation} file.
      */
     @Nullable
-    public static FileType<?> getTypeOfLocationFile(@NotNull ResourceLocation location) {
+    public static FileType<?> getLocationType(@NotNull ResourceLocation location) {
         for (FileType<?> type : FileTypeRegistry.getFileTypes()) {
             if (type.isFileTypeLocation(location)) return type;
         }
@@ -186,7 +186,7 @@ public class FileTypes {
      * Tries to find the {@link FileType} of a local file.
      */
     @Nullable
-    public static FileType<?> getTypeOfLocalFile(@NotNull File file) {
+    public static FileType<?> getLocalType(@NotNull File file) {
         for (FileType<?> type : FileTypeRegistry.getFileTypes()) {
             if (type.isFileTypeLocal(file)) return type;
         }
@@ -197,9 +197,21 @@ public class FileTypes {
      * Tries to find the {@link FileType} of a web file.
      */
     @Nullable
-    public static FileType<?> getTypeOfWebFile(@NotNull String fileUrl) {
+    public static FileType<?> getWebType(@NotNull String fileUrl) {
         for (FileType<?> type : FileTypeRegistry.getFileTypes()) {
             if (type.isFileTypeWeb(fileUrl)) return type;
+        }
+        return null;
+    }
+
+    /**
+     * Tries to find the {@link FileType} of a resource source.<br>
+     * Resource sources can be web URLs, local paths or {@link ResourceLocation}s (namespace:path).
+     */
+    @Nullable
+    public static FileType<?> getType(@NotNull String resourceSource) {
+        for (FileType<?> type : FileTypeRegistry.getFileTypes()) {
+            if (type.isFileType(resourceSource)) return type;
         }
         return null;
     }

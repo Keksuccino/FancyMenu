@@ -410,17 +410,17 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	}
 
 	@Unique
-	@Override
-	public void setCustomClickSoundFancyMenu(@Nullable IAudio sound) {
-		if (this.customClickSoundFancyMenu != null) this.customClickSoundFancyMenu.stop();
-		this.customClickSoundFancyMenu = sound;
-	}
-
-	@Unique
 	@Nullable
 	@Override
 	public IAudio getCustomClickSoundFancyMenu() {
 		return this.customClickSoundFancyMenu;
+	}
+
+	@Unique
+	@Override
+	public void setCustomClickSoundFancyMenu(@Nullable IAudio sound) {
+		if ((this.customClickSoundFancyMenu != null) && !Objects.equals(sound, this.customClickSoundFancyMenu)) this.customClickSoundFancyMenu.stop();
+		this.customClickSoundFancyMenu = sound;
 	}
 
 	@Unique
@@ -433,7 +433,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Unique
 	@Override
 	public void setHoverSoundFancyMenu(@Nullable IAudio sound) {
-		if (this.hoverSoundFancyMenu != null) this.hoverSoundFancyMenu.stop();
+		if ((this.hoverSoundFancyMenu != null) && !Objects.equals(sound, this.hoverSoundFancyMenu)) this.hoverSoundFancyMenu.stop();
 		this.hoverSoundFancyMenu = sound;
 	}
 

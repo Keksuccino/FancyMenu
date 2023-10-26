@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.util.file.type;
 
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.WebUtils;
+import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
+import de.keksuccino.fancymenu.util.resources.ResourceSourceType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
@@ -200,5 +202,35 @@ public abstract class FileCodec<T> {
 
     @Nullable
     public abstract T readWeb(@NotNull String fileUrl);
+
+    @Nullable
+    public DecodedResourceHolder<T> read(@NotNull String resourceSource) {
+        Objects.requireNonNull(resourceSource);
+        resourceSource = resourceSource.trim();
+        ResourceSourceType resourceSourceType = ResourceSourceType.getSourceTypeOf(resourceSource);
+        String withoutPrefix = ResourceSourceType.getWithoutSourcePrefix(resourceSource);
+        resourceSource = resourceSourceType.getSourcePrefix() + withoutPrefix;
+        try {
+            if (resourceSourceType == ResourceSourceType.LOCATION) {
+                ResourceLocation loc = ResourceLocation.tryParse(withoutPrefix);
+                T resource = (loc != null) ? this.readLocation(loc) : null;
+                if (resource != null) return new DecodedResourceHolder<>(resource, resourceSourceType, resourceSource);
+            }
+            if (resourceSourceType == ResourceSourceType.LOCAL) {
+                withoutPrefix = GameDirectoryUtils.getAbsoluteGameDirectoryPath(withoutPrefix);
+                resourceSource = resourceSourceType.getSourcePrefix() + withoutPrefix;
+                T resource = this.readLocal(new File(withoutPrefix));
+                if (resource != null) return new DecodedResourceHolder<>(resource, resourceSourceType, resourceSource);
+            }
+            if (resourceSourceType == ResourceSourceType.WEB) {
+                T resource = this.readWeb(withoutPrefix);
+                if (resource != null) return new DecodedResourceHolder<>(resource, resourceSourceType, resourceSource);
+            }
+        } catch (Exception ignore) {}
+        return null;
+    }
+
+    public record DecodedResourceHolder<T>(@NotNull T resource, @NotNull ResourceSourceType resourceSourceType, @NotNull String resourceSource) {
+    }
 
 }

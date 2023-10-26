@@ -10,7 +10,6 @@ import de.keksuccino.fancymenu.customization.screen.dummyscreen.DummyScreens;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screen.identifier.UniversalScreenIdentifierRegistry;
 import de.keksuccino.fancymenu.customization.widget.identification.identificationcontext.contexts.WidgetIdentificationContexts;
-import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.action.actions.Actions;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.background.backgrounds.MenuBackgrounds;
@@ -274,8 +273,6 @@ public class ScreenCustomization {
 		FancyMenu.reloadOptions();
 		ResourceHandlers.reloadAll();
 		UIColorThemes.reloadThemes();
-		SoundRegistry.resetSounds();
-		SoundRegistry.stopSounds();
 		AnimationHandler.resetAnimations();
 		AnimationHandler.resetAnimationSounds();
 		AnimationHandler.stopAnimationSounds();

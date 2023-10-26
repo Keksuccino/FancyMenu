@@ -14,6 +14,8 @@ import de.keksuccino.fancymenu.customization.element.elements.playerentity.textu
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.textures.SkinWebTextureResourceLocation;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
+import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.PlayerUtils;
 import de.keksuccino.konkrete.input.StringUtils;
@@ -34,6 +36,7 @@ public class PlayerEntityElement extends AbstractElement {
     
     private static final Logger LOGGER = LogManager.getLogger();
 
+
     public PlayerEntityElementRenderer normalRenderer = new PlayerEntityElementRenderer(false);
     public PlayerEntityElementRenderer slimRenderer = new PlayerEntityElementRenderer(true);
 
@@ -50,14 +53,8 @@ public class PlayerEntityElement extends AbstractElement {
     public volatile boolean slim = false;
     public volatile boolean autoSkin = false;
     public volatile boolean autoCape = false;
-    public volatile String skinUrl;
-    protected volatile String oldSkinUrl = null;
-    public volatile String skinPath;
-    public volatile String capeUrl;
-    protected volatile String oldCapeUrl = null;
-    public volatile String capePath;
-    protected volatile ResourceLocation currentSkinLocation = null;
-    protected volatile ResourceLocation currentCapeLocation = null;
+    protected ResourceSupplier<ITexture> skinTextureSupplier = null;
+    protected ResourceSupplier<ITexture> capeTextureSupplier = null;
     public String bodyXRot;
     public String bodyYRot;
     public String headXRot;

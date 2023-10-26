@@ -2,7 +2,9 @@ package de.keksuccino.fancymenu.util.file.type;
 
 import com.google.common.io.Files;
 import de.keksuccino.fancymenu.util.WebUtils;
+import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.resources.ResourceSourceType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
@@ -68,6 +70,25 @@ public class FileType<T> {
             if (fileUrl.endsWith("." + extension)) return true;
         }
         return this.isFileTypeWebInternal(fileUrl);
+    }
+
+    public boolean isFileType(@NotNull String resourceSource) {
+        resourceSource = resourceSource.trim();
+        ResourceSourceType resourceSourceType = ResourceSourceType.getSourceTypeOf(resourceSource);
+        String withoutPrefix = ResourceSourceType.getWithoutSourcePrefix(resourceSource);
+        try {
+            if (resourceSourceType == ResourceSourceType.LOCATION) {
+                ResourceLocation loc = ResourceLocation.tryParse(withoutPrefix);
+                if (loc != null) return this.isFileTypeLocation(loc);
+            }
+            if (resourceSourceType == ResourceSourceType.LOCAL) {
+                return this.isFileTypeLocal(new File(GameDirectoryUtils.getAbsoluteGameDirectoryPath(withoutPrefix)));
+            }
+            if (resourceSourceType == ResourceSourceType.WEB) {
+                return this.isFileTypeWeb(withoutPrefix);
+            }
+        } catch (Exception ignore) {}
+        return false;
     }
 
     /**
