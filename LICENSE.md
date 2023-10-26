@@ -7,6 +7,6 @@ DON'T SNATCH MA STUFF LICENSE (DSMSL)
 4. You are not allowed to ship the mod with your projects.
 5. The end user needs to download the mod from the official download source**. This includes end users using launchers to automatically download mods from said offical source.
  
-*: You can ask me for permission via Discord (Keksuccino#0425).
+*: You can ask me for permission via Discord (Join server: https://discord.gg/rhayah27GC , then PM @keksuccino).
 **: The official download sources are: https://www.curseforge.com/minecraft/mc-mods/fancymenu-forge; https://www.curseforge.com/minecraft/mc-mods/fancymenu-fabric; https://modrinth.com/mod/fancymenu
 ```
