@@ -2,29 +2,31 @@ package de.keksuccino.fancymenu.customization.element.elements.playerentity.text
 
 import com.mojang.blaze3d.platform.NativeImage;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.file.type.FileMediaType;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.resources.ResourceHandlers;
-import de.keksuccino.fancymenu.util.resources.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resources.texture.SimpleTexture;
-import de.keksuccino.konkrete.resources.SelfcleaningDynamicTexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.InputStream;
 
 public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final SimpleTexture DEFAULT_SKIN = SimpleTexture.location(new ResourceLocation("textures/entity/player/wide/zuri.png"));
+
+    public static final ResourceLocation DEFAULT_SKIN_LOCATION = new ResourceLocation("textures/entity/player/wide/zuri.png");
+    public static final SimpleTexture DEFAULT_SKIN = SimpleTexture.location(DEFAULT_SKIN_LOCATION);
 
     protected boolean sourceIsPlayerName;
+    @Nullable
+    protected ITexture currentlyLoadingPngSkinTexture;
 
     public SkinResourceSupplier(@NotNull String source, boolean sourceIsPlayerName) {
         super(ITexture.class, FileMediaType.IMAGE, source);
@@ -33,111 +35,155 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
 
     //TODO Minecraft.getInstance().getSkinManager().getInsecureSkinLocation(gameProfile)
 
+    //TODO Implement "sourceIsPlayerName"
+    // - Asynchronously get Skin URL of player
+    // - If name == client player, try to get client skin if possible ??
+
     @Override
-    public @Nullable ITexture get() {
+    @NotNull
+    public ITexture get() {
+        if ((this.current != null) && this.current.isClosed()) {
+            this.current = null;
+        }
         String getterSource = PlaceholderParser.replacePlaceholders(this.source, false);
         if (!getterSource.equals(this.lastGetterSource)) {
             this.current = null;
+            this.releaseCurrentlyLoadingPngSkin();
+        }
+        if ((this.currentlyLoadingPngSkinTexture != null) && this.currentlyLoadingPngSkinTexture.isClosed()) {
+            this.releaseCurrentlyLoadingPngSkin();
         }
         this.lastGetterSource = getterSource;
+        String convertedSkinKey = "converted_skin_" + getterSource;
         if (this.current == null) {
             try {
-                ResourceSourceType sourceType = ResourceSourceType.getSourceTypeOf(getterSource);
-                String withoutPrefix = ResourceSourceType.getWithoutSourcePrefix(getterSource);
-                getterSource = sourceType.getSourcePrefix() + withoutPrefix;
-                if (FileTypes.PNG_IMAGE.isFileType(getterSource)) {
-                    ITexture t = ResourceHandlers.getImageHandler().get(getterSource);
-                    if (t != null) {
-                        //TODO return default skin here if t#getLocation() returns NULL
+                if (this.currentlyLoadingPngSkinTexture == null) {
+                    if (FileTypes.PNG_IMAGE.isFileType(getterSource)) {
+                        //Searches for an already converted version of the given skin
+                        ITexture cached = ResourceHandlers.getImageHandler().getIfRegistered(convertedSkinKey);
+                        if (cached != null) {
+                            this.current = cached;
+                            return this.current;
+                        }
+                        this.currentlyLoadingPngSkinTexture = ResourceHandlers.getImageHandler().get(getterSource);
+                        if (this.currentlyLoadingPngSkinTexture == null) {
+                            LOGGER.error("[FANCYMENU] Failed to get skin texture! Invalid resource source: " + getterSource);
+                            this.current = DEFAULT_SKIN;
+                        }
                     } else {
-                        LOGGER.error("[FANCYMENU] Failed to ");
+                        this.current = ResourceHandlers.getImageHandler().get(getterSource);
+                        if (this.current == null) {
+                            LOGGER.error("[FANCYMENU] Failed to get skin texture! Invalid resource source: " + getterSource);
+                            this.current = DEFAULT_SKIN;
+                        }
                     }
-                } else {
-                    this.current = ResourceHandlers.getImageHandler().get(getterSource);
+                }
+                if ((this.currentlyLoadingPngSkinTexture != null) && (this.current == null)) {
+                    if (this.currentlyLoadingPngSkinTexture.isReady()) {
+                        if (this.currentlyLoadingPngSkinTexture.getHeight() >= 64) {
+                            //If skin is new format (height >= 64), simply return texture without converting
+                            this.current = this.currentlyLoadingPngSkinTexture;
+                            this.currentlyLoadingPngSkinTexture = null;
+                        } else {
+                            //If skin is old format, convert to new format
+                            ResourceLocation loc = this.currentlyLoadingPngSkinTexture.getResourceLocation();
+                            if (loc != null) {
+                                ITexture converted = modernizePngSkinTexture(loc);
+                                this.releaseCurrentlyLoadingPngSkin();
+                                if (converted != null) {
+                                    ResourceHandlers.getImageHandler().release(convertedSkinKey, false);
+                                    ResourceHandlers.getImageHandler().registerIfKeyAbsent(convertedSkinKey, converted);
+                                    this.current = converted;
+                                } else {
+                                    LOGGER.error("[FANCYMENU] Failed to convert old skin to new format: " + getterSource);
+                                    this.current = DEFAULT_SKIN;
+                                }
+                            }
+                        }
+                    }
                 }
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to get skin resource: " + getterSource + " (" + this.source + ")", ex);
             }
         }
-        return this.current;
+        return (this.current != null) ? this.current : DEFAULT_SKIN;
     }
 
-    @Override
-    public void setSource(@NotNull String source) {
-        super.setSource(source);
+    @NotNull
+    public ResourceLocation getSkinLocation() {
+        ResourceLocation loc = this.get().getResourceLocation();
+        return (loc != null) ? loc : DEFAULT_SKIN_LOCATION;
     }
 
-    protected static ITexture modernizePngSkinTexture(@NotNull String pngSource) {
+    protected void releaseCurrentlyLoadingPngSkin() {
+        if (this.currentlyLoadingPngSkinTexture != null) {
+            ResourceHandlers.getImageHandler().release(this.currentlyLoadingPngSkinTexture);
+            this.currentlyLoadingPngSkinTexture = null;
+        }
+    }
+
+    @SuppressWarnings("all")
+    @Nullable
+    protected static ITexture modernizePngSkinTexture(@NotNull ResourceLocation location) {
+
+        InputStream in = null;
+        NativeImage oldTex = null;
+        NativeImage newTex = null;
+        ITexture iTexture = null;
+
         try {
 
-            NativeImage
+            in = Minecraft.getInstance().getResourceManager().open(location);
+            oldTex = NativeImage.read(in);
+            newTex = new NativeImage(64, 64, true);
 
-            ITexture t = ResourceHandlers.getImageHandler().get(source);
-            if (t != null) {
-                t.waitForReady(5000);
-                ResourceLocation loc = t.getResourceLocation();
-                if (loc != null) {
-                    if (t.getHeight() >= 64) {
-                        this.width = t.getWidth();
-                        this.height = t.getHeight();
-                        this.location = loc;
-                        this.loaded = true;
-                        return;
-                    }
-                }
-            }
+            //Copy old skin texture to new skin
+            newTex.copyFrom(oldTex);
 
-            File f = new File(this.path);
-            this.in = new FileInputStream(f);
+            int xOffsetLeg = 16;
+            int yOffsetLeg = 32;
+            //Clone small leg part 1
+            cloneSkinPart(newTex, 4, 16, 4, 4, xOffsetLeg, yOffsetLeg, true);
+            //Clone small leg part 2
+            cloneSkinPart(newTex, 8, 16, 4, 4, xOffsetLeg, yOffsetLeg, true);
+            //Clone big leg part 1
+            cloneSkinPart(newTex, 0, 20, 4, 12, xOffsetLeg + 8, yOffsetLeg, true);
+            //Clone big leg part 2
+            cloneSkinPart(newTex, 4, 20, 4, 12, xOffsetLeg, yOffsetLeg, true);
+            //Clone big leg part 3
+            cloneSkinPart(newTex, 8, 20, 4, 12, xOffsetLeg - 8, yOffsetLeg, true);
+            //Clone big leg part 4
+            cloneSkinPart(newTex, 12, 20, 4, 12, xOffsetLeg, yOffsetLeg, true);
 
-            NativeImage i = NativeImage.read(this.in);
-            this.width = i.getWidth();
-            this.height = i.getHeight();
-            //Converting old 1.7 skins to new 1.8+ skin format
-            if (this.height < 64) {
+            int xOffsetArm = -8;
+            int yOffsetArm = 32;
+            //Clone small arm part 1
+            cloneSkinPart(newTex, 44, 16, 4, 4, xOffsetArm, yOffsetArm, true);
+            //Clone small arm part 2
+            cloneSkinPart(newTex, 48, 16, 4, 4, xOffsetArm, yOffsetArm, true);
+            //Clone big arm part 1
+            cloneSkinPart(newTex, 40, 20, 4, 12, xOffsetArm + 8, yOffsetArm, true);
+            //Clone big arm part 2
+            cloneSkinPart(newTex, 44, 20, 4, 12, xOffsetArm, yOffsetArm, true);
+            //Clone big arm part 3
+            cloneSkinPart(newTex, 48, 20, 4, 12, xOffsetArm - 8, yOffsetArm, true);
+            //Clone big arm part 4
+            cloneSkinPart(newTex, 52, 20, 4, 12, xOffsetArm, yOffsetArm, true);
 
-                NativeImage skinNew = new NativeImage(64, 64, true);
+            iTexture = SimpleTexture.of(newTex);
 
-                //Copy old skin texture to new skin
-                skinNew.copyFrom(i);
-
-                int xOffsetLeg = 16;
-                int yOffsetLeg = 32;
-                //Clone small leg part 1
-                cloneSkinPart(skinNew, 4, 16, 4, 4, xOffsetLeg, yOffsetLeg, true);
-                //Clone small leg part 2
-                cloneSkinPart(skinNew, 8, 16, 4, 4, xOffsetLeg, yOffsetLeg, true);
-                //Clone big leg part 1
-                cloneSkinPart(skinNew, 0, 20, 4, 12, xOffsetLeg + 8, yOffsetLeg, true);
-                //Clone big leg part 2
-                cloneSkinPart(skinNew, 4, 20, 4, 12, xOffsetLeg, yOffsetLeg, true);
-                //Clone big leg part 3
-                cloneSkinPart(skinNew, 8, 20, 4, 12, xOffsetLeg - 8, yOffsetLeg, true);
-                //Clone big leg part 4
-                cloneSkinPart(skinNew, 12, 20, 4, 12, xOffsetLeg, yOffsetLeg, true);
-
-                int xOffsetArm = -8;
-                int yOffsetArm = 32;
-                //Clone small arm part 1
-                cloneSkinPart(skinNew, 44, 16, 4, 4, xOffsetArm, yOffsetArm, true);
-                //Clone small arm part 2
-                cloneSkinPart(skinNew, 48, 16, 4, 4, xOffsetArm, yOffsetArm, true);
-                //Clone big arm part 1
-                cloneSkinPart(skinNew, 40, 20, 4, 12, xOffsetArm + 8, yOffsetArm, true);
-                //Clone big arm part 2
-                cloneSkinPart(skinNew, 44, 20, 4, 12, xOffsetArm, yOffsetArm, true);
-                //Clone big arm part 3
-                cloneSkinPart(skinNew, 48, 20, 4, 12, xOffsetArm - 8, yOffsetArm, true);
-                //Clone big arm part 4
-                cloneSkinPart(skinNew, 52, 20, 4, 12, xOffsetArm, yOffsetArm, true);
-
-                i = skinNew;
-            }
-            this.location = Minecraft.getInstance().getTextureManager().register("fancymenu_modernized_skin_texture", new SelfcleaningDynamicTexture(i));
-            this.loaded = true;
-        } catch (Exception var2) {
-            var2.printStackTrace();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            CloseableUtils.closeQuietly(newTex);
+            CloseableUtils.closeQuietly(iTexture);
+            iTexture = null;
         }
+
+        CloseableUtils.closeQuietly(in);
+        CloseableUtils.closeQuietly(oldTex);
+
+        return iTexture;
+
     }
 
     /** First X/Y pixel is 0 **/
@@ -165,6 +211,7 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
         }
     }
 
+    @SuppressWarnings("all")
     protected static void cloneSkinPart(NativeImage in, int xStart, int yStart, int width, int height, int xOffset, int yOffset, boolean mirrorX) {
         copyPixelArea(in, xStart, yStart, xStart + xOffset, yStart + yOffset, width, height, mirrorX);
     }

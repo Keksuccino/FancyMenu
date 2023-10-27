@@ -180,6 +180,23 @@ public class SimpleTexture implements ITexture {
         return of(in, null, null);
     }
 
+    @NotNull
+    public static SimpleTexture of(@NotNull NativeImage nativeImage) {
+
+        Objects.requireNonNull(nativeImage);
+
+        SimpleTexture texture = new SimpleTexture();
+
+        texture.nativeImage = nativeImage;
+        texture.width = nativeImage.getWidth();
+        texture.height = nativeImage.getHeight();
+        texture.aspectRatio = new AspectRatio(nativeImage.getWidth(), nativeImage.getHeight());
+        texture.decoded = true;
+
+        return texture;
+
+    }
+
     protected SimpleTexture() {
     }
 

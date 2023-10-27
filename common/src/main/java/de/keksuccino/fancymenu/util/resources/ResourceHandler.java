@@ -25,12 +25,16 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
     protected Map<String, R> resources = new HashMap<>();
 
     /**
-     * Used to get {@link Resource}s.<br>
-     * Registers the requested resource if not already registered.<br><br>
+     * Get a {@link Resource} from a resource source.<br>
+     * Registers the requested resource if not already registered (uses the resource source as key).<br><br>
      *
-     * This method needs to be able to tell web, local and location sources apart.
+     * This method needs to be able to tell web, local and location sources apart.<br><br>
+     *
+     * This method should only return NULL if the resource failed to get registered!<br>
+     * By default, {@link Resource}s should finish loading itself asynchronously after construction.
      *
      * @param resourceSource Can be a URL to a web resource, a path to a local resource or a ResourceLocation (namespace:path).
+     * @return The requested {@link Resource} or NULL if the {@link Resource} failed to get registered.
      */
     @Nullable
     public R get(@NotNull String resourceSource) {
@@ -89,6 +93,17 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
             LOGGER.error("[FANCYMENU] Failed to get resource: " + resourceSource, ex);
         }
         return null;
+    }
+
+    /**
+     * Gets a registered {@link Resource} by its key.<br>
+     * Will NOT register any {@link Resource}s!
+     *
+     * @return The registered {@link Resource} or NULL if no {@link Resource} was found for the given key.
+     */
+    @Nullable
+    public R getIfRegistered(@NotNull String key) {
+        return this.getResourceMap().get(Objects.requireNonNull(key));
     }
 
 //    /**
@@ -174,16 +189,16 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
 
     /**
      * Allows for manual resource registration.<br>
-     * Registers the resource if no resource with the given resource source is registered yet.
+     * Registers the resource if no resource with the given key is registered yet.
      */
-    public void registerIfSourceAbsent(@NotNull R resource, @NotNull String resourceSource) {
-        if (!this.hasResourceSource(resourceSource)) {
-            this.getResourceMap().put(resourceSource, Objects.requireNonNull(resource));
+    public void registerIfKeyAbsent(@NotNull String key, @NotNull R resource) {
+        if (!this.hasResource(key)) {
+            this.getResourceMap().put(key, Objects.requireNonNull(resource));
         }
     }
 
-    public boolean hasResourceSource(@NotNull String resourceSource) {
-        return this.getResourceMap().containsKey(Objects.requireNonNull(resourceSource));
+    public boolean hasResource(@NotNull String key) {
+        return this.getResourceMap().containsKey(Objects.requireNonNull(key));
     }
 
     @Nullable
@@ -208,6 +223,8 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
         if (resource != null) {
             LOGGER.debug("[FANCYMENU] Registering resource: " + resourceSource);
             this.getResourceMap().put(resourceSource, resource);
+        } else {
+            LOGGER.error("[FANCYMENU] Failed to register resource: " + resourceSource);
         }
         return resource;
     }
@@ -222,22 +239,25 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
 
     /**
      * Releases a resource.<br>
-     * This will unregister the resource, remove it from any possible caches and close it.
+     * This will unregister the resource and close it.
      *
-     * @param resourceSource Can be a URL to a web resource, a path to a local resource or a ResourceLocation (namespace:path).
+     * @param key The key of the registered resource. In most cases, this is its resource source and can be a URL to a web resource, a path to a local resource or a ResourceLocation (namespace:path).
+     * @param isKeyResourceSource If the given key is a resource source.
      */
-    public void release(@NotNull String resourceSource) {
-        Objects.requireNonNull(resourceSource);
-        ResourceSourceType sourceType = ResourceSourceType.getSourceTypeOf(resourceSource);
-        if (sourceType == ResourceSourceType.LOCAL) {
-            resourceSource = GameDirectoryUtils.getAbsoluteGameDirectoryPath(ResourceSourceType.getWithoutSourcePrefix(resourceSource));
-            resourceSource = sourceType.getSourcePrefix() + resourceSource;
+    public void release(@NotNull String key, boolean isKeyResourceSource) {
+        Objects.requireNonNull(key);
+        if (isKeyResourceSource) {
+            ResourceSourceType sourceType = ResourceSourceType.getSourceTypeOf(key);
+            if (sourceType == ResourceSourceType.LOCAL) {
+                key = GameDirectoryUtils.getAbsoluteGameDirectoryPath(ResourceSourceType.getWithoutSourcePrefix(key));
+                key = sourceType.getSourcePrefix() + key;
+            }
         }
-        R resource = this.getResourceMap().get(resourceSource);
+        R resource = this.getResourceMap().get(key);
         if (resource != null) {
             CloseableUtils.closeQuietly(resource);
         }
-        this.getResourceMap().remove(resourceSource);
+        this.getResourceMap().remove(key);
     }
 
     /**
@@ -245,6 +265,7 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
      * This will unregister the resource, remove it from any possible caches and close it.
      */
     public void release(@NotNull R resource) {
+        Objects.requireNonNull(resource);
         String key = null;
         for (Map.Entry<String, R> m : this.getResourceMap().entrySet()) {
             if (m.getValue() == resource) {
@@ -252,8 +273,8 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
                 break;
             }
         }
+        CloseableUtils.closeQuietly(resource);
         if (key != null) {
-            CloseableUtils.closeQuietly(resource);
             this.getResourceMap().remove(key);
         }
     }

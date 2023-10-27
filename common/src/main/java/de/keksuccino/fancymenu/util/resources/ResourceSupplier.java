@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.resources;
 
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.file.type.FileMediaType;
 import de.keksuccino.fancymenu.util.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resources.text.IText;
@@ -83,6 +84,9 @@ public class ResourceSupplier<R extends Resource> {
     @SuppressWarnings("all")
     @Nullable
     public R get() {
+        if ((this.current != null) && this.current.isClosed()) {
+            this.current = null;
+        }
         String getterSource = PlaceholderParser.replacePlaceholders(this.source, false);
         if (!getterSource.equals(this.lastGetterSource)) {
             this.current = null;
