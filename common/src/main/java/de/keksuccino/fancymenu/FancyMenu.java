@@ -20,8 +20,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO WICHTIG: Player Entity element auf neues resource handling updaten (skin und cape textures) !!!!!!!!!!!!!!!!!
-
 	//TODO FIXEN: ResourceChooserScreen noch broken
 
 	//TODO FIXEN: FileChooserScreen: FileTypes Anzeige ist buggy

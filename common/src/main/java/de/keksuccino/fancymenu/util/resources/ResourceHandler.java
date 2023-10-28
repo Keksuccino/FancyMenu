@@ -23,6 +23,7 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
     private static final Logger LOGGER = LogManager.getLogger();
 
     protected Map<String, R> resources = new HashMap<>();
+    protected List<String> failedSources = new ArrayList<>();
 
     /**
      * Get a {@link Resource} from a resource source.<br>
@@ -53,6 +54,8 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
             //Check if map contains resource and return cached resource if true
             R cached = this.getFromMapAndClearClosed(resourceSource);
             if (cached != null) return cached;
+            //Check if handler failed to register resource in the past
+            if (this.getFailedSourcesList().contains(resourceSource)) return null;
             //Search file type of resource
             F fileType = null;
             for (F type : this.getAllowedFileTypes()) {
@@ -224,7 +227,10 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
             LOGGER.debug("[FANCYMENU] Registering resource: " + resourceSource);
             this.getResourceMap().put(resourceSource, resource);
         } else {
-            LOGGER.error("[FANCYMENU] Failed to register resource: " + resourceSource);
+            if (!this.getFailedSourcesList().contains(resourceSource)) {
+                this.getFailedSourcesList().add(resourceSource);
+                LOGGER.error("[FANCYMENU] Failed to register resource: " + resourceSource);
+            }
         }
         return resource;
     }
@@ -232,6 +238,11 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
     @NotNull
     protected Map<String, R> getResourceMap() {
         return this.resources;
+    }
+
+    @NotNull
+    protected List<String> getFailedSourcesList() {
+        return this.failedSources;
     }
 
     @NotNull
@@ -247,6 +258,8 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
     public void release(@NotNull String key, boolean isKeyResourceSource) {
         Objects.requireNonNull(key);
         if (isKeyResourceSource) {
+            String finalKey = key;
+            this.getFailedSourcesList().removeIf(s -> s.equals(finalKey));
             ResourceSourceType sourceType = ResourceSourceType.getSourceTypeOf(key);
             if (sourceType == ResourceSourceType.LOCAL) {
                 key = GameDirectoryUtils.getAbsoluteGameDirectoryPath(ResourceSourceType.getWithoutSourcePrefix(key));
@@ -286,6 +299,7 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
     public void releaseAll() {
         this.getResourceMap().values().forEach(CloseableUtils::closeQuietly);
         this.getResourceMap().clear();
+        this.getFailedSourcesList().clear();
     }
 
 }

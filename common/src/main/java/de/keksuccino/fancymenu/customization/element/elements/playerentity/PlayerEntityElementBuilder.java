@@ -1,12 +1,8 @@
 package de.keksuccino.fancymenu.customization.element.elements.playerentity;
 
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
-import de.keksuccino.fancymenu.events.ModReloadEvent;
-import de.keksuccino.fancymenu.util.event.acara.EventHandler;
-import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.network.chat.Component;
@@ -14,26 +10,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 
 @SuppressWarnings("all")
 public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityElement, PlayerEntityEditorElement> {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public static final Map<String, PlayerEntityElement> ELEMENT_CACHE = new HashMap<>();
-
     public PlayerEntityElementBuilder() {
         super("fancymenu_customization_player_entity");
-        EventHandler.INSTANCE.registerListenersOf(this);
-    }
-    
-    @EventListener
-    public void onMenuReload(ModReloadEvent e) {
-        ELEMENT_CACHE.clear();
-        LOGGER.info("[FANCYMENU] PlayerEntity element cache cleared!");
     }
 
     @Override
@@ -53,35 +37,42 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
 
         if (!element.copyClientPlayer) {
 
-            element.setPlayerName(Objects.requireNonNullElse(serialized.getValue("playername"), element.playerName), true);
-
+            element.setPlayerName(serialized.getValue("playername"));
             element.autoSkin = this.deserializeBoolean(element.autoSkin, serialized.getValue("auto_skin"));
-
             element.autoCape = this.deserializeBoolean(element.autoCape, serialized.getValue("auto_cape"));
-
             element.slim = this.deserializeBoolean(element.slim, serialized.getValue("slim"));
 
             if (!element.autoSkin) {
-                element.skinUrl = serialized.getValue("skinurl");
-                if (element.skinUrl != null) {
-                    element.setSkinTextureBySource(element.skinUrl, true);
+                //Legacy support
+                String skinUrl = serialized.getValue("skinurl");
+                String skinPath = serialized.getValue("skinpath");
+                if (skinUrl != null) {
+                    element.setSkinBySource(skinUrl);
+                } else if (skinPath != null) {
+                    element.setSkinBySource(skinPath);
                 }
-                element.skinPath = serialized.getValue("skinpath");
-                if ((element.skinPath != null) && (element.skinUrl == null)) {
-                    element.setSkinTextureBySource(ScreenCustomization.getAbsoluteGameDirectoryPath(element.skinPath), false);
+                //Modern source deserialization
+                String skinResourceSource = serialized.getValue("skin_source");
+                if (skinResourceSource != null) {
+                    element.setSkinBySource(skinResourceSource);
                 }
             } else {
                 element.setSkinByPlayerName();
             }
 
             if (!element.autoCape) {
-                element.capeUrl = serialized.getValue("capeurl");
-                if (element.capeUrl != null) {
-                    element.setCapeTextureBySource(element.capeUrl, true);
+                //Legacy support
+                String capeUrl = serialized.getValue("capeurl");
+                String capePath = serialized.getValue("capepath");
+                if (capeUrl != null) {
+                    element.setCapeBySource(capeUrl);
+                } else if (capePath != null) {
+                    element.setCapeBySource(capePath);
                 }
-                element.capePath = serialized.getValue("capepath");
-                if ((element.capePath != null) && (element.capeUrl == null)) {
-                    element.setCapeTextureBySource(ScreenCustomization.getAbsoluteGameDirectoryPath(element.capePath), false);
+                //Modern source deserialization
+                String capeResourceSource = serialized.getValue("cape_source");
+                if (capeResourceSource != null) {
+                    element.setCapeBySource(capeResourceSource);
                 }
             } else {
                 element.setCapeByPlayerName();
@@ -164,17 +155,11 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
         serializeTo.putProperty("auto_skin", "" + element.autoSkin);
         serializeTo.putProperty("auto_cape", "" + element.autoCape);
         serializeTo.putProperty("slim", "" + element.slim);
-        if (element.skinUrl != null) {
-            serializeTo.putProperty("skinurl", element.skinUrl);
+        if (element.skinTextureSupplier != null) {
+            serializeTo.putProperty("skin_source", element.skinTextureSupplier.getSourceWithPrefix());
         }
-        if (element.skinPath != null) {
-            serializeTo.putProperty("skinpath", element.skinPath);
-        }
-        if (element.capeUrl != null) {
-            serializeTo.putProperty("capeurl", element.capeUrl);
-        }
-        if (element.capePath != null) {
-            serializeTo.putProperty("capepath", element.capePath);
+        if (element.capeTextureSupplier != null) {
+            serializeTo.putProperty("cape_source", element.capeTextureSupplier.getSourceWithPrefix());
         }
         serializeTo.putProperty("scale", element.scale);
         serializeTo.putProperty("parrot", "" + element.hasParrotOnShoulder);

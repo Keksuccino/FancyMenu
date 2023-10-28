@@ -5,7 +5,6 @@ import java.util.*;
 import com.google.common.io.Files;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
-import de.keksuccino.fancymenu.util.audio.SoundRegistry;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
@@ -225,8 +224,6 @@ public class LayoutHandler {
 
 	public static void openLayoutEditor(@NotNull Layout layout, @Nullable Screen layoutTargetScreen) {
 		try {
-			SoundRegistry.stopSounds();
-			SoundRegistry.resetSounds();
 			for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
 				if (r instanceof AdvancedAnimation) {
 					((AdvancedAnimation)r).stopAudio();

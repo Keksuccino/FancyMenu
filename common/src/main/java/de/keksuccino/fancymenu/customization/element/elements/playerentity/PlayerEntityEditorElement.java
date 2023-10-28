@@ -1,11 +1,8 @@
 package de.keksuccino.fancymenu.customization.element.elements.playerentity;
 
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.file.FileFilter;
-import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -42,7 +39,7 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                         consumes -> ((PlayerEntityElement) consumes.element).playerName,
                         (element1, s) -> {
                             PlayerEntityElement i = ((PlayerEntityElement) element1.element);
-                            i.setPlayerName(s, true);
+                            i.setPlayerName(s);
                             if (i.autoCape) {
                                 i.setCapeByPlayerName();
                             }
@@ -72,12 +69,12 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
         this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "auto_skin",
                         consumes -> (consumes instanceof PlayerEntityEditorElement),
                         consumes -> ((PlayerEntityElement) consumes.element).autoSkin,
-                        (element1, s) -> {
-                            ((PlayerEntityElement) element1.element).autoSkin = s;
-                            if (s) {
+                        (element1, auto) -> {
+                            ((PlayerEntityElement) element1.element).autoSkin = auto;
+                            if (auto) {
                                 ((PlayerEntityElement) element1.element).setSkinByPlayerName();
                             } else {
-                                ((PlayerEntityElement) element1.element).setSkinTextureBySource(null, false);
+                                ((PlayerEntityElement) element1.element).skinTextureSupplier = null;
                             }
                         },
                         "fancymenu.helper.editor.items.playerentity.skin.auto")
@@ -88,44 +85,6 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                     }
                     return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.copy_client_player.blocked_until_disabled"));
                 });
-
-        ContextMenu setSkinMenu = new ContextMenu();
-        this.rightClickMenu.addSubMenuEntry("set_skin", Component.translatable("fancymenu.helper.editor.items.playerentity.skin.set"), setSkinMenu)
-                .setIsActiveSupplier((menu, entry) -> (!((PlayerEntityElement) this.element).copyClientPlayer && !((PlayerEntityElement) this.element).autoSkin))
-                .setTooltipSupplier((menu, entry) -> {
-                    if (entry.isActive()) {
-                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.skin.set.desc"));
-                    } else {
-                        if (((PlayerEntityElement) this.element).autoSkin) {
-                            return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.skin.auto.blocked_until_disabled"));
-                        }
-                        if (((PlayerEntityElement) this.element).copyClientPlayer) {
-                            return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.copy_client_player.blocked_until_disabled"));
-                        }
-                    }
-                    return Tooltip.of("");
-                });
-
-        //TODO Skin Setter auf neues Resource system updaten
-
-//        this.addFileChooserContextMenuEntryTo(setSkinMenu, "set_local_skin", PlayerEntityEditorElement.class,
-//                null,
-//                element -> element.getElement().skinPath,
-//                (element, path) -> {
-//                    element.getElement().skinPath = path;
-//                    element.getElement().setSkinTextureBySource(ScreenCustomization.getAbsoluteGameDirectoryPath(path), false);
-//                },
-//                Component.translatable("fancymenu.helper.editor.items.playerentity.skin.set.local"), true,
-//                file -> file.getAbsolutePath().toLowerCase().endsWith(".png") && FileFilter.RESOURCE_NAME_FILTER.checkFile(file));
-//
-//        this.addStringInputContextMenuEntryTo(setSkinMenu, "set_web_skin", PlayerEntityEditorElement.class,
-//                element -> element.getElement().skinUrl,
-//                (element, url) -> {
-//                    element.getElement().skinUrl = url;
-//                    element.getElement().setSkinTextureBySource(url, true);
-//                },
-//                null, false, true, Component.translatable("fancymenu.helper.editor.items.playerentity.skin.set.web"),
-//                true, null, TextValidators.BASIC_URL_TEXT_VALIDATOR, null);
 
         this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "slim_skin",
                         consumes -> (consumes instanceof PlayerEntityEditorElement),
@@ -144,7 +103,32 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                             return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.copy_client_player.blocked_until_disabled"));
                         }
                     }
-                    return Tooltip.of("");
+                    return null;
+                });
+
+        this.addImageResourceChooserContextMenuEntryTo(this.rightClickMenu, "set_skin_texture", PlayerEntityEditorElement.class,
+                        null,
+                        consumes -> consumes.getElement().skinTextureSupplier,
+                        (element, supplier) -> {
+                            if (supplier != null) {
+                                element.getElement().setSkinBySource(supplier.getSourceWithPrefix());
+                            } else {
+                                element.getElement().skinTextureSupplier = null;
+                            }
+                        },
+                        Component.translatable("fancymenu.elements.player_entity.skin_texture"),
+                        true, null, true, true, true)
+                .setStackable(false)
+                .setIcon(ContextMenu.IconFactory.getIcon("image"))
+                .setIsActiveSupplier((menu, entry) -> (!this.getElement().copyClientPlayer && !this.getElement().autoSkin))
+                .setTooltipSupplier((menu, entry) -> {
+                    if (this.getElement().autoSkin) {
+                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.skin.auto.blocked_until_disabled"));
+                    }
+                    if (this.getElement().copyClientPlayer) {
+                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.copy_client_player.blocked_until_disabled"));
+                    }
+                    return null;
                 });
 
         this.rightClickMenu.addSeparatorEntry("player_entity_separator_2");
@@ -152,12 +136,12 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
         this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "auto_cape",
                         consumes -> (consumes instanceof PlayerEntityEditorElement),
                         consumes -> ((PlayerEntityElement) consumes.element).autoCape,
-                        (element1, s) -> {
-                            ((PlayerEntityElement) element1.element).autoCape = s;
-                            if (s) {
+                        (element1, auto) -> {
+                            ((PlayerEntityElement) element1.element).autoCape = auto;
+                            if (auto) {
                                 ((PlayerEntityElement) element1.element).setCapeByPlayerName();
                             } else {
-                                ((PlayerEntityElement) element1.element).setCapeTextureBySource(null, false);
+                                ((PlayerEntityElement) element1.element).capeTextureSupplier = null;
                             }
                         },
                         "fancymenu.helper.editor.items.playerentity.cape.auto")
@@ -169,47 +153,32 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                     return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.copy_client_player.blocked_until_disabled"));
                 });
 
-        ContextMenu setCapeMenu = new ContextMenu();
-        this.rightClickMenu.addSubMenuEntry("set_cape", Component.translatable("fancymenu.helper.editor.items.playerentity.cape.set"), setCapeMenu)
-                .setIsActiveSupplier((menu, entry) -> (!((PlayerEntityElement) this.element).copyClientPlayer && !((PlayerEntityElement) this.element).autoCape))
+        this.addImageResourceChooserContextMenuEntryTo(this.rightClickMenu, "set_cape_texture", PlayerEntityEditorElement.class,
+                        null,
+                        consumes -> consumes.getElement().capeTextureSupplier,
+                        (element, supplier) -> {
+                            if (supplier != null) {
+                                element.getElement().setCapeBySource(supplier.getSourceWithPrefix());
+                            } else {
+                                element.getElement().capeTextureSupplier = null;
+                            }
+                        },
+                        Component.translatable("fancymenu.elements.player_entity.cape_texture"),
+                        true, null, true, true, true)
+                .setStackable(false)
+                .setIcon(ContextMenu.IconFactory.getIcon("image"))
+                .setIsActiveSupplier((menu, entry) -> (!this.getElement().copyClientPlayer && !this.getElement().autoCape))
                 .setTooltipSupplier((menu, entry) -> {
-                    if (entry.isActive()) {
-                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.cape.set.desc"));
-                    } else {
-                        if (((PlayerEntityElement) this.element).autoCape) {
-                            return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.cape.auto.blocked_until_disabled"));
-                        }
-                        if (((PlayerEntityElement) this.element).copyClientPlayer) {
-                            return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.copy_client_player.blocked_until_disabled"));
-                        }
+                    if (this.getElement().autoCape) {
+                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.cape.auto.blocked_until_disabled"));
                     }
-                    return Tooltip.of("");
+                    if (this.getElement().copyClientPlayer) {
+                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.copy_client_player.blocked_until_disabled"));
+                    }
+                    return null;
                 });
 
-        //TODO Cape chooser auf neues resource system updaten
-
-//        this.addFileChooserContextMenuEntryTo(setCapeMenu, "set_local_cape", PlayerEntityEditorElement.class,
-//                null,
-//                element -> element.getElement().capePath,
-//                (element, s) -> {
-//                    element.getElement().capePath = s;
-//                    element.getElement().setCapeTextureBySource(ScreenCustomization.getAbsoluteGameDirectoryPath(s), false);
-//                },
-//                Component.translatable("fancymenu.helper.editor.items.playerentity.cape.set.local"),
-//                false,
-//                file -> file.getAbsolutePath().toLowerCase().endsWith(".png") && FileFilter.RESOURCE_NAME_FILTER.checkFile(file));
-//
-//        this.addStringInputContextMenuEntryTo(setCapeMenu, "set_web_cape",
-//                PlayerEntityEditorElement.class,
-//                consumes -> consumes.getElement().capeUrl,
-//                (element, s) -> {
-//                    element.getElement().capeUrl = s;
-//                    element.getElement().setCapeTextureBySource(s, false);
-//                },
-//                null, false, true, Component.translatable("fancymenu.helper.editor.items.playerentity.cape.set.web"),
-//                true, null, TextValidators.BASIC_URL_TEXT_VALIDATOR, null);
-
-        this.rightClickMenu.addSeparatorEntry("separator_after_set_web_cape");
+        this.rightClickMenu.addSeparatorEntry("separator_after_set_cape");
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "head_follows_mouse", PlayerEntityEditorElement.class,
                 element -> element.getElement().headFollowsMouse,
@@ -227,14 +196,6 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                         Minecraft.getInstance().setScreen(this.editor);
                     }));
                 });
-
-//        this.addGenericIntegerInputContextMenuEntryTo(this.rightClickMenu, "entity_scale",
-//                        consumes -> (consumes instanceof PlayerEntityEditorElement),
-//                        consumes -> ((PlayerEntityElement) consumes.element).scale,
-//                        (element, scale) -> ((PlayerEntityElement) element.element).scale = scale,
-//                        Component.translatable("fancymenu.helper.editor.items.playerentity.scale"),
-//                        true, 30, null, null)
-//                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.scale.desc")));
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "entity_scale", PlayerEntityEditorElement.class,
                 consumes -> consumes.getElement().scale,

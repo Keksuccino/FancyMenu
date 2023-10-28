@@ -1,20 +1,29 @@
 package de.keksuccino.fancymenu.util;
 
-import org.apache.commons.io.IOUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.Objects;
 import java.util.Scanner;
 
-public class PlayerUtils {
+public class PlayerSkinUtils {
 
-    public static String getSkinURL(String playerName) {
+    @Nullable
+    public static String getSkinURL(@NotNull String playerName) {
+        Objects.requireNonNull(playerName);
         String skinUrl = null;
         Scanner scanner = null;
+        InputStream in = null;
+        InputStreamReader reader = null;
         try {
             URL url = new URL("https://api.ashcon.app/mojang/v2/user/" + playerName);
-            scanner = new Scanner(new InputStreamReader(url.openStream()));
+            in = url.openStream();
+            reader = new InputStreamReader(in);
+            scanner = new Scanner(reader);
             boolean b = false;
             boolean b2 = false;
             while (scanner.hasNextLine()) {
@@ -35,22 +44,29 @@ public class PlayerUtils {
                     }
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException ignore) {
+            //empty
         } catch (Exception e) {
             e.printStackTrace();
         }
-        if (scanner != null) {
-            IOUtils.closeQuietly(scanner);
-        }
+        CloseableUtils.closeQuietly(scanner);
+        CloseableUtils.closeQuietly(in);
+        CloseableUtils.closeQuietly(reader);
         return skinUrl;
     }
 
-    public static String getCapeURL(String playerName) {
+    @Nullable
+    public static String getCapeURL(@NotNull String playerName) {
+        Objects.requireNonNull(playerName);
         String capeUrl = null;
         Scanner scanner = null;
+        InputStream in = null;
+        InputStreamReader reader = null;
         try {
             URL url = new URL("https://api.ashcon.app/mojang/v2/user/" + playerName);
-            scanner = new Scanner(new InputStreamReader(url.openStream()));
+            in = url.openStream();
+            reader = new InputStreamReader(in);
+            scanner = new Scanner(reader);
             boolean b = false;
             boolean b2 = false;
             while (scanner.hasNextLine()) {
@@ -71,22 +87,28 @@ public class PlayerUtils {
                     }
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException ignore) {
+            //empty
         } catch (Exception e) {
             e.printStackTrace();
         }
-        if (scanner != null) {
-            IOUtils.closeQuietly(scanner);
-        }
+        CloseableUtils.closeQuietly(scanner);
+        CloseableUtils.closeQuietly(in);
+        CloseableUtils.closeQuietly(reader);
         return capeUrl;
     }
 
-    public static boolean hasSlimSkin(String playerName) {
+    public static boolean hasSlimSkin(@NotNull String playerName) {
+        Objects.requireNonNull(playerName);
         boolean slim = false;
         Scanner scanner = null;
+        InputStream in = null;
+        InputStreamReader reader = null;
         try {
             URL url = new URL("https://api.ashcon.app/mojang/v2/user/" + playerName);
-            scanner = new Scanner(new InputStreamReader(url.openStream()));
+            in = url.openStream();
+            reader = new InputStreamReader(in);
+            scanner = new Scanner(reader);
             boolean b = false;
             boolean b2 = false;
             while (scanner.hasNextLine()) {
@@ -110,13 +132,14 @@ public class PlayerUtils {
                     }
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException ignore) {
+            //empty
         } catch (Exception e) {
             e.printStackTrace();
         }
-        if (scanner != null) {
-            IOUtils.closeQuietly(scanner);
-        }
+        CloseableUtils.closeQuietly(scanner);
+        CloseableUtils.closeQuietly(in);
+        CloseableUtils.closeQuietly(reader);
         return slim;
     }
 

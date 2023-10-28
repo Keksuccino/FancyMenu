@@ -500,18 +500,10 @@
   "fancymenu.helper.editor.items.playerentity.skin.auto.on": "Auto Skin: §yEnabled",
   "fancymenu.helper.editor.items.playerentity.skin.auto.desc": "Tries to automatically pick\nthe skin based on the\nelement's player name.",
   "fancymenu.helper.editor.items.playerentity.skin.auto.blocked_until_disabled": "§xYou can't do this while\n§x\"Auto Skin\" is enabled.",
-  "fancymenu.helper.editor.items.playerentity.skin.set": "Skin Texture",
-  "fancymenu.helper.editor.items.playerentity.skin.set.desc": "Set the skin texture.\nSupports local and web textures.",
-  "fancymenu.helper.editor.items.playerentity.skin.set.local": "Local Skin Texture",
-  "fancymenu.helper.editor.items.playerentity.skin.set.web": "Web Skin Texture",
   "fancymenu.helper.editor.items.playerentity.cape.auto.off": "Auto Cape: §xDisabled",
   "fancymenu.helper.editor.items.playerentity.cape.auto.on": "Auto Cape: §yEnabled",
   "fancymenu.helper.editor.items.playerentity.cape.auto.desc": "Tries to automatically pick\nthe cape based on the\nelement's player name.",
   "fancymenu.helper.editor.items.playerentity.cape.auto.blocked_until_disabled": "§xYou can't do this while\n§x\"Auto Cape\" is enabled.",
-  "fancymenu.helper.editor.items.playerentity.cape.set": "Cape Texture",
-  "fancymenu.helper.editor.items.playerentity.cape.set.desc": "Set the cape texture.\nSupports local and web textures.",
-  "fancymenu.helper.editor.items.playerentity.cape.set.local": "Local Cape Texture",
-  "fancymenu.helper.editor.items.playerentity.cape.set.web": "Web Cape Texture",
   "fancymenu.helper.editor.items.playerentity.scale": "Entity Scale",
   "fancymenu.helper.editor.items.playerentity.scale.desc": "Set the entity's scale.\n\nDefault scale is 30.",
   "fancymenu.editor.elements.player_entity.pose.body_x_rot": "Body X Rotation: %s",
@@ -1120,5 +1112,7 @@
   "fancymenu.elements.text.v2.source_mode.resource": "Resource",
   "fancymenu.elements.text.v2.source_mode.desc": "§lDirect: §rInput text content via text editor.\n§lResource: §rSet a source file to get the text content from.",
   "fancymenu.elements.text.v2.source.choose": "Text Source",
-  "fancymenu.elements.text.v2.source.input": "Text Content"
+  "fancymenu.elements.text.v2.source.input": "Text Content",
+  "fancymenu.elements.player_entity.skin_texture": "Skin Texture",
+  "fancymenu.elements.player_entity.cape_texture": "Cape Texture"
 }
