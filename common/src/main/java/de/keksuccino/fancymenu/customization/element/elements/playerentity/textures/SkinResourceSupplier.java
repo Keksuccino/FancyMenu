@@ -7,11 +7,11 @@ import de.keksuccino.fancymenu.util.PlayerSkinUtils;
 import de.keksuccino.fancymenu.util.file.type.FileMediaType;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.resources.ResourceHandlers;
+import de.keksuccino.fancymenu.util.resources.ResourceSource;
 import de.keksuccino.fancymenu.util.resources.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resources.texture.SimpleTexture;
-import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,13 +27,13 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
     private static final Logger LOGGER = LogManager.getLogger();
     public static final ResourceLocation DEFAULT_SKIN_LOCATION = new ResourceLocation("textures/entity/player/wide/zuri.png");
     public static final SimpleTexture DEFAULT_SKIN = SimpleTexture.location(DEFAULT_SKIN_LOCATION);
-    protected static final Map<String, PlayerSkin> CACHED_PLAYER_NAME_SKINS = new HashMap<>();
+    protected static final Map<String, SkinMetadata> CACHED_SKIN_METADATA = new HashMap<>();
 
     protected boolean sourceIsPlayerName;
     @Nullable
     protected ITexture currentlyLoadingPngSkinTexture;
     @Nullable
-    protected volatile PlayerSkin playerNameSkin;
+    protected volatile SkinResourceSupplier.SkinMetadata playerNameSkinMeta;
     protected volatile boolean startedDownloadingMetadata = false;
     @Nullable
     protected String lastGetterPlayerName;
@@ -46,77 +46,85 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
     @Override
     @NotNull
     public ITexture get() {
-        PlayerSkin playerNameSkinCached = this.playerNameSkin;
+        SkinMetadata playerNameSkinMetaFinal = this.playerNameSkinMeta;
         String getterPlayerName = PlaceholderParser.replacePlaceholders(this.source, false);
         if (this.sourceIsPlayerName) {
+            //If last player name is different one, reload supplier
             if (!getterPlayerName.equals(this.lastGetterPlayerName)) {
                 this.startedDownloadingMetadata = false;
                 this.current = null;
-                this.playerNameSkin = null;
-                playerNameSkinCached = null;
-                this.releaseCurrentlyLoadingPngSkin();
+                this.playerNameSkinMeta = null;
+                playerNameSkinMetaFinal = null;
+                this.clearCurrentlyLoadingPngSkinTexture();
             }
             this.lastGetterPlayerName = getterPlayerName;
-            if (playerNameSkinCached == null) {
+            if (playerNameSkinMetaFinal == null) {
                 if (!this.startedDownloadingMetadata) {
-                    if (CACHED_PLAYER_NAME_SKINS.containsKey(getterPlayerName)) {
+                    if (CACHED_SKIN_METADATA.containsKey(getterPlayerName)) {
                         this.startedDownloadingMetadata = true;
-                        this.playerNameSkin = CACHED_PLAYER_NAME_SKINS.get(getterPlayerName);
-                        playerNameSkinCached = this.playerNameSkin;
+                        this.playerNameSkinMeta = CACHED_SKIN_METADATA.get(getterPlayerName);
+                        playerNameSkinMetaFinal = this.playerNameSkinMeta;
                     } else {
                         this.downloadPlayerNameSkinMetadata(getterPlayerName);
                     }
                 }
             }
-            if (playerNameSkinCached == null) return DEFAULT_SKIN;
+            if (playerNameSkinMetaFinal == null) {
+                return DEFAULT_SKIN;
+            }
         }
         if ((this.current != null) && this.current.isClosed()) {
             this.current = null;
         }
         String getterSource = PlaceholderParser.replacePlaceholders(this.source, false);
-        if (this.sourceIsPlayerName && ((playerNameSkinCached == null) || (playerNameSkinCached.resourceSource() == null))) {
-            return DEFAULT_SKIN;
+        if (this.sourceIsPlayerName) {
+            if ((playerNameSkinMetaFinal == null) || (playerNameSkinMetaFinal.resourceSource() == null)) {
+                return DEFAULT_SKIN;
+            }
+            getterSource = playerNameSkinMetaFinal.resourceSource();
         }
-        if (this.sourceIsPlayerName) getterSource = playerNameSkinCached.resourceSource();
         if (!getterSource.equals(this.lastGetterSource)) {
             this.current = null;
-            this.releaseCurrentlyLoadingPngSkin();
-        }
-        if ((this.currentlyLoadingPngSkinTexture != null) && this.currentlyLoadingPngSkinTexture.isClosed()) {
-            this.releaseCurrentlyLoadingPngSkin();
+            this.clearCurrentlyLoadingPngSkinTexture();
         }
         this.lastGetterSource = getterSource;
-        String convertedSkinKey = "converted_skin_" + getterSource;
+        //If 'currentlyLoadingPngSkinTexture' got closed, NULL it (and close it again, just to be safe)
+        if ((this.currentlyLoadingPngSkinTexture != null) && this.currentlyLoadingPngSkinTexture.isClosed()) {
+            this.clearCurrentlyLoadingPngSkinTexture();
+        }
         if (this.current == null) {
-            if (this.sourceIsPlayerName && !CACHED_PLAYER_NAME_SKINS.containsKey(getterPlayerName)) CACHED_PLAYER_NAME_SKINS.put(getterPlayerName, playerNameSkinCached);
+            ResourceSource resourceSource = ResourceSource.of(getterSource);
+            String convertedSkinKey = "converted_skin_" + resourceSource.getSourceWithPrefix();
+            //Caches the Skin Metadata
+            if (this.sourceIsPlayerName && !CACHED_SKIN_METADATA.containsKey(getterPlayerName)) CACHED_SKIN_METADATA.put(getterPlayerName, playerNameSkinMetaFinal);
+            //Searches for an already converted version of the given skin
+            ITexture cached = ResourceHandlers.getImageHandler().getIfRegistered(convertedSkinKey);
+            if (cached != null) {
+                this.current = cached;
+                return this.current;
+            }
             try {
                 if (this.currentlyLoadingPngSkinTexture == null) {
-                    if (this.sourceIsPlayerName || FileTypes.PNG_IMAGE.isFileType(getterSource)) {
-                        //Searches for an already converted version of the given skin
-                        ITexture cached = ResourceHandlers.getImageHandler().getIfRegistered(convertedSkinKey);
-                        if (cached != null) {
-                            this.current = cached;
-                            return this.current;
-                        }
+                    if (this.sourceIsPlayerName || FileTypes.PNG_IMAGE.isFileType(resourceSource, true)) {
                         if (this.sourceIsPlayerName) {
-                            this.currentlyLoadingPngSkinTexture = FileTypes.PNG_IMAGE.getCodec().readWeb(ResourceSourceType.getWithoutSourcePrefix(getterSource));
+                            this.currentlyLoadingPngSkinTexture = ResourceHandlers.getImageHandler().hasResource(resourceSource.getSourceWithPrefix()) ? ResourceHandlers.getImageHandler().get(resourceSource.getSourceWithPrefix()) : FileTypes.PNG_IMAGE.getCodec().readWeb(resourceSource.getSourceWithoutPrefix());;
                             if (this.currentlyLoadingPngSkinTexture != null) {
-                                ResourceHandlers.getImageHandler().registerIfKeyAbsent(getterSource, this.currentlyLoadingPngSkinTexture);
+                                ResourceHandlers.getImageHandler().registerIfKeyAbsent(resourceSource.getSourceWithPrefix(), this.currentlyLoadingPngSkinTexture);
                             } else {
-                                LOGGER.error("[FANCYMENU] Failed to get skin by player name! PNG codec returned NULL: " + getterSource);
+                                LOGGER.error("[FANCYMENU] SkinResourceSupplier failed to get skin by player name! PNG codec returned NULL: " + resourceSource);
                                 this.current = DEFAULT_SKIN;
                             }
                         } else {
-                            this.currentlyLoadingPngSkinTexture = ResourceHandlers.getImageHandler().get(getterSource);
+                            this.currentlyLoadingPngSkinTexture = ResourceHandlers.getImageHandler().get(resourceSource);
                         }
                         if (this.currentlyLoadingPngSkinTexture == null) {
-                            LOGGER.error("[FANCYMENU] Failed to get skin texture! Invalid resource source: " + getterSource);
+                            LOGGER.error("[FANCYMENU] SkinResourceSupplier failed to get skin texture! Invalid source: " + resourceSource);
                             this.current = DEFAULT_SKIN;
                         }
                     } else {
-                        this.current = ResourceHandlers.getImageHandler().get(getterSource);
+                        this.current = ResourceHandlers.getImageHandler().get(resourceSource);
                         if (this.current == null) {
-                            LOGGER.error("[FANCYMENU] Failed to get skin texture! Invalid resource source: " + getterSource);
+                            LOGGER.error("[FANCYMENU] SkinResourceSupplier failed to get skin texture! Invalid source: " + resourceSource);
                             this.current = DEFAULT_SKIN;
                         }
                     }
@@ -129,16 +137,14 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
                             this.currentlyLoadingPngSkinTexture = null;
                         } else {
                             //If skin is old format, convert to new format
-                            ResourceLocation loc = this.currentlyLoadingPngSkinTexture.getResourceLocation();
-                            if (loc != null) {
-                                ITexture converted = modernizePngSkinTexture(loc);
-                                this.releaseCurrentlyLoadingPngSkin();
+                            if (this.currentlyLoadingPngSkinTexture.isReady()) {
+                                ITexture converted = modernizePngSkinTexture(this.currentlyLoadingPngSkinTexture);
+                                this.clearCurrentlyLoadingPngSkinTexture();
                                 if (converted != null) {
-                                    ResourceHandlers.getImageHandler().release(convertedSkinKey, false);
                                     ResourceHandlers.getImageHandler().registerIfKeyAbsent(convertedSkinKey, converted);
                                     this.current = converted;
                                 } else {
-                                    LOGGER.error("[FANCYMENU] Failed to convert old skin to new format: " + getterSource);
+                                    LOGGER.error("[FANCYMENU] SkinResourceSupplier failed to convert old skin to new format: " + resourceSource);
                                     this.current = DEFAULT_SKIN;
                                 }
                             }
@@ -146,7 +152,7 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
                     }
                 }
             } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to get skin resource: " + getterSource + " (" + this.source + ")", ex);
+                LOGGER.error("[FANCYMENU] SkinResourceSupplier failed to get skin resource: " + resourceSource + " (" + this.source + ")", ex);
             }
         }
         return (this.current != null) ? this.current : DEFAULT_SKIN;
@@ -159,7 +165,7 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
     }
 
     public boolean isSlimPlayerNameSkin() {
-        PlayerSkin skin = this.playerNameSkin;
+        SkinMetadata skin = this.playerNameSkinMeta;
         return (skin != null) && skin.slim();
     }
 
@@ -171,17 +177,17 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
             if (skinUrl != null) {
                 skinUrl = ResourceSourceType.WEB.getSourcePrefix() + skinUrl;
             } else {
-                LOGGER.error("[FANCYMENU] Failed to get URL of player skin: " + getterPlayerName);
+                LOGGER.error("[FANCYMENU] SkinResourceSupplier failed to get URL of player skin: " + getterPlayerName);
             }
             boolean isSlim = PlayerSkinUtils.hasSlimSkin(getterPlayerName);
             if (!this.startedDownloadingMetadata) return;
-            this.playerNameSkin = new PlayerSkin(getterPlayerName, skinUrl, isSlim);
+            this.playerNameSkinMeta = new SkinMetadata(getterPlayerName, skinUrl, isSlim);
         }).start();
     }
 
-    protected void releaseCurrentlyLoadingPngSkin() {
+    protected void clearCurrentlyLoadingPngSkinTexture() {
         if (this.currentlyLoadingPngSkinTexture != null) {
-            ResourceHandlers.getImageHandler().release(this.currentlyLoadingPngSkinTexture);
+            if (this.currentlyLoadingPngSkinTexture.isClosed()) CloseableUtils.closeQuietly(this.currentlyLoadingPngSkinTexture);
             this.currentlyLoadingPngSkinTexture = null;
         }
     }
@@ -192,9 +198,9 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
     }
 
     @Override
-    public @NotNull ResourceSourceType getResourceSourceType() {
+    public @NotNull ResourceSourceType getSourceType() {
         if (this.sourceIsPlayerName) return ResourceSourceType.WEB;
-        return super.getResourceSourceType();
+        return super.getSourceType();
     }
 
     @Override
@@ -211,7 +217,7 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
 
     @SuppressWarnings("all")
     @Nullable
-    protected static ITexture modernizePngSkinTexture(@NotNull ResourceLocation location) {
+    protected static ITexture modernizePngSkinTexture(@NotNull ITexture skinTexture) {
 
         InputStream in = null;
         NativeImage oldTex = null;
@@ -220,7 +226,7 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
 
         try {
 
-            in = Minecraft.getInstance().getResourceManager().open(location);
+            in = Objects.requireNonNull(skinTexture.open(), "Skin texture InputStream was NULL!");
             oldTex = NativeImage.read(in);
             newTex = new NativeImage(64, 64, true);
 
@@ -303,7 +309,7 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
         copyPixelArea(in, xStart, yStart, xStart + xOffset, yStart + yOffset, width, height, mirrorX);
     }
 
-    public record PlayerSkin(@NotNull String playerName, @Nullable String resourceSource, boolean slim) {
+    public record SkinMetadata(@NotNull String playerName, @Nullable String resourceSource, boolean slim) {
     }
 
 }

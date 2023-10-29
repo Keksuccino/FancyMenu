@@ -26,13 +26,11 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
     protected List<String> failedSources = new ArrayList<>();
 
     /**
-     * Get a {@link Resource} from a resource source.<br>
-     * Registers the requested resource if not already registered (uses the resource source as key).<br><br>
-     *
-     * This method needs to be able to tell web, local and location sources apart.<br><br>
+     * Get a {@link Resource} from a {@link ResourceSource}.<br>
+     * Registers the requested resource if not already registered and uses {@link ResourceSource#getSourceWithPrefix()} as key.<br><br>
      *
      * This method should only return NULL if the resource failed to get registered!<br>
-     * By default, {@link Resource}s should finish loading itself asynchronously after construction.
+     * By default, {@link Resource}s should finish loading itself asynchronously after construction, so there's no other reason for returning NULL here.
      *
      * @param resourceSource Can be a URL to a web resource, a path to a local resource or a ResourceLocation (namespace:path).
      * @return The requested {@link Resource} or NULL if the {@link Resource} failed to get registered.
@@ -40,60 +38,84 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
     @Nullable
     public R get(@NotNull String resourceSource) {
         Objects.requireNonNull(resourceSource);
+        return get(ResourceSource.of(resourceSource));
+    }
+
+    /**
+     * Get a {@link Resource} from a {@link ResourceSource}.<br>
+     * Registers the requested resource if not already registered and uses {@link ResourceSource#getSourceWithPrefix()} as key.<br><br>
+     *
+     * This method should only return NULL if the resource failed to get registered!<br>
+     * By default, {@link Resource}s should finish loading itself asynchronously after construction, so there's no other reason for returning NULL here.
+     *
+     * @param resourceSource The source of the resource.
+     * @return The requested {@link Resource} or NULL if the {@link Resource} failed to get registered.
+     */
+    @Nullable
+    public R get(@NotNull ResourceSource resourceSource) {
+        Objects.requireNonNull(resourceSource);
         try {
-            resourceSource = resourceSource.trim();
-            ResourceSourceType sourceType = ResourceSourceType.getSourceTypeOf(resourceSource);
-            String withoutPrefix = ResourceSourceType.getWithoutSourcePrefix(resourceSource);
-            //Make sure the resource source has a prefix, to make source type check of FileType#isFileType(source) more efficient
-            resourceSource = sourceType.getSourcePrefix() + withoutPrefix;
-            //Convert local paths to valid game directory paths
-            if (sourceType == ResourceSourceType.LOCAL) {
-                withoutPrefix = GameDirectoryUtils.getAbsoluteGameDirectoryPath(withoutPrefix);
-                resourceSource = sourceType.getSourcePrefix() + withoutPrefix;
-            }
-            //Check if map contains resource and return cached resource if true
-            R cached = this.getFromMapAndClearClosed(resourceSource);
-            if (cached != null) return cached;
+            //Check if resource is registered and return registered resource if true
+            R registered = this.getFromMapAndClearClosed(resourceSource.getSourceWithPrefix());
+            if (registered != null) return registered;
             //Check if handler failed to register resource in the past
-            if (this.getFailedSourcesList().contains(resourceSource)) return null;
+            if (this.getFailedSourcesList().contains(resourceSource.getSourceWithPrefix())) return null;
             //Search file type of resource
             F fileType = null;
             for (F type : this.getAllowedFileTypes()) {
-                if (type.isFileType(resourceSource)) {
+                if (type.isFileType(resourceSource, false)) {
                     fileType = type;
                     break;
                 }
             }
+            //Do advanced web checks if basic checks were not enough
+            if ((fileType == null) && (resourceSource.getSourceType() == ResourceSourceType.WEB)) {
+                for (F type : this.getAllowedFileTypes()) {
+                    if (type.isFileTypeWebAdvanced(resourceSource.getSourceWithoutPrefix())) {
+                        fileType = type;
+                        break;
+                    }
+                }
+            }
+            //In case file type is still NULL, use fallback type (if a fallback type is defined)
+            if (fileType == null) fileType = this.getFallbackFileType();
+            //If file type is still NULL at this point, see resource loading as failed and add source to failed sources list
             if (fileType == null) {
-                LOGGER.error("[FANCYMENU] Failed to get resource! Unsupported file type: " + resourceSource);
+                LOGGER.error("[FANCYMENU] Failed to register resource! Unsupported file type or failed to identify file type: " + resourceSource + " (RESOURCE HANDLER: " + this.getClass() + ")");
+                this.addToFailedSources(resourceSource);
                 return null;
             }
-            if (sourceType == ResourceSourceType.WEB) {
+            if (resourceSource.getSourceType() == ResourceSourceType.WEB) {
                 if (!fileType.isWebAllowed()) {
-                    LOGGER.error("[FANCYMENU] Failed to get web resource! Web sources are not supported by this file type: " + fileType + " (Source: " + resourceSource + ")");
+                    LOGGER.error("[FANCYMENU] Failed to register web resource! File type does not support web sources: " + fileType + " (Source: " + resourceSource + ")" + " (RESOURCE HANDLER: " + this.getClass() + ")");
+                    this.addToFailedSources(resourceSource);
                     return null;
                 }
-                this.putAndReturn(fileType.getCodec().readWeb(withoutPrefix), resourceSource);
-            } else if (sourceType == ResourceSourceType.LOCATION) {
+                this.putAndReturn(fileType.getCodec().readWeb(resourceSource.getSourceWithoutPrefix()), resourceSource);
+            } else if (resourceSource.getSourceType() == ResourceSourceType.LOCATION) {
                 if (!fileType.isLocationAllowed()) {
-                    LOGGER.error("[FANCYMENU] Failed to get location resource! Location sources are not supported by this file type: " + fileType + " (Source: " + resourceSource + ")");
+                    LOGGER.error("[FANCYMENU] Failed to register location resource! File type does not support location sources: " + fileType + " (Source: " + resourceSource + ")" + " (RESOURCE HANDLER: " + this.getClass() + ")");
+                    this.addToFailedSources(resourceSource);
                     return null;
                 }
-                ResourceLocation loc = ResourceLocation.tryParse(withoutPrefix);
+                ResourceLocation loc = ResourceLocation.tryParse(resourceSource.getSourceWithoutPrefix());
                 if (loc == null) {
-                    LOGGER.error("[FANCYMENU] Failed to get location resource! Unable to parse ResourceLocation: " + resourceSource);
+                    LOGGER.error("[FANCYMENU] Failed to register location resource! Unable to parse ResourceLocation: " + resourceSource + " (RESOURCE HANDLER: " + this.getClass() + ")");
+                    this.addToFailedSources(resourceSource);
                     return null;
                 }
                 return this.putAndReturn(fileType.getCodec().readLocation(loc), resourceSource);
             } else {
                 if (!fileType.isLocalAllowed()) {
-                    LOGGER.error("[FANCYMENU] Failed to get local resource! Local sources are not supported by this file type: " + fileType + " (Source: " + resourceSource + ")");
+                    LOGGER.error("[FANCYMENU] Failed to register local resource! File type does not support local sources: " + fileType + " (Source: " + resourceSource + ")" + " (RESOURCE HANDLER: " + this.getClass() + ")");
+                    this.addToFailedSources(resourceSource);
                     return null;
                 }
-                return this.putAndReturn(fileType.getCodec().readLocal(new File(withoutPrefix)), resourceSource);
+                return this.putAndReturn(fileType.getCodec().readLocal(new File(resourceSource.getSourceWithoutPrefix())), resourceSource);
             }
         } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to get resource: " + resourceSource, ex);
+            LOGGER.error("[FANCYMENU] Failed to register resource: " + resourceSource + " (RESOURCE HANDLER: " + this.getClass() + ")", ex);
+            this.addToFailedSources(resourceSource);
         }
         return null;
     }
@@ -109,93 +131,13 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
         return this.getResourceMap().get(Objects.requireNonNull(key));
     }
 
-//    /**
-//     * Used to get {@link Resource}s.<br>
-//     * Registers the requested resource if not already registered.<br><br>
-//     *
-//     * This method needs to be able to tell web, local and location sources apart.
-//     *
-//     * @param resourceSource Can be a URL to a web resource, a path to a local resource or a ResourceLocation (namespace:path).
-//     */
-//    @SuppressWarnings("all")
-//    @Nullable
-//    public R get(@NotNull String resourceSource) {
-//        Objects.requireNonNull(resourceSource);
-//        try {
-//            resourceSource = resourceSource.trim();
-//            ResourceSourceType sourceType = ResourceSourceType.getSourceTypeOf(resourceSource);
-//            String withoutPrefix = ResourceSourceType.getWithoutSourcePrefix(resourceSource);
-//            resourceSource = sourceType.getSourcePrefix() + withoutPrefix;
-//            if (sourceType == ResourceSourceType.WEB) {
-//                R cached = this.getFromMapAndClearClosed(resourceSource);
-//                if (cached != null) return cached;
-//                F fileType = null;
-//                for (F type : this.getAllowedFileTypes()) {
-//                    if (type.isFileTypeWeb(withoutPrefix)) {
-//                        fileType = type;
-//                        break;
-//                    }
-//                }
-//                if (fileType != null) {
-//                    if (!fileType.isWebAllowed()) {
-//                        LOGGER.error("[FANCYMENU] Failed to get web resource! Web sources are not supported by this file type: " + fileType + " (Source: " + resourceSource + ")");
-//                        return null;
-//                    }
-//                    this.putAndReturn((R) fileType.getCodec().readWeb(withoutPrefix), resourceSource);
-//                }
-//            } else if (sourceType == ResourceSourceType.LOCATION) {
-//                R cached = this.getFromMapAndClearClosed(resourceSource);
-//                if (cached != null) return cached;
-//                ResourceLocation loc = ResourceLocation.tryParse(withoutPrefix);
-//                if (loc != null) {
-//                    F fileType = null;
-//                    for (F type : this.getAllowedFileTypes()) {
-//                        if (type.isFileTypeLocation(loc)) {
-//                            fileType = type;
-//                            break;
-//                        }
-//                    }
-//                    if (fileType != null) {
-//                        if (!fileType.isLocationAllowed()) {
-//                            LOGGER.error("[FANCYMENU] Failed to get location resource! Location sources are not supported by this file type: " + fileType + " (Source: " + resourceSource + ")");
-//                            return null;
-//                        }
-//                        return this.putAndReturn((R) fileType.getCodec().readLocation(loc), resourceSource);
-//                    }
-//                }
-//            } else {
-//                withoutPrefix = GameDirectoryUtils.getAbsoluteGameDirectoryPath(withoutPrefix);
-//                resourceSource = sourceType.getSourcePrefix() + withoutPrefix;
-//                R cached = this.getFromMapAndClearClosed(resourceSource);
-//                if (cached != null) return cached;
-//                File file = new File(withoutPrefix);
-//                F fileType = null;
-//                for (F type : this.getAllowedFileTypes()) {
-//                    if (type.isFileTypeLocal(file)) {
-//                        fileType = type;
-//                        break;
-//                    }
-//                }
-//                if (fileType != null) {
-//                    if (!fileType.isLocalAllowed()) {
-//                        LOGGER.error("[FANCYMENU] Failed to get local resource! Local sources are not supported by this file type: " + fileType + " (Source: " + resourceSource + ")");
-//                        return null;
-//                    }
-//                    return this.putAndReturn((R) fileType.getCodec().readLocal(file), resourceSource);
-//                }
-//            }
-//        } catch (Exception ex) {
-//            LOGGER.error("[FANCYMENU] Failed to get resource: " + resourceSource, ex);
-//        }
-//        return null;
-//    }
-
     /**
      * Allows for manual resource registration.<br>
      * Registers the resource if no resource with the given key is registered yet.
      */
     public void registerIfKeyAbsent(@NotNull String key, @NotNull R resource) {
         if (!this.hasResource(key)) {
+            LOGGER.debug("[FANCYMENU] Registering resource with key: " + key + " (RESOURCE HANDLER: " + this.getClass() + ")");
             this.getResourceMap().put(key, Objects.requireNonNull(resource));
         }
     }
@@ -222,17 +164,24 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
     }
 
     @Nullable
-    protected R putAndReturn(@Nullable R resource, @NotNull String resourceSource) {
+    protected R putAndReturn(@Nullable R resource, @NotNull ResourceSource resourceSource) {
+        Objects.requireNonNull(resourceSource);
         if (resource != null) {
-            LOGGER.debug("[FANCYMENU] Registering resource: " + resourceSource);
-            this.getResourceMap().put(resourceSource, resource);
+            LOGGER.debug("[FANCYMENU] Registering resource with source: " + resourceSource + " (RESOURCE HANDLER: " + this.getClass() + ")");
+            this.getResourceMap().put(resourceSource.getSourceWithPrefix(), resource);
         } else {
-            if (!this.getFailedSourcesList().contains(resourceSource)) {
-                this.getFailedSourcesList().add(resourceSource);
-                LOGGER.error("[FANCYMENU] Failed to register resource: " + resourceSource);
+            if (!this.getFailedSourcesList().contains(resourceSource.getSourceWithPrefix())) {
+                this.getFailedSourcesList().add(resourceSource.getSourceWithPrefix());
+                LOGGER.error("[FANCYMENU] Failed to register resource! Resource was NULL: " + resourceSource + " (RESOURCE HANDLER: " + this.getClass() + ")");
             }
         }
         return resource;
+    }
+
+    protected void addToFailedSources(@NotNull ResourceSource resourceSource) {
+        if (!this.getFailedSourcesList().contains(resourceSource.getSourceWithPrefix())) {
+            this.getFailedSourcesList().add(resourceSource.getSourceWithPrefix());
+        }
     }
 
     @NotNull
@@ -247,6 +196,13 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
 
     @NotNull
     public abstract List<F> getAllowedFileTypes();
+
+    /**
+     * In case the {@link ResourceHandler} was unable to identify the {@link FileType} of the resource source, it will try to use the fallback {@link FileType}.<br>
+     * Some {@link ResourceHandler}s have no fallback {@link FileType}. In that case, this method will return NULL.
+     */
+    @Nullable
+    public abstract F getFallbackFileType();
 
     /**
      * Releases a resource.<br>

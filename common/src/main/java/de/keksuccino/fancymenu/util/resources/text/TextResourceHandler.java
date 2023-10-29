@@ -5,6 +5,8 @@ import de.keksuccino.fancymenu.util.file.type.types.TextFileType;
 import de.keksuccino.fancymenu.util.resources.ResourceHandler;
 import de.keksuccino.fancymenu.util.resources.ResourceHandlers;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.List;
 
 /**
@@ -22,6 +24,11 @@ public class TextResourceHandler extends ResourceHandler<IText, TextFileType> {
     @Override
     public @NotNull List<TextFileType> getAllowedFileTypes() {
         return FileTypes.getAllTextFileTypes();
+    }
+
+    @Override
+    public @Nullable TextFileType getFallbackFileType() {
+        return FileTypes.TXT_TEXT;
     }
 
 }

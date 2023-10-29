@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.util.resources.texture.SimpleTexture;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -114,6 +113,7 @@ public class CursorHandler {
         @NotNull
         public final String textureName;
 
+        @SuppressWarnings("all")
         @Nullable
         public static CustomCursor create(@NotNull SimpleTexture texture, int hotspotX, int hotspotY, @NotNull String textureName) {
             CustomCursor customCursor = null;
@@ -122,14 +122,12 @@ public class CursorHandler {
             ByteBuffer texResourceBuffer = null;
             ByteBuffer stbBuffer = null;
             try {
-                ResourceLocation loc = Objects.requireNonNull(texture).getResourceLocation();
+                Objects.requireNonNull(texture);
                 long start = System.currentTimeMillis();
                 //Wait for the texture to load (Timeout = 5000ms)
-                while((loc == null) && ((start + 5000) > System.currentTimeMillis())) {
-                    loc = Objects.requireNonNull(texture).getResourceLocation();
-                }
-                if (loc != null) {
-                    in = Objects.requireNonNull(Minecraft.getInstance().getResourceManager().open(loc));
+                while(!texture.isReady() && ((start + 5000) > System.currentTimeMillis())) {}
+                if (texture.isReady()) {
+                    in = Objects.requireNonNull(texture.open());
                     texResourceBuffer = TextureUtil.readResource(in);
                     texResourceBuffer.rewind();
                     if (MemoryUtil.memAddress(texResourceBuffer) != 0L) {

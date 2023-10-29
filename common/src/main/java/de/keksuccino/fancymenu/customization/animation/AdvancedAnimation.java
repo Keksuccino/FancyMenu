@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.animation;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -60,7 +61,12 @@ public class AdvancedAnimation implements IAnimationRenderer, RenderableResource
 	public boolean hasIntro() {
 		return (this.introRenderer != null);
 	}
-	
+
+	@Override
+	public @Nullable InputStream open() throws IOException {
+		return null;
+	}
+
 	@Override
 	public boolean isReady() {
 		if ((this.animationRenderer != null) && this.hasIntro()) {

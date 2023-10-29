@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.util.PlayerSkinUtils;
 import de.keksuccino.fancymenu.util.file.type.FileMediaType;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.resources.ResourceHandlers;
+import de.keksuccino.fancymenu.util.resources.ResourceSource;
 import de.keksuccino.fancymenu.util.resources.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
@@ -76,21 +77,22 @@ public class CapeResourceSupplier extends ResourceSupplier<ITexture> {
         }
         this.lastGetterSource = getterSource;
         if (this.current == null) {
+            ResourceSource resourceSource = ResourceSource.of(getterSource);
             if (this.sourceIsPlayerName && !CACHED_PLAYER_NAME_CAPE_URLS.containsKey(getterPlayerName)) CACHED_PLAYER_NAME_CAPE_URLS.put(getterPlayerName, playerNameCapeUrlCached);
             try {
                 if (this.sourceIsPlayerName) {
-                    this.current = FileTypes.PNG_IMAGE.getCodec().readWeb(ResourceSourceType.getWithoutSourcePrefix(getterSource));
+                    this.current = ResourceHandlers.getImageHandler().hasResource(resourceSource.getSourceWithPrefix()) ? ResourceHandlers.getImageHandler().get(resourceSource) : FileTypes.PNG_IMAGE.getCodec().readWeb(resourceSource.getSourceWithoutPrefix());
                     if (this.current != null) {
-                        ResourceHandlers.getImageHandler().registerIfKeyAbsent(getterSource, this.current);
+                        ResourceHandlers.getImageHandler().registerIfKeyAbsent(resourceSource.getSourceWithPrefix(), this.current);
                     } else {
-                        LOGGER.error("[FANCYMENU] Failed to get cape by player name! PNG codec returned NULL: " + getterSource);
+                        LOGGER.error("[FANCYMENU] CapeResourceSupplier failed to get cape by player name! PNG codec returned NULL: " + resourceSource);
                         this.current = DEFAULT_CAPE;
                     }
                 } else {
-                    this.current = ResourceHandlers.getImageHandler().get(getterSource);
+                    this.current = ResourceHandlers.getImageHandler().get(resourceSource);
                 }
             } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to get cape: " + getterSource + " (" + this.source + ")", ex);
+                LOGGER.error("[FANCYMENU] CapeResourceSupplier failed to get cape: " + resourceSource + " (" + this.source + ")", ex);
             }
         }
         return (this.current != null) ? this.current : DEFAULT_CAPE;
@@ -108,7 +110,7 @@ public class CapeResourceSupplier extends ResourceSupplier<ITexture> {
         new Thread(() -> {
             String capeUrl = PlayerSkinUtils.getCapeURL(getterPlayerName);
             if (capeUrl == null) {
-                LOGGER.error("[FANCYMENU] Failed to get URL of player cape: " + getterPlayerName);
+                LOGGER.error("[FANCYMENU] CapeResourceSupplier failed to get URL of player cape: " + getterPlayerName);
             }
             if (!this.startedFindingPlayerNameCapeUrl) return;
             this.playerNameCapeUrl = capeUrl;
@@ -121,9 +123,9 @@ public class CapeResourceSupplier extends ResourceSupplier<ITexture> {
     }
 
     @Override
-    public @NotNull ResourceSourceType getResourceSourceType() {
+    public @NotNull ResourceSourceType getSourceType() {
         if (this.sourceIsPlayerName) return ResourceSourceType.WEB;
-        return super.getResourceSourceType();
+        return super.getSourceType();
     }
 
     @Override

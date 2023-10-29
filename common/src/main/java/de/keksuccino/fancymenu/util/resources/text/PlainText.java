@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Objects;
@@ -172,6 +173,14 @@ public class PlainText implements IText {
     @Override
     public @Nullable List<String> getTextLines() {
         return this.lines;
+    }
+
+    @Override
+    public @Nullable InputStream open() throws IOException {
+        if (this.sourceURL != null) return WebUtils.openResourceStream(this.sourceURL);
+        if (this.sourceFile != null) return new FileInputStream(this.sourceFile);
+        if (this.sourceLocation != null) return Minecraft.getInstance().getResourceManager().open(this.sourceLocation);
+        return null;
     }
 
     @Override

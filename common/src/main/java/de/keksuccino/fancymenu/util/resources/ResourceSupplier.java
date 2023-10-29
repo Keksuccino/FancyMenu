@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.resources;
 
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
-import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.file.type.FileMediaType;
 import de.keksuccino.fancymenu.util.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resources.text.IText;
@@ -93,13 +92,14 @@ public class ResourceSupplier<R extends Resource> {
         }
         this.lastGetterSource = getterSource;
         if (this.current == null) {
+            ResourceSource resourceSource = ResourceSource.of(getterSource);
             try {
                 ResourceHandler<?,?> handler = this.getResourceHandler();
                 if (handler != null) {
-                    this.current = (R) handler.get(getterSource);
+                    this.current = (R) handler.get(resourceSource);
                 }
             } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to get resource: " + getterSource + " (" + this.source + ")", ex);
+                LOGGER.error("[FANCYMENU] ResourceSupplier failed to get resource: " + resourceSource + " (" + this.source + ")", ex);
             }
         }
         return this.current;
@@ -142,7 +142,7 @@ public class ResourceSupplier<R extends Resource> {
     }
 
     @NotNull
-    public ResourceSourceType getResourceSourceType() {
+    public ResourceSourceType getSourceType() {
         return ResourceSourceType.getSourceTypeOf(PlaceholderParser.replacePlaceholders(this.source, false));
     }
 
@@ -162,7 +162,7 @@ public class ResourceSupplier<R extends Resource> {
     @NotNull
     public String getSourceWithPrefix() {
         if (ResourceSourceType.hasSourcePrefix(this.source)) return this.source;
-        return this.getResourceSourceType().getSourcePrefix() + this.source;
+        return this.getSourceType().getSourcePrefix() + this.source;
     }
 
     public void setSource(@NotNull String source) {

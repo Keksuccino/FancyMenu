@@ -20,6 +20,10 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO FIXEN: Wenn mehr als ein Layout aktiv ist, werden Vanilla Buttons, die NICHT den Vanilla Anchor haben, in untere rechte Ecke gepackt??
+
+	//TODO FIXEN: Slider element spammt seine "list entries" in layout files (erstellt immer neue bei jedem speichern????)
+
 	//TODO FIXEN: ResourceChooserScreen noch broken
 
 	//TODO FIXEN: FileChooserScreen: FileTypes Anzeige ist buggy
@@ -77,7 +81,7 @@ public class FancyMenu {
 	// - Sollte nahtlos mit Channel volume eigenes volume ändern
 
 	//TODO Simple Video Renderer schreiben
-	// - Nach "Video Frame InputStream" googlen
+	// - Nach "Video Frame InputStream" googlen (audio evtl. separat getten?)
 	// - Evtl. mit Java-eigenen libs arbeiten
 
 	//TODO Animations rewriten

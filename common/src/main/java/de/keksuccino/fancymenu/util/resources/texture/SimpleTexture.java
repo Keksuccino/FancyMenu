@@ -1,9 +1,8 @@
 package de.keksuccino.fancymenu.util.resources.texture;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
+
+import java.io.*;
 import java.util.Objects;
 import java.util.Optional;
 import de.keksuccino.fancymenu.util.CloseableUtils;
@@ -245,6 +244,12 @@ public class SimpleTexture implements ITexture {
     @NotNull
     public AspectRatio getAspectRatio() {
         return this.aspectRatio;
+    }
+
+    @Override
+    public @Nullable InputStream open() throws IOException {
+        if (this.nativeImage != null) return new ByteArrayInputStream(this.nativeImage.asByteArray());
+        return null;
     }
 
     @Override

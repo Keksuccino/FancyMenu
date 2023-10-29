@@ -3,6 +3,8 @@ package de.keksuccino.fancymenu.util.file.type.types;
 import de.keksuccino.fancymenu.util.file.type.FileCodec;
 import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.FileTypeRegistry;
+import de.keksuccino.fancymenu.util.resources.ResourceSource;
+import de.keksuccino.fancymenu.util.resources.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resources.text.IText;
 import de.keksuccino.fancymenu.util.resources.text.PlainText;
@@ -15,6 +17,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class FileTypes {
 
@@ -197,9 +200,14 @@ public class FileTypes {
      * Tries to find the {@link FileType} of a web file.
      */
     @Nullable
-    public static FileType<?> getWebType(@NotNull String fileUrl) {
+    public static FileType<?> getWebType(@NotNull String fileUrl, boolean doAdvancedWebChecks) {
         for (FileType<?> type : FileTypeRegistry.getFileTypes()) {
             if (type.isFileTypeWeb(fileUrl)) return type;
+        }
+        if (doAdvancedWebChecks) {
+            for (FileType<?> type : FileTypeRegistry.getFileTypes()) {
+                if (type.isFileTypeWebAdvanced(fileUrl)) return type;
+            }
         }
         return null;
     }
@@ -209,9 +217,15 @@ public class FileTypes {
      * Resource sources can be web URLs, local paths or {@link ResourceLocation}s (namespace:path).
      */
     @Nullable
-    public static FileType<?> getType(@NotNull String resourceSource) {
+    public static FileType<?> getType(@NotNull ResourceSource resourceSource, boolean doAdvancedWebChecks) {
+        Objects.requireNonNull(resourceSource);
         for (FileType<?> type : FileTypeRegistry.getFileTypes()) {
-            if (type.isFileType(resourceSource)) return type;
+            if (type.isFileType(resourceSource, false)) return type;
+        }
+        if (doAdvancedWebChecks && (resourceSource.getSourceType() == ResourceSourceType.WEB)) {
+            for (FileType<?> type : FileTypeRegistry.getFileTypes()) {
+                if (type.isFileTypeWebAdvanced(resourceSource.getSourceWithoutPrefix())) return type;
+            }
         }
         return null;
     }

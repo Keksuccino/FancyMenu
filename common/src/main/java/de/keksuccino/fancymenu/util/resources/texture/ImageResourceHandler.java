@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.util.resources.ResourceHandler;
 import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import de.keksuccino.fancymenu.util.resources.ResourceHandlers;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * It is not recommended to make direct calls to this class!<br>
@@ -23,6 +24,11 @@ public class ImageResourceHandler extends ResourceHandler<ITexture, ImageFileTyp
     @Override
     public @NotNull List<ImageFileType> getAllowedFileTypes() {
         return FileTypes.getAllImageFileTypes();
+    }
+
+    @Override
+    public @Nullable ImageFileType getFallbackFileType() {
+        return FileTypes.PNG_IMAGE;
     }
 
 }

@@ -5,6 +5,8 @@ import de.keksuccino.fancymenu.util.file.type.types.VideoFileType;
 import de.keksuccino.fancymenu.util.resources.ResourceHandler;
 import de.keksuccino.fancymenu.util.resources.ResourceHandlers;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.List;
 
 /**
@@ -22,6 +24,11 @@ public class VideoResourceHandler extends ResourceHandler<IVideo, VideoFileType>
     @Override
     public @NotNull List<VideoFileType> getAllowedFileTypes() {
         return FileTypes.getAllVideoFileTypes();
+    }
+
+    @Override
+    public @Nullable VideoFileType getFallbackFileType() {
+        return null;
     }
 
 }

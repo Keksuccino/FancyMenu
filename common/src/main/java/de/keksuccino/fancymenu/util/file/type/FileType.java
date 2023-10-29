@@ -4,6 +4,7 @@ import com.google.common.io.Files;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.resources.ResourceSource;
 import de.keksuccino.fancymenu.util.resources.ResourceSourceType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -63,41 +64,47 @@ public class FileType<T> {
         return this.extensions.contains(Files.getFileExtension(file.getPath()).toLowerCase());
     }
 
+    /**
+     * Checks if the URL starts with "http://" or "https://" and checks if it ends with a file extension of this {@link FileType}.<br>
+     * Will NOT WORK for non-direct URLs that don't end with a file name + extension. In that case, use {@link FileType#isFileTypeWebAdvanced(String)}.
+     */
     public boolean isFileTypeWeb(@NotNull String fileUrl) {
         if (!TextValidators.BASIC_URL_TEXT_VALIDATOR.get(fileUrl)) return false;
         if (fileUrl.endsWith("/")) fileUrl = fileUrl.substring(0, fileUrl.length()-1);
+        fileUrl = fileUrl.toLowerCase();
         for (String extension : this.extensions) {
             if (fileUrl.endsWith("." + extension)) return true;
         }
-        return this.isFileTypeWebInternal(fileUrl);
-    }
-
-    public boolean isFileType(@NotNull String resourceSource) {
-        resourceSource = resourceSource.trim();
-        ResourceSourceType resourceSourceType = ResourceSourceType.getSourceTypeOf(resourceSource);
-        String withoutPrefix = ResourceSourceType.getWithoutSourcePrefix(resourceSource);
-        try {
-            if (resourceSourceType == ResourceSourceType.LOCATION) {
-                ResourceLocation loc = ResourceLocation.tryParse(withoutPrefix);
-                if (loc != null) return this.isFileTypeLocation(loc);
-            }
-            if (resourceSourceType == ResourceSourceType.LOCAL) {
-                return this.isFileTypeLocal(new File(GameDirectoryUtils.getAbsoluteGameDirectoryPath(withoutPrefix)));
-            }
-            if (resourceSourceType == ResourceSourceType.WEB) {
-                return this.isFileTypeWeb(withoutPrefix);
-            }
-        } catch (Exception ignore) {}
         return false;
     }
 
     /**
-     * If the base checks aren't enough, this method will open a connection to the web source and tries to get its file type.<br>
-     * If the file type is the correct one, return true.
+     * If {@link FileType#isFileTypeWeb(String)} isn't enough, this method will open a connection to the web source and tries to get its mime type.<br>
+     * If the returned mime type is the same as the one of this file type, this method returns TRUE.
      */
-    protected boolean isFileTypeWebInternal(@NotNull String fileUrl) {
+    public boolean isFileTypeWebAdvanced(@NotNull String fileUrl) {
         if (this.mimeType == null) return true;
         return Objects.equals(WebUtils.getMimeType(fileUrl), this.mimeType);
+    }
+
+    public boolean isFileType(@NotNull ResourceSource resourceSource, boolean doAdvancedWebChecks) {
+        Objects.requireNonNull(resourceSource);
+        try {
+            if (resourceSource.getSourceType() == ResourceSourceType.LOCATION) {
+                ResourceLocation loc = ResourceLocation.tryParse(resourceSource.getSourceWithoutPrefix());
+                if (loc != null) return this.isFileTypeLocation(loc);
+            }
+            if (resourceSource.getSourceType() == ResourceSourceType.LOCAL) {
+                return this.isFileTypeLocal(new File(GameDirectoryUtils.getAbsoluteGameDirectoryPath(resourceSource.getSourceWithoutPrefix())));
+            }
+            if (resourceSource.getSourceType() == ResourceSourceType.WEB) {
+                if (this.isFileTypeWeb(resourceSource.getSourceWithoutPrefix())) return true;
+                if (doAdvancedWebChecks) {
+                    if (this.isFileTypeWebAdvanced(resourceSource.getSourceWithoutPrefix())) return true;
+                }
+            }
+        } catch (Exception ignore) {}
+        return false;
     }
 
     @NotNull
