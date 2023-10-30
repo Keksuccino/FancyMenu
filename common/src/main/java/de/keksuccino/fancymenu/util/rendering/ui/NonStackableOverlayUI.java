@@ -63,7 +63,7 @@ public class NonStackableOverlayUI {
                     ResourceChooserScreen<R,F> chooserScreen = resourceChooserScreenBuilder.get();
                     chooserScreen.setFileFilter(fileFilter);
                     chooserScreen.setAllowedFileTypes(fileTypes);
-                    chooserScreen.setSource(preSelectedSource);
+                    chooserScreen.setSource(preSelectedSource, false);
                     chooserScreen.setLocationSourceAllowed(allowLocation);
                     chooserScreen.setLocalSourceAllowed(allowLocal);
                     chooserScreen.setWebSourceAllowed(allowWeb);

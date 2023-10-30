@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.util.rendering.ui.widget.editbox;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
-import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
@@ -14,7 +13,8 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.util.Mth;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.Color;
@@ -22,7 +22,7 @@ import java.awt.Color;
 @SuppressWarnings("unused")
 public class ExtendedEditBox extends EditBox implements UniqueWidget, NavigatableWidget {
 
-    //TODO add text prefix and suffix (non-editable)
+    private static final Logger LOGGER = LogManager.getLogger();
 
     protected CharacterFilter characterFilter;
     protected CharacterRenderFormatter characterRenderFormatter;
@@ -177,6 +177,10 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         ((IMixinEditBox)this).setDisplayPosFancyMenu(position);
     }
 
+    public int getHighlightPosition() {
+        return ((IMixinEditBox)this).getHighlightPosFancyMenu();
+    }
+
     public @Nullable CharacterFilter getCharacterFilter() {
         return this.characterFilter;
     }
@@ -280,7 +284,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
 
     public ExtendedEditBox setInputPrefix(@Nullable String inputPrefix) {
         this.inputPrefix = inputPrefix;
-        this.setValue(this.getValue());
+        this.setValue(this.getValueWithoutPrefixSuffix());
         return this;
     }
 
@@ -290,13 +294,13 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
 
     public ExtendedEditBox setInputSuffix(@Nullable String inputSuffix) {
         this.inputSuffix = inputSuffix;
-        this.setValue(this.getValue());
+        this.setValue(this.getValueWithoutPrefixSuffix());
         return this;
     }
 
     public ExtendedEditBox applyInputPrefixSuffixCharacterRenderFormatter() {
         this.setCharacterRenderFormatter((editBox, component, characterIndex, character, visiblePartOfLine, fullLine) -> {
-            if ((this.inputSuffix != null) && (characterIndex >= Math.max(0, (editBox.getValue().length() - this.inputSuffix.length())-1))) {
+            if ((this.inputSuffix != null) && (characterIndex > Math.max(0, (editBox.getValue().length() - this.inputSuffix.length())-1))) {
                 component.withStyle(Style.EMPTY.withColor(this.getTextColorUneditable().getColorInt()));
             }
             if ((this.inputPrefix != null) && (characterIndex < this.inputPrefix.length())) {
@@ -320,40 +324,15 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     }
 
     @Override
-    public void setCursorPosition(int pos) {
-        pos = Mth.clamp(pos, 0, this.getValue().length());
-        if ((this.inputPrefix != null) && (pos < this.inputPrefix.length())) pos = this.inputPrefix.length();
-        if ((this.inputSuffix != null) && (pos >= (this.getValue().length() - this.inputSuffix.length()))) pos = (this.getValue().length() - this.inputSuffix.length());
-        super.setCursorPosition(pos);
-    }
-
-    @Override
-    public void setHighlightPos(int pos) {
-        pos = Mth.clamp(pos, 0, this.getValue().length());
-        if ((this.inputPrefix != null) && (pos < this.inputPrefix.length())) pos = this.inputPrefix.length();
-        if ((this.inputSuffix != null) && (pos >= (this.getValue().length() - this.inputSuffix.length()))) pos = (this.getValue().length() - this.inputSuffix.length());
-        super.setHighlightPos(pos);
-    }
-
-    @Override
     public void setValue(@NotNull String value) {
-        if ((this.inputPrefix != null) && !value.startsWith(this.inputPrefix)) value = this.inputPrefix + value;
-        if ((this.inputSuffix != null) && !value.endsWith(this.inputSuffix)) value = value + this.inputSuffix;
-        super.setValue(value);
+        String v = this.getWithoutPrefixSuffix(value);
+        if (this.inputPrefix != null) v = this.inputPrefix + v;
+        if (this.inputSuffix != null) v = v + this.inputSuffix;
+        super.setValue(v);
     }
 
     @Override
     public boolean charTyped(char character, int modifiers) {
-        if (this.inputSuffix != null) {
-            if (this.getCursorPosition() >= Math.max(0, this.getValue().length() - this.inputSuffix.length())) {
-                return false;
-            }
-        }
-        if (this.inputPrefix != null) {
-            if (this.getCursorPosition() < this.inputPrefix.length()) {
-                return false;
-            }
-        }
         if ((this.characterFilter != null) && !this.characterFilter.isAllowedChar(character)) {
             return false;
         }
@@ -362,6 +341,8 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
 
     @Override
     public void insertText(@NotNull String textToWrite) {
+        if (this.isInPrefixSuffix(this.getCursorPosition(), 0, 0)) return;
+        if (this.isInPrefixSuffix(this.getHighlightPosition(), 0, 0)) return;
         if (this.characterFilter != null) {
             textToWrite = this.characterFilter.filterForAllowedChars(textToWrite);
         }
@@ -369,9 +350,42 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     }
 
     @Override
+    public void deleteChars(int i) {
+        if (this.isInPrefixSuffix(this.getCursorPosition(), -1, -1) || this.isInPrefixSuffix(this.getCursorPosition(), 0, 0)) return;
+        if (this.isInPrefixSuffix(this.getHighlightPosition(), 0, 0)) return;
+        super.deleteChars(i);
+    }
+
+    @SuppressWarnings("all")
+    public boolean isInPrefixSuffix(int index, int prefixIndexOffset, int suffixIndexOffset) {
+        int cursorPrefix = index + prefixIndexOffset;
+        int cursorSuffix = index + suffixIndexOffset;
+        if (this.inputPrefix != null) {
+            if (cursorPrefix < this.inputPrefix.length()) return true;
+        }
+        if (this.inputSuffix != null) {
+            int i = (this.inputPrefix != null) ? this.inputPrefix.length() + this.getValueWithoutPrefixSuffix().length() : this.getValueWithoutPrefixSuffix().length();
+            if (cursorSuffix > i) return true;
+        }
+        return false;
+    }
+
+    public String getValueWithoutPrefixSuffix() {
+        return this.getWithoutPrefixSuffix(this.getValue());
+    }
+
+    protected String getWithoutPrefixSuffix(@NotNull String value) {
+        if (value.isEmpty()) return value;
+        boolean containsPrefix = (this.inputPrefix != null) && value.startsWith(this.inputPrefix);
+        boolean containsSuffix = (this.inputSuffix != null) && value.endsWith(this.inputSuffix);
+        String v = containsPrefix ? value.substring(this.inputPrefix.length()) : value;
+        if (containsSuffix) v = v.substring(0, Math.max(0, v.length() - this.inputSuffix.length()));
+        return v;
+    }
+
+    @Override
     public boolean keyPressed(int keycode, int scancode, int modifiers) {
         if (!this.canConsumeUserInput) return false;
-        boolean isNotArrowKeys = (keycode != InputConstants.KEY_LEFT) && (keycode != InputConstants.KEY_RIGHT) && (keycode != InputConstants.KEY_UP) && (keycode != InputConstants.KEY_DOWN);
         //If select all, only select parts that are not prefix or suffix
         if (Screen.isSelectAll(keycode) && ((this.inputPrefix != null) || (this.inputSuffix != null))) {
             if (this.inputSuffix != null) {
@@ -381,16 +395,6 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             }
             this.setHighlightPos((this.inputPrefix != null) ? this.inputPrefix.length() : 0);
             return true;
-        }
-        if (this.inputSuffix != null) {
-            if (Math.max(0, this.getCursorPosition()) >= Math.max(0, this.getValue().length() - this.inputSuffix.length())) {
-                if (isNotArrowKeys) return false;
-            }
-        }
-        if (this.inputPrefix != null) {
-            if (Math.max(0, this.getCursorPosition()) < this.inputPrefix.length()) {
-                if (isNotArrowKeys) return false;
-            }
         }
         return super.keyPressed(keycode, scancode, modifiers);
     }

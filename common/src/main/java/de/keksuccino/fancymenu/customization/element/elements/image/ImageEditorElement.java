@@ -30,7 +30,7 @@ public class ImageEditorElement extends AbstractEditorElement {
                     this.getElement().textureSupplier = ResourceSupplier.image(source);
                 }
                 Minecraft.getInstance().setScreen(this.editor);
-            }).setSource((this.getElement().textureSupplier != null) ? this.getElement().textureSupplier.getSourceWithPrefix() : null));
+            }).setSource((this.getElement().textureSupplier != null) ? this.getElement().textureSupplier.getSourceWithPrefix() : null, false));
         }).setIcon(ContextMenu.IconFactory.getIcon("image"));
 
         this.rightClickMenu.addSeparatorEntry("image_separator_1");

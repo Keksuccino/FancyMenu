@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.editor;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -11,7 +10,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
-import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.AnchorPointOverlay;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
@@ -33,7 +31,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseFileScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -934,7 +931,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 						ResourceChooserScreen<R,F> chooserScreen = resourceChooserScreenBuilder.get();
 						chooserScreen.setFileFilter(fileFilter);
 						chooserScreen.setAllowedFileTypes(fileTypes);
-						chooserScreen.setSource(preSelectedSource);
+						chooserScreen.setSource(preSelectedSource, false);
 						chooserScreen.setLocationSourceAllowed(allowLocation);
 						chooserScreen.setLocalSourceAllowed(allowLocal);
 						chooserScreen.setWebSourceAllowed(allowWeb);

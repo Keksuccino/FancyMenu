@@ -2,8 +2,8 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen.resource;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
+import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.cycle.LocalizedGenericValueCycle;
 import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
@@ -38,7 +38,12 @@ import java.io.File;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+@SuppressWarnings("unused")
 public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> extends ConfiguratorScreen {
+
+    //TODO hier weiter screen fixen !!!
+    // - vor allem local ist komplett broken
+    // - nach init() kann man input field nicht klicken/editieren
 
     //TODO Somehow tell the user what source types are possible for all allowed file types
     // (maybe tell the user if some source type for some file type is NOT available?? inform only about NOT available source types; maybe under the control cells)
@@ -51,6 +56,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
     protected Consumer<String> resourceSourceCallback;
     @Nullable
     protected String resourceSource;
+    protected boolean legacySource = false;
     @NotNull
     protected ResourceSourceType resourceSourceType = ResourceSourceType.LOCATION;
     protected boolean allowLocation = true;
@@ -114,12 +120,11 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
     protected void initCells() {
 
         boolean isLocal = (this.resourceSourceType == ResourceSourceType.LOCAL);
-        boolean isLegacyLocal = (isLocal && (this.resourceSource != null) && !this.resourceSource.startsWith("config/fancymenu/assets/") && !this.resourceSource.startsWith("/config/fancymenu/assets/"));
+        boolean isLegacyLocal = (isLocal && (this.resourceSource != null) && !(this.resourceSource.startsWith("config/fancymenu/assets/") || this.resourceSource.startsWith("/config/fancymenu/assets/")));
 
         //Fix local sources that don't start with "/"
         if (isLocal && (this.resourceSource != null) && !this.resourceSource.startsWith("/") && this.resourceSource.startsWith("config/fancymenu/assets/")) {
-            this.resourceSource = this.resourceSource.substring("config/fancymenu/assets/".length());
-            this.resourceSource = "/config/fancymenu/assets/" + this.resourceSource;
+            this.resourceSource = "/" + this.resourceSource;
         }
 
         this.addStartEndSpacerCell();
@@ -129,9 +134,10 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
         if (!this.allowLocal) sourceTypeCycle.removeValue(ResourceSourceType.LOCAL);
         if (!this.allowWeb) sourceTypeCycle.removeValue(ResourceSourceType.WEB);
         this.resourceSourceTypeCycleButton = new CycleButton<>(0, 0, 20, 20, sourceTypeCycle, (value, button) -> {
-            this.resourceSourceType = value;
             //Reset the source when changing the source type, because it is not valid anymore
             this.resourceSource = null;
+            this.resourceSourceType = value;
+            this.legacySource = false;
             this.init();
         });
         this.resourceSourceTypeCycleButton.setTooltipSupplier(consumes -> {
@@ -153,6 +159,10 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
         });
         if (isLocal && !isLegacyLocal) this.editBox.setInputPrefix("/config/fancymenu/assets/");
         if (this.resourceSource != null) this.editBox.setValue(this.resourceSource);
+        this.editBox.setCursorPosition(0);
+        this.editBox.setDisplayPosition(0);
+        this.editBox.setHighlightPos(0);
+        this.editBox.applyInputPrefixSuffixCharacterRenderFormatter();
         this.editBox.setEditable(!isLegacyLocal);
 
         if (isLocal) {
@@ -165,10 +175,12 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
                 }
                 ChooseFileScreen fileChooser = new ChooseFileScreen(LayoutHandler.ASSETS_DIR, startDir, call -> {
                     if (call != null) {
-                        this.resourceSource = GameDirectoryUtils.getPathWithoutGameDirectory(call.getAbsolutePath());
-                        if (!this.resourceSource.startsWith("/")) this.resourceSource = "/" + this.resourceSource;
+                        String s = GameDirectoryUtils.getPathWithoutGameDirectory(call.getAbsolutePath());
+                        if (!s.startsWith("/")) s = "/" + s;
+                        s = ResourceSourceType.LOCAL.getSourcePrefix() + s;
+                        this.setSource(s, false);
                     }
-                    this.resourceSourceType = ResourceSourceType.LOCAL;
+                    this.init();
                     Minecraft.getInstance().setScreen(this);
                 });
                 fileChooser.setVisibleDirectoryLevelsAboveRoot(2);
@@ -222,7 +234,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
         if ((this.resourceSourceType == ResourceSourceType.LOCATION) && (this.editBox != null) && this.editBox.isHovered()) {
             TooltipHandler.INSTANCE.addTooltip(
-                    Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.source_type.location.desc.input")),
+                    Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.source_type.location.desc.input")).setDefaultStyle(),
                     () -> this.editBox.isHovered(), false, true);
         }
 
@@ -261,16 +273,19 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
         this.warningNoExtensionLine3.setText(Component.empty());
     }
 
-    public ResourceChooserScreen<R,F> setSource(@Nullable String resourceSource) {
+    public ResourceChooserScreen<R,F> setSource(@Nullable String resourceSource, boolean updateScreen) {
         if (resourceSource == null) {
             this.resourceSource = null;
             this.resourceSourceType = ResourceSourceType.LOCATION;
+            this.legacySource = false;
         } else {
-            this.resourceSourceType = ResourceSourceType.getSourceTypeOf(Objects.requireNonNull(resourceSource));
+            resourceSource = resourceSource.trim();
+            this.legacySource = !ResourceSourceType.hasSourcePrefix(resourceSource);
+            this.resourceSourceType = ResourceSourceType.getSourceTypeOf(PlaceholderParser.replacePlaceholders(resourceSource, false));
             //Remove the prefix for easier handling inside the chooser screen (source type is saved as variable)
             this.resourceSource = ResourceSourceType.getWithoutSourcePrefix(resourceSource);
         }
-        this.init();
+        if (updateScreen) this.init();
         return this;
     }
 

@@ -40,7 +40,7 @@ public class ImageMenuBackgroundConfigScreen extends ConfiguratorScreen {
                 }
                 Minecraft.getInstance().setScreen(this);
             });
-            s.setSource((this.background.textureSupplier != null) ? this.background.textureSupplier.getSourceWithPrefix() : null);
+            s.setSource((this.background.textureSupplier != null) ? this.background.textureSupplier.getSourceWithPrefix() : null, false);
             Minecraft.getInstance().setScreen(s);
         }), true);
 
@@ -51,7 +51,7 @@ public class ImageMenuBackgroundConfigScreen extends ConfiguratorScreen {
                 }
                 Minecraft.getInstance().setScreen(this);
             });
-            s.setSource((this.background.fallbackTextureSupplier != null) ? this.background.fallbackTextureSupplier.getSourceWithPrefix() : null);
+            s.setSource((this.background.fallbackTextureSupplier != null) ? this.background.fallbackTextureSupplier.getSourceWithPrefix() : null, false);
             Minecraft.getInstance().setScreen(s);
         }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.background.image.type.web.fallback.desc"))), true);
 
