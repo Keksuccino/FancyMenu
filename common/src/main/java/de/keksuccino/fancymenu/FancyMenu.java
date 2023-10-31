@@ -24,10 +24,6 @@ public class FancyMenu {
 
 	//TODO FIXEN: Slider element spammt seine "list entries" in layout files (erstellt immer neue bei jedem speichern????)
 
-	//TODO FIXEN: ResourceChooserScreen noch broken
-
-	//TODO FIXEN: FileChooserScreen: FileTypes Anzeige ist buggy
-
 	//TODO AbstractFileBrowserScreen: updateTextPreview() auf neues resource system updaten
 
 	//TODO WAV (und OGG??) Audio FileType Codec implementieren

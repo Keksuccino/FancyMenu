@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
@@ -31,6 +32,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -63,6 +66,10 @@ public abstract class ConfiguratorScreen extends Screen {
      * The {@link ConfiguratorScreen#cancelButton} and {@link ConfiguratorScreen#doneButton} are NOT INITIALIZED yet when this method gets called!
      */
     protected void initRightSideWidgets() {
+    }
+
+    public void rebuild() {
+        this.resize(Minecraft.getInstance(), this.width, this.height);
     }
 
     @Override
@@ -465,12 +472,14 @@ public abstract class ConfiguratorScreen extends Screen {
         public ExtendedButton openEditorButton;
         public final boolean allowEditor;
         protected boolean widgetSizesSet = false;
+        protected BiConsumer<String, TextInputCell> editorCallback = (s, cell) -> cell.editBox.setValue(s);
+        protected ConsumingSupplier<TextInputCell, String> editorSetTextSupplier = consumes -> consumes.editBox.getValue();
 
         public TextInputCell(@Nullable CharacterFilter characterFilter, boolean allowEditor, boolean allowEditorPlaceholders) {
 
             this.allowEditor = allowEditor;
 
-            this.editBox = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 20, 20, Component.empty());
+            this.editBox = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 20, 18, Component.empty());
             this.editBox.setMaxLength(100000);
             this.editBox.setCharacterFilter(characterFilter);
             UIBase.applyDefaultWidgetSkinTo(this.editBox);
@@ -481,13 +490,13 @@ public abstract class ConfiguratorScreen extends Screen {
                     if (allowEditor) {
                         TextEditorScreen s = new TextEditorScreen((characterFilter != null) ? characterFilter.convertToLegacyFilter() : null, callback -> {
                             if (callback != null) {
-                                this.editBox.setValue(callback);
+                                this.editorCallback.accept(callback, this);
                             }
                             Minecraft.getInstance().setScreen(ConfiguratorScreen.this);
                         });
                         s.setMultilineMode(false);
                         s.setPlaceholdersAllowed(allowEditorPlaceholders);
-                        s.setText(this.editBox.getValue());
+                        s.setText(this.editorSetTextSupplier.get(this));
                         Minecraft.getInstance().setScreen(s);
                     }
                 });
@@ -505,8 +514,8 @@ public abstract class ConfiguratorScreen extends Screen {
                 this.widgetSizesSet = true;
             }
 
-            this.editBox.setX(this.getX());
-            this.editBox.setY(this.getY());
+            this.editBox.setX(this.getX() + 1);
+            this.editBox.setY(this.getY() + 1);
 
             if (this.allowEditor) {
                 this.openEditorButton.setX(this.getX() + this.getWidth() - this.openEditorButton.getWidth());
@@ -534,6 +543,16 @@ public abstract class ConfiguratorScreen extends Screen {
         @Override
         public void tick() {
             this.editBox.tick();
+        }
+
+        public TextInputCell setEditorPresetTextSupplier(@NotNull ConsumingSupplier<TextInputCell, String> supplier) {
+            this.editorSetTextSupplier = Objects.requireNonNull(supplier);
+            return this;
+        }
+
+        public TextInputCell setEditorCallback(@NotNull BiConsumer<String, TextInputCell> callback) {
+            this.editorCallback = Objects.requireNonNull(callback);
+            return this;
         }
 
         public TextInputCell setEditListener(@Nullable Consumer<String> listener) {

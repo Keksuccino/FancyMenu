@@ -174,20 +174,6 @@ public class UIBase extends RenderingUtils {
 		return drawElementLabel(pose, font, Component.literal(text), x, y, baseColor);
 	}
 
-	public static void setShaderColor(DrawableColor color) {
-		Color c = color.getColor();
-		float a = Math.min(1F, Math.max(0F, (float)c.getAlpha() / 255.0F));
-		setShaderColor(color, a);
-	}
-
-	public static void setShaderColor(DrawableColor color, float alpha) {
-		Color c = color.getColor();
-		float r = Math.min(1F, Math.max(0F, (float)c.getRed() / 255.0F));
-		float g = Math.min(1F, Math.max(0F, (float)c.getGreen() / 255.0F));
-		float b = Math.min(1F, Math.max(0F, (float)c.getBlue() / 255.0F));
-		RenderSystem.setShaderColor(r, g, b, alpha);
-	}
-
 	@NotNull
 	public static UIColorTheme getUIColorTheme() {
 		return UIColorThemeRegistry.getActiveTheme();

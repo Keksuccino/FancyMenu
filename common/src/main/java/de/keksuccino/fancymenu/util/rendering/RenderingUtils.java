@@ -12,6 +12,8 @@ import net.minecraft.util.FastColor;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 
+import java.awt.*;
+
 public class RenderingUtils extends GuiComponent {
 
     public static float getPartialTick() {
@@ -33,6 +35,20 @@ public class RenderingUtils extends GuiComponent {
 
     public static void resetShaderColor() {
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+    }
+
+    public static void setShaderColor(DrawableColor color) {
+        Color c = color.getColor();
+        float a = Math.min(1F, Math.max(0F, (float)c.getAlpha() / 255.0F));
+        setShaderColor(color, a);
+    }
+
+    public static void setShaderColor(DrawableColor color, float alpha) {
+        Color c = color.getColor();
+        float r = Math.min(1F, Math.max(0F, (float)c.getRed() / 255.0F));
+        float g = Math.min(1F, Math.max(0F, (float)c.getGreen() / 255.0F));
+        float b = Math.min(1F, Math.max(0F, (float)c.getBlue() / 255.0F));
+        RenderSystem.setShaderColor(r, g, b, alpha);
     }
 
     public static void bindTexture(@NotNull ResourceLocation texture, boolean depthTest) {

@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.util.file.type.types.AudioFileType;
 import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
 import de.keksuccino.fancymenu.util.file.type.types.TextFileType;
 import de.keksuccino.fancymenu.util.file.type.types.VideoFileType;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfiguratorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseFileScreen;
@@ -27,11 +28,15 @@ import de.keksuccino.fancymenu.util.resources.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resources.text.IText;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.resources.texture.SimpleTexture;
 import de.keksuccino.fancymenu.util.resources.video.IVideo;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.resources.ResourceLocation;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
@@ -41,12 +46,11 @@ import java.util.function.Consumer;
 @SuppressWarnings("unused")
 public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> extends ConfiguratorScreen {
 
-    //TODO hier weiter screen fixen !!!
-    // - vor allem local ist komplett broken
-    // - nach init() kann man input field nicht klicken/editieren
-
     //TODO Somehow tell the user what source types are possible for all allowed file types
     // (maybe tell the user if some source type for some file type is NOT available?? inform only about NOT available source types; maybe under the control cells)
+
+    private static final Logger LOGGER = LogManager.getLogger();
+    protected static final SimpleTexture WARNING_TEXTURE = SimpleTexture.location(new ResourceLocation("fancymenu", "textures/warning_framed_24x24.png"));
 
     @Nullable
     protected FileTypeGroup<F> allowedFileTypes;
@@ -56,7 +60,6 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
     protected Consumer<String> resourceSourceCallback;
     @Nullable
     protected String resourceSource;
-    protected boolean legacySource = false;
     @NotNull
     protected ResourceSourceType resourceSourceType = ResourceSourceType.LOCATION;
     protected boolean allowLocation = true;
@@ -64,9 +67,9 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
     protected boolean allowWeb = true;
     protected CycleButton<ResourceSourceType> resourceSourceTypeCycleButton;
     protected ExtendedEditBox editBox;
-    protected LabelCell warningNoExtensionLine1;
-    protected LabelCell warningNoExtensionLine2;
-    protected LabelCell warningNoExtensionLine3;
+    protected boolean showWarningLegacyLocal = false;
+    protected boolean showWarningNoExtension = false;
+    protected boolean warningHovered = false;
 
     @NotNull
     public static ResourceChooserScreen<ITexture, ImageFileType> image(@NotNull Component title, @Nullable FileFilter fileFilter, @NotNull Consumer<String> resourceSourceCallback) {
@@ -122,8 +125,10 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
         boolean isLocal = (this.resourceSourceType == ResourceSourceType.LOCAL);
         boolean isLegacyLocal = (isLocal && (this.resourceSource != null) && !(this.resourceSource.startsWith("config/fancymenu/assets/") || this.resourceSource.startsWith("/config/fancymenu/assets/")));
 
+        if (isLocal && (this.resourceSource == null)) this.resourceSource = "/config/fancymenu/assets/";
+
         //Fix local sources that don't start with "/"
-        if (isLocal && (this.resourceSource != null) && !this.resourceSource.startsWith("/") && this.resourceSource.startsWith("config/fancymenu/assets/")) {
+        if (isLocal && !this.resourceSource.startsWith("/") && this.resourceSource.startsWith("config/fancymenu/assets/")) {
             this.resourceSource = "/" + this.resourceSource;
         }
 
@@ -137,8 +142,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
             //Reset the source when changing the source type, because it is not valid anymore
             this.resourceSource = null;
             this.resourceSourceType = value;
-            this.legacySource = false;
-            this.init();
+            this.rebuild();
         });
         this.resourceSourceTypeCycleButton.setTooltipSupplier(consumes -> {
             if (this.resourceSourceType == ResourceSourceType.LOCATION) return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.source_type.location.desc"));
@@ -152,18 +156,23 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
         this.addLabelCell(Component.translatable("fancymenu.resources.chooser_screen.source"));
 
-        this.editBox = this.addTextInputCell(null, !isLegacyLocal, !isLegacyLocal).editBox;
-        this.editBox.setResponder(s -> {
-            this.resourceSource = s;
-            this.updateNoExtensionWarning();
-        });
+        TextInputCell sourceInputCell = this.addTextInputCell(null, !isLegacyLocal, !isLegacyLocal);
+        this.editBox = sourceInputCell.editBox;
         if (isLocal && !isLegacyLocal) this.editBox.setInputPrefix("/config/fancymenu/assets/");
-        if (this.resourceSource != null) this.editBox.setValue(this.resourceSource);
+        this.editBox.setValue((this.resourceSource != null) ? this.resourceSource : "");
         this.editBox.setCursorPosition(0);
         this.editBox.setDisplayPosition(0);
         this.editBox.setHighlightPos(0);
         this.editBox.applyInputPrefixSuffixCharacterRenderFormatter();
         this.editBox.setEditable(!isLegacyLocal);
+        this.editBox.setResponder(s -> this.resourceSource = s);
+        sourceInputCell.setEditorCallback((s, textInputCell) -> {
+            if (!s.startsWith("/config/fancymenu/assets/")) {
+                s = "/config/fancymenu/assets/" + s;
+            }
+            this.resourceSource = s;
+        });
+        sourceInputCell.setEditorPresetTextSupplier(consumes -> consumes.editBox.getValueWithoutPrefixSuffix());
 
         if (isLocal) {
             this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.resources.chooser_screen.choose_local"), var1 -> {
@@ -180,7 +189,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
                         s = ResourceSourceType.LOCAL.getSourcePrefix() + s;
                         this.setSource(s, false);
                     }
-                    this.init();
+                    this.rebuild();
                     Minecraft.getInstance().setScreen(this);
                 });
                 fileChooser.setVisibleDirectoryLevelsAboveRoot(2);
@@ -188,13 +197,6 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
                 fileChooser.setFileFilter(this.fileFilter);
                 Minecraft.getInstance().setScreen(fileChooser);
             }), true);
-        }
-
-        if (isLegacyLocal) {
-            this.addSeparatorCell(3);
-            this.addLabelCell(Component.translatable("fancymenu.resources.chooser_screen.legacy_local.warning.line1").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
-            this.addLabelCell(Component.translatable("fancymenu.resources.chooser_screen.legacy_local.warning.line2").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
-            this.addLabelCell(Component.translatable("fancymenu.resources.chooser_screen.legacy_local.warning.line3").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
         }
 
         this.addCellGroupEndSpacerCell();
@@ -218,11 +220,6 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
         this.addCellGroupEndSpacerCell();
 
-        this.warningNoExtensionLine1 = this.addLabelCell(Component.empty());
-        this.warningNoExtensionLine2 = this.addLabelCell(Component.empty());
-        this.warningNoExtensionLine3 = this.addLabelCell(Component.empty());
-        this.updateNoExtensionWarning();
-
         this.addStartEndSpacerCell();
 
     }
@@ -230,74 +227,107 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
     @Override
     public void render(PoseStack pose, int mouseX, int mouseY, float partial) {
 
+        this.updateLegacyLocalWarning();
+        this.updateNoExtensionWarning();
+
         super.render(pose, mouseX, mouseY, partial);
 
-        if ((this.resourceSourceType == ResourceSourceType.LOCATION) && (this.editBox != null) && this.editBox.isHovered()) {
-            TooltipHandler.INSTANCE.addTooltip(
-                    Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.source_type.location.desc.input")).setDefaultStyle(),
-                    () -> this.editBox.isHovered(), false, true);
-        }
+        this.renderWarning(pose, mouseX, mouseY, partial);
 
-        //TODO render preview on the right, if source allows it
+        this.updateInputFieldTooltips();
 
     }
 
-    protected void updateNoExtensionWarning() {
-        if ((this.warningNoExtensionLine1 == null) || (this.warningNoExtensionLine2 == null) || (this.warningNoExtensionLine3 == null)) return;
-        if ((this.resourceSource != null) && !this.resourceSource.replace(" ", "").isEmpty()) {
-            if ((this.resourceSourceType == ResourceSourceType.LOCATION) || (this.resourceSourceType == ResourceSourceType.WEB)) {
-                boolean extensionFound = false;
-                if (this.allowedFileTypes != null) {
-                    for (FileType<?> fileType : this.allowedFileTypes.getFileTypes()) {
-                        for (String extension : fileType.getExtensions()) {
-                            if (this.resourceSource.toLowerCase().endsWith("." + extension)) {
-                                extensionFound = true;
-                                break;
-                            }
-                        }
-                        if (extensionFound) break;
-                    }
-                } else {
-                    extensionFound = true;
-                }
-                if (!extensionFound) {
-                    this.warningNoExtensionLine1.setText(Component.translatable("fancymenu.resources.chooser_screen.no_extension.warning.line1"));
-                    this.warningNoExtensionLine2.setText(Component.translatable("fancymenu.resources.chooser_screen.no_extension.warning.line2"));
-                    this.warningNoExtensionLine3.setText(Component.translatable("fancymenu.resources.chooser_screen.no_extension.warning.line3"));
-                    return;
-                }
+    protected void updateInputFieldTooltips() {
+        //Update Location Source Input Box Tooltip
+        if (!this.showWarningNoExtension && (this.resourceSourceType == ResourceSourceType.LOCATION) && (this.editBox != null) && (this.editBox.isHovered() || this.warningHovered)) {
+            TooltipHandler.INSTANCE.addTooltip(
+                    Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.source_type.location.desc.input")).setDefaultStyle(),
+                    () -> true, false, true);
+        }
+        //Update Legacy Local Warning Tooltip
+        if (this.showWarningLegacyLocal && (this.editBox != null) && (this.editBox.isHovered() || this.warningHovered)) {
+            TooltipHandler.INSTANCE.addTooltip(
+                    Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.chooser_screen.legacy_local.warning")).setDefaultStyle().setTextBaseColor(UIBase.getUIColorTheme().warning_text_color),
+                    () -> true, false, true);
+        }
+        //Update No Extension Warning Tooltip
+        if (!this.showWarningLegacyLocal && this.showWarningNoExtension && (this.editBox != null) && (this.editBox.isHovered() || this.warningHovered)) {
+            TooltipHandler.INSTANCE.addTooltip(
+                    Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.chooser_screen.no_extension.warning")).setDefaultStyle().setTextBaseColor(UIBase.getUIColorTheme().warning_text_color),
+                    () -> true, false, true);
+        }
+    }
+
+    protected void renderWarning(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        if ((this.showWarningLegacyLocal || this.showWarningNoExtension) && (this.editBox != null)) {
+            ResourceLocation loc = WARNING_TEXTURE.getResourceLocation();
+            if (loc != null) {
+                int h = this.editBox.getHeight() - 4;
+                int w = WARNING_TEXTURE.getAspectRatio().getAspectRatioWidth(h);
+                int x = this.editBox.getX() - w - 2;
+                int y = this.editBox.getY() + 2;
+                this.warningHovered = UIBase.isXYInArea(mouseX, mouseY, x, y, w, h);
+                RenderingUtils.setShaderColor(UIBase.getUIColorTheme().warning_text_color, 1.0F);
+                RenderingUtils.bindTexture(loc);
+                blit(pose, x, y, 0.0F, 0.0F, w, h, w, h);
+                RenderingUtils.resetShaderColor();
             }
         }
-        this.warningNoExtensionLine1.setText(Component.empty());
-        this.warningNoExtensionLine2.setText(Component.empty());
-        this.warningNoExtensionLine3.setText(Component.empty());
+    }
+
+    protected void updateLegacyLocalWarning() {
+        this.showWarningLegacyLocal = ((this.resourceSourceType == ResourceSourceType.LOCAL) && (this.resourceSource != null) && !(this.resourceSource.startsWith("config/fancymenu/assets/") || this.resourceSource.startsWith("/config/fancymenu/assets/")));
+    }
+
+    protected void updateNoExtensionWarning() {
+        boolean emptyAssetDir = (this.resourceSourceType == ResourceSourceType.LOCAL) && (this.resourceSource != null) && this.resourceSource.equals("/config/fancymenu/assets/");
+        if (!emptyAssetDir && (this.resourceSource != null) && !this.resourceSource.replace(" ", "").isEmpty()) {
+            boolean extensionFound = false;
+            if (this.allowedFileTypes != null) {
+                for (FileType<?> fileType : this.allowedFileTypes.getFileTypes()) {
+                    for (String extension : fileType.getExtensions()) {
+                        if (this.resourceSource.toLowerCase().endsWith("." + extension)) {
+                            extensionFound = true;
+                            break;
+                        }
+                    }
+                    if (extensionFound) break;
+                }
+            } else {
+                extensionFound = true;
+            }
+            if (!extensionFound) {
+                this.showWarningNoExtension = true;
+                return;
+            }
+        }
+        this.showWarningNoExtension = false;
     }
 
     public ResourceChooserScreen<R,F> setSource(@Nullable String resourceSource, boolean updateScreen) {
         if (resourceSource == null) {
             this.resourceSource = null;
             this.resourceSourceType = ResourceSourceType.LOCATION;
-            this.legacySource = false;
         } else {
             resourceSource = resourceSource.trim();
-            this.legacySource = !ResourceSourceType.hasSourcePrefix(resourceSource);
             this.resourceSourceType = ResourceSourceType.getSourceTypeOf(PlaceholderParser.replacePlaceholders(resourceSource, false));
             //Remove the prefix for easier handling inside the chooser screen (source type is saved as variable)
             this.resourceSource = ResourceSourceType.getWithoutSourcePrefix(resourceSource);
         }
-        if (updateScreen) this.init();
+        if (updateScreen) this.rebuild();
         return this;
     }
 
     public ResourceChooserScreen<R,F> setAllowedFileTypes(@Nullable FileTypeGroup<F> allowedFileTypes) {
         this.allowedFileTypes = allowedFileTypes;
-        this.init();
+        this.rebuild();
         return this;
     }
 
     public ResourceChooserScreen<R,F> setFileFilter(@Nullable FileFilter fileFilter) {
         this.fileFilter = fileFilter;
-        this.init();
+        this.rebuild();
         return this;
     }
 
@@ -312,7 +342,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
     public ResourceChooserScreen<R,F> setLocationSourceAllowed(boolean allowLocation) {
         this.allowLocation = allowLocation;
-        this.init();
+        this.rebuild();
         return this;
     }
 
@@ -322,7 +352,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
     public ResourceChooserScreen<R,F> setLocalSourceAllowed(boolean allowLocal) {
         this.allowLocal = allowLocal;
-        this.init();
+        this.rebuild();
         return this;
     }
 
@@ -332,13 +362,14 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
     public ResourceChooserScreen<R,F> setWebSourceAllowed(boolean allowWeb) {
         this.allowWeb = allowWeb;
-        this.init();
+        this.rebuild();
         return this;
     }
 
+    @SuppressWarnings("all")
     @Override
     public boolean allowDone() {
-        if ((this.resourceSource == null)  || this.resourceSource.replace(" ", "").isEmpty()) return false;
+        if ((this.resourceSource == null) || this.resourceSource.replace(" ", "").isEmpty()) return false;
         if ((this.resourceSourceType == ResourceSourceType.LOCAL) && this.resourceSource.equals("/config/fancymenu/assets/")) return false;
         return true;
     }

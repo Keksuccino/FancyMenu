@@ -46,34 +46,39 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
             this.fileFilter = file -> file.getName().toLowerCase().endsWith("." + this.forcedFileExtension.toLowerCase());
         }
 
-        this.fileNameEditBox = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 150, 20, Component.translatable("fancymenu.ui.save_file.file_name")) {
-            @Override
-            public boolean charTyped(char character, int modifiers) {
-                if (forcedFileExtension != null) {
-                    if (this.getCursorPosition() >= Math.max(0, this.getValue().length() - forcedFileExtension.length())) {
-                        return false;
-                    }
-                }
-                return super.charTyped(character, modifiers);
-            }
-            @Override
-            public boolean keyPressed(int keycode, int scancode, int modifiers) {
-                if (isSelectAll(keycode)) return false;
-                if (forcedFileExtension != null) {
-                    if (Math.max(0, this.getCursorPosition()) >= Math.max(0, this.getValue().length() - forcedFileExtension.length())) {
-                        if ((keycode != InputConstants.KEY_LEFT) && (keycode != InputConstants.KEY_RIGHT) && (keycode != InputConstants.KEY_UP) && (keycode != InputConstants.KEY_DOWN)) {
-                            return false;
-                        }
-                    }
-                }
-                return super.keyPressed(keycode, scancode, modifiers);
-            }
-        }.setCharacterRenderFormatter((editBox, component, characterIndex, character, visiblePartOfLine, fullLine) -> {
-            if (characterIndex >= Math.max(0, (editBox.getValue().length() - forcedFileExtension.length())-1)) {
-                component.withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().edit_box_text_color_uneditable.getColorInt()));
-            }
-            return component;
-        });
+//        this.fileNameEditBox = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 150, 18, Component.translatable("fancymenu.ui.save_file.file_name")) {
+//            @Override
+//            public boolean charTyped(char character, int modifiers) {
+//                if (forcedFileExtension != null) {
+//                    if (this.getCursorPosition() >= Math.max(0, this.getValue().length() - forcedFileExtension.length())) {
+//                        return false;
+//                    }
+//                }
+//                return super.charTyped(character, modifiers);
+//            }
+//            @Override
+//            public boolean keyPressed(int keycode, int scancode, int modifiers) {
+//                if (isSelectAll(keycode)) return false;
+//                if (forcedFileExtension != null) {
+//                    if (Math.max(0, this.getCursorPosition()) >= Math.max(0, this.getValue().length() - forcedFileExtension.length())) {
+//                        if ((keycode != InputConstants.KEY_LEFT) && (keycode != InputConstants.KEY_RIGHT) && (keycode != InputConstants.KEY_UP) && (keycode != InputConstants.KEY_DOWN)) {
+//                            return false;
+//                        }
+//                    }
+//                }
+//                return super.keyPressed(keycode, scancode, modifiers);
+//            }
+//        }.setCharacterRenderFormatter((editBox, component, characterIndex, character, visiblePartOfLine, fullLine) -> {
+//            if (characterIndex >= Math.max(0, (editBox.getValue().length() - forcedFileExtension.length())-1)) {
+//                component.withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().edit_box_text_color_uneditable.getColorInt()));
+//            }
+//            return component;
+//        });
+        this.fileNameEditBox = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 150, 18, Component.translatable("fancymenu.ui.save_file.file_name"));
+        if (this.forcedFileExtension != null) {
+            this.fileNameEditBox.setInputSuffix("." + this.forcedFileExtension.toLowerCase());
+            this.fileNameEditBox.applyInputPrefixSuffixCharacterRenderFormatter();
+        }
         this.fileNameEditBox.setMaxLength(10000);
         UIBase.applyDefaultWidgetSkinTo(this.fileNameEditBox);
 
@@ -129,10 +134,10 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
 
     protected void renderFileNameEditBox(PoseStack pose, int mouseX, int mouseY, float partial) {
         this.fileNameEditBox.setWidth(this.getBelowFileScrollAreaElementWidth() - 2);
-        this.fileNameEditBox.setX(this.fileListScrollArea.getXWithBorder() + this.fileListScrollArea.getWidthWithBorder() - this.fileNameEditBox.getWidth());
-        this.fileNameEditBox.setY(this.fileListScrollArea.getYWithBorder() + this.fileListScrollArea.getHeightWithBorder() + 5);
+        this.fileNameEditBox.setX(this.fileListScrollArea.getXWithBorder() + this.fileListScrollArea.getWidthWithBorder() - this.fileNameEditBox.getWidth() - 1);
+        this.fileNameEditBox.setY(this.fileListScrollArea.getYWithBorder() + this.fileListScrollArea.getHeightWithBorder() + 5 + 1);
         this.fileNameEditBox.render(pose, mouseX, mouseY, partial);
-        this.font.draw(pose, FILE_NAME_PREFIX_TEXT, this.fileNameEditBox.getX() - 1 - Minecraft.getInstance().font.width(FILE_NAME_PREFIX_TEXT) - 5, this.fileNameEditBox.getY() - 1 + (this.fileNameEditBox.getHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2), UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        this.font.draw(pose, FILE_NAME_PREFIX_TEXT, this.fileNameEditBox.getX() - 1 - Minecraft.getInstance().font.width(FILE_NAME_PREFIX_TEXT) - 5, this.fileNameEditBox.getY() - 1 + (this.fileNameEditBox.getHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2), UIBase.getUIColorTheme().element_label_color_normal.getColorInt());
     }
 
     @Override

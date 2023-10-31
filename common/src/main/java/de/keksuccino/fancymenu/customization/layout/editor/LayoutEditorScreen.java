@@ -31,6 +31,8 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.file.FileUtils;
+import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
+import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -796,7 +798,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		if (this.layout.layoutFile != null) {
 			fileNamePreset = this.layout.layoutFile.getName();
 		}
-		Minecraft.getInstance().setScreen(SaveFileScreen.build(LayoutHandler.LAYOUT_DIR, fileNamePreset, "txt", (call) -> {
+		SaveFileScreen s = (SaveFileScreen) SaveFileScreen.build(LayoutHandler.LAYOUT_DIR, fileNamePreset, "txt", (call) -> {
 			if (call != null) {
 				try {
 					this.layout.updateLastEditedTime();
@@ -822,7 +824,11 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 				}
 			}
 			Minecraft.getInstance().setScreen(this);
-		}).setVisibleDirectoryLevelsAboveRoot(2).setShowSubDirectories(false));
+		}).setVisibleDirectoryLevelsAboveRoot(2).setShowSubDirectories(false);
+		FileTypeGroup<?> fileTypeGroup = FileTypeGroup.of(FileTypes.TXT_TEXT);
+		fileTypeGroup.setDisplayName(Component.translatable("fancymenu.file_types.groups.text"));
+		s.setFileTypes(fileTypeGroup);
+		Minecraft.getInstance().setScreen(s);
 	}
 
 	public void onUpdateSelectedElements() {

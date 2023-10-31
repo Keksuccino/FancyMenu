@@ -84,6 +84,8 @@ public abstract class AbstractFileBrowserScreen extends Screen {
     protected ComponentWidget currentDirectoryComponent;
     protected int fileScrollListHeightOffset = 0;
     protected int fileTypeScrollListYOffset = 0;
+    @Nullable
+    protected MutableComponent currentFileTypesComponent;
 
     public AbstractFileBrowserScreen(@NotNull Component title, @Nullable File rootDirectory, @NotNull File startDirectory, @NotNull Consumer<File> callback) {
 
@@ -143,6 +145,11 @@ public abstract class AbstractFileBrowserScreen extends Screen {
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
+        //Update horizontal scroll bar of file types area
+        if (this.currentFileTypesComponent != null) {
+            this.fileTypeScrollArea.horizontalScrollBar.active = (Minecraft.getInstance().font.width(this.currentFileTypesComponent) > (this.fileTypeScrollArea.getInnerWidth() - 10));
+        }
+
         RenderSystem.enableBlend();
 
         fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
@@ -193,11 +200,12 @@ public abstract class AbstractFileBrowserScreen extends Screen {
     }
 
     protected void renderFileTypeScrollArea(PoseStack pose, int mouseX, int mouseY, float partial) {
+        this.fileTypeScrollArea.verticalScrollBar.active = false;
         this.fileTypeScrollArea.setWidth(this.getBelowFileScrollAreaElementWidth());
         this.fileTypeScrollArea.setX(this.fileListScrollArea.getXWithBorder() + this.fileListScrollArea.getWidthWithBorder() - this.fileTypeScrollArea.getWidthWithBorder());
         this.fileTypeScrollArea.setY(this.fileListScrollArea.getYWithBorder() + this.fileListScrollArea.getHeightWithBorder() + 5 + this.fileTypeScrollListYOffset);
         this.fileTypeScrollArea.render(pose, mouseX, mouseY, partial);
-        this.font.draw(pose, FILE_TYPE_PREFIX_TEXT, this.fileTypeScrollArea.getXWithBorder() - Minecraft.getInstance().font.width(FILE_TYPE_PREFIX_TEXT) - 5, this.fileTypeScrollArea.getYWithBorder() + (this.fileTypeScrollArea.getHeightWithBorder() / 2) - (Minecraft.getInstance().font.lineHeight / 2), UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        this.font.draw(pose, FILE_TYPE_PREFIX_TEXT, this.fileTypeScrollArea.getXWithBorder() - Minecraft.getInstance().font.width(FILE_TYPE_PREFIX_TEXT) - 5, this.fileTypeScrollArea.getYWithBorder() + (this.fileTypeScrollArea.getHeightWithBorder() / 2) - (Minecraft.getInstance().font.lineHeight / 2), UIBase.getUIColorTheme().element_label_color_normal.getColorInt());
     }
 
     protected void renderFileScrollArea(PoseStack pose, int mouseX, int mouseY, float partial, int currentDirFieldYEnd) {
@@ -442,7 +450,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
     public void updateFileTypeScrollArea() {
         this.fileTypeScrollArea.clearEntries();
-        Component c = Component.translatable("fancymenu.file_browser.file_type.types.all").append(" (*)");
+        this.currentFileTypesComponent = Component.translatable("fancymenu.file_browser.file_type.types.all").append(" (*)");
         if (this.fileTypes != null) {
             String types = "";
             for (FileType<?> type : this.fileTypes.getFileTypes()) {
@@ -453,10 +461,14 @@ public abstract class AbstractFileBrowserScreen extends Screen {
             }
             Component fileTypeDisplayName = this.fileTypes.getDisplayName();
             if (fileTypeDisplayName == null) fileTypeDisplayName = Component.empty();
-            c = Component.empty().append(fileTypeDisplayName).append(Component.literal(" (")).append(Component.literal(types)).append(Component.literal(")"));
+            this.currentFileTypesComponent = Component.empty().append(fileTypeDisplayName).append(Component.literal(" (")).append(Component.literal(types)).append(Component.literal(")"));
         }
-        TextScrollAreaEntry entry = new TextScrollAreaEntry(this.fileTypeScrollArea, c, textScrollAreaEntry -> {});
+        this.currentFileTypesComponent = this.currentFileTypesComponent.withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
+        TextScrollAreaEntry entry = new TextScrollAreaEntry(this.fileTypeScrollArea, this.currentFileTypesComponent, textScrollAreaEntry -> {});
         entry.setPlayClickSound(false);
+        entry.setSelectable(false);
+        entry.setBackgroundColorHover(entry.getBackgroundColorIdle());
+        entry.setHeight(this.fileTypeScrollArea.getInnerHeight());
         this.fileTypeScrollArea.addEntry(entry);
     }
 
