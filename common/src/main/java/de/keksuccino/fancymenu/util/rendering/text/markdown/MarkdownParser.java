@@ -14,7 +14,6 @@ import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.Hyperlink;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.QuoteContext;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.CodeBlockContext;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -23,7 +22,7 @@ public class MarkdownParser {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final CharacterFilter RESOURCE_NAME_FILTER = CharacterFilter.buildOnlyLowercaseFileNameFilter();
+    private static final CharacterFilter RESOURCE_NAME_FILTER = CharacterFilter.buildResourceNameFilter();
 
     @NotNull
     public static List<MarkdownTextFragment> parse(@NotNull MarkdownRenderer renderer, @NotNull String markdownText) {

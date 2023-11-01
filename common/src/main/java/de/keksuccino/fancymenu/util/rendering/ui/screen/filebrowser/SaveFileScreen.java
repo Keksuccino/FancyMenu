@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
-import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
@@ -14,7 +13,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
@@ -46,34 +44,6 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
             this.fileFilter = file -> file.getName().toLowerCase().endsWith("." + this.forcedFileExtension.toLowerCase());
         }
 
-//        this.fileNameEditBox = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 150, 18, Component.translatable("fancymenu.ui.save_file.file_name")) {
-//            @Override
-//            public boolean charTyped(char character, int modifiers) {
-//                if (forcedFileExtension != null) {
-//                    if (this.getCursorPosition() >= Math.max(0, this.getValue().length() - forcedFileExtension.length())) {
-//                        return false;
-//                    }
-//                }
-//                return super.charTyped(character, modifiers);
-//            }
-//            @Override
-//            public boolean keyPressed(int keycode, int scancode, int modifiers) {
-//                if (isSelectAll(keycode)) return false;
-//                if (forcedFileExtension != null) {
-//                    if (Math.max(0, this.getCursorPosition()) >= Math.max(0, this.getValue().length() - forcedFileExtension.length())) {
-//                        if ((keycode != InputConstants.KEY_LEFT) && (keycode != InputConstants.KEY_RIGHT) && (keycode != InputConstants.KEY_UP) && (keycode != InputConstants.KEY_DOWN)) {
-//                            return false;
-//                        }
-//                    }
-//                }
-//                return super.keyPressed(keycode, scancode, modifiers);
-//            }
-//        }.setCharacterRenderFormatter((editBox, component, characterIndex, character, visiblePartOfLine, fullLine) -> {
-//            if (characterIndex >= Math.max(0, (editBox.getValue().length() - forcedFileExtension.length())-1)) {
-//                component.withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().edit_box_text_color_uneditable.getColorInt()));
-//            }
-//            return component;
-//        });
         this.fileNameEditBox = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 150, 18, Component.translatable("fancymenu.ui.save_file.file_name"));
         if (this.forcedFileExtension != null) {
             this.fileNameEditBox.setInputSuffix("." + this.forcedFileExtension.toLowerCase());
@@ -253,19 +223,6 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
     @Override
     public boolean keyPressed(int keycode, int scancode, int modifiers) {
 
-        String key = InputUtils.getKeyName(keycode, scancode);
-
-        if (key.equals("a") && hasControlDown() && this.fileNameEditBox.isFocused()) {
-            this.fileNameEditBox.setHighlightPos(0);
-            int cursorPos = this.fileNameEditBox.getValue().length();
-            if (this.forcedFileExtension != null) {
-                cursorPos = Math.max(0, this.fileNameEditBox.getValue().length() - (this.forcedFileExtension.length() + 1));
-            }
-            this.fileNameEditBox.setCursorPosition(cursorPos);
-            if (this.forcedFileExtension != null)
-                return true;
-        }
-
         if (keycode == InputConstants.KEY_ENTER) {
             this.trySave();
             return true;
@@ -288,6 +245,11 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
             if ((now - this.lastClick) < 400) {
                 if (this.file.isDirectory()) {
                     SaveFileScreen.this.setDirectory(this.file, true);
+                } else if (this.file.isFile()) {
+                    String name = this.file.getName();
+                    if ((SaveFileScreen.this.forcedFileExtension == null) || (name.toLowerCase().endsWith("." + SaveFileScreen.this.forcedFileExtension.toLowerCase()))) {
+                        SaveFileScreen.this.fileNameEditBox.setValue(name);
+                    }
                 }
             }
             SaveFileScreen.this.updatePreview(this.file);

@@ -47,13 +47,23 @@ public enum ResourceSourceType implements LocalizedCycleEnum<ResourceSourceType>
      */
     @NotNull
     public static ResourceSourceType getSourceTypeOf(@NotNull String resourceSource) {
+
         Objects.requireNonNull(resourceSource);
+
+        //Check for source prefix
         if (resourceSource.startsWith(LOCAL.getSourcePrefix())) return LOCAL;
-        if (resourceSource.startsWith(WEB.getSourcePrefix()) || TextValidators.BASIC_URL_TEXT_VALIDATOR.get(resourceSource)) return WEB;
-        if (resourceSource.startsWith(LOCATION.getSourcePrefix()) || resourceSource.contains(":")) {
-            if (ResourceLocation.tryParse(resourceSource) != null) return LOCATION;
+        if (resourceSource.startsWith(WEB.getSourcePrefix())) return WEB;
+        if (resourceSource.startsWith(LOCATION.getSourcePrefix())) return LOCATION;
+
+        //If no prefix, try to get source type the classic way
+        if (TextValidators.BASIC_URL_TEXT_VALIDATOR.get(getWithoutSourcePrefix(resourceSource))) return WEB;
+        if (resourceSource.contains(":")) {
+            if (ResourceLocation.tryParse(getWithoutSourcePrefix(resourceSource)) != null) return LOCATION;
         }
+
+        //Fallback type and no-prefix return, if source is not WEB and not LOCATION
         return LOCAL;
+
     }
 
     @Override

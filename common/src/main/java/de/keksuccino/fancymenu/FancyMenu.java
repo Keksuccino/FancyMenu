@@ -20,6 +20,10 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO FIXEN: Große Mengen an Text (SEHR große mengen) in Text element brechen das Game (0 FPS; komplett tot)
+
+	//TODO Markdown renderer: nach Überschrift (unter Linie) Abstand adden
+
 	//TODO FIXEN: Wenn mehr als ein Layout aktiv ist, werden Vanilla Buttons, die NICHT den Vanilla Anchor haben, in untere rechte Ecke gepackt??
 
 	//TODO FIXEN: Slider element spammt seine "list entries" in layout files (erstellt immer neue bei jedem speichern????)

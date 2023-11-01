@@ -4,11 +4,14 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.file.FileFilter;
+import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.file.FilenameComparator;
+import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
+import de.keksuccino.fancymenu.util.file.type.types.TextFileType;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.component.ComponentWidget;
@@ -19,7 +22,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.Text
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
-import de.keksuccino.fancymenu.util.resources.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resources.text.IText;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
@@ -75,9 +77,14 @@ public abstract class AbstractFileBrowserScreen extends Screen {
     protected boolean blockResourceUnfriendlyFileNames = true;
     protected boolean showBlockedResourceUnfriendlyFiles = true;
     protected ScrollArea fileListScrollArea = new ScrollArea(0, 0, 0, 0);
-    protected ScrollArea textFilePreviewScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ScrollArea fileTypeScrollArea = new ScrollArea(0, 0, 0, 20);
+    protected ScrollArea previewTextScrollArea = new ScrollArea(0, 0, 0, 0);
+    @Nullable
     protected ResourceSupplier<ITexture> previewTextureSupplier;
+    @Nullable
+    protected ResourceSupplier<IText> previewTextSupplier;
+    @Nullable
+    protected IText currentPreviewText;
     protected ExtendedButton confirmButton;
     protected ExtendedButton cancelButton;
     protected ExtendedButton openInExplorerButton;
@@ -104,7 +111,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         lastDirectory = startDirectory;
         this.callback = callback;
 
-        this.updateTextPreview(null);
+        this.setTextPreview(null);
         this.updateFilesList();
 
     }
@@ -123,7 +130,13 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
         this.openInExplorerButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.ui.filechooser.open_in_explorer"), (button) -> {
-            if (this.currentDir != null) de.keksuccino.fancymenu.util.file.FileUtils.openFile(this.currentDir);
+            File selected = this.getSelectedFile();
+            if ((selected != null) && selected.isDirectory()) {
+                FileUtils.openFile(selected);
+            } else if (this.currentDir != null) {
+                FileUtils.openFile(this.currentDir);
+            }
+            MainThreadTaskExecutor.executeInMainThread(() -> button.setFocused(false), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
         });
         this.addWidget(this.openInExplorerButton);
         UIBase.applyDefaultWidgetSkinTo(this.openInExplorerButton);
@@ -159,7 +172,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
         this.font.draw(pose, Component.translatable("fancymenu.ui.filechooser.files"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
 
-        int currentDirFieldYEnd = this.renderCurrentDirectoryField(pose, mouseX, mouseY, partial, 20, 50 + 15, (this.width / 2) - 40, this.font.lineHeight + 6);
+        int currentDirFieldYEnd = this.renderCurrentDirectoryField(pose, mouseX, mouseY, partial, 20, 50 + 15, this.width - 260 - 20, this.font.lineHeight + 6);
 
         this.renderFileScrollArea(pose, mouseX, mouseY, partial, currentDirFieldYEnd);
 
@@ -209,7 +222,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
     }
 
     protected void renderFileScrollArea(PoseStack pose, int mouseX, int mouseY, float partial, int currentDirFieldYEnd) {
-        this.fileListScrollArea.setWidth((this.width / 2) - 40, true);
+        this.fileListScrollArea.setWidth(this.width - 260 - 20, true);
         this.fileListScrollArea.setHeight(this.height - 85 - (this.font.lineHeight + 6) - 2 - 25 + this.fileScrollListHeightOffset, true);
         this.fileListScrollArea.setX(20, true);
         this.fileListScrollArea.setY(currentDirFieldYEnd + 2, true);
@@ -217,12 +230,13 @@ public abstract class AbstractFileBrowserScreen extends Screen {
     }
 
     protected void renderPreview(PoseStack pose, int mouseX, int mouseY, float partial) {
+        this.tickTextPreview();
         if (this.previewTextureSupplier != null) {
             ITexture t = this.previewTextureSupplier.get();
             ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
             if (loc != null) {
                 AspectRatio ratio = t.getAspectRatio();
-                int[] size = ratio.getAspectRatioSizeByMaximumSize((this.width / 2) - 40, (this.cancelButton.getY() - 50) - (50 + 15));
+                int[] size = ratio.getAspectRatioSizeByMaximumSize(200, (this.cancelButton.getY() - 50) - (50 + 15));
                 int w = size[0];
                 int h = size[1];
                 int x = this.width - 20 - w;
@@ -237,11 +251,11 @@ public abstract class AbstractFileBrowserScreen extends Screen {
                 UIBase.renderBorder(pose, x, y, x + w, y + h, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUIColorTheme().element_border_color_normal.getColor(), true, true, true, true);
             }
         } else {
-            this.textFilePreviewScrollArea.setWidth((this.width / 2) - 40, true);
-            this.textFilePreviewScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
-            this.textFilePreviewScrollArea.setX(this.width - 20 - this.textFilePreviewScrollArea.getWidthWithBorder(), true);
-            this.textFilePreviewScrollArea.setY(50 + 15, true);
-            this.textFilePreviewScrollArea.render(pose, mouseX, mouseY, partial);
+            this.previewTextScrollArea.setWidth(200, true);
+            this.previewTextScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
+            this.previewTextScrollArea.setX(this.width - 20 - this.previewTextScrollArea.getWidthWithBorder(), true);
+            this.previewTextScrollArea.setY(50 + 15, true);
+            this.previewTextScrollArea.render(pose, mouseX, mouseY, partial);
         }
         UIBase.resetShaderColor();
     }
@@ -309,7 +323,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
             }
 
             //Trim path to fit into the path area
-            while (this.currentDirectoryComponent.getWidth() > ((this.width / 2) - 40 - 8)) {
+            while (this.currentDirectoryComponent.getWidth() > (this.width - 260 - 20 - 8)) {
                 if (!this.currentDirectoryComponent.getChildren().isEmpty()) {
                     this.currentDirectoryComponent.getChildren().remove(0);
                 } else {
@@ -438,6 +452,15 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         return null;
     }
 
+    @Nullable
+    protected File getSelectedFile() {
+        AbstractFileScrollAreaEntry selected = this.getSelectedEntry();
+        if ((selected != null) && !selected.resourceUnfriendlyFileName) {
+            return new File(selected.file.getPath().replace("\\", "/"));
+        }
+        return null;
+    }
+
     public void setFileTypes(@Nullable FileTypeGroup<?> typeGroup) {
         this.fileTypes = typeGroup;
         this.updateFileTypeScrollArea();
@@ -474,46 +497,91 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
     public void updatePreview(@Nullable File file) {
         if ((file != null) && file.isFile()) {
-            this.updateTextPreview(file);
+            this.setTextPreview(file);
             if (FileTypes.getLocalType(file) instanceof ImageFileType) {
                 this.previewTextureSupplier = ResourceSupplier.image(file.getPath());
             } else {
                 this.previewTextureSupplier = null;
             }
         } else {
-            this.updateTextPreview(null);
+            this.setTextPreview(null);
             this.previewTextureSupplier = null;
         }
     }
 
-    //TODO update this to the new resource system
-    protected void updateTextPreview(@Nullable File file) {
-        this.textFilePreviewScrollArea.clearEntries();
-        boolean textSet = false;
-        if ((file != null) && file.isFile() && FileFilter.TEXT_FILE_FILTER.checkFile(file)) {
-            IText text = ResourceHandlers.getTextHandler().get(file.getPath());
-            if (text != null) {
-                for (String s : text.getTextLines()) {
-                    TextScrollAreaEntry e = new TextScrollAreaEntry(this.textFilePreviewScrollArea, Component.literal(s).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), (entry) -> {});
-                    e.setSelectable(false);
-                    e.setBackgroundColorHover(e.getBackgroundColorIdle());
-                    e.setPlayClickSound(false);
-                    this.textFilePreviewScrollArea.addEntry(e);
+    protected void setTextPreview(@Nullable File file) {
+        if (file == null) {
+            this.previewTextSupplier = null;
+        } else {
+            for (TextFileType type : FileTypes.getAllTextFileTypes()) {
+                if (type.isFileTypeLocal(file)) {
+                    this.previewTextSupplier = ResourceSupplier.text(GameDirectoryUtils.getAbsoluteGameDirectoryPath(file.getPath()));
+                    return;
                 }
-                int totalWidth = this.textFilePreviewScrollArea.getTotalEntryWidth();
-                for (ScrollAreaEntry e : this.textFilePreviewScrollArea.getEntries()) {
-                    e.setWidth(totalWidth);
-                }
-                textSet = true;
             }
+            this.previewTextSupplier = null;
         }
-        if (!textSet) {
-            TextScrollAreaEntry e = new TextScrollAreaEntry(this.textFilePreviewScrollArea, Component.translatable("fancymenu.ui.filechooser.no_preview").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), (entry) -> {});
-            e.setSelectable(false);
-            e.setBackgroundColorHover(e.getBackgroundColorIdle());
-            e.setPlayClickSound(false);
-            this.textFilePreviewScrollArea.addEntry(e);
+    }
+
+    protected void tickTextPreview() {
+        if (this.previewTextScrollArea == null) return;
+        if (this.previewTextSupplier != null) {
+            IText text = this.previewTextSupplier.get();
+            if (!Objects.equals(this.currentPreviewText, text)) {
+                if (text == null) {
+                    this.setNoTextPreview();
+                } else {
+                    this.previewTextScrollArea.clearEntries();
+                    List<String> lines = text.getTextLines();
+                    if (lines != null) {
+                        int line = 0;
+                        for (String s : lines) {
+                            line++;
+                            if (line < 70) {
+                                TextScrollAreaEntry e = new TextScrollAreaEntry(this.previewTextScrollArea, Component.literal(s).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), (entry) -> {});
+                                e.setSelectable(false);
+                                e.setBackgroundColorHover(e.getBackgroundColorIdle());
+                                e.setPlayClickSound(false);
+                                this.previewTextScrollArea.addEntry(e);
+                            } else {
+                                TextScrollAreaEntry e = new TextScrollAreaEntry(this.previewTextScrollArea, Component.literal("......").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), (entry) -> {});
+                                e.setSelectable(false);
+                                e.setBackgroundColorHover(e.getBackgroundColorIdle());
+                                e.setPlayClickSound(false);
+                                this.previewTextScrollArea.addEntry(e);
+                                TextScrollAreaEntry e2 = new TextScrollAreaEntry(this.previewTextScrollArea, Component.literal("  ").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), (entry) -> {});
+                                e2.setSelectable(false);
+                                e2.setBackgroundColorHover(e2.getBackgroundColorIdle());
+                                e2.setPlayClickSound(false);
+                                this.previewTextScrollArea.addEntry(e2);
+                                break;
+                            }
+                        }
+                        int totalWidth = this.previewTextScrollArea.getTotalEntryWidth();
+                        for (ScrollAreaEntry e : this.previewTextScrollArea.getEntries()) {
+                            e.setWidth(totalWidth);
+                        }
+                    } else {
+                        //Don't update currentPreviewText, so the method keeps checking if the lines list is null and if not, update the preview
+                        return;
+                    }
+                }
+                this.currentPreviewText = text;
+            }
+        } else {
+            if (this.currentPreviewText != null) this.setNoTextPreview();
+            this.currentPreviewText = null;
         }
+    }
+
+    protected void setNoTextPreview() {
+        if (this.previewTextScrollArea == null) return;
+        this.previewTextScrollArea.clearEntries();
+        TextScrollAreaEntry e = new TextScrollAreaEntry(this.previewTextScrollArea, Component.translatable("fancymenu.ui.filechooser.no_preview").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), (entry) -> {});
+        e.setSelectable(false);
+        e.setBackgroundColorHover(e.getBackgroundColorIdle());
+        e.setPlayClickSound(false);
+        this.previewTextScrollArea.addEntry(e);
     }
 
     protected void updateFilesList() {
@@ -583,7 +651,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
 
-        if ((button == 0) && !this.fileListScrollArea.isMouseInsideArea() && !this.fileListScrollArea.isMouseInteractingWithGrabbers() && !this.isWidgetHovered()) {
+        if ((button == 0) && !this.fileListScrollArea.isMouseInsideArea() && !this.fileListScrollArea.isMouseInteractingWithGrabbers() && !this.previewTextScrollArea.isMouseInsideArea() && !this.previewTextScrollArea.isMouseInteractingWithGrabbers() && !this.isWidgetHovered()) {
             for (ScrollAreaEntry e : this.fileListScrollArea.getEntries()) {
                 e.setSelected(false);
             }

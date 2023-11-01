@@ -12,11 +12,12 @@ import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.resources.language.I18n;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.awt.Color;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -28,6 +29,7 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
 
     @NotNull
     protected String text = "";
+    protected boolean textContainsPlaceholders;
     protected String renderText;
     protected float x;
     protected float y;
@@ -101,10 +103,6 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
             }
             lineOffsetY += line.getLineHeight() + this.lineSpacing;
         }
-
-//        if (shouldRender) {
-//            UIBase.renderBorder(pose, this.x + this.border, this.y + this.border, this.x + this.realWidth - this.border, this.y + this.realHeight - this.border, 1, this.hyperlinkColor.getColorInt(), true, true, true, true);
-//        }
 
     }
 
@@ -228,7 +226,8 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
 
     @NotNull
     protected String buildRenderText() {
-        String t = PlaceholderParser.replacePlaceholders(this.text).replace("%n%", "\n").replace("\r", "\n");
+        String t = this.textContainsPlaceholders ? PlaceholderParser.replacePlaceholders(this.text) : this.text;
+        t = t.replace("%n%", "\n").replace("\r", "\n");
         if (this.removeHtmlBreaks) t = t.replace("<br>", "");
         return t;
     }
@@ -251,7 +250,12 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
     }
 
     public MarkdownRenderer setText(@NotNull String text) {
-        this.text = Objects.requireNonNull(text);
+        if (text.length() > 45000) {
+            this.text = I18n.get("fancymenu.markdown.error.text_too_long");
+        } else {
+            this.text = text;
+            this.textContainsPlaceholders = PlaceholderParser.containsPlaceholders(this.text, true);
+        }
         return this;
     }
 

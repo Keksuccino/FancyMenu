@@ -1,6 +1,6 @@
 
 //Copyright (c) 2022-2023 Keksuccino.
-//This code is licensed under DSMSL.
+//This code is licensed under DSMSLv2.
 //For more information about the license, see this: https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md
 
 package de.keksuccino.fancymenu.customization.placeholder;
@@ -25,17 +25,37 @@ public class PlaceholderParser {
     private static final Map<String, Long> LOG_COOLDOWN = new HashMap<>();
     private static final Map<String, Pair<String, Long>> PLACEHOLDER_CACHE = new HashMap<>();
 
+    /**
+     * Simple check if the given {@link String} contains placeholders.<br>
+     * This basically only checks if the {@link String} contains ' {"placeholder" ', so it's not 100% safe, but performance-friendly.
+     *
+     * @param checkForVariableReferences If the method should check for the short version of variable placeholders ($$variable_name).
+     */
+    public static boolean containsPlaceholders(@Nullable String in, boolean checkForVariableReferences) {
+        if (in == null) return false;
+        if (in.length() <= 2) return false;
+        if (in.contains("{\"placeholder\"")) return true;
+        if (checkForVariableReferences && !Objects.equals(in, replaceVariableReferences(in))) return true;
+        return false;
+    }
+
+    //TODO Make this return all top-level placeholders
+    // (top-level = every placeholder in the given string, without placeholders that were added after replacing placeholders)
+    public static List<String> getTopLevelPlaceholders(@Nullable String in) {
+
+    }
+
     @NotNull
-    public static String replacePlaceholders(@NotNull String in) {
+    public static String replacePlaceholders(@Nullable String in) {
         return replacePlaceholders(in, true);
     }
 
     @NotNull
-    public static String replacePlaceholders(String in, boolean convertFormatCodes) {
+    public static String replacePlaceholders(@Nullable String in, boolean convertFormatCodes) {
 
         if (in == null) return "";
-        if (in.replace(" ", "").isEmpty()) return in;
         if (in.length() <= 1) return in;
+        if (in.trim().isEmpty()) return in;
 
         updateLogHandler();
 
@@ -66,7 +86,9 @@ public class PlaceholderParser {
             }
         }
         if (replaced != null) {
-            replaced = StringUtils.convertFormatCodes(replaced, "&", "§");
+            if (convertFormatCodes) {
+                replaced = StringUtils.convertFormatCodes(replaced, "&", "§");
+            }
             replaced = replaced.replace("\\\"", "\"").replace("\\{", "{").replace("\\}", "}");
             PLACEHOLDER_CACHE.put(original, Pair.of(replaced, System.currentTimeMillis()));
             return replaced;
