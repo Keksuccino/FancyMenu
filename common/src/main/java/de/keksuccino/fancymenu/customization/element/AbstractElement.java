@@ -44,9 +44,17 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	public int baseWidth = 0;
 	public int baseHeight = 0;
 	public String advancedX;
+	public Integer cachedAdvancedX;
+	public long lastAdvancedXParse = -1;
 	public String advancedY;
+	public Integer cachedAdvancedY;
+	public long lastAdvancedYParse = -1;
 	public String advancedWidth;
+	public Integer cachedAdvancedWidth;
+	public long lastAdvancedWidthParse = -1;
 	public String advancedHeight;
+	public Integer cachedAdvancedHeight;
+	public long lastAdvancedHeightParse = -1;
 	public boolean stretchX = false;
 	public boolean stretchY = false;
 	public boolean stayOnScreen = true;
@@ -124,9 +132,17 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 			x = this.anchorPoint.getElementPositionX(this);
 		}
 		if (this.advancedX != null) {
-			String s = PlaceholderParser.replacePlaceholders(this.advancedX).replace(" ", "");
-			if (MathUtils.isDouble(s)) {
-				x = (int) Double.parseDouble(s);
+			long now = System.currentTimeMillis();
+			//Cache advancedX for 30ms to save performance (thanks to danorris for the idea!)
+			if (((this.lastAdvancedXParse + 30) > now) && (this.cachedAdvancedX != null)) {
+				x = this.cachedAdvancedX;
+			} else {
+				String s = PlaceholderParser.replacePlaceholders(this.advancedX).replace(" ", "");
+				if (MathUtils.isDouble(s)) {
+					x = (int) Double.parseDouble(s);
+					this.cachedAdvancedX = x;
+					this.lastAdvancedXParse = now;
+				}
 			}
 		}
 		if (this.stretchX) {
@@ -151,9 +167,17 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 			y = this.anchorPoint.getElementPositionY(this);
 		}
 		if (this.advancedY != null) {
-			String s = PlaceholderParser.replacePlaceholders(this.advancedY).replace(" ", "");
-			if (MathUtils.isDouble(s)) {
-				y = (int) Double.parseDouble(s);
+			long now = System.currentTimeMillis();
+			//Cache advancedY for 30ms to save performance (thanks to danorris for the idea!)
+			if (((this.lastAdvancedYParse + 30) > now) && (this.cachedAdvancedY != null)) {
+				y = this.cachedAdvancedY;
+			} else {
+				String s = PlaceholderParser.replacePlaceholders(this.advancedY).replace(" ", "");
+				if (MathUtils.isDouble(s)) {
+					y = (int) Double.parseDouble(s);
+					this.cachedAdvancedY = y;
+					this.lastAdvancedYParse = now;
+				}
 			}
 		}
 		if (this.stretchY) {
@@ -174,9 +198,17 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	 */
 	public int getAbsoluteWidth() {
 		if (this.advancedWidth != null) {
-			String s = PlaceholderParser.replacePlaceholders(this.advancedWidth).replace(" ", "");
-			if (MathUtils.isDouble(s)) {
-				return (int) Double.parseDouble(s);
+			long now = System.currentTimeMillis();
+			//Cache advancedWidth for 30ms to save performance (thanks to danorris for the idea!)
+			if (((this.lastAdvancedWidthParse + 30) > now) && (this.cachedAdvancedWidth != null)) {
+				return this.cachedAdvancedWidth;
+			} else {
+				String s = PlaceholderParser.replacePlaceholders(this.advancedWidth).replace(" ", "");
+				if (MathUtils.isDouble(s)) {
+					this.cachedAdvancedWidth = (int) Double.parseDouble(s);
+					this.lastAdvancedWidthParse = now;
+					return this.cachedAdvancedWidth;
+				}
 			}
 		}
 		if (this.stretchX) {
@@ -190,9 +222,17 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	 */
 	public int getAbsoluteHeight() {
 		if (this.advancedHeight != null) {
-			String s = PlaceholderParser.replacePlaceholders(this.advancedHeight).replace(" ", "");
-			if (MathUtils.isDouble(s)) {
-				return (int) Double.parseDouble(s);
+			long now = System.currentTimeMillis();
+			//Cache advancedHeight for 30ms to save performance (thanks to danorris for the idea!)
+			if (((this.lastAdvancedHeightParse + 30) > now) && (this.cachedAdvancedHeight != null)) {
+				return this.cachedAdvancedHeight;
+			} else {
+				String s = PlaceholderParser.replacePlaceholders(this.advancedHeight).replace(" ", "");
+				if (MathUtils.isDouble(s)) {
+					this.cachedAdvancedHeight = (int) Double.parseDouble(s);
+					this.lastAdvancedHeightParse = now;
+					return this.cachedAdvancedHeight;
+				}
 			}
 		}
 		if (this.stretchY) {

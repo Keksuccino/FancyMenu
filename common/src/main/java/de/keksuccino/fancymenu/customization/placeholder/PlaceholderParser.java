@@ -7,7 +7,8 @@ package de.keksuccino.fancymenu.customization.placeholder;
 
 import de.keksuccino.fancymenu.customization.variables.Variable;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
-import de.keksuccino.konkrete.input.StringUtils;
+import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,7 +24,25 @@ public class PlaceholderParser {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Map<String, Long> LOG_COOLDOWN = new HashMap<>();
+
     private static final Map<String, Pair<String, Long>> PLACEHOLDER_CACHE = new HashMap<>();
+
+    private static final String PLACEHOLDER_PREFIX = "{\"placeholder\"";
+    private static final String EMPTY_STRING = "";
+    private static final Character OPEN_BRACKET_CHAR = '{';
+    private static final Character CLOSE_BRACKET_CHAR = '}';
+    private static final String FORMATTING_PREFIX_AND = "&";
+    private static final String FORMATTING_PREFIX_PARAGRAPH = "§";
+    private static final String SHORT_VARIABLE_PLACEHOLDER_PREFIX = "$$";
+    private static final Character DOLLAR_CHAR = '$';
+    private static final String ESCAPED_APOSTROPHE = "\\\"";
+    private static final String APOSTROPHE = "\"";
+    private static final String ESCAPED_OPEN_BRACKET = "\\{";
+    private static final String OPEN_BRACKET = "{";
+    private static final String ESCAPED_CLOSE_BRACKET = "\\}";
+    private static final String CLOSE_BRACKET = "}";
+    private static final Character NEWLINE_CHAR = '\n';
+    private static final Character BACKSLASH_CHAR = '\\';
 
     /**
      * Simple check if the given {@link String} contains placeholders.<br>
@@ -34,15 +53,59 @@ public class PlaceholderParser {
     public static boolean containsPlaceholders(@Nullable String in, boolean checkForVariableReferences) {
         if (in == null) return false;
         if (in.length() <= 2) return false;
-        if (in.contains("{\"placeholder\"")) return true;
+        if (StringUtils.contains(in, PLACEHOLDER_PREFIX)) return true;
         if (checkForVariableReferences && !Objects.equals(in, replaceVariableReferences(in))) return true;
         return false;
     }
 
-    //TODO Make this return all top-level placeholders
-    // (top-level = every placeholder in the given string, without placeholders that were added after replacing placeholders)
-    public static List<String> getTopLevelPlaceholders(@Nullable String in) {
+    //TODO when replacing placeholders, use *HASH*map to cache already replaced placeholder Strings ( <Placeholder String, Replacement String> )
+    // - if the hashmap contains the placeholder string, use the cached replacement instead of parsing the placeholder value again
 
+    @NotNull
+    public static List<IndexedPlaceholder> getTopLevelPlaceholders(@Nullable String in) {
+        List<IndexedPlaceholder> placeholders = new ArrayList<>();
+        if (in == null) return placeholders;
+        int skipToIndex = -1;
+        int index = -1;
+        for (char c : in.toCharArray()) {
+            index++;
+            if ((skipToIndex != -1) && (skipToIndex > index)) continue;
+            if (c == OPEN_BRACKET_CHAR) {
+                String sub = StringUtils.substring(in, index);
+                if (StringUtils.startsWith(sub, PLACEHOLDER_PREFIX)) {
+                    int endIndex = findPlaceholderEndIndex(sub, index);
+                    if (endIndex != -1) {
+                        skipToIndex = endIndex;
+                        endIndex++; //so the sub string ends AFTER the placeholder
+                        placeholders.add(new IndexedPlaceholder(StringUtils.substring(in, index, endIndex), index, endIndex));
+                    }
+                }
+            }
+        }
+        return placeholders;
+    }
+
+    private static int findPlaceholderEndIndex(@NotNull String placeholderStartSubString, int startIndex) {
+        int currentIndex = startIndex;
+        int depth = 0;
+        boolean backslash = false;
+        for (char c : placeholderStartSubString.toCharArray()) {
+            if (currentIndex != startIndex) { //skip first char
+                if (c == NEWLINE_CHAR) return -1;
+                if ((c == OPEN_BRACKET_CHAR) && !backslash) {
+                    depth++;
+                } else if ((c == CLOSE_BRACKET_CHAR) && !backslash) {
+                    if (depth <= 0) {
+                        return currentIndex;
+                    } else {
+                        depth--;
+                    }
+                }
+                backslash = (c == BACKSLASH_CHAR);
+            }
+            currentIndex++;
+        }
+        return -1;
     }
 
     @NotNull
@@ -53,7 +116,7 @@ public class PlaceholderParser {
     @NotNull
     public static String replacePlaceholders(@Nullable String in, boolean convertFormatCodes) {
 
-        if (in == null) return "";
+        if (in == null) return EMPTY_STRING;
         if (in.length() <= 1) return in;
         if (in.trim().isEmpty()) return in;
 
@@ -70,7 +133,7 @@ public class PlaceholderParser {
             }
         }
         if (convertFormatCodes) {
-            in = StringUtils.convertFormatCodes(in, "&", "§");
+            in = TextFormattingUtils.replaceFormattingCodes(in, FORMATTING_PREFIX_AND, FORMATTING_PREFIX_PARAGRAPH);
         }
         in = replaceVariableReferences(in);
         String beforeReplacing = in;
@@ -87,9 +150,11 @@ public class PlaceholderParser {
         }
         if (replaced != null) {
             if (convertFormatCodes) {
-                replaced = StringUtils.convertFormatCodes(replaced, "&", "§");
+                replaced = TextFormattingUtils.replaceFormattingCodes(replaced, FORMATTING_PREFIX_AND, FORMATTING_PREFIX_PARAGRAPH);
             }
-            replaced = replaced.replace("\\\"", "\"").replace("\\{", "{").replace("\\}", "}");
+            replaced = StringUtils.replace(replaced, ESCAPED_APOSTROPHE, APOSTROPHE);
+            replaced = StringUtils.replace(replaced, ESCAPED_OPEN_BRACKET, OPEN_BRACKET);
+            replaced = StringUtils.replace(replaced, ESCAPED_CLOSE_BRACKET, CLOSE_BRACKET);
             PLACEHOLDER_CACHE.put(original, Pair.of(replaced, System.currentTimeMillis()));
             return replaced;
         }
@@ -97,20 +162,23 @@ public class PlaceholderParser {
         return in;
     }
 
+    @NotNull
     public static String replaceVariableReferences(@NotNull String in) {
         String replaced = in;
-        int index = -1;
-        for (char ignored : in.toCharArray()) {
-            index++;
-            String sub = in.substring(index);
-            if (sub.startsWith("$$")) {
-                for (Variable variable : VariableHandler.getVariables()) {
-                    if (sub.startsWith("$$" + variable.getName())) {
-                        replaced = replaced.replace("$$" + variable.getName(), variable.getValue());
-                        break;
+        int index = 0;
+        for (char c : in.toCharArray()) {
+            if (c == DOLLAR_CHAR) {
+                String sub = StringUtils.substring(in, index);
+                if (StringUtils.startsWith(sub, SHORT_VARIABLE_PLACEHOLDER_PREFIX)) {
+                    for (Variable variable : VariableHandler.getVariables()) {
+                        if (StringUtils.startsWith(sub, SHORT_VARIABLE_PLACEHOLDER_PREFIX + variable.getName())) {
+                            replaced = StringUtils.replace(replaced, SHORT_VARIABLE_PLACEHOLDER_PREFIX + variable.getName(), variable.getValue());
+                            break;
+                        }
                     }
                 }
             }
+            index++;
         }
         return replaced;
     }
@@ -332,6 +400,36 @@ public class PlaceholderParser {
         for (String s : remove) {
             LOG_COOLDOWN.remove(s);
         }
+    }
+
+    public static class IndexedPlaceholder {
+
+        public final String placeholder;
+        public final int startIndex;
+        public final int endIndex;
+        private Integer hashcode;
+
+        protected IndexedPlaceholder(@NotNull String placeholder, int startIndex, int endIndex) {
+            this.placeholder = placeholder;
+            this.startIndex = startIndex;
+            this.endIndex = endIndex;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (obj instanceof IndexedPlaceholder p) {
+                return (this.placeholder.equals(p.placeholder) && (this.startIndex == p.startIndex) && (this.endIndex == p.endIndex));
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            if (this.hashcode == null) this.hashcode = Objects.hash(placeholder, startIndex, endIndex);
+            return this.hashcode;
+        }
+
     }
 
 }
