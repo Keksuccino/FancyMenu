@@ -2,6 +2,7 @@
 CHANGELOG | FANCYMENU v3.0.0 CLOSED ALPHA 3
  
 - Added experimental placeholder parsing cooldown (30ms) to improve performance (placeholders basically get cached and can only update every 30ms)
+- Added experimental advanced position and size parsing cooldown (30ms) for elements to improve performance (they get cached and can only update every 30ms)
 - Most GIF images now load way smoother and don't freeze the screen anymore
 - Most elements and backgrounds that support web images also support web GIFs now
 - The Progress Bar element now accepts GIF images as bar and background textures
@@ -13,6 +14,9 @@ CHANGELOG | FANCYMENU v3.0.0 CLOSED ALPHA 3
 - You can now fully customize Vanilla/Mod Slider handle and background textures
 - Added back the "Close Editor" entry to the "Layout" tab of the Layout Editor's menu bar
 - Reworked Slider element (old Slider now deprecated)
+- Completely reworked FM's resource handling
+--> Almost all elements that accept some kind of resource (image, audio, video, text) now accept Web, Local and Minecraft Resource (resource location) sources
+--> Reloading FancyMenu now correctly releases all types of resources and loads them again
  
 - Added: "Update Screen" action to update/reload the current screen's customizations without reloading the whole mod
 - Added: "Set Minecraft Option" action to set the value of a Minecraft option
