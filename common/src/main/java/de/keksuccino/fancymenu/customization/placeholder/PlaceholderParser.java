@@ -5,6 +5,7 @@
 
 package de.keksuccino.fancymenu.customization.placeholder;
 
+import com.google.common.collect.Lists;
 import de.keksuccino.fancymenu.customization.variables.Variable;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
@@ -28,6 +29,7 @@ public class PlaceholderParser {
     private static final Map<String, Pair<String, Long>> PLACEHOLDER_CACHE = new HashMap<>();
 
     private static final String PLACEHOLDER_PREFIX = "{\"placeholder\"";
+    private static final String VALUES_PREFIX = "{\"placeholder\"";
     private static final String EMPTY_STRING = "";
     private static final Character OPEN_BRACKET_CHAR = '{';
     private static final Character CLOSE_BRACKET_CHAR = '}';
@@ -62,22 +64,49 @@ public class PlaceholderParser {
     // - if the hashmap contains the placeholder string, use the cached replacement instead of parsing the placeholder value again
 
     @NotNull
-    public static List<IndexedPlaceholder> getTopLevelPlaceholders(@Nullable String in) {
+    public static String replacePlaceholdersIn(@Nullable String in, @Nullable HashMap<String, String> parsed, boolean replaceFormattingCodes) {
+
+        if (in == null) return EMPTY_STRING;
+        if (in.length() <= 2) return in;
+
+        if (parsed == null) parsed = new HashMap<>();
+
+        int length = in.length();
+        while (true) {
+            //Reverse the list to start replacing from the end of the String, so all nested placeholders get replaced first
+            for (IndexedPlaceholder p : Lists.reverse(findPlaceholders(in, false, parsed, replaceFormattingCodes))) {
+
+            }
+            int lengthNew = in.length();
+            if (lengthNew != length) break;
+            length = lengthNew;
+        }
+
+        return in;
+
+    }
+
+    /**
+     * Finds all placeholders in a {@link String}.<br>
+     * Will not find placeholders that get added to the {@link String} by replacing placeholders.
+     *
+     * @param in The {@link String} to get the placeholders from.
+     * @param excludeWithNested If placeholders with nested placeholders should get excluded.
+     */
+    @NotNull
+    public static List<IndexedPlaceholder> findPlaceholders(@Nullable String in, boolean excludeWithNested, @NotNull HashMap<String, String> parsed, boolean replaceFormattingCodes) {
         List<IndexedPlaceholder> placeholders = new ArrayList<>();
         if (in == null) return placeholders;
-        int skipToIndex = -1;
         int index = -1;
         for (char c : in.toCharArray()) {
             index++;
-            if ((skipToIndex != -1) && (skipToIndex > index)) continue;
             if (c == OPEN_BRACKET_CHAR) {
                 String sub = StringUtils.substring(in, index);
                 if (StringUtils.startsWith(sub, PLACEHOLDER_PREFIX)) {
-                    int endIndex = findPlaceholderEndIndex(sub, index);
+                    int endIndex = findPlaceholderEndIndex(sub, index, excludeWithNested);
                     if (endIndex != -1) {
-                        skipToIndex = endIndex;
                         endIndex++; //so the sub string ends AFTER the placeholder
-                        placeholders.add(new IndexedPlaceholder(StringUtils.substring(in, index, endIndex), index, endIndex));
+                        placeholders.add(new IndexedPlaceholder(StringUtils.substring(in, index, endIndex), index, endIndex, parsed, replaceFormattingCodes));
                     }
                 }
             }
@@ -85,14 +114,19 @@ public class PlaceholderParser {
         return placeholders;
     }
 
-    private static int findPlaceholderEndIndex(@NotNull String placeholderStartSubString, int startIndex) {
+    private static int findPlaceholderEndIndex(@NotNull String placeholderStartSubString, int startIndex, boolean excludeWithNested) {
         int currentIndex = startIndex;
         int depth = 0;
+        int subStringIndex = 0;
         boolean backslash = false;
         for (char c : placeholderStartSubString.toCharArray()) {
             if (currentIndex != startIndex) { //skip first char
                 if (c == NEWLINE_CHAR) return -1;
                 if ((c == OPEN_BRACKET_CHAR) && !backslash) {
+                    //If nested placeholder found and excludeWithNested, return -1 to ignore placeholder
+                    if (excludeWithNested && StringUtils.startsWith(StringUtils.substring(placeholderStartSubString, subStringIndex), PLACEHOLDER_PREFIX)) {
+                        return -1;
+                    }
                     depth++;
                 } else if ((c == CLOSE_BRACKET_CHAR) && !backslash) {
                     if (depth <= 0) {
@@ -103,6 +137,7 @@ public class PlaceholderParser {
                 }
                 backslash = (c == BACKSLASH_CHAR);
             }
+            subStringIndex++;
             currentIndex++;
         }
         return -1;
@@ -270,8 +305,6 @@ public class PlaceholderParser {
         return null;
     }
 
-    //{"placeholder":"calc","values":{"expression":"{"placeholder":"elementposy","values":{"id":"b6e86656-76a0-4e85-a744-bb441c5258dd1665959168373"}}+30"}}
-
     @NotNull
     private static Map<String, String> getPlaceholderValues(Placeholder placeholder, String valueString) {
         if ((placeholder == null) || (valueString == null) || (placeholder.getValueNames() == null) || (placeholder.getValueNames().isEmpty())) {
@@ -407,12 +440,55 @@ public class PlaceholderParser {
         public final String placeholder;
         public final int startIndex;
         public final int endIndex;
+        private final HashMap<String, String> parsed;
+        private final boolean replaceFormattingCodes;
         private Integer hashcode;
+        private String identifier;
+        private boolean identifierFailed = false;
 
-        protected IndexedPlaceholder(@NotNull String placeholder, int startIndex, int endIndex) {
+        protected IndexedPlaceholder(@NotNull String placeholder, int startIndex, int endIndex, @NotNull HashMap<String, String> parsed, boolean replaceFormattingCodes) {
             this.placeholder = placeholder;
             this.startIndex = startIndex;
             this.endIndex = endIndex;
+            this.parsed = parsed;
+            this.replaceFormattingCodes = replaceFormattingCodes;
+        }
+
+        @Nullable
+        public String getIdentifier() {
+            if (this.identifierFailed) return null;
+            if (this.identifier != null) return this.identifier;
+            try {
+                this.identifier = StringUtils.split(StringUtils.substring(this.placeholder, PLACEHOLDER_PREFIX.length()), APOSTROPHE, 2)[0];
+                return this.identifier;
+            } catch (Exception ex) {
+                LOGGER.info("[FANCYMENU] Failed to parse identifier of placeholder: " + this.placeholder, ex);
+                this.identifierFailed = true;
+            }
+            return null;
+        }
+
+        //{"placeholder":"calc","values":{"expression":"4+30"}}
+
+        public HashMap<String, String> getValues() {
+            HashMap<String, String> values = new HashMap<>();
+            int index = 0;
+            boolean backslash = false;
+            for (char c : this.placeholder.toCharArray()) {
+                if (index > 0) { //skip first char
+                    if ((c == OPEN_BRACKET_CHAR) && !backslash) {
+
+                    }
+                }
+                backslash = (c == BACKSLASH_CHAR);
+                index++;
+            }
+            return values;
+        }
+
+        @Nullable
+        public Placeholder getPlaceholder() {
+            return PlaceholderRegistry.getPlaceholder(this.getIdentifier());
         }
 
         @Override
