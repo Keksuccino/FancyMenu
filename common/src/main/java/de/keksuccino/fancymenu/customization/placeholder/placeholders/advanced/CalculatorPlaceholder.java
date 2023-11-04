@@ -50,7 +50,7 @@ public class CalculatorPlaceholder extends Placeholder {
     }
 
     @Override
-    public String getDisplayName() {
+    public @NotNull String getDisplayName() {
         return I18n.get("fancymenu.helper.placeholder.calc");
     }
 

@@ -56,7 +56,7 @@ public class WorldLoadProgressPlaceholder extends Placeholder {
     @Override
     public @NotNull DeserializedPlaceholderString getDefaultPlaceholderString() {
         DeserializedPlaceholderString dps = new DeserializedPlaceholderString();
-        dps.placeholder = this.getIdentifier();
+        dps.placeholderIdentifier = this.getIdentifier();
         return dps;
     }
 

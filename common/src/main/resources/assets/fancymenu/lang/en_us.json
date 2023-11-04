@@ -1111,5 +1111,6 @@
   "fancymenu.elements.text.v2.source.input": "Text Content",
   "fancymenu.elements.player_entity.skin_texture": "Skin Texture",
   "fancymenu.elements.player_entity.cape_texture": "Cape Texture",
-  "fancymenu.markdown.error.text_too_long": "§c§lERROR: §rText too long! 45,000 characters at max!"
+  "fancymenu.markdown.error.text_too_long": "§c§lERROR: §rText too long! 45,000 characters at max!",
+  "fancymenu.placeholders.error.text_too_long": "§c§lERROR: §rText too long to parse placeholders! 20,000 characters at max!"
 }

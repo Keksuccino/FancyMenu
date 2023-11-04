@@ -36,7 +36,7 @@ public class ModVersionPlaceholder extends Placeholder {
     }
 
     @Override
-    public String getDisplayName() {
+    public @NotNull String getDisplayName() {
         return I18n.get("fancymenu.editor.dynamicvariabletextfield.variables.modversion");
     }
 

@@ -70,12 +70,12 @@ public class JsonPlaceholder extends Placeholder {
                 }
             } else {
                 if (!isInvalidWebPlaceholderLink(source)) {
-                    List<String> json = getCachedWebPlaceholder(dps.originalString);
+                    List<String> json = getCachedWebPlaceholder(dps.placeholderString);
                     if (json != null) {
                         return formatJsonToString(json);
                     } else {
-                        if (!isWebPlaceholderUpdating(dps.originalString)) {
-                            cacheWebPlaceholder(dps.originalString, source, jsonPath);
+                        if (!isWebPlaceholderUpdating(dps.placeholderString)) {
+                            cacheWebPlaceholder(dps.placeholderString, source, jsonPath);
                         }
                         return "";
                     }
@@ -194,7 +194,7 @@ public class JsonPlaceholder extends Placeholder {
     }
 
     @Override
-    public String getDisplayName() {
+    public @NotNull String getDisplayName() {
         return I18n.get("fancymenu.helper.placeholder.json");
     }
 
@@ -211,7 +211,7 @@ public class JsonPlaceholder extends Placeholder {
     @Override
     public @NotNull DeserializedPlaceholderString getDefaultPlaceholderString() {
         DeserializedPlaceholderString dps = new DeserializedPlaceholderString();
-        dps.placeholder = this.getIdentifier();
+        dps.placeholderIdentifier = this.getIdentifier();
         dps.values.put("source", "path_or_link_to_json");
         dps.values.put("json_path", "$.some.json.path");
         return dps;

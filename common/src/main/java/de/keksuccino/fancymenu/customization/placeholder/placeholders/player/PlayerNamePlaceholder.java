@@ -29,7 +29,7 @@ public class PlayerNamePlaceholder extends Placeholder {
     }
 
     @Override
-    public String getDisplayName() {
+    public @NotNull String getDisplayName() {
         return I18n.get("fancymenu.editor.dynamicvariabletextfield.variables.playername");
     }
 
@@ -46,7 +46,7 @@ public class PlayerNamePlaceholder extends Placeholder {
     @Override
     public @NotNull DeserializedPlaceholderString getDefaultPlaceholderString() {
         DeserializedPlaceholderString dps = new DeserializedPlaceholderString();
-        dps.placeholder = this.getIdentifier();
+        dps.placeholderIdentifier = this.getIdentifier();
         return dps;
     }
 

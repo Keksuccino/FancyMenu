@@ -7,7 +7,6 @@ package de.keksuccino.fancymenu.customization.placeholder;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.List;
 
 public abstract class Placeholder {
@@ -25,6 +24,9 @@ public abstract class Placeholder {
      */
     public abstract String getReplacementFor(DeserializedPlaceholderString dps);
 
+    /**
+     * This should return the {@link Placeholder}'s value names or NULL, if it has no values.
+     */
     @Nullable
     public abstract List<String> getValueNames();
 

@@ -73,7 +73,7 @@ public class RandomTextPlaceholder extends Placeholder {
     }
 
     @Override
-    public String getDisplayName() {
+    public @NotNull String getDisplayName() {
         return I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.randomtext");
     }
 
@@ -90,7 +90,7 @@ public class RandomTextPlaceholder extends Placeholder {
     @Override
     public @NotNull DeserializedPlaceholderString getDefaultPlaceholderString() {
         DeserializedPlaceholderString dps = new DeserializedPlaceholderString();
-        dps.placeholder = this.getIdentifier();
+        dps.placeholderIdentifier = this.getIdentifier();
         dps.values.put("path", "randomtexts.txt");
         dps.values.put("interval", "10");
         return dps;

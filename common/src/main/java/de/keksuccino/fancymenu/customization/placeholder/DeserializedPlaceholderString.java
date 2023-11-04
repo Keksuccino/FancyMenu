@@ -7,43 +7,53 @@ package de.keksuccino.fancymenu.customization.placeholder;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class DeserializedPlaceholderString {
 
-    public String placeholder;
-    public Map<String, String> values;
-    public String originalString;
+    @NotNull
+    public String placeholderIdentifier;
+    /**
+     * This map should never be NULL, but can be EMPTY, especially if the placeholder has no values.
+     */
+    @NotNull
+    public HashMap<String, String> values = new HashMap<>();
+    @NotNull
+    public String placeholderString;
 
-    public DeserializedPlaceholderString() {
-        this.values = new LinkedHashMap<>();
+    @Deprecated(forRemoval = true)
+    public static DeserializedPlaceholderString build(@NotNull String placeholderIdentifier, @Nullable Map<String, String> values) {
+        if ((values != null) && !(values instanceof HashMap<String, String>)) throw new RuntimeException("Values list has to be a HashMap!");
+        return new DeserializedPlaceholderString(placeholderIdentifier, (HashMap<String, String>) values, "");
     }
 
+    @Deprecated(forRemoval = true)
+    public DeserializedPlaceholderString() {
+        this("", null, "");
+    }
+
+    public DeserializedPlaceholderString(@NotNull String placeholderIdentifier, @Nullable HashMap<String, String> values, @NotNull String placeholderString) {
+        this.placeholderIdentifier = Objects.requireNonNull(placeholderIdentifier);
+        if (values != null) this.values = values;
+        this.placeholderString = Objects.requireNonNull(placeholderString);
+    }
+
+    @NotNull
     public String toString() {
-        if ((this.values != null) && !this.values.isEmpty()) {
-            String values = "";
+        if (!this.values.isEmpty()) {
+            StringBuilder values = new StringBuilder();
             for (Map.Entry<String, String> m : this.values.entrySet()) {
                 if (values.length() > 0) {
-                    values += ",";
+                    values.append(",");
                 }
-                values += "\"" + m.getKey() + "\":\"" + m.getValue() + "\"";
+                values.append("\"").append(m.getKey()).append("\":\"").append(m.getValue()).append("\"");
             }
-            return "{\"placeholder\":\"" + this.placeholder + "\",\"values\":{" + values + "}}";
+            return "{\"placeholder\":\"" + this.placeholderIdentifier + "\",\"values\":{" + values + "}}";
         } else {
-            return "{\"placeholder\":\"" + this.placeholder + "\"}";
+            return "{\"placeholder\":\"" + this.placeholderIdentifier + "\"}";
         }
-    }
-
-    public static DeserializedPlaceholderString build(@NotNull String placeholderId, @Nullable Map<String, String> values) {
-        DeserializedPlaceholderString dps = new DeserializedPlaceholderString();
-        dps.placeholder = placeholderId;
-        dps.values = values;
-        if (dps.values == null) {
-            dps.values = new LinkedHashMap<>();
-        }
-        return dps;
     }
 
 }

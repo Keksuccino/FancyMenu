@@ -52,14 +52,14 @@ public class WebTextPlaceholder extends Placeholder {
         if (link != null) {
             link = StringUtils.convertFormatCodes(link, "§", "&");
             if (!isInvalidWebPlaceholderLink(link)) {
-                List<String> lines = getCachedWebPlaceholder(dps.originalString);
+                List<String> lines = getCachedWebPlaceholder(dps.placeholderString);
                 if (lines != null) {
                     if (!lines.isEmpty()) {
                         return lines.get(0);
                     }
                 } else {
-                    if (!isWebPlaceholderUpdating(dps.originalString)) {
-                        cacheWebPlaceholder(dps.originalString, link);
+                    if (!isWebPlaceholderUpdating(dps.placeholderString)) {
+                        cacheWebPlaceholder(dps.placeholderString, link);
                     }
                     return "";
                 }
@@ -129,7 +129,7 @@ public class WebTextPlaceholder extends Placeholder {
     }
 
     @Override
-    public String getDisplayName() {
+    public @NotNull String getDisplayName() {
         return I18n.get("fancymenu.helper.placeholder.webtext");
     }
 
@@ -146,7 +146,7 @@ public class WebTextPlaceholder extends Placeholder {
     @Override
     public @NotNull DeserializedPlaceholderString getDefaultPlaceholderString() {
         DeserializedPlaceholderString dps = new DeserializedPlaceholderString();
-        dps.placeholder = this.getIdentifier();
+        dps.placeholderIdentifier = this.getIdentifier();
         dps.values.put("link", "http://somewebsite.com/textfile.txt");
         return dps;
     }
