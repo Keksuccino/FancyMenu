@@ -25,14 +25,15 @@ import java.util.*;
 public class PlaceholderParser {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final Map<String, Long> LOG_COOLDOWN = new HashMap<>();
+    private static final HashMap<String, Long> LOG_COOLDOWN = new HashMap<>();
     private static final long LOG_COOLDOWN_MS = 10000;
 
     private static final HashSet<String> TOO_LONG_TO_PARSE = new HashSet<>();
     private static final HashMap<String, Boolean> CONTAINS_PLACEHOLDERS = new HashMap<>();
-    private static final Map<String, Pair<String, Long>> PLACEHOLDER_CACHE = new HashMap<>();
+    private static final HashMap<String, Pair<String, Long>> PLACEHOLDER_CACHE = new HashMap<>();
     private static final Long PLACEHOLDER_CACHE_DURATION_MS = 30L;
 
+    private static final int MAX_TEXT_LENGTH = 17000;
     private static final String PLACEHOLDER_PREFIX = "{\"placeholder\":\"";
     private static final String EMPTY_STRING = "";
     private static final Character OPEN_BRACKET_CHAR = '{';
@@ -61,17 +62,52 @@ public class PlaceholderParser {
         if (in == null) return false;
         if (in.length() <= 2) return false;
         if (StringUtils.contains(in, PLACEHOLDER_PREFIX)) return true;
-        if (checkForVariableReferences && !Objects.equals(in, replaceVariableReferences(in))) return true;
+        if (checkForVariableReferences && (in.hashCode() != replaceVariableReferences(in).hashCode())) return true;
         return false;
     }
 
+    /**
+     * Replaces all placeholders in the given {@link String}.<br>
+     * Since placeholders can contain variables that are not always the same, this task can be performance-intensive,
+     * so you should keep in mind to not parse/update long texts too often in a short time frame.
+     *
+     * @param in The {@link String} to replace placeholders in.
+     * @return The given {@link String} with all placeholders replaced.
+     */
     @NotNull
-    public static String replacePlaceholdersIn(@Nullable String in, @Nullable HashMap<String, String> parsed, boolean replaceFormattingCodes) {
+    public static String replacePlaceholders(@Nullable String in) {
+        return replacePlaceholders(in, true);
+    }
+
+    /**
+     * Replaces all placeholders in the given {@link String}.<br>
+     * Since placeholders can contain variables that are not always the same, this task can be performance-intensive,
+     * so you should keep in mind to not parse/update long texts too often in a short time frame.
+     *
+     * @param in The {@link String} to replace placeholders in.
+     * @param replaceFormattingCodes If Minecraft formatting codes should get replaced.
+     * @return The given {@link String} with all placeholders replaced.
+     */
+    @NotNull
+    public static String replacePlaceholders(@Nullable String in, boolean replaceFormattingCodes) {
+        return replacePlaceholders(in, null, replaceFormattingCodes);
+    }
+
+    /**
+     * Replaces all placeholders in the given {@link String}.<br>
+     * Since placeholders can contain variables that are not always the same, this task can be performance-intensive,
+     * so you should keep in mind to not parse/update long texts too often in a short time frame.
+     *
+     * @param in The {@link String} to replace placeholders in.
+     * @param parsed The placeholder replacement cache.
+     * @param replaceFormattingCodes If Minecraft formatting codes should get replaced.
+     * @return The given {@link String} with all placeholders replaced.
+     */
+    @NotNull
+    protected static String replacePlaceholders(@Nullable String in, @Nullable HashMap<String, String> parsed, boolean replaceFormattingCodes) {
 
         if (in == null) return EMPTY_STRING;
         if (in.length() <= 2) return in;
-
-        //TODO zu langes parsing markdown text element etwas kürzen = führt zu stack overdlow in markdown???? FIXEN!
 
         Boolean containsPlaceholders = CONTAINS_PLACEHOLDERS.get(in);
         if (containsPlaceholders == null) {
@@ -81,7 +117,7 @@ public class PlaceholderParser {
         if (!containsPlaceholders) return in;
 
         if (TOO_LONG_TO_PARSE.contains(in)) return I18n.get(TOO_LONG_TO_PARSE_LOCALIZATION);
-        if (in.length() >= 20000) {
+        if (in.length() >= MAX_TEXT_LENGTH) {
             TOO_LONG_TO_PARSE.add(in);
             return I18n.get(TOO_LONG_TO_PARSE_LOCALIZATION);
         }
@@ -91,12 +127,13 @@ public class PlaceholderParser {
 
         String original = in;
 
+        //Used to cache replacements for already parsed placeholders, so they can get reused to improve performance
         if (parsed == null) parsed = new HashMap<>();
 
         int hash = in.hashCode();
         while (true) {
             //Reverse the list to start replacing from the end of the String, so all nested placeholders get replaced first
-            for (ParsedPlaceholder p : Lists.reverse(findPlaceholders(in, false, parsed, replaceFormattingCodes))) {
+            for (ParsedPlaceholder p : Lists.reverse(findPlaceholders(in, parsed, replaceFormattingCodes))) {
                 String replacement = parsed.get(p.placeholderString);
                 if (replacement == null) {
                     replacement = p.getReplacement();
@@ -111,6 +148,8 @@ public class PlaceholderParser {
 
         if (replaceFormattingCodes) in = TextFormattingUtils.replaceFormattingCodes(in, FORMATTING_PREFIX_AND, FORMATTING_PREFIX_PARAGRAPH);
 
+        in = replaceVariableReferences(in);
+
         PLACEHOLDER_CACHE.put(original, Pair.of(in, System.currentTimeMillis()));
 
         return in;
@@ -119,13 +158,12 @@ public class PlaceholderParser {
 
     /**
      * Finds all placeholders in a {@link String}.<br>
-     * Will not find placeholders that get added to the {@link String} by replacing placeholders.
+     * Will not find placeholders that get added to the {@link String} by replacing other placeholders.
      *
      * @param in The {@link String} to get the placeholders from.
-     * @param excludeWithNested If placeholders with nested placeholders should get excluded.
      */
     @NotNull
-    public static List<ParsedPlaceholder> findPlaceholders(@Nullable String in, boolean excludeWithNested, @NotNull HashMap<String, String> parsed, boolean replaceFormattingCodes) {
+    public static List<ParsedPlaceholder> findPlaceholders(@Nullable String in, @NotNull HashMap<String, String> parsed, boolean replaceFormattingCodes) {
         List<ParsedPlaceholder> placeholders = new ArrayList<>();
         if (in == null) return placeholders;
         int index = -1;
@@ -134,7 +172,7 @@ public class PlaceholderParser {
             if (c == OPEN_BRACKET_CHAR) {
                 String sub = StringUtils.substring(in, index);
                 if (StringUtils.startsWith(sub, PLACEHOLDER_PREFIX)) {
-                    int endIndex = findPlaceholderEndIndex(sub, index, excludeWithNested);
+                    int endIndex = findPlaceholderEndIndex(sub, index);
                     if (endIndex != -1) {
                         endIndex++; //so the sub string ends AFTER the placeholder
                         placeholders.add(new ParsedPlaceholder(StringUtils.substring(in, index, endIndex), index, endIndex, parsed, replaceFormattingCodes));
@@ -145,19 +183,14 @@ public class PlaceholderParser {
         return placeholders;
     }
 
-    private static int findPlaceholderEndIndex(@NotNull String placeholderStartSubString, int startIndex, boolean excludeWithNested) {
+    private static int findPlaceholderEndIndex(@NotNull String placeholderStartSubString, int startIndex) {
         int currentIndex = startIndex;
         int depth = 0;
-        int subStringIndex = 0;
         boolean backslash = false;
         for (char c : placeholderStartSubString.toCharArray()) {
             if (currentIndex != startIndex) { //skip first char
                 if (c == NEWLINE_CHAR) return -1;
                 if ((c == OPEN_BRACKET_CHAR) && !backslash) {
-                    //If nested placeholder found and excludeWithNested, return -1 to ignore placeholder
-                    if (excludeWithNested && StringUtils.startsWith(StringUtils.substring(placeholderStartSubString, subStringIndex), PLACEHOLDER_PREFIX)) {
-                        return -1;
-                    }
                     depth++;
                 } else if ((c == CLOSE_BRACKET_CHAR) && !backslash) {
                     if (depth <= 0) {
@@ -168,22 +201,9 @@ public class PlaceholderParser {
                 }
                 backslash = (c == BACKSLASH_CHAR);
             }
-            subStringIndex++;
             currentIndex++;
         }
         return -1;
-    }
-
-    @NotNull
-    public static String replacePlaceholders(@Nullable String in) {
-        return replacePlaceholders(in, true);
-    }
-
-    @NotNull
-    public static String replacePlaceholders(@Nullable String in, boolean convertFormatCodes) {
-
-        return replacePlaceholdersIn(in, null, convertFormatCodes);
-
     }
 
     @NotNull
@@ -270,7 +290,7 @@ public class PlaceholderParser {
             DeserializedPlaceholderString deserialized = new DeserializedPlaceholderString(identifier, null, this.placeholderString);
             if (values != null) {
                 for (Map.Entry<String, String> value : values.entrySet()) {
-                    deserialized.values.put(value.getKey(), replacePlaceholdersIn(value.getValue(), this.parsed, this.replaceFormattingCodes));
+                    deserialized.values.put(value.getKey(), replacePlaceholders(value.getValue(), this.parsed, this.replaceFormattingCodes));
                 }
             }
             return p.getReplacementFor(deserialized);

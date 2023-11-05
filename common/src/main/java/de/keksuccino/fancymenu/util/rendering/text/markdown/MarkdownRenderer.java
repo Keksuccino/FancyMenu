@@ -13,6 +13,7 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.resources.language.I18n;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -27,9 +28,16 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    private static final int MAX_TEXT_LENGTH = 45000;
+    private static final String NEWLINE_PERCENT = "%n%";
+    private static final String NEWLINE = "\n";
+    private static final String NEWLINE_R = "\r";
+    private static final String EMPTY_STRING = "";
+    private static final String HTML_BREAK = "<br>";
+
+    protected boolean parseMarkdown = true;
     @NotNull
     protected String text = "";
-    protected boolean textContainsPlaceholders;
     protected String renderText;
     protected float x;
     protected float y;
@@ -142,10 +150,10 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
         this.onRender(null, 0, 0, 0, false);
     }
 
-    public void rebuildFragments() {
+    protected void rebuildFragments() {
         this.fragments.clear();
         if (this.renderText != null) {
-            this.fragments.addAll(MarkdownParser.parse(this, this.renderText));
+            this.fragments.addAll(MarkdownParser.parse(this, this.renderText, this.parseMarkdown));
         }
     }
 
@@ -226,9 +234,10 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
 
     @NotNull
     protected String buildRenderText() {
-        String t = this.textContainsPlaceholders ? PlaceholderParser.replacePlaceholders(this.text) : this.text;
-        t = t.replace("%n%", "\n").replace("\r", "\n");
-        if (this.removeHtmlBreaks) t = t.replace("<br>", "");
+        String t = PlaceholderParser.replacePlaceholders(this.text);
+        t = StringUtils.replace(t, NEWLINE_PERCENT, NEWLINE);
+        t = StringUtils.replace(t, NEWLINE_R, NEWLINE);
+        if (this.removeHtmlBreaks) t = StringUtils.replace(t, HTML_BREAK, EMPTY_STRING);
         return t;
     }
 
@@ -244,19 +253,26 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
         return true;
     }
 
+    public boolean isParseMarkdown() {
+        return this.parseMarkdown;
+    }
+
+    public void setParseMarkdown(boolean parseMarkdown) {
+        this.parseMarkdown = parseMarkdown;
+        this.refreshRenderer();
+    }
+
     @NotNull
     public String getText() {
         return this.text;
     }
 
-    public MarkdownRenderer setText(@NotNull String text) {
-        if (text.length() > 45000) {
+    public void setText(@NotNull String text) {
+        if (text.length() > MAX_TEXT_LENGTH) {
             this.text = I18n.get("fancymenu.markdown.error.text_too_long");
         } else {
             this.text = text;
-            this.textContainsPlaceholders = PlaceholderParser.containsPlaceholders(this.text, true);
         }
-        return this;
     }
 
     public float getX() {
