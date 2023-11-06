@@ -41,7 +41,7 @@ public class MousePosXPlaceholder extends Placeholder {
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.placeholder.mouseposx.desc")));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.placeholder.mouseposx.desc"));
     }
 
     @Override

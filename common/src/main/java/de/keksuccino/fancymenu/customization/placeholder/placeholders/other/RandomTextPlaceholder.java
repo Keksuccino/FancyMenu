@@ -79,7 +79,7 @@ public class RandomTextPlaceholder extends Placeholder {
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.randomtext.desc")));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.randomtext.desc"));
     }
 
     @Override

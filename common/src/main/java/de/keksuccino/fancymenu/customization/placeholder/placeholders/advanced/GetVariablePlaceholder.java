@@ -46,7 +46,7 @@ public class GetVariablePlaceholder extends Placeholder {
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.placeholder.get_variable.desc")));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.placeholder.get_variable.desc"));
     }
 
     @Override

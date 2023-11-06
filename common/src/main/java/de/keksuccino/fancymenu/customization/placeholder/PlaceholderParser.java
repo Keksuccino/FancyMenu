@@ -36,16 +36,16 @@ public class PlaceholderParser {
     private static final int MAX_TEXT_LENGTH = 17000;
     private static final String PLACEHOLDER_PREFIX = "{\"placeholder\":\"";
     private static final String EMPTY_STRING = "";
-    private static final Character OPEN_BRACKET_CHAR = '{';
-    private static final Character CLOSE_BRACKET_CHAR = '}';
+    private static final char OPEN_CURLY_BRACKETS_CHAR = '{';
+    private static final char CLOSE_CURLY_BRACKETS_CHAR = '}';
     private static final String FORMATTING_PREFIX_AND = "&";
     private static final String FORMATTING_PREFIX_PARAGRAPH = "§";
     private static final String SHORT_VARIABLE_PLACEHOLDER_PREFIX = "$$";
-    private static final Character DOLLAR_CHAR = '$';
+    private static final char DOLLAR_CHAR = '$';
     private static final String APOSTROPHE = "\"";
-    private static final Character APOSTROPHE_CHAR = '\"';
-    private static final Character NEWLINE_CHAR = '\n';
-    private static final Character BACKSLASH_CHAR = '\\';
+    private static final char APOSTROPHE_CHAR = '\"';
+    private static final char NEWLINE_CHAR = '\n';
+    private static final char BACKSLASH_CHAR = '\\';
     private static final String BACKSLASH = "\\";
     private static final String COMMA = ",";
     private static final String COMMA_WRAPPED_IN_APOSTROPHES = "\",\"";
@@ -169,7 +169,7 @@ public class PlaceholderParser {
         int index = -1;
         for (char c : in.toCharArray()) {
             index++;
-            if (c == OPEN_BRACKET_CHAR) {
+            if (c == OPEN_CURLY_BRACKETS_CHAR) {
                 String sub = StringUtils.substring(in, index);
                 if (StringUtils.startsWith(sub, PLACEHOLDER_PREFIX)) {
                     int endIndex = findPlaceholderEndIndex(sub, index);
@@ -190,9 +190,9 @@ public class PlaceholderParser {
         for (char c : placeholderStartSubString.toCharArray()) {
             if (currentIndex != startIndex) { //skip first char
                 if (c == NEWLINE_CHAR) return -1;
-                if ((c == OPEN_BRACKET_CHAR) && !backslash) {
+                if ((c == OPEN_CURLY_BRACKETS_CHAR) && !backslash) {
                     depth++;
-                } else if ((c == CLOSE_BRACKET_CHAR) && !backslash) {
+                } else if ((c == CLOSE_CURLY_BRACKETS_CHAR) && !backslash) {
                     if (depth <= 0) {
                         return currentIndex;
                     } else {
@@ -327,10 +327,10 @@ public class PlaceholderParser {
                                 }
                             }
                         }
-                        if ((c == OPEN_BRACKET_CHAR) && (currentValueName != null) && !StringUtils.startsWith(StringUtils.substring(valueString, currentIndex-1), BACKSLASH)) {
+                        if ((c == OPEN_CURLY_BRACKETS_CHAR) && (currentValueName != null) && !StringUtils.startsWith(StringUtils.substring(valueString, currentIndex-1), BACKSLASH)) {
                             inValueDepth++;
                         }
-                        if ((c == CLOSE_BRACKET_CHAR) && (currentValueName != null) && !StringUtils.startsWith(StringUtils.substring(valueString, currentIndex-1), BACKSLASH)) {
+                        if ((c == CLOSE_CURLY_BRACKETS_CHAR) && (currentValueName != null) && !StringUtils.startsWith(StringUtils.substring(valueString, currentIndex-1), BACKSLASH)) {
                             if (inValueDepth > 0) inValueDepth--;
                         }
                     }

@@ -53,7 +53,7 @@ public class IsAdventureRequirement extends LoadingRequirement {
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.visibilityrequirement.gamemode.is_adventure.desc")));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.visibilityrequirement.gamemode.is_adventure.desc"));
     }
 
     @Override

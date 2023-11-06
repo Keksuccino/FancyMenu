@@ -45,7 +45,7 @@ public class WorldLoadProgressPlaceholder extends Placeholder {
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.placeholders.world_load_progress.desc")));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.placeholders.world_load_progress.desc"));
     }
 
     @Override

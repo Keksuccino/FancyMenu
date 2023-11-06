@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
@@ -38,6 +39,10 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
     protected boolean parseMarkdown = true;
     @NotNull
     protected String text = "";
+    @NotNull
+    protected String textPlaceholders = "";
+    protected String lastTextPlaceholders;
+    @Nullable
     protected String renderText;
     protected float x;
     protected float y;
@@ -84,12 +89,11 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
 
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        this.tick();
         this.onRender(pose, mouseX, mouseY, partial, true);
     }
 
     protected void onRender(PoseStack pose, int mouseX, int mouseY, float partial, boolean shouldRender) {
-
-        this.tick();
 
         float lineOffsetY = this.border;
         for (MarkdownTextLine line : this.lines) {
@@ -116,11 +120,13 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
 
     public void tick() {
 
-        String newRenderText = this.buildRenderText();
-        if ((this.renderText == null) || !this.renderText.equals(newRenderText)) {
-            this.renderText = newRenderText;
+        String replaced = PlaceholderParser.replacePlaceholders(this.textPlaceholders);
+        boolean placeholdersChanged = (this.lastTextPlaceholders == null) || (replaced.hashCode() != this.lastTextPlaceholders.hashCode());
+        if ((this.renderText == null) || placeholdersChanged) {
+            this.renderText = this.buildRenderText();
             this.refreshRenderer();
         }
+        this.lastTextPlaceholders = replaced;
 
         this.updateSize();
 
@@ -142,9 +148,7 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
 
     public void refreshRenderer() {
         if (this.skipRefresh) return;
-        if (this.renderText == null) {
-            this.renderText = this.buildRenderText();
-        }
+        if (this.renderText == null) this.renderText = this.buildRenderText();
         this.rebuildFragments();
         this.rebuildLines();
         this.onRender(null, 0, 0, 0, false);
@@ -270,9 +274,16 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
     public void setText(@NotNull String text) {
         if (text.length() > MAX_TEXT_LENGTH) {
             this.text = I18n.get("fancymenu.markdown.error.text_too_long");
+            this.textPlaceholders = "";
         } else {
             this.text = text;
+            StringBuilder builder = new StringBuilder();
+            for (PlaceholderParser.ParsedPlaceholder p : PlaceholderParser.findPlaceholders(this.text, new HashMap<>(), false)) {
+                builder.append(p.placeholderString);
+            }
+            this.textPlaceholders = builder.toString();
         }
+        this.lastTextPlaceholders = null;
     }
 
     public float getX() {

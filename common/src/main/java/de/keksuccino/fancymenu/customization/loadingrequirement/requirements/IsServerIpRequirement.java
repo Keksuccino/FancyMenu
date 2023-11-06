@@ -52,7 +52,7 @@ public class IsServerIpRequirement extends LoadingRequirement {
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.visibilityrequirement.is_server_ip.desc")));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.visibilityrequirement.is_server_ip.desc"));
     }
 
     @Override

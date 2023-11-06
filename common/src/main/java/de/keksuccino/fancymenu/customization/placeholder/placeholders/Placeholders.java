@@ -18,6 +18,8 @@ import de.keksuccino.fancymenu.customization.placeholder.placeholders.player.Pla
 public class Placeholders {
 
     public static final MinecraftVersionPlaceholder MINECRAFT_VERSION = new MinecraftVersionPlaceholder();
+    public static final ModLoaderVersionPlaceholder MOD_LOADER_VERSION = new ModLoaderVersionPlaceholder();
+    public static final ModLoaderNamePlaceholder MOD_LOADER_NAME = new ModLoaderNamePlaceholder();
     public static final ModVersionPlaceholder MOD_VERSION = new ModVersionPlaceholder();
     public static final LoadedModsPlaceholder LOADED_MODS = new LoadedModsPlaceholder();
     public static final TotalModsPlaceholder TOTAL_MODS = new TotalModsPlaceholder();
@@ -63,6 +65,8 @@ public class Placeholders {
 
         //Client
         PlaceholderRegistry.register(MINECRAFT_VERSION);
+        PlaceholderRegistry.register(MOD_LOADER_VERSION);
+        PlaceholderRegistry.register(MOD_LOADER_NAME);
         PlaceholderRegistry.register(MOD_VERSION);
         PlaceholderRegistry.register(LOADED_MODS);
         PlaceholderRegistry.register(TOTAL_MODS);

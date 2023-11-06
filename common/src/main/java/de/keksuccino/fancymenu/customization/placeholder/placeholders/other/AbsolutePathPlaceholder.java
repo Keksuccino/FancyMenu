@@ -45,7 +45,7 @@ public class AbsolutePathPlaceholder extends Placeholder {
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.placeholder.absolute_path.desc")));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.placeholder.absolute_path.desc"));
     }
 
     @Override

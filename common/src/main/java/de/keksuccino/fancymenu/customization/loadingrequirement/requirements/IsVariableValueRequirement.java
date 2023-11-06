@@ -56,7 +56,7 @@ public class IsVariableValueRequirement extends LoadingRequirement {
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.visibilityrequirement.is_variable_value.desc")));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.visibilityrequirement.is_variable_value.desc"));
     }
 
     @Override

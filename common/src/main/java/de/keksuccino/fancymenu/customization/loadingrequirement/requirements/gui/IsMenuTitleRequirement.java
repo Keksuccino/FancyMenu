@@ -74,7 +74,7 @@ public class IsMenuTitleRequirement extends LoadingRequirement {
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.loading_requirements.is_menu_title.desc")));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirements.is_menu_title.desc"));
     }
 
     @Override

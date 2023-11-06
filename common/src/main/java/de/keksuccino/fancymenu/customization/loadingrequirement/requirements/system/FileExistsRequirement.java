@@ -36,7 +36,7 @@ public class FileExistsRequirement extends LoadingRequirement {
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.helper.editor.items.loadingrequirement.file_exists.desc")));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.items.loadingrequirement.file_exists.desc"));
     }
 
     @Override

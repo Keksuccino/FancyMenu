@@ -1112,5 +1112,9 @@
   "fancymenu.elements.player_entity.skin_texture": "Skin Texture",
   "fancymenu.elements.player_entity.cape_texture": "Cape Texture",
   "fancymenu.markdown.error.text_too_long": "§c§lERROR: §rText too long! 45,000 characters at max!",
-  "fancymenu.placeholders.error.text_too_long": "§c§lERROR: §rText too long to parse placeholders! 17,000 characters at max!"
+  "fancymenu.placeholders.error.text_too_long": "§c§lERROR: §rText too long to parse placeholders! 17,000 characters at max!",
+  "fancymenu.placeholders.loader_version": "Mod Loader Version",
+  "fancymenu.placeholders.loader_version.desc": "Gets the version of the mod loader (Forge, Fabric, etc.).",
+  "fancymenu.placeholders.loader_name": "Mod Loader Name",
+  "fancymenu.placeholders.loader_name.desc": "Gets the name of the mod loader (Forge, Fabric, etc.)."
 }

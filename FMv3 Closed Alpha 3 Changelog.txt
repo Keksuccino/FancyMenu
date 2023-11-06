@@ -17,10 +17,17 @@ CHANGELOG | FANCYMENU v3.0.0 CLOSED ALPHA 3
 - Completely reworked FM's resource handling
 --> Almost all elements that accept some kind of resource (image, audio, video, text) now accept Web, Local and Minecraft Resource (resource location) sources
 --> Reloading FancyMenu now correctly releases all types of resources and loads them again
+- Text elements are now locked at a maximum of 45,000 characters, because the game isn't really usable anymore when using longer texts
+- The placeholder parser is now locked at a maximum of 17,000 characters per text that can be checked for placeholders
+--> So if you use placeholders in text elements, this overrides the normal 45,000 characters maximum
+- Improved performance of the placeholder parser
+- Improved performance of the Markdown parser
  
 - Added: "Update Screen" action to update/reload the current screen's customizations without reloading the whole mod
 - Added: "Set Minecraft Option" action to set the value of a Minecraft option
 - Added: "Minecraft Option Value" placeholder to get the value of a Minecraft option
+- Added: "Mod Loader Version" placeholder to get the mod loader version (Fabric, Forge, etc.)
+- Added: "Mod Loader Name" placeholder to get the mod loader name (Fabric, Forge, etc.)
  
 - Fixed: Tab and arrow key navigation broke in menu screens
 - Fixed: Unable to focus custom buttons via tab/arrow key navigation

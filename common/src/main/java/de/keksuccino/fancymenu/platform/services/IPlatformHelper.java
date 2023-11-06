@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.platform.services;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
-
 import java.util.List;
 
 public interface IPlatformHelper {
@@ -13,6 +12,10 @@ public interface IPlatformHelper {
      * @return The name of the current platform.
      */
     String getPlatformName();
+
+    String getPlatformDisplayName();
+
+    String getLoaderVersion();
 
     /**
      * Checks if a mod with the given id is loaded.

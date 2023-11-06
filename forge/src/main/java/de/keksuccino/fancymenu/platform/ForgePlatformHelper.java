@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.platform;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.platform.services.IPlatformHelper;
-import de.keksuccino.konkrete.gui.content.ContextMenu;
 import net.minecraft.client.KeyMapping;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.ModContainer;
@@ -10,7 +9,6 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLLoader;
 import net.minecraftforge.forgespi.language.IModInfo;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -20,6 +18,16 @@ public class ForgePlatformHelper implements IPlatformHelper {
     @Override
     public String getPlatformName() {
         return "forge";
+    }
+
+    @Override
+    public String getPlatformDisplayName() {
+        return "Forge";
+    }
+
+    @Override
+    public String getLoaderVersion() {
+        return this.getModVersion("forge");
     }
 
     @Override

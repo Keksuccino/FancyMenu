@@ -474,7 +474,7 @@ public class CustomizationOverlayUI {
                             if (file.getName().toLowerCase().endsWith(".png")) {
                                 ITexture t = SimpleTexture.local(file);
                                 t.waitForReady(5000);
-                                boolean b = ((t.getWidth() == 16) && (t.getHeight() == 16));
+                                boolean b = ((t.getWidth() == 32) && (t.getHeight() == 32));
                                 CloseableUtils.closeQuietly(t);
                                 return b;
                             }

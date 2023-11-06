@@ -51,9 +51,12 @@ public class TotalModsPlaceholder extends Placeholder {
         if (cachedTotalMods == -10) {
             if (MOD_DIRECTORY.exists()) {
                 int i = 0;
-                for (File f : MOD_DIRECTORY.listFiles()) {
-                    if (f.isFile() && f.getName().toLowerCase().endsWith(".jar")) {
-                        i++;
+                File[] files = MOD_DIRECTORY.listFiles();
+                if (files != null) {
+                    for (File f : files) {
+                        if (f.isFile() && f.getName().toLowerCase().endsWith(".jar")) {
+                            i++;
+                        }
                     }
                 }
                 cachedTotalMods = i+2;
@@ -76,7 +79,7 @@ public class TotalModsPlaceholder extends Placeholder {
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.dynamicvariabletextfield.variables.totalmods.desc")));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.dynamicvariabletextfield.variables.totalmods.desc"));
     }
 
     @Override

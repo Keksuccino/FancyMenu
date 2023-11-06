@@ -50,7 +50,7 @@ public class VanillaButtonLabelPlaceholder extends Placeholder {
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.vanillabuttonlabel.desc")));
+        return Arrays.asList(LocalizationUtils.splitLocalizedStringLines("fancymenu.fancymenu.editor.dynamicvariabletextfield.variables.vanillabuttonlabel.desc"));
     }
 
     @Override

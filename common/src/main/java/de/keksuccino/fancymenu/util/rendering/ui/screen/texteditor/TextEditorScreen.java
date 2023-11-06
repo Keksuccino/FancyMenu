@@ -200,7 +200,7 @@ public class TextEditorScreen extends Screen {
                     extendedPlaceholderMenu = true;
                 }
                 this.rebuildWidgets();
-            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines(I18n.get("fancymenu.editor.dynamicvariabletextfield.variables.desc"))).setDefaultStyle());
+            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.dynamicvariabletextfield.variables.desc")).setDefaultStyle());
             this.addWidget(this.placeholderButton);
             UIBase.applyDefaultWidgetSkinTo(this.placeholderButton);
             if (extendedPlaceholderMenu) {
