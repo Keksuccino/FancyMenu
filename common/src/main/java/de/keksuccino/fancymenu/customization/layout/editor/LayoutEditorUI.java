@@ -826,7 +826,6 @@ public class LayoutEditorUI {
 
 		menu.addClickableEntry("edit_in_system_text_editor", Component.translatable("fancymenu.layout.manage.open_in_text_editor"), (menu1, entry) -> {
 			if (layout.layoutFile != null) {
-				menu1.closeMenu();
 				FileUtils.openFile(layout.layoutFile);
 			}
 		});

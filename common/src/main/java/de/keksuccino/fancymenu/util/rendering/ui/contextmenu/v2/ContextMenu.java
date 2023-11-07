@@ -612,17 +612,53 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         return false;
     }
 
-    public ContextMenu openMenuAt(float x, float y) {
+    /**
+     * Opens the {@link ContextMenu} at the given X and Y coordinates.
+     *
+     * @param x The X coordinate.
+     * @param y The Y coordinate.
+     * @param entryPath The {@link SubMenuContextMenuEntry} path of menus to open.
+     */
+    public ContextMenu openMenuAt(float x, float y, @Nullable List<String> entryPath) {
         this.closeSubMenus();
         this.unhoverAllEntries();
         this.rawX = x;
         this.rawY = y;
         this.open = true;
+        if ((entryPath != null) && !entryPath.isEmpty()) {
+            String firstId = entryPath.get(0);
+            ContextMenuEntry<?> entry = this.getEntry(firstId);
+            if (entry instanceof SubMenuContextMenuEntry sub) {
+                sub.openSubMenu((entryPath.size() > 1) ? entryPath.subList(1, entryPath.size()) : null);
+            }
+        }
         return this;
     }
 
+    /**
+     * Opens the {@link ContextMenu} at the given X and Y coordinates.
+     *
+     * @param x The X coordinate.
+     * @param y The Y coordinate.
+     */
+    public ContextMenu openMenuAt(float x, float y) {
+        return this.openMenuAt(x, y, null);
+    }
+
+    /**
+     * Opens the {@link ContextMenu} at the mouse position.
+     *
+     * @param entryPath The {@link SubMenuContextMenuEntry} path of menus to open.
+     */
+    public ContextMenu openMenuAtMouse(@Nullable List<String> entryPath) {
+        return this.openMenuAt(MouseInput.getMouseX(), MouseInput.getMouseY(), entryPath);
+    }
+
+    /**
+     * Opens the {@link ContextMenu} at the mouse position.
+     */
     public ContextMenu openMenuAtMouse() {
-        return this.openMenuAt(MouseInput.getMouseX(), MouseInput.getMouseY());
+        return this.openMenuAtMouse(null);
     }
 
     public ContextMenu closeMenu() {
@@ -1353,8 +1389,20 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             }
         }
 
+        /**
+         * Opens the {@link ContextMenu} of this {@link SubMenuContextMenuEntry}.
+         *
+         * @param entryPath The {@link SubMenuContextMenuEntry} path of menus to open.
+         */
+        public void openSubMenu(@NotNull List<String> entryPath) {
+            this.subContextMenu.openMenuAt(0, 0, entryPath);
+        }
+
+        /**
+         * Opens the {@link ContextMenu} of this {@link SubMenuContextMenuEntry}.
+         */
         public void openSubMenu() {
-            this.subContextMenu.openMenuAt(0,0);
+            this.subContextMenu.openMenuAt(0, 0);
         }
 
         @NotNull

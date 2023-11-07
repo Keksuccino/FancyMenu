@@ -252,14 +252,14 @@ public class TextElement extends AbstractElement {
                 }
             }
 
-            String text = "";
+            StringBuilder text = new StringBuilder();
             for (String s : linesRaw) {
-                if (!text.isEmpty()) {
-                    text += "\n";
+                if (text.length() > 0) {
+                    text.append("\n");
                 }
-                text += s;
+                text.append(s);
             }
-            this.text = text;
+            this.text = text.toString();
 
         }).start();
 

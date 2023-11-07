@@ -383,7 +383,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
     public boolean shouldShowFile(@NotNull File file) {
         if ((this.fileFilter != null) && !this.fileFilter.checkFile(file)) return false;
-        if ((this.fileTypes != null)) {
+        if (this.fileTypes != null) {
             for (FileType<?> type : this.fileTypes.getFileTypes()) {
                 if (type.isFileTypeLocal(file)) return true;
             }
@@ -463,6 +463,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
     public void setFileTypes(@Nullable FileTypeGroup<?> typeGroup) {
         this.fileTypes = typeGroup;
+        this.updateFilesList();
         this.updateFileTypeScrollArea();
     }
 

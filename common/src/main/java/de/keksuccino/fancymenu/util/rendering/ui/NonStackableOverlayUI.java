@@ -29,6 +29,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -118,6 +119,11 @@ public class NonStackableOverlayUI {
 
     @NotNull
     public static ContextMenu.ClickableContextMenuEntry<?> addFileChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Component label, @NotNull Supplier<String> getter, @NotNull Consumer<String> setter, boolean addResetOption, String defaultValue, @Nullable FileFilter fileFilter, @Nullable FileTypeGroup<?> fileTypes) {
+        return addFileChooserContextMenuEntryTo(addTo, entryIdentifier, label, getter, setter, addResetOption, defaultValue, fileFilter, fileTypes, null);
+    }
+
+    @NotNull
+    public static ContextMenu.ClickableContextMenuEntry<?> addFileChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Component label, @NotNull Supplier<String> getter, @NotNull Consumer<String> setter, boolean addResetOption, String defaultValue, @Nullable FileFilter fileFilter, @Nullable FileTypeGroup<?> fileTypes, @Nullable BiConsumer<Screen, File> onCloseFileChooser) {
 
         ContextMenu subMenu = new ContextMenu();
 
@@ -134,7 +140,11 @@ public class NonStackableOverlayUI {
                     setter.accept(call.getPath());
                 }
                 menu.closeMenu();
-                Minecraft.getInstance().setScreen(current);
+                if (onCloseFileChooser != null) {
+                    onCloseFileChooser.accept(current, call);
+                } else {
+                    Minecraft.getInstance().setScreen(current);
+                }
             });
             fileChooser.setVisibleDirectoryLevelsAboveRoot(2);
             fileChooser.setFileFilter(fileFilter);
@@ -220,6 +230,11 @@ public class NonStackableOverlayUI {
 
     @NotNull
     public static ContextMenu.ClickableContextMenuEntry<?> addInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Component label, @NotNull Supplier<String> getter, @NotNull Consumer<String> setter, boolean addResetOption, String defaultValue, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+        return addInputContextMenuEntryTo(addTo, entryIdentifier, label, getter, setter, addResetOption, defaultValue, inputCharacterFilter, multiLineInput, allowPlaceholders, textValidator, textValidatorUserFeedback, null);
+    }
+
+    @NotNull
+    public static ContextMenu.ClickableContextMenuEntry<?> addInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Component label, @NotNull Supplier<String> getter, @NotNull Consumer<String> setter, boolean addResetOption, String defaultValue, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback, @Nullable BiConsumer<Screen, String> onCloseEditor) {
         return addGenericInputContextMenuEntryTo(addTo, entryIdentifier, label, getter, setter, addResetOption, defaultValue, valueSetter -> {
             Screen current = Minecraft.getInstance().screen;
             Screen inputScreen;
@@ -228,7 +243,11 @@ public class NonStackableOverlayUI {
                     if (call != null) {
                         valueSetter.accept(call);
                     }
-                    Minecraft.getInstance().setScreen(current);
+                    if (onCloseEditor != null) {
+                        onCloseEditor.accept(current, call);
+                    } else {
+                        Minecraft.getInstance().setScreen(current);
+                    }
                 });
                 if (textValidator != null) {
                     s.setTextValidator(consumes -> {
@@ -243,7 +262,11 @@ public class NonStackableOverlayUI {
                     if (call != null) {
                         valueSetter.accept(call);
                     }
-                    Minecraft.getInstance().setScreen(current);
+                    if (onCloseEditor != null) {
+                        onCloseEditor.accept(current, call);
+                    } else {
+                        Minecraft.getInstance().setScreen(current);
+                    }
                 });
                 if (textValidator != null) {
                     s.setTextValidator(consumes -> {
@@ -262,46 +285,66 @@ public class NonStackableOverlayUI {
 
     @NotNull
     public static ContextMenu.ClickableContextMenuEntry<?> addIntegerInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Component label, @NotNull Supplier<Integer> getter, @NotNull Consumer<Integer> setter, boolean addResetOption, int defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+        return addIntegerInputContextMenuEntryTo(addTo, entryIdentifier, label, getter, setter, addResetOption, defaultValue, textValidator, textValidatorUserFeedback, null);
+    }
+
+    @NotNull
+    public static ContextMenu.ClickableContextMenuEntry<?> addIntegerInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Component label, @NotNull Supplier<Integer> getter, @NotNull Consumer<Integer> setter, boolean addResetOption, int defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback, @Nullable BiConsumer<Screen, String> onCloseEditor) {
         ConsumingSupplier<String, Boolean> defaultIntegerValidator = consumes -> (consumes != null) && !consumes.replace(" ", "").isEmpty() && MathUtils.isInteger(consumes);
         return addInputContextMenuEntryTo(addTo, entryIdentifier, label,
                 () -> String.valueOf(Objects.requireNonNullElse(getter.get(), "")),
                 s -> {
                     if (MathUtils.isInteger(s)) setter.accept(Integer.valueOf(s));
                 }, addResetOption, "" + defaultValue, CharacterFilter.buildIntegerFiler(),
-                false, false, (textValidator != null) ? textValidator : defaultIntegerValidator, textValidatorUserFeedback);
+                false, false, (textValidator != null) ? textValidator : defaultIntegerValidator, textValidatorUserFeedback, onCloseEditor);
     }
 
     @NotNull
     public static ContextMenu.ClickableContextMenuEntry<?> addDoubleInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Component label, @NotNull Supplier<Double> getter, @NotNull Consumer<Double> setter, boolean addResetOption, double defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+        return addDoubleInputContextMenuEntryTo(addTo, entryIdentifier, label, getter, setter, addResetOption, defaultValue, textValidator, textValidatorUserFeedback, null);
+    }
+
+    @NotNull
+    public static ContextMenu.ClickableContextMenuEntry<?> addDoubleInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Component label, @NotNull Supplier<Double> getter, @NotNull Consumer<Double> setter, boolean addResetOption, double defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback, @Nullable BiConsumer<Screen, String> onCloseEditor) {
         ConsumingSupplier<String, Boolean> defaultDoubleValidator = consumes -> (consumes != null) && !consumes.replace(" ", "").isEmpty() && MathUtils.isDouble(consumes);
         return addInputContextMenuEntryTo(addTo, entryIdentifier, label,
                 () -> String.valueOf(Objects.requireNonNullElse(getter.get(), "")),
                 s -> {
                     if (MathUtils.isDouble(s)) setter.accept(Double.valueOf(s));
                 }, addResetOption, "" + defaultValue, CharacterFilter.buildDecimalFiler(),
-                false, false, (textValidator != null) ? textValidator : defaultDoubleValidator, textValidatorUserFeedback);
+                false, false, (textValidator != null) ? textValidator : defaultDoubleValidator, textValidatorUserFeedback, onCloseEditor);
     }
 
     @NotNull
     public static ContextMenu.ClickableContextMenuEntry<?> addFloatInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Component label, @NotNull Supplier<Float> getter, @NotNull Consumer<Float> setter, boolean addResetOption, float defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+        return addFloatInputContextMenuEntryTo(addTo, entryIdentifier, label, getter, setter, addResetOption, defaultValue, textValidator, textValidatorUserFeedback, null);
+    }
+
+    @NotNull
+    public static ContextMenu.ClickableContextMenuEntry<?> addFloatInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Component label, @NotNull Supplier<Float> getter, @NotNull Consumer<Float> setter, boolean addResetOption, float defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback, @Nullable BiConsumer<Screen, String> onCloseEditor) {
         ConsumingSupplier<String, Boolean> defaultFloatValidator = consumes -> (consumes != null) && !consumes.replace(" ", "").isEmpty() && MathUtils.isFloat(consumes);
         return addInputContextMenuEntryTo(addTo, entryIdentifier, label,
                 () -> String.valueOf(Objects.requireNonNullElse(getter.get(), "")),
                 s -> {
                     if (MathUtils.isFloat(s)) setter.accept(Float.valueOf(s));
                 }, addResetOption, "" + defaultValue, CharacterFilter.buildDecimalFiler(),
-                false, false, (textValidator != null) ? textValidator : defaultFloatValidator, textValidatorUserFeedback);
+                false, false, (textValidator != null) ? textValidator : defaultFloatValidator, textValidatorUserFeedback, onCloseEditor);
     }
 
     @NotNull
     public static ContextMenu.ClickableContextMenuEntry<?> addLongInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Component label, @NotNull Supplier<Long> getter, @NotNull Consumer<Long> setter, boolean addResetOption, long defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
+        return addLongInputContextMenuEntryTo(addTo, entryIdentifier, label, getter, setter, addResetOption, defaultValue, textValidator, textValidatorUserFeedback, null);
+    }
+
+    @NotNull
+    public static ContextMenu.ClickableContextMenuEntry<?> addLongInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Component label, @NotNull Supplier<Long> getter, @NotNull Consumer<Long> setter, boolean addResetOption, long defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback, @Nullable BiConsumer<Screen, String> onCloseEditor) {
         ConsumingSupplier<String, Boolean> defaultLongValidator = consumes -> (consumes != null) && !consumes.replace(" ", "").isEmpty() && MathUtils.isLong(consumes);
         return addInputContextMenuEntryTo(addTo, entryIdentifier, label,
                 () -> String.valueOf(Objects.requireNonNullElse(getter.get(), "")),
                 s -> {
                     if (MathUtils.isLong(s)) setter.accept(Long.valueOf(s));
                 }, addResetOption, "" + defaultValue, CharacterFilter.buildIntegerFiler(),
-                false, false, (textValidator != null) ? textValidator : defaultLongValidator, textValidatorUserFeedback);
+                false, false, (textValidator != null) ? textValidator : defaultLongValidator, textValidatorUserFeedback, onCloseEditor);
     }
 
 }

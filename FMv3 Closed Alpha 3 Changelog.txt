@@ -22,6 +22,8 @@ CHANGELOG | FANCYMENU v3.0.0 CLOSED ALPHA 3
 --> So if you use placeholders in text elements, this overrides the normal 45,000 characters maximum
 - Improved performance of the placeholder parser
 - Improved performance of the Markdown parser
+- Most context menus in the menu bar (normal overlay and layout editor) now stay open after doing stuff that opens new screens or reloads the screen (like deleting layouts)
+- It is now possible to disable Markdown parsing for text elements
  
 - Added: "Update Screen" action to update/reload the current screen's customizations without reloading the whole mod
 - Added: "Set Minecraft Option" action to set the value of a Minecraft option
@@ -29,7 +31,7 @@ CHANGELOG | FANCYMENU v3.0.0 CLOSED ALPHA 3
 - Added: "Mod Loader Version" placeholder to get the mod loader version (Fabric, Forge, etc.)
 - Added: "Mod Loader Name" placeholder to get the mod loader name (Fabric, Forge, etc.)
  
-- Fixed: Tab and arrow key navigation broke in menu screens
+- Fixed: Tab and arrow key navigation broken in menu screens
 - Fixed: Unable to focus custom buttons via tab/arrow key navigation
 - Fixed: Unable to focus custom input fields via tab/arrow key navigation
 - Fixed: Resizing and moving Vanilla widgets is broken

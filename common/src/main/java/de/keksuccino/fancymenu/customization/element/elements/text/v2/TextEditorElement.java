@@ -144,6 +144,15 @@ public class TextEditorElement extends AbstractEditorElement {
         ContextMenu markdownMenu = new ContextMenu();
         this.rightClickMenu.addSubMenuEntry("markdown", Component.translatable("fancymenu.customization.items.text.markdown"), markdownMenu).setStackable(true);
 
+        this.addToggleContextMenuEntryTo(markdownMenu, "parse_markdown",
+                        TextEditorElement.class,
+                        consumes -> consumes.getElement().markdownRenderer.isParseMarkdown(),
+                        (textEditorElement, aBoolean) -> textEditorElement.getElement().markdownRenderer.setParseMarkdown(aBoolean),
+                        "fancymenu.customization.items.text.markdown.toggle")
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.markdown.toggle.desc")));
+
+        markdownMenu.addSeparatorEntry("separator_after_parse_markdown");
+
         this.addStringInputContextMenuEntryTo(markdownMenu, "code_block_single_line_color", TextEditorElement.class,
                         consumes -> consumes.getElement().markdownRenderer.getCodeBlockSingleLineColor().getHex(),
                         (textEditorElement, s) -> textEditorElement.getElement().markdownRenderer.setCodeBlockSingleLineColor(DrawableColor.of(s)),

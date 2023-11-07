@@ -815,13 +815,25 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
             this.clickAction = (bar, entry) -> this.openContextMenu();
         }
 
+        /**
+         * Opens the {@link ContextMenu}.
+         */
         public void openContextMenu() {
+            this.openContextMenu(null);
+        }
+
+        /**
+         * Opens the {@link ContextMenu}.
+         *
+         * @param entryPath The {@link ContextMenu.SubMenuContextMenuEntry} path of menus to open.
+         */
+        public void openContextMenu(@Nullable List<String> entryPath) {
             this.contextMenu.setScale(this.parent.scale);
             float scale = UIBase.calculateFixedScale(this.parent.scale);
             float scaledX = (float)this.x * scale;
             float scaledY = (float)this.y * scale;
             float scaledHeight = (float)this.height * scale;
-            this.contextMenu.openMenuAt(scaledX, scaledY + scaledHeight - this.contextMenu.getScaledBorderThickness());
+            this.contextMenu.openMenuAt(scaledX, scaledY + scaledHeight - this.contextMenu.getScaledBorderThickness(), entryPath);
         }
 
         @Override

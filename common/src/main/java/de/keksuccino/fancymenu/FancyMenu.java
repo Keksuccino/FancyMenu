@@ -20,6 +20,16 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO "Open Custom GUI" zu custom GUI context menu und Manage screen adden
+
+	//TODO Einige der currently active layouts (nur enabled) als entries zu erster Ebene von Layout Context Menu adden
+	// - Universal + Current Screen layouts kombinieren
+	// - Nur 5-8 zeigen, dann entry "... (and X more)" (nicht clickable)
+
+	//TODO "Current Screen Identifier" placeholder
+
+	//TODO Make progress bars smoother (calculate progress with float value)
+
 	//TODO Markdown renderer: nach Überschrift (unter Linie) Abstand adden
 
 	//TODO FIXEN: Wenn mehr als ein Layout aktiv ist, werden Vanilla Buttons, die NICHT den Vanilla Anchor haben, in untere rechte Ecke gepackt??
@@ -30,8 +40,8 @@ public class FancyMenu {
 
 	//TODO ALLE UNGENUTZTEN FileTypes entfernen (ungenutzte audio und video types)
 
-	//TODO Bei Custom Icon settings den 16x16 und 32x32 check weg, weil frisst RAM
-	// -> Stattdessen vllt bei "Done" checken und wenn falsch, Fehlermeldung öffnen
+	//TODO Render layout editor grid always at scale 1 (ignore game scale and UI scale)
+
 
 
 
@@ -41,10 +51,6 @@ public class FancyMenu {
 	//TODO Make resources.fancymenu.net redirect to the wiki page for ResourceLocations
 
 	//TODO Bei Resource Reload (MC Resource Pack changed, etc.) alle resources per ResourceHandler#reload() reloaden
-
-	//TODO Make progress bars smoother (calculate progress with float value)
-
-	//TODO "Current Screen Identifier" placeholder
 
 	//TODO Layout Listener System
 	// - Auf Layout Ebene (rechtsklick editor back -> Listeners)
@@ -63,12 +69,6 @@ public class FancyMenu {
 
 	//TODO Button: Nine-Slice Background Mode (toggle on/off)
 	// - Option, um Randbreite zu definieren, wenn möglich
-
-	//TODO "Open Custom GUI" zu custom GUI context menu und Manage screen adden
-
-	//TODO Einige der currently active layouts (nur enabled) als entries zu erster Ebene von Layout Context Menu adden
-	// - Universal + Current Screen layouts kombinieren
-	// - Nur 5-8 zeigen, dann entry "... (and X more)" (nicht clickable)
 
 	//TODO Add short delay before elements can be moved in the editor (after left-clicking them)
 
@@ -101,13 +101,11 @@ public class FancyMenu {
 
 	//TODO Testweise Title screen widget identifiers adden (eventuell dafür universal widget identifiers entfernen)
 
-	//TODO "Split Text" placeholder (regex support)
+	//TODO "Split Text" placeholder (regex support) (könnte performance killen)
 
 	//TODO Markdown support for tooltips
 
 	//TODO FIXEN: Splash Elemente werden bei resize reloaded (isNewMenu in builder fixen??)
-
-	//TODO Render layout editor grid always at scale 1 (ignore game scale and UI scale)
 
 	//TODO FIXEN: Manchmal wird per Anchor Overlay onHover der Anchor nicht aktualisiert (hover loading animation sichtbar, aber anchor wechselt am Ende nicht)
 	// - Aufgetreten, nachdem Label von Custom Button editiert (fenster danach nicht resized oder gespeichert)
@@ -120,8 +118,6 @@ public class FancyMenu {
 	//TODO FIXEN: Layout Editor: grid toggle in Window tab wird nicht aktualisiert, wenn grid per Ctrl + G getoggelt wird
 
 	//TODO Item Element, das per item meta (wie in give command) customized werden kann
-
-	//TODO custom background support für slider adden (+ eventuell option zum changen von slider grabber textur)
 
 	//TODO option für "keep position after anchor change" adden
 
@@ -137,8 +133,8 @@ public class FancyMenu {
 	public static final String MOD_LOADER = Services.PLATFORM.getPlatformName();
 	public static final String MOD_ID = "fancymenu";
 
-	public static final File MOD_DIR = createDirectory(new File(getGameDirectory(), "/config/fancymenu"));
-	public static final File INSTANCE_DATA_DIR = createDirectory(new File(getGameDirectory(), "/fancymenu_data"));
+	public static final File MOD_DIR = createDirectory(new File(GameDirectoryUtils.getGameDirectory(), "/config/fancymenu"));
+	public static final File INSTANCE_DATA_DIR = createDirectory(new File(GameDirectoryUtils.getGameDirectory(), "/fancymenu_data"));
 	public static final File TEMP_DATA_DIR = createDirectory(new File(INSTANCE_DATA_DIR, "/.fancymenu_temp"));
 	public static final File CACHE_DIR = createDirectory(new File(INSTANCE_DATA_DIR, "/cached_data"));
 
@@ -200,11 +196,6 @@ public class FancyMenu {
 
 	public static String getMinecraftVersion() {
 		return SharedConstants.getCurrentVersion().getName();
-	}
-
-	@Deprecated
-	public static File getGameDirectory() {
-		return GameDirectoryUtils.getGameDirectory();
 	}
 
 	private static File createDirectory(@NotNull File directory) {

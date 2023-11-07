@@ -166,6 +166,8 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
             element.markdownRenderer.setBulletListSpacing(Integer.parseInt(bulletListSpacing));
         }
 
+        element.markdownRenderer.setParseMarkdown(deserializeBoolean(true, serialized.getValue("parse_markdown")));
+
         element.markdownRenderer.refreshRenderer();
 
         element.setSource(element.sourceMode, element.source);
@@ -223,6 +225,8 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
         serializeTo.putProperty("bullet_list_dot_color", element.markdownRenderer.getBulletListDotColor().getHex());
         serializeTo.putProperty("bullet_list_indent", "" + element.markdownRenderer.getBulletListIndent());
         serializeTo.putProperty("bullet_list_spacing", "" + element.markdownRenderer.getBulletListSpacing());
+
+        serializeTo.putProperty("parse_markdown", "" + element.markdownRenderer.isParseMarkdown());
 
         return serializeTo;
         
