@@ -99,7 +99,7 @@ public abstract class ConfiguratorScreen extends Screen {
 
         this.initRightSideWidgets();
 
-        this.addRightSideSpacer(5);
+        this.addRightSideDefaultSpacer();
 
         this.cancelButton = this.addRightSideButton(20, Component.translatable("fancymenu.guicomponents.cancel"), button -> {
             this.onCancel();
@@ -169,6 +169,10 @@ public abstract class ConfiguratorScreen extends Screen {
 
     public boolean allowDone() {
         return true;
+    }
+
+    protected void addRightSideDefaultSpacer() {
+        this.addRightSideSpacer(5);
     }
 
     protected void addRightSideSpacer(int height) {

@@ -10,11 +10,12 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -41,6 +42,7 @@ public class ProgressBarElement extends AbstractElement {
     protected int lastProgressY = 0;
     protected int lastProgressWidth = 0;
     protected int lastProgressHeight = 0;
+    protected float renderProgress = 0.0F;
 
     public ProgressBarElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -58,18 +60,20 @@ public class ProgressBarElement extends AbstractElement {
 
     protected void renderProgress(@NotNull PoseStack pose) {
 
-        float currentProgress = Math.max(0.0F, Math.min(1.0F, this.getCurrentProgress()));
+        float actualProgress = Math.max(0.0F, Math.min(1.0F, this.getCurrentProgress()));
+        this.renderProgress = Mth.clamp(this.renderProgress * 0.95F + actualProgress * 0.050000012F, 0.0F, 1.0F);
         int progressWidth = this.getAbsoluteWidth();
         int progressHeight = this.getAbsoluteHeight();
         int progressX = this.getAbsoluteX();
         int progressY = this.getAbsoluteY();
         float offsetX = 0.0F;
         float offsetY = 0.0F;
+        Mth.lerp(1.0F, 1.0F, 1.0F);
         if ((this.direction == BarDirection.LEFT) || (this.direction == BarDirection.RIGHT)) {
-            progressWidth = (int)((float)this.getAbsoluteWidth() * currentProgress);
+            progressWidth = (int)((float)this.getAbsoluteWidth() * this.renderProgress);
         }
         if ((this.direction == BarDirection.UP) || (this.direction == BarDirection.DOWN)) {
-            progressHeight = (int)((float)this.getAbsoluteHeight() * currentProgress);
+            progressHeight = (int)((float)this.getAbsoluteHeight() * this.renderProgress);
         }
         if (this.direction == BarDirection.LEFT) {
             progressX += this.getAbsoluteWidth() - progressWidth;
@@ -128,7 +132,7 @@ public class ProgressBarElement extends AbstractElement {
     public float getCurrentProgress() {
         if (isEditor()) return 0.5F;
         if (this.progressSource != null) {
-            String s = PlaceholderParser.replacePlaceholders(this.progressSource).replace(" ", "");
+            String s = StringUtils.replace(PlaceholderParser.replacePlaceholders(this.progressSource), " ", "");
             if (MathUtils.isFloat(s)) {
                 if (this.progressValueMode == ProgressValueMode.PERCENTAGE) return Float.parseFloat(s) / 100.0F;
                 return Float.parseFloat(s);

@@ -89,6 +89,7 @@ public class MarkdownParser {
         int charsToSkip = 0;
         boolean skipLine = false;
         MarkdownTextFragment lastBuiltFragment = null;
+        boolean lastLineWasHeadline = false;
 
         String currentLine = EMPTY_STRING;
 
@@ -107,6 +108,17 @@ public class MarkdownParser {
 
             //Update Current Line
             if (isStartOfLine) currentLine = getLine(subText);
+
+            //Skip empty line under headline
+            if ((c == NEWLINE_CHAR) && lastLineWasHeadline) {
+                String nextLine = null;
+                try { nextLine = StringUtils.substring(subText, 1).split(NEWLINE, 2)[0]; } catch (Exception ignored) {}
+                if ((nextLine != null) && removeFromString(nextLine, NEWLINE, SPACE).isEmpty()) {
+                    lastLineWasHeadline = false;
+                    continue;
+                }
+                lastLineWasHeadline = false;
+            }
 
             //Skip Chars
             if (charsToSkip > 0) {
@@ -144,6 +156,7 @@ public class MarkdownParser {
                             charsToSkip = 3;
                         }
                         if (builder.headlineType != HeadlineType.NONE) {
+                            lastLineWasHeadline = true;
                             continue;
                         }
                     }

@@ -1120,5 +1120,8 @@
   "fancymenu.placeholders.loader_version": "Mod Loader Version",
   "fancymenu.placeholders.loader_version.desc": "Gets the version of the mod loader (Forge, Fabric, etc.).",
   "fancymenu.placeholders.loader_name": "Mod Loader Name",
-  "fancymenu.placeholders.loader_name.desc": "Gets the name of the mod loader (Forge, Fabric, etc.)."
+  "fancymenu.placeholders.loader_name.desc": "Gets the name of the mod loader (Forge, Fabric, etc.).",
+  "fancymenu.custom_guis.manage.open": "Open GUI",
+  "fancymenu.placeholders.screen_identifier": "Screen Identifier",
+  "fancymenu.placeholders.screen_identifier.desc": "Gets the identifier of the active screen."
 }

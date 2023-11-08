@@ -150,7 +150,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             RenderSystem.enableBlend();
             float scale = (this.parent.parentRenderScale != null) ? this.parent.parentRenderScale : (float)Minecraft.getInstance().getWindow().getGuiScale();
             float lineThickness = (scale > 1) ? 0.5f : 1f;
-            RenderingUtils.fillF(pose, this.parent.x + this.parent.border, this.y + this.getRenderHeight() - lineThickness, this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, this.y + this.getRenderHeight(), this.parent.headlineUnderlineColor.getColorInt());
+            float lineY = this.y + this.getTextRenderHeight() + 1;
+            RenderingUtils.fillF(pose, this.parent.x + this.parent.border, lineY, this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, lineY + lineThickness, this.parent.headlineUnderlineColor.getColorInt());
             RenderingUtils.resetShaderColor();
         }
     }
@@ -313,7 +314,10 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
         float f = this.getTextRenderHeight();
         if ((this.headlineType == HeadlineType.BIGGER) || (this.headlineType == HeadlineType.BIGGEST)) {
-            f += 5;
+            f += 8;
+        }
+        if (this.headlineType == HeadlineType.BIG) {
+            f += 6;
         }
         if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockStart() != null) && (this.codeBlockContext.getBlockStart().y == this.y)) {
             f += 10;

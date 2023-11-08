@@ -55,6 +55,15 @@ public class ManageCustomGuisScreen extends ConfiguratorScreen {
             }));
         });
 
+        this.addRightSideDefaultSpacer();
+
+        this.addRightSideButton(20, Component.translatable("fancymenu.custom_guis.manage.open"), var1 -> {
+            CustomGui selected = this.selected;
+            if (selected != null) {
+                Minecraft.getInstance().setScreen(CustomGuiHandler.constructInstance(selected, Minecraft.getInstance().screen, null));
+            }
+        }).setIsActiveSupplier(consumes -> this.selected != null);
+
         this.addRightSideButton(20, Component.translatable("fancymenu.custom_guis.manage.edit"), var1 -> {
             Screen s = Minecraft.getInstance().screen;
             CustomGui selected = this.selected;

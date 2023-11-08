@@ -20,17 +20,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO "Open Custom GUI" zu custom GUI context menu und Manage screen adden
-
 	//TODO Einige der currently active layouts (nur enabled) als entries zu erster Ebene von Layout Context Menu adden
 	// - Universal + Current Screen layouts kombinieren
 	// - Nur 5-8 zeigen, dann entry "... (and X more)" (nicht clickable)
-
-	//TODO "Current Screen Identifier" placeholder
-
-	//TODO Make progress bars smoother (calculate progress with float value)
-
-	//TODO Markdown renderer: nach Überschrift (unter Linie) Abstand adden
 
 	//TODO FIXEN: Wenn mehr als ein Layout aktiv ist, werden Vanilla Buttons, die NICHT den Vanilla Anchor haben, in untere rechte Ecke gepackt??
 
