@@ -895,7 +895,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         protected Supplier<Tooltip> tooltipSupplier;
         protected Font font = Minecraft.getInstance().font;
         protected boolean addSpaceForIcon = false;
-        protected boolean hoverable = true;
+        protected boolean changeBackgroundColorOnHover = true;
 
         public ContextMenuEntry(@NotNull String identifier, @NotNull ContextMenu parent) {
             this.identifier = identifier;
@@ -926,22 +926,20 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         public abstract float getMinWidth();
 
         protected void setHovered(boolean hovered) {
-            if (!this.isHoverable()) return;
             this.hovered = hovered;
         }
 
         public boolean isHovered() {
-            if (!this.isHoverable()) return false;
             if (!this.parent.isOpen()) return false;
             return this.hovered;
         }
 
-        public boolean isHoverable() {
-            return this.hoverable;
+        public boolean isChangeBackgroundColorOnHover() {
+            return this.changeBackgroundColorOnHover;
         }
 
-        public T setHoverable(boolean hoverable) {
-            this.hoverable = hoverable;
+        public T setChangeBackgroundColorOnHover(boolean changeColor) {
+            this.changeBackgroundColorOnHover = changeColor;
             return (T) this;
         }
 
@@ -1126,7 +1124,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
 
         protected void renderBackground(@NotNull PoseStack pose) {
-            if (this.isHovered() && this.isActive()) {
+            if (this.isChangeBackgroundColorOnHover() && this.isHovered() && this.isActive()) {
                 RenderingUtils.fillF(pose, (float) this.x, (float) this.y, (float) (this.x + this.width), (float) (this.y + this.height), UIBase.getUIColorTheme().element_background_color_hover.getColorInt());
             }
         }
@@ -1329,7 +1327,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         @Override
         protected void renderBackground(@NotNull PoseStack pose) {
             boolean hover = this.hovered;
-            if (this.isHoverable()) this.hovered = this.hovered || this.subContextMenu.isOpen();
+            this.hovered = this.hovered || this.subContextMenu.isOpen();
             super.renderBackground(pose);
             this.hovered = hover;
         }

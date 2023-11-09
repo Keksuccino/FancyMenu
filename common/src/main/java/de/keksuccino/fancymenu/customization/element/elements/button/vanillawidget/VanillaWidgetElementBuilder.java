@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
-import de.keksuccino.fancymenu.customization.element.IElementStacker;
+import de.keksuccino.fancymenu.customization.element.ElementStacker;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
@@ -14,7 +14,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements IElementStacker<VanillaWidgetElement> {
+public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements ElementStacker<VanillaWidgetElement> {
 
     private static final Logger LOGGER = LogManager.getLogger();
     public static final VanillaWidgetElementBuilder INSTANCE = new VanillaWidgetElementBuilder();
@@ -164,7 +164,7 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
     @Override
     public void stackElementsSingleInternal(AbstractElement e, AbstractElement stack) {
 
-        IElementStacker.super.stackElementsSingleInternal(e, stack);
+        ElementStacker.super.stackElementsSingleInternal(e, stack);
 
         //AbstractElement stuff
         if (e.anchorPoint != ElementAnchorPoints.VANILLA) {
@@ -179,7 +179,7 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
         if (stack != null) {
             stack.anchorPoint = ElementAnchorPoints.VANILLA;
         }
-        return IElementStacker.super.stackElementsInternal(stack, elements);
+        return ElementStacker.super.stackElementsInternal(stack, elements);
     }
 
     @Override

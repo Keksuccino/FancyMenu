@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.network.chat.Component;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -56,20 +57,22 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
 
         element.roundingDecimalPlace = deserializeNumber(Integer.class, element.roundingDecimalPlace, serialized.getValue("rounding_decimal_place"));
 
-        List<List<String>> listValueEntries = new ArrayList<>();
+        List<Pair<String, String>> listValueEntries = new ArrayList<>();
         serialized.getProperties().forEach((key, value) -> {
             if (key.startsWith("slider_list_value_")) {
-                listValueEntries.add(List.of(key, value));
+                listValueEntries.add(Pair.of(key, value));
             }
         });
         listValueEntries.sort(Comparator.comparingInt(value -> {
-            String key = value.get(0);
+            String key = value.getKey();
             key = new StringBuilder(key).reverse().toString();
             key = new StringBuilder(key.split("_", 2)[0]).reverse().toString();
             if (MathUtils.isInteger(key)) return Integer.parseInt(key);
             return 0;
         }));
-        listValueEntries.forEach(strings -> element.listValues.add(strings.get(1)));
+        if (!listValueEntries.isEmpty()) element.listValues.clear();
+        listValueEntries.forEach(pair -> element.listValues.add(pair.getValue()));
+        if (element.listValues.size() < 2) element.listValues.add("placeholder_value");
 
         String executableBlockId = serialized.getValue("slider_element_executable_block_identifier");
         if (executableBlockId != null) {

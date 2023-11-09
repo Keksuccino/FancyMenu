@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.element.IHideableElement;
+import de.keksuccino.fancymenu.customization.element.HideableElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
@@ -22,7 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
-public class VanillaWidgetElement extends ButtonElement implements IHideableElement {
+public class VanillaWidgetElement extends ButtonElement implements HideableElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
 

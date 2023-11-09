@@ -55,7 +55,6 @@ public class LayoutHandler {
 		ScreenCustomization.readCustomizableScreensFromFile();
 
 		List<Layout> layouts = deserializeLayoutFilesInDirectory(LAYOUT_DIR);
-		layouts.sort(Comparator.comparingInt(value -> value.layoutIndex));
 
 		LAYOUTS.clear();
 		LAYOUTS.addAll(layouts);
@@ -111,23 +110,40 @@ public class LayoutHandler {
 
 	@NotNull
 	public static List<Layout> getEnabledLayoutsForScreenIdentifier(@NotNull String screenIdentifier, boolean includeUniversalLayouts) {
-		List<Layout> l = new ArrayList<>();
+		List<Layout> layouts = new ArrayList<>();
 		for (Layout layout : getEnabledLayouts()) {
 			if (ScreenIdentifierHandler.equalIdentifiers(screenIdentifier, layout.screenIdentifier)) {
-				l.add(layout);
+				layouts.add(layout);
 			} else if (layout.isUniversalLayout() && includeUniversalLayouts) {
 				if (!layout.universalLayoutMenuWhitelist.isEmpty() || !layout.universalLayoutMenuBlacklist.isEmpty()) {
 					if (!layout.universalLayoutMenuWhitelist.isEmpty() && layout.universalLayoutMenuWhitelist.contains(screenIdentifier)) {
-						l.add(layout);
+						layouts.add(layout);
 					} else if (!layout.universalLayoutMenuBlacklist.isEmpty() && !layout.universalLayoutMenuBlacklist.contains(screenIdentifier)) {
-						l.add(layout);
+						layouts.add(layout);
 					}
 				} else {
-					l.add(layout);
+					layouts.add(layout);
 				}
 			}
 		}
-		return l;
+		//Sort layouts by their index
+		layouts.sort(Comparator.comparingInt(value -> value.layoutIndex));
+		//Sort layouts to load universal layouts BEFORE normal ones
+		if (includeUniversalLayouts) {
+			List<Layout> normal = new ArrayList<>();
+			List<Layout> universal = new ArrayList<>();
+			for (Layout layout : layouts) {
+				if (layout.isUniversalLayout()) {
+					universal.add(layout);
+				} else {
+					normal.add(layout);
+				}
+			}
+			layouts.clear();
+			layouts.addAll(universal);
+			layouts.addAll(normal);
+		}
+		return layouts;
 	}
 
 	@NotNull

@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.element;
 
-public interface IHideableElement {
+public interface HideableElement {
 
     boolean isHidden();
 

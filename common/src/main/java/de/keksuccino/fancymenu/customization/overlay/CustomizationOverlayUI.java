@@ -25,8 +25,6 @@ import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.file.type.FileCodec;
-import de.keksuccino.fancymenu.util.file.type.FileMediaType;
-import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroups;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
@@ -64,7 +62,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -350,6 +347,42 @@ public class CustomizationOverlayUI {
                 Minecraft.getInstance().setScreen(screen);
             })));
         });
+
+        layoutMenu.addSeparatorEntry("separator_after_manage_layouts");
+
+        if (identifier != null) {
+            int layoutIndex = 0;
+            List<Layout> allLayouts2 = LayoutHandler.getAllLayoutsForScreenIdentifier(identifier, false);
+            allLayouts2.addAll(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true));
+//            allLayouts2.removeIf(layout -> !layout.isEnabled());
+            int allLayoutsCount2 = allLayouts2.size();
+            for (Layout layout : LayoutHandler.sortLayoutListByLastEdited(allLayouts2, true, 8)) {
+                layoutMenu.addSubMenuEntry("layout_" + layoutIndex, Component.empty(), buildManageLayoutSubMenu(layout, List.of("layouts")))
+                        .setLabelSupplier((menu, entry) -> {
+                            Style style = layout.getStatus().getValueComponentStyle();
+                            MutableComponent c = Component.literal(layout.getLayoutName());
+                            c.append(Component.literal(" "));
+                            if (layout.isUniversalLayout()) {
+                                MutableComponent universalSuffix = Component.translatable("fancymenu.ui.customization_overlay.layouts.universal_suffix").setStyle(Style.EMPTY.withBold(true));
+                                c.append(universalSuffix);
+                            } else {
+                                MutableComponent normalSuffix = Component.translatable("fancymenu.ui.customization_overlay.layouts.normal_suffix").setStyle(Style.EMPTY.withBold(true));
+                                c.append(normalSuffix);
+                            }
+                            c.append(Component.literal(" (").setStyle(style));
+                            c.append(layout.getStatus().getValueComponent());
+                            c.append(Component.literal(")").setStyle(style));
+                            return c;
+                        });
+                layoutIndex++;
+            }
+            if (allLayoutsCount2 > 8) {
+                String moreLayoutCount = "" + (allLayoutsCount2-8);
+                layoutMenu.addClickableEntry("x_more_layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.more_layouts", moreLayoutCount), (menu, entry) -> {})
+                        .setClickSoundEnabled(false)
+                        .setChangeBackgroundColorOnHover(false);
+            }
+        }
 
         customizationMenu.addSeparatorEntry("separator_after_layout_menu");
 

@@ -2,14 +2,14 @@ package de.keksuccino.fancymenu.customization.deep;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.element.IElementStacker;
+import de.keksuccino.fancymenu.customization.element.ElementStacker;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class DeepElementBuilder<D extends DeepScreenCustomizationLayer, E extends AbstractDeepElement, L extends AbstractDeepEditorElement> extends ElementBuilder<E, L> implements IElementStacker<E> {
+public abstract class DeepElementBuilder<D extends DeepScreenCustomizationLayer, E extends AbstractDeepElement, L extends AbstractDeepEditorElement> extends ElementBuilder<E, L> implements ElementStacker<E> {
 
     public final D layer;
 
@@ -84,7 +84,7 @@ public abstract class DeepElementBuilder<D extends DeepScreenCustomizationLayer,
     @Override
     public void stackElementsSingleInternal(AbstractElement elementAbstract, AbstractElement stackAbstract) {
 
-        IElementStacker.super.stackElementsSingleInternal(elementAbstract, stackAbstract);
+        ElementStacker.super.stackElementsSingleInternal(elementAbstract, stackAbstract);
 
         if ((elementAbstract instanceof AbstractDeepElement e) && (stackAbstract instanceof AbstractDeepElement stack)) {
 
@@ -107,7 +107,7 @@ public abstract class DeepElementBuilder<D extends DeepScreenCustomizationLayer,
         if (stack != null) {
             stack.anchorPoint = ElementAnchorPoints.VANILLA;
         }
-        return IElementStacker.super.stackElementsInternal(stack, elements);
+        return ElementStacker.super.stackElementsInternal(stack, elements);
     }
 
 }

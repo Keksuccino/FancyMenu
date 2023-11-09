@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public interface IElementFactory {
+public interface ElementFactory {
 
     /**
      * Constructs element instances for {@link ScreenCustomizationLayer}s and {@link LayoutEditorScreen}s.

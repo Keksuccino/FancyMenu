@@ -166,6 +166,8 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - Text elements are now locked at a maximum of 45,000 characters, because the game isn't really usable anymore when using longer texts
 - The placeholder parser is now locked at a maximum of 17,000 characters per text that can be checked for placeholders
 --> So if you use placeholders in text elements, this overrides the normal 45,000 characters maximum
+- Universal layouts now get always loaded BEFORE normal ones, so normal layouts can override parts of universal ones
+- The grid in the layout editor now always gets rendered at the same scale, no matter what GUI scale is used
  
 - Added loading requirement "File/Folder Exists" to check if a file/folder exists
 - Added loading requirement "Is Button Active" to check if a button is active (clickable/not greyed out)

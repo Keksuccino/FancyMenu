@@ -988,7 +988,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		subMenu.addClickableEntry("current_value_display", Component.empty(), (menu, entry) -> {})
 				.setLabelSupplier((menu, entry) -> currentValueDisplayLabelSupplier.get())
 				.setClickSoundEnabled(false)
-				.setHoverable(false)
+				.setChangeBackgroundColorOnHover(false)
 				.setIsVisibleSupplier((menu, entry) -> this.getFilteredSelectedElementList(selectedElementsFilter).size() == 1)
 				.setIcon(ContextMenu.IconFactory.getIcon("info"));
 
@@ -1180,7 +1180,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		subMenu.addClickableEntry("current_value_display", Component.empty(), (menu, entry) -> {})
 				.setLabelSupplier((menu, entry) -> currentValueDisplayLabelSupplier.get())
 				.setClickSoundEnabled(false)
-				.setHoverable(false)
+				.setChangeBackgroundColorOnHover(false)
 				.setIsVisibleSupplier((menu, entry) -> this.getFilteredSelectedElementList(selectedElementsFilter).size() == 1)
 				.setIcon(ContextMenu.IconFactory.getIcon("info"));
 

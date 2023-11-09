@@ -5,14 +5,14 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.element.IExecutableElement;
+import de.keksuccino.fancymenu.customization.element.ExecutableElement;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 
-public class TickerElement extends AbstractElement implements IExecutableElement {
+public class TickerElement extends AbstractElement implements ExecutableElement {
 
     @NotNull
     public volatile GenericExecutableBlock actionExecutor = new GenericExecutableBlock();

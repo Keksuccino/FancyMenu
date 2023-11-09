@@ -51,7 +51,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
-public class ScreenCustomizationLayer extends GuiComponent implements IElementFactory {
+public class ScreenCustomizationLayer extends GuiComponent implements ElementFactory {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 

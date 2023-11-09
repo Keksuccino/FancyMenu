@@ -4,11 +4,10 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
-import de.keksuccino.fancymenu.customization.element.IHideableElement;
+import de.keksuccino.fancymenu.customization.element.HideableElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -156,7 +155,7 @@ public class DebugOverlay extends GuiComponent implements Renderable, Narratable
         List<AbstractElement> widgets = new ArrayList<>(layer.deepElements);
         widgets.addAll(layer.vanillaWidgetElements);
         for (AbstractElement e : widgets) {
-            if ((e instanceof IHideableElement h) && h.isHidden()) continue;
+            if ((e instanceof HideableElement h) && h.isHidden()) continue;
             this.currentScreenElements.add(e);
             UIBase.renderBorder(pose, e.getAbsoluteX(), e.getAbsoluteY(), e.getAbsoluteX() + e.getAbsoluteWidth(), e.getAbsoluteY() + e.getAbsoluteHeight(), 1, UIBase.getUIColorTheme().layout_editor_element_border_color_normal, true, true, true, true);
         }

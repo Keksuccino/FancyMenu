@@ -179,7 +179,7 @@ public class NonStackableOverlayUI {
         subMenu.addClickableEntry("current_value_display", Component.empty(), (menu, entry) -> {})
                 .setLabelSupplier((menu, entry) -> currentValueDisplayLabelSupplier.get())
                 .setClickSoundEnabled(false)
-                .setHoverable(false)
+                .setChangeBackgroundColorOnHover(false)
                 .setIcon(ContextMenu.IconFactory.getIcon("info"));
 
         return addTo.addSubMenuEntry(entryIdentifier, label, subMenu);
@@ -222,7 +222,7 @@ public class NonStackableOverlayUI {
         subMenu.addClickableEntry("current_value_display", Component.empty(), (menu, entry) -> {})
                 .setLabelSupplier((menu, entry) -> currentValueDisplayLabelSupplier.get())
                 .setClickSoundEnabled(false)
-                .setHoverable(false)
+                .setChangeBackgroundColorOnHover(false)
                 .setIcon(ContextMenu.IconFactory.getIcon("info"));
 
         return addTo.addSubMenuEntry(entryIdentifier, label, subMenu);

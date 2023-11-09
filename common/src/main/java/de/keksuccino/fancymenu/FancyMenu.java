@@ -20,19 +20,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO Einige der currently active layouts (nur enabled) als entries zu erster Ebene von Layout Context Menu adden
-	// - Universal + Current Screen layouts kombinieren
-	// - Nur 5-8 zeigen, dann entry "... (and X more)" (nicht clickable)
-
-	//TODO FIXEN: Wenn mehr als ein Layout aktiv ist, werden Vanilla Buttons, die NICHT den Vanilla Anchor haben, in untere rechte Ecke gepackt??
-
-	//TODO FIXEN: Slider element spammt seine "list entries" in layout files (erstellt immer neue bei jedem speichern????)
-
 	//TODO WAV (und OGG??) Audio FileType Codec implementieren
 
 	//TODO ALLE UNGENUTZTEN FileTypes entfernen (ungenutzte audio und video types)
-
-	//TODO Render layout editor grid always at scale 1 (ignore game scale and UI scale)
 
 
 

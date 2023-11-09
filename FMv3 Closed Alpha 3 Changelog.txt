@@ -28,6 +28,9 @@ CHANGELOG | FANCYMENU v3.0.0 CLOSED ALPHA 3
 - Markdown headlines now add some space between them and the next line (to get more in line with default Markdown behaviour)
 - An empty line after a Markdown headline now gets ignored (to get more in line with default Markdown behaviour)
 - Progress bar elements now have a smoother progress animation
+- Universal layouts now get always loaded BEFORE normal ones, so normal layouts can override parts of universal ones
+- The grid in the layout editor now always gets rendered at the same scale, no matter what GUI scale is used
+- The 8 most recently edited layouts (normal and universal combined) now get showed in the root "Layouts" context menu in the "Customization" tab (shortcut to Layouts -> Manage -> Normal / Universal)
  
 - Added: "Update Screen" action to update/reload the current screen's customizations without reloading the whole mod
 - Added: "Set Minecraft Option" action to set the value of a Minecraft option
@@ -41,3 +44,4 @@ CHANGELOG | FANCYMENU v3.0.0 CLOSED ALPHA 3
 - Fixed: Unable to focus custom input fields via tab/arrow key navigation
 - Fixed: Resizing and moving Vanilla widgets is broken
 - Fixed: Vanilla widgets in some screens stay customized after disabling customizations/layouts
+- Fixed: Positions of Vanilla elements sometimes broken when more than one layout is enabled

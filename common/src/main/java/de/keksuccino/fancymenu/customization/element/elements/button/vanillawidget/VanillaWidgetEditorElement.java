@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.element.elements.button.vanillawid
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
-import de.keksuccino.fancymenu.customization.element.IHideableElement;
+import de.keksuccino.fancymenu.customization.element.HideableElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
@@ -21,7 +21,7 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
-public class VanillaWidgetEditorElement extends ButtonEditorElement implements IHideableElement {
+public class VanillaWidgetEditorElement extends ButtonEditorElement implements HideableElement {
 
     private ElementAnchorPoint lastAnchorPoint = null;
 
@@ -278,12 +278,12 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements I
 
     @Override
     public boolean isHidden() {
-        return ((IHideableElement)this.element).isHidden();
+        return ((HideableElement)this.element).isHidden();
     }
 
     @Override
     public void setHidden(boolean hidden) {
-        ((IHideableElement)this.element).setHidden(hidden);
+        ((HideableElement)this.element).setHidden(hidden);
         if (this.isHidden()) {
             this.resetElementStates();
         }

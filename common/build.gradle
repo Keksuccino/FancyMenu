@@ -23,6 +23,7 @@ dependencies {
     implementation "curse.maven:load-my-resources-fabric-534835:4203280"
     implementation fileTree('libs') { include '*.jar' }
     implementation 'com.github.Keksuccino:japng:0.5.2-3'
+//    implementation 'com.github.Gagravarr:VorbisJava:vorbis-java-0.8'
 }
 
 publishing {

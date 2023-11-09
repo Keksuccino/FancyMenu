@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetEditorElement;
+import de.keksuccino.fancymenu.customization.layer.ElementFactory;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.LayoutEditorWidgetRegistry;
@@ -21,12 +22,11 @@ import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.element.IHideableElement;
+import de.keksuccino.fancymenu.customization.element.HideableElement;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElementBuilder;
-import de.keksuccino.fancymenu.customization.layer.IElementFactory;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
@@ -44,7 +44,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.SaveFileScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resources.texture.ImageResourceHandler;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
@@ -58,7 +57,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
-public class LayoutEditorScreen extends Screen implements IElementFactory {
+public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -400,58 +399,68 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 
 	}
 
-	protected void renderGrid(PoseStack pose) {
+	@SuppressWarnings("all")
+	protected void renderGrid(@NotNull PoseStack pose) {
 
 		if (FancyMenu.getOptions().showLayoutEditorGrid.getValue()) {
+
+			float scale = UIBase.calculateFixedScale(1.0F);
+			int scaledWidth = (int)((float)this.width / scale);
+			int scaledHeight = (int)((float)this.height / scale);
+
+			pose.pushPose();
+			pose.scale(scale, scale, scale);
 
 			int gridSize = FancyMenu.getOptions().layoutEditorGridSize.getValue();
 			int lineThickness = 1;
 
 			//Draw centered vertical line
-			fill(pose, (this.width / 2) - 1, 0, (this.width / 2) + 1, this.height, UIBase.getUIColorTheme().layout_editor_grid_color_center.getColorInt());
+			fill(pose, (scaledWidth / 2) - 1, 0, (scaledWidth / 2) + 1, scaledHeight, UIBase.getUIColorTheme().layout_editor_grid_color_center.getColorInt());
 
 			//Draw vertical lines center -> left
-			int linesVerticalToLeftPosX = (this.width / 2) - gridSize - 1;
+			int linesVerticalToLeftPosX = (scaledWidth / 2) - gridSize - 1;
 			while (linesVerticalToLeftPosX > 0) {
 				int minY = 0;
-				int maxY = this.height;
+				int maxY = scaledHeight;
 				int maxX = linesVerticalToLeftPosX + lineThickness;
 				fill(pose, linesVerticalToLeftPosX, minY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
 				linesVerticalToLeftPosX -= gridSize;
 			}
 
 			//Draw vertical lines center -> right
-			int linesVerticalToRightPosX = (this.width / 2) + gridSize;
-			while (linesVerticalToRightPosX < this.width) {
+			int linesVerticalToRightPosX = (scaledWidth / 2) + gridSize;
+			while (linesVerticalToRightPosX < scaledWidth) {
 				int minY = 0;
-				int maxY = this.height;
+				int maxY = scaledHeight;
 				int maxX = linesVerticalToRightPosX + lineThickness;
 				fill(pose, linesVerticalToRightPosX, minY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
 				linesVerticalToRightPosX += gridSize;
 			}
 
 			//Draw centered horizontal line
-			fill(pose, 0, (this.height / 2) - 1, this.width, (this.height / 2) + 1, UIBase.getUIColorTheme().layout_editor_grid_color_center.getColorInt());
+			fill(pose, 0, (scaledHeight / 2) - 1, scaledWidth, (scaledHeight / 2) + 1, UIBase.getUIColorTheme().layout_editor_grid_color_center.getColorInt());
 
 			//Draw horizontal lines center -> top
-			int linesHorizontalToTopPosY = (this.height / 2) - gridSize - 1;
+			int linesHorizontalToTopPosY = (scaledHeight / 2) - gridSize - 1;
 			while (linesHorizontalToTopPosY > 0) {
 				int minX = 0;
-				int maxX = this.width;
+				int maxX = scaledWidth;
 				int maxY = linesHorizontalToTopPosY + lineThickness;
 				fill(pose, minX, linesHorizontalToTopPosY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
 				linesHorizontalToTopPosY -= gridSize;
 			}
 
 			//Draw horizontal lines center -> bottom
-			int linesHorizontalToBottomPosY = (this.height / 2) + gridSize;
-			while (linesHorizontalToBottomPosY < this.height) {
+			int linesHorizontalToBottomPosY = (scaledHeight / 2) + gridSize;
+			while (linesHorizontalToBottomPosY < scaledHeight) {
 				int minX = 0;
-				int maxX = this.width;
+				int maxX = scaledWidth;
 				int maxY = linesHorizontalToBottomPosY + lineThickness;
 				fill(pose, minX, linesHorizontalToBottomPosY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
 				linesHorizontalToBottomPosY += gridSize;
 			}
+
+			pose.popPose();
 
 		}
 
@@ -571,7 +580,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 		List<AbstractEditorElement> elements = new ArrayList<>();
 		for (AbstractEditorElement e : this.getAllElements()) {
 			if (e.isHovered()) {
-				if ((e instanceof IHideableElement h) && h.isHidden()) continue;
+				if ((e instanceof HideableElement h) && h.isHidden()) continue;
 				elements.add(e);
 			}
 		}
@@ -640,7 +649,7 @@ public class LayoutEditorScreen extends Screen implements IElementFactory {
 					w.editorElementRemovedOrHidden(element);
 				}
 				return true;
-			} else if (element instanceof IHideableElement hideable) {
+			} else if (element instanceof HideableElement hideable) {
 				hideable.setHidden(true);
 				return true;
 			}

@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public interface IElementStacker<E extends AbstractElement> {
+public interface ElementStacker<E extends AbstractElement> {
 
     @SuppressWarnings("all")
     public abstract void stackElements(@NotNull E element, @NotNull E stack);
@@ -25,28 +25,28 @@ public interface IElementStacker<E extends AbstractElement> {
         if (e.anchorPointElementIdentifier != null) {
             stack.anchorPointElementIdentifier = e.anchorPointElementIdentifier;
         }
-        if (e.posOffsetX != 0) {
+        if ((e.posOffsetX != 0) && (e.anchorPoint != ElementAnchorPoints.VANILLA)) {
             stack.posOffsetX = e.posOffsetX;
         }
-        if (e.posOffsetY != 0) {
+        if ((e.posOffsetY != 0) && (e.anchorPoint != ElementAnchorPoints.VANILLA)) {
             stack.posOffsetY = e.posOffsetY;
         }
-        if (e.baseWidth != 0) {
+        if ((e.baseWidth != 0) && (e.anchorPoint != ElementAnchorPoints.VANILLA)) {
             stack.baseWidth = e.baseWidth;
         }
-        if (e.baseHeight != 0) {
+        if ((e.baseHeight != 0) && (e.anchorPoint != ElementAnchorPoints.VANILLA)) {
             stack.baseHeight = e.baseHeight;
         }
-        if (e.advancedX != null) {
+        if ((e.advancedX != null) && (e.anchorPoint != ElementAnchorPoints.VANILLA)) {
             stack.advancedX = e.advancedX;
         }
-        if (e.advancedY != null) {
+        if ((e.advancedY != null) && (e.anchorPoint != ElementAnchorPoints.VANILLA)) {
             stack.advancedY = e.advancedY;
         }
-        if (e.advancedWidth != null) {
+        if ((e.advancedWidth != null) && (e.anchorPoint != ElementAnchorPoints.VANILLA)) {
             stack.advancedWidth = e.advancedWidth;
         }
-        if (e.advancedHeight != null) {
+        if ((e.advancedHeight != null) && (e.anchorPoint != ElementAnchorPoints.VANILLA)) {
             stack.advancedHeight = e.advancedHeight;
         }
         if (e.stretchX) {

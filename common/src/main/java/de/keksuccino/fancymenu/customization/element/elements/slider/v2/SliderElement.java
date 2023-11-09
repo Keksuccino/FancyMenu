@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.element.IExecutableElement;
+import de.keksuccino.fancymenu.customization.element.ExecutableElement;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
@@ -31,7 +31,7 @@ import java.util.List;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.Nullable;
 
-public class SliderElement extends AbstractElement implements IExecutableElement {
+public class SliderElement extends AbstractElement implements ExecutableElement {
 
     public static final String VALUE_PLACEHOLDER = "$$value";
 

@@ -1,15 +1,13 @@
 package de.keksuccino.fancymenu.customization.deep;
 
-import de.keksuccino.fancymenu.customization.element.IHideableElement;
-import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
-import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
+import de.keksuccino.fancymenu.customization.element.HideableElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.element.editor.EditorElementSettings;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class AbstractDeepEditorElement extends AbstractEditorElement implements IHideableElement {
+public abstract class AbstractDeepEditorElement extends AbstractEditorElement implements HideableElement {
 
     public AbstractDeepEditorElement(@NotNull AbstractDeepElement element, @NotNull LayoutEditorScreen editor, @Nullable EditorElementSettings settings) {
         super(element, editor, settings);
@@ -71,12 +69,12 @@ public abstract class AbstractDeepEditorElement extends AbstractEditorElement im
 
     @Override
     public boolean isHidden() {
-        return ((IHideableElement)this.element).isHidden();
+        return ((HideableElement)this.element).isHidden();
     }
 
     @Override
     public void setHidden(boolean hidden) {
-        ((IHideableElement)this.element).setHidden(hidden);
+        ((HideableElement)this.element).setHidden(hidden);
         if (this.isHidden()) {
             this.resetElementStates();
         }
