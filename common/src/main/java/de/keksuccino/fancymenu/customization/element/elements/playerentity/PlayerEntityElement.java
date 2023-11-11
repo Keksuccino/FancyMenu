@@ -24,8 +24,8 @@ public class PlayerEntityElement extends AbstractElement {
     
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public final PlayerEntityElementRenderer normalRenderer = new PlayerEntityElementRenderer(false);
-    public final PlayerEntityElementRenderer slimRenderer = new PlayerEntityElementRenderer(true);
+    public final PlayerEntityElementRenderer normalRenderer = buildEntityRenderer(false);
+    public final PlayerEntityElementRenderer slimRenderer = buildEntityRenderer(true);
 
     public volatile boolean copyClientPlayer = false;
     @NotNull
@@ -82,6 +82,14 @@ public class PlayerEntityElement extends AbstractElement {
 
     public PlayerEntityElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+    }
+
+    @Nullable
+    protected static PlayerEntityElementRenderer buildEntityRenderer(boolean slim) {
+        try {
+            return new PlayerEntityElementRenderer(slim);
+        } catch (Exception ignored) {}
+        return null;
     }
 
     @Override
@@ -241,12 +249,14 @@ public class PlayerEntityElement extends AbstractElement {
     }
 
     public void setShowPlayerName(boolean showName) {
+        if ((this.normalRenderer == null) || (this.slimRenderer == null)) return;
         this.showPlayerName = showName;
         this.normalRenderer.properties.showDisplayName = showName;
         this.slimRenderer.properties.showDisplayName = showName;
     }
 
     public void setHasParrotOnShoulder(boolean hasParrot, boolean onLeftShoulder) {
+        if ((this.normalRenderer == null) || (this.slimRenderer == null)) return;
         this.hasParrotOnShoulder = hasParrot;
         this.parrotOnLeftShoulder = onLeftShoulder;
         this.normalRenderer.properties.hasParrotOnShoulder = hasParrot;
@@ -256,12 +266,14 @@ public class PlayerEntityElement extends AbstractElement {
     }
 
     public void setCrouching(boolean crouching) {
+        if ((this.normalRenderer == null) || (this.slimRenderer == null)) return;
         this.crouching = crouching;
         this.normalRenderer.properties.crouching = crouching;
         this.slimRenderer.properties.crouching = crouching;
     }
 
     public void setIsBaby(boolean isBaby) {
+        if ((this.normalRenderer == null) || (this.slimRenderer == null)) return;
         this.isBaby = isBaby;
         this.normalRenderer.properties.isBaby = isBaby;
         this.slimRenderer.properties.isBaby = isBaby;
@@ -284,6 +296,7 @@ public class PlayerEntityElement extends AbstractElement {
     }
 
     protected void updateSkinAndCape() {
+        if ((this.normalRenderer == null) || (this.slimRenderer == null)) return;
         if (this.copyClientPlayer || this.autoSkin) {
             this.slim = (this.skinTextureSupplier == null) || this.skinTextureSupplier.isSlimPlayerNameSkin();
         }
@@ -294,6 +307,7 @@ public class PlayerEntityElement extends AbstractElement {
     }
 
     protected void updatePlayerDisplayName() {
+        if ((this.normalRenderer == null) || (this.slimRenderer == null)) return;
         this.normalRenderer.properties.displayName = buildComponent(this.playerName);
         this.slimRenderer.properties.displayName = buildComponent(this.playerName);
     }

@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.resources.texture;
 
 import com.mojang.blaze3d.platform.NativeImage;
-
 import java.io.*;
 import java.util.Objects;
 import java.util.Optional;

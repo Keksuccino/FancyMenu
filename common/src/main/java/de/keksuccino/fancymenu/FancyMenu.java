@@ -32,8 +32,6 @@ public class FancyMenu {
 
 	//TODO Make resources.fancymenu.net redirect to the wiki page for ResourceLocations
 
-	//TODO Bei Resource Reload (MC Resource Pack changed, etc.) alle resources per ResourceHandler#reload() reloaden
-
 	//TODO Layout Listener System
 	// - Auf Layout Ebene (rechtsklick editor back -> Listeners)
 	// - Jeder Listener hat eine ExecutableBlock instanz, die er ausführen kann

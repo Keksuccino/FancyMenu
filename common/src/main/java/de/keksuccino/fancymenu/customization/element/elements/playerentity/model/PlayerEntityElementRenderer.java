@@ -38,8 +38,8 @@ import org.joml.Matrix4f;
 @SuppressWarnings("all")
 public class PlayerEntityElementRenderer extends PlayerRenderer {
 
-    private static final EntityModelSet ENTITY_MODEL_SET = Minecraft.getInstance().getEntityModels();
-    private static final EntityRendererProvider.Context RENDER_CONTEXT = new EntityRendererProvider.Context(Minecraft.getInstance().getEntityRenderDispatcher(), Minecraft.getInstance().getItemRenderer(), Minecraft.getInstance().getBlockRenderer(), Minecraft.getInstance().getEntityRenderDispatcher().getItemInHandRenderer(), Minecraft.getInstance().getResourceManager(), ENTITY_MODEL_SET, Minecraft.getInstance().font);
+    public static final EntityModelSet ENTITY_MODEL_SET = Minecraft.getInstance().getEntityModels();
+    public static final EntityRendererProvider.Context RENDER_CONTEXT = new EntityRendererProvider.Context(Minecraft.getInstance().getEntityRenderDispatcher(), Minecraft.getInstance().getItemRenderer(), Minecraft.getInstance().getBlockRenderer(), Minecraft.getInstance().getEntityRenderDispatcher().getItemInHandRenderer(), Minecraft.getInstance().getResourceManager(), ENTITY_MODEL_SET, Minecraft.getInstance().font);
 
     public final PlayerEntityProperties properties;
     public final PlayerEntityModel playerModel;
@@ -51,20 +51,6 @@ public class PlayerEntityElementRenderer extends PlayerRenderer {
         this.addLayer(new PlayerEntityShoulderParrotLayer(this, RENDER_CONTEXT.getModelSet(), this.properties));
         this.addLayer(new PlayerEntityCapeLayer(this, this.properties));
     }
-
-//    public PlayerEntityItemRenderer(EntityRendererProvider.Context context, boolean slim) {
-//        super(context, new PlayerModel<>(context.bakeLayer(slim ? ModelLayers.PLAYER_SLIM : ModelLayers.PLAYER), slim), 0.5F);
-//        this.addLayer(new HumanoidArmorLayer<>(this, new HumanoidModel(context.bakeLayer(slim ? ModelLayers.PLAYER_SLIM_INNER_ARMOR : ModelLayers.PLAYER_INNER_ARMOR)), new HumanoidModel(context.bakeLayer(slim ? ModelLayers.PLAYER_SLIM_OUTER_ARMOR : ModelLayers.PLAYER_OUTER_ARMOR))));
-//        this.addLayer(new PlayerItemInHandLayer<>(this, context.getItemInHandRenderer()));
-//        this.addLayer(new ArrowLayer<>(context, this));
-//        this.addLayer(new Deadmau5EarsLayer(this));
-//        this.addLayer(new CapeLayer(this));
-//        this.addLayer(new CustomHeadLayer<>(this, context.getModelSet(), context.getItemInHandRenderer()));
-//        this.addLayer(new ElytraLayer<>(this, context.getModelSet()));
-//        this.addLayer(new ParrotOnShoulderLayer<>(this, context.getModelSet()));
-//        this.addLayer(new SpinAttackEffectLayer<>(this, context.getModelSet()));
-//        this.addLayer(new BeeStingerLayer<>(this));
-//    }
 
     public void renderPlayerEntityItem(double d11, double d12, double d13, float f11, float f12, PoseStack matrix, MultiBufferSource bufferSource, int i11) {
         try {
