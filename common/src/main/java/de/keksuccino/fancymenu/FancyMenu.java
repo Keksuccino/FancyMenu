@@ -24,6 +24,9 @@ public class FancyMenu {
 
 	//TODO ALLE UNGENUTZTEN FileTypes entfernen (ungenutzte audio und video types)
 
+	//TODO Alle OGG und WAV audio klassen in separate mod (Melody) packen
+	// - Auudio wird nicht mehr weiter entwickelt
+	// - Melody wird mandatory dependency von FMv3
 
 
 
@@ -55,12 +58,6 @@ public class FancyMenu {
 	//TODO split Debug overlay into toggleable groups
 
 	//TODO Keep context menus open when opening layout in system text editor, etc.
-
-	//TODO Neue audio lib schreiben
-	// - Melody
-	// - Nutzt separate audio lib (nach lib suchen, die OGG unterstützt)
-	// - Alle MC audio channel supporten
-	// - Sollte nahtlos mit Channel volume eigenes volume ändern
 
 	//TODO Simple Video Renderer schreiben
 	// - Nach "Video Frame InputStream" googlen (audio evtl. separat getten?)

@@ -123,9 +123,8 @@ public class CursorHandler {
             ByteBuffer stbBuffer = null;
             try {
                 Objects.requireNonNull(texture);
-                long start = System.currentTimeMillis();
                 //Wait for the texture to load (Timeout = 5000ms)
-                while(!texture.isReady() && ((start + 5000) > System.currentTimeMillis())) {}
+                texture.waitForReady(5000);
                 if (texture.isReady()) {
                     in = Objects.requireNonNull(texture.open());
                     texResourceBuffer = TextureUtil.readResource(in);
