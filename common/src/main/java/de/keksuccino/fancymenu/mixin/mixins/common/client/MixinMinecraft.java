@@ -5,10 +5,18 @@ import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.*;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
+import de.keksuccino.fancymenu.util.resources.ResourceHandlers;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.server.packs.resources.ReloadableResourceManager;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
+import net.minecraft.util.profiling.ProfilerFiller;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -23,14 +31,18 @@ import net.minecraft.client.Minecraft;
 @Mixin(value = Minecraft.class)
 public class MixinMinecraft {
 
-	@Shadow @Nullable public Screen screen;
+	@Unique private static final String DUMMY_RESOURCE_RELOAD_LISTENER_RETURN_VALUE_FANCYMENU = "PREPARE RETURN VALUE";
+	@Unique private static final Logger LOGGER_FANCYMENU = LogManager.getLogger();
 
-	@Unique private boolean lateClientInitDone = false;
+	@Unique private static boolean reloadListenerRegisteredFancyMenu = false;
+	@Unique private boolean lateClientInitDoneFancyMenu = false;
+
+	@Shadow @Nullable public Screen screen;
 
 	@Inject(method = "setOverlay", at = @At("HEAD"))
 	private void beforeSetOverlayFancyMenu(Overlay overlay, CallbackInfo info) {
-		if (!this.lateClientInitDone) {
-			this.lateClientInitDone = true;
+		if (!this.lateClientInitDoneFancyMenu) {
+			this.lateClientInitDoneFancyMenu = true;
 			FancyMenu.lateClientInit();
 		}
 	}
@@ -138,5 +150,27 @@ public class MixinMinecraft {
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(this.screen));
 		}
 	}
-	
+
+	//This is a hacky way to get Minecraft to register FancyMenu's reload listener as early as possible in the Minecraft.class constructor
+	@Inject(method = "resizeDisplay", at = @At("HEAD"))
+	private void registerResourceReloadListenerInResizeDisplayFancyMenu(CallbackInfo info) {
+		if (!reloadListenerRegisteredFancyMenu) {
+			reloadListenerRegisteredFancyMenu = true;
+			Minecraft mc = (Minecraft)((Object)this);
+			LOGGER_FANCYMENU.info("[FANCYMENU] Registering resource reload listener..");
+			if (mc.getResourceManager() instanceof ReloadableResourceManager r) {
+				r.registerReloadListener(new SimplePreparableReloadListener<String>() {
+					@Override
+					protected @NotNull String prepare(@NotNull ResourceManager var1, @NotNull ProfilerFiller var2) {
+						return DUMMY_RESOURCE_RELOAD_LISTENER_RETURN_VALUE_FANCYMENU;
+					}
+					@Override
+					protected void apply(@NotNull String prepareReturnValue, @NotNull ResourceManager var2, @NotNull ProfilerFiller var3) {
+						ResourceHandlers.reloadAll();
+					}
+				});
+			}
+		}
+	}
+
 }

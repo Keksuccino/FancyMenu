@@ -29,7 +29,6 @@
     "client.MixinConnectScreen",
     "client.MixinContainerEventHandler",
     "client.MixinGenericDirtMessageScreen",
-    "client.MixinGui",
     "client.MixinImageButton",
     "client.MixinLevelLoadingScreen",
     "client.MixinLevelStorageAccess",

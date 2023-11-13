@@ -20,6 +20,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO AudioResourceHandler reloaden, wenn in MC sound einstellungen stuff geändert wird (3D audio, audio device, etc.)
+
 	//TODO WAV (und OGG??) Audio FileType Codec implementieren
 
 	//TODO ALLE UNGENUTZTEN FileTypes entfernen (ungenutzte audio und video types)

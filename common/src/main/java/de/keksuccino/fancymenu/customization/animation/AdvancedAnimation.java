@@ -536,6 +536,11 @@ public class AdvancedAnimation implements IAnimationRenderer, RenderableResource
 	}
 
 	@Override
+	public boolean isPaused() {
+		return false;
+	}
+
+	@Override
 	public void stop() {
 		this.playing = false;
 		this.started = false;

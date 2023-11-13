@@ -1,7 +1,11 @@
 package de.keksuccino.fancymenu.util.resources.audio.ogg.base;
 
 import de.keksuccino.fancymenu.util.resources.audio.AudioClip;
+import de.keksuccino.fancymenu.util.resources.audio.MinecraftSoundSettingsObserver;
+import net.minecraft.client.Minecraft;
 import net.minecraft.sounds.SoundSource;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.openal.AL10;
@@ -10,15 +14,13 @@ import java.util.Objects;
 @SuppressWarnings("unused")
 public class OggAudioClip implements AudioClip {
 
-    //TODO Implement SoundSource handling
-    //TODO Implement SoundSource handling
-    //TODO Implement SoundSource handling
-    //TODO Implement SoundSource handling
-    //TODO Implement SoundSource handling
+    private static final Logger LOGGER = LogManager.getLogger();
 
     protected final int source;
     @NotNull
-    protected SoundSource soundCategory = SoundSource.MASTER;
+    protected SoundSource soundChannel = SoundSource.MASTER;
+    protected float volume = 1.0F;
+    protected long volumeListenerId;
     protected volatile boolean closed = false;
 
     /**
@@ -50,6 +52,10 @@ public class OggAudioClip implements AudioClip {
 
     protected OggAudioClip(int source) {
         this.source = source;
+        this.volumeListenerId = MinecraftSoundSettingsObserver.registerVolumeListener((soundSource, aFloat) -> {
+            if (soundSource == this.soundChannel) this.updateVolume();
+        });
+        this.updateVolume();
     }
 
     public int getState() {
@@ -60,14 +66,17 @@ public class OggAudioClip implements AudioClip {
     }
 
     /**
-     * When the audio is not playing, this will start the audio.<br>
+     * If the audio is not playing, this will START the audio.<br>
+     * If the audio is paused, this will RESUME the audio.<br>
      * If the audio is playing, this will RESTART the audio.
      */
+    @Override
     public void play() {
         if (this.closed) return;
         if (!this.isPlaying()) AL10.alSourcePlay(this.source);
     }
 
+    @Override
     public boolean isPlaying() {
         return this.getState() == AL10.AL_PLAYING;
     }
@@ -76,6 +85,7 @@ public class OggAudioClip implements AudioClip {
      * Will stop the audio.<br>
      * The audio will start at the beginning the next time it starts playing via {@link OggAudioClip#play()}.
      */
+    @Override
     public void stop() {
         if (this.closed) return;
         if (!this.isStopped()) {
@@ -92,6 +102,7 @@ public class OggAudioClip implements AudioClip {
      * Will pause the audio if it is currently playing and preserves its current state.<br>
      * To unpause the audio, use {@link OggAudioClip#resume()}.
      */
+    @Override
     public void pause() {
         if (this.closed) return;
         if (this.isPlaying()) {
@@ -103,6 +114,7 @@ public class OggAudioClip implements AudioClip {
     /**
      * Will resume the audio if it is currently paused.
      */
+    @Override
     public void resume() {
         if (this.closed) return;
         if (this.isPaused()) {
@@ -128,35 +140,41 @@ public class OggAudioClip implements AudioClip {
         return loop;
     }
 
-    /**
-     * Set the audio volume.<br><br>
-     *
-     * The audio's ACTUAL volume is a sub-volume of Minecraft's {@link SoundSource#MASTER} volume, so if this audio's volume is 1.0F and
-     * Minecraft's {@link SoundSource#MASTER} volume is at 0.5F, this audio's actual volume is also 0.5F,
-     * because {@link SoundSource#MASTER} is at 50%, so this audio is at 50% of 1.0F.
-     *
-     * @param volume Float between 0.0F and 1.0F.
-     */
+    @Override
     public void setVolume(float volume) {
         if (this.closed) return;
-        AL10.alSourcef(this.source, AL10.AL_GAIN, volume);
+        if (volume > 1.0F) volume = 1.0F;
+        if (volume < 0.0F) volume = 0.0F;
+        this.volume = volume;
+        float actualVolume = this.volume;
+        if (this.soundChannel != SoundSource.MASTER) {
+            float soundSourceVolume = Minecraft.getInstance().options.getSoundSourceVolume(this.soundChannel);
+            actualVolume = actualVolume * soundSourceVolume; //Calculate percentage of volume by this audio's sound channel
+        }
+        AL10.alSourcef(this.source, AL10.AL_GAIN, Math.min(1.0F, Math.max(0.0F, actualVolume)));
         OpenALUtils.checkAndPrintOpenAlError("Set OpenAL audio volume");
     }
 
-    /**
-     * Get the audio volume.<br><br>
-     *
-     * The audio's ACTUAL volume is a sub-volume of Minecraft's {@link SoundSource#MASTER} volume, so if this audio's volume is 1.0F and
-     * Minecraft's {@link SoundSource#MASTER} volume is at 0.5F, this audio's actual volume is also 0.5F,
-     * because {@link SoundSource#MASTER} is at 50%, so this audio is at 50% of 1.0F.
-     *
-     * @return Float between 0.0F and 1.0F.
-     */
+    @Override
     public float getVolume() {
         if (this.closed) return 0.0F;
-        float vol = AL10.alGetSourcef(this.source, AL10.AL_GAIN);
-        OpenALUtils.checkAndPrintOpenAlError("Get OpenAL audio volume");
-        return vol;
+        return this.volume;
+    }
+
+    public void updateVolume() {
+        this.setVolume(this.volume);
+    }
+
+    @Override
+    public void setSoundChannel(@NotNull SoundSource channel) {
+        this.soundChannel = Objects.requireNonNull(channel);
+        this.updateVolume();
+    }
+
+    @Override
+    @NotNull
+    public SoundSource getSoundChannel() {
+        return this.soundChannel;
     }
 
     /**
@@ -176,6 +194,7 @@ public class OggAudioClip implements AudioClip {
     public void close() {
         if (!this.closed) {
             this.closed = true;
+            MinecraftSoundSettingsObserver.unregisterVolumeListener(this.volumeListenerId);
             if (this.isLoadedInOpenAL()) {
                 //Can't call stop(), because already closed
                 AL10.alSourceStop(this.source);
@@ -186,6 +205,7 @@ public class OggAudioClip implements AudioClip {
         }
     }
 
+    @Override
     public boolean isClosed() {
         return this.closed;
     }

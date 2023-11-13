@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.resources.audio.ogg.base.OggAudioClip;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -35,6 +36,7 @@ public class OggAudio implements IAudio {
     protected ResourceLocation sourceLocation;
     protected File sourceFile;
     protected String sourceURL;
+    protected volatile boolean decoded = false;
     protected volatile boolean closed = false;
 
     @NotNull
@@ -152,6 +154,7 @@ public class OggAudio implements IAudio {
                 OggAudioBuffer audioBuffer = new OggAudioBuffer(byteBuffer, stream.getFormat());
                 audio.audioBuffer = audioBuffer;
                 clip.setBuffer(audioBuffer);
+                audio.decoded = true;
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to read OGG audio: " + name, ex);
             }
@@ -187,19 +190,25 @@ public class OggAudio implements IAudio {
     }
 
     @Override
+    public boolean isPlaying() {
+        OggAudioClip cached = this.clip;
+        return (cached != null) && cached.isPlaying();
+    }
+
+    @Override
     public void pause() {
         this.forClip(OggAudioClip::pause);
     }
 
     @Override
-    public void stop() {
-        this.forClip(OggAudioClip::stop);
+    public boolean isPaused() {
+        OggAudioClip cached = this.clip;
+        return (cached != null) && cached.isPaused();
     }
 
     @Override
-    public boolean isPlaying() {
-        OggAudioClip cached = this.clip;
-        return (cached != null) && cached.isPlaying();
+    public void stop() {
+        this.forClip(OggAudioClip::stop);
     }
 
     @Override
@@ -213,6 +222,16 @@ public class OggAudio implements IAudio {
         return (cached != null) ? cached.getVolume() : 0.0F;
     }
 
+    public void setSoundChannel(@NotNull SoundSource channel) {
+        this.forClip(oggAudioClip -> oggAudioClip.setSoundChannel(channel));
+    }
+
+    @NotNull
+    public SoundSource getSoundChannel() {
+        OggAudioClip cached = this.clip;
+        return (cached != null) ? cached.getSoundChannel() : SoundSource.MASTER;
+    }
+
     @Override
     public @Nullable InputStream open() throws IOException {
         if (this.sourceURL != null) return WebUtils.openResourceStream(this.sourceURL);
@@ -223,7 +242,7 @@ public class OggAudio implements IAudio {
 
     @Override
     public boolean isReady() {
-        return !this.closed && (this.clip != null);
+        return !this.closed && this.decoded && (this.clip != null);
     }
 
     public boolean isClipLoaded() {
@@ -238,16 +257,17 @@ public class OggAudio implements IAudio {
             OggAudioClip cachedClip = this.clip;
             if (cachedClip != null) cachedClip.close();
         } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to close audio clip!", ex);
+            LOGGER.error("[FANCYMENU] Failed to close OGG audio clip!", ex);
         }
         this.clip = null;
         try {
             OggAudioBuffer cachedBuffer = this.audioBuffer;
             if (cachedBuffer != null) cachedBuffer.delete();
         } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to delete audio buffer!", ex);
+            LOGGER.error("[FANCYMENU] Failed to delete OGG audio buffer!", ex);
         }
         this.audioBuffer = null;
+        this.decoded = false;
     }
 
     @Override

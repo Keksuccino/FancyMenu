@@ -6,6 +6,8 @@ import de.keksuccino.fancymenu.util.file.type.FileTypeRegistry;
 import de.keksuccino.fancymenu.util.resources.ResourceSource;
 import de.keksuccino.fancymenu.util.resources.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resources.audio.IAudio;
+import de.keksuccino.fancymenu.util.resources.audio.ogg.OggAudio;
+import de.keksuccino.fancymenu.util.resources.audio.wav.WavAudio;
 import de.keksuccino.fancymenu.util.resources.text.IText;
 import de.keksuccino.fancymenu.util.resources.text.PlainText;
 import de.keksuccino.fancymenu.util.resources.texture.*;
@@ -45,10 +47,12 @@ public class FileTypes {
             FileCodec.advanced(ITexture.class, ApngTexture::of, ApngTexture::location, ApngTexture::local, ApngTexture::web),
             "image/apng", "apng").setCustomDisplayName(Component.translatable("fancymenu.file_types.apng"));
 
-    //TODO implement audio codecs (and remove file types that have no codec)
-    public static final AudioFileType OGG_AUDIO = new AudioFileType(FileCodec.basic(IAudio.class, consumes -> null, consumes -> null), "audio/ogg", "ogg");
-    public static final AudioFileType MP3_AUDIO = new AudioFileType(FileCodec.basic(IAudio.class, consumes -> null, consumes -> null), "audio/mpeg", "mp3");
-    public static final AudioFileType WAV_AUDIO = new AudioFileType(FileCodec.basic(IAudio.class, consumes -> null, consumes -> null), "audio/wav", "wav");
+    public static final AudioFileType OGG_AUDIO = new AudioFileType(
+            FileCodec.advanced(IAudio.class, OggAudio::of, OggAudio::location, OggAudio::local, OggAudio::web),
+            "audio/ogg", "ogg");
+    public static final AudioFileType WAV_AUDIO = new AudioFileType(
+            FileCodec.advanced(IAudio.class, WavAudio::of, WavAudio::location, WavAudio::local, WavAudio::web),
+            "audio/wav", "wav");
 
     //TODO implement video codecs (and remove file types that have no codec)
     public static final VideoFileType MPEG_VIDEO = new VideoFileType(FileCodec.basic(IVideo.class, consumes -> null, consumes -> null), "video/mpeg", "mpeg", "mpg");
@@ -100,7 +104,6 @@ public class FileTypes {
         FileTypeRegistry.register("apng", APNG_IMAGE);
 
         FileTypeRegistry.register("ogg", OGG_AUDIO);
-        FileTypeRegistry.register("mp3", MP3_AUDIO);
         FileTypeRegistry.register("wav", WAV_AUDIO);
 
         FileTypeRegistry.register("mpeg", MPEG_VIDEO);

@@ -7,12 +7,13 @@ import net.minecraft.client.gui.components.TabOrderedElement;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.navigation.*;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Vector2i;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import org.spongepowered.asm.mixin.Shadow;
-import javax.annotation.Nullable;
+import org.spongepowered.asm.mixin.Unique;
 import java.util.*;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
@@ -108,6 +109,7 @@ public interface MixinContainerEventHandler {
 
     }
 
+    @Unique
     default ComponentPath nextFocusPathVaguelyInDirectionFancyMenu(ScreenRectangle $$0, ScreenDirection $$1, GuiEventListener $$2, FocusNavigationEvent $$3) {
 
         ScreenAxis $$4 = $$1.getAxis();

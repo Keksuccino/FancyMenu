@@ -355,6 +355,11 @@ public class ApngTexture implements ITexture, PlayableResource {
     }
 
     @Override
+    public boolean isPaused() {
+        return false;
+    }
+
+    @Override
     public void stop() {
         this.reset();
     }
