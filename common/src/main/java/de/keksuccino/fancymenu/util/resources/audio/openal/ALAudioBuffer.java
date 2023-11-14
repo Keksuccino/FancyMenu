@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util.resources.audio.ogg.base;
+package de.keksuccino.fancymenu.util.resources.audio.openal;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -7,14 +7,14 @@ import javax.sound.sampled.AudioFormat;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
-public class OggAudioBuffer {
+public class ALAudioBuffer {
 
     private ByteBuffer dataBuffer;
     private final AudioFormat audioFormat;
     private boolean bufferPrepared;
     private int source;
 
-    public OggAudioBuffer(@NotNull ByteBuffer dataBuffer, @NotNull AudioFormat audioFormat) {
+    public ALAudioBuffer(@NotNull ByteBuffer dataBuffer, @NotNull AudioFormat audioFormat) {
         this.dataBuffer = Objects.requireNonNull(dataBuffer);
         this.audioFormat = Objects.requireNonNull(audioFormat);
     }
@@ -27,12 +27,12 @@ public class OggAudioBuffer {
     public boolean prepare() {
         if (!this.bufferPrepared) {
             this.bufferPrepared = true;
-            int audioFormat = OpenALUtils.getAudioFormatAsOpenAL(this.audioFormat);
+            int audioFormat = ALUtils.getAudioFormatAsOpenAL(this.audioFormat);
             int[] bufferSource = new int[1];
             AL10.alGenBuffers(bufferSource);
-            if (OpenALUtils.checkAndPrintOpenAlError("Generate OpenAL buffer")) return false;
+            if (ALUtils.checkAndPrintOpenAlError("Generate OpenAL buffer")) return false;
             AL10.alBufferData(bufferSource[0], audioFormat, this.dataBuffer, (int)this.audioFormat.getSampleRate());
-            if (OpenALUtils.checkAndPrintOpenAlError("Set OpenAL buffer data")) return false;
+            if (ALUtils.checkAndPrintOpenAlError("Set OpenAL buffer data")) return false;
             this.source = bufferSource[0];
             this.dataBuffer = null;
         }
@@ -42,7 +42,7 @@ public class OggAudioBuffer {
     public void delete() {
         if (this.isLoadedInOpenAL()) {
             AL10.alDeleteBuffers(new int[]{this.source});
-            OpenALUtils.checkAndPrintOpenAlError("Delete OpenAL buffers");
+            ALUtils.checkAndPrintOpenAlError("Delete OpenAL buffers");
         }
         this.bufferPrepared = false;
     }

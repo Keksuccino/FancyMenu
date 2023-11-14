@@ -20,6 +20,8 @@
     "client.IMixinReceivingLevelScreen",
     "client.IMixinScreen",
     "client.IMixinServerList",
+    "client.IMixinSoundEngine",
+    "client.IMixinSoundManager",
     "client.IMixinSuggestionsList",
     "client.MixinAbstractButton",
     "client.MixinAbstractContainerEventHandler",

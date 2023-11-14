@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util.resources.audio.wav;
+package de.keksuccino.fancymenu.util.resources.audio.wav_javax;
 
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.resources.audio.AudioClip;
@@ -15,8 +15,11 @@ import javax.sound.sampled.Clip;
 import javax.sound.sampled.FloatControl;
 import java.util.Objects;
 
+/**
+ * Unused WAV audio class that uses Java's default audio handling libraries instead of OpenAL.
+ */
 @SuppressWarnings("unused")
-public class WavAudioClip implements AudioClip {
+public class JavaxWavAudioClip implements AudioClip {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -33,15 +36,15 @@ public class WavAudioClip implements AudioClip {
     protected volatile boolean closed = false;
 
     /**
-     * Creates a new {@link WavAudioClip} with the given {@link AudioInputStream}.<br>
+     * Creates a new {@link JavaxWavAudioClip} with the given {@link AudioInputStream}.<br>
      * The given {@link AudioInputStream} gets closed at the end.
      *
      * @param dataStream The audio data stream. The whole stream gets loaded into the clip.
      */
     @Nullable
-    public static WavAudioClip of(@NotNull AudioInputStream dataStream) {
+    public static JavaxWavAudioClip of(@NotNull AudioInputStream dataStream) {
         Objects.requireNonNull(dataStream);
-        WavAudioClip clip = WavAudioClip.create();
+        JavaxWavAudioClip clip = JavaxWavAudioClip.create();
         if (clip != null) {
             try {
                 clip.setStream(dataStream);
@@ -57,23 +60,23 @@ public class WavAudioClip implements AudioClip {
     }
 
     /**
-     * Creates a new {@link WavAudioClip}.<br>
+     * Creates a new {@link JavaxWavAudioClip}.<br>
      */
     @Nullable
-    public static WavAudioClip create() {
+    public static JavaxWavAudioClip create() {
         Clip clip = null;
         try {
             clip = AudioSystem.getClip();
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to create WavAudioClip!", ex);
         }
-        return (clip == null) ? null : new WavAudioClip(clip);
+        return (clip == null) ? null : new JavaxWavAudioClip(clip);
     }
 
-    protected WavAudioClip(@NotNull Clip clip) {
+    protected JavaxWavAudioClip(@NotNull Clip clip) {
         this.clip = clip;
         this.volumeListenerId = MinecraftSoundSettingsObserver.registerVolumeListener((soundSource, aFloat) -> {
-            if (soundSource == this.soundChannel) this.updateVolume();
+            if ((soundSource == SoundSource.MASTER) || (soundSource == this.soundChannel)) this.updateVolume();
         });
         this.updateVolume();
     }
@@ -89,9 +92,8 @@ public class WavAudioClip implements AudioClip {
         if (this.paused) {
             this.resume();
         } else {
-            if (this.isPlaying()) {
-                this.stop();
-            }
+            this.clip.flush();
+            this.clip.setMicrosecondPosition(0L);
             this.clip.start();
         }
     }
@@ -103,7 +105,7 @@ public class WavAudioClip implements AudioClip {
 
     /**
      * Will stop the audio.<br>
-     * The audio will start at the beginning the next time it starts playing via {@link WavAudioClip#play()}.
+     * The audio will start at the beginning the next time it starts playing via {@link JavaxWavAudioClip#play()}.
      */
     @Override
     public void stop() {
@@ -115,7 +117,7 @@ public class WavAudioClip implements AudioClip {
 
     /**
      * Will pause the audio if it is currently playing and preserves its current state.<br>
-     * To unpause the audio, use {@link WavAudioClip#resume()}.
+     * To unpause the audio, use {@link JavaxWavAudioClip#resume()}.
      */
     @Override
     public void pause() {
@@ -135,6 +137,7 @@ public class WavAudioClip implements AudioClip {
         if (this.closed) return;
         if (this.paused) {
             this.paused = false;
+            this.clip.flush();
             this.clip.setMicrosecondPosition(this.pauseMicrosecondPosition);
             this.clip.start();
         }
@@ -165,14 +168,16 @@ public class WavAudioClip implements AudioClip {
         if (volume > 1.0F) volume = 1.0F;
         if (volume < 0.0F) volume = 0.0F;
         this.volume = volume;
-        float actualVolume = this.volume;
-        if (this.soundChannel != SoundSource.MASTER) {
-            float soundSourceVolume = Minecraft.getInstance().options.getSoundSourceVolume(this.soundChannel);
-            actualVolume = actualVolume * soundSourceVolume; //Calculate percentage of volume by this audio's sound channel
+        if (this.isJavaxClipOpen()) {
+            float actualVolume = this.volume;
+            if (this.soundChannel != SoundSource.MASTER) {
+                float soundSourceVolume = Minecraft.getInstance().options.getSoundSourceVolume(this.soundChannel);
+                actualVolume = actualVolume * soundSourceVolume; //Calculate percentage of volume by this audio's sound channel
+            }
+            float masterVolume = Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MASTER);
+            actualVolume = actualVolume * masterVolume; //Calculate percentage of volume based on Minecraft's MASTER channel
+            this._setVolume(Math.min(1.0F, Math.max(0.0F, actualVolume)));
         }
-        float masterVolume = Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MASTER);
-        actualVolume = actualVolume * masterVolume; //Calculate percentage of volume based on Minecraft's MASTER channel
-        this._setVolume(Math.min(1.0F, Math.max(0.0F, actualVolume)));
     }
 
     protected void _setVolume(float volume) {
@@ -181,12 +186,9 @@ public class WavAudioClip implements AudioClip {
             if (this.isJavaxClipOpen()) {
                 if (this.clip.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
                     FloatControl control = (FloatControl)this.clip.getControl(FloatControl.Type.MASTER_GAIN);
-//                    int gain = (int)((float)((int)control.getMinimum()) + (control.getMaximum() - control.getMinimum()) / 100.0F * (float)percentage);
-//                    control.setValue((float)gain);
+                    volume = 20f * (float) Math.log10(volume); //Convert 0.0-1.0F percentage to decibels
                     if (volume > control.getMaximum()) volume = control.getMaximum();
                     if (volume < control.getMinimum()) volume = control.getMinimum();
-                    //TODO remove debug
-                    LOGGER.info("########### SETTING WAV VOLUME: " + volume);
                     control.setValue(volume);
                 } else {
                     this.canHandleVolume = false;
@@ -234,6 +236,7 @@ public class WavAudioClip implements AudioClip {
         if (!this.open) {
             this.clip.open(Objects.requireNonNull(dataStream));
             this.open = true;
+            this.updateVolume();
         } else {
             throw new IllegalStateException("WavAudioClip audio data stream already set!");
         }

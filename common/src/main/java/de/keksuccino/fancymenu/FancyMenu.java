@@ -20,11 +20,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO AudioResourceHandler reloaden, wenn in MC sound einstellungen stuff geändert wird (3D audio, audio device, etc.)
-
-	//TODO WAV (und OGG??) Audio FileType Codec implementieren
-
-	//TODO ALLE UNGENUTZTEN FileTypes entfernen (ungenutzte audio und video types)
+	//TODO ALLE UNGENUTZTEN FileTypes entfernen (ungenutzte video types)
 
 	//TODO Alle OGG und WAV audio klassen in separate mod (Melody) packen
 	// - Auudio wird nicht mehr weiter entwickelt
@@ -32,6 +28,7 @@ public class FancyMenu {
 
 
 
+	//TODO Animations deprecaten! APNG kann als Alternative genutzt werden (und später vllt auch Videos)
 
 	//TODO Make FMv3 wiki accessible via docs.fancymenu.net
 
@@ -64,8 +61,6 @@ public class FancyMenu {
 	//TODO Simple Video Renderer schreiben
 	// - Nach "Video Frame InputStream" googlen (audio evtl. separat getten?)
 	// - Evtl. mit Java-eigenen libs arbeiten
-
-	//TODO Animations rewriten
 
 	//TODO FIXEN: Neues element wird bei last mouse right-click pos geaddet, wenn man per menu bar addet (sollte oben links geaddet werden)
 	// - Bei Menu Bar click cached mouse pos auf X30 Y30 setzen ??

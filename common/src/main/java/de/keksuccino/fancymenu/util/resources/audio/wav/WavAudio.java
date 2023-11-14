@@ -1,9 +1,13 @@
 package de.keksuccino.fancymenu.util.resources.audio.wav;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.resources.audio.IAudio;
+import de.keksuccino.fancymenu.util.resources.audio.openal.ALAudioBuffer;
+import de.keksuccino.fancymenu.util.resources.audio.openal.ALAudioClip;
+import de.keksuccino.fancymenu.util.resources.audio.openal.ALUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
@@ -15,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -25,7 +30,9 @@ public class WavAudio implements IAudio {
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Nullable
-    protected volatile WavAudioClip clip;
+    protected volatile ALAudioClip clip;
+    @Nullable
+    protected volatile ALAudioBuffer audioBuffer;
     protected ResourceLocation sourceLocation;
     protected File sourceFile;
     protected String sourceURL;
@@ -45,11 +52,31 @@ public class WavAudio implements IAudio {
 
         audio.sourceLocation = location;
 
+        //Clips need to get created on the main thread, so make sure we're in the correct thread
+        RenderSystem.assertOnRenderThread();
+
+        if (!ALUtils.isOpenAlReady()) {
+            LOGGER.error("[FANCYMENU] Failed to read WAV audio! OpenAL not ready! Returning empty audio for: " + location);
+            return audio;
+        }
+
+        ALAudioClip clip;
+        try {
+            clip = ALAudioClip.create();
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to read WAV audio! Failed to create clip: " + location, ex);
+            return audio;
+        }
+        if (clip == null) {
+            LOGGER.error("[FANCYMENU] Failed to read WAV audio! Clip was NULL: " + location);
+            return audio;
+        }
+
         try {
             Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(location);
             if (resource.isPresent()) {
                 InputStream in = resource.get().open();
-                of(in, location.toString(), audio);
+                of(in, location.toString(), audio, clip);
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to read WAV audio from ResourceLocation: " + location, ex);
@@ -77,9 +104,29 @@ public class WavAudio implements IAudio {
             return audio;
         }
 
+        //Clips need to get created on the main thread, so make sure we're in the correct thread
+        RenderSystem.assertOnRenderThread();
+
+        if (!ALUtils.isOpenAlReady()) {
+            LOGGER.error("[FANCYMENU] Failed to read WAV audio! OpenAL not ready! Returning empty audio for: " + wavAudioFile.getPath());
+            return audio;
+        }
+
+        ALAudioClip clip;
+        try {
+            clip = ALAudioClip.create();
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to read WAV audio! Failed to create clip: " + wavAudioFile.getPath(), ex);
+            return audio;
+        }
+        if (clip == null) {
+            LOGGER.error("[FANCYMENU] Failed to read WAV audio! Clip was NULL: " + wavAudioFile.getPath());
+            return audio;
+        }
+
         try {
             InputStream in = new FileInputStream(wavAudioFile);
-            of(in, wavAudioFile.getPath(), audio);
+            of(in, wavAudioFile.getPath(), audio, clip);
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to read WAV audio from file: " + wavAudioFile.getPath(), ex);
         }
@@ -106,21 +153,34 @@ public class WavAudio implements IAudio {
             return audio;
         }
 
-        //TODO byte array input stream entfernen !!! wird bereits in of() gemacht !!
+        //Clips need to get created on the main thread, so make sure we're in the correct thread
+        RenderSystem.assertOnRenderThread();
 
-        //TODO FIXEN: setVolume noch broken (zeigt immer clip not open ????)
+        if (!ALUtils.isOpenAlReady()) {
+            LOGGER.error("[FANCYMENU] Failed to read WAV audio! OpenAL not ready! Returning empty audio for: " + wavAudioURL);
+            return audio;
+        }
+
+        ALAudioClip clip;
+        try {
+            clip = ALAudioClip.create();
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to read WAV audio! Failed to create clip: " + wavAudioURL, ex);
+            return audio;
+        }
+        if (clip == null) {
+            LOGGER.error("[FANCYMENU] Failed to read WAV audio! Clip was NULL: " + wavAudioURL);
+            return audio;
+        }
 
         new Thread(() -> {
-            InputStream webIn = null;
             try {
-                webIn = WebUtils.openResourceStream(wavAudioURL);
-                if (webIn == null) throw new NullPointerException("Web resource input stream was NULL!");
-                ByteArrayInputStream byteIn = new ByteArrayInputStream(webIn.readAllBytes());
-                of(byteIn, wavAudioURL, audio);
+                InputStream in = WebUtils.openResourceStream(wavAudioURL);
+                if (in == null) throw new NullPointerException("Web resource input stream was NULL!");
+                of(in, wavAudioURL, audio, clip);
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to read WAV audio from URL: " + wavAudioURL, ex);
             }
-            CloseableUtils.closeQuietly(webIn);
         }).start();
 
         return audio;
@@ -128,22 +188,28 @@ public class WavAudio implements IAudio {
     }
 
     @NotNull
-    public static WavAudio of(@NotNull InputStream in, @Nullable String wavAudioName, @Nullable WavAudio writeTo) {
-
-        Objects.requireNonNull(in);
+    public static WavAudio of(@NotNull InputStream in, @Nullable String wavAudioName, @Nullable WavAudio writeTo, @Nullable ALAudioClip clip) {
 
         String name = (wavAudioName != null) ? wavAudioName : "[Generic InputStream Source]";
         WavAudio audio = (writeTo != null) ? writeTo : new WavAudio();
 
+        //Clips need to get created on the main thread, so make sure we're in the correct thread
+        if (clip == null) RenderSystem.assertOnRenderThread();
+
+        if (!ALUtils.isOpenAlReady()) {
+            LOGGER.error("[FANCYMENU] Failed to read WAV audio! OpenAL not ready! Returning empty audio for: " + name);
+            return audio;
+        }
+
         try {
-            audio.clip = WavAudioClip.create();
+            audio.clip = (clip != null) ? clip : ALAudioClip.create();
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to read WAV audio! Failed to create clip: " + name, ex);
             return audio;
         }
 
-        WavAudioClip clip = audio.clip;
-        if (clip == null) {
+        ALAudioClip cachedClip = audio.clip;
+        if (cachedClip == null) {
             LOGGER.error("[FANCYMENU] Failed to read WAV audio! Clip was NULL: " + name);
             return audio;
         }
@@ -152,9 +218,13 @@ public class WavAudio implements IAudio {
             AudioInputStream stream = null;
             ByteArrayInputStream byteIn = null;
             try {
+                //Needed because otherwise getAudioInputStream() could fail due to issues like "in" not supporting mark/reset, etc.
                 byteIn = new ByteArrayInputStream(in.readAllBytes());
                 stream = AudioSystem.getAudioInputStream(byteIn);
-                clip.setStream(stream);
+                ByteBuffer byteBuffer = ALUtils.readStreamIntoBuffer(stream);
+                ALAudioBuffer audioBuffer = new ALAudioBuffer(byteBuffer, stream.getFormat());
+                audio.audioBuffer = audioBuffer;
+                cachedClip.setStaticBuffer(audioBuffer);
                 audio.decoded = true;
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to read WAV audio: " + name, ex);
@@ -170,67 +240,67 @@ public class WavAudio implements IAudio {
 
     @NotNull
     public static WavAudio of(@NotNull InputStream in) {
-        return of(in, null, null);
+        return of(in, null, null, null);
     }
 
     protected WavAudio() {
     }
 
-    protected void forClip(@NotNull Consumer<WavAudioClip> clip) {
-        WavAudioClip cached = this.clip;
+    protected void forClip(@NotNull Consumer<ALAudioClip> clip) {
+        ALAudioClip cached = this.clip;
         if (cached != null) clip.accept(cached);
     }
 
     @Nullable
-    public WavAudioClip getClip() {
+    public ALAudioClip getClip() {
         return this.clip;
     }
 
     @Override
     public void play() {
-        this.forClip(WavAudioClip::play);
+        this.forClip(ALAudioClip::play);
     }
 
     @Override
     public boolean isPlaying() {
-        WavAudioClip cached = this.clip;
+        ALAudioClip cached = this.clip;
         return (cached != null) && cached.isPlaying();
     }
 
     @Override
     public void pause() {
-        this.forClip(WavAudioClip::pause);
+        this.forClip(ALAudioClip::pause);
     }
 
     @Override
     public boolean isPaused() {
-        WavAudioClip cached = this.clip;
+        ALAudioClip cached = this.clip;
         return (cached != null) && cached.isPaused();
     }
 
     @Override
     public void stop() {
-        this.forClip(WavAudioClip::stop);
+        this.forClip(ALAudioClip::stop);
     }
 
     @Override
     public void setVolume(float volume) {
-        this.forClip(WavAudioClip -> WavAudioClip.setVolume(volume));
+        this.forClip(oggAudioClip -> oggAudioClip.setVolume(volume));
     }
 
     @Override
     public float getVolume() {
-        WavAudioClip cached = this.clip;
+        ALAudioClip cached = this.clip;
         return (cached != null) ? cached.getVolume() : 0.0F;
     }
 
     public void setSoundChannel(@NotNull SoundSource channel) {
-        this.forClip(WavAudioClip -> WavAudioClip.setSoundChannel(channel));
+        this.forClip(oggAudioClip -> oggAudioClip.setSoundChannel(channel));
     }
 
     @NotNull
     public SoundSource getSoundChannel() {
-        WavAudioClip cached = this.clip;
+        ALAudioClip cached = this.clip;
         return (cached != null) ? cached.getSoundChannel() : SoundSource.MASTER;
     }
 
@@ -247,21 +317,28 @@ public class WavAudio implements IAudio {
         return !this.closed && this.decoded && (this.clip != null);
     }
 
-    public boolean isClipOpen() {
-        WavAudioClip cached = this.clip;
-        return (cached != null) && cached.isJavaxClipOpen();
+    public boolean isClipLoaded() {
+        ALAudioClip cached = this.clip;
+        return (cached != null) && cached.isLoadedInOpenAL();
     }
 
     @Override
     public void close() {
         this.closed = true;
         try {
-            WavAudioClip cachedClip = this.clip;
+            ALAudioClip cachedClip = this.clip;
             if (cachedClip != null) cachedClip.close();
         } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to close WAV audio clip!", ex);
+            LOGGER.error("[FANCYMENU] Failed to close OGG audio clip!", ex);
         }
         this.clip = null;
+        try {
+            ALAudioBuffer cachedBuffer = this.audioBuffer;
+            if (cachedBuffer != null) cachedBuffer.delete();
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to delete OGG audio buffer!", ex);
+        }
+        this.audioBuffer = null;
         this.decoded = false;
     }
 

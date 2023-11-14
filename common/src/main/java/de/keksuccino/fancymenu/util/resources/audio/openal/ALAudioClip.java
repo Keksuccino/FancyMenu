@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util.resources.audio.ogg.base;
+package de.keksuccino.fancymenu.util.resources.audio.openal;
 
 import de.keksuccino.fancymenu.util.resources.audio.AudioClip;
 import de.keksuccino.fancymenu.util.resources.audio.MinecraftSoundSettingsObserver;
@@ -12,7 +12,7 @@ import org.lwjgl.openal.AL10;
 import java.util.Objects;
 
 @SuppressWarnings("unused")
-public class OggAudioClip implements AudioClip {
+public class ALAudioClip implements AudioClip {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -24,33 +24,33 @@ public class OggAudioClip implements AudioClip {
     protected volatile boolean closed = false;
 
     /**
-     * Creates a new {@link OggAudioClip} with the given {@link OggAudioBuffer}.<br>
-     * {@link OggAudioClip}s stop working after Minecraft performs a resource reload or audio settings get changed, so make sure to
-     * always check if the {@link OggAudioClip} is still working by calling {@link OggAudioClip#isLoadedInOpenAL()}.
+     * Creates a new {@link ALAudioClip} with the given static {@link ALAudioBuffer}.<br>
+     * {@link ALAudioClip}s stop working after Minecraft performs a resource reload or audio settings get changed, so make sure to
+     * always check if the {@link ALAudioClip} is still working by calling {@link ALAudioClip#isLoadedInOpenAL()}.
      */
     @Nullable
-    public static OggAudioClip of(@NotNull OggAudioBuffer completeDataBuffer) {
-        Objects.requireNonNull(completeDataBuffer);
-        OggAudioClip clip = OggAudioClip.create();
+    public static ALAudioClip of(@NotNull ALAudioBuffer completeStaticDataBuffer) {
+        Objects.requireNonNull(completeStaticDataBuffer);
+        ALAudioClip clip = ALAudioClip.create();
         if (clip != null) {
-            clip.setBuffer(completeDataBuffer);
+            clip.setStaticBuffer(completeStaticDataBuffer);
         }
         return clip;
     }
 
     /**
-     * Creates a new {@link OggAudioClip}.<br>
-     * {@link OggAudioClip}s stop working after Minecraft performs a resource reload or audio settings get changed, so make sure to
-     * always check if the {@link OggAudioClip} is still working by calling {@link OggAudioClip#isLoadedInOpenAL()}.
+     * Creates a new {@link ALAudioClip}.<br>
+     * {@link ALAudioClip}s stop working after Minecraft performs a resource reload or audio settings get changed, so make sure to
+     * always check if the {@link ALAudioClip} is still working by calling {@link ALAudioClip#isLoadedInOpenAL()}.
      */
     @Nullable
-    public static OggAudioClip create() {
+    public static ALAudioClip create() {
         int[] audioSource = new int[1];
         AL10.alGenSources(audioSource);
-        return OpenALUtils.checkAndPrintOpenAlError("Generate OpenAL audio source") ? null : new OggAudioClip(audioSource[0]);
+        return ALUtils.checkAndPrintOpenAlError("Generate OpenAL audio source") ? null : new ALAudioClip(audioSource[0]);
     }
 
-    protected OggAudioClip(int source) {
+    protected ALAudioClip(int source) {
         this.source = source;
         this.volumeListenerId = MinecraftSoundSettingsObserver.registerVolumeListener((soundSource, aFloat) -> {
             if (soundSource == this.soundChannel) this.updateVolume();
@@ -61,7 +61,7 @@ public class OggAudioClip implements AudioClip {
     public int getState() {
         if (this.closed) return AL10.AL_STOPPED;
         int state = AL10.alGetSourcei(this.source, AL10.AL_SOURCE_STATE);
-        OpenALUtils.checkAndPrintOpenAlError("Get OpenAL audio state");
+        ALUtils.checkAndPrintOpenAlError("Get OpenAL audio state");
         return state;
     }
 
@@ -83,14 +83,14 @@ public class OggAudioClip implements AudioClip {
 
     /**
      * Will stop the audio.<br>
-     * The audio will start at the beginning the next time it starts playing via {@link OggAudioClip#play()}.
+     * The audio will start at the beginning the next time it starts playing via {@link ALAudioClip#play()}.
      */
     @Override
     public void stop() {
         if (this.closed) return;
         if (!this.isStopped()) {
             AL10.alSourceStop(this.source);
-            OpenALUtils.checkAndPrintOpenAlError("Stop OpenAL audio");
+            ALUtils.checkAndPrintOpenAlError("Stop OpenAL audio");
         }
     }
 
@@ -100,14 +100,14 @@ public class OggAudioClip implements AudioClip {
 
     /**
      * Will pause the audio if it is currently playing and preserves its current state.<br>
-     * To unpause the audio, use {@link OggAudioClip#resume()}.
+     * To unpause the audio, use {@link ALAudioClip#resume()}.
      */
     @Override
     public void pause() {
         if (this.closed) return;
         if (this.isPlaying()) {
             AL10.alSourcePause(this.source);
-            OpenALUtils.checkAndPrintOpenAlError("Pause OpenAL audio");
+            ALUtils.checkAndPrintOpenAlError("Pause OpenAL audio");
         }
     }
 
@@ -119,7 +119,7 @@ public class OggAudioClip implements AudioClip {
         if (this.closed) return;
         if (this.isPaused()) {
             AL10.alSourcePlay(this.source);
-            OpenALUtils.checkAndPrintOpenAlError("Resume OpenAL audio");
+            ALUtils.checkAndPrintOpenAlError("Resume OpenAL audio");
         }
     }
 
@@ -130,13 +130,13 @@ public class OggAudioClip implements AudioClip {
     public void setLooping(boolean looping) {
         if (this.closed) return;
         AL10.alSourcei(this.source, AL10.AL_LOOPING, looping ? 1 : 0);
-        OpenALUtils.checkAndPrintOpenAlError("Set OpenAL audio looping");
+        ALUtils.checkAndPrintOpenAlError("Set OpenAL audio looping");
     }
 
     public boolean isLooping() {
         if (this.closed) return false;
         boolean loop = AL10.alGetSourcei(this.source, AL10.AL_LOOPING) == 1;
-        OpenALUtils.checkAndPrintOpenAlError("Get OpenAL audio looping");
+        ALUtils.checkAndPrintOpenAlError("Get OpenAL audio looping");
         return loop;
     }
 
@@ -152,7 +152,7 @@ public class OggAudioClip implements AudioClip {
             actualVolume = actualVolume * soundSourceVolume; //Calculate percentage of volume by this audio's sound channel
         }
         AL10.alSourcef(this.source, AL10.AL_GAIN, Math.min(1.0F, Math.max(0.0F, actualVolume)));
-        OpenALUtils.checkAndPrintOpenAlError("Set OpenAL audio volume");
+        ALUtils.checkAndPrintOpenAlError("Set OpenAL audio volume");
     }
 
     @Override
@@ -178,15 +178,15 @@ public class OggAudioClip implements AudioClip {
     }
 
     /**
-     * Sets the data buffer of this audio.<br>
+     * Sets the static data buffer of this audio.<br>
      * The buffer should contain the complete audio data.
      */
-    public void setBuffer(@NotNull OggAudioBuffer completeDataBuffer) {
+    public void setStaticBuffer(@NotNull ALAudioBuffer completeDataBuffer) {
         if (this.closed) return;
         Integer buffer = completeDataBuffer.getSource();
         if (buffer != null) {
             AL10.alSourcei(this.source, AL10.AL_BUFFER, buffer);
-            OpenALUtils.checkAndPrintOpenAlError("Set OpenAL audio buffer");
+            ALUtils.checkAndPrintOpenAlError("Set OpenAL audio buffer");
         }
     }
 
@@ -198,9 +198,9 @@ public class OggAudioClip implements AudioClip {
             if (this.isLoadedInOpenAL()) {
                 //Can't call stop(), because already closed
                 AL10.alSourceStop(this.source);
-                OpenALUtils.checkAndPrintOpenAlError("Stop OpenAL audio");
+                ALUtils.checkAndPrintOpenAlError("Stop OpenAL audio");
                 AL10.alDeleteSources(new int[]{this.source});
-                OpenALUtils.checkAndPrintOpenAlError("Delete OpenAL audio source");
+                ALUtils.checkAndPrintOpenAlError("Delete OpenAL audio source");
             }
         }
     }

@@ -1,12 +1,14 @@
 package de.keksuccino.fancymenu.util.resources.audio.ogg;
 
 import com.mojang.blaze3d.audio.OggAudioStream;
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.resources.audio.IAudio;
-import de.keksuccino.fancymenu.util.resources.audio.ogg.base.OggAudioBuffer;
-import de.keksuccino.fancymenu.util.resources.audio.ogg.base.OggAudioClip;
+import de.keksuccino.fancymenu.util.resources.audio.openal.ALAudioBuffer;
+import de.keksuccino.fancymenu.util.resources.audio.openal.ALAudioClip;
+import de.keksuccino.fancymenu.util.resources.audio.openal.ALUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
@@ -15,10 +17,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 import java.util.Optional;
@@ -30,9 +30,9 @@ public class OggAudio implements IAudio {
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Nullable
-    protected volatile OggAudioClip clip;
+    protected volatile ALAudioClip clip;
     @Nullable
-    protected volatile OggAudioBuffer audioBuffer;
+    protected volatile ALAudioBuffer audioBuffer;
     protected ResourceLocation sourceLocation;
     protected File sourceFile;
     protected String sourceURL;
@@ -52,11 +52,31 @@ public class OggAudio implements IAudio {
 
         audio.sourceLocation = location;
 
+        //Clips need to get created on the main thread, so make sure we're in the correct thread
+        RenderSystem.assertOnRenderThread();
+
+        if (!ALUtils.isOpenAlReady()) {
+            LOGGER.error("[FANCYMENU] Failed to read OGG audio! OpenAL not ready! Returning empty audio for: " + location);
+            return audio;
+        }
+
+        ALAudioClip clip;
+        try {
+            clip = ALAudioClip.create();
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to read OGG audio! Failed to create clip: " + location, ex);
+            return audio;
+        }
+        if (clip == null) {
+            LOGGER.error("[FANCYMENU] Failed to read OGG audio! Clip was NULL: " + location);
+            return audio;
+        }
+
         try {
             Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(location);
             if (resource.isPresent()) {
                 InputStream in = resource.get().open();
-                of(in, location.toString(), audio);
+                of(in, location.toString(), audio, clip);
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to read OGG audio from ResourceLocation: " + location, ex);
@@ -84,9 +104,29 @@ public class OggAudio implements IAudio {
             return audio;
         }
 
+        //Clips need to get created on the main thread, so make sure we're in the correct thread
+        RenderSystem.assertOnRenderThread();
+
+        if (!ALUtils.isOpenAlReady()) {
+            LOGGER.error("[FANCYMENU] Failed to read OGG audio! OpenAL not ready! Returning empty audio for: " + oggAudioFile.getPath());
+            return audio;
+        }
+
+        ALAudioClip clip;
+        try {
+            clip = ALAudioClip.create();
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to read OGG audio! Failed to create clip: " + oggAudioFile.getPath(), ex);
+            return audio;
+        }
+        if (clip == null) {
+            LOGGER.error("[FANCYMENU] Failed to read OGG audio! Clip was NULL: " + oggAudioFile.getPath());
+            return audio;
+        }
+
         try {
             InputStream in = new FileInputStream(oggAudioFile);
-            of(in, oggAudioFile.getPath(), audio);
+            of(in, oggAudioFile.getPath(), audio, clip);
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to read OGG audio from file: " + oggAudioFile.getPath(), ex);
         }
@@ -113,14 +153,37 @@ public class OggAudio implements IAudio {
             return audio;
         }
 
+        //Clips need to get created on the main thread, so make sure we're in the correct thread
+        RenderSystem.assertOnRenderThread();
+
+        if (!ALUtils.isOpenAlReady()) {
+            LOGGER.error("[FANCYMENU] Failed to read OGG audio! OpenAL not ready! Returning empty audio for: " + oggAudioURL);
+            return audio;
+        }
+
+        ALAudioClip clip;
+        try {
+            clip = ALAudioClip.create();
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to read OGG audio! Failed to create clip: " + oggAudioURL, ex);
+            return audio;
+        }
+        if (clip == null) {
+            LOGGER.error("[FANCYMENU] Failed to read OGG audio! Clip was NULL: " + oggAudioURL);
+            return audio;
+        }
+
         new Thread(() -> {
+            InputStream webIn = null;
             try {
-                InputStream in = WebUtils.openResourceStream(oggAudioURL);
-                if (in == null) throw new NullPointerException("Web resource input stream was NULL!");
-                of(in, oggAudioURL, audio);
+                webIn = WebUtils.openResourceStream(oggAudioURL);
+                if (webIn == null) throw new NullPointerException("Web resource input stream was NULL!");
+                ByteArrayInputStream byteIn = new ByteArrayInputStream(webIn.readAllBytes());
+                of(byteIn, oggAudioURL, audio, clip);
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to read OGG audio from URL: " + oggAudioURL, ex);
             }
+            CloseableUtils.closeQuietly(webIn);
         }).start();
 
         return audio;
@@ -128,20 +191,28 @@ public class OggAudio implements IAudio {
     }
 
     @NotNull
-    public static OggAudio of(@NotNull InputStream in, @Nullable String oggAudioName, @Nullable OggAudio writeTo) {
+    public static OggAudio of(@NotNull InputStream in, @Nullable String oggAudioName, @Nullable OggAudio writeTo, @Nullable ALAudioClip clip) {
 
         String name = (oggAudioName != null) ? oggAudioName : "[Generic InputStream Source]";
         OggAudio audio = (writeTo != null) ? writeTo : new OggAudio();
 
+        //Clips need to get created on the main thread, so make sure we're in the correct thread
+        if (clip == null) RenderSystem.assertOnRenderThread();
+
+        if (!ALUtils.isOpenAlReady()) {
+            LOGGER.error("[FANCYMENU] Failed to read OGG audio! OpenAL not ready! Returning empty audio for: " + name);
+            return audio;
+        }
+
         try {
-            audio.clip = OggAudioClip.create();
+            audio.clip = (clip != null) ? clip : ALAudioClip.create();
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to read OGG audio! Failed to create clip: " + name, ex);
             return audio;
         }
 
-        OggAudioClip clip = audio.clip;
-        if (clip == null) {
+        ALAudioClip cachedClip = audio.clip;
+        if (cachedClip == null) {
             LOGGER.error("[FANCYMENU] Failed to read OGG audio! Clip was NULL: " + name);
             return audio;
         }
@@ -151,9 +222,9 @@ public class OggAudio implements IAudio {
             try {
                 stream = new OggAudioStream(in);
                 ByteBuffer byteBuffer = stream.readAll();
-                OggAudioBuffer audioBuffer = new OggAudioBuffer(byteBuffer, stream.getFormat());
+                ALAudioBuffer audioBuffer = new ALAudioBuffer(byteBuffer, stream.getFormat());
                 audio.audioBuffer = audioBuffer;
-                clip.setBuffer(audioBuffer);
+                cachedClip.setStaticBuffer(audioBuffer);
                 audio.decoded = true;
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to read OGG audio: " + name, ex);
@@ -168,47 +239,47 @@ public class OggAudio implements IAudio {
 
     @NotNull
     public static OggAudio of(@NotNull InputStream in) {
-        return of(in, null, null);
+        return of(in, null, null, null);
     }
 
     protected OggAudio() {
     }
 
-    protected void forClip(@NotNull Consumer<OggAudioClip> clip) {
-        OggAudioClip cached = this.clip;
+    protected void forClip(@NotNull Consumer<ALAudioClip> clip) {
+        ALAudioClip cached = this.clip;
         if (cached != null) clip.accept(cached);
     }
 
     @Nullable
-    public OggAudioClip getClip() {
+    public ALAudioClip getClip() {
         return this.clip;
     }
 
     @Override
     public void play() {
-        this.forClip(OggAudioClip::play);
+        this.forClip(ALAudioClip::play);
     }
 
     @Override
     public boolean isPlaying() {
-        OggAudioClip cached = this.clip;
+        ALAudioClip cached = this.clip;
         return (cached != null) && cached.isPlaying();
     }
 
     @Override
     public void pause() {
-        this.forClip(OggAudioClip::pause);
+        this.forClip(ALAudioClip::pause);
     }
 
     @Override
     public boolean isPaused() {
-        OggAudioClip cached = this.clip;
+        ALAudioClip cached = this.clip;
         return (cached != null) && cached.isPaused();
     }
 
     @Override
     public void stop() {
-        this.forClip(OggAudioClip::stop);
+        this.forClip(ALAudioClip::stop);
     }
 
     @Override
@@ -218,7 +289,7 @@ public class OggAudio implements IAudio {
 
     @Override
     public float getVolume() {
-        OggAudioClip cached = this.clip;
+        ALAudioClip cached = this.clip;
         return (cached != null) ? cached.getVolume() : 0.0F;
     }
 
@@ -228,7 +299,7 @@ public class OggAudio implements IAudio {
 
     @NotNull
     public SoundSource getSoundChannel() {
-        OggAudioClip cached = this.clip;
+        ALAudioClip cached = this.clip;
         return (cached != null) ? cached.getSoundChannel() : SoundSource.MASTER;
     }
 
@@ -246,7 +317,7 @@ public class OggAudio implements IAudio {
     }
 
     public boolean isClipLoaded() {
-        OggAudioClip cached = this.clip;
+        ALAudioClip cached = this.clip;
         return (cached != null) && cached.isLoadedInOpenAL();
     }
 
@@ -254,14 +325,14 @@ public class OggAudio implements IAudio {
     public void close() {
         this.closed = true;
         try {
-            OggAudioClip cachedClip = this.clip;
+            ALAudioClip cachedClip = this.clip;
             if (cachedClip != null) cachedClip.close();
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to close OGG audio clip!", ex);
         }
         this.clip = null;
         try {
-            OggAudioBuffer cachedBuffer = this.audioBuffer;
+            ALAudioBuffer cachedBuffer = this.audioBuffer;
             if (cachedBuffer != null) cachedBuffer.delete();
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to delete OGG audio buffer!", ex);
