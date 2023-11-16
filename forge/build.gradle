@@ -71,6 +71,7 @@ dependencies {
     implementation fg.deobf("curse.maven:konkrete-410295:4514916")
     implementation fg.deobf("curse.maven:load-my-resources-forge-534502:4203277")
     implementation(jarJar("com.github.Keksuccino:japng:0.5.2-3"))
+    implementation fg.deobf("curse.maven:melody-938643:4869647")
 }
 
 tasks.withType(JavaCompile).configureEach {

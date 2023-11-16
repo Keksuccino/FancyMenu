@@ -71,6 +71,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 	public Map<LoadingRequirementContainer, Boolean> cachedLayoutWideLoadingRequirements = new HashMap<>();
 	@NotNull
 	public List<WidgetMeta> cachedScreenWidgetMetas = new ArrayList<>();
+	public boolean loadEarly = false;
 
 	public static Map<Class<?>, Component> cachedOriginalMenuTitles = new HashMap<>();
 
@@ -363,13 +364,6 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 		if (PopupHandler.isPopupActive()) return;
 		if (!this.shouldCustomize(e.getScreen())) return;
 
-//		//Remove vanilla widgets from the renderables list before rendering the screen and let the vanilla button elements render them instead
-//		if (e.getScreen() != null) {
-//			for (WidgetMeta d : this.cachedScreenWidgetMetas) {
-//				((IMixinScreen)e.getScreen()).getRenderablesFancyMenu().remove(d.getWidget());
-//			}
-//		}
-
 		//Re-init screen if layout-wide loading requirements changed
 		for (Map.Entry<LoadingRequirementContainer, Boolean> m : this.cachedLayoutWideLoadingRequirements.entrySet()) {
 			if (m.getKey().requirementsMet() != m.getValue()) {
@@ -409,14 +403,6 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 		for (AbstractElement element : new ArrayList<>(this.normalElements.foregroundElements)) {
 			element.render(e.getPoseStack(), e.getMouseX(), e.getMouseY(), e.getPartial());
 		}
-
-//		//Add back vanilla widgets after screen rendering
-//		//Note: Adding back widgets is important for screens that don't clear their widgets on resize, like the CreateWorldScreen
-//		if (e.getScreen() != null) {
-//			for (WidgetMeta d : this.cachedScreenWidgetMetas) {
-//				((IMixinScreen)e.getScreen()).getRenderablesFancyMenu().add(d.getWidget());
-//			}
-//		}
 
 	}
 
@@ -548,6 +534,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 	@SuppressWarnings("all")
 	protected boolean shouldCustomize(@Nullable Screen screen) {
 		if (screen == null) return false;
+		if (ScreenCustomizationLayerHandler.isBeforeFinishInitialMinecraftReload() && !this.loadEarly) return false;
 		if (!ScreenIdentifierHandler.isIdentifierOfScreen(this.getScreenIdentifier(), screen)) return false;
 		if (!ScreenCustomization.isCustomizationEnabledForScreen(screen)) return false;
 		return true;

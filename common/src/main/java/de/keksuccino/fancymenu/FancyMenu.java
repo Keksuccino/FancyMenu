@@ -22,9 +22,7 @@ public class FancyMenu {
 
 	//TODO ALLE UNGENUTZTEN FileTypes entfernen (ungenutzte video types)
 
-	//TODO Alle OGG und WAV audio klassen in separate mod (Melody) packen
-	// - Auudio wird nicht mehr weiter entwickelt
-	// - Melody wird mandatory dependency von FMv3
+
 
 
 

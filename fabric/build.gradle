@@ -19,6 +19,7 @@ dependencies {
     implementation fileTree('libs') { include '*.jar' }
     include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.2.0")))
     include(implementation 'com.github.Keksuccino:japng:0.5.2-3')
+    modImplementation "curse.maven:melody-938643:4871682"
 }
 
 loom {

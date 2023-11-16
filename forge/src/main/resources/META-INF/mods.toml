@@ -33,6 +33,13 @@ versionRange="[1.6.1,)"
 side="BOTH"
 
 [[dependencies.fancymenu]]
+modId="melody"
+mandatory=true
+ordering="NONE"
+versionRange="[1.0.0,)"
+side="CLIENT"
+
+[[dependencies.fancymenu]]
 modId="findme"
 mandatory=false
 ordering="AFTER"

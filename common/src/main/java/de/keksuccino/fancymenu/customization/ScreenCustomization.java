@@ -240,10 +240,10 @@ public class ScreenCustomization {
 
 	/**
 	 * TRUE when, and only when, a new TYPE of screen (different identifier than last one) gets opened.<br>
-	 * Returns FALSE if a new instance of the same screen type as the last one gets opened.<br><br>
+	 * Returns FALSE if an instance with the same identifier as the last one gets opened.<br><br>
 	 *
 	 * The isNewMenu value gets updated in an {@link InitOrResizeScreenStartingEvent},
-	 * so it is already up-to-date when {@link InitOrResizeScreenEvent.Pre} and {@link InitOrResizeScreenEvent.Post} gets fired.
+	 * so it is already up-to-date when {@link InitOrResizeScreenEvent.Pre} and {@link InitOrResizeScreenEvent.Post} get fired.
 	 */
 	public static boolean isNewMenu() {
 		return isNewMenu;

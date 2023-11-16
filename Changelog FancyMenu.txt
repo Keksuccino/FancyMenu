@@ -168,6 +168,8 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 --> So if you use placeholders in text elements, this overrides the normal 45,000 characters maximum
 - Universal layouts now get always loaded BEFORE normal ones, so normal layouts can override parts of universal ones
 - The grid in the layout editor now always gets rendered at the same scale, no matter what GUI scale is used
+- FancyMenu now supports APNG textures (Animated PNGs, like GIFs, but better)
+- ANIMATIONS are DEPRECATED now, since there's APNG support now
  
 - Added loading requirement "File/Folder Exists" to check if a file/folder exists
 - Added loading requirement "Is Button Active" to check if a button is active (clickable/not greyed out)

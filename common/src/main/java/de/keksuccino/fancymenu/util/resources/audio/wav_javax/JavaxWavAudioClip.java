@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.util.resources.audio.wav_javax;
 
 import de.keksuccino.fancymenu.util.CloseableUtils;
-import de.keksuccino.fancymenu.util.resources.audio.AudioClip;
-import de.keksuccino.fancymenu.util.resources.audio.MinecraftSoundSettingsObserver;
+import de.keksuccino.melody.resources.audio.AudioClip;
+import de.keksuccino.melody.resources.audio.MinecraftSoundSettingsObserver;
 import net.minecraft.client.Minecraft;
 import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;

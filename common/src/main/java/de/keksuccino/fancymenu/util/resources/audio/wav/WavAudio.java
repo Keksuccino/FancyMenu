@@ -5,9 +5,9 @@ import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.resources.audio.IAudio;
-import de.keksuccino.fancymenu.util.resources.audio.openal.ALAudioBuffer;
-import de.keksuccino.fancymenu.util.resources.audio.openal.ALAudioClip;
-import de.keksuccino.fancymenu.util.resources.audio.openal.ALUtils;
+import de.keksuccino.melody.resources.audio.openal.ALAudioBuffer;
+import de.keksuccino.melody.resources.audio.openal.ALAudioClip;
+import de.keksuccino.melody.resources.audio.openal.ALUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
@@ -246,11 +246,6 @@ public class WavAudio implements IAudio {
     protected WavAudio() {
     }
 
-    protected void forClip(@NotNull Consumer<ALAudioClip> clip) {
-        ALAudioClip cached = this.clip;
-        if (cached != null) clip.accept(cached);
-    }
-
     @Nullable
     public ALAudioClip getClip() {
         return this.clip;
@@ -258,34 +253,68 @@ public class WavAudio implements IAudio {
 
     @Override
     public void play() {
-        this.forClip(ALAudioClip::play);
+        this.forClip(alAudioClip -> {
+            try {
+                alAudioClip.play();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
     }
 
     @Override
     public boolean isPlaying() {
-        ALAudioClip cached = this.clip;
-        return (cached != null) && cached.isPlaying();
+        try {
+            ALAudioClip cached = this.clip;
+            if (cached != null) return cached.isPlaying();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return false;
     }
 
     @Override
     public void pause() {
-        this.forClip(ALAudioClip::pause);
+        this.forClip(alAudioClip -> {
+            try {
+                alAudioClip.pause();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
     }
 
     @Override
     public boolean isPaused() {
-        ALAudioClip cached = this.clip;
-        return (cached != null) && cached.isPaused();
+        try {
+            ALAudioClip cached = this.clip;
+            if (cached != null) return cached.isPaused();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return false;
     }
 
     @Override
     public void stop() {
-        this.forClip(ALAudioClip::stop);
+        this.forClip(alAudioClip -> {
+            try {
+                alAudioClip.stop();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
     }
 
     @Override
     public void setVolume(float volume) {
-        this.forClip(oggAudioClip -> oggAudioClip.setVolume(volume));
+        this.forClip(alAudioClip -> {
+            try {
+                alAudioClip.setVolume(volume);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
     }
 
     @Override
@@ -304,6 +333,11 @@ public class WavAudio implements IAudio {
         return (cached != null) ? cached.getSoundChannel() : SoundSource.MASTER;
     }
 
+    protected void forClip(@NotNull Consumer<ALAudioClip> clip) {
+        ALAudioClip cached = this.clip;
+        if (cached != null) clip.accept(cached);
+    }
+
     @Override
     public @Nullable InputStream open() throws IOException {
         if (this.sourceURL != null) return WebUtils.openResourceStream(this.sourceURL);
@@ -317,9 +351,9 @@ public class WavAudio implements IAudio {
         return !this.closed && this.decoded && (this.clip != null);
     }
 
-    public boolean isClipLoaded() {
+    public boolean isValidOpenAlSource() {
         ALAudioClip cached = this.clip;
-        return (cached != null) && cached.isLoadedInOpenAL();
+        return (cached != null) && cached.isValidOpenAlSource();
     }
 
     @Override

@@ -3,12 +3,15 @@ package de.keksuccino.fancymenu.customization.layer;
 import java.util.HashMap;
 import java.util.Map;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
+import de.keksuccino.fancymenu.util.MinecraftResourceReloadObserver;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.LoadingOverlay;
 import net.minecraft.client.gui.screens.Screen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,11 +24,62 @@ public class ScreenCustomizationLayerHandler {
 
 	protected static final Map<String, ScreenCustomizationLayer> LAYERS = new HashMap<>();
 
-	public static void init() {
-		EventHandler.INSTANCE.registerListenersOf(new ScreenCustomizationLayerHandler());
-	}
+	private static volatile boolean neverReloaded = true;
+	private static volatile boolean resourceReload = false;
 
 	private ScreenCustomizationLayerHandler() {
+	}
+
+	public static void init() {
+
+		EventHandler.INSTANCE.registerListenersOf(new ScreenCustomizationLayerHandler());
+
+		MinecraftResourceReloadObserver.addReloadListener(ScreenCustomizationLayerHandler::onMinecraftReload);
+
+	}
+
+	/**
+	 * Gets called before Minecraft starts and after it finished a resource reload via {@link LoadingOverlay}.<br>
+	 * Some stuff like firing screen init and render events still get injected into {@link LoadingOverlay} via mixins.
+	 */
+	private static void onMinecraftReload(@NotNull MinecraftResourceReloadObserver.ReloadAction reloadAction) {
+
+		if (reloadAction == MinecraftResourceReloadObserver.ReloadAction.STARTING) {
+
+			LOGGER.info("[FANCYMENU] Minecraft resource reload: STARTING");
+
+			resourceReload = true;
+
+		} else { //FINISHED
+
+			neverReloaded = false;
+			resourceReload = false;
+
+			//Reset isNewMenu, so first-time stuff and on-load stuff works correctly
+			ScreenCustomization.setIsNewMenu(true);
+
+			//Update resource pack animation sizes after reloading textures
+			LOGGER.info("[FANCYMENU] Updating animation sizes..");
+			AnimationHandler.updateAnimationSizes();
+
+			LOGGER.info("[FANCYMENU] Minecraft resource reload: FINISHED");
+
+		}
+
+	}
+
+	/**
+	 * Returns if the initial resource reload ({@link LoadingOverlay} when starting the game) is finished.
+	 */
+	public static boolean isBeforeFinishInitialMinecraftReload() {
+		return neverReloaded;
+	}
+
+	/**
+	 * If Minecraft is currently reloading its resources (via {@link LoadingOverlay}).
+	 */
+	public static boolean isMinecraftCurrentlyReloading() {
+		return resourceReload;
 	}
 
 	public static void registerScreen(@NotNull Screen screen) {

@@ -6,9 +6,9 @@ import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.resources.audio.IAudio;
-import de.keksuccino.fancymenu.util.resources.audio.openal.ALAudioBuffer;
-import de.keksuccino.fancymenu.util.resources.audio.openal.ALAudioClip;
-import de.keksuccino.fancymenu.util.resources.audio.openal.ALUtils;
+import de.keksuccino.melody.resources.audio.openal.ALAudioBuffer;
+import de.keksuccino.melody.resources.audio.openal.ALAudioClip;
+import de.keksuccino.melody.resources.audio.openal.ALUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
@@ -17,7 +17,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.Objects;
@@ -257,34 +256,68 @@ public class OggAudio implements IAudio {
 
     @Override
     public void play() {
-        this.forClip(ALAudioClip::play);
+        this.forClip(oggAudioClip -> {
+            try {
+                oggAudioClip.play();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
     }
 
     @Override
     public boolean isPlaying() {
-        ALAudioClip cached = this.clip;
-        return (cached != null) && cached.isPlaying();
+        try {
+            ALAudioClip cached = this.clip;
+            if (cached != null) return cached.isPlaying();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return false;
     }
 
     @Override
     public void pause() {
-        this.forClip(ALAudioClip::pause);
+        this.forClip(oggAudioClip -> {
+            try {
+                oggAudioClip.pause();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
     }
 
     @Override
     public boolean isPaused() {
-        ALAudioClip cached = this.clip;
-        return (cached != null) && cached.isPaused();
+        try {
+            ALAudioClip cached = this.clip;
+            if (cached != null) return cached.isPaused();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return false;
     }
 
     @Override
     public void stop() {
-        this.forClip(ALAudioClip::stop);
+        this.forClip(oggAudioClip -> {
+            try {
+                oggAudioClip.stop();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
     }
 
     @Override
     public void setVolume(float volume) {
-        this.forClip(oggAudioClip -> oggAudioClip.setVolume(volume));
+        this.forClip(oggAudioClip -> {
+            try {
+                oggAudioClip.setVolume(volume);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
     }
 
     @Override
@@ -316,9 +349,9 @@ public class OggAudio implements IAudio {
         return !this.closed && this.decoded && (this.clip != null);
     }
 
-    public boolean isClipLoaded() {
+    public boolean isValidOpenAlSource() {
         ALAudioClip cached = this.clip;
-        return (cached != null) && cached.isLoadedInOpenAL();
+        return (cached != null) && cached.isValidOpenAlSource();
     }
 
     @Override

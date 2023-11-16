@@ -29,6 +29,7 @@
     "fabricloader": ">=0.13.3",
     "fabric": ">=0.58.0",
     "konkrete": ">=1.6.1",
+    "melody": ">=1.0.0",
     "minecraft": ">=1.19.4",
     "java": ">=17"
   },

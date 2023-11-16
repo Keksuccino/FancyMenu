@@ -3,6 +3,7 @@ CHANGELOG | FANCYMENU v3.0.0 CLOSED ALPHA 3
  
 - Added experimental placeholder parsing cooldown (30ms) to improve performance (placeholders basically get cached and can only update every 30ms)
 - Added experimental advanced position and size parsing cooldown (30ms) for elements to improve performance (they get cached and can only update every 30ms)
+- FancyMenu now supports APNG textures (Animated PNGs, like GIFs, but better)
 - Most GIF images now load way smoother and don't freeze the screen anymore
 - Most elements and backgrounds that support web images also support web GIFs now
 - The Progress Bar element now accepts GIF images as bar and background textures
@@ -31,6 +32,8 @@ CHANGELOG | FANCYMENU v3.0.0 CLOSED ALPHA 3
 - Universal layouts now get always loaded BEFORE normal ones, so normal layouts can override parts of universal ones
 - The grid in the layout editor now always gets rendered at the same scale, no matter what GUI scale is used
 - The 8 most recently edited layouts (normal and universal combined) now get showed in the root "Layouts" context menu in the "Customization" tab (shortcut to Layouts -> Manage -> Normal / Universal)
+- ANIMATIONS can now be seen as DEPRECATED!
+--> There are still places where you can only use animations, but that will change soon, since FM has APNG support now and maybe even full video support in the future
  
 - Added: "Update Screen" action to update/reload the current screen's customizations without reloading the whole mod
 - Added: "Set Minecraft Option" action to set the value of a Minecraft option
