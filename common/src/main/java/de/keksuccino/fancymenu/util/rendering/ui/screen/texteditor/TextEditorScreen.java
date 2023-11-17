@@ -1,10 +1,10 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -31,6 +31,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 import java.awt.*;
 import java.lang.reflect.Array;
@@ -1207,13 +1208,6 @@ public class TextEditorScreen extends Screen {
         return s.toString();
     }
 
-//    if (value != null) {
-//        value = StringUtils.convertFormatCodes(value, "§", "&");
-//        if (ScreenCustomization.isExistingGameDirectoryPath(value)) {
-//            return ScreenCustomization.getAbsoluteGameDirectoryPath(value);
-//        }
-//    }
-
     @Override
     public boolean charTyped(char character, int modifiers) {
 
@@ -1227,14 +1221,17 @@ public class TextEditorScreen extends Screen {
 
 
     @Override
-    public boolean keyPressed(int keycode, int i1, int i2) {
+    public boolean keyPressed(int keycode, int scancode, int modifiers) {
 
         for (TextEditorLine l : new ArrayList<>(this.textFieldLines)) {
-            l.keyPressed(keycode, i1, i2);
+            l.keyPressed(keycode, scancode, modifiers);
         }
 
+        String key = GLFW.glfwGetKeyName(keycode, scancode);
+        if (key == null) key = "";
+
         //ENTER
-        if (keycode == 257) {
+        if (keycode == InputConstants.KEY_ENTER) {
             if (!this.isInMouseHighlightingMode() && this.multilineMode) {
                 if (this.isLineFocused()) {
                     this.resetHighlighting();
@@ -1316,7 +1313,7 @@ public class TextEditorScreen extends Screen {
             return true;
         }
 
-        return super.keyPressed(keycode, i1, i2);
+        return super.keyPressed(keycode, scancode, modifiers);
 
     }
 

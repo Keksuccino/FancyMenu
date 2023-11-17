@@ -40,6 +40,7 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
     private static final Logger LOGGER = LogManager.getLogger();
 
     protected static final SimpleTexture COLLAPSE_EXPAND_TEXTURE = SimpleTexture.location(new ResourceLocation("fancymenu", "textures/menubar/icons/collapse_expand.png"));
+    protected static final int ENTRY_LABEL_SPACE_LEFT_RIGHT = 6;
 
     protected final List<MenuBarEntry> leftEntries = new ArrayList<>();
     protected final List<MenuBarEntry> rightEntries = new ArrayList<>();
@@ -681,7 +682,7 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
                 RenderUtils.bindTexture((iconTexture.getResourceLocation() != null) ? iconTexture.getResourceLocation() : ITexture.MISSING_TEXTURE_LOCATION);
                 blit(pose, this.x, this.y, 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
             } else {
-                UIBase.drawElementLabel(pose, this.font, label, this.x + 5, this.y + (this.height / 2) - (this.font.lineHeight / 2), this.isActive() ? UIBase.getUIColorTheme().element_label_color_normal.getColorInt() : UIBase.getUIColorTheme().element_label_color_inactive.getColorInt());
+                UIBase.drawElementLabel(pose, this.font, label, this.x + ENTRY_LABEL_SPACE_LEFT_RIGHT, this.y + (this.height / 2) - (this.font.lineHeight / 2), this.isActive() ? UIBase.getUIColorTheme().element_label_color_normal.getColorInt() : UIBase.getUIColorTheme().element_label_color_inactive.getColorInt());
             }
             UIBase.resetShaderColor();
         }
@@ -693,7 +694,7 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
             if (iconTexture != null) {
                 return iconTexture.getAspectRatio().getAspectRatioWidth(this.height);
             }
-            return this.font.width(label) + 10;
+            return this.font.width(label) + (ENTRY_LABEL_SPACE_LEFT_RIGHT * 2);
         }
 
         @Override

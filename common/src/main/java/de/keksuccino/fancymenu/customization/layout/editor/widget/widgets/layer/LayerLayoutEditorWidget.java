@@ -29,6 +29,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
@@ -185,6 +186,11 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
     @Override
     public void editorElementRemovedOrHidden(@NotNull AbstractEditorElement element) {
+        this.updateList(false);
+    }
+
+    @Override
+    public void editorElementOrderChanged(@NotNull AbstractEditorElement element, boolean movedUp) {
         this.updateList(false);
     }
 
@@ -354,6 +360,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                         if (!this.element.isSelected()) this.layerWidget.editor.deselectAllElements();
                         this.element.setSelected(true);
                         this.layerWidget.editor.moveElementUp(this.element);
+                        this.layerWidget.getAllWidgetsExceptThis().forEach(widget -> widget.editorElementOrderChanged(this.element, true));
                         MainThreadTaskExecutor.executeInMainThread(() -> this.layerWidget.updateList(true), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                     }
                 } else if (this.isMoveDownButtonHovered()) {
@@ -363,6 +370,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                         if (!this.element.isSelected()) this.layerWidget.editor.deselectAllElements();
                         this.element.setSelected(true);
                         this.layerWidget.editor.moveElementDown(this.element);
+                        this.layerWidget.getAllWidgetsExceptThis().forEach(widget -> widget.editorElementOrderChanged(this.element, false));
                         MainThreadTaskExecutor.executeInMainThread(() -> this.layerWidget.updateList(true), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                     }
                 } else {

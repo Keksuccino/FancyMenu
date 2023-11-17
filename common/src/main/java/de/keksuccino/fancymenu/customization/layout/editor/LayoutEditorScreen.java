@@ -10,12 +10,12 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetEditorElement;
 import de.keksuccino.fancymenu.customization.layer.ElementFactory;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.LayoutEditorWidgetRegistry;
+import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.widget.ScreenWidgetDiscoverer;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
@@ -62,6 +62,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	private static final Logger LOGGER = LogManager.getLogger();
 
 	protected static final Map<SerializedElement, ElementBuilder<?,?>> COPIED_ELEMENTS_CLIPBOARD = new LinkedHashMap<>();
+	public static final int ELEMENT_DRAG_CRUMPLE_ZONE = 5;
 
 	protected static LayoutEditorScreen currentInstance = null;
 
@@ -81,6 +82,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	protected boolean isMouseSelection = false;
 	protected int mouseSelectionStartX = 0;
 	protected int mouseSelectionStartY = 0;
+	public int leftMouseDownPosX = 0;
+	public int leftMouseDownPosY = 0;
+	protected boolean elementDraggingStarted = false;
 	protected int rightClickMenuOpenPosX = -1000;
 	protected int rightClickMenuOpenPosY = -1000;
 	protected LayoutEditorHistory.Snapshot preDragElementSnapshot;
@@ -769,6 +773,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 					AbstractEditorElement deserializedEditorElement = m.getValue().wrapIntoEditorElementInternal(deserialized, this);
 					if (deserializedEditorElement != null) {
 						this.normalEditorElements.add(deserializedEditorElement);
+						this.layoutEditorWidgets.forEach(widget -> widget.editorElementAdded(deserializedEditorElement));
 						deserializedEditorElement.setSelected(true);
 					}
 				}
@@ -795,11 +800,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public void saveLayoutAs() {
 		String fileNamePreset = "universal_layout";
 		if (this.layoutTargetScreen != null) {
-			if (this.layoutTargetScreen instanceof CustomGuiBaseScreen c) {
-				fileNamePreset = c.getIdentifier() + "_layout";
-			} else {
-				fileNamePreset = this.layoutTargetScreen.getClass().getSimpleName() + "_layout";
-			}
+			fileNamePreset = ScreenIdentifierHandler.getIdentifierOfScreen(this.layoutTargetScreen) + "_layout";
 		}
 		fileNamePreset = fileNamePreset.toLowerCase();
 		fileNamePreset = CharacterFilter.buildOnlyLowercaseFileNameFilter().filterForAllowedChars(fileNamePreset);
@@ -910,6 +911,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	@Override
 	public boolean mouseClicked(double mouseX, double mouseY, int button) {
 
+		this.leftMouseDownPosX = (int) mouseX;
+		this.leftMouseDownPosY = (int) mouseY;
+
 		boolean menuBarContextOpen = (this.menuBar != null) && this.menuBar.isEntryContextMenuOpen();
 
 		if (PopupHandler.isPopupActive()) {
@@ -991,6 +995,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	@Override
 	public boolean mouseReleased(double mouseX, double mouseY, int button) {
 
+		this.elementDraggingStarted = false;
+
 		boolean cachedMouseSelection = this.isMouseSelection;
 		if (button == 0) {
 			this.isMouseSelection = false;
@@ -1046,19 +1052,29 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				if (!b && hasControlDown()) continue; //skip deselect if CTRL pressed
 				e.setSelected(b);
 			}
+			//TODO eventuell return hier bei isMouseSelection ??? sollte doch okay sein?
 		}
 
 		if (this.preDragElementSnapshot == null) {
 			this.preDragElementSnapshot = this.history.createSnapshot();
 		}
 
-		for (AbstractEditorElement e : this.getAllElements()) {
-			if (e.mouseDragged(mouseX, mouseY, button, $$3, $$4)) {
-				break;
-			}
-		}
+		int draggingDiffX = (int) (mouseX - this.leftMouseDownPosX);
+		int draggingDiffY = (int) (mouseY - this.leftMouseDownPosY);
 
-		this.anchorPointOverlay.mouseDragged(mouseX, mouseY, button, $$3, $$4);
+		if ((Math.abs(draggingDiffX) >= ELEMENT_DRAG_CRUMPLE_ZONE) || (Math.abs(draggingDiffY) >= ELEMENT_DRAG_CRUMPLE_ZONE)) {
+			List<AbstractEditorElement> allElements = this.getAllElements();
+			if (!this.elementDraggingStarted) {
+				allElements.forEach(element -> element.updateDraggingStartPos((int)mouseX, (int)mouseY));
+			}
+			this.elementDraggingStarted = true;
+			for (AbstractEditorElement e : allElements) {
+				if (e.mouseDragged(mouseX, mouseY, button, $$3, $$4)) {
+					break;
+				}
+			}
+			this.anchorPointOverlay.mouseDragged(mouseX, mouseY, button, $$3, $$4);
+		}
 
 		return false;
 

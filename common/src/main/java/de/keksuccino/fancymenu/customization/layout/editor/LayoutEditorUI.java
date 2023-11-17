@@ -41,6 +41,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
@@ -106,7 +107,14 @@ public class LayoutEditorUI {
 		layoutMenu.addSeparatorEntry("separator_after_save_as");
 
 		layoutMenu.addSubMenuEntry("layout_settings", Component.translatable("fancymenu.editor.layout.properties"), buildRightClickContextMenu(editor))
-				.setIcon(ContextMenu.IconFactory.getIcon("settings"));
+				.setIcon(ContextMenu.IconFactory.getIcon("settings"))
+				.setHoverAction((menu, entry, isPost) -> {
+					if (!isPost) {
+						int menuBarHeight = (int)((float)menuBar.getHeight() * UIBase.calculateFixedScale(menuBar.getScale()));
+						editor.rightClickMenuOpenPosX = 20;
+						editor.rightClickMenuOpenPosY = menuBarHeight + 20;
+					}
+				});
 
 		layoutMenu.addSeparatorEntry("separator_after_layout_settings");
 
@@ -623,6 +631,10 @@ public class LayoutEditorUI {
 						if ((editor.rightClickMenuOpenPosX != -1000) && (editor.rightClickMenuOpenPosY != -1000)) {
 							//Add new element at right-click menu coordinates
 							editorElement.setAnchorPoint(editorElement.element.anchorPoint, true, editor.rightClickMenuOpenPosX, editor.rightClickMenuOpenPosY, true);
+							editor.deselectAllElements();
+							editorElement.setSelected(true);
+							editor.rightClickMenuOpenPosX = -1000;
+							editor.rightClickMenuOpenPosY = -1000;
 						}
 						for (AbstractLayoutEditorWidget w : editor.layoutEditorWidgets) {
 							w.editorElementAdded(editorElement);

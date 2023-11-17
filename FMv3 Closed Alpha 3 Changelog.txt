@@ -34,6 +34,9 @@ CHANGELOG | FANCYMENU v3.0.0 CLOSED ALPHA 3
 - The 8 most recently edited layouts (normal and universal combined) now get showed in the root "Layouts" context menu in the "Customization" tab (shortcut to Layouts -> Manage -> Normal / Universal)
 - ANIMATIONS can now be seen as DEPRECATED!
 --> There are still places where you can only use animations, but that will change soon, since FM has APNG support now and maybe even full video support in the future
+- Elements now have a dragging "crumple zone", so you don't acidentally move your elements anymore (you're welcome!)
+- New elements now get added in the top-left corner when added via the "Layout -> Properties" menu (not right-click menu)
+- Newly added elements are now selected by default
  
 - Added: "Update Screen" action to update/reload the current screen's customizations without reloading the whole mod
 - Added: "Set Minecraft Option" action to set the value of a Minecraft option
@@ -48,3 +51,4 @@ CHANGELOG | FANCYMENU v3.0.0 CLOSED ALPHA 3
 - Fixed: Resizing and moving Vanilla widgets is broken
 - Fixed: Vanilla widgets in some screens stay customized after disabling customizations/layouts
 - Fixed: Positions of Vanilla elements sometimes broken when more than one layout is enabled
+- Fixed: Layer widget in editor not correctly updating when moving elements up/down via their right-click menus and when pasting an element

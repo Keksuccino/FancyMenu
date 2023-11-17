@@ -86,6 +86,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	protected int leftMouseDownBaseY = 0;
 	protected int leftMouseDownBaseWidth = 0;
 	protected int leftMouseDownBaseHeight = 0;
+	protected int draggingStartPosX = 0;
+	protected int draggingStartPosY = 0;
 	protected ResizeGrabber[] resizeGrabbers = new ResizeGrabber[]{new ResizeGrabber(ResizeGrabberType.TOP), new ResizeGrabber(ResizeGrabberType.RIGHT), new ResizeGrabber(ResizeGrabberType.BOTTOM), new ResizeGrabber(ResizeGrabberType.LEFT)};
 	protected ResizeGrabber activeResizeGrabber = null;
 	protected AspectRatio resizeAspectRatio = new AspectRatio(10, 10);
@@ -380,15 +382,21 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		if (this.settings.isOrderable()) {
 
-			this.rightClickMenu.addClickableEntry("move_up_element", Component.translatable("fancymenu.editor.object.moveup"), (menu, entry) -> {
-				this.editor.moveElementUp(this);
-			}).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.moveup.desc")))
+			this.rightClickMenu.addClickableEntry("move_up_element", Component.translatable("fancymenu.editor.object.moveup"),
+							(menu, entry) -> {
+								this.editor.moveElementUp(this);
+								this.editor.layoutEditorWidgets.forEach(widget -> widget.editorElementOrderChanged(this, true));
+							})
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.moveup.desc")))
 					.setIsActiveSupplier((menu, entry) -> this.editor.canBeMovedUp(this))
 					.setIcon(ContextMenu.IconFactory.getIcon("arrow_up"));
 
-			this.rightClickMenu.addClickableEntry("move_down_element", Component.translatable("fancymenu.editor.object.movedown"), (menu, entry) -> {
-				this.editor.moveElementDown(this);
-			}).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.movedown.desc")))
+			this.rightClickMenu.addClickableEntry("move_down_element", Component.translatable("fancymenu.editor.object.movedown"),
+							(menu, entry) -> {
+								this.editor.moveElementDown(this);
+								this.editor.layoutEditorWidgets.forEach(widget -> widget.editorElementOrderChanged(this, false));
+							})
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.movedown.desc")))
 					.setIsActiveSupplier((menu, entry) -> this.editor.canBeMovedDown(this))
 					.setIcon(ContextMenu.IconFactory.getIcon("arrow_down"));
 
@@ -638,6 +646,11 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		this.leftMouseDownBaseHeight = this.element.baseHeight;
 	}
 
+	public void updateDraggingStartPos(int mouseX, int mouseY) {
+		this.draggingStartPosX = mouseX;
+		this.draggingStartPosY = mouseY;
+	}
+
 	@Override
 	public boolean mouseClicked(double mouseX, double mouseY, int button) {
 		if (!this.isSelected()) {
@@ -672,8 +685,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			return false;
 		}
 		if (button == 0) {
-			int diffX = (int)-(this.leftMouseDownMouseX - mouseX);
-			int diffY = (int)-(this.leftMouseDownMouseY - mouseY);
+			int diffX = (int)-(this.draggingStartPosX - mouseX);
+			int diffY = (int)-(this.draggingStartPosY - mouseY);
 			if (this.leftMouseDown && !this.isGettingResized()) {
 				if (this.editor.allSelectedElementsMovable()) {
 					if (!this.isMultiSelected() || (this.element.anchorPoint != ElementAnchorPoints.ELEMENT)) {

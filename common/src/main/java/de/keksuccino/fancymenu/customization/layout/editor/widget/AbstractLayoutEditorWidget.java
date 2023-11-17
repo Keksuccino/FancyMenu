@@ -453,6 +453,16 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
         }
     }
 
+    @NotNull
+    public List<AbstractLayoutEditorWidget> getAllWidgetsExceptThis() {
+        List<AbstractLayoutEditorWidget> widgets = new ArrayList<>(this.editor.layoutEditorWidgets);
+        widgets.removeIf(widget -> widget == this);
+        return widgets;
+    }
+
+    public void editorElementOrderChanged(@NotNull AbstractEditorElement element, boolean movedUp) {
+    }
+
     public void editorElementAdded(@NotNull AbstractEditorElement element) {
     }
 

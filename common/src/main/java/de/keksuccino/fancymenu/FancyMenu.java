@@ -22,6 +22,9 @@ public class FancyMenu {
 
 	//TODO ALLE UNGENUTZTEN FileTypes entfernen (ungenutzte video types)
 
+	//TODO Text Editor: Undo/Redo adden
+
+
 
 
 
@@ -50,22 +53,13 @@ public class FancyMenu {
 	//TODO Button: Nine-Slice Background Mode (toggle on/off)
 	// - Option, um Randbreite zu definieren, wenn möglich
 
-	//TODO Add short delay before elements can be moved in the editor (after left-clicking them)
-
 	//TODO split Debug overlay into toggleable groups
-
-	//TODO Keep context menus open when opening layout in system text editor, etc.
 
 	//TODO Simple Video Renderer schreiben
 	// - Nach "Video Frame InputStream" googlen (audio evtl. separat getten?)
 	// - Evtl. mit Java-eigenen libs arbeiten
 
-	//TODO FIXEN: Neues element wird bei last mouse right-click pos geaddet, wenn man per menu bar addet (sollte oben links geaddet werden)
-	// - Bei Menu Bar click cached mouse pos auf X30 Y30 setzen ??
-
 	//TODO FIXEN: eventuell aktualisieren Forge Deep elements in title screen ihre position nicht richtig (checken)
-
-	//TODO In layout safe-as screen als default file name universal identifiers nutzen, falls vorhanden
 
 	//TODO add widget label scale option (per CustomizableWidget adden)
 
@@ -92,8 +86,6 @@ public class FancyMenu {
 	//TODO Item Element, das per item meta (wie in give command) customized werden kann
 
 	//TODO option für "keep position after anchor change" adden
-
-	//TODO Key Presses in TextEditorScreen genau wie in LayoutEditorScreen handeln (pressed char getten und dann damit checken)
 
 	//TODO Möglichkeit adden, Custom GUIs zu kopieren (bei kopieren öffnet sich input screen, um neuen identifier einzugeben)
 
