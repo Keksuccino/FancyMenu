@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public class ResourceSupplier<R extends Resource> {
@@ -29,6 +30,8 @@ public class ResourceSupplier<R extends Resource> {
     protected R current;
     @Nullable
     protected String lastGetterSource;
+    @Nullable
+    protected Consumer<R> onUpdateCurrent = null;
 
     /**
      * Returns a new {@link ResourceSupplier} for an image source.
@@ -49,7 +52,8 @@ public class ResourceSupplier<R extends Resource> {
      */
     @NotNull
     public static ResourceSupplier<IAudio> audio(@NotNull String source) {
-        return new ResourceSupplier<>(IAudio.class, FileMediaType.AUDIO, source);
+        return new ResourceSupplier<>(IAudio.class, FileMediaType.AUDIO, source)
+                .setOnUpdateResourceTask(PlayableResource::stop);
     }
 
     /**
@@ -88,6 +92,9 @@ public class ResourceSupplier<R extends Resource> {
         }
         String getterSource = PlaceholderParser.replacePlaceholders(this.source, false);
         if (!getterSource.equals(this.lastGetterSource)) {
+            if ((this.onUpdateCurrent != null) && (this.current != null)) {
+                this.onUpdateCurrent.accept(this.current);
+            }
             this.current = null;
         }
         this.lastGetterSource = getterSource;
@@ -167,6 +174,15 @@ public class ResourceSupplier<R extends Resource> {
 
     public void setSource(@NotNull String source) {
         this.source = Objects.requireNonNull(source);
+    }
+
+    /**
+     * Set a task that should get executed when updating the {@link ResourceSupplier#current} resource to a new one.<br>
+     * The consumer contains the old resource that is about to get replaced.
+     */
+    public ResourceSupplier<R> setOnUpdateResourceTask(@Nullable Consumer<R> oldResourceConsumer) {
+        this.onUpdateCurrent = oldResourceConsumer;
+        return this;
     }
 
 }

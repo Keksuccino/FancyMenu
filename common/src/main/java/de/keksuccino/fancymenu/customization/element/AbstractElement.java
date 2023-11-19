@@ -275,23 +275,17 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	}
 
 	public boolean shouldRender() {
-		if (!this.loadingRequirementsMet()) {
-			return false;
-		}
+		if (!this.loadingRequirementsMet()) return false;
 		return this.visible;
 	}
 
 	protected boolean loadingRequirementsMet() {
-		if (isEditor()) {
-			return true;
-		}
+		if (isEditor()) return true;
 		return this.loadingRequirementContainer.requirementsMet();
 	}
 
 	public static String fixBackslashPath(String path) {
-		if (path != null) {
-			return path.replace("\\", "/");
-		}
+		if (path != null) return path.replace("\\", "/");
 		return null;
 	}
 

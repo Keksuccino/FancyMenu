@@ -26,6 +26,10 @@ public class FancyMenu {
 
 	//TODO Neues Audio element schreiben (default; keine Extension mehr)
 
+	//TODO Max Number Placeholder (Math.max)
+
+	//TODO Min Number Placeholder (Math.min)
+
 
 
 

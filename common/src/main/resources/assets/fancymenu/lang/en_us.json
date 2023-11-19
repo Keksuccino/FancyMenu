@@ -1125,5 +1125,10 @@
   "fancymenu.placeholders.screen_identifier": "Screen Identifier",
   "fancymenu.placeholders.screen_identifier.desc": "Gets the identifier of the active screen.",
   "fancymenu.ui.customization_overlay.layouts.universal_suffix": "(Universal)",
-  "fancymenu.ui.customization_overlay.layouts.normal_suffix": "(Normal)"
+  "fancymenu.ui.customization_overlay.layouts.normal_suffix": "(Normal)",
+  "fancymenu.elements.audio": "Audio",
+  "fancymenu.elements.audio.desc": "Audio elements allow you to play\naudio files in menus.\nSupports multiple audios per element!",
+  "fancymenu.elements.audio.play_mode": "Play Mode: %s",
+  "fancymenu.elements.audio.play_mode.normal": "Normal",
+  "fancymenu.elements.audio.play_mode.shuffle": "Shuffle"
 }
