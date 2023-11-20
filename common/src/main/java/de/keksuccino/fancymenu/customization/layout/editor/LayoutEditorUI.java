@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
-import de.keksuccino.fancymenu.Compat;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.background.ChooseMenuBackgroundScreen;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
@@ -18,7 +17,6 @@ import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlayUI;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
 import de.keksuccino.fancymenu.util.file.FileUtils;
@@ -41,7 +39,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
@@ -613,12 +610,6 @@ public class LayoutEditorUI {
 	public static ContextMenu buildElementContextMenu(@NotNull LayoutEditorScreen editor) {
 
 		ContextMenu menu = new ContextMenu();
-
-		if (!Compat.isAudioExtensionLoaded()) {
-			menu.addClickableEntry("dummy_audio_entry", Component.translatable("fancymenu.editor.add.audio"), (menu1, entry) -> {
-				WebUtils.openWebLink("https://www.curseforge.com/minecraft/mc-mods/audio-extension-for-fancymenu-" + FancyMenu.MOD_LOADER);
-			}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.extension.dummy.audio.btn.desc")));
-		}
 
 		int i = 0;
 		for (ElementBuilder<?,?> builder : ElementRegistry.getBuilders()) {
