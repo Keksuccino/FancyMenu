@@ -4,7 +4,7 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.function.Consumer;
 
-public abstract class StringBuilderScreen extends ConfiguratorScreen {
+public abstract class StringBuilderScreen extends CellScreen {
 
     protected final Consumer<String> callback;
 

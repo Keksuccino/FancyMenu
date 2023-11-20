@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.customgui;
 
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfiguratorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.client.Minecraft;
@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class ManageOverriddenGuisScreen extends ConfiguratorScreen {
+public class ManageOverriddenGuisScreen extends CellScreen {
 
     protected Runnable onCloseRunnable;
     protected List<String> removedOverrides = new ArrayList<>();

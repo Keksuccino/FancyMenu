@@ -6,9 +6,42 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 @SuppressWarnings("unused")
 public class ListUtils {
+
+    /**
+     * Moves the given object to the given index.<br>
+     * Does nothing if the given object was not found in the given list.<br><br>
+     *
+     * If the given index is smaller than 0, the object gets moved to the beginning of the list.<br>
+     * If the given index is bigger than list.size(), the object gets moved to the end of the list.
+     */
+    public static <T> void changeIndexOf(@NotNull List<T> list, @NotNull T object, int newIndex) {
+        if (list.isEmpty()) return;
+        if (newIndex < 0) newIndex = 0;
+        if (newIndex > list.size()) newIndex = list.size();
+        int currentIndex = list.indexOf(Objects.requireNonNull(object));
+        if (currentIndex == -1) return;
+        if (currentIndex == newIndex) return;
+        list.remove(object);
+        list.add(newIndex, object);
+    }
+
+    /**
+     * Moves the given object to the given index offset.<br>
+     * Does nothing if the given object was not found in the given list.<br><br>
+     *
+     * If the new index is smaller than 0, the object gets moved to the beginning of the list.<br>
+     * If the new index is bigger than list.size(), the object gets moved to the end of the list.
+     */
+    public static <T> void offsetIndexOf(@NotNull List<T> list, @NotNull T object, int indexOffset) {
+        int currentIndex = list.indexOf(Objects.requireNonNull(object));
+        if (currentIndex == -1) return;
+        int newIndex = currentIndex + indexOffset;
+        changeIndexOf(list, object, newIndex);
+    }
 
     @Nullable
     public static <T> T getLast(@NotNull List<T> list) {
@@ -66,8 +99,11 @@ public class ListUtils {
     /**
      * Filters the given list and returns it.<br>
      * The filter checks every entry of the given list and if it returns FALSE, the entry will get REMOVED from the list.
+     *
+     * @deprecated Use {@link List#removeIf(Predicate)} instead.
      */
     @NotNull
+    @Deprecated
     public static <T> List<T> filterList(@NotNull List<T> listToFilter, @NotNull ConsumingSupplier<T, Boolean> filter) {
         List<T> l = new ArrayList<>();
         for (T object : listToFilter) {

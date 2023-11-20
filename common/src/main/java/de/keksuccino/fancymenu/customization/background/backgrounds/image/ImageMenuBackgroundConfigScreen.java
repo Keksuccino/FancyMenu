@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfiguratorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
@@ -16,7 +16,7 @@ import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import java.util.function.Consumer;
 
-public class ImageMenuBackgroundConfigScreen extends ConfiguratorScreen {
+public class ImageMenuBackgroundConfigScreen extends CellScreen {
 
     @NotNull
     protected Consumer<ImageMenuBackground> callback;

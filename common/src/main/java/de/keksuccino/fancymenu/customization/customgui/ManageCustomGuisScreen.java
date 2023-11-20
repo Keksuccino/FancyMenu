@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.customgui;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfiguratorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ManageCustomGuisScreen extends ConfiguratorScreen {
+public class ManageCustomGuisScreen extends CellScreen {
 
     protected Runnable onCloseRunnable;
     protected List<CustomGui> guis = new ArrayList<>();

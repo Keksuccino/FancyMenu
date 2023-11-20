@@ -346,7 +346,13 @@ public class OggAudio implements IAudio {
 
     @Override
     public boolean isReady() {
-        return !this.closed && this.decoded && (this.clip != null);
+        if (this.closed || !this.decoded) return false;
+        ALAudioClip cachedClip = this.clip;
+        if (cachedClip != null) {
+            if (cachedClip.isClosed()) return false;
+            if (cachedClip.isValidOpenAlSource()) return true;
+        }
+        return false;
     }
 
     public boolean isValidOpenAlSource() {

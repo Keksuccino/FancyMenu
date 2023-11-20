@@ -14,33 +14,52 @@ import de.keksuccino.fancymenu.util.resources.audio.IAudio;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
+import net.minecraft.sounds.SoundSource;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 public class AudioElement extends AbstractElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final DrawableColor BACKGROUND_COLOR = DrawableColor.of(new Color(149, 196, 22));
-    private static final Map<String, String> CACHED_CURRENT_AUDIOS = new HashMap<>();
+    private static final long AUDIO_START_COOLDOWN_MS = 2000;
+    private static final Map<String, Integer> CACHED_CURRENT_AUDIOS = new HashMap<>();
 
-    //TODO Cache current audio with element ID and check if audio is cached on load, to continue playing it
-    // - Wenn current im cache, dann direkt play(), sonst vorher stop() (für neustart bei nicht gecachten audios)
+    //TODO Editor: add sound channel cycle
+
+    //TODO Editor: add volume setter
+
+    //TODO Actions
+    // - Add as new category if possible ("Audio Element"); alternatively add prefix to all Actions ("Audio Element: ...")
+    // - Set Volume
+    // - Next Track
+    // - Previous Track
+    // - Toggle Mute
+
+    //TODO Placeholders
+    // - Get Volume
 
     @NotNull
-    public PlayMode playMode = PlayMode.NORMAL;
-    public boolean loop = false;
-    public final List<AudioInstance> audios = new ArrayList<>();
-    public int currentAudioIndex = -1;
+    protected PlayMode playMode = PlayMode.NORMAL;
+    protected boolean loop = false;
+    protected float volume = 1.0F;
+    @NotNull
+    protected SoundSource soundSource = SoundSource.MASTER;
+    /** Call {@link AudioElement#resetAudioElementKeepAudios()} after adding or removing audios. **/
+    public List<AudioInstance> audios = new ArrayList<>();
+    protected int currentAudioIndex = -1;
     @Nullable
-    public AudioInstance currentAudio;
+    protected AudioInstance currentAudio;
+    protected long lastAudioStart = -1L;
+    /** Used when not looping and is shuffling. **/
+    protected List<Integer> alreadyPlayedShuffleAudios = new ArrayList<>();
+    protected boolean cacheChecked = false;
 
     public AudioElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -48,6 +67,34 @@ public class AudioElement extends AbstractElement {
 
     @Override
     public void tick() {
+
+        //Don't play music in editor
+        if (isEditor()) return; //TODO Maybe make this a toggleable option in editor???
+
+        boolean loadedFromCache = false;
+        if (!this.cacheChecked) {
+            if (CACHED_CURRENT_AUDIOS.containsKey(this.getInstanceIdentifier())) {
+                int cached = CACHED_CURRENT_AUDIOS.get(this.getInstanceIdentifier());
+                if ((this.audios.size()-1) >= cached) {
+                    this.currentAudioIndex = cached;
+                    loadedFromCache = true;
+                }
+            }
+            this.cacheChecked = true;
+        }
+
+        if (this.shouldRender()) this.pickNextAudio();
+
+        //Do nothing in case not looping and end reached
+        if (this.currentAudioIndex == -2) return;
+
+        //Set currentAudio by currentAudioIndex
+        if ((this.currentAudio == null) && (this.currentAudioIndex >= 0)) {
+            if ((this.audios.size()-1) >= this.currentAudioIndex) {
+                this.currentAudio = this.audios.get(this.currentAudioIndex);
+                CACHED_CURRENT_AUDIOS.put(this.getInstanceIdentifier(), this.currentAudioIndex);
+            }
+        }
 
         if (this.currentAudio != null) {
 
@@ -60,9 +107,18 @@ public class AudioElement extends AbstractElement {
                 return;
             }
 
+            long now = System.currentTimeMillis();
+            boolean isOnCooldown = ((this.lastAudioStart + AUDIO_START_COOLDOWN_MS) > now);
+
             //Start current audio if not playing
-            if (this.currentAudio != null) {
-                if ((a != null) && a.isReady() && !a.isPlaying()) a.play();
+            if (!isOnCooldown && (this.currentAudio != null)) {
+                if ((a != null) && a.isReady() && !a.isPlaying()) {
+                    this.lastAudioStart = now;
+                    a.setVolume(this.volume);
+                    a.setSoundChannel(this.soundSource);
+                    if (!loadedFromCache) a.stop();
+                    a.play();
+                }
             }
 
         }
@@ -79,9 +135,122 @@ public class AudioElement extends AbstractElement {
     }
 
     protected void pickNextAudio() {
+        //Return if no audios to play
+        if (this.audios.isEmpty()) return;
+        //-2 = not looping & last track finished
+        if (this.currentAudioIndex == -2) return;
+        //-1 = not started
         if (this.currentAudioIndex == -1) {
-            if (!this.audios.isEmpty())
+            this.currentAudioIndex = 0;
+            return;
         }
+        if (this.currentAudio != null) {
+            IAudio a = this.currentAudio.audio.get();
+            if (a != null) {
+                long now = System.currentTimeMillis();
+                boolean isOnCooldown = ((this.lastAudioStart + AUDIO_START_COOLDOWN_MS) > now);
+                if (!isOnCooldown && a.isReady() && !a.isPlaying()) {
+                    if (this.playMode == PlayMode.SHUFFLE) {
+                        List<Integer> indexes = this.buildShuffleIndexesList();
+                        if (!indexes.isEmpty()) {
+                            int pickedIndex = (indexes.size() == 1) ? 0 : MathUtils.getRandomNumberInRange(0, indexes.size()-1);
+                            this.currentAudioIndex = indexes.get(pickedIndex);
+                            if (!this.loop) this.alreadyPlayedShuffleAudios.add(this.currentAudioIndex);
+                        } else {
+                            this.currentAudioIndex = -2;
+                        }
+                    } else {
+                        this.currentAudioIndex++;
+                        //Restart if end of audio list reached (or stop if not looping)
+                        if (this.currentAudioIndex > (this.audios.size()-1)) {
+                            this.currentAudioIndex = this.loop ? 0 : -2;
+                        }
+                    }
+                    CACHED_CURRENT_AUDIOS.remove(this.getInstanceIdentifier());
+                    a.stop();
+                    this.currentAudio = null;
+                }
+            }
+        }
+    }
+
+    @NotNull
+    protected List<Integer> buildShuffleIndexesList() {
+        List<Integer> indexes = new ArrayList<>();
+        if (this.playMode != PlayMode.SHUFFLE) return indexes;
+        int i = 0;
+        for (AudioInstance ignored : this.audios) {
+            indexes.add(i);
+            i++;
+        }
+        if (!this.loop) {
+            indexes.removeIf(integer -> this.alreadyPlayedShuffleAudios.contains(integer));
+        }
+        return indexes;
+    }
+
+    public void resetAudioElementKeepAudios() {
+        if (this.currentAudio != null) {
+            IAudio a = this.currentAudio.audio.get();
+            if (a != null) a.stop();
+        }
+        this.currentAudio = null;
+        this.alreadyPlayedShuffleAudios.clear();
+        this.currentAudioIndex = -1;
+        this.lastAudioStart = -1;
+        CACHED_CURRENT_AUDIOS.remove(this.getInstanceIdentifier());
+    }
+
+    public void setLooping(boolean loop) {
+        this.loop = loop;
+        this.resetAudioElementKeepAudios();
+    }
+
+    public boolean isLooping() {
+        return this.loop;
+    }
+
+    public void setPlayMode(@NotNull PlayMode mode) {
+        this.playMode = Objects.requireNonNull(mode);
+        this.resetAudioElementKeepAudios();
+    }
+
+    @NotNull
+    public PlayMode getPlayMode() {
+        return this.playMode;
+    }
+
+    /**
+     * Value between 0.0F and 1.0F.
+     */
+    public void setVolume(float volume) {
+        if (volume > 1.0F) volume = 1.0F;
+        if (volume < 0.0F) volume = 0.0F;
+        this.volume = volume;
+        if (this.currentAudio != null) {
+            IAudio a = this.currentAudio.audio.get();
+            if (a != null) a.setVolume(this.volume);
+        }
+    }
+
+    /**
+     * Value between 0.0F and 1.0F.
+     */
+    public float getVolume() {
+        return this.volume;
+    }
+
+    public void setSoundSource(@NotNull SoundSource soundSource) {
+        this.soundSource = Objects.requireNonNull(soundSource);
+        if (this.currentAudio != null) {
+            IAudio a = this.currentAudio.audio.get();
+            if (a != null) a.setSoundChannel(soundSource);
+        }
+    }
+
+    @NotNull
+    public SoundSource getSoundSource() {
+        return this.soundSource;
     }
 
     @Override
@@ -152,13 +321,17 @@ public class AudioElement extends AbstractElement {
 
     public static class AudioInstance {
 
+        @NotNull
         ResourceSupplier<IAudio> audio;
-        float volume = 1.0F;
+
+        public AudioInstance(@NotNull ResourceSupplier<IAudio> audio) {
+            this.audio = Objects.requireNonNull(audio);
+        }
 
         public static void serializeAllToExistingContainer(@NotNull List<AudioInstance> instances, @NotNull PropertyContainer container) {
             int i = 0;
             for (AudioInstance instance : instances) {
-                if (instance.audio != null) container.putProperty("audio_instance_" + i, "" + instance.volume + ";" + instance.audio.getSourceWithPrefix());
+                container.putProperty("audio_instance_" + i, instance.audio.getSourceWithPrefix());
                 i++;
             }
         }
@@ -167,14 +340,8 @@ public class AudioElement extends AbstractElement {
         public static List<AudioInstance> deserializeAllOfContainer(@NotNull PropertyContainer container) {
             List<AudioInstance> instances = new ArrayList<>();
             container.getProperties().forEach((key, value) -> {
-                if (StringUtils.startsWith(key, "audio_instance_") && StringUtils.contains(value, ';')) {
-                    AudioInstance instance = new AudioInstance();
-                    String[] serialized = value.split(";", 2);
-                    if (MathUtils.isFloat(serialized[0])) {
-                        instance.volume = Float.parseFloat(serialized[0]);
-                        instance.audio = ResourceSupplier.audio(serialized[1]);
-                    }
-                    instances.add(instance);
+                if (StringUtils.startsWith(key, "audio_instance_")) {
+                    instances.add(new AudioInstance(ResourceSupplier.audio(value)));
                 }
             });
             return instances;

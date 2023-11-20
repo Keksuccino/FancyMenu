@@ -30,15 +30,14 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @SuppressWarnings("all")
-public abstract class ConfiguratorScreen extends Screen {
+public abstract class CellScreen extends Screen {
 
     public ScrollArea scrollArea;
     @Nullable
@@ -49,21 +48,21 @@ public abstract class ConfiguratorScreen extends Screen {
     @Nullable
     protected ExtendedButton cancelButton;
 
-    protected ConfiguratorScreen(@NotNull Component title) {
+    protected CellScreen(@NotNull Component title) {
         super(title);
     }
 
     /**
      * This is to add cells to the cell view.<br>
-     * Gets called in {@link ConfiguratorScreen#init()}, before {@link ConfiguratorScreen#initRightSideWidgets()}.
+     * Gets called in {@link CellScreen#init()}, before {@link CellScreen#initRightSideWidgets()}.
      */
     protected void initCells() {
     }
 
     /**
      * This is for custom widgets that should get added to the right side.<br>
-     * Gets called in {@link ConfiguratorScreen#init()}.<br>
-     * The {@link ConfiguratorScreen#cancelButton} and {@link ConfiguratorScreen#doneButton} are NOT INITIALIZED yet when this method gets called!
+     * Gets called in {@link CellScreen#init()}.<br>
+     * The {@link CellScreen#cancelButton} and {@link CellScreen#doneButton} are NOT INITIALIZED yet when this method gets called!
      */
     protected void initRightSideWidgets() {
     }
@@ -200,7 +199,7 @@ public abstract class ConfiguratorScreen extends Screen {
     }
 
     @NotNull
-    protected ConfiguratorScreen.LabelCell addLabelCell(@NotNull Component text) {
+    protected CellScreen.LabelCell addLabelCell(@NotNull Component text) {
         return this.addCell(new LabelCell(text));
     }
 
@@ -236,12 +235,12 @@ public abstract class ConfiguratorScreen extends Screen {
     }
 
     @NotNull
-    protected <T> ConfiguratorScreen.WidgetCell addCycleButtonCell(@NotNull ILocalizedValueCycle<T> cycle, boolean applyDefaultButtonSkin, CycleButton.CycleButtonClickFeedback<T> clickFeedback) {
+    protected <T> CellScreen.WidgetCell addCycleButtonCell(@NotNull ILocalizedValueCycle<T> cycle, boolean applyDefaultButtonSkin, CycleButton.CycleButtonClickFeedback<T> clickFeedback) {
         return this.addWidgetCell(new CycleButton(0, 0, 20, 20, cycle, clickFeedback), applyDefaultButtonSkin);
     }
 
     @NotNull
-    protected ConfiguratorScreen.WidgetCell addWidgetCell(@NotNull AbstractWidget widget, boolean applyDefaultButtonSkin) {
+    protected CellScreen.WidgetCell addWidgetCell(@NotNull AbstractWidget widget, boolean applyDefaultButtonSkin) {
         return this.addCell(new WidgetCell(widget, applyDefaultButtonSkin));
     }
 
@@ -313,7 +312,7 @@ public abstract class ConfiguratorScreen extends Screen {
             this.cell.updatePosition(this);
             //Use the scroll entry position and size to check for cell hover, to cover the whole cell line and not just the (sometimes too small) actual cell size
             this.cell.hovered = UIBase.isXYInArea(mouseX, mouseY, this.getX(), this.getY(), this.parent.getInnerWidth(), this.getHeight());
-            if ((cell.isSelectable() && cell.isHovered()) || (cell == ConfiguratorScreen.this.selectedCell)) {
+            if ((cell.isSelectable() && cell.isHovered()) || (cell == CellScreen.this.selectedCell)) {
                 RenderingUtils.resetShaderColor();
                 fill(pose, (int) this.getX(), (int) this.getY(), (int) (this.getX() + this.parent.getInnerWidth()), (int) (this.getY() + this.getHeight()), this.cell.hoverColorSupplier.get().getColorInt());
                 RenderingUtils.resetShaderColor();
@@ -355,7 +354,7 @@ public abstract class ConfiguratorScreen extends Screen {
 
         @Override
         protected void updateSize(@NotNull CellScrollEntry scrollEntry) {
-            this.setWidth((int)(ConfiguratorScreen.this.scrollArea.getInnerWidth() - 40));
+            this.setWidth((int)(CellScreen.this.scrollArea.getInnerWidth() - 40));
         }
 
         @NotNull
@@ -430,7 +429,7 @@ public abstract class ConfiguratorScreen extends Screen {
 
         @Override
         protected void updateSize(@NotNull CellScrollEntry scrollEntry) {
-            this.setWidth((int)(ConfiguratorScreen.this.scrollArea.getInnerWidth() - 40));
+            this.setWidth((int)(CellScreen.this.scrollArea.getInnerWidth() - 40));
             this.setHeight(this.widget.getHeight());
         }
 
@@ -496,7 +495,7 @@ public abstract class ConfiguratorScreen extends Screen {
                             if (callback != null) {
                                 this.editorCallback.accept(callback, this);
                             }
-                            Minecraft.getInstance().setScreen(ConfiguratorScreen.this);
+                            Minecraft.getInstance().setScreen(CellScreen.this);
                         });
                         s.setMultilineMode(false);
                         s.setPlaceholdersAllowed(allowEditorPlaceholders);
@@ -591,6 +590,7 @@ public abstract class ConfiguratorScreen extends Screen {
         protected boolean hovered = false;
         protected Supplier<DrawableColor> hoverColorSupplier = () -> UIBase.getUIColorTheme().list_entry_color_selected_hovered;
         protected final List<GuiEventListener> children = new ArrayList<>();
+        protected final Map<String, String> memory = new HashMap<>();
 
         public abstract void renderCell(@NotNull PoseStack pose, int mouseX, int mouseY, float partial);
 
@@ -613,7 +613,7 @@ public abstract class ConfiguratorScreen extends Screen {
         }
 
         protected void updateSize(@NotNull CellScrollEntry scrollEntry) {
-            this.setWidth((int)(ConfiguratorScreen.this.scrollArea.getInnerWidth() - 40));
+            this.setWidth((int)(CellScreen.this.scrollArea.getInnerWidth() - 40));
             this.setHeight(20);
         }
 
@@ -685,6 +685,16 @@ public abstract class ConfiguratorScreen extends Screen {
             return this;
         }
 
+        public RenderCell putMemoryValue(@NotNull String key, @NotNull String value) {
+            this.memory.put(key, value);
+            return this;
+        }
+
+        @Nullable
+        public String getMemoryValue(@NotNull String key) {
+            return this.memory.get(key);
+        }
+
         @Override
         public @NotNull List<GuiEventListener> children() {
             return this.children;
@@ -701,10 +711,10 @@ public abstract class ConfiguratorScreen extends Screen {
 
         @Override
         public boolean mouseClicked(double $$0, double $$1, int $$2) {
-            if (ConfiguratorScreen.this.scrollArea.isMouseInteractingWithGrabbers()) {
+            if (CellScreen.this.scrollArea.isMouseInteractingWithGrabbers()) {
                 return false;
             }
-            if (!ConfiguratorScreen.this.scrollArea.isInnerAreaHovered()) {
+            if (!CellScreen.this.scrollArea.isInnerAreaHovered()) {
                 return false;
             }
             if (this.hovered && this.selectable) {
@@ -717,7 +727,7 @@ public abstract class ConfiguratorScreen extends Screen {
 
         @Override
         public boolean mouseDragged(double $$0, double $$1, int $$2, double $$3, double $$4) {
-            if (ConfiguratorScreen.this.scrollArea.isMouseInteractingWithGrabbers()) {
+            if (CellScreen.this.scrollArea.isMouseInteractingWithGrabbers()) {
                 return false;
             }
             return super.mouseDragged($$0, $$1, $$2, $$3, $$4);
@@ -725,7 +735,7 @@ public abstract class ConfiguratorScreen extends Screen {
 
         @Override
         public boolean mouseReleased(double $$0, double $$1, int $$2) {
-            if (ConfiguratorScreen.this.scrollArea.isMouseInteractingWithGrabbers()) {
+            if (CellScreen.this.scrollArea.isMouseInteractingWithGrabbers()) {
                 return false;
             }
             return super.mouseReleased($$0, $$1, $$2);

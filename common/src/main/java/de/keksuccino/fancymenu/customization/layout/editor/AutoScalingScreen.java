@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfiguratorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -9,7 +9,7 @@ import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import java.util.function.Consumer;
 
-public class AutoScalingScreen extends ConfiguratorScreen {
+public class AutoScalingScreen extends CellScreen {
 
     protected LayoutEditorScreen editor;
     protected Consumer<Boolean> callback;

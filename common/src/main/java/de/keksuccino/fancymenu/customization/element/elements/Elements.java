@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.element.elements;
 
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
 import de.keksuccino.fancymenu.customization.element.elements.animation.AnimationElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.audio.AudioElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.cursor.CursorElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.image.ImageElementBuilder;
@@ -34,6 +35,7 @@ public class Elements {
     public static final ShapeElementBuilder SHAPE = new ShapeElementBuilder();
     public static final CursorElementBuilder CURSOR = new CursorElementBuilder();
     public static final ProgressBarElementBuilder PROGRESS_BAR = new ProgressBarElementBuilder();
+    public static final AudioElementBuilder AUDIO_V2 = new AudioElementBuilder();
 
     public static void registerAll() {
 
@@ -52,6 +54,7 @@ public class Elements {
         ElementRegistry.register(SHAPE);
         ElementRegistry.register(CURSOR);
         ElementRegistry.register(PROGRESS_BAR);
+        ElementRegistry.register(AUDIO_V2);
 
     }
 

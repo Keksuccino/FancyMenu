@@ -16,7 +16,7 @@ import de.keksuccino.fancymenu.util.file.type.types.TextFileType;
 import de.keksuccino.fancymenu.util.file.type.types.VideoFileType;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfiguratorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseFileScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
@@ -44,7 +44,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
-public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> extends ConfiguratorScreen {
+public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> extends CellScreen {
 
     //TODO Somehow tell the user what source types are possible for all allowed file types
     // (maybe tell the user if some source type for some file type is NOT available?? inform only about NOT available source types; maybe under the control cells)

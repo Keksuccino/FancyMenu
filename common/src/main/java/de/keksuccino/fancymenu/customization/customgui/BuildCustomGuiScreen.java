@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfiguratorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-public class BuildCustomGuiScreen extends ConfiguratorScreen {
+public class BuildCustomGuiScreen extends CellScreen {
 
     @NotNull
     protected CustomGui gui;

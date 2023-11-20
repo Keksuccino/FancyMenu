@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class StringListChooserScreen extends ConfiguratorScreen {
+public class StringListChooserScreen extends CellScreen {
 
     protected Consumer<String> callback;
     protected List<String> list;
