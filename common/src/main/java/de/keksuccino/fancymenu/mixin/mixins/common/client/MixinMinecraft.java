@@ -109,16 +109,17 @@ public class MixinMinecraft {
 	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/BufferUploader;reset()V", shift = At.Shift.AFTER))
 	private void beforeInitCurrentScreenFancyMenu(Screen screen, CallbackInfo info) {
 		if (screen != null) {
-			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(screen));
-			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(screen));
+			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(screen, InitOrResizeScreenEvent.InitializationPhase.INIT));
+			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(screen, InitOrResizeScreenEvent.InitializationPhase.INIT));
 		}
 	}
 
 	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;updateTitle()V"))
 	private void afterInitCurrentScreenFancyMenu(Screen screen, CallbackInfo info) {
 		if (screen != null) {
-			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(screen));
-			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(screen));
+			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(screen, InitOrResizeScreenEvent.InitializationPhase.INIT));
+			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(screen, InitOrResizeScreenEvent.InitializationPhase.INIT));
+			EventHandler.INSTANCE.postEvent(new OpenScreenPostInitEvent(screen));
 		}
 	}
 
@@ -138,16 +139,16 @@ public class MixinMinecraft {
 	private void beforeResizeCurrentScreenFancyMenu(CallbackInfo info) {
 		if (this.screen != null) {
 			RenderingUtils.resetGuiScale();
-			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(this.screen));
-			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(this.screen));
+			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(this.screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
+			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(this.screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
 		}
 	}
 
 	@Inject(method = "resizeDisplay", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;getMainRenderTarget()Lcom/mojang/blaze3d/pipeline/RenderTarget;"))
 	private void afterResizeCurrentScreenFancyMenu(CallbackInfo info) {
 		if (this.screen != null) {
-			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(this.screen));
-			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(this.screen));
+			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(this.screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
+			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(this.screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
 		}
 	}
 

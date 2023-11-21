@@ -543,6 +543,7 @@ public class Layout extends LayoutBase {
                 if (builder != null) {
                     AbstractElement element = builder.deserializeElementInternal(serialized);
                     if (element != null) {
+                        element.setParentLayout(this);
                         if (this.renderElementsBehindVanilla) {
                             collection.backgroundElements.add(element);
                         } else {
@@ -566,6 +567,7 @@ public class Layout extends LayoutBase {
                     if (builder != null) {
                         AbstractDeepElement element = builder.deserializeElementInternal(serialized);
                         if (element != null) {
+                            element.setParentLayout(this);
                             elements.add(element);
                         }
                     }
@@ -581,6 +583,7 @@ public class Layout extends LayoutBase {
         for (SerializedElement serialized : this.serializedVanillaButtonElements) {
             VanillaWidgetElement element = VanillaWidgetElementBuilder.INSTANCE.deserializeElementInternal(serialized);
             if (element != null) {
+                element.setParentLayout(this);
                 elements.add(element);
             }
         }

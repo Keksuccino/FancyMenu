@@ -6,17 +6,18 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
-
+import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.Objects;
-
 
 public class InitOrResizeScreenEvent extends EventBase {
 
     protected final Screen screen;
+    protected final InitializationPhase phase;
 
-    protected InitOrResizeScreenEvent(Screen screen) {
+    protected InitOrResizeScreenEvent(@NotNull Screen screen, @NotNull InitializationPhase phase) {
         this.screen = Objects.requireNonNull(screen);
+        this.phase = Objects.requireNonNull(phase);
     }
 
     @Override
@@ -24,23 +25,29 @@ public class InitOrResizeScreenEvent extends EventBase {
         return false;
     }
 
+    @NotNull
     public Screen getScreen() {
         return this.screen;
+    }
+
+    @NotNull
+    public InitializationPhase getInitializationPhase() {
+        return this.phase;
     }
 
     /** You should not get the widgets list in Pre, because it is fired BEFORE the list gets cleared. **/
     public static class Pre extends InitOrResizeScreenEvent {
 
-        public Pre(Screen screen) {
-            super(screen);
+        public Pre(@NotNull Screen screen, @NotNull InitializationPhase phase) {
+            super(screen, phase);
         }
 
     }
 
     public static class Post extends InitOrResizeScreenEvent {
 
-        public Post(Screen screen) {
-            super(screen);
+        public Post(@NotNull Screen screen, @NotNull InitializationPhase phase) {
+            super(screen, phase);
         }
 
         public <T extends GuiEventListener & NarratableEntry> void addWidget(T widget) {
@@ -65,6 +72,11 @@ public class InitOrResizeScreenEvent extends EventBase {
             return ((IMixinScreen)this.getScreen()).getNarratablesFancyMenu();
         }
 
+    }
+
+    public enum InitializationPhase {
+        INIT,
+        RESIZE
     }
 
 }

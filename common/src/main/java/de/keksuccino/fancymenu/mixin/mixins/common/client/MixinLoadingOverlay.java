@@ -10,9 +10,6 @@ import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
-import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
@@ -27,14 +24,14 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.Objects;
 import java.util.function.Consumer;
 
 @Mixin(LoadingOverlay.class)
 public abstract class MixinLoadingOverlay {
 
 	@Unique private static final Logger LOGGER_FANCYMENU = LogManager.getLogger();
-
-	@Unique private static boolean firstScreenInitFancyMenu = true;
 
 	@Inject(method = "<init>", at = @At(value = "RETURN"))
 	private void onConstructFancyMenu(Minecraft mc, ReloadInstance reloadInstance, Consumer<?> consumer, boolean b, CallbackInfo info) {
@@ -77,8 +74,8 @@ public abstract class MixinLoadingOverlay {
 		//Fire Pre Screen Init events, because they normally don't get fired in the loading overlay
 		if (!isPlayingIntro) {
 			RenderingUtils.resetGuiScale();
-			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(Minecraft.getInstance().screen));
-			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(Minecraft.getInstance().screen));
+			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(Objects.requireNonNull(Minecraft.getInstance().screen), InitOrResizeScreenEvent.InitializationPhase.INIT));
+			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(Objects.requireNonNull(Minecraft.getInstance().screen), InitOrResizeScreenEvent.InitializationPhase.INIT));
 		}
 
 	}
@@ -86,35 +83,9 @@ public abstract class MixinLoadingOverlay {
 	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;init(Lnet/minecraft/client/Minecraft;II)V", shift = At.Shift.AFTER))
 	private void afterInitScreenFancyMenu(PoseStack pose, int mouseX, int mouseY, float partial, CallbackInfo info) {
 		//Fire Post Screen Init events, because they normally don't get fired in the loading overlay
-		EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(Minecraft.getInstance().screen));
-		EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(Minecraft.getInstance().screen));
+		EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(Objects.requireNonNull(Minecraft.getInstance().screen), InitOrResizeScreenEvent.InitializationPhase.INIT));
+		EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(Objects.requireNonNull(Minecraft.getInstance().screen), InitOrResizeScreenEvent.InitializationPhase.INIT));
 	}
-
-//	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;init(Lnet/minecraft/client/Minecraft;II)V", shift = At.Shift.AFTER))
-//	private void afterInitScreenFancyMenu(PoseStack pose, int mouseX, int mouseY, float partial, CallbackInfo info) {
-//		if (Minecraft.getInstance().screen != null) {
-//			//Update resource pack animation sizes after reloading textures and when starting the game
-//			LOGGER_FANCYMENU.info("[FANCYMENU] Updating animation sizes..");
-//			AnimationHandler.updateAnimationSizes();
-//			//If it's the first time a screen gets initialized, soft-reload the screen's layer, so first-time stuff works when fading to the Title menu
-//			ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(Minecraft.getInstance().screen);
-//			if ((layer != null) && firstScreenInitFancyMenu) layer.resetLayer();
-//			firstScreenInitFancyMenu = false;
-//			//Reset isNewMenu, so first-time stuff and on-load stuff works correctly, because the menu got initialized already (this is after screen init)
-//			ScreenCustomization.setIsNewMenu(true);
-//			//Re-init the screen to cover all customization init stages
-//			ScreenCustomization.reInitCurrentScreen();
-//		}
-//	}
-
-//	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;setOverlay(Lnet/minecraft/client/gui/screens/Overlay;)V"))
-//	private void beforeClosingOverlayFancyMenu(PoseStack pose, int mouseX, int mouseY, float partial, CallbackInfo info) {
-//		if (Minecraft.getInstance().screen == null) {
-//			//Update resource pack animation sizes after reloading textures if fading to no screen (while in-game)
-//			LOGGER_FANCYMENU.info("[FANCYMENU] Updating animation sizes..");
-//			AnimationHandler.updateAnimationSizes();
-//		}
-//	}
 
 }
 

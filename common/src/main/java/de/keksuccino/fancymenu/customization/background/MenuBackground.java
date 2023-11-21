@@ -36,15 +36,30 @@ public abstract class MenuBackground extends GuiComponent implements Renderable,
 
     /**
      * Gets called before a {@link Screen} gets closed.<br>
-     * A screen gets closed when a new active {@link Screen} gets set via {@link Minecraft#setScreen(Screen)}.
+     * A screen gets closed when a new {@link Screen} gets set via {@link Minecraft#setScreen(Screen)}.
      */
     public void onCloseScreen() {
     }
 
     /**
-     * Gets called after a {@link Screen} got opened via {@link Minecraft#setScreen(Screen)}.
+     * Gets called after a {@link Screen} got opened via {@link Minecraft#setScreen(Screen)}.<br>
+     * The {@link Screen} is already initialized at the time this method gets called.
      */
     public void onOpenScreen() {
+    }
+
+    /**
+     * Gets called before the current {@link Screen} gets resized.<br>
+     * Does NOT get called on initial resize (when opening the screen). Use {@link MenuBackground#onOpenScreen()} for that instead.
+     */
+    public void onBeforeResizeScreen() {
+    }
+
+    /**
+     * Gets called after the current {@link Screen} got resized.<br>
+     * Does NOT get called on initial resize (when opening the screen). Use {@link MenuBackground#onOpenScreen()} for that instead.
+     */
+    public void onAfterResizeScreen() {
     }
 
     @Nullable

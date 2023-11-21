@@ -6,10 +6,12 @@ import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.util.Objects;
 
 public class AudioElementBuilder extends ElementBuilder<AudioElement, AudioEditorElement> {
 
@@ -32,18 +34,42 @@ public class AudioElementBuilder extends ElementBuilder<AudioElement, AudioEdito
 
         AudioElement element = this.buildDefaultInstance();
 
-        element.textureSupplier = deserializeImageResourceSupplier(serialized.getValue("source"));
+        element.audios.addAll(AudioElement.AudioInstance.deserializeAllOfContainer(serialized));
+
+        String playMode = serialized.getValue("play_mode");
+        if (playMode != null) element.setPlayMode(Objects.requireNonNullElse(AudioElement.PlayMode.getByName(playMode), AudioElement.PlayMode.NORMAL));
+
+        element.setLooping(deserializeBoolean(element.loop, serialized.getValue("looping")));
+
+        element.setVolume(deserializeNumber(Float.class, element.volume, serialized.getValue("volume")));
+
+        String soundSource = serialized.getValue("sound_source");
+        if (soundSource != null) element.setSoundSource(Objects.requireNonNullElse(getSoundSourceByName(soundSource), SoundSource.MASTER));
 
         return element;
 
     }
 
+    @Nullable
+    protected static SoundSource getSoundSourceByName(@NotNull String name) {
+        for (SoundSource source : SoundSource.values()) {
+            if (source.getName().equals(name)) return source;
+        }
+        return null;
+    }
+
     @Override
     protected SerializedElement serializeElement(@NotNull AudioElement element, @NotNull SerializedElement serializeTo) {
 
-        if (element.textureSupplier != null) {
-            serializeTo.putProperty("source", element.textureSupplier.getSourceWithPrefix());
-        }
+        AudioElement.AudioInstance.serializeAllToExistingContainer(element.audios, serializeTo);
+
+        serializeTo.putProperty("play_mode", element.playMode.getName());
+
+        serializeTo.putProperty("looping", "" + element.loop);
+
+        serializeTo.putProperty("volume", "" + element.volume);
+
+        serializeTo.putProperty("sound_source", element.soundSource.getName());
 
         return serializeTo;
         

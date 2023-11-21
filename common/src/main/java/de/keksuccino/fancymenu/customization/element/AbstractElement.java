@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
+import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -74,11 +75,22 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	@Nullable
 	public String customElementLayerName = null;
 	private String instanceIdentifier;
+	@Nullable
+	protected Layout parentLayout;
 
 	@SuppressWarnings("all")
 	public AbstractElement(@NotNull ElementBuilder<?,?> builder) {
 		this.builder = builder;
 		this.instanceIdentifier = ScreenCustomization.generateUniqueIdentifier();
+	}
+
+	public void setParentLayout(@Nullable Layout parentLayout) {
+		this.parentLayout = parentLayout;
+	}
+
+	@Nullable
+	public Layout getParentLayout() {
+		return this.parentLayout;
 	}
 
 	@Override
@@ -92,15 +104,46 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 
 	/**
 	 * Gets called before a {@link Screen} gets closed.<br>
-	 * A screen gets closed when a new active {@link Screen} gets set via {@link Minecraft#setScreen(Screen)}.
+	 * A screen gets closed when a new active {@link Screen} gets set via {@link Minecraft#setScreen(Screen)}.<br><br>
+	 *
+	 * Keep in mind that, just like most Vanilla GUI stuff, {@link AbstractElement}s get rebuild every time the {@link Screen} gets resized,
+	 * so this method will only get called for the VERY LAST {@link AbstractElement} instance that got built for the {@link Screen} while it was active.
+	 * It does not get called for instances that got built earlier (by resizing the {@link Screen} multiple times for example).
 	 */
 	public void onCloseScreen() {
 	}
 
 	/**
-	 * Gets called after a {@link Screen} got opened via {@link Minecraft#setScreen(Screen)}.
+	 * Gets called after a {@link Screen} got opened via {@link Minecraft#setScreen(Screen)}.<br>
+	 * The {@link Screen} is already initialized at the time this method gets called.<br><br>
+	 *
+	 * Keep in mind that, just like most Vanilla GUI stuff, {@link AbstractElement}s get rebuild every time the {@link Screen} gets resized,
+	 * so this method will only get called for the FIRST {@link AbstractElement} instance that gets build for the {@link Screen} after opening it.
+	 * It does not get called for instances that get build because of resizing the {@link Screen}.
 	 */
 	public void onOpenScreen() {
+	}
+
+	/**
+	 * Gets called before the current {@link Screen} gets resized.<br>
+	 * Does NOT get called on initial resize (when opening the screen). Use {@link AbstractElement#onOpenScreen()} for that instead.<br><br>
+	 *
+	 * Just like most Vanilla GUI stuff, {@link AbstractElement}s get rebuild every time the screen size changes,
+	 * so every time this method gets called, it gets called for a new {@link AbstractElement} instance.<br><br>
+	 *
+	 * This method should never get called more than once for an {@link AbstractElement} instance.
+	 */
+	public void onBeforeResizeScreen() {
+	}
+
+	/**
+	 * Gets called before the element instance gets destroyed.<br><br>
+	 *
+	 * Just like most Vanilla GUI stuff, {@link AbstractElement}s get rebuild every time the screen size changes,
+	 * so this method gets called every time the {@link Screen} gets resized and when it gets closed by setting
+	 * a new {@link Screen} (or no screen) via {@link Minecraft#setScreen(Screen)}.
+	 */
+	public void onDestroyElement() {
 	}
 
 	/**

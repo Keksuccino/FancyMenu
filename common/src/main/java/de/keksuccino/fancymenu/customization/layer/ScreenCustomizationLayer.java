@@ -57,6 +57,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 
 	protected String screenIdentifier;
 	public LayoutBase layoutBase = new LayoutBase();
+	@NotNull
 	public List<AbstractElement> allElements = new ArrayList<>();
 	public Layout.OrderedElementCollection normalElements = new Layout.OrderedElementCollection();
 	public List<VanillaWidgetElement> vanillaWidgetElements = new ArrayList<>();
@@ -108,9 +109,14 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 			cachedOriginalMenuTitles.put(e.getScreen().getClass(), e.getScreen().getTitle());
 		}
 
-		for (AbstractElement element : this.allElements) {
-			element.onOpenScreen();
-		}
+	}
+
+	@EventListener
+	public void onOpenScreenPostInit(OpenScreenPostInitEvent e) {
+
+		if (!this.shouldCustomize(e.getScreen())) return;
+
+		this.allElements.forEach(AbstractElement::onOpenScreen);
 
 		if (this.layoutBase.menuBackground != null) this.layoutBase.menuBackground.onOpenScreen();
 
@@ -121,9 +127,10 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 
 		if (!this.shouldCustomize(e.getScreen())) return;
 
-		for (AbstractElement element : this.allElements) {
+		this.allElements.forEach(element -> {
 			element.onCloseScreen();
-		}
+			element.onDestroyElement();
+		});
 
 		if (this.layoutBase.menuBackground != null) this.layoutBase.menuBackground.onCloseScreen();
 
@@ -146,6 +153,19 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 		this.delayThreads.clear();
 
 		if (!this.shouldCustomize(e.getScreen())) return;
+
+		this.allElements.forEach(element -> {
+			//Call onResizeScreen() for all OLD elements BEFORE resizing the screen
+			if (e.getInitializationPhase() == InitOrResizeScreenEvent.InitializationPhase.RESIZE) {
+				element.onBeforeResizeScreen();
+			}
+			//Call onDestroyElement() for all OLD elements before resizing the screen, because they get rebuild on resize
+			element.onDestroyElement();
+		});
+
+		if (e.getInitializationPhase() == InitOrResizeScreenEvent.InitializationPhase.RESIZE) {
+			if (this.layoutBase.menuBackground != null) this.layoutBase.menuBackground.onBeforeResizeScreen();
+		}
 
 		List<Layout> rawLayouts = LayoutHandler.getEnabledLayoutsForScreenIdentifier(this.getScreenIdentifier(), true);
 		List<Layout> normalLayouts = new ArrayList<>();
@@ -290,8 +310,13 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 			if (e.getScreen() instanceof CustomizableScreen c) c.removeOnInitChildrenFancyMenu().add(this.layoutBase.menuBackground);
 		}
 
+		if (e.getInitializationPhase() == InitOrResizeScreenEvent.InitializationPhase.RESIZE) {
+			if (this.layoutBase.menuBackground != null) this.layoutBase.menuBackground.onAfterResizeScreen();
+		}
+
 	}
 
+	@SuppressWarnings("all")
 	protected void handleAppearanceDelayFor(AbstractElement element) {
 		if ((element.appearanceDelay != null) && (element.appearanceDelay != AbstractElement.AppearanceDelay.NO_DELAY)) {
 			if ((element.appearanceDelay == AbstractElement.AppearanceDelay.FIRST_TIME) && delayAppearanceFirstTime.contains(element.getInstanceIdentifier())) {

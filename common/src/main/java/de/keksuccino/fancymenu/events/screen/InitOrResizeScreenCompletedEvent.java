@@ -6,15 +6,18 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
-
+import org.jetbrains.annotations.NotNull;
 import java.util.List;
+import java.util.Objects;
 
 public class InitOrResizeScreenCompletedEvent extends EventBase {
 	
-	protected Screen screen;
+	protected final Screen screen;
+	protected final InitOrResizeScreenEvent.InitializationPhase phase;
 	
-	public InitOrResizeScreenCompletedEvent(Screen screen) {
-		this.screen = screen;
+	public InitOrResizeScreenCompletedEvent(@NotNull Screen screen, @NotNull InitOrResizeScreenEvent.InitializationPhase phase) {
+		this.screen = Objects.requireNonNull(screen);
+		this.phase = Objects.requireNonNull(phase);
 	}
 	
 	@Override
@@ -43,9 +46,15 @@ public class InitOrResizeScreenCompletedEvent extends EventBase {
 	public List<NarratableEntry> getNarratables() {
 		return ((IMixinScreen)this.getScreen()).getNarratablesFancyMenu();
 	}
-	
+
+	@NotNull
 	public Screen getScreen() {
 		return this.screen;
+	}
+
+	@NotNull
+	public InitOrResizeScreenEvent.InitializationPhase getInitializationPhase() {
+		return this.phase;
 	}
 	
 }

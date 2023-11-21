@@ -31,9 +31,8 @@ public class AudioElement extends AbstractElement {
     private static final long AUDIO_START_COOLDOWN_MS = 2000;
     private static final Map<String, Integer> CACHED_CURRENT_AUDIOS = new HashMap<>();
 
-    //TODO Editor: add sound channel cycle
-
-    //TODO Editor: add volume setter
+    //TODO FIXEN: Audio stockt noch, wenn resize/menü wechsel
+    // - Am besten doch Audio nicht anhalten und in Builder dann checken, welche audios nach resize/menü wechsel getstoppt werden müssen
 
     //TODO Actions
     // - Add as new category if possible ("Audio Element"); alternatively add prefix to all Actions ("Audio Element: ...")
@@ -41,6 +40,7 @@ public class AudioElement extends AbstractElement {
     // - Next Track
     // - Previous Track
     // - Toggle Mute
+    // - Restart (set to start of first track)
 
     //TODO Placeholders
     // - Get Volume
@@ -125,8 +125,17 @@ public class AudioElement extends AbstractElement {
 
     }
 
+//    @Override
+//    public void onCloseScreen() {
+//        if (this.currentAudio != null) {
+//            IAudio a = this.currentAudio.audio.get();
+//            if (a != null) a.pause();
+//            this.currentAudio = null;
+//        }
+//    }
+
     @Override
-    public void onCloseScreen() {
+    public void onDestroyElement() {
         if (this.currentAudio != null) {
             IAudio a = this.currentAudio.audio.get();
             if (a != null) a.pause();
