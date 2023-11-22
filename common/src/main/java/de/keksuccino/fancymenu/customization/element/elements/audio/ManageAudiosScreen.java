@@ -37,9 +37,9 @@ public class ManageAudiosScreen extends CellScreen {
         this.addStartEndSpacerCell();
 
         for (AudioElement.AudioInstance instance : this.tempAudios) {
-            MutableComponent name = Component.literal(instance.audio.getSourceWithoutPrefix());
+            MutableComponent name = Component.literal(instance.supplier.getSourceWithoutPrefix());
             this.addLabelCell(name)
-                    .putMemoryValue("source", instance.audio.getSourceWithPrefix())
+                    .putMemoryValue("source", instance.supplier.getSourceWithPrefix())
                     .setSelectable(true);
         }
 
@@ -95,7 +95,7 @@ public class ManageAudiosScreen extends CellScreen {
     }
 
     protected void removeAudio(@NotNull String source) {
-        this.tempAudios.removeIf(audioInstance -> audioInstance.audio.getSourceWithPrefix().equals(source));
+        this.tempAudios.removeIf(audioInstance -> audioInstance.supplier.getSourceWithPrefix().equals(source));
         this.rebuild();
 
     }
@@ -124,7 +124,7 @@ public class ManageAudiosScreen extends CellScreen {
     @Nullable
     protected AudioElement.AudioInstance findAudio(@NotNull String source) {
         for (AudioElement.AudioInstance instance : this.tempAudios) {
-            if (instance.audio.getSourceWithPrefix().equals(source)) return instance;
+            if (instance.supplier.getSourceWithPrefix().equals(source)) return instance;
         }
         return null;
     }

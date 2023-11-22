@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.util.MathUtils;
+import de.keksuccino.fancymenu.util.Trio;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -29,10 +30,11 @@ public class AudioElement extends AbstractElement {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final DrawableColor BACKGROUND_COLOR = DrawableColor.of(new Color(149, 196, 22));
     private static final long AUDIO_START_COOLDOWN_MS = 2000;
-    private static final Map<String, Integer> CACHED_CURRENT_AUDIOS = new HashMap<>();
 
-    //TODO FIXEN: Audio stockt noch, wenn resize/menü wechsel
-    // - Am besten doch Audio nicht anhalten und in Builder dann checken, welche audios nach resize/menü wechsel getstoppt werden müssen
+    //TODO FIXEN: Audio startet beim ersten laden nicht (siehe log, wird direkt bei laden in skipToNextAudio gestoppt)
+    //TODO FIXEN: Audio startet beim ersten laden nicht (siehe log, wird direkt bei laden in skipToNextAudio gestoppt)
+    //TODO FIXEN: Audio startet beim ersten laden nicht (siehe log, wird direkt bei laden in skipToNextAudio gestoppt)
+    //TODO FIXEN: Audio startet beim ersten laden nicht (siehe log, wird direkt bei laden in skipToNextAudio gestoppt)
 
     //TODO Actions
     // - Add as new category if possible ("Audio Element"); alternatively add prefix to all Actions ("Audio Element: ...")
@@ -55,7 +57,8 @@ public class AudioElement extends AbstractElement {
     public List<AudioInstance> audios = new ArrayList<>();
     protected int currentAudioIndex = -1;
     @Nullable
-    protected AudioInstance currentAudio;
+    protected AudioInstance currentAudioInstance;
+    protected IAudio currentAudio;
     protected long lastAudioStart = -1L;
     /** Used when not looping and is shuffling. **/
     protected List<Integer> alreadyPlayedShuffleAudios = new ArrayList<>();
@@ -73,51 +76,79 @@ public class AudioElement extends AbstractElement {
 
         boolean loadedFromCache = false;
         if (!this.cacheChecked) {
-            if (CACHED_CURRENT_AUDIOS.containsKey(this.getInstanceIdentifier())) {
-                int cached = CACHED_CURRENT_AUDIOS.get(this.getInstanceIdentifier());
+            if (AudioElementBuilder.CURRENT_AUDIO_CACHE.containsKey(this.getInstanceIdentifier())) {
+                int cached = AudioElementBuilder.CURRENT_AUDIO_CACHE.get(this.getInstanceIdentifier()).getThird();
                 if ((this.audios.size()-1) >= cached) {
                     this.currentAudioIndex = cached;
                     loadedFromCache = true;
+                    //TODO remove debug
+                    LOGGER.info("######### CACHED FOUND FOR: INSTANCE ID: " + this.getInstanceIdentifier() + " | CACHED INDEX: " + this.currentAudioIndex + " | CACHED SOURCE: " + AudioElementBuilder.CURRENT_AUDIO_CACHE.get(this.getInstanceIdentifier()).getFirst().getSourceWithPrefix());
                 }
             }
             this.cacheChecked = true;
         }
 
-        if (this.shouldRender()) this.pickNextAudio();
+        if (this.shouldRender()) {
+            this.pickNextAudio();
+        } else if (loadedFromCache) {
+            AudioElementBuilder.CURRENT_AUDIO_CACHE.get(this.getInstanceIdentifier()).getSecond().stop();
+            AudioElementBuilder.CURRENT_AUDIO_CACHE.remove(this.getInstanceIdentifier());
+            this.resetAudioElementKeepAudios();
+            //TODO remove debug
+            LOGGER.info("############ STOPPED CACHED AUDIO IN ELEMENT, BECAUSE shouldRender == false");
+            return;
+        }
 
         //Do nothing in case not looping and end reached
         if (this.currentAudioIndex == -2) return;
+        //Do nothing if pickNextAudio() didn't update the index
+        if (this.currentAudioIndex == -1) return;
 
         //Set currentAudio by currentAudioIndex
-        if ((this.currentAudio == null) && (this.currentAudioIndex >= 0)) {
+        if ((this.currentAudioInstance == null) && (this.currentAudioIndex >= 0)) {
             if ((this.audios.size()-1) >= this.currentAudioIndex) {
-                this.currentAudio = this.audios.get(this.currentAudioIndex);
-                CACHED_CURRENT_AUDIOS.put(this.getInstanceIdentifier(), this.currentAudioIndex);
+                this.currentAudioInstance = this.audios.get(this.currentAudioIndex);
+                if (this.currentAudioInstance != null) {
+                    this.currentAudio = this.currentAudioInstance.supplier.get();
+                    if (this.currentAudio != null) {
+                        //TODO remove debug
+                        LOGGER.info("############ PICKED NEW AUDIO: " + this.currentAudioInstance.supplier.getSourceWithPrefix() + " | INDEX: " + this.currentAudioIndex);
+                        AudioElementBuilder.CURRENT_AUDIO_CACHE.put(this.getInstanceIdentifier(), Trio.of(this.currentAudioInstance.supplier, this.currentAudio, this.currentAudioIndex));
+                    }
+                }
             }
         }
 
         if (this.currentAudio != null) {
 
-            IAudio a = this.currentAudio.audio.get();
-
-            //Pause the audio in case the element should not load/render due to loading requirements, etc.
+            //Stop the audio in case the element should not load/render due to loading requirements, etc.
             if (!this.shouldRender()) {
-                if (a != null) a.stop();
-                this.currentAudio = null;
+                this.resetAudioElementKeepAudios();
                 return;
             }
 
             long now = System.currentTimeMillis();
+
+            //Update current volume, channel if loaded from cache + update lastAudioStart in case current loaded from cache is still playing
+            if (loadedFromCache) {
+                if (this.currentAudio.isReady() && this.currentAudio.isPlaying()) {
+                    this.lastAudioStart = now;
+                }
+                this.currentAudio.setVolume(this.volume);
+                this.currentAudio.setSoundChannel(this.soundSource);
+            }
+
             boolean isOnCooldown = ((this.lastAudioStart + AUDIO_START_COOLDOWN_MS) > now);
 
             //Start current audio if not playing
-            if (!isOnCooldown && (this.currentAudio != null)) {
-                if ((a != null) && a.isReady() && !a.isPlaying()) {
+            if (!isOnCooldown && (this.currentAudioInstance != null)) {
+                if (this.currentAudio.isReady() && !this.currentAudio.isPlaying()) {
                     this.lastAudioStart = now;
-                    a.setVolume(this.volume);
-                    a.setSoundChannel(this.soundSource);
-                    if (!loadedFromCache) a.stop();
-                    a.play();
+                    this.currentAudio.setVolume(this.volume);
+                    this.currentAudio.setSoundChannel(this.soundSource);
+                    this.currentAudio.play();
+                    //TODO remove debug
+                    LOGGER.info("############## STARTING NEW AUDIO: " + this.currentAudioInstance.supplier.getSourceWithPrefix());
                 }
             }
 
@@ -125,61 +156,57 @@ public class AudioElement extends AbstractElement {
 
     }
 
-//    @Override
-//    public void onCloseScreen() {
-//        if (this.currentAudio != null) {
-//            IAudio a = this.currentAudio.audio.get();
-//            if (a != null) a.pause();
-//            this.currentAudio = null;
-//        }
-//    }
-
-    @Override
-    public void onDestroyElement() {
-        if (this.currentAudio != null) {
-            IAudio a = this.currentAudio.audio.get();
-            if (a != null) a.pause();
-            this.currentAudio = null;
-        }
-    }
-
     protected void pickNextAudio() {
+
         //Return if no audios to play
         if (this.audios.isEmpty()) return;
         //-2 = not looping & last track finished
         if (this.currentAudioIndex == -2) return;
-        //-1 = not started
-        if (this.currentAudioIndex == -1) {
-            this.currentAudioIndex = 0;
-            return;
-        }
-        if (this.currentAudio != null) {
-            IAudio a = this.currentAudio.audio.get();
-            if (a != null) {
+
+        if (this.currentAudioInstance != null) {
+            if (this.currentAudio != null) {
                 long now = System.currentTimeMillis();
                 boolean isOnCooldown = ((this.lastAudioStart + AUDIO_START_COOLDOWN_MS) > now);
-                if (!isOnCooldown && a.isReady() && !a.isPlaying()) {
-                    if (this.playMode == PlayMode.SHUFFLE) {
-                        List<Integer> indexes = this.buildShuffleIndexesList();
-                        if (!indexes.isEmpty()) {
-                            int pickedIndex = (indexes.size() == 1) ? 0 : MathUtils.getRandomNumberInRange(0, indexes.size()-1);
-                            this.currentAudioIndex = indexes.get(pickedIndex);
-                            if (!this.loop) this.alreadyPlayedShuffleAudios.add(this.currentAudioIndex);
-                        } else {
-                            this.currentAudioIndex = -2;
-                        }
-                    } else {
-                        this.currentAudioIndex++;
-                        //Restart if end of audio list reached (or stop if not looping)
-                        if (this.currentAudioIndex > (this.audios.size()-1)) {
-                            this.currentAudioIndex = this.loop ? 0 : -2;
-                        }
-                    }
-                    CACHED_CURRENT_AUDIOS.remove(this.getInstanceIdentifier());
-                    a.stop();
-                    this.currentAudio = null;
+                if (!isOnCooldown && this.currentAudio.isReady() && !this.currentAudio.isPlaying()) {
+                    this.skipToNextAudio(false);
                 }
+            } else {
+                LOGGER.warn("[FANCYMENU] Audio element was unable to load audio track! Skipping to next track, because track was NULL: " + this.currentAudioInstance.supplier.getSourceWithPrefix());
+                this.skipToNextAudio(false);
             }
+        } else {
+            this.skipToNextAudio(false);
+        }
+
+    }
+
+    public void skipToNextAudio(boolean forceRestartIfEndReached) {
+        if (this.playMode == PlayMode.SHUFFLE) {
+            List<Integer> indexes = this.buildShuffleIndexesList();
+            if (!indexes.isEmpty()) {
+                int pickedIndex = (indexes.size() == 1) ? 0 : MathUtils.getRandomNumberInRange(0, indexes.size()-1);
+                this.currentAudioIndex = indexes.get(pickedIndex);
+                if (!this.loop) this.alreadyPlayedShuffleAudios.add(this.currentAudioIndex);
+            } else {
+                this.currentAudioIndex = -2;
+            }
+        } else {
+            this.currentAudioIndex++;
+            //Restart if end of audio list reached (or stop if not looping)
+            if (this.currentAudioIndex > (this.audios.size()-1)) {
+                this.currentAudioIndex = this.loop ? 0 : -2;
+            }
+        }
+        AudioElementBuilder.CURRENT_AUDIO_CACHE.remove(this.getInstanceIdentifier());
+        if ((this.currentAudio != null) && this.currentAudio.isReady()) {
+            //TODO remove debug
+            LOGGER.info("########### STOPPING OLD CURRENT AUDIO IN skipToNextAudio!");
+            this.currentAudio.stop();
+        }
+        this.currentAudioInstance = null;
+        this.currentAudio = null;
+        if ((this.currentAudioIndex == -2) && forceRestartIfEndReached) {
+            this.resetAudioElementKeepAudios();
         }
     }
 
@@ -199,15 +226,17 @@ public class AudioElement extends AbstractElement {
     }
 
     public void resetAudioElementKeepAudios() {
-        if (this.currentAudio != null) {
-            IAudio a = this.currentAudio.audio.get();
-            if (a != null) a.stop();
+        //TODO remove debug
+        LOGGER.info("########### RESETTING AUDIO ELEMENT");
+        if ((this.currentAudio != null) && this.currentAudio.isReady()) {
+            this.currentAudio.stop();
         }
+        this.currentAudioInstance = null;
         this.currentAudio = null;
         this.alreadyPlayedShuffleAudios.clear();
         this.currentAudioIndex = -1;
         this.lastAudioStart = -1;
-        CACHED_CURRENT_AUDIOS.remove(this.getInstanceIdentifier());
+        AudioElementBuilder.CURRENT_AUDIO_CACHE.remove(this.getInstanceIdentifier());
     }
 
     public void setLooping(boolean loop) {
@@ -237,8 +266,7 @@ public class AudioElement extends AbstractElement {
         if (volume < 0.0F) volume = 0.0F;
         this.volume = volume;
         if (this.currentAudio != null) {
-            IAudio a = this.currentAudio.audio.get();
-            if (a != null) a.setVolume(this.volume);
+            this.currentAudio.setVolume(this.volume);
         }
     }
 
@@ -252,8 +280,7 @@ public class AudioElement extends AbstractElement {
     public void setSoundSource(@NotNull SoundSource soundSource) {
         this.soundSource = Objects.requireNonNull(soundSource);
         if (this.currentAudio != null) {
-            IAudio a = this.currentAudio.audio.get();
-            if (a != null) a.setSoundChannel(soundSource);
+            this.currentAudio.setSoundChannel(soundSource);
         }
     }
 
@@ -331,16 +358,16 @@ public class AudioElement extends AbstractElement {
     public static class AudioInstance {
 
         @NotNull
-        ResourceSupplier<IAudio> audio;
+        ResourceSupplier<IAudio> supplier;
 
-        public AudioInstance(@NotNull ResourceSupplier<IAudio> audio) {
-            this.audio = Objects.requireNonNull(audio);
+        public AudioInstance(@NotNull ResourceSupplier<IAudio> supplier) {
+            this.supplier = Objects.requireNonNull(supplier);
         }
 
         public static void serializeAllToExistingContainer(@NotNull List<AudioInstance> instances, @NotNull PropertyContainer container) {
             int i = 0;
             for (AudioInstance instance : instances) {
-                container.putProperty("audio_instance_" + i, instance.audio.getSourceWithPrefix());
+                container.putProperty("audio_instance_" + i, instance.supplier.getSourceWithPrefix());
                 i++;
             }
         }

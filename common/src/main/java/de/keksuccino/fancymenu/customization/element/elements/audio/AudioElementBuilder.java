@@ -3,22 +3,71 @@ package de.keksuccino.fancymenu.customization.element.elements.audio;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.Trio;
+import de.keksuccino.fancymenu.util.event.acara.EventHandler;
+import de.keksuccino.fancymenu.util.event.acara.EventListener;
+import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
+import de.keksuccino.fancymenu.util.resources.audio.IAudio;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.Objects;
+import java.util.*;
 
 public class AudioElementBuilder extends ElementBuilder<AudioElement, AudioEditorElement> {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    protected static final Map<String, Trio<ResourceSupplier<IAudio>, IAudio, Integer>> CURRENT_AUDIO_CACHE = new HashMap<>();
 
     public AudioElementBuilder() {
         super("audio_v2");
+        EventHandler.INSTANCE.registerListenersOf(this);
+    }
+
+    @EventListener
+    public void onInitOrResizeScreenCompleted(InitOrResizeScreenCompletedEvent ignored) {
+        ScreenCustomizationLayer activeLayer = ScreenCustomizationLayerHandler.getActiveLayer();
+        if (activeLayer != null) {
+            List<String> removeFromCache = new ArrayList<>();
+            CURRENT_AUDIO_CACHE.forEach((s, resourceSupplierIAudioPair) -> {
+                AbstractElement element = activeLayer.getElementByInstanceIdentifier(s);
+                if (element == null) {
+                    resourceSupplierIAudioPair.getSecond().stop();
+                    //TODO remove debug
+                    LOGGER.info("########### BUILDER: STOPPED CACHED AUDIO (audio element not found in new layer)");
+                    removeFromCache.add(s);
+                } else if (element instanceof AudioElement a) {
+                    boolean audioFound = false;
+                    for (AudioElement.AudioInstance instance : a.audios) {
+                        if (Objects.equals(instance.supplier.get(), resourceSupplierIAudioPair.getSecond())) {
+                            audioFound = true;
+                            break;
+                        }
+                    }
+                    if (!audioFound) {
+                        resourceSupplierIAudioPair.getSecond().stop();
+                        removeFromCache.add(s);
+                        //TODO remove debug
+                        LOGGER.info("########### BUILDER: STOPPED CACHED AUDIO (IAudio not found in element)");
+                    }
+                }
+            });
+            for (String s : removeFromCache) {
+                CURRENT_AUDIO_CACHE.remove(s);
+            }
+        } else {
+            CURRENT_AUDIO_CACHE.forEach((s, resourceSupplierIAudioPair) -> resourceSupplierIAudioPair.getSecond().stop());
+            CURRENT_AUDIO_CACHE.clear();
+            //TODO remove debug
+            LOGGER.info("########### BUILDER: STOPPED ALL CACHED AUDIOS (layer was NULL)");
+        }
     }
 
     @Override
