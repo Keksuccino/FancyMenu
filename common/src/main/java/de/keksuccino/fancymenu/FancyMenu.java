@@ -20,6 +20,13 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO FIXEN: Durch dragging crumple zone hackt resizen etwas (irgendwie crumple zone ignorieren, wenn resize)
+
+	//TODO Audio element in universal layout testen
+
+	//TODO Audio element debug log stuff entfernen
+
+
 	//TODO ALLE UNGENUTZTEN FileTypes entfernen (ungenutzte video types)
 
 	//TODO Text Editor: Undo/Redo adden

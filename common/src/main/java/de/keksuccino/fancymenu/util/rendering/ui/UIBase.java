@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui;
 
 import java.awt.Color;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -12,6 +11,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v1.ExtendedSliderButton;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtendedSlider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
@@ -43,6 +43,9 @@ public class UIBase extends RenderingUtils {
 		if (widget instanceof ExtendedSliderButton s) {
 			return (T) applyDefaultSliderSkinTo(s);
 		}
+		if (widget instanceof AbstractExtendedSlider s) {
+			return (T) applyDefaultV2SliderSkinTo(s);
+		}
 		return widget;
 	}
 
@@ -51,6 +54,17 @@ public class UIBase extends RenderingUtils {
 		slider.setBorderColor(UIBase.getUIColorTheme().element_border_color_normal);
 		slider.setHandleColorNormal(UIBase.getUIColorTheme().slider_handle_color_normal);
 		slider.setHandleColorHover(UIBase.getUIColorTheme().slider_handle_color_hover);
+		slider.setLabelColorNormal(UIBase.getUIColorTheme().element_label_color_normal);
+		slider.setLabelColorInactive(UIBase.getUIColorTheme().element_label_color_inactive);
+		slider.setLabelShadow(FancyMenu.getOptions().enableUiTextShadow.getValue());
+		return slider;
+	}
+
+	private static AbstractExtendedSlider applyDefaultV2SliderSkinTo(AbstractExtendedSlider slider) {
+		slider.setSliderBackgroundColorNormal(UIBase.getUIColorTheme().element_background_color_normal);
+		slider.setSliderBorderColorNormal(UIBase.getUIColorTheme().element_border_color_normal);
+		slider.setSliderHandleColorNormal(UIBase.getUIColorTheme().slider_handle_color_normal);
+		slider.setSliderHandleColorHover(UIBase.getUIColorTheme().slider_handle_color_hover);
 		slider.setLabelColorNormal(UIBase.getUIColorTheme().element_label_color_normal);
 		slider.setLabelColorInactive(UIBase.getUIColorTheme().element_label_color_inactive);
 		slider.setLabelShadow(FancyMenu.getOptions().enableUiTextShadow.getValue());

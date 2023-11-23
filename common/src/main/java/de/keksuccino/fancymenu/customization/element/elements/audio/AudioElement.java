@@ -28,13 +28,8 @@ import java.util.List;
 public class AudioElement extends AbstractElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final DrawableColor BACKGROUND_COLOR = DrawableColor.of(new Color(149, 196, 22));
+    private static final DrawableColor BACKGROUND_COLOR = DrawableColor.of(new Color(92, 166, 239));
     private static final long AUDIO_START_COOLDOWN_MS = 2000;
-
-    //TODO FIXEN: Audio startet beim ersten laden nicht (siehe log, wird direkt bei laden in skipToNextAudio gestoppt)
-    //TODO FIXEN: Audio startet beim ersten laden nicht (siehe log, wird direkt bei laden in skipToNextAudio gestoppt)
-    //TODO FIXEN: Audio startet beim ersten laden nicht (siehe log, wird direkt bei laden in skipToNextAudio gestoppt)
-    //TODO FIXEN: Audio startet beim ersten laden nicht (siehe log, wird direkt bei laden in skipToNextAudio gestoppt)
 
     //TODO Actions
     // - Add as new category if possible ("Audio Element"); alternatively add prefix to all Actions ("Audio Element: ...")
@@ -59,17 +54,18 @@ public class AudioElement extends AbstractElement {
     @Nullable
     protected AudioInstance currentAudioInstance;
     protected IAudio currentAudio;
+    protected boolean currentAudioStarted = false;
     protected long lastAudioStart = -1L;
     /** Used when not looping and is shuffling. **/
     protected List<Integer> alreadyPlayedShuffleAudios = new ArrayList<>();
+    protected Integer lastPlayedLoopShuffleAudio = null;
     protected boolean cacheChecked = false;
 
     public AudioElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
     }
 
-    @Override
-    public void tick() {
+    public void renderTick() {
 
         //Don't play music in editor
         if (isEditor()) return; //TODO Maybe make this a toggleable option in editor???
@@ -82,20 +78,20 @@ public class AudioElement extends AbstractElement {
                     this.currentAudioIndex = cached;
                     loadedFromCache = true;
                     //TODO remove debug
-                    LOGGER.info("######### CACHED FOUND FOR: INSTANCE ID: " + this.getInstanceIdentifier() + " | CACHED INDEX: " + this.currentAudioIndex + " | CACHED SOURCE: " + AudioElementBuilder.CURRENT_AUDIO_CACHE.get(this.getInstanceIdentifier()).getFirst().getSourceWithPrefix());
+                    LOGGER.info("######### CACHED FOUND FOR: INSTANCE ID: " + this.getInstanceIdentifier() + " | CACHED INDEX: " + this.currentAudioIndex + " | CACHED SOURCE: " + AudioElementBuilder.CURRENT_AUDIO_CACHE.get(this.getInstanceIdentifier()).getFirst().getSourceWithPrefix() + " | INSTANCE: " + this);
                 }
             }
             this.cacheChecked = true;
         }
 
         if (this.shouldRender()) {
-            this.pickNextAudio();
+            if (!loadedFromCache) this.pickNextAudio();
         } else if (loadedFromCache) {
             AudioElementBuilder.CURRENT_AUDIO_CACHE.get(this.getInstanceIdentifier()).getSecond().stop();
             AudioElementBuilder.CURRENT_AUDIO_CACHE.remove(this.getInstanceIdentifier());
             this.resetAudioElementKeepAudios();
             //TODO remove debug
-            LOGGER.info("############ STOPPED CACHED AUDIO IN ELEMENT, BECAUSE shouldRender == false");
+            LOGGER.info("############ STOPPED CACHED AUDIO IN ELEMENT, BECAUSE shouldRender == false" + " | INSTANCE: " + this);
             return;
         }
 
@@ -112,7 +108,7 @@ public class AudioElement extends AbstractElement {
                     this.currentAudio = this.currentAudioInstance.supplier.get();
                     if (this.currentAudio != null) {
                         //TODO remove debug
-                        LOGGER.info("############ PICKED NEW AUDIO: " + this.currentAudioInstance.supplier.getSourceWithPrefix() + " | INDEX: " + this.currentAudioIndex);
+                        LOGGER.info("############ PICKED NEW AUDIO: " + this.currentAudioInstance.supplier.getSourceWithPrefix() + " | INDEX: " + this.currentAudioIndex + " | INSTANCE: " + this);
                         AudioElementBuilder.CURRENT_AUDIO_CACHE.put(this.getInstanceIdentifier(), Trio.of(this.currentAudioInstance.supplier, this.currentAudio, this.currentAudioIndex));
                     }
                 }
@@ -133,6 +129,7 @@ public class AudioElement extends AbstractElement {
             if (loadedFromCache) {
                 if (this.currentAudio.isReady() && this.currentAudio.isPlaying()) {
                     this.lastAudioStart = now;
+                    this.currentAudioStarted = true;
                 }
                 this.currentAudio.setVolume(this.volume);
                 this.currentAudio.setSoundChannel(this.soundSource);
@@ -142,13 +139,14 @@ public class AudioElement extends AbstractElement {
 
             //Start current audio if not playing
             if (!isOnCooldown && (this.currentAudioInstance != null)) {
-                if (this.currentAudio.isReady() && !this.currentAudio.isPlaying()) {
+                if (!this.currentAudioStarted && this.currentAudio.isReady() && !this.currentAudio.isPlaying()) {
                     this.lastAudioStart = now;
                     this.currentAudio.setVolume(this.volume);
                     this.currentAudio.setSoundChannel(this.soundSource);
                     this.currentAudio.play();
+                    this.currentAudioStarted = true;
                     //TODO remove debug
-                    LOGGER.info("############## STARTING NEW AUDIO: " + this.currentAudioInstance.supplier.getSourceWithPrefix());
+                    LOGGER.info("############## STARTING NEW AUDIO: " + this.currentAudioInstance.supplier.getSourceWithPrefix() + " | INSTANCE: " + this);
                 }
             }
 
@@ -167,7 +165,7 @@ public class AudioElement extends AbstractElement {
             if (this.currentAudio != null) {
                 long now = System.currentTimeMillis();
                 boolean isOnCooldown = ((this.lastAudioStart + AUDIO_START_COOLDOWN_MS) > now);
-                if (!isOnCooldown && this.currentAudio.isReady() && !this.currentAudio.isPlaying()) {
+                if (!isOnCooldown && this.currentAudioStarted && (!this.currentAudio.isReady() || !this.currentAudio.isPlaying())) {
                     this.skipToNextAudio(false);
                 }
             } else {
@@ -186,25 +184,32 @@ public class AudioElement extends AbstractElement {
             if (!indexes.isEmpty()) {
                 int pickedIndex = (indexes.size() == 1) ? 0 : MathUtils.getRandomNumberInRange(0, indexes.size()-1);
                 this.currentAudioIndex = indexes.get(pickedIndex);
-                if (!this.loop) this.alreadyPlayedShuffleAudios.add(this.currentAudioIndex);
+                if (!this.loop) {
+                    this.alreadyPlayedShuffleAudios.add(this.currentAudioIndex);
+                } else {
+                    this.lastPlayedLoopShuffleAudio = this.currentAudioIndex;
+                }
             } else {
                 this.currentAudioIndex = -2;
+                this.lastPlayedLoopShuffleAudio = null;
+                this.clearCacheForElement();
             }
         } else {
             this.currentAudioIndex++;
             //Restart if end of audio list reached (or stop if not looping)
             if (this.currentAudioIndex > (this.audios.size()-1)) {
                 this.currentAudioIndex = this.loop ? 0 : -2;
+                if (this.currentAudioIndex == -2) this.clearCacheForElement();
             }
         }
-        AudioElementBuilder.CURRENT_AUDIO_CACHE.remove(this.getInstanceIdentifier());
         if ((this.currentAudio != null) && this.currentAudio.isReady()) {
             //TODO remove debug
-            LOGGER.info("########### STOPPING OLD CURRENT AUDIO IN skipToNextAudio!");
+            LOGGER.info("########### STOPPING OLD CURRENT AUDIO IN skipToNextAudio!" + " | INSTANCE: " + this);
             this.currentAudio.stop();
         }
         this.currentAudioInstance = null;
         this.currentAudio = null;
+        this.currentAudioStarted = false;
         if ((this.currentAudioIndex == -2) && forceRestartIfEndReached) {
             this.resetAudioElementKeepAudios();
         }
@@ -221,22 +226,36 @@ public class AudioElement extends AbstractElement {
         }
         if (!this.loop) {
             indexes.removeIf(integer -> this.alreadyPlayedShuffleAudios.contains(integer));
+        } else {
+            if (this.lastPlayedLoopShuffleAudio != null) indexes.remove(this.lastPlayedLoopShuffleAudio);
         }
         return indexes;
     }
 
     public void resetAudioElementKeepAudios() {
         //TODO remove debug
-        LOGGER.info("########### RESETTING AUDIO ELEMENT");
+        LOGGER.info("########### RESETTING AUDIO ELEMENT" + " | INSTANCE: " + this);
         if ((this.currentAudio != null) && this.currentAudio.isReady()) {
             this.currentAudio.stop();
         }
         this.currentAudioInstance = null;
         this.currentAudio = null;
+        this.currentAudioStarted = false;
         this.alreadyPlayedShuffleAudios.clear();
+        this.lastPlayedLoopShuffleAudio = null;
         this.currentAudioIndex = -1;
         this.lastAudioStart = -1;
-        AudioElementBuilder.CURRENT_AUDIO_CACHE.remove(this.getInstanceIdentifier());
+        this.clearCacheForElement();
+    }
+
+    public void clearCacheForElement() {
+        if (AudioElementBuilder.CURRENT_AUDIO_CACHE.containsKey(this.getInstanceIdentifier())) {
+            Trio<ResourceSupplier<IAudio>, IAudio, Integer> cache = AudioElementBuilder.CURRENT_AUDIO_CACHE.get(this.getInstanceIdentifier());
+            if ((cache != null) && cache.getSecond().isReady()) cache.getSecond().stop();
+            //TODO remove debug
+            LOGGER.info("######### CLEAR CACHE FOR ELEMENT !!!!!!!!!!" + " | INSTANCE: " + this, new Throwable());
+            AudioElementBuilder.CURRENT_AUDIO_CACHE.remove(this.getInstanceIdentifier());
+        }
     }
 
     public void setLooping(boolean loop) {
@@ -292,6 +311,8 @@ public class AudioElement extends AbstractElement {
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
+        this.renderTick();
+
         if (!this.shouldRender()) return;
 
         if (isEditor()) {
@@ -301,8 +322,8 @@ public class AudioElement extends AbstractElement {
             int h = this.getAbsoluteHeight();
             RenderSystem.enableBlend();
             fill(pose, x, y, x + w, y + h, BACKGROUND_COLOR.getColorInt());
-            enableScissor(x, y, w, h);
-            drawCenteredString(pose, Minecraft.getInstance().font, Component.translatable("fancymenu.elements.audio"), x, y - (Minecraft.getInstance().font.lineHeight / 2), -1);
+            enableScissor(x, y, x + w, y + h);
+            drawCenteredString(pose, Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
             disableScissor();
             RenderingUtils.resetShaderColor();
         }

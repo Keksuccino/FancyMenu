@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.audio;
 
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
@@ -13,6 +14,7 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resources.audio.IAudio;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
@@ -32,9 +34,9 @@ public class AudioElementBuilder extends ElementBuilder<AudioElement, AudioEdito
     }
 
     @EventListener
-    public void onInitOrResizeScreenCompleted(InitOrResizeScreenCompletedEvent ignored) {
+    public void onInitOrResizeScreenCompleted(InitOrResizeScreenCompletedEvent e) {
         ScreenCustomizationLayer activeLayer = ScreenCustomizationLayerHandler.getActiveLayer();
-        if (activeLayer != null) {
+        if (ScreenCustomization.isCustomizationEnabledForScreen(e.getScreen()) && (activeLayer != null)) {
             List<String> removeFromCache = new ArrayList<>();
             CURRENT_AUDIO_CACHE.forEach((s, resourceSupplierIAudioPair) -> {
                 AbstractElement element = activeLayer.getElementByInstanceIdentifier(s);
@@ -66,7 +68,7 @@ public class AudioElementBuilder extends ElementBuilder<AudioElement, AudioEdito
             CURRENT_AUDIO_CACHE.forEach((s, resourceSupplierIAudioPair) -> resourceSupplierIAudioPair.getSecond().stop());
             CURRENT_AUDIO_CACHE.clear();
             //TODO remove debug
-            LOGGER.info("########### BUILDER: STOPPED ALL CACHED AUDIOS (layer was NULL)");
+            LOGGER.info("########### BUILDER: STOPPED ALL CACHED AUDIOS (layer was NULL or customization disabled)");
         }
     }
 

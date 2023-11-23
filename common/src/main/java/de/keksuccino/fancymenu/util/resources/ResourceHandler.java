@@ -30,7 +30,7 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
      * Registers the requested resource if not already registered and uses {@link ResourceSource#getSourceWithPrefix()} as key.<br><br>
      *
      * This method should only return NULL if the resource failed to get registered!<br>
-     * By default, {@link Resource}s should finish loading itself asynchronously after construction, so there's no other reason for returning NULL here.
+     * {@link Resource}s should finish loading itself asynchronously after construction, so there's no other reason for returning NULL here.
      *
      * @param resourceSource Can be a URL to a web resource, a path to a local resource or a ResourceLocation (namespace:path).
      * @return The requested {@link Resource} or NULL if the {@link Resource} failed to get registered.
@@ -46,7 +46,7 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
      * Registers the requested resource if not already registered and uses {@link ResourceSource#getSourceWithPrefix()} as key.<br><br>
      *
      * This method should only return NULL if the resource failed to get registered!<br>
-     * By default, {@link Resource}s should finish loading itself asynchronously after construction, so there's no other reason for returning NULL here.
+     * {@link Resource}s should finish loading itself asynchronously after construction, so there's no other reason for returning NULL here.
      *
      * @param resourceSource The source of the resource.
      * @return The requested {@link Resource} or NULL if the {@link Resource} failed to get registered.
@@ -91,7 +91,7 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
                     this.addToFailedSources(resourceSource);
                     return null;
                 }
-                this.putAndReturn(fileType.getCodec().readWeb(resourceSource.getSourceWithoutPrefix()), resourceSource);
+                return this.putAndReturn(fileType.getCodec().readWeb(resourceSource.getSourceWithoutPrefix()), resourceSource);
             } else if (resourceSource.getSourceType() == ResourceSourceType.LOCATION) {
                 if (!fileType.isLocationAllowed()) {
                     LOGGER.error("[FANCYMENU] Failed to register location resource! File type does not support location sources: " + fileType + " (Source: " + resourceSource + ")" + " (RESOURCE HANDLER: " + this.getClass() + ")");

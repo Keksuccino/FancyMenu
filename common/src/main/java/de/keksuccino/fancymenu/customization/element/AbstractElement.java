@@ -327,6 +327,12 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 		return this.loadingRequirementContainer.requirementsMet();
 	}
 
+	@NotNull
+	public Component getDisplayName() {
+		if (this.customElementLayerName != null) return Component.literal(this.customElementLayerName);
+		return this.builder.getDisplayName(this);
+	}
+
 	public static String fixBackslashPath(String path) {
 		if (path != null) return path.replace("\\", "/");
 		return null;
