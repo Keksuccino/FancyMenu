@@ -86,14 +86,17 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	protected int leftMouseDownBaseY = 0;
 	protected int leftMouseDownBaseWidth = 0;
 	protected int leftMouseDownBaseHeight = 0;
-	protected int draggingStartPosX = 0;
-	protected int draggingStartPosY = 0;
+	protected int movingStartPosX = 0;
+	protected int movingStartPosY = 0;
+	protected int resizingStartPosX = 0;
+	protected int resizingStartPosY = 0;
 	protected ResizeGrabber[] resizeGrabbers = new ResizeGrabber[]{new ResizeGrabber(ResizeGrabberType.TOP), new ResizeGrabber(ResizeGrabberType.RIGHT), new ResizeGrabber(ResizeGrabberType.BOTTOM), new ResizeGrabber(ResizeGrabberType.LEFT)};
 	protected ResizeGrabber activeResizeGrabber = null;
 	protected AspectRatio resizeAspectRatio = new AspectRatio(10, 10);
 	public long renderMovingNotAllowedTime = -1;
 	public boolean recentlyMovedByDragging = false;
 	public boolean recentlyLeftClickSelected = false;
+	public boolean movingCrumpleZonePassed = false;
 
 	private final List<AbstractEditorElement> cachedHoveredElementsOnRightClickMenuOpen = new ArrayList<>();
 
@@ -646,9 +649,14 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		this.leftMouseDownBaseHeight = this.element.baseHeight;
 	}
 
-	public void updateDraggingStartPos(int mouseX, int mouseY) {
-		this.draggingStartPosX = mouseX;
-		this.draggingStartPosY = mouseY;
+	public void updateMovingStartPos(int mouseX, int mouseY) {
+		this.movingStartPosX = mouseX;
+		this.movingStartPosY = mouseY;
+	}
+
+	public void updateResizingStartPos(int mouseX, int mouseY) {
+		this.resizingStartPosX = mouseX;
+		this.resizingStartPosY = mouseY;
 	}
 
 	@Override
@@ -675,6 +683,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			this.leftMouseDown = false;
 			this.activeResizeGrabber = null;
 			this.recentlyMovedByDragging = false;
+			this.movingCrumpleZonePassed = false;
 		}
 		return false;
 	}
@@ -685,9 +694,9 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			return false;
 		}
 		if (button == 0) {
-			int diffX = (int)-(this.draggingStartPosX - mouseX);
-			int diffY = (int)-(this.draggingStartPosY - mouseY);
-			if (this.leftMouseDown && !this.isGettingResized()) {
+			if (this.leftMouseDown && !this.isGettingResized() && this.movingCrumpleZonePassed) { // MOVE ELEMENT
+				int diffX = (int)-(this.movingStartPosX - mouseX);
+				int diffY = (int)-(this.movingStartPosY - mouseY);
 				if (this.editor.allSelectedElementsMovable()) {
 					if (!this.isMultiSelected() || (this.element.anchorPoint != ElementAnchorPoints.ELEMENT)) {
 						this.element.posOffsetX = this.leftMouseDownBaseX + diffX;
@@ -700,7 +709,9 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 					this.renderMovingNotAllowedTime = System.currentTimeMillis() + 800;
 				}
 			}
-			if (this.leftMouseDown && this.isGettingResized()) {
+			if (this.leftMouseDown && this.isGettingResized()) { // RESIZE ELEMENT
+				int diffX = (int)-(this.resizingStartPosX - mouseX);
+				int diffY = (int)-(this.resizingStartPosY - mouseY);
 				if ((this.activeResizeGrabber.type == ResizeGrabberType.LEFT) || (this.activeResizeGrabber.type == ResizeGrabberType.RIGHT)) {
 					int i = (this.activeResizeGrabber.type == ResizeGrabberType.LEFT) ? (this.leftMouseDownBaseWidth - diffX) : (this.leftMouseDownBaseWidth + diffX);
 					if (i >= 2) {
@@ -1008,92 +1019,6 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		return addTo.addSubMenuEntry(entryIdentifier, label, subMenu).setStackable(true);
 
 	}
-
-//	protected ContextMenu.ClickableContextMenuEntry<?> addGenericFileChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, String defaultValue, @NotNull ConsumingSupplier<AbstractEditorElement, String> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, String> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter) {
-//
-//		ContextMenu subMenu = new ContextMenu();
-//
-//		subMenu.addClickableEntry("choose_file", Component.translatable("fancymenu.ui.filechooser.choose.file"),
-//				(menu, entry) ->
-//				{
-//					List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
-//					if (entry.getStackMeta().isFirstInStack() && !selectedElements.isEmpty()) {
-//						File startDir = LayoutHandler.ASSETS_DIR;
-//						List<String> allPaths = ObjectUtils.getOfAll(String.class, selectedElements, targetFieldGetter);
-//						if (ListUtils.allInListEqual(allPaths)) {
-//							String path = allPaths.get(0);
-//							if (path != null) {
-//								startDir = new File(GameDirectoryUtils.getAbsoluteGameDirectoryPath(allPaths.get(0))).getParentFile();
-//								if (startDir == null) startDir = LayoutHandler.ASSETS_DIR;
-//							}
-//						}
-//						ChooseFileScreen fileChooser = new ChooseFileScreen(LayoutHandler.ASSETS_DIR, startDir, (call) -> {
-//							if (call != null) {
-//								this.editor.history.saveSnapshot();
-//								for (AbstractEditorElement e : selectedElements) {
-//									targetFieldSetter.accept(e, GameDirectoryUtils.getPathWithoutGameDirectory(call.getAbsolutePath()));
-//								}
-//							}
-//							Minecraft.getInstance().setScreen(this.editor);
-//						});
-//						fileChooser.setVisibleDirectoryLevelsAboveRoot(2);
-//						fileChooser.setFileFilter(fileFilter);
-//						Minecraft.getInstance().setScreen(fileChooser);
-//					}
-//				}).setStackable(true);
-//
-//		if (addResetOption) {
-//			subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.editor.filechooser.reset"), (menu, entry) ->
-//			{
-//				if (entry.getStackMeta().isFirstInStack()) {
-//					List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
-//					this.editor.history.saveSnapshot();
-//					for (AbstractEditorElement e : selectedElements) {
-//						targetFieldSetter.accept(e, defaultValue);
-//					}
-//				}
-//			}).setStackable(true);
-//		}
-//
-//		Supplier<Component> currentValueDisplayLabelSupplier = () -> {
-//			List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
-//			if (selectedElements.size() == 1) {
-//				Component valueComponent;
-//				String val = targetFieldGetter.get(selectedElements.get(0));
-//				if (val == null) {
-//					valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
-//				} else {
-//					val = GameDirectoryUtils.getPathWithoutGameDirectory(val);
-//					if (Minecraft.getInstance().font.width(val) > 150) {
-//						val = new StringBuilder(val).reverse().toString();
-//						val = Minecraft.getInstance().font.plainSubstrByWidth(val, 150);
-//						val = new StringBuilder(val).reverse().toString();
-//						val = ".." + val;
-//					}
-//					valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
-//				}
-//				return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
-//			}
-//			return Component.empty();
-//		};
-//		subMenu.addSeparatorEntry("separator_before_current_value_display")
-//				.setIsVisibleSupplier((menu, entry) -> this.getFilteredSelectedElementList(selectedElementsFilter).size() == 1);
-//		subMenu.addClickableEntry("current_value_display", Component.empty(), (menu, entry) -> {})
-//				.setLabelSupplier((menu, entry) -> currentValueDisplayLabelSupplier.get())
-//				.setClickSoundEnabled(false)
-//				.setHoverable(false)
-//				.setIsVisibleSupplier((menu, entry) -> this.getFilteredSelectedElementList(selectedElementsFilter).size() == 1)
-//				.setIcon(ContextMenu.IconFactory.getIcon("info"));
-//
-//		return addTo.addSubMenuEntry(entryIdentifier, label, subMenu).setStackable(true);
-//	}
-//
-//	@SuppressWarnings("all")
-//	protected <E extends AbstractEditorElement> ContextMenu.ClickableContextMenuEntry<?> addFileChooserContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<E> elementType, String defaultValue, @NotNull ConsumingSupplier<E, String> targetFieldGetter, @NotNull BiConsumer<E, String> targetFieldSetter, @NotNull Component label, boolean addResetOption, @Nullable FileFilter fileFilter) {
-//		ConsumingSupplier<AbstractEditorElement, String> getter = (ConsumingSupplier<AbstractEditorElement, String>) targetFieldGetter;
-//		BiConsumer<AbstractEditorElement, String> setter = (BiConsumer<AbstractEditorElement, String>) targetFieldSetter;
-//		return addGenericFileChooserContextMenuEntryTo(addTo, entryIdentifier, (consumes) -> elementType.isAssignableFrom(consumes.getClass()), defaultValue, getter, setter, label, addResetOption, fileFilter);
-//	}
 
 	protected ContextMenu.ClickableContextMenuEntry<?> addInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, String> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
 		ContextMenu subMenu = new ContextMenu();

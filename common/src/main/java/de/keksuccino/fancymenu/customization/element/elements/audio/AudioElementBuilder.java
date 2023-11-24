@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.events.ModReloadEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.Trio;
@@ -14,7 +15,6 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resources.audio.IAudio;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
@@ -42,8 +42,6 @@ public class AudioElementBuilder extends ElementBuilder<AudioElement, AudioEdito
                 AbstractElement element = activeLayer.getElementByInstanceIdentifier(s);
                 if (element == null) {
                     resourceSupplierIAudioPair.getSecond().stop();
-                    //TODO remove debug
-                    LOGGER.info("########### BUILDER: STOPPED CACHED AUDIO (audio element not found in new layer)");
                     removeFromCache.add(s);
                 } else if (element instanceof AudioElement a) {
                     boolean audioFound = false;
@@ -56,8 +54,6 @@ public class AudioElementBuilder extends ElementBuilder<AudioElement, AudioEdito
                     if (!audioFound) {
                         resourceSupplierIAudioPair.getSecond().stop();
                         removeFromCache.add(s);
-                        //TODO remove debug
-                        LOGGER.info("########### BUILDER: STOPPED CACHED AUDIO (IAudio not found in element)");
                     }
                 }
             });
@@ -65,11 +61,20 @@ public class AudioElementBuilder extends ElementBuilder<AudioElement, AudioEdito
                 CURRENT_AUDIO_CACHE.remove(s);
             }
         } else {
-            CURRENT_AUDIO_CACHE.forEach((s, resourceSupplierIAudioPair) -> resourceSupplierIAudioPair.getSecond().stop());
+            CURRENT_AUDIO_CACHE.forEach((s, resourceSupplierIAudioPair) -> {
+                if (resourceSupplierIAudioPair.getSecond().isReady()) resourceSupplierIAudioPair.getSecond().stop();
+            });
             CURRENT_AUDIO_CACHE.clear();
-            //TODO remove debug
-            LOGGER.info("########### BUILDER: STOPPED ALL CACHED AUDIOS (layer was NULL or customization disabled)");
         }
+    }
+
+    @EventListener
+    public void onModReload(ModReloadEvent e) {
+        LOGGER.info("[FANCYMENU] Clearing Audio element cache..");
+        CURRENT_AUDIO_CACHE.forEach((s, resourceSupplierIAudioPair) -> {
+            if (resourceSupplierIAudioPair.getSecond().isReady()) resourceSupplierIAudioPair.getSecond().stop();
+        });
+        CURRENT_AUDIO_CACHE.clear();
     }
 
     @Override
@@ -88,9 +93,9 @@ public class AudioElementBuilder extends ElementBuilder<AudioElement, AudioEdito
         element.audios.addAll(AudioElement.AudioInstance.deserializeAllOfContainer(serialized));
 
         String playMode = serialized.getValue("play_mode");
-        if (playMode != null) element.setPlayMode(Objects.requireNonNullElse(AudioElement.PlayMode.getByName(playMode), AudioElement.PlayMode.NORMAL));
+        if (playMode != null) element.setPlayMode(Objects.requireNonNullElse(AudioElement.PlayMode.getByName(playMode), AudioElement.PlayMode.NORMAL), false);
 
-        element.setLooping(deserializeBoolean(element.loop, serialized.getValue("looping")));
+        element.setLooping(deserializeBoolean(element.loop, serialized.getValue("looping")), false);
 
         element.setVolume(deserializeNumber(Float.class, element.volume, serialized.getValue("volume")));
 

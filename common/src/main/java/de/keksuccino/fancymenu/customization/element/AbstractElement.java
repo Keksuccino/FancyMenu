@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
@@ -77,6 +78,8 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	private String instanceIdentifier;
 	@Nullable
 	protected Layout parentLayout;
+	@Nullable
+	protected RuntimePropertyContainer cachedMemory;
 
 	@SuppressWarnings("all")
 	public AbstractElement(@NotNull ElementBuilder<?,?> builder) {
@@ -106,7 +109,7 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	 * Gets called before a {@link Screen} gets closed.<br>
 	 * A screen gets closed when a new active {@link Screen} gets set via {@link Minecraft#setScreen(Screen)}.<br><br>
 	 *
-	 * Keep in mind that, just like most Vanilla GUI stuff, {@link AbstractElement}s get rebuild every time the {@link Screen} gets resized,
+	 * Keep in mind that, just like most Vanilla GUI stuff, {@link AbstractElement}s get rebuilt every time the {@link Screen} gets resized,
 	 * so this method will only get called for the VERY LAST {@link AbstractElement} instance that got built for the {@link Screen} while it was active.
 	 * It does not get called for instances that got built earlier (by resizing the {@link Screen} multiple times for example).
 	 */
@@ -117,7 +120,7 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	 * Gets called after a {@link Screen} got opened via {@link Minecraft#setScreen(Screen)}.<br>
 	 * The {@link Screen} is already initialized at the time this method gets called.<br><br>
 	 *
-	 * Keep in mind that, just like most Vanilla GUI stuff, {@link AbstractElement}s get rebuild every time the {@link Screen} gets resized,
+	 * Keep in mind that, just like most Vanilla GUI stuff, {@link AbstractElement}s get rebuilt every time the {@link Screen} gets resized,
 	 * so this method will only get called for the FIRST {@link AbstractElement} instance that gets build for the {@link Screen} after opening it.
 	 * It does not get called for instances that get build because of resizing the {@link Screen}.
 	 */
@@ -128,7 +131,7 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	 * Gets called before the current {@link Screen} gets resized.<br>
 	 * Does NOT get called on initial resize (when opening the screen). Use {@link AbstractElement#onOpenScreen()} for that instead.<br><br>
 	 *
-	 * Just like most Vanilla GUI stuff, {@link AbstractElement}s get rebuild every time the screen size changes,
+	 * Just like most Vanilla GUI stuff, {@link AbstractElement}s get rebuilt every time the screen size changes,
 	 * so every time this method gets called, it gets called for a new {@link AbstractElement} instance.<br><br>
 	 *
 	 * This method should never get called more than once for an {@link AbstractElement} instance.
@@ -139,7 +142,7 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	/**
 	 * Gets called before the element instance gets destroyed.<br><br>
 	 *
-	 * Just like most Vanilla GUI stuff, {@link AbstractElement}s get rebuild every time the screen size changes,
+	 * Just like most Vanilla GUI stuff, {@link AbstractElement}s get rebuilt every time the screen size changes,
 	 * so this method gets called every time the {@link Screen} gets resized and when it gets closed by setting
 	 * a new {@link Screen} (or no screen) via {@link Minecraft#setScreen(Screen)}.
 	 */
@@ -331,6 +334,20 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	public Component getDisplayName() {
 		if (this.customElementLayerName != null) return Component.literal(this.customElementLayerName);
 		return this.builder.getDisplayName(this);
+	}
+
+	/**
+	 * The memory of an {@link AbstractElement} remembers variables across element rebuilding.<br>
+	 * It can be used if an element needs to access data of its ancestors.<br><br>
+	 *
+	 * Every element (based on its instance identifier) has its own memory.
+	 */
+	@NotNull
+	public RuntimePropertyContainer getMemory() {
+		if (this.cachedMemory == null) {
+			this.cachedMemory = ElementMemories.getMemory(this.getInstanceIdentifier());
+		}
+		return this.cachedMemory;
 	}
 
 	public static String fixBackslashPath(String path) {

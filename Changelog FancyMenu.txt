@@ -215,6 +215,15 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 --> Just like Vanilla Sliders, custom ones have fully customizable textures now (handle and background)
 --> Old Slider elements are deprecated now
  
+- Reworked Audio elements
+--> Their options got simplified while keeping all features of the old version
+--> They now have a detailed memory of what tracks they already played, so even in Shuffle mode they only play every audio once per loop (or once in total if not looping)
+--> They never play the same track twice in a row (well except they only have one track)
+--> The logic of when Audio elements keep playing across menus is more in line with the rest of FM now, so Audio elements only keep playing across menus if they are part of a universal layout now
+--> The Manage Tracks GUI lets you easily reorder tracks to let them play in the correct order (if not in Shuffle)
+--> They support WEB audio sources now!
+--> Oh and they are part of the BASE MOD now! No Audio extension anymore!
+ 
 - Reworked Custom GUIs
 --> OLD SCREEN OVERRIDES DON'T WORK ANYMORE! You need to override screens again (sorry >.<)
 --> They should now be way more stable and shouldn't cause so many issues anymore

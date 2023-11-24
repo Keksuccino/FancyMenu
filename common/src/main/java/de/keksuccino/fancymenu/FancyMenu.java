@@ -20,11 +20,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO FIXEN: Durch dragging crumple zone hackt resizen etwas (irgendwie crumple zone ignorieren, wenn resize)
+	//TODO Audio element: Manage Audio Track GUI Liste besser designen (schlicht, aber evtl. noch source type dazu, etc.)
 
-	//TODO Audio element in universal layout testen
-
-	//TODO Audio element debug log stuff entfernen
+	//TODO Anzeigename (in Editor) von Ticker element wie bei neuem Audio element machen (zeigt custom name falls vorhanden)
 
 
 	//TODO ALLE UNGENUTZTEN FileTypes entfernen (ungenutzte video types)

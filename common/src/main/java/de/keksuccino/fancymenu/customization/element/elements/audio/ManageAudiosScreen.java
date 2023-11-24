@@ -21,13 +21,16 @@ public class ManageAudiosScreen extends CellScreen {
     @NotNull
     protected List<AudioElement.AudioInstance> audios;
     @NotNull
+    protected AudioElement element;
+    @NotNull
     protected List<AudioElement.AudioInstance> tempAudios;
     protected LayoutEditorScreen editor;
 
-    protected ManageAudiosScreen(@NotNull List<AudioElement.AudioInstance> audios, @NotNull LayoutEditorScreen editor) {
+    protected ManageAudiosScreen(@NotNull AudioElement element, @NotNull List<AudioElement.AudioInstance> audios, @NotNull LayoutEditorScreen editor) {
         super(Component.translatable("fancymenu.elements.audio.manage_audios"));
         this.audios = Objects.requireNonNull(audios);
         this.tempAudios = new ArrayList<>(audios);
+        this.element = element;
         this.editor = editor;
     }
 
@@ -138,6 +141,7 @@ public class ManageAudiosScreen extends CellScreen {
     protected void onDone() {
         this.audios.clear();
         this.audios.addAll(this.tempAudios);
+        this.element.resetAudioElementKeepAudios();
         Minecraft.getInstance().setScreen(this.editor);
     }
 

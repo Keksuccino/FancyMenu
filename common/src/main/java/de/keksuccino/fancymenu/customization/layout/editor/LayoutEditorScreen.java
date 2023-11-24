@@ -84,7 +84,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	protected int mouseSelectionStartY = 0;
 	public int leftMouseDownPosX = 0;
 	public int leftMouseDownPosY = 0;
-	protected boolean elementDraggingStarted = false;
+	protected boolean elementMovingStarted = false;
+	protected boolean elementResizingStarted = false;
 	protected int rightClickMenuOpenPosX = -1000;
 	protected int rightClickMenuOpenPosY = -1000;
 	protected LayoutEditorHistory.Snapshot preDragElementSnapshot;
@@ -995,7 +996,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	@Override
 	public boolean mouseReleased(double mouseX, double mouseY, int button) {
 
-		this.elementDraggingStarted = false;
+		this.elementMovingStarted = false;
+		this.elementResizingStarted = false;
 
 		boolean cachedMouseSelection = this.isMouseSelection;
 		if (button == 0) {
@@ -1062,19 +1064,29 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		int draggingDiffX = (int) (mouseX - this.leftMouseDownPosX);
 		int draggingDiffY = (int) (mouseY - this.leftMouseDownPosY);
 
-		if ((Math.abs(draggingDiffX) >= ELEMENT_DRAG_CRUMPLE_ZONE) || (Math.abs(draggingDiffY) >= ELEMENT_DRAG_CRUMPLE_ZONE)) {
-			List<AbstractEditorElement> allElements = this.getAllElements();
-			if (!this.elementDraggingStarted) {
-				allElements.forEach(element -> element.updateDraggingStartPos((int)mouseX, (int)mouseY));
-			}
-			this.elementDraggingStarted = true;
-			for (AbstractEditorElement e : allElements) {
-				if (e.mouseDragged(mouseX, mouseY, button, $$3, $$4)) {
-					break;
-				}
-			}
-			this.anchorPointOverlay.mouseDragged(mouseX, mouseY, button, $$3, $$4);
+		List<AbstractEditorElement> allElements = this.getAllElements();
+
+		if (!this.elementResizingStarted) {
+			allElements.forEach(element -> element.updateResizingStartPos((int)mouseX, (int)mouseY));
 		}
+		this.elementResizingStarted = true;
+
+		boolean movingCrumpleZonePassed = (Math.abs(draggingDiffX) >= ELEMENT_DRAG_CRUMPLE_ZONE) || (Math.abs(draggingDiffY) >= ELEMENT_DRAG_CRUMPLE_ZONE);
+		if (movingCrumpleZonePassed) {
+			if (!this.elementMovingStarted) {
+				allElements.forEach(element -> {
+					element.updateMovingStartPos((int)mouseX, (int)mouseY);
+					element.movingCrumpleZonePassed = true;
+				});
+			}
+			this.elementMovingStarted = true;
+		}
+		for (AbstractEditorElement e : allElements) {
+			if (e.mouseDragged(mouseX, mouseY, button, $$3, $$4)) {
+				break;
+			}
+		}
+		this.anchorPointOverlay.mouseDragged(mouseX, mouseY, button, $$3, $$4);
 
 		return false;
 

@@ -71,6 +71,10 @@ public class RuntimePropertyContainer {
         return this;
     }
 
+    public void clear() {
+        this.properties.clear();
+    }
+
     public static class RuntimeProperty<T> {
 
         public T value;

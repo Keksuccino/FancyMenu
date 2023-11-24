@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.*;
 import de.keksuccino.fancymenu.Compat;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.element.ElementMemories;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.widgets.LayoutEditorWidgets;
 import de.keksuccino.fancymenu.customization.screen.dummyscreen.DummyScreens;
@@ -73,6 +74,8 @@ public class ScreenCustomization {
 		EventHandler.INSTANCE.registerListenersOf(eventsInstance);
 
 		addDefaultScreenBlacklistRules();
+
+		ElementMemories.init();
 
 		ScreenCustomizationLayerHandler.init();
 
