@@ -23,6 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(AbstractSliderButton.class)
 public abstract class MixinAbstractSliderButton extends AbstractWidget implements CustomizableSlider {
 
+    @Unique
     private static final ResourceLocation SLIDER_LOCATION_FANCYMENU = new ResourceLocation("textures/gui/slider.png");
 
     @Shadow private boolean canChangeValue;

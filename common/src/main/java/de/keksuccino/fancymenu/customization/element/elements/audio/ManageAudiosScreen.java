@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.element.elements.audio;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
@@ -10,6 +11,7 @@ import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -25,6 +27,8 @@ public class ManageAudiosScreen extends CellScreen {
     @NotNull
     protected List<AudioElement.AudioInstance> tempAudios;
     protected LayoutEditorScreen editor;
+    @Nullable
+    protected String lastSelectedSource;
 
     protected ManageAudiosScreen(@NotNull AudioElement element, @NotNull List<AudioElement.AudioInstance> audios, @NotNull LayoutEditorScreen editor) {
         super(Component.translatable("fancymenu.elements.audio.manage_audios"));
@@ -37,16 +41,36 @@ public class ManageAudiosScreen extends CellScreen {
     @Override
     protected void initCells() {
 
-        this.addStartEndSpacerCell();
+        this.addSpacerCell(10);
 
         for (AudioElement.AudioInstance instance : this.tempAudios) {
-            MutableComponent name = Component.literal(instance.supplier.getSourceWithoutPrefix());
-            this.addLabelCell(name)
+            MutableComponent sourceName = Component.literal("[").append(instance.supplier.getSourceType().getValueComponent().setStyle(Style.EMPTY)).append("] ").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()));
+            MutableComponent name = Component.literal(instance.supplier.getSourceWithoutPrefix()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
+            RenderCell cell = this.addLabelCell(sourceName.append(name))
                     .putMemoryValue("source", instance.supplier.getSourceWithPrefix())
+                    .setHeight(80)
                     .setSelectable(true);
+            if ((this.lastSelectedSource != null) && (instance.supplier.getSourceWithPrefix().equals(this.lastSelectedSource))) {
+                cell.setSelected(true);
+                this.lastSelectedSource = null;
+            }
         }
 
         this.addStartEndSpacerCell();
+
+    }
+
+    @Override
+    protected void updateSelectedCell() {
+
+        super.updateSelectedCell();
+
+        RenderCell selected = this.getSelectedCell();
+        if (selected != null) {
+            this.lastSelectedSource = selected.getMemoryValue("source");
+        } else {
+            this.lastSelectedSource = null;
+        }
 
     }
 

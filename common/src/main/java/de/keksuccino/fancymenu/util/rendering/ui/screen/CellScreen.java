@@ -30,7 +30,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -664,6 +663,11 @@ public abstract class CellScreen extends Screen {
 
         public boolean isHovered() {
             return this.hovered;
+        }
+
+        public RenderCell setSelected(boolean selected) {
+            this.selected = selected;
+            return this;
         }
 
         public boolean isSelected() {

@@ -3,8 +3,10 @@ package de.keksuccino.fancymenu.customization.element.elements.audio;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -56,6 +58,15 @@ public class AudioEditorElement extends AbstractEditorElement {
                 Minecraft.getInstance().setScreen(this.editor);
             }));
         });
+
+        this.rightClickMenu.addSeparatorEntry("separator_after_volume");
+
+        this.rightClickMenu.addClickableEntry("disable_vanilla_music", Component.translatable("fancymenu.elements.audio.disable_vanilla_music"), (menu, entry) -> {
+                    Minecraft.getInstance().setScreen(NotificationScreen.notificationWithHeadline(
+                            aBoolean -> Minecraft.getInstance().setScreen(this.editor),
+                            LocalizationUtils.splitLocalizedLines("fancymenu.elements.audio.disable_vanilla_music.desc")));
+                })
+                .setStackable(true);
 
     }
 

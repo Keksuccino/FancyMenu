@@ -829,6 +829,14 @@ public class Layout extends LayoutBase {
                     }
                 }
 
+                if (action.equalsIgnoreCase("resizebutton")) {
+                    element.baseWidth = SerializationUtils.deserializeNumber(Integer.class, 5, sec.getValue("width"));
+                    element.baseHeight = SerializationUtils.deserializeNumber(Integer.class, 5, sec.getValue("height"));
+                    element.advancedWidth = sec.getValue("advanced_width");
+                    element.advancedHeight = sec.getValue("advanced_height");
+                    addElement = true;
+                }
+
                 if (action.equalsIgnoreCase("movebutton")) {
 
                     String x = sec.getValue("x");

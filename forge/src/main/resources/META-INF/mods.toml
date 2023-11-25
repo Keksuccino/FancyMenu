@@ -23,7 +23,10 @@ COPYRIGHT:
 
 > FancyMenu © Copyright 2020-2023 Keksuccino.
   FancyMenu is licensed under DSMSL (DON'T SNATCH MA STUFF LICENSE).
-  See https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md for more information about this license.'''
+  See https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md for more information about this license.
+
+> Japng © Copyright A. Ellerton.
+  Japng is licensed under Apache-2.0.'''
 
 [[dependencies.fancymenu]]
 modId="konkrete"

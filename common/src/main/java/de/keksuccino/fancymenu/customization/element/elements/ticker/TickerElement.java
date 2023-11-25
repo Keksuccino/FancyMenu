@@ -6,13 +6,16 @@ import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBloc
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ExecutableElement;
-import net.minecraft.client.resources.language.I18n;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 
 public class TickerElement extends AbstractElement implements ExecutableElement {
+
+    private static final DrawableColor BACKGROUND_COLOR = DrawableColor.of(Color.ORANGE);
 
     @NotNull
     public volatile GenericExecutableBlock actionExecutor = new GenericExecutableBlock();
@@ -56,9 +59,16 @@ public class TickerElement extends AbstractElement implements ExecutableElement 
         this.ready = true;
 
         if (isEditor()) {
+            int x = this.getAbsoluteX();
+            int y = this.getAbsoluteY();
+            int w = this.getAbsoluteWidth();
+            int h = this.getAbsoluteHeight();
             RenderSystem.enableBlend();
-            fill(pose, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), Color.ORANGE.getRGB());
-            drawCenteredString(pose, Minecraft.getInstance().font, "§l" + I18n.get("fancymenu.customization.items.ticker"), this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY() + (this.getAbsoluteHeight() / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
+            fill(pose, x, y, x + w, y + h, BACKGROUND_COLOR.getColorInt());
+            enableScissor(x, y, x + w, y + h);
+            drawCenteredString(pose, Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
+            disableScissor();
+            RenderingUtils.resetShaderColor();
         } else if (!this.isAsync) {
             this.tickerElementTick();
         }

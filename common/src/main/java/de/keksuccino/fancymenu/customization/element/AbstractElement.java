@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
+import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.layout.Layout;
@@ -378,7 +379,8 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	@Nullable
 	public static AbstractElement getElementByInstanceIdentifier(String identifier) {
 		if (isEditor()) {
-			return ((LayoutEditorScreen)getScreen()).getElementByInstanceIdentifier(identifier).element;
+			AbstractEditorElement editorElement = ((LayoutEditorScreen)getScreen()).getElementByInstanceIdentifier(identifier);
+			if (editorElement != null) return editorElement.element;
 		} else {
 			ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getActiveLayer();
 			if (layer != null) return layer.getElementByInstanceIdentifier(identifier);

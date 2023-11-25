@@ -20,25 +20,22 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO Audio element: Manage Audio Track GUI Liste besser designen (schlicht, aber evtl. noch source type dazu, etc.)
+	//TODO FIXEN: When moving multiple elements by mouse (CTRL + mouse), it sometimes de-selects all elements except one when stop moving the elements
 
-	//TODO Anzeigename (in Editor) von Ticker element wie bei neuem Audio element machen (zeigt custom name falls vorhanden)
+	//TODO FIXEN: When moving multiple elements and one of the selected elements is the anchor point of other selected elements, the child elements will move separately, instead of together with its parent
+
+	//TODO FIXEN: "Pick Element" in the editor seems to be broken
+
+
 
 
 	//TODO ALLE UNGENUTZTEN FileTypes entfernen (ungenutzte video types)
 
 	//TODO Text Editor: Undo/Redo adden
 
-	//TODO Neues Audio element schreiben (default; keine Extension mehr)
-
 	//TODO Max Number Placeholder (Math.max)
 
 	//TODO Min Number Placeholder (Math.min)
-
-
-
-
-
 
 	//TODO Animations deprecaten! APNG kann als Alternative genutzt werden (und später vllt auch Videos)
 

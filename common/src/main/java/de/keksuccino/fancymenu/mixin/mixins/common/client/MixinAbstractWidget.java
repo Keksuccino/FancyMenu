@@ -193,14 +193,14 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Inject(method = "getWidth", at = @At("RETURN"), cancellable = true)
 	private void atReturnGetWidthFancyMenu(CallbackInfoReturnable<Integer> info) {
 		if (this.customWidthFancyMenu != null) {
-			info.setReturnValue(this.customWidthFancyMenu);
+			if (this.customWidthFancyMenu > 0) info.setReturnValue(this.customWidthFancyMenu);
 		}
 	}
 
 	@Inject(method = "getHeight", at = @At("RETURN"), cancellable = true)
 	private void atReturnGetHeightFancyMenu(CallbackInfoReturnable<Integer> info) {
 		if (this.customHeightFancyMenu != null) {
-			info.setReturnValue(this.customHeightFancyMenu);
+			if (this.customHeightFancyMenu > 0) info.setReturnValue(this.customHeightFancyMenu);
 		}
 	}
 

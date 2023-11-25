@@ -1140,5 +1140,7 @@
   "fancymenu.elements.audio.manage_audios.remove_audio": "Remove Selected",
   "fancymenu.elements.audio.manage_audios.remove_audio.confirm": "Are you sure?\n\nDo you really want to remove the selected audio track?",
   "fancymenu.elements.audio.manage_audios.move_up": "Move Selected UP",
-  "fancymenu.elements.audio.manage_audios.move_down": "Move Selected DOWN"
+  "fancymenu.elements.audio.manage_audios.move_down": "Move Selected DOWN",
+  "fancymenu.elements.audio.disable_vanilla_music": "Disable Vanilla Menu Music",
+  "fancymenu.elements.audio.disable_vanilla_music.desc": "Disabling Vanilla Menu Music\n\nYou can disable Vanilla Minecraft's menu music\nin FancyMenu's menu bar at the top of every menu,\nwhen you're §lNOT§r in the editor.\n\nTo toggle it off, disable: \n§zCustomization -> Settings -> Play Vanilla Menu Music"
 }
