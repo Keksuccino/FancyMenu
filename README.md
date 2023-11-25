@@ -12,11 +12,10 @@ For more information about the license, please check `LICENSE.md`.
 Japng © Copyright A. Ellerton.<br>
 Japng is licensed under Apache-2.0.
 
+<br>
 
 -------------
 
-<br>
-<br>
 <br>
 
 # MultiLoader Template
