@@ -1,3 +1,20 @@
+
+# About
+
+This is the dev repo for FancyMenu v3, which is currently in development.
+
+# Copyright
+
+FancyMenu © Copyright 2020-2023 Keksuccino.<br>
+FancyMenu is licenced under DSMSLv2.<br>
+For more information about the license, please check `LICENSE.md`.
+
+Japng © Copyright A. Ellerton.<br>
+Japng is licensed under Apache-2.0.
+
+
+-------------
+
 # MultiLoader Template
 
 This project provides a Gradle project template that can compile mods for both Forge and Fabric using a common sourceset. This project does not require any third party libraries or dependencies. If you have any questions or want to discuss the project join our [Discord](https://discord.myceliummod.network).
