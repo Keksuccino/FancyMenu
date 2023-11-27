@@ -20,11 +20,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO FIXEN: When moving multiple elements by mouse (CTRL + mouse), it sometimes de-selects all elements except one when stop moving the elements
+	//TODO FIXEN: Disablen von Forced GUI Scale verhindern, wenn auto-scaling enabled (zusätzlicher check ob forced scale beim anwenden von auto-scaling)
 
-	//TODO FIXEN: When moving multiple elements and one of the selected elements is the anchor point of other selected elements, the child elements will move separately, instead of together with its parent
-
-	//TODO FIXEN: "Pick Element" in the editor seems to be broken
 
 
 

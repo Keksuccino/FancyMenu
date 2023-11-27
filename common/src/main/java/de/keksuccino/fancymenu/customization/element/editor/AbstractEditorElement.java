@@ -107,10 +107,10 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		this.element = element;
 		this.rightClickMenu = new ContextMenu() {
 			@Override
-			public @NotNull ContextMenu openMenuAt(float x, float y) {
+			public ContextMenu openMenuAt(float x, float y, @Nullable List<String> entryPath) {
 				cachedHoveredElementsOnRightClickMenuOpen.clear();
 				cachedHoveredElementsOnRightClickMenuOpen.addAll(editor.getHoveredElements());
-				return super.openMenuAt(x, y);
+				return super.openMenuAt(x, y, entryPath);
 			}
 		};
 		this.init();
@@ -120,7 +120,6 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		this(element, editor, new EditorElementSettings());
 	}
 
-	@SuppressWarnings("all")
 	public void init() {
 
 		this.rightClickMenu.closeMenu();
@@ -132,7 +131,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		this.topLeftDisplay.addLine("pos_x", () -> Component.translatable("fancymenu.element.border_display.pos_x", "" + this.getX()));
 		this.topLeftDisplay.addLine("width", () -> Component.translatable("fancymenu.element.border_display.width", "" + this.getWidth()));
 		if (this.element.builder.isDeprecated()) {
-			this.topLeftDisplay.addLine("deprecated_warning_line0", () -> Component.empty());
+			this.topLeftDisplay.addLine("deprecated_warning_line0", Component::empty);
 			this.topLeftDisplay.addLine("deprecated_warning_line1", () -> Component.translatable("fancymenu.editor.elements.deprecated_warning.line1").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
 			this.topLeftDisplay.addLine("deprecated_warning_line2", () -> Component.translatable("fancymenu.editor.elements.deprecated_warning.line2").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
 			this.topLeftDisplay.addLine("deprecated_warning_line3", () -> Component.translatable("fancymenu.editor.elements.deprecated_warning.line3").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
@@ -147,10 +146,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				this.clearEntries();
 				int i = 0;
 				for (AbstractEditorElement e : cachedHoveredElementsOnRightClickMenuOpen) {
-					this.addClickableEntry("element_" + i, (e.element.customElementLayerName != null) ? Component.literal(e.element.customElementLayerName) : e.element.builder.getDisplayName(e.element), (menu, entry) -> {
-						for (AbstractEditorElement e2 : AbstractEditorElement.this.editor.getAllElements()) {
-							e2.resetElementStates();
-						}
+					this.addClickableEntry("element_" + i, e.element.getDisplayName(), (menu, entry) -> {
+						editor.getAllElements().forEach(AbstractEditorElement::resetElementStates);
 						e.setSelected(true);
 					});
 					i++;
@@ -387,20 +384,20 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 			this.rightClickMenu.addClickableEntry("move_up_element", Component.translatable("fancymenu.editor.object.moveup"),
 							(menu, entry) -> {
-								this.editor.moveElementUp(this);
+								this.editor.moveLayerUp(this);
 								this.editor.layoutEditorWidgets.forEach(widget -> widget.editorElementOrderChanged(this, true));
 							})
 					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.moveup.desc")))
-					.setIsActiveSupplier((menu, entry) -> this.editor.canBeMovedUp(this))
+					.setIsActiveSupplier((menu, entry) -> this.editor.canMoveLayerUp(this))
 					.setIcon(ContextMenu.IconFactory.getIcon("arrow_up"));
 
 			this.rightClickMenu.addClickableEntry("move_down_element", Component.translatable("fancymenu.editor.object.movedown"),
 							(menu, entry) -> {
-								this.editor.moveElementDown(this);
+								this.editor.moveLayerDown(this);
 								this.editor.layoutEditorWidgets.forEach(widget -> widget.editorElementOrderChanged(this, false));
 							})
 					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.object.movedown.desc")))
-					.setIsActiveSupplier((menu, entry) -> this.editor.canBeMovedDown(this))
+					.setIsActiveSupplier((menu, entry) -> this.editor.canMoveLayerDown(this))
 					.setIcon(ContextMenu.IconFactory.getIcon("arrow_down"));
 
 		}
@@ -627,7 +624,6 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	}
 
 	public void resetElementStates() {
-		this.hovered = false;
 		this.selected = false;
 		this.multiSelected = false;
 		this.leftMouseDown = false;
@@ -657,6 +653,14 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	public void updateResizingStartPos(int mouseX, int mouseY) {
 		this.resizingStartPosX = mouseX;
 		this.resizingStartPosY = mouseY;
+	}
+
+	public boolean isElementAnchorAndParentIsSelected() {
+		if (this.element.anchorPoint != ElementAnchorPoints.ELEMENT) return false;
+		if (this.element.anchorPointElementIdentifier == null) return false;
+		AbstractEditorElement parent = this.editor.getElementByInstanceIdentifier(this.element.anchorPointElementIdentifier);
+		if (parent == null) return false;
+		return (parent.isSelected() || parent.isMultiSelected());
 	}
 
 	@Override
@@ -698,7 +702,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				int diffX = (int)-(this.movingStartPosX - mouseX);
 				int diffY = (int)-(this.movingStartPosY - mouseY);
 				if (this.editor.allSelectedElementsMovable()) {
-					if (!this.isMultiSelected() || (this.element.anchorPoint != ElementAnchorPoints.ELEMENT)) {
+					if (!this.isMultiSelected() || !this.isElementAnchorAndParentIsSelected()) {
 						this.element.posOffsetX = this.leftMouseDownBaseX + diffX;
 						this.element.posOffsetY = this.leftMouseDownBaseY + diffY;
 					}

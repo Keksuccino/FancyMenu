@@ -86,6 +86,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public int leftMouseDownPosY = 0;
 	protected boolean elementMovingStarted = false;
 	protected boolean elementResizingStarted = false;
+	protected boolean mouseDraggingStarted = false;
 	protected int rightClickMenuOpenPosX = -1000;
 	protected int rightClickMenuOpenPosY = -1000;
 	protected LayoutEditorHistory.Snapshot preDragElementSnapshot;
@@ -324,6 +325,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	}
 
+	@SuppressWarnings("unused")
 	protected void renderScrollListHeaderFooterPreview(PoseStack pose, int mouseX, int mouseY, float partial) {
 
 		if (this.layout.showScrollListHeaderFooterPreviewInEditor) {
@@ -585,8 +587,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		List<AbstractEditorElement> elements = new ArrayList<>();
 		for (AbstractEditorElement e : this.getAllElements()) {
 			if (e.isHovered()) {
-				if ((e instanceof HideableElement h) && h.isHidden()) continue;
-				elements.add(e);
+				boolean hidden = (e instanceof HideableElement h) && h.isHidden();
+				if (!hidden) elements.add(e);
 			}
 		}
 		return elements;
@@ -601,10 +603,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	@NotNull
 	public List<AbstractEditorElement> getSelectedElements() {
 		List<AbstractEditorElement> l = new ArrayList<>();
-		this.getAllElements().forEach((element) -> {
-			if (element.isSelected()) {
-				l.add(element);
-			}
+		this.getAllElements().forEach(element -> {
+			if (element.isSelected()) l.add(element);
 		});
 		return l;
 	}
@@ -677,13 +677,13 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		return true;
 	}
 
-	public boolean canBeMovedUp(AbstractEditorElement element) {
+	public boolean canMoveLayerUp(AbstractEditorElement element) {
 		int index = this.normalEditorElements.indexOf(element);
 		if (index == -1) return false;
 		return index < this.normalEditorElements.size()-1;
 	}
 
-	public boolean canBeMovedDown(AbstractEditorElement element) {
+	public boolean canMoveLayerDown(AbstractEditorElement element) {
 		int index = this.normalEditorElements.indexOf(element);
 		return index > 0;
 	}
@@ -692,7 +692,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	 * Returns the element the given one was moved above or NULL if there was no element above the given one.
 	 */
 	@Nullable
-	public AbstractEditorElement moveElementUp(@NotNull AbstractEditorElement element) {
+	public AbstractEditorElement moveLayerUp(@NotNull AbstractEditorElement element) {
 		AbstractEditorElement movedAbove = null;
 		try {
 			if (this.normalEditorElements.contains(element)) {
@@ -723,7 +723,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	 * Returns the element the given one was moved behind or NULL if there was no element behind the given one.
 	 */
 	@Nullable
-	public AbstractEditorElement moveElementDown(AbstractEditorElement element) {
+	public AbstractEditorElement moveLayerDown(AbstractEditorElement element) {
 		AbstractEditorElement movedBehind = null;
 		try {
 			if (this.normalEditorElements.contains(element)) {
@@ -908,6 +908,24 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		}
 	}
 
+	protected void moveSelectedElementsByXYOffset(int offsetX, int offsetY) {
+		List<AbstractEditorElement> selected = this.getSelectedElements();
+		if ((selected.size() > 0) && this.allSelectedElementsMovable()) {
+			this.history.saveSnapshot();
+		}
+		boolean multiSelect = selected.size() > 1;
+		for (AbstractEditorElement e : selected) {
+			if (this.allSelectedElementsMovable()) {
+				if (!multiSelect || !e.isElementAnchorAndParentIsSelected()) {
+					e.element.posOffsetX = e.element.posOffsetX + offsetX;
+					e.element.posOffsetY = e.element.posOffsetY + offsetY;
+				}
+			} else if (!e.settings.isMovable()) {
+				e.renderMovingNotAllowedTime = System.currentTimeMillis() + 800;
+			}
+		}
+	}
+
 	//Called before mouseDragged
 	@Override
 	public boolean mouseClicked(double mouseX, double mouseY, int button) {
@@ -999,6 +1017,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		this.elementMovingStarted = false;
 		this.elementResizingStarted = false;
 
+		boolean mouseWasInDraggingMode = this.mouseDraggingStarted;
+		this.mouseDraggingStarted = false;
+
 		boolean cachedMouseSelection = this.isMouseSelection;
 		if (button == 0) {
 			this.isMouseSelection = false;
@@ -1016,7 +1037,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		AbstractEditorElement topHoverElement = (hoveredElements.size() > 0) ? hoveredElements.get(hoveredElements.size()-1) : null;
 
 		//Deselect hovered element on left-click if CTRL pressed
-		if (!cachedMouseSelection && (button == 0) && (topHoverElement != null) && topHoverElement.isSelected() && !topHoverElement.recentlyMovedByDragging && !topHoverElement.recentlyLeftClickSelected && hasControlDown()) {
+		if (!mouseWasInDraggingMode && !cachedMouseSelection && (button == 0) && (topHoverElement != null) && topHoverElement.isSelected() && !topHoverElement.recentlyMovedByDragging && !topHoverElement.recentlyLeftClickSelected && hasControlDown()) {
 			topHoverElement.setSelected(false);
 		}
 
@@ -1063,6 +1084,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		int draggingDiffX = (int) (mouseX - this.leftMouseDownPosX);
 		int draggingDiffY = (int) (mouseY - this.leftMouseDownPosY);
+		if ((draggingDiffX != 0) || (draggingDiffY != 0)) {
+			this.mouseDraggingStarted = true;
+		}
 
 		List<AbstractEditorElement> allElements = this.getAllElements();
 
@@ -1104,53 +1128,25 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		//ARROW LEFT
 		if (keycode == InputConstants.KEY_LEFT) {
-			this.history.saveSnapshot();
-			for (AbstractEditorElement e : this.getSelectedElements()) {
-				if (this.allSelectedElementsMovable()) {
-					e.element.posOffsetX -= 1;
-				} else if (!e.settings.isMovable()) {
-					e.renderMovingNotAllowedTime = System.currentTimeMillis() + 800;
-				}
-			}
+			this.moveSelectedElementsByXYOffset(-1, 0);
 			return true;
 		}
 
 		//ARROW UP
 		if (keycode == InputConstants.KEY_UP) {
-			this.history.saveSnapshot();
-			for (AbstractEditorElement e : this.getSelectedElements()) {
-				if (this.allSelectedElementsMovable()) {
-					e.element.posOffsetY -= 1;
-				} else if (!e.settings.isMovable()) {
-					e.renderMovingNotAllowedTime = System.currentTimeMillis() + 800;
-				}
-			}
+			this.moveSelectedElementsByXYOffset(0, -1);
 			return true;
 		}
 
 		//ARROW RIGHT
 		if (keycode == InputConstants.KEY_RIGHT) {
-			this.history.saveSnapshot();
-			for (AbstractEditorElement e : this.getSelectedElements()) {
-				if (this.allSelectedElementsMovable()) {
-					e.element.posOffsetX += 1;
-				} else if (!e.settings.isMovable()) {
-					e.renderMovingNotAllowedTime = System.currentTimeMillis() + 800;
-				}
-			}
+			this.moveSelectedElementsByXYOffset(1, 0);
 			return true;
 		}
 
 		//ARROW DOWN
 		if (keycode == InputConstants.KEY_DOWN) {
-			this.history.saveSnapshot();
-			for (AbstractEditorElement e : this.getSelectedElements()) {
-				if (this.allSelectedElementsMovable()) {
-					e.element.posOffsetY += 1;
-				} else if (!e.settings.isMovable()) {
-					e.renderMovingNotAllowedTime = System.currentTimeMillis() + 800;
-				}
-			}
+			this.moveSelectedElementsByXYOffset(0, 1);
 			return true;
 		}
 

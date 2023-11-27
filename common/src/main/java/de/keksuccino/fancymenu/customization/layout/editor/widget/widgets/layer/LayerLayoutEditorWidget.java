@@ -29,7 +29,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
@@ -246,11 +245,11 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                 fillF(pose, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), UIBase.getUIColorTheme().element_background_color_hover.getColorInt());
             }
 
-            UIBase.getUIColorTheme().setUITextureShaderColor(this.layerWidget.editor.canBeMovedUp(this.element) ? 1.0f : 0.3f);
+            UIBase.getUIColorTheme().setUITextureShaderColor(this.layerWidget.editor.canMoveLayerUp(this.element) ? 1.0f : 0.3f);
             RenderingUtils.bindTexture(MOVE_UP_TEXTURE);
             blitF(pose, this.x, this.y, 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight());
 
-            UIBase.getUIColorTheme().setUITextureShaderColor(this.layerWidget.editor.canBeMovedDown(this.element) ? 1.0f : 0.3f);
+            UIBase.getUIColorTheme().setUITextureShaderColor(this.layerWidget.editor.canMoveLayerDown(this.element) ? 1.0f : 0.3f);
             RenderingUtils.bindTexture(MOVE_DOWN_TEXTURE);
             blitF(pose, this.x, this.y + this.getButtonHeight(), 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight());
 
@@ -354,22 +353,22 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
             if (button == 0) {
                 if (this.isMoveUpButtonHovered()) {
-                    if (this.layerWidget.editor.canBeMovedUp(this.element)) {
+                    if (this.layerWidget.editor.canMoveLayerUp(this.element)) {
                         if (FancyMenu.getOptions().playUiClickSounds.getValue()) Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
                         this.layerWidget.editor.history.saveSnapshot();
                         if (!this.element.isSelected()) this.layerWidget.editor.deselectAllElements();
                         this.element.setSelected(true);
-                        this.layerWidget.editor.moveElementUp(this.element);
+                        this.layerWidget.editor.moveLayerUp(this.element);
                         this.layerWidget.getAllWidgetsExceptThis().forEach(widget -> widget.editorElementOrderChanged(this.element, true));
                         MainThreadTaskExecutor.executeInMainThread(() -> this.layerWidget.updateList(true), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                     }
                 } else if (this.isMoveDownButtonHovered()) {
-                    if (this.layerWidget.editor.canBeMovedDown(this.element)) {
+                    if (this.layerWidget.editor.canMoveLayerDown(this.element)) {
                         if (FancyMenu.getOptions().playUiClickSounds.getValue()) Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
                         this.layerWidget.editor.history.saveSnapshot();
                         if (!this.element.isSelected()) this.layerWidget.editor.deselectAllElements();
                         this.element.setSelected(true);
-                        this.layerWidget.editor.moveElementDown(this.element);
+                        this.layerWidget.editor.moveLayerDown(this.element);
                         this.layerWidget.getAllWidgetsExceptThis().forEach(widget -> widget.editorElementOrderChanged(this.element, false));
                         MainThreadTaskExecutor.executeInMainThread(() -> this.layerWidget.updateList(true), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                     }
