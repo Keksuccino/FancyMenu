@@ -1,6 +1,10 @@
 
 CHANGELOG | FANCYMENU v3.0.0 CLOSED BETA 5
  
+- Improved Anchor Overlay
+--> It should hopefully work much more stable now (*knock on wood*)
+--> Hopefully no phantom anchor lines anymore
+ 
 - Fixed: "Pick Element" in element right-click menu not working correctly
 - Fixed: Elements in the editor sometimes get de-selected when moving multiple elements at once (using CTRL + left-click)
 - Fixed: When moving multiple elements by arrow keys, elements with ELEMENT anchor point move wrong if parent element is selected as well
