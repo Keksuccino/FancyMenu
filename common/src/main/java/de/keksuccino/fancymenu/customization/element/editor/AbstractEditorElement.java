@@ -585,6 +585,10 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		if (p == null) {
 			p = ElementAnchorPoints.MID_CENTERED;
 		}
+		if (p != ElementAnchorPoints.ELEMENT) {
+			this.element.anchorPointElementIdentifier = null;
+			this.element.setElementAnchorPointParent(null);
+		}
 		if (keepAbsolutePosition) {
 			this.element.posOffsetX = this.calcNewBaseX(p, oldAbsoluteX);
 			this.element.posOffsetY = this.calcNewBaseY(p, oldAbsoluteY);
@@ -606,11 +610,13 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			if (ee != null) {
 				this.element.setElementAnchorPointParent(ee.element);
 			} else {
-				LOGGER.error("[FANCYMENU] Failed to get element in AbstractEditorElement#setAnchorPointViaOverlay()! Element was NULL!");
+				this.element.setElementAnchorPointParent(null);
+				LOGGER.error("[FANCYMENU] Failed to get parent element for ELEMENT anchor! Element was NULL!", new NullPointerException());
 			}
 		}
 		this.setAnchorPoint(anchor.anchorPoint, true, oldAbsoluteX, oldAbsoluteY, false);
 		this.updateLeftMouseDownCachedValues(mouseX, mouseY);
+		this.updateMovingStartPos(mouseX, mouseY);
 	}
 
 	protected int calcNewBaseX(ElementAnchorPoint newAnchor, int oldAbsoluteX) {

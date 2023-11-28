@@ -1,18 +1,20 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
-import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.element.HideableElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
+import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -25,19 +27,17 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    protected static final int MOUSE_OVER_DELAY_MS = 1000;
+    protected static final int AREA_HOVER_CHARGING_TIME_MS = 1000;
     protected static final int AREA_ALPHA_NORMAL = 40;
     protected static final int AREA_ALPHA_BORDER = 70;
     protected static final float AREA_ALPHA_MULTIPLIER = 2.0F;
 
     protected final LayoutEditorScreen editor;
-    protected List<AbstractEditorElement> elements = new ArrayList<>();
-    protected boolean leftMouseDown = false;
-    protected AnchorPointArea initialHoverArea = null;
-    protected AnchorPointArea lastTickMouseOverArea = null;
-    protected AnchorPointArea currentMouseOverArea = null;
-    protected long areaMouseOverStartTime = -1;
-    protected boolean mouseDragged = false;
+    protected AnchorPointArea lastTickHoveredArea = null;
+    protected AnchorPointArea currentlyHoveredArea = null;
+    protected AnchorPointArea lastCompletedHoverArea = null;
+    protected boolean lastTickDraggedEmpty = true;
+    protected long areaHoverStartTime = -1;
 
     protected AnchorPointArea topLeftArea = new AnchorPointArea(ElementAnchorPoints.TOP_LEFT, 30, 30, AnchorPointArea.ProgressDirection.TO_RIGHT);
     protected AnchorPointArea midLeftArea = new AnchorPointArea(ElementAnchorPoints.MID_LEFT, 30, 30, AnchorPointArea.ProgressDirection.TO_RIGHT);
@@ -51,40 +51,44 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
     protected AnchorPointArea[] anchorPointAreas = new AnchorPointArea[] { topLeftArea, midLeftArea, bottomLeftArea, topCenteredArea, midCenteredArea, bottomCenteredArea, topRightArea, midRightArea, bottomRightArea };
 
     public AnchorPointOverlay(@NotNull LayoutEditorScreen editor) {
-        this.editor = editor;
+        this.editor = Objects.requireNonNull(editor);
+    }
+
+    public void resetAreaHoverCache() {
+        this.currentlyHoveredArea = null;
+        this.lastTickHoveredArea = null;
+        this.areaHoverStartTime = -1;
+    }
+
+    public void resetOverlay() {
+        this.resetAreaHoverCache();
+        this.setLastCompletedHoverArea(null);
+        this.lastTickDraggedEmpty = true;
     }
 
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
         if (!FancyMenu.getOptions().showAnchorOverlay.getValue()) {
-            this.leftMouseDown = false;
-            this.initialHoverArea = null;
-            this.currentMouseOverArea = null;
-            this.lastTickMouseOverArea = null;
-            this.areaMouseOverStartTime = -1;
-            this.mouseDragged = false;
+            this.resetOverlay();
             return;
         }
 
-        this.updateCachedElements();
+        //Don't render if overlay not always visible and no elements currently dragged
+        if (!FancyMenu.getOptions().alwaysShowAnchorOverlay.getValue() && this.editor.getCurrentlyDraggedElements().isEmpty()) return;
 
-        if (!FancyMenu.getOptions().alwaysShowAnchorOverlay.getValue() && (!this.isElementPressed() || !this.allSelectedElementsMovable())) return;
+        this.tickAreaMouseOver(mouseX, mouseY);
 
-        if ((this.initialHoverArea != null) && (!this.initialHoverArea.isMouseOver(mouseX, mouseY))) {
-            this.initialHoverArea = null;
-        }
-        if (this.initialHoverArea instanceof ElementAnchorPointArea ea) {
-            AbstractEditorElement element = ea.getElement();
-            if ((element == null) || element.isSelected() || element.isMultiSelected()) this.initialHoverArea = null;
-        }
-        if (!this.leftMouseDown) {
-            this.initialHoverArea = null;
-        }
+        this.renderAreas(pose, mouseX, mouseY, partial);
 
-        this.handleAreaMouseOver(mouseX, mouseY);
+        this.renderConnectionLines(pose);
+
+    }
+
+    protected void renderAreas(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
         int menuBarHeight = ((this.editor.menuBar != null) ? (int)((float)this.editor.menuBar.getHeight() * UIBase.calculateFixedScale(this.editor.menuBar.getScale())) : 0);
+        if ((this.editor.menuBar != null) && !this.editor.menuBar.isExpanded()) menuBarHeight = 0;
 
         this.topLeftArea.x = -1;
         this.topLeftArea.y = -1 + menuBarHeight;
@@ -122,30 +126,35 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
         this.bottomRightArea.y = ScreenUtils.getScreenHeight() - this.bottomRightArea.getHeight() + 1;
         this.bottomRightArea.render(pose, mouseX, mouseY, partial);
 
-        if ((this.currentMouseOverArea != null) && FancyMenu.getOptions().changeAnchorOnHover.getValue()) {
-            this.currentMouseOverArea.renderMouseOverProgress(pose, this.calculateMouseOverProgress());
+        if ((this.currentlyHoveredArea != null) && FancyMenu.getOptions().changeAnchorOnHover.getValue()) {
+            this.currentlyHoveredArea.renderMouseOverProgress(pose, this.calculateMouseOverProgress());
         }
-
-        this.renderConnectionLines(pose);
 
     }
 
-    protected void renderConnectionLines(PoseStack pose) {
-        if (FancyMenu.getOptions().showAllAnchorConnections.getValue()) {
-            for (AbstractEditorElement e : this.elements) {
-                this.renderConnectionLineFor(pose, e);
+    protected float calculateMouseOverProgress() {
+        if (this.currentlyHoveredArea != null) {
+            long now = System.currentTimeMillis();
+            if ((this.areaHoverStartTime + AREA_HOVER_CHARGING_TIME_MS) > now) {
+                long diff = (this.areaHoverStartTime + AREA_HOVER_CHARGING_TIME_MS) - now;
+                float f = Math.max(0.0F, Math.min(1.0F, Math.max(1F, (float)diff) / (float) AREA_HOVER_CHARGING_TIME_MS));
+                return 1.0F - f;
             }
-        } else if (this.leftMouseDown) {
-            for (AbstractEditorElement e : this.elements) {
-                if (e.isSelected() || e.isMultiSelected() || this.isParentSelected(e)) {
-                    this.renderConnectionLineFor(pose, e);
-                }
-            }
+            return 1.0F;
+        }
+        return 0.0F;
+    }
+
+    protected void renderConnectionLines(@NotNull PoseStack pose) {
+        List<AbstractEditorElement> elements = FancyMenu.getOptions().showAllAnchorConnections.getValue() ? this.editor.getAllElements() : this.editor.getCurrentlyDraggedElements();
+        for (AbstractEditorElement e : elements) {
+            boolean hidden = (e instanceof HideableElement h) && h.isHidden();
+            if (!hidden) this.renderConnectionLineFor(pose, e);
         }
     }
 
-    protected void renderConnectionLineFor(PoseStack pose, AbstractEditorElement e) {
-        AnchorPointArea a = this.getAreaForElement(e);
+    protected void renderConnectionLineFor(@NotNull PoseStack pose, @NotNull AbstractEditorElement e) {
+        AnchorPointArea a = this.getParentAreaOfElement(e);
         if (a != null) {
             int xElement = e.getX() + (e.getWidth() / 2);
             int yElement = e.getY() + (e.getHeight() / 2);
@@ -156,7 +165,7 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
     }
 
     @SuppressWarnings("all")
-    protected void renderSquareLine(PoseStack pose, int xElement, int yElement, int xArea, int yArea, int lineThickness, int color) {
+    protected void renderSquareLine(@NotNull PoseStack pose, int xElement, int yElement, int xArea, int yArea, int lineThickness, int color) {
 
         int horizontalWidth = Math.max(xElement, xArea) - Math.min(xElement, xArea);
         int verticalHeight = Math.max(yElement, yArea) - Math.min(yElement, yArea);
@@ -178,126 +187,98 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
 
     }
 
-    protected void updateCachedElements() {
-        this.elements = this.editor.getAllElements();
-    }
-
-    protected void handleAreaMouseOver(int mouseX, int mouseY) {
-        if (this.leftMouseDown && (this.initialHoverArea == null) && this.mouseDragged && this.allSelectedElementsMovable()) {
-            this.currentMouseOverArea = this.getMouseOverArea(mouseX, mouseY);
-            if (!FancyMenu.getOptions().changeAnchorOnHover.getValue()) this.currentMouseOverArea = null;
-            if (this.isElementGettingResized()) this.currentMouseOverArea = null;
-            if ((this.lastTickMouseOverArea instanceof ElementAnchorPointArea a1) && (this.currentMouseOverArea instanceof ElementAnchorPointArea a2)) {
-                if (a1.elementIdentifier.equals(a2.elementIdentifier)) this.currentMouseOverArea = this.lastTickMouseOverArea;
+    protected void tickAreaMouseOver(int mouseX, int mouseY) {
+        boolean draggedEmpty = this.editor.getCurrentlyDraggedElements().isEmpty();
+        if (!draggedEmpty) {
+            this.currentlyHoveredArea = FancyMenu.getOptions().changeAnchorOnHover.getValue() ? this.getMouseOverArea(mouseX, mouseY) : null;
+            //If just started dragging, set lastCompleted to current, to "ignore" the initially hovered area
+            if (this.lastTickDraggedEmpty) {
+                this.setLastCompletedHoverArea(this.currentlyHoveredArea);
             }
-            if ((this.currentMouseOverArea != null) && (this.currentMouseOverArea != this.lastTickMouseOverArea)) {
-                this.areaMouseOverStartTime = System.currentTimeMillis();
+            //Reset lastCompleted if current is NULL
+            if (this.currentlyHoveredArea == null) this.setLastCompletedHoverArea(null);
+            //Set current to NULL if it was the last area that changed anchors of elements
+            if (this.isSameArea(this.currentlyHoveredArea, this.lastCompletedHoverArea)) this.currentlyHoveredArea = null;
+            //Update hoverStartTime if new area got hovered
+            if ((this.currentlyHoveredArea != null) && !this.isSameArea(this.currentlyHoveredArea, this.lastTickHoveredArea)) {
+                this.areaHoverStartTime = System.currentTimeMillis();
             }
-            this.lastTickMouseOverArea = this.currentMouseOverArea;
-            if (this.currentMouseOverArea != null) {
-                if ((this.areaMouseOverStartTime + MOUSE_OVER_DELAY_MS) <= System.currentTimeMillis()) {
-                    for (AbstractEditorElement e : this.elements) {
-                        if (e.isDragged() && !this.isAlreadyAttachedToAnchor(e, this.currentMouseOverArea)) {
-                            e.setAnchorPointViaOverlay(this.currentMouseOverArea, mouseX, mouseY);
+            this.lastTickHoveredArea = this.currentlyHoveredArea;
+            if (this.currentlyHoveredArea != null) {
+                //Change anchor of dragged elements if area hovered long enough
+                if ((this.areaHoverStartTime + AREA_HOVER_CHARGING_TIME_MS) <= System.currentTimeMillis()) {
+                    for (AbstractEditorElement e : this.editor.getCurrentlyDraggedElements()) {
+                        if (this.canChangeAnchorTo(e, this.currentlyHoveredArea)) {
+                            e.setAnchorPointViaOverlay(this.currentlyHoveredArea, mouseX, mouseY);
                         }
                     }
+                    this.setLastCompletedHoverArea(this.currentlyHoveredArea);
+                    this.resetAreaHoverCache();
                 }
             }
         } else {
-            this.currentMouseOverArea = null;
-            this.lastTickMouseOverArea = null;
-            this.areaMouseOverStartTime = -1;
+            this.resetAreaHoverCache();
         }
+        this.lastTickDraggedEmpty = draggedEmpty;
     }
 
-    public boolean allSelectedElementsMovable() {
-        for (AbstractEditorElement e : this.elements) {
-            if ((e.isSelected() || e.isMultiSelected()) && !e.settings.isMovable()) return false;
+    /**
+     * Compares two {@link AnchorPointArea}s.<br>
+     * Returns FALSE if one or both areas are NULL.
+     */
+    protected boolean isSameArea(@Nullable AnchorPointArea firstArea, @Nullable AnchorPointArea secondArea) {
+        if ((firstArea == null) && (secondArea == null)) return true;
+        if ((firstArea == null) || (secondArea == null)) return false;
+        if ((firstArea instanceof ElementAnchorPointArea a1) && (secondArea instanceof ElementAnchorPointArea a2)) {
+            return StringUtils.equals(a1.elementIdentifier, a2.elementIdentifier);
+        }
+        return firstArea.anchorPoint == secondArea.anchorPoint;
+    }
+
+    protected boolean canChangeAnchorTo(@NotNull AbstractEditorElement element, @NotNull AnchorPointArea area) {
+        Objects.requireNonNull(element);
+        Objects.requireNonNull(area);
+        if (this.isAttachedToAnchor(element, area)) return false;
+        //Check if area is ElementAnchorPointArea and if so, check if area's element is child of the given element parameter
+        if (area instanceof ElementAnchorPointArea a) {
+            String parentOfElement = element.element.anchorPointElementIdentifier;
+            if ((parentOfElement != null) && parentOfElement.equals(a.elementIdentifier)) return false;
         }
         return true;
     }
 
-    protected boolean isAlreadyAttachedToAnchor(@NotNull AbstractEditorElement element, @NotNull AnchorPointArea area) {
-        if ((element.element.anchorPoint == ElementAnchorPoints.ELEMENT) && (area instanceof ElementAnchorPointArea ae)) {
-            AbstractEditorElement element1 = ae.getElement();
-            if (element1 != null) return Objects.equals(element.element.anchorPointElementIdentifier, element1.element.getInstanceIdentifier());
+    /**
+     * Returns NULL if there was an error while trying to get all child elements.
+     */
+    @Nullable
+    protected List<AbstractEditorElement> getChildElementsOfDraggedElements() {
+        List<AbstractEditorElement> currentlyDragged = this.editor.getCurrentlyDraggedElements();
+        List<AbstractEditorElement> children = new ArrayList<>();
+        for (AbstractEditorElement e : currentlyDragged) {
+            List<AbstractEditorElement> childChainOfE = this.editor.getElementChildChainOfExcluding(e);
+            if (childChainOfE == null) return null;
+            childChainOfE.forEach(element -> {
+                if (!currentlyDragged.contains(element)) children.add(element);
+            });
+        }
+        return children;
+    }
+
+    protected boolean isAttachedToAnchor(@NotNull AbstractEditorElement element, @NotNull AnchorPointArea area) {
+        if (area instanceof ElementAnchorPointArea ae) {
+            String parentOfElement = element.element.anchorPointElementIdentifier;
+            if (parentOfElement != null) {
+                return ae.elementIdentifier.equals(parentOfElement);
+            }
         }
         return element.element.anchorPoint == area.anchorPoint;
     }
 
-    protected float calculateMouseOverProgress() {
-        if (this.currentMouseOverArea != null) {
-            long now = System.currentTimeMillis();
-            if ((this.areaMouseOverStartTime + MOUSE_OVER_DELAY_MS) > now) {
-                long diff = (this.areaMouseOverStartTime + MOUSE_OVER_DELAY_MS) - now;
-                float f = Math.max(0.0F, Math.min(1.0F, Math.max(1F, (float)diff) / (float)MOUSE_OVER_DELAY_MS));
-                return 1.0F - f;
-            }
-            return 1.0F;
-        }
-        return 0.0F;
-    }
-
-    protected boolean isElementPressed() {
-        for (AbstractEditorElement e : this.elements) {
-            if (e.isPressed() && !e.isGettingResized()) return true;
-        }
-        return false;
-    }
-
-    protected boolean isElementGettingResized() {
-        for (AbstractEditorElement e : this.elements) {
-            if (e.isGettingResized()) return true;
-        }
-        return false;
-    }
-
-    protected boolean isSelectedElementParentOf(@NotNull AbstractEditorElement element) {
-        if (element.element.anchorPoint != ElementAnchorPoints.ELEMENT) return false;
-        if (element.element.anchorPointElementIdentifier != null) {
-            AbstractEditorElement parent = this.editor.getElementByInstanceIdentifier(element.element.anchorPointElementIdentifier);
-            if (parent != null) {
-                for (AbstractEditorElement e : this.elements) {
-                    if ((e.isSelected() || e.isMultiSelected()) && (e != element)) {
-                        if (e == parent) return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    protected boolean isParentSelected(AbstractEditorElement e) {
-        if (e.element.anchorPoint != ElementAnchorPoints.ELEMENT) return false;
-        if (e.element.anchorPointElementIdentifier == null) return false;
-        AbstractEditorElement parent = this.editor.getElementByInstanceIdentifier(e.element.anchorPointElementIdentifier);
-        if (parent != null) {
-            if (parent.isSelected() || parent.isMultiSelected()) return true;
-            return this.isParentSelected(parent);
-        }
-        return false;
-    }
-
     @Nullable
-    protected AbstractEditorElement getTopMouseOverAnchorElement(int mouseX, int mouseY) {
-        for (AbstractEditorElement e : Lists.reverse(new ArrayList<>(this.elements))) {
-            if (e.isMouseOver(mouseX, mouseY) && !e.isSelected() && !e.isMultiSelected() && !this.isSelectedElementParentOf(e)) return e;
-        }
-        return null;
-    }
-
-    @Nullable
-    protected AbstractEditorElement getTopMouseOverElement(int mouseX, int mouseY) {
-        for (AbstractEditorElement e : Lists.reverse(new ArrayList<>(this.elements))) {
-            if (e.isMouseOver(mouseX, mouseY)) return e;
-        }
-        return null;
-    }
-
-    @Nullable
-    protected AnchorPointArea getAreaForElement(@NotNull AbstractEditorElement element) {
+    protected AnchorPointArea getParentAreaOfElement(@NotNull AbstractEditorElement element) {
         if (element.element.anchorPoint == ElementAnchorPoints.ELEMENT) {
             if (element.element.anchorPointElementIdentifier != null) {
+                //Safety check to lower the change to construct a broken ElementAnchorPointArea instance
                 AbstractEditorElement e = this.editor.getElementByInstanceIdentifier(element.element.anchorPointElementIdentifier);
                 if (e != null) return new ElementAnchorPointArea(e.element.getInstanceIdentifier());
             }
@@ -310,55 +291,44 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
     }
 
     @Nullable
+    protected AbstractEditorElement getTopHoveredNotDraggedElement() {
+        List<AbstractEditorElement> childrenOfDragged = this.getChildElementsOfDraggedElements();
+        if (childrenOfDragged == null) {
+            LOGGER.error("[FANCYMENU] Failed to get hovered element! Error while getting children of dragged elements!", new IllegalStateException());
+            return null;
+        }
+        List<AbstractEditorElement> draggedElements = this.editor.getCurrentlyDraggedElements();
+        List<AbstractEditorElement> notDraggedElements = this.editor.getHoveredElements();
+        notDraggedElements.removeIf(draggedElements::contains);
+        notDraggedElements.removeIf(childrenOfDragged::contains);
+        return notDraggedElements.isEmpty() ? null : ListUtils.getLast(notDraggedElements);
+    }
+
+    @Nullable
     protected AnchorPointArea getMouseOverArea(int mouseX, int mouseY) {
         for (AnchorPointArea a : this.anchorPointAreas) {
             if (a.isMouseOver(mouseX, mouseY)) return a;
         }
-        AbstractEditorElement e = this.getTopMouseOverAnchorElement(mouseX, mouseY);
-        if (e != null) return new ElementAnchorPointArea(e.element.getInstanceIdentifier());
+        AbstractEditorElement e = this.getTopHoveredNotDraggedElement();
+        if ((e != null) && !e.isSelected() && !e.isMultiSelected()) return new ElementAnchorPointArea(e.element.getInstanceIdentifier());
         return null;
     }
 
-    @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-
-        if (!FancyMenu.getOptions().showAnchorOverlay.getValue()) return false;
-
-        this.updateCachedElements();
-
-        this.leftMouseDown = (this.getTopMouseOverElement((int) mouseX, (int) mouseY) != null);
-        if (this.leftMouseDown) this.initialHoverArea = this.getMouseOverArea((int) mouseX, (int) mouseY);
-
-        return GuiEventListener.super.mouseClicked(mouseX, mouseY, button);
-
+    /**
+     * Has its own setter method for easier debugging.
+     */
+    protected void setLastCompletedHoverArea(@Nullable AnchorPointArea area) {
+        this.lastCompletedHoverArea = area;
     }
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
 
-        if (!FancyMenu.getOptions().showAnchorOverlay.getValue()) return false;
-
-        this.updateCachedElements();
-
-        this.leftMouseDown = false;
-        this.initialHoverArea = null;
-        this.currentMouseOverArea = null;
-        this.lastTickMouseOverArea = null;
-        this.areaMouseOverStartTime = -1;
-        this.mouseDragged = false;
+        this.resetAreaHoverCache();
+        this.lastTickDraggedEmpty = true;
+        this.setLastCompletedHoverArea(null);
 
         return GuiEventListener.super.mouseReleased(mouseX, mouseY, button);
-
-    }
-
-    @Override
-    public boolean mouseDragged(double $$0, double $$1, int $$2, double $$3, double $$4) {
-
-        if (!FancyMenu.getOptions().showAnchorOverlay.getValue()) return false;
-
-        this.mouseDragged = true;
-
-        return GuiEventListener.super.mouseDragged($$0, $$1, $$2, $$3, $$4);
 
     }
 
@@ -378,7 +348,7 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
 
         private ElementAnchorPointArea(@NotNull String elementIdentifier) {
             super(ElementAnchorPoints.ELEMENT, 0, 0, ProgressDirection.TO_TOP);
-            this.elementIdentifier = elementIdentifier;
+            this.elementIdentifier = Objects.requireNonNull(elementIdentifier);
         }
 
         @Override
@@ -388,31 +358,33 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
 
         @Nullable
         public AbstractEditorElement getElement() {
-            return AnchorPointOverlay.this.editor.getElementByInstanceIdentifier(this.elementIdentifier);
+            AbstractEditorElement element = AnchorPointOverlay.this.editor.getElementByInstanceIdentifier(this.elementIdentifier);
+            if (element == null) LOGGER.error("[FANCYMENU] Failed to get element instance of ElementAnchorPointArea! Element was NULL!", new NullPointerException());
+            return element;
         }
 
         @Override
         protected int getX() {
             AbstractEditorElement element = this.getElement();
-            return (element != null) ? element.getX() : 20;
+            return (element != null) ? element.getX() : -100000;
         }
 
         @Override
         protected int getY() {
             AbstractEditorElement element = this.getElement();
-            return (element != null) ? element.getY() : 20;
+            return (element != null) ? element.getY() : -100000;
         }
 
         @Override
         protected int getWidth() {
             AbstractEditorElement element = this.getElement();
-            return (element != null) ? element.getWidth() : 20;
+            return (element != null) ? element.getWidth() : 1;
         }
 
         @Override
         protected int getHeight() {
             AbstractEditorElement element = this.getElement();
-            return (element != null) ? element.getHeight() : 20;
+            return (element != null) ? element.getHeight() : 1;
         }
 
         @SuppressWarnings("all")
@@ -492,7 +464,7 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
         }
 
         protected float getAlphaMultiplier() {
-            if (AnchorPointOverlay.this.leftMouseDown && AnchorPointOverlay.this.isElementPressed()) {
+            if (!AnchorPointOverlay.this.editor.getCurrentlyDraggedElements().isEmpty()) {
                 return AREA_ALPHA_MULTIPLIER;
             }
             return 1.0F;

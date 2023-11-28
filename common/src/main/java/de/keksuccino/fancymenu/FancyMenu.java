@@ -22,7 +22,10 @@ public class FancyMenu {
 
 	//TODO FIXEN: Disablen von Forced GUI Scale verhindern, wenn auto-scaling enabled (zusätzlicher check ob forced scale beim anwenden von auto-scaling)
 
-
+	//TODO ANCHOR OVERLAY ERWEITERN
+	// - Settings zum changen von Overlay Opacity (wenn elements dragged und wenn nicht - letzteres nur nutzen wenn alwaysShowOverlay == true)
+	// - Setting zum überschreiben von Overlay color (default ist leer -> wenn nicht leer, normale Farbe überschreiben, die durch Theme gesetzt wird)
+	// - 3 Modi für Overlay Sichtbarkeit: ALWAYS, WHEN_DRAGGING_ELEMENTS, WHEN_KEYBIND (für letzteres noch keybind überlegen)
 
 
 

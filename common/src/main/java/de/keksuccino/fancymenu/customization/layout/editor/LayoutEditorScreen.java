@@ -1,15 +1,14 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetEditorElement;
 import de.keksuccino.fancymenu.customization.layer.ElementFactory;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
@@ -87,6 +86,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	protected boolean elementMovingStarted = false;
 	protected boolean elementResizingStarted = false;
 	protected boolean mouseDraggingStarted = false;
+	protected List<AbstractEditorElement> currentlyDraggedElements = new ArrayList<>();
 	protected int rightClickMenuOpenPosX = -1000;
 	protected int rightClickMenuOpenPosY = -1000;
 	protected LayoutEditorHistory.Snapshot preDragElementSnapshot;
@@ -121,6 +121,10 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	@Override
 	protected void init() {
+
+		this.currentlyDraggedElements.clear();
+
+		this.anchorPointOverlay.resetOverlay();
 
 		for (WidgetMeta m : this.cachedVanillaWidgetMetas) {
 			if (m.getWidget() instanceof CustomizableWidget w) {
@@ -908,6 +912,43 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		}
 	}
 
+	@NotNull
+	public List<AbstractEditorElement> getCurrentlyDraggedElements() {
+		return this.currentlyDraggedElements;
+	}
+
+	/**
+	 * Returns NULL if there was an error while trying to get the element chain.
+	 */
+	@Nullable
+	protected List<AbstractEditorElement> getElementChildChainOfExcluding(@NotNull AbstractEditorElement element) {
+		Objects.requireNonNull(element);
+		List<AbstractEditorElement> chain = new ArrayList<>();
+		try {
+			AbstractEditorElement e = element;
+			while (true) {
+				e = this.getChildElementOf(e);
+				if (e == null) break;
+				if (e == element) throw new IllegalStateException("Child of origin element is its own child. This shouldn't be possible and comes from an invalid ELEMENT anchor point. You need to manually fix this.");
+				if (chain.contains(e)) throw new IllegalStateException("Chain already contains element! This shouldn't be possible and probably comes from an invalid ELEMENT anchor who's child is its parent or similar scenarios (sweet home Alabama). You need to manually fix this.");
+				chain.add(e);
+			}
+		} catch (Exception ex) {
+			LOGGER.error("[FANCYMENU] There was an error while trying to get the element chain!", ex);
+			return null;
+		}
+		return chain;
+	}
+
+	@Nullable
+	protected AbstractEditorElement getChildElementOf(@NotNull AbstractEditorElement element) {
+		for (AbstractEditorElement e : this.getAllElements()) {
+			String parentOfE = e.element.anchorPointElementIdentifier;
+			if ((parentOfE != null) && parentOfE.equals(element.element.getInstanceIdentifier())) return e;
+		}
+		return null;
+	}
+
 	protected void moveSelectedElementsByXYOffset(int offsetX, int offsetY) {
 		List<AbstractEditorElement> selected = this.getSelectedElements();
 		if ((selected.size() > 0) && this.allSelectedElementsMovable()) {
@@ -1004,8 +1045,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			}
 		}
 
-		this.anchorPointOverlay.mouseClicked(mouseX, mouseY, button);
-
 		return false;
 
 	}
@@ -1014,8 +1053,11 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	@Override
 	public boolean mouseReleased(double mouseX, double mouseY, int button) {
 
+		this.anchorPointOverlay.mouseReleased(mouseX, mouseY, button);
+
 		this.elementMovingStarted = false;
 		this.elementResizingStarted = false;
+		this.currentlyDraggedElements.clear();
 
 		boolean mouseWasInDraggingMode = this.mouseDraggingStarted;
 		this.mouseDraggingStarted = false;
@@ -1055,8 +1097,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			this.history.saveSnapshot(this.preDragElementSnapshot);
 		}
 		this.preDragElementSnapshot = null;
-
-		this.anchorPointOverlay.mouseReleased(mouseX, mouseY, button);
 
 		return false;
 
@@ -1102,6 +1142,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 					element.updateMovingStartPos((int)mouseX, (int)mouseY);
 					element.movingCrumpleZonePassed = true;
 				});
+				if (this.allSelectedElementsMovable()) {
+					this.currentlyDraggedElements.addAll(this.getSelectedElements());
+				}
 			}
 			this.elementMovingStarted = true;
 		}
@@ -1110,7 +1153,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				break;
 			}
 		}
-		this.anchorPointOverlay.mouseDragged(mouseX, mouseY, button, $$3, $$4);
 
 		return false;
 
