@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
@@ -79,9 +80,16 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
 
         this.tickAreaMouseOver(mouseX, mouseY);
 
-        this.renderAreas(pose, mouseX, mouseY, partial);
+        RenderingUtils.resetShaderColor();
+        RenderSystem.enableBlend();
+        //Invert color of overlay based on what's rendered behind it
+        RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.ONE_MINUS_DST_COLOR, GlStateManager.DestFactor.ONE_MINUS_SRC_COLOR, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
 
+        this.renderAreas(pose, mouseX, mouseY, partial);
         this.renderConnectionLines(pose);
+
+        RenderSystem.defaultBlendFunc();
+        RenderingUtils.resetShaderColor();
 
     }
 
