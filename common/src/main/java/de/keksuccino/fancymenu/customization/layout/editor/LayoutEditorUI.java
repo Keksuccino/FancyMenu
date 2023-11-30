@@ -198,21 +198,74 @@ public class LayoutEditorUI {
 
 		windowMenu.addSeparatorEntry("separator_after_grid_size");
 
-		windowMenu.addValueCycleEntry("show_anchor_overlay", CommonCycles.cycleEnabledDisabled("fancymenu.editor.menu_bar.window.show_anchor_overlay", FancyMenu.getOptions().showAnchorOverlay.getValue()).addCycleListener(cycle -> {
-			FancyMenu.getOptions().showAnchorOverlay.setValue(cycle.getAsBoolean());
-		}));
+		windowMenu.addValueCycleEntry("anchor_overlay_visibility_mode",
+				AnchorPointOverlay.AnchorOverlayVisibilityMode.ALWAYS.cycle(editor.anchorPointOverlay.getVisibilityMode())
+						.addCycleListener(anchorOverlayVisibilityMode -> FancyMenu.getOptions().anchorOverlayVisibilityMode.setValue(anchorOverlayVisibilityMode.getName())));
 
-		windowMenu.addValueCycleEntry("always_show_anchor_overlay", CommonCycles.cycleEnabledDisabled("fancymenu.editor.menu_bar.window.always_show_anchor_overlay", FancyMenu.getOptions().alwaysShowAnchorOverlay.getValue()).addCycleListener(cycle -> {
-			FancyMenu.getOptions().alwaysShowAnchorOverlay.setValue(cycle.getAsBoolean());
-		}));
+		windowMenu.addValueCycleEntry("show_all_anchor_connections",
+				CommonCycles.cycleEnabledDisabled("fancymenu.editor.anchor_overlay.show_all_anchor_connections",
+								FancyMenu.getOptions().showAllAnchorOverlayConnections.getValue())
+						.addCycleListener(cycle -> FancyMenu.getOptions().showAllAnchorOverlayConnections.setValue(cycle.getAsBoolean())));
 
-		windowMenu.addValueCycleEntry("show_all_anchor_connections", CommonCycles.cycleEnabledDisabled("fancymenu.editor.menu_bar.window.show_all_anchor_connections", FancyMenu.getOptions().showAllAnchorConnections.getValue()).addCycleListener(cycle -> {
-			FancyMenu.getOptions().showAllAnchorConnections.setValue(cycle.getAsBoolean());
-		}));
+		windowMenu.addSeparatorEntry("separator_after_show_all_anchor_connections");
 
-		windowMenu.addValueCycleEntry("change_anchor_on_hover", CommonCycles.cycleEnabledDisabled("fancymenu.editor.menu_bar.window.change_anchor_on_hover", FancyMenu.getOptions().changeAnchorOnHover.getValue()).addCycleListener(cycle -> {
-			FancyMenu.getOptions().changeAnchorOnHover.setValue(cycle.getAsBoolean());
-		}));
+		windowMenu.addValueCycleEntry("anchor_area_hovering",
+						CommonCycles.cycleEnabledDisabled("fancymenu.editor.anchor_overlay.change_anchor_on_area_hover",
+										FancyMenu.getOptions().anchorOverlayChangeAnchorOnAreaHover.getValue())
+								.addCycleListener(cycle -> FancyMenu.getOptions().anchorOverlayChangeAnchorOnAreaHover.setValue(cycle.getAsBoolean())))
+				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.anchor_overlay.change_anchor_on_area_hover.desc")));
+
+		windowMenu.addValueCycleEntry("anchor_element_hovering",
+						CommonCycles.cycleEnabledDisabled("fancymenu.editor.anchor_overlay.change_anchor_on_element_hover",
+										FancyMenu.getOptions().anchorOverlayChangeAnchorOnElementHover.getValue())
+								.addCycleListener(cycle -> FancyMenu.getOptions().anchorOverlayChangeAnchorOnElementHover.setValue(cycle.getAsBoolean())))
+				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.anchor_overlay.change_anchor_on_area_hover.desc")));
+
+		NonStackableOverlayUI.addRangeSliderInputContextMenuEntryTo(windowMenu, "anchor_overlay_hover_charging_time",
+						Component.translatable("fancymenu.editor.anchor_overlay.charging_time"),
+						() -> FancyMenu.getOptions().anchorOverlayHoverChargingTimeSeconds.getValue(),
+						aDouble -> FancyMenu.getOptions().anchorOverlayHoverChargingTimeSeconds.setValue(aDouble),
+						true, FancyMenu.getOptions().anchorOverlayHoverChargingTimeSeconds.getDefaultValue(),
+						1.0D, 20.0D, consumes -> Component.translatable("fancymenu.editor.anchor_overlay.charging_time.slider_label", consumes))
+				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.anchor_overlay.charging_time.desc")));
+
+		windowMenu.addSeparatorEntry("separator_after_anchor_overlay_hover_charging_time");
+
+		windowMenu.addValueCycleEntry("invert_anchor_overlay_colors",
+						CommonCycles.cycleEnabledDisabled("fancymenu.editor.anchor_overlay.invert_colors",
+										FancyMenu.getOptions().invertAnchorOverlayColor.getValue())
+								.addCycleListener(cycle -> FancyMenu.getOptions().invertAnchorOverlayColor.setValue(cycle.getAsBoolean())))
+				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.anchor_overlay.invert_colors.desc")));
+
+		NonStackableOverlayUI.addInputContextMenuEntryTo(windowMenu, "custom_anchor_overlay_base_color",
+				Component.translatable("fancymenu.editor.anchor_overlay.overlay_color_base"),
+				() -> FancyMenu.getOptions().anchorOverlayColorBaseOverride.getValue(),
+				s -> FancyMenu.getOptions().anchorOverlayColorBaseOverride.setValue(s),
+				true, FancyMenu.getOptions().anchorOverlayColorBaseOverride.getDefaultValue(),
+				null, false, false, TextValidators.HEX_COLOR_TEXT_VALIDATOR, null, null);
+
+		NonStackableOverlayUI.addInputContextMenuEntryTo(windowMenu, "custom_anchor_overlay_border_color",
+				Component.translatable("fancymenu.editor.anchor_overlay.overlay_color_border"),
+				() -> FancyMenu.getOptions().anchorOverlayColorBorderOverride.getValue(),
+				s -> FancyMenu.getOptions().anchorOverlayColorBorderOverride.setValue(s),
+				true, FancyMenu.getOptions().anchorOverlayColorBorderOverride.getDefaultValue(),
+				null, false, false, TextValidators.HEX_COLOR_TEXT_VALIDATOR, null, null);
+
+		windowMenu.addSeparatorEntry("separator_after_custom_anchor_overlay_border_color");
+
+		NonStackableOverlayUI.addRangeSliderInputContextMenuEntryTo(windowMenu, "anchor_overlay_opacity_normal",
+				Component.translatable("fancymenu.editor.anchor_overlay.opacity_normal"),
+				() -> Double.valueOf(FancyMenu.getOptions().anchorOverlayOpacityPercentageNormal.getValue()),
+				aDouble -> FancyMenu.getOptions().anchorOverlayOpacityPercentageNormal.setValue(aDouble.floatValue()),
+				true, (double) FancyMenu.getOptions().anchorOverlayOpacityPercentageNormal.getDefaultValue(),
+				0.0D, 1.0D, consumes -> Component.translatable("fancymenu.editor.anchor_overlay.opacity_normal.slider_label", ((int)(consumes * 100.0D)) + "%"));
+
+		NonStackableOverlayUI.addRangeSliderInputContextMenuEntryTo(windowMenu, "anchor_overlay_opacity_busy",
+				Component.translatable("fancymenu.editor.anchor_overlay.opacity_busy"),
+				() -> Double.valueOf(FancyMenu.getOptions().anchorOverlayOpacityPercentageBusy.getValue()),
+				aDouble -> FancyMenu.getOptions().anchorOverlayOpacityPercentageBusy.setValue(aDouble.floatValue()),
+				true, (double) FancyMenu.getOptions().anchorOverlayOpacityPercentageBusy.getDefaultValue(),
+				0.0D, 1.0D, consumes -> Component.translatable("fancymenu.editor.anchor_overlay.opacity_busy.slider_label", ((int)(consumes * 100.0D)) + "%"));
 
 		//USER INTERFACE
 		CustomizationOverlayUI.buildUITabAndAddTo(menuBar);

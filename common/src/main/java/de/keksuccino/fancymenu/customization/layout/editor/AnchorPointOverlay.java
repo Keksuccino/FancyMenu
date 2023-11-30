@@ -10,16 +10,21 @@ import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.ScreenUtils;
+import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
+import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.network.chat.Style;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -28,17 +33,13 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    protected static final int AREA_HOVER_CHARGING_TIME_MS = 1000;
-    protected static final int AREA_ALPHA_NORMAL = 40;
-    protected static final int AREA_ALPHA_BORDER = 70;
-    protected static final float AREA_ALPHA_MULTIPLIER = 2.0F;
-
     protected final LayoutEditorScreen editor;
     protected AnchorPointArea lastTickHoveredArea = null;
     protected AnchorPointArea currentlyHoveredArea = null;
     protected AnchorPointArea lastCompletedHoverArea = null;
     protected boolean lastTickDraggedEmpty = true;
     protected long areaHoverStartTime = -1;
+    protected boolean overlayVisibilityKeybindPressed = false;
 
     protected AnchorPointArea topLeftArea = new AnchorPointArea(ElementAnchorPoints.TOP_LEFT, 30, 30, AnchorPointArea.ProgressDirection.TO_RIGHT);
     protected AnchorPointArea midLeftArea = new AnchorPointArea(ElementAnchorPoints.MID_LEFT, 30, 30, AnchorPointArea.ProgressDirection.TO_RIGHT);
@@ -65,25 +66,103 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
         this.resetAreaHoverCache();
         this.setLastCompletedHoverArea(null);
         this.lastTickDraggedEmpty = true;
+        this.overlayVisibilityKeybindPressed = false;
+    }
+
+    public double getOverlayHoverChargingTimeSeconds() {
+        return FancyMenu.getOptions().anchorOverlayHoverChargingTimeSeconds.getValue();
+    }
+
+    public long getOverlayHoverChargingTimeMs() {
+        return (long) (this.getOverlayHoverChargingTimeSeconds() * 1000.0F);
+    }
+
+    @NotNull
+    public AnchorOverlayVisibilityMode getVisibilityMode() {
+        AnchorOverlayVisibilityMode m = AnchorOverlayVisibilityMode.getByName(FancyMenu.getOptions().anchorOverlayVisibilityMode.getValue());
+        return (m != null) ? m : AnchorOverlayVisibilityMode.DRAGGING;
+    }
+
+    public boolean isOverlayVisible() {
+        if (this.getVisibilityMode() == AnchorOverlayVisibilityMode.DISABLED) return false;
+        if (this.getVisibilityMode() == AnchorOverlayVisibilityMode.DRAGGING) return !this.editor.getCurrentlyDraggedElements().isEmpty();
+        if (this.getVisibilityMode() == AnchorOverlayVisibilityMode.KEYBIND) return this.overlayVisibilityKeybindPressed;
+        return true; //mode == ALWAYS
+    }
+
+    public boolean invertOverlayColors() {
+        return FancyMenu.getOptions().invertAnchorOverlayColor.getValue();
+    }
+
+    @Nullable
+    public DrawableColor getOverlayColorBaseOverride() {
+        String override = FancyMenu.getOptions().anchorOverlayColorBaseOverride.getValue();
+        if (override.trim().isEmpty()) return null;
+        if (!TextValidators.HEX_COLOR_TEXT_VALIDATOR.get(override)) return null;
+        return DrawableColor.of(override);
+    }
+
+    @Nullable
+    public DrawableColor getOverlayColorBorderOverride() {
+        String override = FancyMenu.getOptions().anchorOverlayColorBorderOverride.getValue();
+        if (override.trim().isEmpty()) return null;
+        if (!TextValidators.HEX_COLOR_TEXT_VALIDATOR.get(override)) return null;
+        return DrawableColor.of(override);
+    }
+
+    @NotNull
+    public DrawableColor getOverlayColorBase() {
+        if (this.invertOverlayColors()) return DrawableColor.WHITE;
+        DrawableColor override = this.getOverlayColorBaseOverride();
+        return (override != null) ? override : UIBase.getUIColorTheme().layout_editor_anchor_point_overlay_color_base;
+    }
+
+    @NotNull
+    public DrawableColor getOverlayColorBorder() {
+        if (this.invertOverlayColors()) return DrawableColor.WHITE;
+        DrawableColor override = this.getOverlayColorBorderOverride();
+        return (override != null) ? override : UIBase.getUIColorTheme().layout_editor_anchor_point_overlay_color_border;
+    }
+
+    public boolean isOverlayBusy() {
+        return !this.editor.getCurrentlyDraggedElements().isEmpty();
+    }
+
+    public float getOverlayOpacityNormal() {
+        return FancyMenu.getOptions().anchorOverlayOpacityPercentageNormal.getValue();
+    }
+
+    public float getOverlayOpacityBusy() {
+        return FancyMenu.getOptions().anchorOverlayOpacityPercentageBusy.getValue();
+    }
+
+    /**
+     * Value between 0 and 255.
+     */
+    public int getOverlayOpacity() {
+        if (this.invertOverlayColors()) return 255;
+        float percentage = this.isOverlayBusy() ? this.getOverlayOpacityBusy() : this.getOverlayOpacityNormal();
+        if (percentage > 1.0F) percentage = 1.0F;
+        if (percentage < 0.0F) percentage = 0.0F;
+        return Math.min(255, Math.max(0, (int)(percentage * 255.0F)));
     }
 
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
-        if (!FancyMenu.getOptions().showAnchorOverlay.getValue()) {
+        if (!this.isOverlayVisible()) {
             this.resetOverlay();
             return;
         }
-
-        //Don't render if overlay not always visible and no elements currently dragged
-        if (!FancyMenu.getOptions().alwaysShowAnchorOverlay.getValue() && this.editor.getCurrentlyDraggedElements().isEmpty()) return;
 
         this.tickAreaMouseOver(mouseX, mouseY);
 
         RenderingUtils.resetShaderColor();
         RenderSystem.enableBlend();
         //Invert color of overlay based on what's rendered behind it
-        RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.ONE_MINUS_DST_COLOR, GlStateManager.DestFactor.ONE_MINUS_SRC_COLOR, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+        if (this.invertOverlayColors()) {
+            RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.ONE_MINUS_DST_COLOR, GlStateManager.DestFactor.ONE_MINUS_SRC_COLOR, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+        }
 
         this.renderAreas(pose, mouseX, mouseY, partial);
         this.renderConnectionLines(pose);
@@ -134,7 +213,7 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
         this.bottomRightArea.y = ScreenUtils.getScreenHeight() - this.bottomRightArea.getHeight() + 1;
         this.bottomRightArea.render(pose, mouseX, mouseY, partial);
 
-        if ((this.currentlyHoveredArea != null) && FancyMenu.getOptions().changeAnchorOnHover.getValue()) {
+        if (this.currentlyHoveredArea != null) {
             this.currentlyHoveredArea.renderMouseOverProgress(pose, this.calculateMouseOverProgress());
         }
 
@@ -143,9 +222,9 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
     protected float calculateMouseOverProgress() {
         if (this.currentlyHoveredArea != null) {
             long now = System.currentTimeMillis();
-            if ((this.areaHoverStartTime + AREA_HOVER_CHARGING_TIME_MS) > now) {
-                long diff = (this.areaHoverStartTime + AREA_HOVER_CHARGING_TIME_MS) - now;
-                float f = Math.max(0.0F, Math.min(1.0F, Math.max(1F, (float)diff) / (float) AREA_HOVER_CHARGING_TIME_MS));
+            if ((this.areaHoverStartTime + this.getOverlayHoverChargingTimeMs()) > now) {
+                long diff = (this.areaHoverStartTime + this.getOverlayHoverChargingTimeMs()) - now;
+                float f = Math.max(0.0F, Math.min(1.0F, Math.max(1F, (float)diff) / (float)this.getOverlayHoverChargingTimeMs()));
                 return 1.0F - f;
             }
             return 1.0F;
@@ -154,7 +233,7 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
     }
 
     protected void renderConnectionLines(@NotNull PoseStack pose) {
-        List<AbstractEditorElement> elements = FancyMenu.getOptions().showAllAnchorConnections.getValue() ? this.editor.getAllElements() : this.editor.getCurrentlyDraggedElements();
+        List<AbstractEditorElement> elements = FancyMenu.getOptions().showAllAnchorOverlayConnections.getValue() ? this.editor.getAllElements() : this.editor.getCurrentlyDraggedElements();
         for (AbstractEditorElement e : elements) {
             boolean hidden = (e instanceof HideableElement h) && h.isHidden();
             if (!hidden) this.renderConnectionLineFor(pose, e);
@@ -168,7 +247,7 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
             int yElement = e.getY() + (e.getHeight() / 2);
             int xArea = a.getX() + (a.getWidth() / 2);
             int yArea = a.getY() + (a.getHeight() / 2);
-            this.renderSquareLine(pose, xElement, yElement, xArea, yArea, 2, RenderingUtils.replaceAlphaInColor(UIBase.getUIColorTheme().layout_editor_anchor_point_overlay_color.getColorInt(), (int)((float)AREA_ALPHA_BORDER * a.getAlphaMultiplier())));
+            this.renderSquareLine(pose, xElement, yElement, xArea, yArea, 2, RenderingUtils.replaceAlphaInColor(this.getOverlayColorBase().getColorInt(), this.getOverlayOpacity()));
         }
     }
 
@@ -198,7 +277,7 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
     protected void tickAreaMouseOver(int mouseX, int mouseY) {
         boolean draggedEmpty = this.editor.getCurrentlyDraggedElements().isEmpty();
         if (!draggedEmpty) {
-            this.currentlyHoveredArea = FancyMenu.getOptions().changeAnchorOnHover.getValue() ? this.getMouseOverArea(mouseX, mouseY) : null;
+            this.currentlyHoveredArea = FancyMenu.getOptions().anchorOverlayChangeAnchorOnAreaHover.getValue() ? this.getMouseOverArea(mouseX, mouseY) : null;
             //If just started dragging, set lastCompleted to current, to "ignore" the initially hovered area
             if (this.lastTickDraggedEmpty) {
                 this.setLastCompletedHoverArea(this.currentlyHoveredArea);
@@ -214,7 +293,7 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
             this.lastTickHoveredArea = this.currentlyHoveredArea;
             if (this.currentlyHoveredArea != null) {
                 //Change anchor of dragged elements if area hovered long enough
-                if ((this.areaHoverStartTime + AREA_HOVER_CHARGING_TIME_MS) <= System.currentTimeMillis()) {
+                if ((this.areaHoverStartTime + this.getOverlayHoverChargingTimeMs()) <= System.currentTimeMillis()) {
                     for (AbstractEditorElement e : this.editor.getCurrentlyDraggedElements()) {
                         if (this.canChangeAnchorTo(e, this.currentlyHoveredArea)) {
                             e.setAnchorPointViaOverlay(this.currentlyHoveredArea, mouseX, mouseY);
@@ -314,11 +393,15 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
 
     @Nullable
     protected AnchorPointArea getMouseOverArea(int mouseX, int mouseY) {
-        for (AnchorPointArea a : this.anchorPointAreas) {
-            if (a.isMouseOver(mouseX, mouseY)) return a;
+        if (FancyMenu.getOptions().anchorOverlayChangeAnchorOnAreaHover.getValue()) {
+            for (AnchorPointArea a : this.anchorPointAreas) {
+                if (a.isMouseOver(mouseX, mouseY)) return a;
+            }
         }
-        AbstractEditorElement e = this.getTopHoveredNotDraggedElement();
-        if ((e != null) && !e.isSelected() && !e.isMultiSelected()) return new ElementAnchorPointArea(e.element.getInstanceIdentifier());
+        if (FancyMenu.getOptions().anchorOverlayChangeAnchorOnElementHover.getValue()) {
+            AbstractEditorElement e = this.getTopHoveredNotDraggedElement();
+            if ((e != null) && !e.isSelected() && !e.isMultiSelected()) return new ElementAnchorPointArea(e.element.getInstanceIdentifier());
+        }
         return null;
     }
 
@@ -337,6 +420,30 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
         this.setLastCompletedHoverArea(null);
 
         return GuiEventListener.super.mouseReleased(mouseX, mouseY, button);
+
+    }
+
+    @Override
+    public boolean keyPressed(int keycode, int scancode, int modifiers) {
+
+        String key = GLFW.glfwGetKeyName(keycode, scancode);
+        if (key == null) key = "";
+
+        if (key.equals("o")) this.overlayVisibilityKeybindPressed = true;
+
+        return GuiEventListener.super.keyPressed(keycode, scancode, modifiers);
+
+    }
+
+    @Override
+    public boolean keyReleased(int keycode, int scancode, int modifiers) {
+
+        String key = GLFW.glfwGetKeyName(keycode, scancode);
+        if (key == null) key = "";
+
+        if (key.equals("o")) this.overlayVisibilityKeybindPressed = false;
+
+        return GuiEventListener.super.keyReleased(keycode, scancode, modifiers);
 
     }
 
@@ -429,8 +536,8 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
         public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
             int endX = this.getX() + this.getWidth();
             int endY = this.getY() + this.getHeight();
-            fill(pose, this.getX(), this.getY(), endX, endY, RenderingUtils.replaceAlphaInColor(UIBase.getUIColorTheme().layout_editor_anchor_point_overlay_color.getColorInt(), (int)((float)AREA_ALPHA_NORMAL * this.getAlphaMultiplier())));
-            UIBase.renderBorder(pose, this.getX(), this.getY(), endX, endY, 1, RenderingUtils.replaceAlphaInColor(UIBase.getUIColorTheme().layout_editor_anchor_point_overlay_color.getColorInt(), (int)((float)AREA_ALPHA_BORDER * this.getAlphaMultiplier())), true, true, true, true);
+            fill(pose, this.getX(), this.getY(), endX, endY, RenderingUtils.replaceAlphaInColor(getOverlayColorBase().getColorInt(), getOverlayOpacity()));
+            UIBase.renderBorder(pose, this.getX(), this.getY(), endX, endY, 1, RenderingUtils.replaceAlphaInColor(getOverlayColorBorder().getColorInt(), getOverlayOpacity()), true, true, true, true);
             UIBase.resetShaderColor();
         }
 
@@ -451,7 +558,7 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
                 endX = this.getX() + this.getWidth();
                 startY = endY - progressHeight;
             }
-            fill(pose, startX, startY, endX, endY, RenderingUtils.replaceAlphaInColor(UIBase.getUIColorTheme().layout_editor_anchor_point_overlay_color.getColorInt(), (int)((float)AREA_ALPHA_NORMAL * this.getAlphaMultiplier())));
+            fill(pose, startX, startY, endX, endY, RenderingUtils.replaceAlphaInColor(getOverlayColorBorder().getColorInt(), getOverlayOpacity()));
             UIBase.resetShaderColor();
         }
 
@@ -469,13 +576,6 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
 
         protected int getY() {
             return this.y;
-        }
-
-        protected float getAlphaMultiplier() {
-            if (!AnchorPointOverlay.this.editor.getCurrentlyDraggedElements().isEmpty()) {
-                return AREA_ALPHA_MULTIPLIER;
-            }
-            return 1.0F;
         }
 
         @Override
@@ -497,6 +597,54 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
             TO_RIGHT,
             TO_TOP,
             TO_DOWN
+        }
+
+    }
+
+    public enum AnchorOverlayVisibilityMode implements LocalizedCycleEnum<AnchorOverlayVisibilityMode> {
+
+        DISABLED("disabled"),
+        ALWAYS("always"),
+        DRAGGING("dragging"),
+        KEYBIND("keybind");
+
+        final String name;
+
+        AnchorOverlayVisibilityMode(@NotNull String name) {
+            this.name = name;
+        }
+
+        @Override
+        public @NotNull String getLocalizationKeyBase() {
+            return "fancymenu.editor.anchor_overlay.visibility_mode";
+        }
+
+        @Override
+        public @NotNull Style getValueComponentStyle() {
+            return WARNING_TEXT_STYLE.get();
+        }
+
+        @Override
+        public @NotNull String getName() {
+            return this.name;
+        }
+
+        @Override
+        public @NotNull AnchorOverlayVisibilityMode[] getValues() {
+            return AnchorOverlayVisibilityMode.values();
+        }
+
+        @Override
+        public @Nullable AnchorPointOverlay.AnchorOverlayVisibilityMode getByNameInternal(@NotNull String name) {
+            return getByName(name);
+        }
+
+        @Nullable
+        public static AnchorOverlayVisibilityMode getByName(@NotNull String name) {
+            for (AnchorOverlayVisibilityMode m : AnchorOverlayVisibilityMode.values()) {
+                if (m.name.equals(name)) return m;
+            }
+            return null;
         }
 
     }

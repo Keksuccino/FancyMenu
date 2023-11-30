@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.util.rendering.ui.theme.themes;
 
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
-
 import java.awt.*;
 
 public class LightUIColorTheme extends UIColorTheme {

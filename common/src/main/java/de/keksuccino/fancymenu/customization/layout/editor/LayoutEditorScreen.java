@@ -1159,11 +1159,13 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	}
 
 	@Override
-	public boolean keyPressed(int keycode, int scancode, int $$2) {
+	public boolean keyPressed(int keycode, int scancode, int modifiers) {
 
 		if (PopupHandler.isPopupActive()) return false;
 
-		if (super.keyPressed(keycode, scancode, $$2)) return true;
+		this.anchorPointOverlay.keyPressed(keycode, scancode, modifiers);
+
+		if (super.keyPressed(keycode, scancode, modifiers)) return true;
 
 		String key = GLFW.glfwGetKeyName(keycode, scancode);
 		if (key == null) key = "";
@@ -1246,7 +1248,16 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			return true;
 		}
 
-		return super.keyPressed(keycode, scancode, $$2);
+		return super.keyPressed(keycode, scancode, modifiers);
+
+	}
+
+	@Override
+	public boolean keyReleased(int keycode, int scancode, int modifiers) {
+
+		this.anchorPointOverlay.keyReleased(keycode, scancode, modifiers);
+
+		return super.keyReleased(keycode, scancode, modifiers);
 
 	}
 

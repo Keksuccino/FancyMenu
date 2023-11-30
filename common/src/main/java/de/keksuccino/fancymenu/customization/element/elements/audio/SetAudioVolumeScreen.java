@@ -27,7 +27,7 @@ public class SetAudioVolumeScreen extends CellScreen {
         RangeSlider slider = new RangeSlider(0, 0, 20, 20, Component.empty(), 0.0D, 1.0D, this.current);
         slider.setRoundingDecimalPlace(2);
         slider.setLabelSupplier(consumes -> Component.translatable("fancymenu.elements.audio.set_volume.track_volume", Component.literal("" + this.getPercentage() + "%")));
-        slider.setSliderValueUpdateListener((slider1, valueDisplayText, value) -> this.current = (float)value);
+        slider.setSliderValueUpdateListener((slider1, valueDisplayText, value) -> this.current = (float)((RangeSlider)slider1).getRangeValue());
         this.addWidgetCell(slider, true);
 
         this.addStartEndSpacerCell();

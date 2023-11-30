@@ -32,10 +32,17 @@ public class Options extends AbstractOptions {
 
     public final Option<Boolean> showLayoutEditorGrid = new Option<>(config, "show_layout_editor_grid", true, "layout_editor");
     public final Option<Integer> layoutEditorGridSize = new Option<>(config, "layout_editor_grid_size", 10, "layout_editor");
-    public final Option<Boolean> showAnchorOverlay = new Option<>(config, "show_anchor_overlay", true, "layout_editor");
-    public final Option<Boolean> alwaysShowAnchorOverlay = new Option<>(config, "always_show_anchor_overlay", false, "layout_editor");
-    public final Option<Boolean> showAllAnchorConnections = new Option<>(config, "show_all_anchor_connections", false, "layout_editor");
-    public final Option<Boolean> changeAnchorOnHover = new Option<>(config, "change_anchor_on_hover", false, "layout_editor");
+
+    public final Option<Boolean> showAllAnchorOverlayConnections = new Option<>(config, "anchor_overlay_show_all_connection_lines", false, "layout_editor");
+    public final Option<Boolean> anchorOverlayChangeAnchorOnAreaHover = new Option<>(config, "anchor_overlay_change_anchor_on_area_hover", true, "layout_editor");
+    public final Option<Boolean> anchorOverlayChangeAnchorOnElementHover = new Option<>(config, "anchor_overlay_change_anchor_on_element_hover", true, "layout_editor");
+    public final Option<Boolean> invertAnchorOverlayColor = new Option<>(config, "invert_anchor_overlay_color", false, "layout_editor");
+    public final Option<Float> anchorOverlayOpacityPercentageNormal = new Option<>(config, "anchor_overlay_opacity_normal", 0.5F, "layout_editor");
+    public final Option<Float> anchorOverlayOpacityPercentageBusy = new Option<>(config, "anchor_overlay_opacity_busy", 0.7F, "layout_editor");
+    public final Option<String> anchorOverlayColorBaseOverride = new Option<>(config, "anchor_overlay_color_base_override", "", "layout_editor");
+    public final Option<String> anchorOverlayColorBorderOverride = new Option<>(config, "anchor_overlay_color_border_override", "", "layout_editor");
+    public final Option<String> anchorOverlayVisibilityMode = new Option<>(config, "anchor_overlay_visibility_mode", "dragging", "layout_editor");
+    public final Option<Double> anchorOverlayHoverChargingTimeSeconds = new Option<>(config, "anchor_overlay_hover_charging_time_seconds", 2.0D, "layout_editor");
 
     public final Option<Float> uiScale = new Option<>(config, "ui_scale", 4.0F, "ui");
     public final Option<Boolean> playUiClickSounds = new Option<>(config, "play_ui_click_sounds", true, "ui");
