@@ -775,7 +775,7 @@ public class CustomizationOverlayUI {
         menuBar.addContextMenuEntry("help", Component.translatable("fancymenu.overlay.menu_bar.help"), helpMenu);
 
         helpMenu.addClickableEntry("fancymenu_wiki", Component.translatable("fancymenu.overlay.menu_bar.help.wiki"), (menu, entry) -> {
-            WebUtils.openWebLink("https://fm.keksuccino.dev");
+            WebUtils.openWebLink("https://docs.fancymenu.net");
         }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.help.wiki.tooltip")))
                 .setIcon(ContextMenu.IconFactory.getIcon("book"));
 

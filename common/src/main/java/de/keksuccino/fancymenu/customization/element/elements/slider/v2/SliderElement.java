@@ -146,8 +146,8 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
 
         if (this.slider == null) return;
 
-        //So the slider isn't clickable when not getting rendered
         this.slider.visible = this.shouldRender();
+        this.slider.setAlpha(this.opacity);
 
         if (!this.shouldRender()) return;
 

@@ -1,7 +1,9 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.ImageButton;
@@ -10,6 +12,8 @@ import net.minecraft.util.Mth;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import net.minecraft.client.gui.GuiComponent;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @SuppressWarnings("unused")
 @Mixin(ImageButton.class)
@@ -30,9 +34,19 @@ public abstract class MixinImageButton extends GuiComponent {
 			button.renderString(pose, Minecraft.getInstance().font, labelColor | Mth.ceil(((IMixinAbstractWidget)button).getAlphaFancyMenu() * 255.0F) << 24);
 		}
 
+		RenderSystem.enableBlend();
+		//Fix missing alpha handling for ImageButtons (Vanilla bug)
+		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)button).getAlphaFancyMenu());
+
 		//If it should render the Vanilla background
 		return renderVanilla;
 
+	}
+
+	@Inject(method = "renderWidget", at = @At("RETURN"))
+	private void afterRenderWidgetFancyMenu(PoseStack $$0, int $$1, int $$2, float $$3, CallbackInfo info) {
+		//Reset shader color after alpha handling
+		RenderingUtils.resetShaderColor();
 	}
 	
 }

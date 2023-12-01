@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ExecutableElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinButton;
@@ -60,18 +61,23 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     }
 
     @Override
+    public void tick() {
+
+        if (this.getWidget() == null) return;
+
+        //This is mainly to make Vanilla buttons not flicker for the first frame when hidden
+        this.updateWidget();
+
+    }
+
+    @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
         if (this.getWidget() == null) return;
 
-        //So the widget isn't clickable when not getting rendered
-        if (this.getWidget() instanceof ExtendedButton) {
-            this.getWidget().visible = this.shouldRender();
-        }
+        this.updateWidget();
 
         if (!this.shouldRender()) return;
-
-        this.updateWidget();
 
         if (isEditor()) {
             if (this.getWidget() instanceof ExtendedButton e) {
@@ -103,14 +109,21 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     }
 
     public void updateWidget() {
+        this.updateWidgetVisibility();
+        this.updateWidgetAlpha();
         this.updateWidgetTooltip();
         this.updateWidgetLabels();
         this.updateWidgetHoverSound();
         this.updateWidgetClickSound();
         this.updateWidgetTexture();
-        this.updateWidgetAlpha();
         this.updateWidgetSize();
         this.updateWidgetPosition();
+    }
+
+    public void updateWidgetVisibility() {
+        if (this.getWidget() instanceof CustomizableWidget w) {
+            w.setHiddenFancyMenu(!this.shouldRender());
+        }
     }
 
     public void updateWidgetAlpha() {

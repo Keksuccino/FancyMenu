@@ -238,7 +238,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 		}
 
 		//Handle auto-scaling
-		if ((this.layoutBase.autoScalingWidth != 0) && (this.layoutBase.autoScalingHeight != 0)) {
+		if ((this.layoutBase.autoScalingWidth != 0) && (this.layoutBase.autoScalingHeight != 0) && (this.layoutBase.forcedScale != 0)) {
 			Window m = Minecraft.getInstance().getWindow();
 			double guiWidth = e.getScreen().width * m.getGuiScale();
 			double guiHeight = e.getScreen().height * m.getGuiScale();

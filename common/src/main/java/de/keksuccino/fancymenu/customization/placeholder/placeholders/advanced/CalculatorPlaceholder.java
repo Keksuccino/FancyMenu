@@ -6,12 +6,15 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.konkrete.objecthunter.exp4j.Expression;
 import de.keksuccino.konkrete.objecthunter.exp4j.ExpressionBuilder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.*;
 
 public class CalculatorPlaceholder extends Placeholder {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public CalculatorPlaceholder() {
         super("calc");
@@ -38,6 +41,7 @@ public class CalculatorPlaceholder extends Placeholder {
                 e.printStackTrace();
             }
         }
+        LOGGER.error("[FANCYMENU] Failed to parse Calculator placeholder: " + dps.placeholderString);
         return null;
     }
 

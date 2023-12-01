@@ -49,12 +49,24 @@ public class Placeholders {
     public static final RealtimeHourPlaceholder REALTIME_HOUR = new RealtimeHourPlaceholder();
     public static final RealtimeMinutePlaceholder REALTIME_MINUTE = new RealtimeMinutePlaceholder();
     public static final RealtimeSecondPlaceholder REALTIME_SECOND = new RealtimeSecondPlaceholder();
+    public static final UnixTimestampPlaceholder UNIX_TIMESTAMP = new UnixTimestampPlaceholder();
     public static final StringifyPlaceholder STRINGIFY = new StringifyPlaceholder();
     public static final JsonPlaceholder JSON = new JsonPlaceholder();
     public static final GetVariablePlaceholder GET_VARIABLE = new GetVariablePlaceholder();
     public static final LocalizationPlaceholder LOCALIZATION = new LocalizationPlaceholder();
     public static final CalculatorPlaceholder CALCULATOR = new CalculatorPlaceholder();
     public static final RandomNumberPlaceholder RANDOM_NUMBER = new RandomNumberPlaceholder();
+    public static final MaxNumberPlaceholder MAX_NUMBER = new MaxNumberPlaceholder();
+    public static final MinNumberPlaceholder MIN_NUMBER = new MinNumberPlaceholder();
+    public static final AbsoluteNumberPlaceholder ABSOLUTE_NUMBER = new AbsoluteNumberPlaceholder();
+    public static final NegateNumberPlaceholder NEGATE_NUMBER = new NegateNumberPlaceholder();
+    public static final MathPiPlaceholder MATH_PI = new MathPiPlaceholder();
+    public static final MathSinPlaceholder MATH_SIN = new MathSinPlaceholder();
+    public static final MathSinhPlaceholder MATH_SINH = new MathSinhPlaceholder();
+    public static final MathCosPlaceholder MATH_COS = new MathCosPlaceholder();
+    public static final MathCoshPlaceholder MATH_COSH = new MathCoshPlaceholder();
+    public static final MathTanPlaceholder MATH_TAN = new MathTanPlaceholder();
+    public static final MathTanhPlaceholder MATH_TANH = new MathTanhPlaceholder();
     public static final PercentRamPlaceholder PERCENT_RAM = new PercentRamPlaceholder();
     public static final UsedRamPlaceholder USED_RAM = new UsedRamPlaceholder();
     public static final MaxRamPlaceholder MAX_RAM = new MaxRamPlaceholder();
@@ -105,6 +117,7 @@ public class Placeholders {
         PlaceholderRegistry.register(REALTIME_HOUR);
         PlaceholderRegistry.register(REALTIME_MINUTE);
         PlaceholderRegistry.register(REALTIME_SECOND);
+        PlaceholderRegistry.register(UNIX_TIMESTAMP);
 
         //Advanced
         PlaceholderRegistry.register(STRINGIFY);
@@ -113,6 +126,17 @@ public class Placeholders {
         PlaceholderRegistry.register(LOCALIZATION);
         PlaceholderRegistry.register(CALCULATOR);
         PlaceholderRegistry.register(RANDOM_NUMBER);
+        PlaceholderRegistry.register(MAX_NUMBER);
+        PlaceholderRegistry.register(MIN_NUMBER);
+        PlaceholderRegistry.register(ABSOLUTE_NUMBER);
+        PlaceholderRegistry.register(NEGATE_NUMBER);
+        PlaceholderRegistry.register(MATH_PI);
+        PlaceholderRegistry.register(MATH_SIN);
+        PlaceholderRegistry.register(MATH_SINH);
+        PlaceholderRegistry.register(MATH_COS);
+        PlaceholderRegistry.register(MATH_COSH);
+        PlaceholderRegistry.register(MATH_TAN);
+        PlaceholderRegistry.register(MATH_TANH);
 
         //Other
         PlaceholderRegistry.register(PERCENT_RAM);

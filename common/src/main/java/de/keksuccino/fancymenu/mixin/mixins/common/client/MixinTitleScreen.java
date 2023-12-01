@@ -15,6 +15,7 @@ import net.minecraft.client.gui.components.LogoRenderer;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -22,9 +23,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(TitleScreen.class)
-public class MixinTitleScreen {
+public abstract class MixinTitleScreen {
 
-    @Unique boolean handleRealmsNotification = false;
+    @Shadow public abstract void render(PoseStack $$0, int $$1, int $$2, float $$3);
+
+    @Shadow public boolean fading;
+    @Unique boolean handleRealmsNotificationFancyMenu = false;
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/LogoRenderer;renderLogo(Lcom/mojang/blaze3d/vertex/PoseStack;IF)V"))
     private void fireBackgroundRenderedEventAfterPanoramaOverlayFancyMenu(PoseStack pose, int $$1, int $$2, float $$3, CallbackInfo info) {
@@ -43,17 +47,21 @@ public class MixinTitleScreen {
 
     @Inject(method = "render", at = @At("HEAD"))
     private void beforeRenderFancyMenu(PoseStack $$0, int $$1, int $$2, float $$3, CallbackInfo info) {
-        this.handleRealmsNotification = true;
+        this.handleRealmsNotificationFancyMenu = true;
+        //Disable fading if customizations enabled, so FancyMenu can properly handle widget alpha
+        if (ScreenCustomization.isCustomizationEnabledForScreen((Screen)((Object)this))) {
+            this.fading = false;
+        }
     }
 
     @Inject(method = "render", at = @At("RETURN"))
     private void afterRenderFancyMenu(PoseStack $$0, int $$1, int $$2, float $$3, CallbackInfo info) {
-        this.handleRealmsNotification = false;
+        this.handleRealmsNotificationFancyMenu = false;
     }
 
     @Inject(method = "realmsNotificationsEnabled", at = @At("HEAD"), cancellable = true)
     private void cancelVanillaRealmsNotificationIconRenderingFancyMenu(CallbackInfoReturnable<Boolean> info) {
-        if (this.handleRealmsNotification && ScreenCustomization.isCustomizationEnabledForScreen((Screen)((Object)this))) {
+        if (this.handleRealmsNotificationFancyMenu && ScreenCustomization.isCustomizationEnabledForScreen((Screen)((Object)this))) {
             ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen((Screen)((Object)this));
             if (layer != null) {
                 AbstractElement e = layer.getElementByInstanceIdentifier("deep:" + DeepScreenCustomizationLayers.TITLE_SCREEN.realmsNotification.getIdentifier());

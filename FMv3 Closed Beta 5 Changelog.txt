@@ -4,8 +4,32 @@ CHANGELOG | FANCYMENU v3.0.0 CLOSED BETA 5
 - Improved Anchor Overlay
 --> It should hopefully work much more stable now (*knock on wood*)
 --> Hopefully no phantom anchor lines anymore
+--> Added lots of new accessibility options to customize the overlay
+----> Customizable overlay colors
+----> Customizable overlay opacity
+----> More visibility modes (Disabled, When Dragging Elements, On Key Press, Always Visible)
+----> Customizable hover charging time (the time needed until the anchor of an element gets changed when hovering anchor areas and elements)
+----> Toggleable hovering for anchor areas and elements (if the anchor of elements should change when hovering anchor areas and elements; can be toggled separately for areas and elements)
  
+- Added: Placeholder "Max Number" that returns the greater of two numbers
+- Added: Placeholder "Min Number" that returns the smaller of two numbers
+- Added: Placeholder "Absolute Number" to get the absolute (positive) value of a number
+- Added: Placeholder "Negate Number" to negate a number
+- Added: Placeholder "pi" that returns the double value that is closer to pi than any other
+- Added: Placeholder "Trigonometric Sine" to calculate the trigonometric sine of an angle
+- Added: Placeholder "Hyperbolic Sine" to calculate the hyperbolic sine of a double value
+- Added: Placeholder "Trigonometric Cosine" to calculate the trigonometric cosine of an angle
+- Added: Placeholder "Hyperbolic Cosine" to calculate the hyperbolic cosine of a double value
+- Added: Placeholder "Trigonometric Tangent" to calculate the trigonometric tangent of an angle
+- Added: Placeholder "Hyperbolic Tangent" to calculate the hyperbolic tangent of a double value
+- Added: Placeholder "Current Time in Millis (Unix Timestamp)" to get the current time in milliseconds, measured by the time that has elapsed since 00:00:00 UTC on 1 January 1970
+ 
+- Fixed: It is possible to remove/reset the Forced GUI Scale of a layout without disabling Auto-Scaling first, which can lead to the layout scaling the menu to infinity
 - Fixed: "Pick Element" in element right-click menu not working correctly
 - Fixed: Elements in the editor sometimes get de-selected when moving multiple elements at once (using CTRL + left-click)
 - Fixed: When moving multiple elements by arrow keys, elements with ELEMENT anchor point move wrong if parent element is selected as well
 - Fixed: When moving multiple elements by mouse, elements with ELEMENT anchor point don't move if parent element is NOT selected as well
+- Fixed: Menu bar entry to toggle the editor grid does not update its label if the grid gets toggled via shortcut (CTRL + G)
+- Fixed: Appearance delay + fade-in not working correctly for Vanilla widgets
+- Fixed: Missing alpha/opacity handling for ImageButtons like the Language and Accessibility buttons (this is a Vanilla bug)
+- Fixed: Fade-in not working correctly for Slider elements

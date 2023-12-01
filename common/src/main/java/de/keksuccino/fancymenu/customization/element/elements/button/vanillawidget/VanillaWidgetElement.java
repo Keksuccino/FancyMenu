@@ -39,10 +39,24 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
         super(builder);
     }
 
+    @Override
+    public void tick() {
+
+        //Auto-click the vanilla button on menu load
+        if (!isEditor() && !this.automatedButtonClicksDone && (this.automatedButtonClicks > 0)) {
+            for (int i = 0; i < this.automatedButtonClicks; i++) {
+                if (this.getWidget() != null) this.getWidget().onClick(this.getWidget().getX() + 1, this.getWidget().getY() + 1);
+            }
+            this.automatedButtonClicksDone = true;
+        }
+
+        super.tick();
+
+    }
+
     @SuppressWarnings("all")
     @Override
     protected void renderElementWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-        ((CustomizableWidget)this.getWidget()).setHiddenFancyMenu((isEditor() || this.isCopyrightButton()) ? false : this.vanillaButtonHidden);
         if (isEditor()) {
             //Only render button in editor
             super.renderElementWidget(pose, mouseX, mouseY, partial);
@@ -56,23 +70,6 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
     @Override
     public @Nullable List<GuiEventListener> getWidgetsToRegister() {
         return null;
-    }
-
-    @Override
-    public void updateWidget() {
-
-        //Auto-click the vanilla button on menu load (don't add this to updateWidget(), because it could break stuff!)
-        if (!isEditor() && !this.automatedButtonClicksDone && (this.automatedButtonClicks > 0)) {
-            for (int i = 0; i < this.automatedButtonClicks; i++) {
-                if (this.getWidget() != null) this.getWidget().onClick(this.getWidget().getX() + 1, this.getWidget().getY() + 1);
-            }
-            this.automatedButtonClicksDone = true;
-        }
-
-        this.updateWidgetVisibility();
-
-        super.updateWidget();
-
     }
 
     @Override
@@ -113,10 +110,15 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
 
     }
 
+    @Override
     public void updateWidgetVisibility() {
-        if (this.getWidget() == null) return;
-        boolean forceVisible = isEditor() || this.isCopyrightButton();
-        ((CustomizableWidget)this.getWidget()).setHiddenFancyMenu(!forceVisible && this.vanillaButtonHidden);
+        //Note: A patch in TitleScreen.class is needed to make the screen not permanently update the widget's alpha
+        super.updateWidgetVisibility();
+        if (this.getWidget() instanceof CustomizableWidget w) {
+            boolean forceVisible = isEditor() || this.isCopyrightButton();
+            if (this.vanillaButtonHidden) w.setHiddenFancyMenu(true);
+            if (forceVisible) w.setHiddenFancyMenu(false);
+        }
     }
 
     @Override

@@ -20,14 +20,17 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO FIXEN: Disablen von Forced GUI Scale verhindern, wenn auto-scaling enabled (zusätzlicher check ob forced scale beim anwenden von auto-scaling)
+	//TODO split Debug overlay into toggleable groups
 
-	//TODO ANCHOR OVERLAY ERWEITERN
-	// - Settings zum changen von Overlay Opacity (wenn elements dragged und wenn nicht - letzteres nur nutzen wenn alwaysShowOverlay == true)
-	// - Setting zum überschreiben von Overlay color (default ist leer -> wenn nicht leer, normale Farbe überschreiben, die durch Theme gesetzt wird)
-	// - 4 Modi für Overlay Sichtbarkeit: OFF, ALWAYS, WHEN_DRAGGING_ELEMENTS, WHEN_KEYBIND (für letzteres noch keybind überlegen)
-	// - Invertierungs-Modus (ähnlich wie Fadenkreuz; deaktiviert Färbung des Overlays)
-	// - Einstellbare Anchor Charging Time
+	//TODO Simple Video Renderer schreiben
+	// - Nach "Video Frame InputStream" googlen (audio evtl. separat getten?)
+	// - Evtl. mit Java-eigenen libs arbeiten
+
+	//TODO Make FMv3 wiki accessible via docs.fancymenu.net
+
+	//TODO Make resources.fancymenu.net redirect to the wiki page for ResourceLocations
+
+
 
 
 
@@ -36,15 +39,7 @@ public class FancyMenu {
 
 	//TODO Text Editor: Undo/Redo adden
 
-	//TODO Max Number Placeholder (Math.max)
-
-	//TODO Min Number Placeholder (Math.min)
-
 	//TODO Animations deprecaten! APNG kann als Alternative genutzt werden (und später vllt auch Videos)
-
-	//TODO Make FMv3 wiki accessible via docs.fancymenu.net
-
-	//TODO Make resources.fancymenu.net redirect to the wiki page for ResourceLocations
 
 	//TODO Layout Listener System
 	// - Auf Layout Ebene (rechtsklick editor back -> Listeners)
@@ -64,19 +59,9 @@ public class FancyMenu {
 	//TODO Button: Nine-Slice Background Mode (toggle on/off)
 	// - Option, um Randbreite zu definieren, wenn möglich
 
-	//TODO split Debug overlay into toggleable groups
-
-	//TODO Simple Video Renderer schreiben
-	// - Nach "Video Frame InputStream" googlen (audio evtl. separat getten?)
-	// - Evtl. mit Java-eigenen libs arbeiten
-
-	//TODO FIXEN: eventuell aktualisieren Forge Deep elements in title screen ihre position nicht richtig (checken)
-
 	//TODO add widget label scale option (per CustomizableWidget adden)
 
 	//TODO Add Edit GUI to more Action values, if needed
-
-	//TODO Testweise Title screen widget identifiers adden (eventuell dafür universal widget identifiers entfernen)
 
 	//TODO "Split Text" placeholder (regex support) (könnte performance killen)
 
@@ -84,23 +69,14 @@ public class FancyMenu {
 
 	//TODO FIXEN: Splash Elemente werden bei resize reloaded (isNewMenu in builder fixen??)
 
-	//TODO FIXEN: Manchmal wird per Anchor Overlay onHover der Anchor nicht aktualisiert (hover loading animation sichtbar, aber anchor wechselt am Ende nicht)
-	// - Aufgetreten, nachdem Label von Custom Button editiert (fenster danach nicht resized oder gespeichert)
-	// - Speichern per CTRL + S hat es gefixt (nur gespeichert, nicht resized, etc.)
-
 	//TODO "Key Pressed" Loading Requirement
 	// - Modes: ONCE_PER_KEY_PRESS (nur einen tick pro key press auf true), CONTINUOUS (hält bei key press dauerhaft auf true)
 	// - Setzt "pressed" boolean bei onKeyPress auf true und bei onKeyRelease auf false (für modes)
 
-	//TODO FIXEN: Layout Editor: grid toggle in Window tab wird nicht aktualisiert, wenn grid per Ctrl + G getoggelt wird
-
 	//TODO Item Element, das per item meta (wie in give command) customized werden kann
-
-	//TODO option für "keep position after anchor change" adden
 
 	//TODO Möglichkeit adden, Custom GUIs zu kopieren (bei kopieren öffnet sich input screen, um neuen identifier einzugeben)
 
-	//TODO add setAlpha() support to Vanilla ImageButtons (language button, accessibility button)
 
 	private static final Logger LOGGER = LogManager.getLogger();
 

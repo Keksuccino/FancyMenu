@@ -39,6 +39,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
@@ -181,9 +182,16 @@ public class LayoutEditorUI {
 
 		windowMenu.addSeparatorEntry("separator_after_editor_widgets");
 
-		windowMenu.addValueCycleEntry("enable_grid", CommonCycles.cycleEnabledDisabled("fancymenu.editor.menu_bar.window.grid", FancyMenu.getOptions().showLayoutEditorGrid.getValue()).addCycleListener(cycle -> {
-			FancyMenu.getOptions().showLayoutEditorGrid.setValue(cycle.getAsBoolean());
-		})).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.grid"))
+		LocalizedEnumValueCycle<CommonCycles.CycleEnabledDisabled> gridToggleCycle = CommonCycles.cycleEnabledDisabled("fancymenu.editor.menu_bar.window.grid", FancyMenu.getOptions().showLayoutEditorGrid.getValue());
+		gridToggleCycle.addCycleListener(cycle -> FancyMenu.getOptions().showLayoutEditorGrid.setValue(cycle.getAsBoolean()));
+		windowMenu.addValueCycleEntry("enable_grid", gridToggleCycle)
+				.setTickAction((menu, entry, isPost) -> {
+					//This is to correct the displayed value in case the grid got toggled via shortcut
+					if (FancyMenu.getOptions().showLayoutEditorGrid.getValue() != gridToggleCycle.current().getAsBoolean()) {
+						gridToggleCycle.setCurrentValue(CommonCycles.CycleEnabledDisabled.getByBoolean(FancyMenu.getOptions().showLayoutEditorGrid.getValue()), false);
+					}
+				})
+				.setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.grid"))
 				.setIcon(ContextMenu.IconFactory.getIcon("grid"));
 
 		int preSelectedGridSize = FancyMenu.getOptions().layoutEditorGridSize.getValue();
@@ -238,34 +246,38 @@ public class LayoutEditorUI {
 				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.anchor_overlay.invert_colors.desc")));
 
 		NonStackableOverlayUI.addInputContextMenuEntryTo(windowMenu, "custom_anchor_overlay_base_color",
-				Component.translatable("fancymenu.editor.anchor_overlay.overlay_color_base"),
-				() -> FancyMenu.getOptions().anchorOverlayColorBaseOverride.getValue(),
-				s -> FancyMenu.getOptions().anchorOverlayColorBaseOverride.setValue(s),
-				true, FancyMenu.getOptions().anchorOverlayColorBaseOverride.getDefaultValue(),
-				null, false, false, TextValidators.HEX_COLOR_TEXT_VALIDATOR, null, null);
+						Component.translatable("fancymenu.editor.anchor_overlay.overlay_color_base"),
+						() -> FancyMenu.getOptions().anchorOverlayColorBaseOverride.getValue(),
+						s -> FancyMenu.getOptions().anchorOverlayColorBaseOverride.setValue(s),
+						true, FancyMenu.getOptions().anchorOverlayColorBaseOverride.getDefaultValue(),
+						null, false, false, TextValidators.HEX_COLOR_TEXT_VALIDATOR, null, null)
+				.setIsActiveSupplier((menu, entry) -> !FancyMenu.getOptions().invertAnchorOverlayColor.getValue());
 
 		NonStackableOverlayUI.addInputContextMenuEntryTo(windowMenu, "custom_anchor_overlay_border_color",
-				Component.translatable("fancymenu.editor.anchor_overlay.overlay_color_border"),
-				() -> FancyMenu.getOptions().anchorOverlayColorBorderOverride.getValue(),
-				s -> FancyMenu.getOptions().anchorOverlayColorBorderOverride.setValue(s),
-				true, FancyMenu.getOptions().anchorOverlayColorBorderOverride.getDefaultValue(),
-				null, false, false, TextValidators.HEX_COLOR_TEXT_VALIDATOR, null, null);
+						Component.translatable("fancymenu.editor.anchor_overlay.overlay_color_border"),
+						() -> FancyMenu.getOptions().anchorOverlayColorBorderOverride.getValue(),
+						s -> FancyMenu.getOptions().anchorOverlayColorBorderOverride.setValue(s),
+						true, FancyMenu.getOptions().anchorOverlayColorBorderOverride.getDefaultValue(),
+						null, false, false, TextValidators.HEX_COLOR_TEXT_VALIDATOR, null, null)
+				.setIsActiveSupplier((menu, entry) -> !FancyMenu.getOptions().invertAnchorOverlayColor.getValue());
 
 		windowMenu.addSeparatorEntry("separator_after_custom_anchor_overlay_border_color");
 
 		NonStackableOverlayUI.addRangeSliderInputContextMenuEntryTo(windowMenu, "anchor_overlay_opacity_normal",
-				Component.translatable("fancymenu.editor.anchor_overlay.opacity_normal"),
-				() -> Double.valueOf(FancyMenu.getOptions().anchorOverlayOpacityPercentageNormal.getValue()),
-				aDouble -> FancyMenu.getOptions().anchorOverlayOpacityPercentageNormal.setValue(aDouble.floatValue()),
-				true, (double) FancyMenu.getOptions().anchorOverlayOpacityPercentageNormal.getDefaultValue(),
-				0.0D, 1.0D, consumes -> Component.translatable("fancymenu.editor.anchor_overlay.opacity_normal.slider_label", ((int)(consumes * 100.0D)) + "%"));
+						Component.translatable("fancymenu.editor.anchor_overlay.opacity_normal"),
+						() -> Double.valueOf(FancyMenu.getOptions().anchorOverlayOpacityPercentageNormal.getValue()),
+						aDouble -> FancyMenu.getOptions().anchorOverlayOpacityPercentageNormal.setValue(aDouble.floatValue()),
+						true, (double) FancyMenu.getOptions().anchorOverlayOpacityPercentageNormal.getDefaultValue(),
+						0.0D, 1.0D, consumes -> Component.translatable("fancymenu.editor.anchor_overlay.opacity_normal.slider_label", ((int)(consumes * 100.0D)) + "%"))
+				.setIsActiveSupplier((menu, entry) -> !FancyMenu.getOptions().invertAnchorOverlayColor.getValue());
 
 		NonStackableOverlayUI.addRangeSliderInputContextMenuEntryTo(windowMenu, "anchor_overlay_opacity_busy",
-				Component.translatable("fancymenu.editor.anchor_overlay.opacity_busy"),
-				() -> Double.valueOf(FancyMenu.getOptions().anchorOverlayOpacityPercentageBusy.getValue()),
-				aDouble -> FancyMenu.getOptions().anchorOverlayOpacityPercentageBusy.setValue(aDouble.floatValue()),
-				true, (double) FancyMenu.getOptions().anchorOverlayOpacityPercentageBusy.getDefaultValue(),
-				0.0D, 1.0D, consumes -> Component.translatable("fancymenu.editor.anchor_overlay.opacity_busy.slider_label", ((int)(consumes * 100.0D)) + "%"));
+						Component.translatable("fancymenu.editor.anchor_overlay.opacity_busy"),
+						() -> Double.valueOf(FancyMenu.getOptions().anchorOverlayOpacityPercentageBusy.getValue()),
+						aDouble -> FancyMenu.getOptions().anchorOverlayOpacityPercentageBusy.setValue(aDouble.floatValue()),
+						true, (double) FancyMenu.getOptions().anchorOverlayOpacityPercentageBusy.getDefaultValue(),
+						0.0D, 1.0D, consumes -> Component.translatable("fancymenu.editor.anchor_overlay.opacity_busy.slider_label", ((int)(consumes * 100.0D)) + "%"))
+				.setIsActiveSupplier((menu, entry) -> !FancyMenu.getOptions().invertAnchorOverlayColor.getValue());
 
 		//USER INTERFACE
 		CustomizationOverlayUI.buildUITabAndAddTo(menuBar);
@@ -525,27 +537,33 @@ public class LayoutEditorUI {
 				.setIcon(ContextMenu.IconFactory.getIcon("measure"));
 
 		NonStackableOverlayUI.addIntegerInputContextMenuEntryTo(menu, "forced_gui_scale", Component.translatable("fancymenu.editor.rightclick.scale"),
-				() -> (int) editor.layout.forcedScale,
-				integer -> {
-					editor.history.saveSnapshot();
-					editor.layout.forcedScale = integer;
-					menu.closeMenu();
-					editor.init();
-				},
-				true, 0, consumes -> {
-					if (MathUtils.isInteger(consumes)) {
-						return Integer.parseInt(consumes) >= 0;
-					}
-					return false;
-				}, consumes -> {
-					if (MathUtils.isInteger(consumes)) {
-						if (Integer.parseInt(consumes) < 0) {
-							return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.rightclick.scale.invalid"));
-						}
-					}
-					return null;
-				}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.scale.btn.desc")))
-				.setIcon(ContextMenu.IconFactory.getIcon("measure"));
+						() -> (int) editor.layout.forcedScale,
+						integer -> {
+							editor.history.saveSnapshot();
+							editor.layout.forcedScale = integer;
+							if (integer == 0) {
+								editor.layout.autoScalingWidth = 0;
+								editor.layout.autoScalingHeight = 0;
+							}
+							menu.closeMenu();
+							editor.init();
+						},
+						true, 0, consumes -> {
+							if (MathUtils.isInteger(consumes)) {
+								return Integer.parseInt(consumes) >= 0;
+							}
+							return false;
+						}, consumes -> {
+							if (MathUtils.isInteger(consumes)) {
+								if (Integer.parseInt(consumes) < 0) {
+									return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.rightclick.scale.invalid"));
+								}
+							}
+							return null;
+						}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.properties.scale.btn.desc")))
+				.setIcon(ContextMenu.IconFactory.getIcon("measure"))
+				.setIsActiveSupplier((menu1, entry) -> editor.layout.autoScalingWidth == 0)
+				.setTooltipSupplier((menu1, entry) -> entry.isActive() ? null : Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.auto_scaling.disable_forced_scale_first")));
 
 		menu.addSeparatorEntry("separator_after_forced_scale");
 

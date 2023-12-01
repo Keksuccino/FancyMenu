@@ -186,6 +186,18 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - Added placeholder "Mod Loader Version" to get the mod loader version (Fabric, Forge, etc.)
 - Added placeholder "Mod Loader Name" to get the mod loader name (Fabric, Forge, etc.)
 - Added "Cursor" element that allows you to set a custom cursor texture (supports loading requirements)
+- Added placeholder "Max Number" that returns the greater of two numbers
+- Added placeholder "Min Number" that returns the smaller of two numbers
+- Added placeholder "Absolute Number" to get the absolute (positive) value of a number
+- Added placeholder "Negate Number" to negate a number
+- Added placeholder "pi" that returns the double value that is closer to pi than any other
+- Added placeholder "Trigonometric Sine" to calculate the trigonometric sine of an angle
+- Added placeholder "Hyperbolic Sine" to calculate the hyperbolic sine of a double value
+- Added placeholder "Trigonometric Cosine" to calculate the trigonometric cosine of an angle
+- Added placeholder "Hyperbolic Cosine" to calculate the hyperbolic cosine of a double value
+- Added placeholder "Trigonometric Tangent" to calculate the trigonometric tangent of an angle
+- Added placeholder "Hyperbolic Tangent" to calculate the hyperbolic tangent of a double value
+- Added placeholder "Current Time in Millis (Unix Timestamp)" to get the current time in milliseconds, measured by the time that has elapsed since 00:00:00 UTC on 1 January 1970
  
 - Added a bunch of accessibility stuff
 --> UI Themes to change the color scheme of FancyMenu's UI (dark and light themes included by default and you can make your own themes!)
@@ -255,8 +267,7 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - Fixed: "&" formatting codes in "Paste to Chat" action get replaced with "§" formatting codes
 - Fixed: "&" formatting codes in "Send Message" action get replaced with "§" formatting codes
 - Fixed: Crash when pressing DELETE on an empty line in the text editor
- 
-- KNOWN ISSUE: The anchor overlay in the layout editor sometimes doesn't correctly change element anchors on hover (wasn't able to reproduce this bug, but it happened 2 or 3 times, so would be nice to get some feedback for this)
+- Fixed: It is possible to remove/reset the Forced GUI Scale of a layout without disabling Auto-Scaling first, which can lead to the layout scaling the menu to infinity
  
 %changelog:end%
 
