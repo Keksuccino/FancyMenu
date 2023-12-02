@@ -12,7 +12,7 @@ import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
+import de.keksuccino.fancymenu.util.resources.PlayableResource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.LoadingOverlay;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -24,7 +24,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -63,10 +62,10 @@ public abstract class MixinLoadingOverlay {
 		boolean isPlayingIntro = false;
 
 		if (!GameIntroHandler.introPlayed && GameIntroHandler.shouldPlayIntro()) {
-			IAnimationRenderer animationRenderer = GameIntroHandler.getGameIntroAnimation();
-			if (animationRenderer != null) {
+			PlayableResource intro = GameIntroHandler.getIntro();
+			if (intro != null) {
 				isPlayingIntro = true;
-				Minecraft.getInstance().setScreen(new GameIntroScreen((Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen : new TitleScreen(), animationRenderer));
+				Minecraft.getInstance().setScreen(new GameIntroScreen((Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen : new TitleScreen(), intro));
 			}
 		}
 		GameIntroHandler.introPlayed = true;

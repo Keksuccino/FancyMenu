@@ -7,11 +7,13 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
+import de.keksuccino.fancymenu.util.resources.PlayableResource;
+import de.keksuccino.fancymenu.util.resources.RenderableResource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -23,21 +25,35 @@ public class GameIntroScreen extends Screen {
     private static final Logger LOGGER = LogManager.getLogger();
 
     protected Screen fadeTo;
-    protected IAnimationRenderer animationRenderer;
+    protected PlayableResource intro;
     protected float opacity = 1.0F;
+    protected long start = -1;
 
-    public GameIntroScreen(@NotNull Screen fadeTo, @NotNull IAnimationRenderer animationRenderer) {
+    public GameIntroScreen(@NotNull Screen fadeTo, @NotNull PlayableResource intro) {
         super(Component.empty());
         this.fadeTo = Objects.requireNonNull(fadeTo);
-        this.animationRenderer = Objects.requireNonNull(animationRenderer);
-        this.animationRenderer.resetAnimation();
+        this.intro = Objects.requireNonNull(intro);
+        this.intro.waitForReady(5000);
+    }
+
+    protected boolean endOfIntroReached() {
+        if (this.start == -1) return false;
+        long now = System.currentTimeMillis();
+        //If not playing (anymore) 2 seconds after starting to play it, consider the playable resource finished
+        return ((this.start + 2000) < now) && !this.intro.isPlaying();
     }
 
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
-        //Close screen after animation finished playing
-        if (this.animationRenderer.isFinished()) {
+        if (this.start == -1) {
+            this.start = System.currentTimeMillis();
+            this.intro.stop();
+            this.intro.play();
+        }
+
+        //Close screen after finished playing
+        if (this.endOfIntroReached()) {
             this.onClose();
             return;
         }
@@ -53,47 +69,47 @@ public class GameIntroScreen extends Screen {
 
     }
 
+    //TODO APNG game intro fixen (scheint NULL zu sein, deshalb startet es nicht?? vllt wegen resource reload??)
+    //TODO APNG game intro fixen (scheint NULL zu sein, deshalb startet es nicht?? vllt wegen resource reload??)
+    //TODO APNG game intro fixen (scheint NULL zu sein, deshalb startet es nicht?? vllt wegen resource reload??)
+    //TODO APNG game intro fixen (scheint NULL zu sein, deshalb startet es nicht?? vllt wegen resource reload??)
+    //TODO APNG game intro fixen (scheint NULL zu sein, deshalb startet es nicht?? vllt wegen resource reload??)
+    //TODO APNG game intro fixen (scheint NULL zu sein, deshalb startet es nicht?? vllt wegen resource reload??)
+
+    //TODO fix fade-out
     protected void tickFadeOut() {
-        int fps = this.animationRenderer.getFPS();
-        int framesLeft = this.animationRenderer.animationFrames() - this.animationRenderer.currentFrame();
-        int secondsLeft = (framesLeft > 0) ? Math.max(0, framesLeft / fps) : 0;
-        if (secondsLeft <= 1) {
-            this.opacity -= 1.0F / (fps * 4F);
-            if (this.opacity < 0F) this.opacity = 0F;
-        }
+//        int fps = this.animationRenderer.getFPS();
+//        int framesLeft = this.animationRenderer.animationFrames() - this.animationRenderer.currentFrame();
+//        int secondsLeft = (framesLeft > 0) ? Math.max(0, framesLeft / fps) : 0;
+//        if (secondsLeft <= 1) {
+//            this.opacity -= 1.0F / (fps * 4F);
+//            if (this.opacity < 0F) this.opacity = 0F;
+//        }
     }
 
     protected void renderAnimation(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
-        int cachedX = this.animationRenderer.getPosX();
-        int cachedY = this.animationRenderer.getPosY();
-        int cachedWidth = this.animationRenderer.getWidth();
-        int cachedHeight = this.animationRenderer.getHeight();
-        boolean cachedLoop = this.animationRenderer.isGettingLooped();
+        if (this.intro instanceof RenderableResource r) {
 
-        AspectRatio ratio = new AspectRatio(cachedWidth, cachedHeight);
-        int[] size = ratio.getAspectRatioSizeByMinimumSize(this.width, this.height);
-        int aspectWidth = size[0];
-        int aspectHeight = size[1];
+            AspectRatio ratio = r.getAspectRatio();
+            int[] size = ratio.getAspectRatioSizeByMinimumSize(this.width, this.height);
+            int aspectWidth = size[0];
+            int aspectHeight = size[1];
+            int x = (this.width / 2) - (aspectWidth / 2);
+            int y = (this.height / 2) - (aspectHeight / 2);
 
-        this.animationRenderer.setPosX((this.width / 2) - (aspectWidth / 2));
-        this.animationRenderer.setPosY((this.height / 2) - (aspectHeight / 2));
-        this.animationRenderer.setWidth(aspectWidth);
-        this.animationRenderer.setHeight(aspectHeight);
-        this.animationRenderer.setLooped(false);
-        this.animationRenderer.setHideAfterLastFrame(false);
-        this.animationRenderer.setOpacity(this.opacity);
+            ResourceLocation location = r.getResourceLocation();
 
-        this.animationRenderer.render(pose);
+            if (location != null) {
+                RenderSystem.enableBlend();
+                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
+                RenderingUtils.bindTexture(location);
+                blit(pose, x, y, 0.0F, 0.0F, aspectWidth, aspectHeight, aspectWidth, aspectHeight);
+            }
 
-        this.animationRenderer.setPosX(cachedX);
-        this.animationRenderer.setPosY(cachedY);
-        this.animationRenderer.setWidth(cachedWidth);
-        this.animationRenderer.setHeight(cachedHeight);
-        this.animationRenderer.setLooped(cachedLoop);
-        this.animationRenderer.setOpacity(1.0F);
+            RenderingUtils.resetShaderColor();
 
-        RenderingUtils.resetShaderColor();
+        }
 
     }
 
@@ -121,7 +137,6 @@ public class GameIntroScreen extends Screen {
 
     @Override
     public void onClose() {
-        this.animationRenderer.resetAnimation();
         Minecraft.getInstance().setScreen(this.fadeTo);
     }
 

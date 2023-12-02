@@ -20,7 +20,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO split Debug overlay into toggleable groups
+	//TODO Animations deprecaten! APNG kann als Alternative genutzt werden (und später vllt auch Videos)
 
 	//TODO Simple Video Renderer schreiben
 	// - Nach "Video Frame InputStream" googlen (audio evtl. separat getten?)
@@ -34,12 +34,9 @@ public class FancyMenu {
 
 
 
-
 	//TODO ALLE UNGENUTZTEN FileTypes entfernen (ungenutzte video types)
 
 	//TODO Text Editor: Undo/Redo adden
-
-	//TODO Animations deprecaten! APNG kann als Alternative genutzt werden (und später vllt auch Videos)
 
 	//TODO Layout Listener System
 	// - Auf Layout Ebene (rechtsklick editor back -> Listeners)

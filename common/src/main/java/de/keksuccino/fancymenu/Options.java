@@ -13,7 +13,6 @@ public class Options extends AbstractOptions {
 
     public final Option<Boolean> advancedCustomizationMode = new Option<>(config, "advanced_customization_mode", false, "customization");
     public final Option<Boolean> showCustomizationOverlay = new Option<>(config, "show_customization_overlay", true, "customization");
-    public final Option<Boolean> showDebugOverlay = new Option<>(config, "show_debug_overlay", false, "customization");
 
     public final Option<String> gameIntroAnimation = new Option<>(config, "game_intro_animation_name", "", "loading");
     public final Option<Boolean> allowGameIntroSkip = new Option<>(config, "allow_game_intro_skip", true, "loading");
@@ -49,6 +48,12 @@ public class Options extends AbstractOptions {
     public final Option<Boolean> enableUiTextShadow = new Option<>(config, "enable_ui_text_shadow", false, "ui");
     public final Option<Integer> contextMenuHoverOpenSpeed = new Option<>(config, "context_menu_hover_open_speed", 1, "ui");
     public final Option<String> uiTheme = new Option<>(config, "ui_theme", "dark", "ui");
+
+    public final Option<Boolean> showDebugOverlay = new Option<>(config, "show_debug_overlay", false, "debug_overlay");
+    public final Option<Boolean> debugOverlayShowBasicScreenCategory = new Option<>(config, "debug_overlay_show_basic_screen_category", true, "debug_overlay");
+    public final Option<Boolean> debugOverlayShowAdvancedScreenCategory = new Option<>(config, "debug_overlay_show_advanced_screen_category", true, "debug_overlay");
+    public final Option<Boolean> debugOverlayShowResourcesCategory = new Option<>(config, "debug_overlay_show_resources_category", true, "debug_overlay");
+    public final Option<Boolean> debugOverlayShowSystemCategory = new Option<>(config, "debug_overlay_show_system_category", true, "debug_overlay");
 
     public Options() {
         this.config.syncConfig();

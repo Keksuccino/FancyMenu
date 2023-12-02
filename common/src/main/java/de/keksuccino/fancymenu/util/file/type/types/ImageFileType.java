@@ -10,8 +10,19 @@ import org.jetbrains.annotations.Nullable;
 
 public class ImageFileType extends FileType<ITexture> {
 
+    protected boolean animated = false;
+
     public ImageFileType(@NotNull FileCodec<ITexture> codec, @Nullable String mimeType, @NotNull String... extensions) {
         super(codec, mimeType, FileMediaType.IMAGE, extensions);
+    }
+
+    public boolean isAnimated() {
+        return this.animated;
+    }
+
+    public ImageFileType setAnimated(boolean animated) {
+        this.animated = animated;
+        return this;
     }
 
     @Override

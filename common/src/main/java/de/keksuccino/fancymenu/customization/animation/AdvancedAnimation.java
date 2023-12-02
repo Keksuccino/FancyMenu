@@ -550,7 +550,7 @@ public class AdvancedAnimation implements IAnimationRenderer, RenderableResource
 
 	@Override
 	public boolean isPlaying() {
-		return this.playing;
+		return !this.isFinished() && this.playing;
 	}
 
 	@Override

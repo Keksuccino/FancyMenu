@@ -16,11 +16,13 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class ChooseMenuBackgroundScreen extends Screen {
 
@@ -206,6 +208,7 @@ public class ChooseMenuBackgroundScreen extends Screen {
             this.backgroundTypeListScrollArea.addEntry(e);
         }
 
+        //TODO handling für deprecated adden ---->
         for (MenuBackgroundBuilder<?> b : MenuBackgroundRegistry.getBuilders()) {
             BackgroundTypeScrollEntry e = new BackgroundTypeScrollEntry(this.backgroundTypeListScrollArea, b, (entry) -> {
                 if (this.backgroundType != b) {
@@ -236,17 +239,35 @@ public class ChooseMenuBackgroundScreen extends Screen {
     public static class BackgroundTypeScrollEntry extends TextListScrollAreaEntry {
 
         public MenuBackgroundBuilder<?> backgroundType;
+        @Nullable
+        public Supplier<Tooltip> tooltipSupplier = null;
 
         public BackgroundTypeScrollEntry(ScrollArea parent, @NotNull MenuBackgroundBuilder<?> backgroundType, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
             super(parent, getText(backgroundType), UIBase.getUIColorTheme().listing_dot_color_1.getColor(), onClick);
             this.backgroundType = backgroundType;
+            if (this.backgroundType.isDeprecated()) {
+                this.tooltipSupplier = () -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.menu_background.deprecated.details"))
+                        .setDefaultStyle()
+                        .setTextBaseColor(UIBase.getUIColorTheme().warning_text_color);
+            }
+        }
+
+        @Override
+        public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
+            if (this.tooltipSupplier != null) {
+                Tooltip t = this.tooltipSupplier.get();
+                if (t != null) TooltipHandler.INSTANCE.addTooltip(t, this::isHovered, false, true);
+            }
+            super.render(matrix, mouseX, mouseY, partial);
         }
 
         private static Component getText(MenuBackgroundBuilder<?> backgroundType) {
             if (backgroundType == NO_BACKGROUND_TYPE) {
                 return Component.translatable("fancymenu.menu_background.choose.entry.no_background").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
             }
-            return backgroundType.getDisplayName().copy().setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
+            MutableComponent c = backgroundType.getDisplayName().copy().setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
+            if (backgroundType.isDeprecated()) c.append(Component.translatable("fancymenu.menu_background.deprecated").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
+            return c;
         }
 
     }

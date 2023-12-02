@@ -40,7 +40,8 @@ public class ApngTexture implements ITexture, PlayableResource {
     protected volatile boolean tickerThreadRunning = false;
     protected volatile boolean decoded = false;
     protected volatile int cycles = 0;
-    protected volatile int numPlays = -1;
+    /** How many times the APNG should loop. Value <= 0 means infinite loops. **/
+    protected volatile int numPlays = 0;
     protected ResourceLocation sourceLocation;
     protected File sourceFile;
     protected String sourceURL;
@@ -224,7 +225,7 @@ public class ApngTexture implements ITexture, PlayableResource {
 
     @SuppressWarnings("all")
     protected void startTickerIfNeeded() {
-        if (!this.tickerThreadRunning && !this.frames.isEmpty() && !this.closed) {
+        if (!this.tickerThreadRunning && !this.frames.isEmpty() && !this.maxLoopsReached() && !this.closed) {
 
             this.tickerThreadRunning = true;
             this.lastResourceLocationCall = System.currentTimeMillis();
@@ -235,7 +236,7 @@ public class ApngTexture implements ITexture, PlayableResource {
                 while ((this.lastResourceLocationCall + 10000) > System.currentTimeMillis()) {
                     if (this.frames.isEmpty() || this.closed) break;
                     //Don't tick frame if max loops reached
-                    if ((this.numPlays >= 0) && (this.cycles >= this.numPlays)) return;
+                    if (this.maxLoopsReached()) break;
                     boolean sleep = false;
                     try {
                         //Cache frames to avoid possible concurrent modification exceptions
@@ -250,16 +251,16 @@ public class ApngTexture implements ITexture, PlayableResource {
                             ApngFrame cachedCurrent = this.current;
                             if (cachedCurrent != null) {
                                 //Go to the next frame if current frame display time is over
-                                ApngFrame newCurrent;
+                                ApngFrame newCurrent = null;
                                 if ((cachedCurrent.index + 1) < cachedFrames.size()) {
                                     newCurrent = cachedFrames.get(cachedCurrent.index + 1);
                                 } else {
-                                    newCurrent = cachedFrames.get(0);
-                                    //Count cycles up if APNG should not loop infinitely (numPlays == -1 == infinite loops)
-                                    if (this.numPlays >= 0) this.cycles++;
+                                    //Count cycles up if APNG should not loop infinitely
+                                    if (this.numPlays > 0) this.cycles++;
+                                    if (!this.maxLoopsReached()) newCurrent = cachedFrames.get(0);
                                 }
-                                this.current = newCurrent;
-                                Thread.sleep(Math.max(20, newCurrent.delayMs));
+                                if (newCurrent != null) this.current = newCurrent;
+                                Thread.sleep(Math.max(20, (newCurrent != null) ? newCurrent.delayMs : 100));
                             } else {
                                 sleep = true;
                             }
@@ -331,6 +332,10 @@ public class ApngTexture implements ITexture, PlayableResource {
         return null;
     }
 
+    public boolean maxLoopsReached() {
+        return (this.numPlays > 0) && (this.cycles >= this.numPlays);
+    }
+
     @Override
     public boolean isReady() {
         //Everything important (like size) is set at this point, so it is considered ready
@@ -351,6 +356,11 @@ public class ApngTexture implements ITexture, PlayableResource {
     }
 
     @Override
+    public boolean isPlaying() {
+        return !this.maxLoopsReached();
+    }
+
+    @Override
     public void pause() {
     }
 
@@ -362,11 +372,6 @@ public class ApngTexture implements ITexture, PlayableResource {
     @Override
     public void stop() {
         this.reset();
-    }
-
-    @Override
-    public boolean isPlaying() {
-        return true;
     }
 
     @Override

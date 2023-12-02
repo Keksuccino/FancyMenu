@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.overlay;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.events.screen.ScreenKeyPressedEvent;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventPriority;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
@@ -24,8 +23,12 @@ public class CustomizationOverlay {
 	}
 
 	public static void rebuildOverlay() {
-		if (debugOverlay != null) debugOverlay.resetOverlay();
 		overlayMenuBar = CustomizationOverlayUI.buildMenuBar((overlayMenuBar == null) || overlayMenuBar.isExpanded());
+		rebuildDebugOverlay();
+	}
+
+	public static void rebuildDebugOverlay() {
+		if (debugOverlay != null) debugOverlay.resetOverlay();
 		debugOverlay = CustomizationOverlayUI.buildDebugOverlay(overlayMenuBar);
 	}
 

@@ -1,7 +1,7 @@
-
-CHANGELOG | FANCYMENU v3.0.0 CLOSED BETA 5
  
-- Improved Anchor Overlay
+CHANGELOG | FANCYMENU v3.0.0 CLOSED BETA 1 / RELEASE CANDIDATE 1
+ 
+- Improved the Anchor Overlay
 --> It should hopefully work much more stable now (*knock on wood*)
 --> Hopefully no phantom anchor lines anymore
 --> Added lots of new accessibility options to customize the overlay
@@ -10,6 +10,10 @@ CHANGELOG | FANCYMENU v3.0.0 CLOSED BETA 5
 ----> More visibility modes (Disabled, When Dragging Elements, On Key Press, Always Visible)
 ----> Customizable hover charging time (the time needed until the anchor of an element gets changed when hovering anchor areas and elements)
 ----> Toggleable hovering for anchor areas and elements (if the anchor of elements should change when hovering anchor areas and elements; can be toggled separately for areas and elements)
+ 
+- Improved the Debug Overlay
+--> The overlay is now categorized and categories can be toggled on/off
+--> Formatted some text parts to make them more visible / easier to notice
  
 - Added: Placeholder "Max Number" that returns the greater of two numbers
 - Added: Placeholder "Min Number" that returns the smaller of two numbers

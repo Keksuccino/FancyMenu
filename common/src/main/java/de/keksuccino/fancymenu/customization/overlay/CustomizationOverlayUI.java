@@ -1,15 +1,12 @@
 package de.keksuccino.fancymenu.customization.overlay;
 
-import com.mojang.blaze3d.platform.GlUtil;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.customgui.ManageCustomGuisScreen;
 import de.keksuccino.fancymenu.customization.customgui.ManageOverriddenGuisScreen;
-import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
-import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
+import de.keksuccino.fancymenu.customization.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.ManageLayoutsScreen;
@@ -17,14 +14,13 @@ import de.keksuccino.fancymenu.customization.layout.editor.ChooseAnimationScreen
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screen.dummyscreen.DummyScreenBuilder;
 import de.keksuccino.fancymenu.customization.screen.dummyscreen.DummyScreenRegistry;
-import de.keksuccino.fancymenu.customization.slideshow.ExternalTextureSlideshowRenderer;
-import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.customization.variables.ManageVariablesScreen;
 import de.keksuccino.fancymenu.util.*;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.file.type.FileCodec;
+import de.keksuccino.fancymenu.util.file.type.FileMediaType;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroups;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
@@ -34,6 +30,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.NonStackableOverlayUI;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorThemeRegistry;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -43,13 +40,12 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.resources.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resources.ResourceSource;
 import de.keksuccino.fancymenu.util.resources.ResourceSourceType;
+import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resources.texture.SimpleTexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
@@ -62,7 +58,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -75,100 +70,9 @@ public class CustomizationOverlayUI {
 
     private static MenuBar grandfatheredMenuBar = null;
 
-    @NotNull static DebugOverlay buildDebugOverlay(@NotNull MenuBar menuBar) {
-
-        DebugOverlay overlay = new DebugOverlay();
-
-        int menuBarHeight = (int)((float)menuBar.getHeight() * UIBase.calculateFixedScale(menuBar.getScale()));
-        overlay.setTopYOffsetSupplier(() -> menuBarHeight + 10);
-        overlay.setBottomYOffsetSupplier(() -> -10);
-
-        Screen current = Minecraft.getInstance().screen;
-        if (current == null) return overlay;
-        boolean customizationEnabled = ScreenCustomization.isCustomizationEnabledForScreen(current);
-        ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(current);
-        if (layer == null) return overlay;
-        String currentIdentifier = ScreenIdentifierHandler.getIdentifierOfScreen(current);
-        List<Layout> allLayoutsCurrent = LayoutHandler.getAllLayoutsForScreenIdentifier(currentIdentifier, false);
-        List<Layout> allUniversalLayoutsCurrent = LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true);
-        List<Layout> enabledUniversalLayoutsCurrent = new ArrayList<>();
-        for (Layout l : layer.activeLayouts) {
-            if (l.isUniversalLayout()) enabledUniversalLayoutsCurrent.add(l);
-        }
-        int animationCount = AnimationHandler.getAnimations().size();
-        int totalAnimationFrameCount = 0;
-        boolean tooHighAnimationResolution = false;
-        for (IAnimationRenderer ani : AnimationHandler.getAnimations()) {
-            totalAnimationFrameCount += ani.animationFrames();
-            if ((ani.getWidth() > 1920) || (ani.getHeight() > 1080)) tooHighAnimationResolution = true;
-        }
-        boolean tooManyAnimationFrames = totalAnimationFrameCount > 500;
-        final int finalTotalAnimationFrameCount = totalAnimationFrameCount;
-        int slideshowCount = SlideshowHandler.getSlideshows().size();
-        int totalSlideshowImages = 0;
-        for (ExternalTextureSlideshowRenderer slide : SlideshowHandler.getSlideshows()) {
-            totalSlideshowImages += slide.getImageCount();
-        }
-        final int finalTotalSlideshowImages = totalSlideshowImages;
-
-        overlay.addLine("screen_identifier", DebugOverlay.LinePosition.TOP_LEFT,
-                        consumes -> {
-                            MutableComponent c = Component.translatable("fancymenu.overlay.debug.screen_identifier", currentIdentifier);
-                            if (consumes.isHovered()) c = c.setStyle(Style.EMPTY.withUnderlined(true));
-                            if (consumes.recentlyClicked()) c = Component.translatable("fancymenu.overlay.debug.screen_identifier.copied").setStyle(Style.EMPTY.withColor(ChatFormatting.GREEN));
-                            return c;
-                        })
-                .setClickAction(line -> Minecraft.getInstance().keyboardHandler.setClipboard(currentIdentifier));
-        overlay.addLine("screen_size", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.screen_size", "" + Minecraft.getInstance().getWindow().getScreenWidth(), "" + Minecraft.getInstance().getWindow().getScreenHeight()));
-        overlay.addLine("active_layout_count", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.screen_active_layout_count", "" + (customizationEnabled ? layer.activeLayouts.size() : 0), "" + (customizationEnabled ? enabledUniversalLayoutsCurrent.size() : 0)));
-        overlay.addLine("total_layout_count", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.screen_total_layout_count", "" + (allLayoutsCurrent.size() + allUniversalLayoutsCurrent.size()), "" + allUniversalLayoutsCurrent.size()));
-        overlay.addLine("active_elements_count", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.screen_active_element_count", "" + (customizationEnabled ? layer.allElements.size() : 0)));
-
-        overlay.addSpacerLine("spacer_after_active_element_count", DebugOverlay.LinePosition.TOP_LEFT, 5);
-
-        overlay.addLine("total_animations", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.loaded_animations", "" + animationCount, "" + finalTotalAnimationFrameCount));
-        if (tooManyAnimationFrames) {
-            overlay.addLine("too_many_animation_frames", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.loaded_animations.too_many_frames").setStyle(Style.EMPTY.withColor(ChatFormatting.RED)));
-        }
-        if (tooHighAnimationResolution) {
-            overlay.addLine("too_high_resolution", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.loaded_animations.resolution_too_high").setStyle(Style.EMPTY.withColor(ChatFormatting.RED)));
-        }
-        overlay.addLine("total_slideshows", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.loaded_slideshows", "" + slideshowCount, "" + finalTotalSlideshowImages));
-
-        overlay.addSpacerLine("spacer_after_total_slideshows", DebugOverlay.LinePosition.TOP_LEFT, 5);
-
-        overlay.addLine("frames_per_second", DebugOverlay.LinePosition.TOP_LEFT, consumes -> {
-            int fps = Minecraft.getInstance().getFps();
-            MutableComponent fpsComp = Component.literal("" + fps);
-            if (fps < 20) fpsComp = fpsComp.setStyle(Style.EMPTY.withColor(ChatFormatting.GOLD));
-            if (fps < 10) fpsComp = fpsComp.setStyle(Style.EMPTY.withColor(ChatFormatting.RED));
-            return Component.translatable("fancymenu.overlay.debug.fps", fpsComp);
-        });
-        overlay.addLine("ram_usage", DebugOverlay.LinePosition.TOP_LEFT, consumes -> {
-            long max = Runtime.getRuntime().maxMemory();
-            long total = Runtime.getRuntime().totalMemory();
-            long free = Runtime.getRuntime().freeMemory();
-            long used = total - free;
-            long percent = (total - free) * 100L / max;
-            String ramString = bytesToMb(used) + "/" + bytesToMb(max) + "MB";
-            String percentString = percent + "%";
-            if (percent >= 60) percentString = ChatFormatting.GOLD + "" + percent + "%" + ChatFormatting.RESET;
-            if (percent >= 80) percentString = ChatFormatting.RED + "" + percent + "%" + ChatFormatting.RESET;
-            return Component.translatable("fancymenu.overlay.debug.memory", ramString, percentString);
-        });
-        overlay.addLine("cpu_info", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.cpu", GlUtil.getCpuInfo()));
-        overlay.addLine("gpu_info", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.gpu", GlUtil.getRenderer(), GlUtil.getOpenGLVersion()));
-
-        overlay.addSpacerLine("spacer_after_gpu_info", DebugOverlay.LinePosition.TOP_LEFT, 5);
-
-        overlay.addLine("right_click_elements", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.right_click_elements"));
-
-        return overlay;
-
-    }
-
-    private static long bytesToMb(long bytes) {
-        return bytes / 1024L / 1024L;
+    @NotNull
+    public static DebugOverlay buildDebugOverlay(@NotNull MenuBar menuBar) {
+        return DebugOverlayBuilder.buildDebugOverlay(menuBar);
     }
 
     @Nullable
@@ -429,24 +333,41 @@ public class CustomizationOverlayUI {
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.game_intro.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("video"));
 
-        NonStackableOverlayUI.addGenericInputContextMenuEntryTo(screenSettingsGameIntroMenu, "set_game_intro_animation",
-                Component.translatable("fancymenu.overlay.menu_bar.customization.settings.game_intro.set_intro_animation"),
+//        NonStackableOverlayUI.addGenericInputContextMenuEntryTo(screenSettingsGameIntroMenu, "set_game_intro_animation",
+//                Component.translatable("fancymenu.overlay.menu_bar.customization.settings.game_intro.set_intro_animation"),
+//                () -> {
+//                    String s = FancyMenu.getOptions().gameIntroAnimation.getValue();
+//                    if (s.equals("")) return null;
+//                    return s;
+//                },
+//                s -> FancyMenu.getOptions().gameIntroAnimation.setValue(s), true, "",
+//                valueSetter -> {
+//                    String preSelected = FancyMenu.getOptions().gameIntroAnimation.getValue();
+//                    Minecraft.getInstance().setScreen(new ChooseAnimationScreen((!preSelected.isEmpty()) ? preSelected : null, (call) -> {
+//                        if (call != null) {
+//                            valueSetter.accept(call);
+//                        }
+//                        Minecraft.getInstance().setScreen(screen);
+//                        forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("screen_settings", "game_intro", "set_game_intro_animation")));
+//                    }));
+//                });
+
+        ResourceSupplier<ITexture> emptyImageSupplier = ResourceSupplier.empty(ITexture.class, FileMediaType.IMAGE);
+        FileTypeGroup<ImageFileType> introFileTypeGroup = FileTypeGroup.of(FileTypes.APNG_IMAGE);
+
+        NonStackableOverlayUI.addGenericResourceChooserContextMenuEntryTo(screenSettingsGameIntroMenu, "set_game_intro",
+                () -> new ResourceChooserScreen<>(Component.empty(), introFileTypeGroup, null, s -> {}),
+                ResourceSupplier::image, emptyImageSupplier,
                 () -> {
-                    String s = FancyMenu.getOptions().gameIntroAnimation.getValue();
-                    if (s.equals("")) return null;
-                    return s;
+                    if (GameIntroHandler.introIsAnimation()) return emptyImageSupplier;
+                    if (FancyMenu.getOptions().gameIntroAnimation.getValue().trim().isEmpty()) return emptyImageSupplier;
+                    return ResourceSupplier.image(FancyMenu.getOptions().gameIntroAnimation.getValue());
                 },
-                s -> FancyMenu.getOptions().gameIntroAnimation.setValue(s), true, "",
-                valueSetter -> {
-                    String preSelected = FancyMenu.getOptions().gameIntroAnimation.getValue();
-                    Minecraft.getInstance().setScreen(new ChooseAnimationScreen((!preSelected.isEmpty()) ? preSelected : null, (call) -> {
-                        if (call != null) {
-                            valueSetter.accept(call);
-                        }
-                        Minecraft.getInstance().setScreen(screen);
-                        forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("screen_settings", "game_intro", "set_game_intro_animation")));
-                    }));
-                });
+                supplier -> {
+                    FancyMenu.getOptions().gameIntroAnimation.setValue(supplier.getSourceWithPrefix());
+                    forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("screen_settings", "game_intro", "set_game_intro")));
+                },
+                Component.translatable("fancymenu.overlay.menu_bar.customization.settings.game_intro.set"), true, introFileTypeGroup, null, true, true, false);
 
         screenSettingsGameIntroMenu.addSeparatorEntry("separator_after_game_intro_set_animation");
 
@@ -689,13 +610,42 @@ public class CustomizationOverlayUI {
 
         customizationMenu.addSeparatorEntry("separator_after_variables");
 
-        customizationMenu.addValueCycleEntry("debug_overlay", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.debug_overlay", FancyMenu.getOptions().showDebugOverlay.getValue())
+        ContextMenu debugOverlayMenu = new ContextMenu();
+        customizationMenu.addSubMenuEntry("debug_overlay", Component.translatable("fancymenu.overlay.debug"), debugOverlayMenu)
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.debug.toggle.desc")))
+                .setIcon(ContextMenu.IconFactory.getIcon("script"));
+
+        debugOverlayMenu.addValueCycleEntry("toggle_debug_overlay", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.debug.toggle", FancyMenu.getOptions().showDebugOverlay.getValue())
                         .addCycleListener(cycleEnabledDisabled -> {
                             FancyMenu.getOptions().showDebugOverlay.setValue(cycleEnabledDisabled.getAsBoolean());
                         }))
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.debug_overlay.desc")))
-                .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.overlay.menu_bar.customization.debug_overlay.shortcut"))
-                .setIcon(ContextMenu.IconFactory.getIcon("script"));
+                .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.overlay.debug.toggle.shortcut"));
+
+        debugOverlayMenu.addSeparatorEntry("separator_after_toggle_debug_overlay");
+
+        debugOverlayMenu.addValueCycleEntry("toggle_debug_overlay_category_screen_basic", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.debug.basic_screen_category", FancyMenu.getOptions().debugOverlayShowBasicScreenCategory.getValue())
+                .addCycleListener(cycleEnabledDisabled -> {
+                    FancyMenu.getOptions().debugOverlayShowBasicScreenCategory.setValue(cycleEnabledDisabled.getAsBoolean());
+                    CustomizationOverlay.rebuildDebugOverlay();
+                }));
+
+        debugOverlayMenu.addValueCycleEntry("toggle_debug_overlay_category_screen_advanced", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.debug.advanced_screen_category", FancyMenu.getOptions().debugOverlayShowAdvancedScreenCategory.getValue())
+                .addCycleListener(cycleEnabledDisabled -> {
+                    FancyMenu.getOptions().debugOverlayShowAdvancedScreenCategory.setValue(cycleEnabledDisabled.getAsBoolean());
+                    CustomizationOverlay.rebuildDebugOverlay();
+                }));
+
+        debugOverlayMenu.addValueCycleEntry("toggle_debug_overlay_category_resources", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.debug.resources_category", FancyMenu.getOptions().debugOverlayShowResourcesCategory.getValue())
+                .addCycleListener(cycleEnabledDisabled -> {
+                    FancyMenu.getOptions().debugOverlayShowResourcesCategory.setValue(cycleEnabledDisabled.getAsBoolean());
+                    CustomizationOverlay.rebuildDebugOverlay();
+                }));
+
+        debugOverlayMenu.addValueCycleEntry("toggle_debug_overlay_category_system", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.debug.system_category", FancyMenu.getOptions().debugOverlayShowSystemCategory.getValue())
+                .addCycleListener(cycleEnabledDisabled -> {
+                    FancyMenu.getOptions().debugOverlayShowSystemCategory.setValue(cycleEnabledDisabled.getAsBoolean());
+                    CustomizationOverlay.rebuildDebugOverlay();
+                }));
 
         customizationMenu.addClickableEntry("reload_fancymenu", Component.translatable("fancymenu.overlay.menu_bar.customization.reload_fancymenu"), (menu, entry) -> {
             MainThreadTaskExecutor.executeInMainThread(() -> {

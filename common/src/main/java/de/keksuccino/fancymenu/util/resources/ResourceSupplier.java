@@ -32,6 +32,18 @@ public class ResourceSupplier<R extends Resource> {
     protected String lastGetterSource;
     @Nullable
     protected Consumer<R> onUpdateCurrent = null;
+    protected boolean empty = false;
+
+    /**
+     * Returns a dummy-like {@link ResourceSupplier} that will never return a {@link Resource}, it will only return NULL.<br>
+     * Empty {@link ResourceSupplier}s can be identified by calling {@link ResourceSupplier#isEmpty()}.
+     */
+    @NotNull
+    public static <R extends Resource> ResourceSupplier<R> empty(@NotNull Class<R> resourceType, @NotNull FileMediaType mediaType) {
+        ResourceSupplier<R> supplier = new ResourceSupplier<>(resourceType, mediaType, "");
+        supplier.empty = true;
+        return supplier;
+    }
 
     /**
      * Returns a new {@link ResourceSupplier} for an image source.
@@ -87,6 +99,7 @@ public class ResourceSupplier<R extends Resource> {
     @SuppressWarnings("all")
     @Nullable
     public R get() {
+        if (this.empty) return null;
         if ((this.current != null) && this.current.isClosed()) {
             this.current = null;
         }
@@ -150,6 +163,7 @@ public class ResourceSupplier<R extends Resource> {
 
     @NotNull
     public ResourceSourceType getSourceType() {
+        if (this.empty) return ResourceSourceType.LOCAL;
         return ResourceSourceType.getSourceTypeOf(PlaceholderParser.replacePlaceholders(this.source, false));
     }
 
@@ -159,6 +173,7 @@ public class ResourceSupplier<R extends Resource> {
      */
     @NotNull
     public String getSourceWithoutPrefix() {
+        if (this.empty) return "";
         return ResourceSourceType.getWithoutSourcePrefix(this.source);
     }
 
@@ -168,11 +183,13 @@ public class ResourceSupplier<R extends Resource> {
      */
     @NotNull
     public String getSourceWithPrefix() {
+        if (this.empty) return "";
         if (ResourceSourceType.hasSourcePrefix(this.source)) return this.source;
         return this.getSourceType().getSourcePrefix() + this.source;
     }
 
     public void setSource(@NotNull String source) {
+        if (this.empty) return;
         this.source = Objects.requireNonNull(source);
     }
 
@@ -183,6 +200,10 @@ public class ResourceSupplier<R extends Resource> {
     public ResourceSupplier<R> setOnUpdateResourceTask(@Nullable Consumer<R> oldResourceConsumer) {
         this.onUpdateCurrent = oldResourceConsumer;
         return this;
+    }
+
+    public boolean isEmpty() {
+        return this.empty;
     }
 
 }

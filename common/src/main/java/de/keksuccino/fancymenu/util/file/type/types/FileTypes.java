@@ -42,10 +42,13 @@ public class FileTypes {
             "image/png", "png");
     public static final ImageFileType GIF_IMAGE = new ImageFileType(
             FileCodec.advanced(ITexture.class, GifTexture::of, GifTexture::location, GifTexture::local, GifTexture::web),
-            "image/gif", "gif");
+            "image/gif", "gif")
+            .setAnimated(true);
     public static final ImageFileType APNG_IMAGE = new ImageFileType(
             FileCodec.advanced(ITexture.class, ApngTexture::of, ApngTexture::location, ApngTexture::local, ApngTexture::web),
-            "image/apng", "apng").setCustomDisplayName(Component.translatable("fancymenu.file_types.apng"));
+            "image/apng", "apng")
+            .setCustomDisplayName(Component.translatable("fancymenu.file_types.apng"))
+            .setAnimated(true);
 
     public static final AudioFileType OGG_AUDIO = new AudioFileType(
             FileCodec.advanced(IAudio.class, OggAudio::of, OggAudio::location, OggAudio::local, OggAudio::web),
@@ -134,6 +137,19 @@ public class FileTypes {
         List<ImageFileType> types = new ArrayList<>();
         for (FileType<?> type : FileTypeRegistry.getFileTypes()) {
             if (type instanceof ImageFileType i) types.add(i);
+        }
+        return types;
+    }
+
+    /**
+     * Returns all animated {@link ImageFileType}s registered in the {@link FileTypeRegistry}.<br>
+     * Default types listed in {@link FileTypes} are included.
+     */
+    @NotNull
+    public static List<ImageFileType> getAllAnimatedImageFileTypes() {
+        List<ImageFileType> types = new ArrayList<>();
+        for (FileType<?> type : FileTypeRegistry.getFileTypes()) {
+            if ((type instanceof ImageFileType i) && i.isAnimated()) types.add(i);
         }
         return types;
     }

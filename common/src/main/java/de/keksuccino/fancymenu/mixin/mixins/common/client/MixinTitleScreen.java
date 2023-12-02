@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandl
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.LogoRenderer;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -19,13 +20,12 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(TitleScreen.class)
 public abstract class MixinTitleScreen {
-
-    @Shadow public abstract void render(PoseStack $$0, int $$1, int $$2, float $$3);
 
     @Shadow public boolean fading;
     @Unique boolean handleRealmsNotificationFancyMenu = false;
@@ -72,6 +72,14 @@ public abstract class MixinTitleScreen {
                 }
             }
         }
+    }
+
+    /**
+     * @reason This is to make the Title screen not constantly update the alpha of its widgets, so FancyMenu can properly handle it.
+     */
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractWidget;setAlpha(F)V"))
+    private boolean wrapRenderAlphaFancyMenu(AbstractWidget instance, float alpha) {
+        return !ScreenCustomization.isCustomizationEnabledForScreen((Screen)((Object)this));
     }
 
 }

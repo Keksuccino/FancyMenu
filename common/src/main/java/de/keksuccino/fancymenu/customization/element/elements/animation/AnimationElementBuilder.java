@@ -20,6 +20,11 @@ public class AnimationElementBuilder extends ElementBuilder<AnimationElement, An
     }
 
     @Override
+    public boolean isDeprecated() {
+        return true;
+    }
+
+    @Override
     public @NotNull AnimationElement buildDefaultInstance() {
         AnimationElement i = new AnimationElement(this);
         i.baseWidth = 200;

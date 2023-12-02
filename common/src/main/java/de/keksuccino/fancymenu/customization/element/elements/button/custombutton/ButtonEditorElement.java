@@ -5,8 +5,6 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.layout.editor.ChooseAnimationScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
-import de.keksuccino.fancymenu.util.file.FileFilter;
-import de.keksuccino.fancymenu.util.file.ResourceFile;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -73,25 +71,25 @@ public class ButtonEditorElement extends AbstractEditorElement {
                     buttonEditorElement.getElement().backgroundAnimationNormal = null;
                 }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null, true, true, true);
 
-        normalBackMenu.addClickableEntry("normal_background_animation", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation"), (menu, entry) -> {
-            List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof ButtonEditorElement));
-            String preSelectedAnimation = null;
-            List<String> allAnimations = ObjectUtils.getOfAll(String.class, selectedElements, consumes -> ((ButtonElement)consumes.element).backgroundAnimationNormal);
-            if (!allAnimations.isEmpty() && ListUtils.allInListEqual(allAnimations)) {
-                preSelectedAnimation = allAnimations.get(0);
-            }
-            ChooseAnimationScreen s = new ChooseAnimationScreen(preSelectedAnimation, (call) -> {
-                if (call != null) {
-                    this.editor.history.saveSnapshot();
-                    for (AbstractEditorElement e : selectedElements) {
-                        ((ButtonElement)e.element).backgroundAnimationNormal = call;
-                        ((ButtonElement)e.element).backgroundTextureNormal = null;
-                    }
-                }
-                Minecraft.getInstance().setScreen(this.editor);
-            });
-            Minecraft.getInstance().setScreen(s);
-        }).setStackable(true);
+//        normalBackMenu.addClickableEntry("normal_background_animation", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation"), (menu, entry) -> {
+//            List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof ButtonEditorElement));
+//            String preSelectedAnimation = null;
+//            List<String> allAnimations = ObjectUtils.getOfAll(String.class, selectedElements, consumes -> ((ButtonElement)consumes.element).backgroundAnimationNormal);
+//            if (!allAnimations.isEmpty() && ListUtils.allInListEqual(allAnimations)) {
+//                preSelectedAnimation = allAnimations.get(0);
+//            }
+//            ChooseAnimationScreen s = new ChooseAnimationScreen(preSelectedAnimation, (call) -> {
+//                if (call != null) {
+//                    this.editor.history.saveSnapshot();
+//                    for (AbstractEditorElement e : selectedElements) {
+//                        ((ButtonElement)e.element).backgroundAnimationNormal = call;
+//                        ((ButtonElement)e.element).backgroundTextureNormal = null;
+//                    }
+//                }
+//                Minecraft.getInstance().setScreen(this.editor);
+//            });
+//            Minecraft.getInstance().setScreen(s);
+//        }).setStackable(true);
 
         normalBackMenu.addSeparatorEntry("separator_1").setStackable(true);
 
@@ -117,25 +115,25 @@ public class ButtonEditorElement extends AbstractEditorElement {
                     buttonEditorElement.getElement().backgroundAnimationHover = null;
                 }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null, true, true, true);
 
-        hoverBackMenu.addClickableEntry("hover_background_animation", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation"), (menu, entry) -> {
-            List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof ButtonEditorElement));
-            String preSelectedAnimation = null;
-            List<String> allAnimations = ObjectUtils.getOfAll(String.class, selectedElements, consumes -> ((ButtonElement)consumes.element).backgroundAnimationHover);
-            if (!allAnimations.isEmpty() && ListUtils.allInListEqual(allAnimations)) {
-                preSelectedAnimation = allAnimations.get(0);
-            }
-            ChooseAnimationScreen s = new ChooseAnimationScreen(preSelectedAnimation, (call) -> {
-                if (call != null) {
-                    this.editor.history.saveSnapshot();
-                    for (AbstractEditorElement e : selectedElements) {
-                        ((ButtonElement)e.element).backgroundAnimationHover = call;
-                        ((ButtonElement)e.element).backgroundTextureHover = null;
-                    }
-                }
-                Minecraft.getInstance().setScreen(this.editor);
-            });
-            Minecraft.getInstance().setScreen(s);
-        }).setStackable(true);
+//        hoverBackMenu.addClickableEntry("hover_background_animation", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation"), (menu, entry) -> {
+//            List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof ButtonEditorElement));
+//            String preSelectedAnimation = null;
+//            List<String> allAnimations = ObjectUtils.getOfAll(String.class, selectedElements, consumes -> ((ButtonElement)consumes.element).backgroundAnimationHover);
+//            if (!allAnimations.isEmpty() && ListUtils.allInListEqual(allAnimations)) {
+//                preSelectedAnimation = allAnimations.get(0);
+//            }
+//            ChooseAnimationScreen s = new ChooseAnimationScreen(preSelectedAnimation, (call) -> {
+//                if (call != null) {
+//                    this.editor.history.saveSnapshot();
+//                    for (AbstractEditorElement e : selectedElements) {
+//                        ((ButtonElement)e.element).backgroundAnimationHover = call;
+//                        ((ButtonElement)e.element).backgroundTextureHover = null;
+//                    }
+//                }
+//                Minecraft.getInstance().setScreen(this.editor);
+//            });
+//            Minecraft.getInstance().setScreen(s);
+//        }).setStackable(true);
 
         hoverBackMenu.addSeparatorEntry("separator_1").setStackable(true);
 
@@ -161,25 +159,25 @@ public class ButtonEditorElement extends AbstractEditorElement {
                     buttonEditorElement.getElement().backgroundAnimationInactive = null;
                 }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null, true, true, true);
 
-        inactiveBackMenu.addClickableEntry("inactive_background_animation", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation"), (menu, entry) -> {
-            List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof ButtonEditorElement));
-            String preSelectedAnimation = null;
-            List<String> allAnimations = ObjectUtils.getOfAll(String.class, selectedElements, consumes -> ((ButtonElement)consumes.element).backgroundAnimationInactive);
-            if (!allAnimations.isEmpty() && ListUtils.allInListEqual(allAnimations)) {
-                preSelectedAnimation = allAnimations.get(0);
-            }
-            ChooseAnimationScreen s = new ChooseAnimationScreen(preSelectedAnimation, (call) -> {
-                if (call != null) {
-                    this.editor.history.saveSnapshot();
-                    for (AbstractEditorElement e : selectedElements) {
-                        ((ButtonElement)e.element).backgroundAnimationInactive = call;
-                        ((ButtonElement)e.element).backgroundTextureInactive = null;
-                    }
-                }
-                Minecraft.getInstance().setScreen(this.editor);
-            });
-            Minecraft.getInstance().setScreen(s);
-        }).setStackable(true);
+//        inactiveBackMenu.addClickableEntry("inactive_background_animation", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation"), (menu, entry) -> {
+//            List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof ButtonEditorElement));
+//            String preSelectedAnimation = null;
+//            List<String> allAnimations = ObjectUtils.getOfAll(String.class, selectedElements, consumes -> ((ButtonElement)consumes.element).backgroundAnimationInactive);
+//            if (!allAnimations.isEmpty() && ListUtils.allInListEqual(allAnimations)) {
+//                preSelectedAnimation = allAnimations.get(0);
+//            }
+//            ChooseAnimationScreen s = new ChooseAnimationScreen(preSelectedAnimation, (call) -> {
+//                if (call != null) {
+//                    this.editor.history.saveSnapshot();
+//                    for (AbstractEditorElement e : selectedElements) {
+//                        ((ButtonElement)e.element).backgroundAnimationInactive = call;
+//                        ((ButtonElement)e.element).backgroundTextureInactive = null;
+//                    }
+//                }
+//                Minecraft.getInstance().setScreen(this.editor);
+//            });
+//            Minecraft.getInstance().setScreen(s);
+//        }).setStackable(true);
 
         inactiveBackMenu.addSeparatorEntry("separator_after_inactive_back_animation").setStackable(true);
 
@@ -194,18 +192,18 @@ public class ButtonEditorElement extends AbstractEditorElement {
 
         buttonBackgroundMenu.addSeparatorEntry("separator_1").setStackable(true);
 
-        this.addGenericBooleanSwitcherContextMenuEntryTo(buttonBackgroundMenu, "loop_animation",
-                        consumes -> (consumes instanceof ButtonEditorElement),
-                        consumes -> ((ButtonElement)consumes.element).loopBackgroundAnimations,
-                        (element1, s) -> ((ButtonElement)element1.element).loopBackgroundAnimations = s,
-                        "fancymenu.helper.editor.items.buttons.buttonbackground.loopanimation")
+        this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "loop_animated",
+                        ButtonEditorElement.class,
+                        consumes -> consumes.getElement().loopBackgroundAnimations,
+                        (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().loopBackgroundAnimations = aBoolean,
+                        "fancymenu.helper.editor.items.buttons.textures.loop_animated")
                 .setStackable(true);
 
-        this.addGenericBooleanSwitcherContextMenuEntryTo(buttonBackgroundMenu, "restart_animation_on_hover",
-                        consumes -> (consumes instanceof ButtonEditorElement),
-                        consumes -> ((ButtonElement)consumes.element).restartBackgroundAnimationsOnHover,
-                        (element1, s) -> ((ButtonElement)element1.element).restartBackgroundAnimationsOnHover = s,
-                        "fancymenu.helper.editor.items.buttons.buttonbackground.restartonhover")
+        this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "restart_animated_on_hover",
+                        ButtonEditorElement.class,
+                        consumes -> consumes.getElement().restartBackgroundAnimationsOnHover,
+                        (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().restartBackgroundAnimationsOnHover = aBoolean,
+                        "fancymenu.helper.editor.items.buttons.textures.restart_animated_on_hover")
                 .setStackable(true);
 
         this.rightClickMenu.addSeparatorEntry("button_separator_2").setStackable(true);
