@@ -20,6 +20,12 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO Game Intro:
+	// - Fade-out deaktivierbar machen
+	// - Wenn möglich zu nächstem screen faden (wie in loading overlay machen)
+
+	//TODO Feature adden, um resourcen zu pre-loaden (einfach source angeben und FM holt sich richtigen FileType + ResourceHandler)
+
 	//TODO Animations deprecaten! APNG kann als Alternative genutzt werden (und später vllt auch Videos)
 
 	//TODO Simple Video Renderer schreiben

@@ -52,13 +52,13 @@ public class GameIntroScreen extends Screen {
             this.intro.play();
         }
 
+        this.tickFadeOut();
+
         //Close screen after finished playing
-        if (this.endOfIntroReached()) {
+        if (this.endOfIntroReached() && (this.opacity < 0.1F)) {
             this.onClose();
             return;
         }
-
-        this.tickFadeOut();
 
         fill(pose, 0, 0, this.width, this.height, DrawableColor.BLACK.getColorInt());
         RenderingUtils.resetShaderColor();
@@ -69,22 +69,10 @@ public class GameIntroScreen extends Screen {
 
     }
 
-    //TODO APNG game intro fixen (scheint NULL zu sein, deshalb startet es nicht?? vllt wegen resource reload??)
-    //TODO APNG game intro fixen (scheint NULL zu sein, deshalb startet es nicht?? vllt wegen resource reload??)
-    //TODO APNG game intro fixen (scheint NULL zu sein, deshalb startet es nicht?? vllt wegen resource reload??)
-    //TODO APNG game intro fixen (scheint NULL zu sein, deshalb startet es nicht?? vllt wegen resource reload??)
-    //TODO APNG game intro fixen (scheint NULL zu sein, deshalb startet es nicht?? vllt wegen resource reload??)
-    //TODO APNG game intro fixen (scheint NULL zu sein, deshalb startet es nicht?? vllt wegen resource reload??)
-
-    //TODO fix fade-out
     protected void tickFadeOut() {
-//        int fps = this.animationRenderer.getFPS();
-//        int framesLeft = this.animationRenderer.animationFrames() - this.animationRenderer.currentFrame();
-//        int secondsLeft = (framesLeft > 0) ? Math.max(0, framesLeft / fps) : 0;
-//        if (secondsLeft <= 1) {
-//            this.opacity -= 1.0F / (fps * 4F);
-//            if (this.opacity < 0F) this.opacity = 0F;
-//        }
+        if (this.endOfIntroReached()) {
+            this.opacity -= 0.03F;
+        }
     }
 
     protected void renderAnimation(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {

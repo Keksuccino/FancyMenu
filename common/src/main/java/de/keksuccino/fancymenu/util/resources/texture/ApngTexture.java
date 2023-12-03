@@ -23,6 +23,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public class ApngTexture implements ITexture, PlayableResource {
 
@@ -39,6 +40,7 @@ public class ApngTexture implements ITexture, PlayableResource {
     protected volatile long lastResourceLocationCall = -1;
     protected volatile boolean tickerThreadRunning = false;
     protected volatile boolean decoded = false;
+    protected volatile boolean allFramesDecoded = false;
     protected volatile int cycles = 0;
     /** How many times the APNG should loop. Value <= 0 means infinite loops. **/
     protected volatile int numPlays = 0;
@@ -173,48 +175,34 @@ public class ApngTexture implements ITexture, PlayableResource {
 
     protected static void populateTexture(@NotNull ApngTexture apngTexture, @NotNull InputStream in, @NotNull String apngTextureName) {
         if (!apngTexture.closed) {
-            //Decode first frame and set it as temporary frame list to show APNG quicker
-            DecodedApngImage imageAndFirstFrame = readApng(in, apngTextureName, true);
-            if (imageAndFirstFrame == null) {
+            DecodedApngImage decodedImage = decodeApng(in, apngTextureName);
+            if (decodedImage == null) {
                 LOGGER.error("[FANCYMENU] Failed to read APNG image, because DecodedApngImage was NULL: " + apngTextureName);
                 apngTexture.decoded = true;
                 return;
             }
-            apngTexture.width = imageAndFirstFrame.imageWidth;
-            apngTexture.height = imageAndFirstFrame.imageHeight;
-            apngTexture.aspectRatio = new AspectRatio(imageAndFirstFrame.imageWidth, imageAndFirstFrame.imageHeight);
-            if (!imageAndFirstFrame.frames().isEmpty()) {
-                ApngFrame first = imageAndFirstFrame.frames().get(0);
-                try {
-                    first.nativeImage = NativeImage.read(first.frameInputStream);
-                } catch (Exception ex) {
-                    LOGGER.error("[FANCYMENU] Failed to read preview frame of APNG image into NativeImage: " + apngTextureName, ex);
-                }
-                CloseableUtils.closeQuietly(first.closeAfterLoading);
-                CloseableUtils.closeQuietly(first.frameInputStream);
-                apngTexture.frames = imageAndFirstFrame.frames();
-                apngTexture.decoded = true;
-            }
-            //Decode the full APNG and set its frames to the ApngTexture
-            DecodedApngImage allFrames = null;
+            apngTexture.width = decodedImage.imageWidth;
+            apngTexture.height = decodedImage.imageHeight;
+            apngTexture.aspectRatio = new AspectRatio(decodedImage.imageWidth, decodedImage.imageHeight);
+            apngTexture.numPlays = decodedImage.numPlays;
+            apngTexture.decoded = true;
             try {
-                allFrames = readApng(imageAndFirstFrame.sequence(), apngTextureName, false);
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to read APNG image: " + apngTextureName, ex);
-            }
-            if (allFrames != null) {
-                for (ApngFrame frame : allFrames.frames()) {
-                    try {
-                        frame.nativeImage = NativeImage.read(frame.frameInputStream);
-                    } catch (Exception ex) {
-                        LOGGER.error("[FANCYMENU] Failed to read frame of APNG image into NativeImage: " + apngTextureName, ex);
+                deliverApngFrames(decodedImage.sequence(), apngTextureName, true, frame -> {
+                    if (frame != null) {
+                        try {
+                            frame.nativeImage = NativeImage.read(frame.frameInputStream);
+                        } catch (Exception ex) {
+                            LOGGER.error("[FANCYMENU] Failed to read frame of APNG image into NativeImage: " + apngTextureName, ex);
+                        }
+                        CloseableUtils.closeQuietly(frame.closeAfterLoading);
+                        CloseableUtils.closeQuietly(frame.frameInputStream);
+                        apngTexture.frames.add(frame);
                     }
-                    CloseableUtils.closeQuietly(frame.closeAfterLoading);
-                    CloseableUtils.closeQuietly(frame.frameInputStream);
-                }
-                apngTexture.frames = allFrames.frames();
+                });
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to read frames of APNG image: " + apngTextureName, ex);
             }
-            apngTexture.numPlays = imageAndFirstFrame.numPlays;
+            apngTexture.allFramesDecoded = true;
         }
         apngTexture.decoded = true;
         CloseableUtils.closeQuietly(in);
@@ -256,8 +244,8 @@ public class ApngTexture implements ITexture, PlayableResource {
                                     newCurrent = cachedFrames.get(cachedCurrent.index + 1);
                                 } else {
                                     //Count cycles up if APNG should not loop infinitely
-                                    if (this.numPlays > 0) this.cycles++;
-                                    if (!this.maxLoopsReached()) newCurrent = cachedFrames.get(0);
+                                    if ((this.numPlays > 0) && this.allFramesDecoded) this.cycles++;
+                                    if (!this.maxLoopsReached() && this.allFramesDecoded) newCurrent = cachedFrames.get(0);
                                 }
                                 if (newCurrent != null) this.current = newCurrent;
                                 Thread.sleep(Math.max(20, (newCurrent != null) ? newCurrent.delayMs : 100));
@@ -402,35 +390,45 @@ public class ApngTexture implements ITexture, PlayableResource {
     }
 
     @Nullable
-    public static DecodedApngImage readApng(@NotNull InputStream in, @NotNull String apngName, boolean onlyFirst) {
+    public static DecodedApngImage decodeApng(@NotNull InputStream in, @NotNull String apngName) {
         try {
-            return readApng(Png.readArgb8888BitmapSequence(in), apngName, onlyFirst);
+            return decodeApng(Png.readArgb8888BitmapSequence(in));
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.error("[FANCYMENU] Failed to decode APNG image: " + apngName, ex);
         }
         return null;
     }
 
     @NotNull
-    public static ApngTexture.DecodedApngImage readApng(@NotNull Argb8888BitmapSequence sequence, @NotNull String apngName, boolean onlyFirst) {
-        List<ApngFrame> frames = new ArrayList<>();
+    public static ApngTexture.DecodedApngImage decodeApng(@NotNull Argb8888BitmapSequence sequence) {
         int numPlays = -1;
         try {
-            numPlays = sequence.getAnimationControl().loopForever() ? -1 : sequence.getAnimationControl().numPlays;
             if (sequence.isAnimated()) {
-                if (sequence.hasDefaultImage() && onlyFirst) {
+                numPlays = sequence.getAnimationControl().loopForever() ? -1 : sequence.getAnimationControl().numPlays;
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return new DecodedApngImage(sequence, sequence.header.width, sequence.header.height, numPlays);
+    }
+
+    public static void deliverApngFrames(@NotNull Argb8888BitmapSequence sequence, @NotNull String apngName, boolean includeFirstFrame, @NotNull Consumer<ApngFrame> frameDelivery) {
+        try {
+            if (sequence.isAnimated()) {
+                boolean defaultDelivered = false;
+                if (sequence.hasDefaultImage() && includeFirstFrame) {
                     try {
                         BufferedImage frameImage = getBufferedImageFromBitmap(sequence.defaultImage, sequence.header.width, sequence.header.height, 0, 0);
                         ByteArrayOutputStream frameOut = new ByteArrayOutputStream();
                         ImageIO.write(frameImage, "PNG", frameOut);
                         ByteArrayInputStream frameIn = new ByteArrayInputStream(frameOut.toByteArray());
-                        frames.add(new ApngFrame(0, frameIn, 0, frameOut));
-                        return new DecodedApngImage(sequence, frames, sequence.header.width, sequence.header.height, numPlays);
+                        frameDelivery.accept(new ApngFrame(0, frameIn, 0, frameOut));
+                        defaultDelivered = true;
                     } catch (Exception ex) {
                         LOGGER.error("[FANCYMENU] Failed to decode default frame of APNG image: " + apngName, ex);
                     }
                 }
-                int index = frames.isEmpty() ? 0 : 1;
+                int index = !defaultDelivered ? 0 : 1;
                 int frameCount = 0;
                 for (Argb8888BitmapSequence.Frame frame : sequence.getAnimationFrames()) {
                     try {
@@ -438,9 +436,9 @@ public class ApngTexture implements ITexture, PlayableResource {
                         ByteArrayOutputStream frameOut = new ByteArrayOutputStream();
                         ImageIO.write(frameImage, "PNG", frameOut);
                         ByteArrayInputStream frameIn = new ByteArrayInputStream(frameOut.toByteArray());
-                        frames.add(new ApngFrame(index, frameIn, frame.control.getDelayMilliseconds(), frameOut));
+                        boolean skip = !includeFirstFrame && (index == 0);
+                        if (!skip) frameDelivery.accept(new ApngFrame(index, frameIn, frame.control.getDelayMilliseconds(), frameOut));
                         index++;
-                        if (onlyFirst) return new DecodedApngImage(sequence, frames, sequence.header.width, sequence.header.height, numPlays);
                     } catch (Exception ex) {
                         LOGGER.error("[FANCYMENU] Failed to decode frame " + frameCount + " of APNG image: " + apngName, ex);
                     }
@@ -448,9 +446,9 @@ public class ApngTexture implements ITexture, PlayableResource {
                 }
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.error("[FANCYMENU] Failed to decode APNG image: " + apngName, ex);
         }
-        return new DecodedApngImage(sequence, frames, sequence.header.width, sequence.header.height, numPlays);
+        frameDelivery.accept(null);
     }
 
     @NotNull
@@ -465,7 +463,7 @@ public class ApngTexture implements ITexture, PlayableResource {
         return frameImage;
     }
 
-    protected static class ApngFrame {
+    public static class ApngFrame {
 
         protected final int index;
         protected final ByteArrayInputStream frameInputStream;
@@ -485,7 +483,7 @@ public class ApngTexture implements ITexture, PlayableResource {
 
     }
 
-    protected record DecodedApngImage(@NotNull Argb8888BitmapSequence sequence, @NotNull List<ApngFrame> frames, int imageWidth, int imageHeight, int numPlays) {
+    public record DecodedApngImage(@NotNull Argb8888BitmapSequence sequence, int imageWidth, int imageHeight, int numPlays) {
     }
 
 }

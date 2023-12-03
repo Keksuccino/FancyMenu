@@ -15,6 +15,10 @@ CHANGELOG | FANCYMENU v3.0.0 CLOSED BETA 1 / RELEASE CANDIDATE 1
 --> The overlay is now categorized and categories can be toggled on/off
 --> Formatted some text parts to make them more visible / easier to notice
  
+- GIFs and APNGs now start playing INSTANTLY without showing its first frame until they are fully loaded
+--> Web sources still show nothing for a short time, because they need to download the image first
+--> Since they start playing while still loading, the first loop could stutter a bit (low framerate), because the image can't load its frames fast enough
+ 
 - Added: Placeholder "Max Number" that returns the greater of two numbers
 - Added: Placeholder "Min Number" that returns the smaller of two numbers
 - Added: Placeholder "Absolute Number" to get the absolute (positive) value of a number
