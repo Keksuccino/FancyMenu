@@ -3,13 +3,17 @@ package de.keksuccino.fancymenu.customization.gameintro;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.events.screen.*;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resources.PlayableResource;
 import de.keksuccino.fancymenu.util.resources.RenderableResource;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
@@ -19,21 +23,85 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 
-@SuppressWarnings("all")
-public class GameIntroScreen extends Screen {
+public class GameIntroOverlay extends Overlay {
+
+    //TODO fadeTo wird von Minecraft#resize() initialisiert, wenn screen resized wird
+    // - Eventuell richtiges InitEvent nicht firen, wenn overlay == GameIntroOverlay ?????
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    protected Font font = Minecraft.getInstance().font;
+    @NotNull
     protected Screen fadeTo;
     protected PlayableResource intro;
     protected float opacity = 1.0F;
     protected long start = -1;
+    protected boolean fadeToInitialized = false;
+    protected int width;
+    protected int height;
+    protected int lastWidth;
+    protected int lastHeight;
 
-    public GameIntroScreen(@NotNull Screen fadeTo, @NotNull PlayableResource intro) {
-        super(Component.empty());
+    public GameIntroOverlay(@NotNull Screen fadeTo, @NotNull PlayableResource intro) {
+        super();
         this.fadeTo = Objects.requireNonNull(fadeTo);
         this.intro = Objects.requireNonNull(intro);
         this.intro.waitForReady(5000);
+    }
+
+    protected void resize() {
+        if (this.endOfIntroReached()) {
+            LOGGER.info("############# RESIZE");
+            this.initNextScreen();
+        }
+    }
+
+    @Override
+    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+
+        if ((this.lastWidth != this.width) || (this.lastHeight != this.height)) {
+            this.resize();
+        }
+
+        this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
+        this.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+        this.lastWidth = this.width;
+        this.lastHeight = this.height;
+
+        //----------------------
+
+        if (this.start == -1) {
+            this.start = System.currentTimeMillis();
+            this.intro.stop();
+            this.intro.play();
+        }
+
+        if (this.endOfIntroReached() && !this.fadeToInitialized) {
+            this.initNextScreen();
+        }
+
+        this.tickFadeOut();
+
+        //Close screen after finished playing
+        if (this.endOfIntroReached() && (this.opacity < 0.1F)) {
+            this.close();
+            return;
+        }
+
+        if (this.endOfIntroReached()) {
+            EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(this.fadeTo, pose, mouseX, mouseY, partial));
+            this.fadeTo.render(pose, mouseX, mouseY, partial);
+            EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(this.fadeTo, pose, mouseX, mouseY, partial));
+        } else {
+            fill(pose, 0, 0, this.width, this.height, DrawableColor.BLACK.getColorInt());
+        }
+
+        RenderingUtils.resetShaderColor();
+
+        this.renderAnimation(pose, mouseX, mouseY, partial);
+
+        this.renderSkipText(pose, mouseX, mouseY, partial);
+
     }
 
     protected boolean endOfIntroReached() {
@@ -43,35 +111,29 @@ public class GameIntroScreen extends Screen {
         return ((this.start + 2000) < now) && !this.intro.isPlaying();
     }
 
-    @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    protected void initNextScreen() {
 
-        if (this.start == -1) {
-            this.start = System.currentTimeMillis();
-            this.intro.stop();
-            this.intro.play();
-        }
+        LOGGER.info("############################# init", new Throwable());
 
-        this.tickFadeOut();
+        boolean firstInit = !this.fadeToInitialized;
 
-        //Close screen after finished playing
-        if (this.endOfIntroReached() && (this.opacity < 0.1F)) {
-            this.onClose();
-            return;
-        }
+        if (firstInit) EventHandler.INSTANCE.postEvent(new OpenScreenEvent(this.fadeTo));
+        EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(this.fadeTo, firstInit ? InitOrResizeScreenEvent.InitializationPhase.INIT : InitOrResizeScreenEvent.InitializationPhase.RESIZE));
+        EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(this.fadeTo, firstInit ? InitOrResizeScreenEvent.InitializationPhase.INIT : InitOrResizeScreenEvent.InitializationPhase.RESIZE));
 
-        fill(pose, 0, 0, this.width, this.height, DrawableColor.BLACK.getColorInt());
-        RenderingUtils.resetShaderColor();
+        this.fadeTo.init(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
 
-        this.renderAnimation(pose, mouseX, mouseY, partial);
+        EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(this.fadeTo, firstInit ? InitOrResizeScreenEvent.InitializationPhase.INIT : InitOrResizeScreenEvent.InitializationPhase.RESIZE));
+        EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(this.fadeTo, firstInit ? InitOrResizeScreenEvent.InitializationPhase.INIT : InitOrResizeScreenEvent.InitializationPhase.RESIZE));
+        if (firstInit) EventHandler.INSTANCE.postEvent(new OpenScreenPostInitEvent(this.fadeTo));
 
-        this.renderSkipText(pose, mouseX, mouseY, partial);
+        this.fadeToInitialized = true;
 
     }
 
     protected void tickFadeOut() {
         if (this.endOfIntroReached()) {
-            this.opacity -= 0.03F;
+            this.opacity -= 0.02F;
         }
     }
 
@@ -87,7 +149,6 @@ public class GameIntroScreen extends Screen {
             int y = (this.height / 2) - (aspectHeight / 2);
 
             ResourceLocation location = r.getResourceLocation();
-
             if (location != null) {
                 RenderSystem.enableBlend();
                 RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
@@ -123,34 +184,23 @@ public class GameIntroScreen extends Screen {
         }
     }
 
-    @Override
-    public void onClose() {
-        Minecraft.getInstance().setScreen(this.fadeTo);
-    }
-
-    @Override
-    public boolean shouldCloseOnEsc() {
-        return FancyMenu.getOptions().allowGameIntroSkip.getValue();
-    }
-
-    @Override
-    public boolean keyPressed(int keycode, int scancode, int modifiers) {
+    public void keyPressed(int keycode, int scancode, int modifiers) {
         //Handle "Press Any Key to Skip" if enabled
         if (FancyMenu.getOptions().allowGameIntroSkip.getValue()) {
-            this.onClose();
-            return true;
+            this.close();
         }
-        return super.keyPressed(keycode, scancode, modifiers);
     }
 
-    @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public void mouseClicked(int button) {
         //Handle "Press Any Key to Skip" if enabled
         if (FancyMenu.getOptions().allowGameIntroSkip.getValue()) {
-            this.onClose();
-            return true;
+            this.close();
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    protected void close() {
+        if (!this.fadeToInitialized) this.initNextScreen();
+        Minecraft.getInstance().setOverlay(null);
     }
 
 }

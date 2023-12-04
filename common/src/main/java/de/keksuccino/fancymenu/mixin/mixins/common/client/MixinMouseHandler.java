@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import de.keksuccino.fancymenu.customization.gameintro.GameIntroOverlay;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.ScreenMouseScrollEvent;
 import net.minecraft.client.Minecraft;
@@ -45,6 +46,14 @@ public class MixinMouseHandler {
         double mY = this.ypos * (double)this.mc.getWindow().getGuiScaledHeight() / (double)this.mc.getWindow().getScreenHeight();
         ScreenMouseScrollEvent.Post e = new ScreenMouseScrollEvent.Post(mc.screen, mX, mY, scrollDelta);
         EventHandler.INSTANCE.postEvent(e);
+    }
+
+    @Inject(method = "onPress", at = @At(value = "HEAD"))
+    private void headOnPressFancyMenu(long window, int button, int $$2, int $$3, CallbackInfo info) {
+        if (window == Minecraft.getInstance().getWindow().getWindow()) {
+            boolean clicked = $$2 == 1;
+            if (clicked && (Minecraft.getInstance().getOverlay() instanceof GameIntroOverlay o)) o.mouseClicked(button);
+        }
     }
 
 }

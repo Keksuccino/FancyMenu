@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.gameintro.GameIntroHandler;
-import de.keksuccino.fancymenu.customization.gameintro.GameIntroScreen;
+import de.keksuccino.fancymenu.customization.gameintro.GameIntroOverlay;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
@@ -61,14 +61,23 @@ public abstract class MixinLoadingOverlay {
 
 		boolean isPlayingIntro = false;
 
+//		if (!GameIntroHandler.introPlayed && GameIntroHandler.shouldPlayIntro()) {
+//			PlayableResource intro = GameIntroHandler.getIntro();
+//			if (intro != null) {
+//				isPlayingIntro = true;
+//				Minecraft.getInstance().setScreen(new GameIntroScreen((Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen : new TitleScreen(), intro));
+//			}
+//		}
+//		GameIntroHandler.introPlayed = true;
+
 		if (!GameIntroHandler.introPlayed && GameIntroHandler.shouldPlayIntro()) {
+			GameIntroHandler.introPlayed = true;
 			PlayableResource intro = GameIntroHandler.getIntro();
 			if (intro != null) {
 				isPlayingIntro = true;
-				Minecraft.getInstance().setScreen(new GameIntroScreen((Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen : new TitleScreen(), intro));
+				Minecraft.getInstance().setOverlay(new GameIntroOverlay((Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen : new TitleScreen(), intro));
 			}
 		}
-		GameIntroHandler.introPlayed = true;
 
 		//Fire Pre Screen Init events, because they normally don't get fired in the loading overlay
 		if (!isPlayingIntro) {
