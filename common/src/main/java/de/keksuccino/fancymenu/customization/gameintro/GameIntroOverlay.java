@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.gameintro;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.events.screen.*;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
@@ -25,8 +26,10 @@ import java.util.Objects;
 
 public class GameIntroOverlay extends Overlay {
 
-    //TODO fadeTo wird von Minecraft#resize() initialisiert, wenn screen resized wird
-    // - Eventuell richtiges InitEvent nicht firen, wenn overlay == GameIntroOverlay ?????
+    //TODO Fade-out deaktivierbar machen !!
+    //TODO Fade-out deaktivierbar machen !!
+    //TODO Fade-out deaktivierbar machen !!
+    //TODO Fade-out deaktivierbar machen !!
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -39,8 +42,6 @@ public class GameIntroOverlay extends Overlay {
     protected boolean fadeToInitialized = false;
     protected int width;
     protected int height;
-    protected int lastWidth;
-    protected int lastHeight;
 
     public GameIntroOverlay(@NotNull Screen fadeTo, @NotNull PlayableResource intro) {
         super();
@@ -49,24 +50,11 @@ public class GameIntroOverlay extends Overlay {
         this.intro.waitForReady(5000);
     }
 
-    protected void resize() {
-        if (this.endOfIntroReached()) {
-            LOGGER.info("############# RESIZE");
-            this.initNextScreen();
-        }
-    }
-
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
-        if ((this.lastWidth != this.width) || (this.lastHeight != this.height)) {
-            this.resize();
-        }
-
         this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
         this.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
-        this.lastWidth = this.width;
-        this.lastHeight = this.height;
 
         //----------------------
 
@@ -77,7 +65,7 @@ public class GameIntroOverlay extends Overlay {
         }
 
         if (this.endOfIntroReached() && !this.fadeToInitialized) {
-            this.initNextScreen();
+            this.initFadeToScreen();
         }
 
         this.tickFadeOut();
@@ -98,46 +86,13 @@ public class GameIntroOverlay extends Overlay {
 
         RenderingUtils.resetShaderColor();
 
-        this.renderAnimation(pose, mouseX, mouseY, partial);
+        this.renderIntro(pose, mouseX, mouseY, partial);
 
         this.renderSkipText(pose, mouseX, mouseY, partial);
 
     }
 
-    protected boolean endOfIntroReached() {
-        if (this.start == -1) return false;
-        long now = System.currentTimeMillis();
-        //If not playing (anymore) 2 seconds after starting to play it, consider the playable resource finished
-        return ((this.start + 2000) < now) && !this.intro.isPlaying();
-    }
-
-    protected void initNextScreen() {
-
-        LOGGER.info("############################# init", new Throwable());
-
-        boolean firstInit = !this.fadeToInitialized;
-
-        if (firstInit) EventHandler.INSTANCE.postEvent(new OpenScreenEvent(this.fadeTo));
-        EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(this.fadeTo, firstInit ? InitOrResizeScreenEvent.InitializationPhase.INIT : InitOrResizeScreenEvent.InitializationPhase.RESIZE));
-        EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(this.fadeTo, firstInit ? InitOrResizeScreenEvent.InitializationPhase.INIT : InitOrResizeScreenEvent.InitializationPhase.RESIZE));
-
-        this.fadeTo.init(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
-
-        EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(this.fadeTo, firstInit ? InitOrResizeScreenEvent.InitializationPhase.INIT : InitOrResizeScreenEvent.InitializationPhase.RESIZE));
-        EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(this.fadeTo, firstInit ? InitOrResizeScreenEvent.InitializationPhase.INIT : InitOrResizeScreenEvent.InitializationPhase.RESIZE));
-        if (firstInit) EventHandler.INSTANCE.postEvent(new OpenScreenPostInitEvent(this.fadeTo));
-
-        this.fadeToInitialized = true;
-
-    }
-
-    protected void tickFadeOut() {
-        if (this.endOfIntroReached()) {
-            this.opacity -= 0.02F;
-        }
-    }
-
-    protected void renderAnimation(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    protected void renderIntro(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
         if (this.intro instanceof RenderableResource r) {
 
@@ -184,6 +139,42 @@ public class GameIntroOverlay extends Overlay {
         }
     }
 
+    protected boolean endOfIntroReached() {
+        if (this.start == -1) return false;
+        long now = System.currentTimeMillis();
+        //If not playing (anymore) 2 seconds after starting to play it, consider the playable resource finished
+        return ((this.start + 2000) < now) && !this.intro.isPlaying();
+    }
+
+    protected void tickFadeOut() {
+        if (this.endOfIntroReached()) {
+            this.opacity -= 0.02F;
+        }
+    }
+
+    protected void initFadeToScreen() {
+
+        ScreenCustomization.setIsNewMenu(true);
+
+        EventHandler.INSTANCE.postEvent(new OpenScreenEvent(this.fadeTo));
+        EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(this.fadeTo, InitOrResizeScreenEvent.InitializationPhase.INIT));
+        EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(this.fadeTo, InitOrResizeScreenEvent.InitializationPhase.INIT));
+
+        this.fadeTo.init(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
+
+        EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(this.fadeTo, InitOrResizeScreenEvent.InitializationPhase.INIT));
+        EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(this.fadeTo, InitOrResizeScreenEvent.InitializationPhase.INIT));
+        EventHandler.INSTANCE.postEvent(new OpenScreenPostInitEvent(this.fadeTo));
+
+        this.fadeToInitialized = true;
+
+    }
+
+    protected void close() {
+        if (!this.fadeToInitialized) this.initFadeToScreen();
+        Minecraft.getInstance().setOverlay(null);
+    }
+
     public void keyPressed(int keycode, int scancode, int modifiers) {
         //Handle "Press Any Key to Skip" if enabled
         if (FancyMenu.getOptions().allowGameIntroSkip.getValue()) {
@@ -196,11 +187,6 @@ public class GameIntroOverlay extends Overlay {
         if (FancyMenu.getOptions().allowGameIntroSkip.getValue()) {
             this.close();
         }
-    }
-
-    protected void close() {
-        if (!this.fadeToInitialized) this.initNextScreen();
-        Minecraft.getInstance().setOverlay(null);
     }
 
 }
