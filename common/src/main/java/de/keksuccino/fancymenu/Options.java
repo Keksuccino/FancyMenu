@@ -15,9 +15,11 @@ public class Options extends AbstractOptions {
     public final Option<Boolean> showCustomizationOverlay = new Option<>(config, "show_customization_overlay", true, "customization");
 
     public final Option<String> gameIntroAnimation = new Option<>(config, "game_intro_animation_name", "", "loading");
-    public final Option<Boolean> allowGameIntroSkip = new Option<>(config, "allow_game_intro_skip", true, "loading");
-    public final Option<String> customGameIntroSkipText = new Option<>(config, "custom_game_intro_skip_text", "", "loading");
+    public final Option<Boolean> gameIntroAllowSkip = new Option<>(config, "allow_game_intro_skip", true, "loading");
+    public final Option<Boolean> gameIntroFadeOut = new Option<>(config, "game_intro_fade_out", true, "loading");
+    public final Option<String> gameIntroCustomSkipText = new Option<>(config, "custom_game_intro_skip_text", "", "loading");
     public final Option<Boolean> preLoadAnimations = new Option<>(config, "preload_animations", true, "loading");
+    public final Option<String> preLoadResources = new Option<>(config, "preload_resources", "", "loading");
 
     public final Option<Boolean> showCustomWindowIcon = new Option<>(config, "show_custom_window_icon", false, "window");
     public final Option<String> customWindowIcon16 = new Option<>(config, "custom_window_icon_16", "", "window");

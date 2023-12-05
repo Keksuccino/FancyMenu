@@ -10,7 +10,6 @@ import de.keksuccino.fancymenu.customization.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.ManageLayoutsScreen;
-import de.keksuccino.fancymenu.customization.layout.editor.ChooseAnimationScreen;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screen.dummyscreen.DummyScreenBuilder;
 import de.keksuccino.fancymenu.customization.screen.dummyscreen.DummyScreenRegistry;
@@ -333,25 +332,6 @@ public class CustomizationOverlayUI {
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.game_intro.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("video"));
 
-//        NonStackableOverlayUI.addGenericInputContextMenuEntryTo(screenSettingsGameIntroMenu, "set_game_intro_animation",
-//                Component.translatable("fancymenu.overlay.menu_bar.customization.settings.game_intro.set_intro_animation"),
-//                () -> {
-//                    String s = FancyMenu.getOptions().gameIntroAnimation.getValue();
-//                    if (s.equals("")) return null;
-//                    return s;
-//                },
-//                s -> FancyMenu.getOptions().gameIntroAnimation.setValue(s), true, "",
-//                valueSetter -> {
-//                    String preSelected = FancyMenu.getOptions().gameIntroAnimation.getValue();
-//                    Minecraft.getInstance().setScreen(new ChooseAnimationScreen((!preSelected.isEmpty()) ? preSelected : null, (call) -> {
-//                        if (call != null) {
-//                            valueSetter.accept(call);
-//                        }
-//                        Minecraft.getInstance().setScreen(screen);
-//                        forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("screen_settings", "game_intro", "set_game_intro_animation")));
-//                    }));
-//                });
-
         ResourceSupplier<ITexture> emptyImageSupplier = ResourceSupplier.empty(ITexture.class, FileMediaType.IMAGE);
         FileTypeGroup<ImageFileType> introFileTypeGroup = FileTypeGroup.of(FileTypes.APNG_IMAGE);
 
@@ -371,19 +351,24 @@ public class CustomizationOverlayUI {
 
         screenSettingsGameIntroMenu.addSeparatorEntry("separator_after_game_intro_set_animation");
 
-        screenSettingsGameIntroMenu.addValueCycleEntry("game_intro_allow_skip", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.game_intro.allow_skip", FancyMenu.getOptions().allowGameIntroSkip.getValue())
+        screenSettingsGameIntroMenu.addValueCycleEntry("game_intro_allow_skip", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.game_intro.allow_skip", FancyMenu.getOptions().gameIntroAllowSkip.getValue())
                 .addCycleListener(cycle -> {
-                    FancyMenu.getOptions().allowGameIntroSkip.setValue(cycle.getAsBoolean());
+                    FancyMenu.getOptions().gameIntroAllowSkip.setValue(cycle.getAsBoolean());
+                }));
+
+        screenSettingsGameIntroMenu.addValueCycleEntry("game_intro_fade_out", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.game_intro.fade_out", FancyMenu.getOptions().gameIntroFadeOut.getValue())
+                .addCycleListener(cycle -> {
+                    FancyMenu.getOptions().gameIntroFadeOut.setValue(cycle.getAsBoolean());
                 }));
 
         NonStackableOverlayUI.addInputContextMenuEntryTo(screenSettingsGameIntroMenu, "game_intro_set_custom_skip_text",
                         Component.translatable("fancymenu.overlay.menu_bar.customization.settings.game_intro.set_custom_skip_text"),
                         () -> {
-                            String s = FancyMenu.getOptions().customGameIntroSkipText.getValue();
+                            String s = FancyMenu.getOptions().gameIntroCustomSkipText.getValue();
                             if (s.equals("")) return null;
                             return s;
                         },
-                        s -> FancyMenu.getOptions().customGameIntroSkipText.setValue((s != null) ? s : ""),
+                        s -> FancyMenu.getOptions().gameIntroCustomSkipText.setValue((s != null) ? s : ""),
                         true, null, null, false, false, null, null, (screen1, s) -> {
                             Minecraft.getInstance().setScreen(screen1);
                             forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("screen_settings", "game_intro", "game_intro_set_custom_skip_text")));

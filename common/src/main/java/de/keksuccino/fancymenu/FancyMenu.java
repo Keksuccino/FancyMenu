@@ -22,10 +22,6 @@ public class FancyMenu {
 
 	//TODO Feature adden, um resourcen zu pre-loaden (einfach source angeben und FM holt sich richtigen FileType + ResourceHandler)
 
-	//TODO FIXEN: Fade-out von appearance delay kann aktiviert werden, wenn appearance delay off
-
-	//TODO Animations deprecaten! APNG kann als Alternative genutzt werden (und später vllt auch Videos)
-
 	//TODO Simple Video Renderer schreiben
 	// - Nach "Video Frame InputStream" googlen (audio evtl. separat getten?)
 	// - Evtl. mit Java-eigenen libs arbeiten

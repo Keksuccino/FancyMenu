@@ -1,10 +1,8 @@
 package de.keksuccino.fancymenu.util.resources;
 
 import de.keksuccino.fancymenu.util.ListUtils;
-import de.keksuccino.fancymenu.util.file.type.types.AudioFileType;
-import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
-import de.keksuccino.fancymenu.util.file.type.types.TextFileType;
-import de.keksuccino.fancymenu.util.file.type.types.VideoFileType;
+import de.keksuccino.fancymenu.util.file.type.FileType;
+import de.keksuccino.fancymenu.util.file.type.types.*;
 import de.keksuccino.fancymenu.util.resources.audio.AudioResourceHandler;
 import de.keksuccino.fancymenu.util.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resources.text.IText;
@@ -16,6 +14,8 @@ import de.keksuccino.fancymenu.util.resources.video.VideoResourceHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -72,6 +72,16 @@ public class ResourceHandlers {
     @NotNull
     public static List<ResourceHandler<?,?>> getHandlers() {
         return ListUtils.of(imageHandler, audioHandler, videoHandler, textHandler);
+    }
+
+    @Nullable
+    public static ResourceHandler<?,?> findHandlerForSource(@NotNull ResourceSource source, boolean doAdvancedWebChecks) {
+        FileType<?> type = FileTypes.getType(source, doAdvancedWebChecks);
+        if (type instanceof ImageFileType) return getImageHandler();
+        if (type instanceof AudioFileType) return getAudioHandler();
+        if (type instanceof VideoFileType) return getVideoHandler();
+        if (type instanceof TextFileType) return getTextHandler();
+        return null;
     }
 
     public static void reloadAll() {

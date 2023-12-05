@@ -456,12 +456,23 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							})
 					.setStackable(true);
 
+			Supplier<Boolean> appearanceDelayIsActive = () -> {
+				List<AbstractEditorElement> selected = this.editor.getSelectedElements();
+				selected.removeIf(e -> !e.settings.isDelayable());
+				if (selected.size() > 1) return true;
+				for (AbstractEditorElement e : selected) {
+					if (e.element.appearanceDelay == AbstractElement.AppearanceDelay.NO_DELAY) return false;
+				}
+				return true;
+			};
+
 			this.addGenericFloatInputContextMenuEntryTo(appearanceDelayMenu, "appearance_delay_seconds",
 							element -> element.settings.isDelayable(),
 							element -> element.element.appearanceDelayInSeconds,
 							(element, input) -> element.element.appearanceDelayInSeconds = input,
 							Component.translatable("fancymenu.element.general.appearance_delay.seconds"),
 							true, 1.0F, null, null)
+					.setIsActiveSupplier((menu, entry) -> appearanceDelayIsActive.get())
 					.setStackable(true);
 
 			appearanceDelayMenu.addSeparatorEntry("separator_1").setStackable(true);
@@ -471,6 +482,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							consumes -> consumes.element.fadeIn,
 							(element, switcherValue) -> element.element.fadeIn = switcherValue,
 							"fancymenu.element.general.appearance_delay.fade_in")
+					.setIsActiveSupplier((menu, entry) -> appearanceDelayIsActive.get())
 					.setStackable(true);
 
 			this.addGenericFloatInputContextMenuEntryTo(appearanceDelayMenu, "appearance_delay_fade_in_speed",
@@ -479,6 +491,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							(element, input) -> element.element.fadeInSpeed = input,
 							Component.translatable("fancymenu.element.general.appearance_delay.fade_in.speed"),
 							true, 1.0F, null, null)
+					.setIsActiveSupplier((menu, entry) -> appearanceDelayIsActive.get())
 					.setStackable(true);
 
 		}

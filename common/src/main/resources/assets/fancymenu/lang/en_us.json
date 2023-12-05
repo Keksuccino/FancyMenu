@@ -797,6 +797,7 @@
   "fancymenu.overlay.menu_bar.customization.settings.game_intro": "Game Intro",
   "fancymenu.overlay.menu_bar.customization.settings.game_intro.set": "Set Game Intro",
   "fancymenu.overlay.menu_bar.customization.settings.game_intro.allow_skip": "Game Intro Skipping: %s",
+  "fancymenu.overlay.menu_bar.customization.settings.game_intro.fade_out": "Game Intro Fade-Out: %s",
   "fancymenu.overlay.menu_bar.customization.settings.game_intro.set_custom_skip_text": "Custom Skip Text",
   "fancymenu.overlay.menu_bar.customization.settings.game_intro.set_custom_skip_text.tooltip": "Set a custom skip text that\nreplaces the default one.\nSupports localization keys and plain text.",
   "fancymenu.overlay.menu_bar.customization.settings.preload_animations": "Preload Animations: %s",

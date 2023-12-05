@@ -26,11 +26,6 @@ import java.util.Objects;
 
 public class GameIntroOverlay extends Overlay {
 
-    //TODO Fade-out deaktivierbar machen !!
-    //TODO Fade-out deaktivierbar machen !!
-    //TODO Fade-out deaktivierbar machen !!
-    //TODO Fade-out deaktivierbar machen !!
-
     private static final Logger LOGGER = LogManager.getLogger();
 
     protected Font font = Minecraft.getInstance().font;
@@ -71,7 +66,7 @@ public class GameIntroOverlay extends Overlay {
         this.tickFadeOut();
 
         //Close screen after finished playing
-        if (this.endOfIntroReached() && (this.opacity < 0.1F)) {
+        if (this.endOfIntroReached() && (!this.fadeOutIntro() || (this.opacity < 0.1F))) {
             this.close();
             return;
         }
@@ -118,9 +113,9 @@ public class GameIntroOverlay extends Overlay {
     }
 
     protected void renderSkipText(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-        if (FancyMenu.getOptions().allowGameIntroSkip.getValue()) {
+        if (FancyMenu.getOptions().gameIntroAllowSkip.getValue()) {
             float scale = 1.3F;
-            String customSkipText = FancyMenu.getOptions().customGameIntroSkipText.getValue();
+            String customSkipText = FancyMenu.getOptions().gameIntroCustomSkipText.getValue();
             if (!customSkipText.isEmpty() && LocalizationUtils.isLocalizationKey(customSkipText)) {
                 customSkipText = I18n.get(customSkipText);
             }
@@ -139,6 +134,10 @@ public class GameIntroOverlay extends Overlay {
         }
     }
 
+    protected boolean fadeOutIntro() {
+        return FancyMenu.getOptions().gameIntroFadeOut.getValue();
+    }
+
     protected boolean endOfIntroReached() {
         if (this.start == -1) return false;
         long now = System.currentTimeMillis();
@@ -147,7 +146,7 @@ public class GameIntroOverlay extends Overlay {
     }
 
     protected void tickFadeOut() {
-        if (this.endOfIntroReached()) {
+        if (this.endOfIntroReached() && this.fadeOutIntro()) {
             this.opacity -= 0.02F;
         }
     }
@@ -177,14 +176,14 @@ public class GameIntroOverlay extends Overlay {
 
     public void keyPressed(int keycode, int scancode, int modifiers) {
         //Handle "Press Any Key to Skip" if enabled
-        if (FancyMenu.getOptions().allowGameIntroSkip.getValue()) {
+        if (FancyMenu.getOptions().gameIntroAllowSkip.getValue()) {
             this.close();
         }
     }
 
     public void mouseClicked(int button) {
         //Handle "Press Any Key to Skip" if enabled
-        if (FancyMenu.getOptions().allowGameIntroSkip.getValue()) {
+        if (FancyMenu.getOptions().gameIntroAllowSkip.getValue()) {
             this.close();
         }
     }

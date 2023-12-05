@@ -1,6 +1,12 @@
  
 CHANGELOG | FANCYMENU v3.0.0 CLOSED BETA 1 / RELEASE CANDIDATE 1
  
+- Animations are now FULLY deprecated!
+--> APNGs exist now (and maybe videos soon), so there's no real need for animations anymore
+--> It's not possible to add new Animation elements to layouts, but existing ones still work for now
+--> Animations can't get set as game intro anymore, but existing animation intros still work for now
+--> Animations can't get set as button background anymore, but existing animation button backgrounds still work for now
+ 
 - Improved the Anchor Overlay
 --> It should hopefully work much more stable now (*knock on wood*)
 --> Hopefully no phantom anchor lines anymore
@@ -18,6 +24,8 @@ CHANGELOG | FANCYMENU v3.0.0 CLOSED BETA 1 / RELEASE CANDIDATE 1
 - GIFs and APNGs now start playing INSTANTLY without showing its first frame until they are fully loaded
 --> Web sources still show nothing for a short time, because they need to download the image first
 --> Since they start playing while still loading, the first loop could stutter a bit (low framerate), because the image can't load its frames fast enough
+ 
+- The game intro now fades to the Title screen like the loading overlay (can be toggled off)
  
 - Added: Placeholder "Max Number" that returns the greater of two numbers
 - Added: Placeholder "Min Number" that returns the smaller of two numbers
@@ -41,3 +49,4 @@ CHANGELOG | FANCYMENU v3.0.0 CLOSED BETA 1 / RELEASE CANDIDATE 1
 - Fixed: Appearance delay + fade-in not working correctly for Vanilla widgets
 - Fixed: Missing alpha/opacity handling for ImageButtons like the Language and Accessibility buttons (this is a Vanilla bug)
 - Fixed: Fade-in not working correctly for Slider elements
+- Fixed: Fade-in feature of the element appearance delay can be enabled while appearance delay is disabled (this still works in multi-select menus and will probably stay like that)
