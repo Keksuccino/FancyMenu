@@ -1,13 +1,12 @@
 package de.keksuccino.fancymenu.util.file.type.groups;
 
 import de.keksuccino.fancymenu.util.file.type.FileType;
+import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
+import de.keksuccino.fancymenu.util.resource.Resource;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
@@ -17,6 +16,19 @@ public class FileTypeGroup<T extends FileType<?>> {
     protected Supplier<List<T>> typeSupplier;
     @Nullable
     protected Component displayName;
+
+    @SuppressWarnings("all")
+    @NotNull
+    public static FileTypeGroup<FileType<Resource>> allSupported() {
+        List<FileType<Resource>> types = new ArrayList<>();
+        FileTypes.getAllImageFileTypes().forEach(imageFileType -> types.add((FileType<Resource>)((FileType<?>)imageFileType)));
+        FileTypes.getAllAudioFileTypes().forEach(imageFileType -> types.add((FileType<Resource>)((FileType<?>)imageFileType)));
+        FileTypes.getAllVideoFileTypes().forEach(imageFileType -> types.add((FileType<Resource>)((FileType<?>)imageFileType)));
+        FileTypes.getAllTextFileTypes().forEach(imageFileType -> types.add((FileType<Resource>)((FileType<?>)imageFileType)));
+        FileTypeGroup<FileType<Resource>> group = new FileTypeGroup<>(() -> types, null);
+        group.setDisplayName(Component.translatable("fancymenu.file_types.groups.all_supported"));
+        return group;
+    }
 
     @SafeVarargs
     @NotNull

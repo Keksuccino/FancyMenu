@@ -1,11 +1,5 @@
 package de.keksuccino.fancymenu;
 
-import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
-import de.keksuccino.fancymenu.util.event.acara.EventListener;
-import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
-import de.keksuccino.fancymenu.util.resources.audio.IAudio;
-import net.minecraft.client.gui.screens.OptionsScreen;
-import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

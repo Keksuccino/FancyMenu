@@ -20,9 +20,10 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO Feature adden, um resourcen zu pre-loaden (einfach source angeben und FM holt sich richtigen FileType + ResourceHandler)
+	//TODO Text Editor: Undo/Redo adden
 
 	//TODO Simple Video Renderer schreiben
+	// - SIEHE ORDNER DESKTOP: video_rendering   !!!!!!!!!!!!!!!!!!!!
 	// - Nach "Video Frame InputStream" googlen (audio evtl. separat getten?)
 	// - Evtl. mit Java-eigenen libs arbeiten
 
@@ -35,8 +36,6 @@ public class FancyMenu {
 
 
 	//TODO ALLE UNGENUTZTEN FileTypes entfernen (ungenutzte video types)
-
-	//TODO Text Editor: Undo/Redo adden
 
 	//TODO Layout Listener System
 	// - Auf Layout Ebene (rechtsklick editor back -> Listeners)

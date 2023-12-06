@@ -23,13 +23,13 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
-import de.keksuccino.fancymenu.util.resources.Resource;
-import de.keksuccino.fancymenu.util.resources.ResourceSourceType;
-import de.keksuccino.fancymenu.util.resources.audio.IAudio;
-import de.keksuccino.fancymenu.util.resources.text.IText;
-import de.keksuccino.fancymenu.util.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resources.texture.SimpleTexture;
-import de.keksuccino.fancymenu.util.resources.video.IVideo;
+import de.keksuccino.fancymenu.util.resource.Resource;
+import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
+import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
+import de.keksuccino.fancymenu.util.resource.resources.text.IText;
+import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.SimpleTexture;
+import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -70,6 +70,16 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
     protected boolean showWarningLegacyLocal = false;
     protected boolean showWarningNoExtension = false;
     protected boolean warningHovered = false;
+
+    @NotNull
+    public static ResourceChooserScreen<Resource, FileType<Resource>> generic(@Nullable FileTypeGroup<FileType<Resource>> fileTypes, @Nullable FileFilter fileFilter, @NotNull Consumer<String> resourceSourceCallback) {
+        return new ResourceChooserScreen<>(Component.translatable("fancymenu.resources.chooser_screen.choose.generic"), fileTypes, fileFilter, resourceSourceCallback);
+    }
+
+    @NotNull
+    public static ResourceChooserScreen<Resource, FileType<Resource>> generic(@NotNull Component title, @Nullable FileTypeGroup<FileType<Resource>> fileTypes, @Nullable FileFilter fileFilter, @NotNull Consumer<String> resourceSourceCallback) {
+        return new ResourceChooserScreen<>(title, fileTypes, fileFilter, resourceSourceCallback);
+    }
 
     @NotNull
     public static ResourceChooserScreen<ITexture, ImageFileType> image(@NotNull Component title, @Nullable FileFilter fileFilter, @NotNull Consumer<String> resourceSourceCallback) {
@@ -122,8 +132,23 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
     @Override
     protected void initCells() {
 
+        LocalizedGenericValueCycle<ResourceSourceType> sourceTypeCycle = ResourceSourceType.LOCATION.cycle();
+        if (!this.allowLocation) sourceTypeCycle.removeValue(ResourceSourceType.LOCATION);
+        if (!this.allowLocal) sourceTypeCycle.removeValue(ResourceSourceType.LOCAL);
+        if (!this.allowWeb) sourceTypeCycle.removeValue(ResourceSourceType.WEB);
+
+        if (sourceTypeCycle.getValues().isEmpty()) {
+            throw new IllegalStateException("There needs to be at least one allowed source type!");
+        }
+
+        //Fix resource type if selected is not allowed
+        if (!sourceTypeCycle.getValues().contains(this.resourceSourceType)) {
+            this.resourceSource = null;
+            this.resourceSourceType = sourceTypeCycle.getValues().get(0);
+        }
+
         boolean isLocal = (this.resourceSourceType == ResourceSourceType.LOCAL);
-        boolean isLegacyLocal = (isLocal && (this.resourceSource != null) && !(this.resourceSource.startsWith("config/fancymenu/assets/") || this.resourceSource.startsWith("/config/fancymenu/assets/")));
+        boolean isLegacyLocal = (isLocal && (this.resourceSource != null) && !this.resourceSource.trim().isEmpty() && !(this.resourceSource.startsWith("config/fancymenu/assets/") || this.resourceSource.startsWith("/config/fancymenu/assets/")));
 
         if (isLocal && (this.resourceSource == null)) this.resourceSource = "/config/fancymenu/assets/";
 
@@ -134,10 +159,6 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
         this.addStartEndSpacerCell();
 
-        LocalizedGenericValueCycle<ResourceSourceType> sourceTypeCycle = ResourceSourceType.LOCATION.cycle();
-        if (!this.allowLocation) sourceTypeCycle.removeValue(ResourceSourceType.LOCATION);
-        if (!this.allowLocal) sourceTypeCycle.removeValue(ResourceSourceType.LOCAL);
-        if (!this.allowWeb) sourceTypeCycle.removeValue(ResourceSourceType.WEB);
         this.resourceSourceTypeCycleButton = new CycleButton<>(0, 0, 20, 20, sourceTypeCycle, (value, button) -> {
             //Reset the source when changing the source type, because it is not valid anymore
             this.resourceSource = null;
@@ -277,7 +298,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
     }
 
     protected void updateLegacyLocalWarning() {
-        this.showWarningLegacyLocal = ((this.resourceSourceType == ResourceSourceType.LOCAL) && (this.resourceSource != null) && !(this.resourceSource.startsWith("config/fancymenu/assets/") || this.resourceSource.startsWith("/config/fancymenu/assets/")));
+        this.showWarningLegacyLocal = ((this.resourceSourceType == ResourceSourceType.LOCAL) && (this.resourceSource != null) && !this.resourceSource.trim().isEmpty() && !(this.resourceSource.startsWith("config/fancymenu/assets/") || this.resourceSource.startsWith("/config/fancymenu/assets/")));
     }
 
     protected void updateNoExtensionWarning() {

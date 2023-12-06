@@ -107,13 +107,14 @@ IMPORTANT! PLEASE READ!
  
 tl;dr: BACKUP your LAYOUTS and Minecraft INSTANCE before updating!
  
-The following changelog only contains SOME of the changes in FancyMenu v3, but not all of them.
+The following changelog only contains SOME of the maaaany changes in FancyMenu v3.
 It's just too much stuff to mention every change in detail.
-It's also very likely that I forgot some of the bigger changes, because I worked on v3 for over 5 months.
-In these 5+ months I rewrote like 75% of the code (some parts multiple times), shared progress updates with you all and got a lot of feedback
-from you to polish as many of the new/rewritten stuff as possible and I am very thankful for that!
+It's also very likely that I forgot some of the bigger changes, because I worked on v3 for over 6 months.
+In these 6+ months I rewrote like 90% of the code (some parts multiple times), shared progress updates with
+you all and got a lot of feedback from you to polish as many of the new/rewritten stuff as possible!
+Thank you SO MUCH to all of the Alpha and Beta testers! This update wouldn't be possible without you! <3
  
-But well, since SO MUCH stuff got rewritten in this update, there's like no chance it will not contain bugs and some of them could harm your layouts!
+But well, since sooo much stuff got rewritten in this update, there's like no chance it will not contain bugs and some of them could harm your layouts!
 So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updating to this version!
  
 ------------------------------
@@ -170,6 +171,16 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - The grid in the layout editor now always gets rendered at the same scale, no matter what GUI scale is used
 - FancyMenu now supports APNG textures (Animated PNGs, like GIFs, but better)
 - ANIMATIONS are DEPRECATED now, since there's APNG support now
+- It is now possible to pre-load specific resources
+--> Accessible via Customization Menu Bar -> Customization -> Pre-Load Resources
+--> Recommended for APNGs used as game intro
+- The game intro now fades to the Title screen like the loading overlay (can be toggled off)
+ 
+- Animations are now deprecated!
+--> APNGs exist now (and maybe videos soon), so there's no real need for animations anymore
+--> It's not possible to add new Animation elements to layouts, but existing ones still work for now
+--> Animations can't get set as game intro anymore, but existing animation intros still work for now
+--> Animations can't get set as button background anymore, but existing animation button backgrounds still work for now
  
 - Added loading requirement "File/Folder Exists" to check if a file/folder exists
 - Added loading requirement "Is Button Active" to check if a button is active (clickable/not greyed out)

@@ -1061,6 +1061,7 @@
   "fancymenu.file_types.groups.audio": "Audio",
   "fancymenu.file_types.groups.video": "Video",
   "fancymenu.file_types.groups.text": "Text",
+  "fancymenu.file_types.groups.all_supported": "All Supported",
   "fancymenu.file_browser.save_file.file_name": "File Name:",
   "fancymenu.file_browser.file_type": "File Types:",
   "fancymenu.file_browser.file_type.types.all": "All",
@@ -1081,6 +1082,7 @@
   "fancymenu.resources.chooser_screen.choose.audio": "Choose Audio Resource",
   "fancymenu.resources.chooser_screen.choose.video": "Choose Video Resource",
   "fancymenu.resources.chooser_screen.choose.text": "Choose Text Resource",
+  "fancymenu.resources.chooser_screen.choose.generic": "Choose Resource",
   "fancymenu.ui.resources.choose": "Choose Resource",
   "fancymenu.ui.resources.reset": "Reset to Default",
   "fancymenu.ui.resources.current": "Current: %s",
@@ -1190,5 +1192,11 @@
   "fancymenu.overlay.debug.gpu": "§lGPU:§r %1$s (OpenGL: %2$s)",
   "fancymenu.overlay.debug.right_click_elements": "§bRight-click highlighted elements to copy their widget locator and more!",
   "fancymenu.menu_background.deprecated": " (Deprecated)",
-  "fancymenu.menu_background.deprecated.details": "This background type is deprecated and gets\nremoved or replaced in the future.\nIt is also possible that there is already an\nalternative available."
+  "fancymenu.menu_background.deprecated.details": "This background type is deprecated and gets\nremoved or replaced in the future.\nIt is also possible that there is already an\nalternative available.",
+  "fancymenu.resources.pre_loading": "Pre-Load Resources",
+  "fancymenu.resources.pre_loading.desc": "Set resources to pre-load on game start,\nso they are ready to use once the game\nloading process is completed.",
+  "fancymenu.resources.pre_loading.manage": "Manage Resources for Pre-Loading",
+  "fancymenu.resources.pre_loading.manage.add": "Add",
+  "fancymenu.resources.pre_loading.manage.remove": "Remove Selected",
+  "fancymenu.resources.pre_loading.manage.remove.confirm": "Remove Resource?\n\nDo you really want to remove the selected resource?"
 }

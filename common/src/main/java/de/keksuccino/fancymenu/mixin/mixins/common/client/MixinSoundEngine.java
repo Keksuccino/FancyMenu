@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
-import de.keksuccino.fancymenu.util.resources.ResourceHandlers;
+import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import net.minecraft.client.sounds.SoundEngine;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

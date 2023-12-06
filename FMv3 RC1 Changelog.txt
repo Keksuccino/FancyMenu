@@ -21,6 +21,10 @@ CHANGELOG | FANCYMENU v3.0.0 CLOSED BETA 1 / RELEASE CANDIDATE 1
 --> The overlay is now categorized and categories can be toggled on/off
 --> Formatted some text parts to make them more visible / easier to notice
  
+- It is now possible to pre-load specific resources
+--> Accessible via Customization Menu Bar -> Customization -> Pre-Load Resources
+--> Recommended for APNGs used as game intro
+ 
 - GIFs and APNGs now start playing INSTANTLY without showing its first frame until they are fully loaded
 --> Web sources still show nothing for a short time, because they need to download the image first
 --> Since they start playing while still loading, the first loop could stutter a bit (low framerate), because the image can't load its frames fast enough

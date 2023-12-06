@@ -36,12 +36,13 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
-import de.keksuccino.fancymenu.util.resources.ResourceHandlers;
-import de.keksuccino.fancymenu.util.resources.ResourceSource;
-import de.keksuccino.fancymenu.util.resources.ResourceSourceType;
-import de.keksuccino.fancymenu.util.resources.ResourceSupplier;
-import de.keksuccino.fancymenu.util.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resources.texture.SimpleTexture;
+import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
+import de.keksuccino.fancymenu.util.resource.ResourceSource;
+import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
+import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
+import de.keksuccino.fancymenu.util.resource.preload.ManageResourcePreLoadScreen;
+import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.SimpleTexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -593,7 +594,18 @@ public class CustomizationOverlayUI {
             Minecraft.getInstance().setScreen(s);
         });
 
-        customizationMenu.addSeparatorEntry("separator_after_variables");
+        customizationMenu.addClickableEntry("pre_load_resources", Component.translatable("fancymenu.resources.pre_loading"),
+                        (menu, entry) -> {
+                            Screen current = Minecraft.getInstance().screen;
+                            ManageResourcePreLoadScreen s = new ManageResourcePreLoadScreen(aBoolean -> {
+                                Minecraft.getInstance().setScreen(current);
+                            });
+                            Minecraft.getInstance().setScreen(s);
+                        })
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.pre_loading.desc")))
+                .setIcon(ContextMenu.IconFactory.getIcon("check_list"));
+
+        customizationMenu.addSeparatorEntry("separator_after_pre_load_resources");
 
         ContextMenu debugOverlayMenu = new ContextMenu();
         customizationMenu.addSubMenuEntry("debug_overlay", Component.translatable("fancymenu.overlay.debug"), debugOverlayMenu)

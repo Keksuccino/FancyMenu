@@ -2,8 +2,8 @@ package de.keksuccino.fancymenu.util.file.type;
 
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.WebUtils;
-import de.keksuccino.fancymenu.util.resources.ResourceSource;
-import de.keksuccino.fancymenu.util.resources.ResourceSourceType;
+import de.keksuccino.fancymenu.util.resource.ResourceSource;
+import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;

@@ -12,8 +12,8 @@ import java.util.function.Supplier;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.animation.exceptions.AnimationNotFoundException;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
-import de.keksuccino.fancymenu.util.resources.PlayableResource;
-import de.keksuccino.fancymenu.util.resources.RenderableResource;
+import de.keksuccino.fancymenu.util.resource.PlayableResource;
+import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.konkrete.rendering.animation.ExternalTextureAnimationRenderer;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
@@ -77,6 +77,16 @@ public class AdvancedAnimation implements IAnimationRenderer, RenderableResource
 			return this.animationRenderer.isReady();
 		}
 		
+		return false;
+	}
+
+	@Override
+	public boolean isLoadingCompleted() {
+		return true;
+	}
+
+	@Override
+	public boolean isLoadingFailed() {
 		return false;
 	}
 
