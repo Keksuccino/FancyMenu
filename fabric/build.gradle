@@ -20,6 +20,10 @@ dependencies {
     include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.2.0")))
     include(implementation 'com.github.Keksuccino:japng:0.5.3')
     modImplementation "curse.maven:melody-938643:4871682"
+    include(implementation 'com.tianscar.javasound:javasound-aac:0.9.8')
+    include(implementation 'com.tianscar.javasound:javasound-resloader:0.1.3')
+    include(implementation group: 'org.jcodec', name: 'jcodec', version: '0.2.5')
+    include(implementation group: 'org.jcodec', name: 'jcodec-javase', version: '0.2.5')
 }
 
 loom {

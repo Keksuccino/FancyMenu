@@ -75,6 +75,18 @@ dependencies {
         jarJar.ranged(it, "[0.5.3,)")
     }
     implementation fg.deobf("curse.maven:melody-938643:4869647")
+    minecraftLibrary(jarJar(implementation 'com.tianscar.javasound:javasound-aac:0.9.8')) {
+        jarJar.ranged(it, "[0.9.8,)")
+    }
+    minecraftLibrary(jarJar(implementation 'com.tianscar.javasound:javasound-resloader:0.1.3')) {
+        jarJar.ranged(it, "[0.1.3,)")
+    }
+    minecraftLibrary(jarJar(implementation group: 'org.jcodec', name: 'jcodec', version: '0.2.5')) {
+        jarJar.ranged(it, "[0.2.5,)")
+    }
+    minecraftLibrary(jarJar(implementation group: 'org.jcodec', name: 'jcodec-javase', version: '0.2.5')) {
+        jarJar.ranged(it, "[0.2.5,)")
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {
