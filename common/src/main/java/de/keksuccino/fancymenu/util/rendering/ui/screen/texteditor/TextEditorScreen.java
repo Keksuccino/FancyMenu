@@ -44,7 +44,7 @@ import java.util.function.Consumer;
 @SuppressWarnings("all")
 public class TextEditorScreen extends Screen {
 
-    //TODO Ganze Zeile markieren, wenn zwischen highlightStart und highlightEnd index
+    //TODO Ganze Zeile markieren, wenn zwischen highlightStart und highlightEnd cursorPos
 
     //TODO Bei highlight start und end Zeilen alles markieren, was innerhalb von markiertem bereich liegt, selbst wenn eigentlicher Text kürzer (also alles NACH cursor bei end und alles VOR cursor bei start)
 
@@ -115,6 +115,7 @@ public class TextEditorScreen extends Screen {
     protected ConsumingSupplier<TextEditorScreen, Boolean> textValidator = null;
     protected Tooltip textValidatorFeedbackTooltip = null;
     protected boolean selectedHoveredOnRightClickMenuOpen = false;
+    protected final TextEditorHistory history = new TextEditorHistory(this);
 
     @NotNull
     public static TextEditorScreen build(@Nullable Component title, @Nullable CharacterFilter characterFilter, @NotNull Consumer<String> callback) {
@@ -609,7 +610,7 @@ public class TextEditorScreen extends Screen {
             int endIndex = Math.max(hoveredIndex, firstIndex);
             int index = 0;
             for (TextEditorLine t : this.textFieldLines) {
-                //Highlight all lines between the first and current line and remove highlighting from lines outside of highlight range
+                //Highlight all lines between the first and current focusedLineIndex and remove highlighting from lines outside of highlight range
                 if ((t != hovered) && (t != first)) {
                     if ((index > startIndex) && (index < endIndex)) {
                         if (firstIsAfterHovered) {
@@ -684,11 +685,11 @@ public class TextEditorScreen extends Screen {
     }
 
     public void updateCurrentLineWidth() {
-        //Find width of the longest line and update current line width
+        //Find width of the longest focusedLineIndex and update current focusedLineIndex width
         int longestTextWidth = 0;
         for (TextEditorLine f : this.textFieldLines) {
             if (f.textWidth > longestTextWidth) {
-                //Calculating the text size for every line every tick kills the CPU, so I'm calculating the size on value change in the text box
+                //Calculating the text size for every focusedLineIndex every tick kills the CPU, so I'm calculating the size on value change in the text box
                 longestTextWidth = f.textWidth;
             }
         }
@@ -763,7 +764,7 @@ public class TextEditorScreen extends Screen {
     }
 
     /**
-     * Returns the index of the focused line or -1 if no line is focused.
+     * Returns the cursorPos of the focused focusedLineIndex or -1 if no focusedLineIndex is focused.
      **/
     public int getFocusedLineIndex() {
         int index = 0;
@@ -867,13 +868,13 @@ public class TextEditorScreen extends Screen {
             if (currentLine != null) {
                 TextEditorLine nextLine = this.getFocusedLine();
                 if (isNewLine) {
-                    //Split content of currentLine at cursor pos and move text after cursor to next line if ENTER was pressed
+                    //Split content of currentLine at cursor pos and move text after cursor to next focusedLineIndex if ENTER was pressed
                     String textBeforeCursor = currentLine.getValue().substring(0, currentLine.getCursorPosition());
                     String textAfterCursor = currentLine.getValue().substring(currentLine.getCursorPosition());
                     currentLine.setValue(textBeforeCursor);
                     nextLine.setValue(textAfterCursor);
                     nextLine.moveCursorTo(0);
-                    //Add amount of spaces of the beginning of the old line to the beginning of the new line
+                    //Add amount of spaces of the beginning of the old focusedLineIndex to the beginning of the new focusedLineIndex
                     if (textBeforeCursor.startsWith(" ")) {
                         int spaces = 0;
                         for (char c : textBeforeCursor.toCharArray()) {
@@ -1026,7 +1027,7 @@ public class TextEditorScreen extends Screen {
                     this.getFocusedLine().moveCursorToEnd();
                 }
                 TextEditorLine focusedLine = this.getFocusedLine();
-                //These two strings are for correctly pasting text within a char sequence (if the cursor is not at the end or beginning of the line)
+                //These two strings are for correctly pasting text within a char sequence (if the cursor is not at the end or beginning of the focusedLineIndex)
                 String textBeforeCursor = "";
                 String textAfterCursor = "";
                 if (focusedLine.getValue().length() > 0) {
@@ -1145,7 +1146,7 @@ public class TextEditorScreen extends Screen {
     }
 
     /**
-     * @return The text BEFORE the cursor or NULL if no line is focused.
+     * @return The text BEFORE the cursor or NULL if no focusedLineIndex is focused.
      */
     @Nullable
     public String getTextBeforeCursor() {
@@ -1177,7 +1178,7 @@ public class TextEditorScreen extends Screen {
     }
 
     /**
-     * @return The text AFTER the cursor or NULL if no line is focused.
+     * @return The text AFTER the cursor or NULL if no focusedLineIndex is focused.
      */
     @Nullable
     public String getTextAfterCursor() {
@@ -1211,6 +1212,10 @@ public class TextEditorScreen extends Screen {
     @Override
     public boolean charTyped(char character, int modifiers) {
 
+        if (this.isLineFocused()) {
+            this.history.saveSnapshot();
+        }
+
         for (TextEditorLine l : this.textFieldLines) {
             l.charTyped(character, modifiers);
         }
@@ -1230,10 +1235,21 @@ public class TextEditorScreen extends Screen {
         String key = GLFW.glfwGetKeyName(keycode, scancode);
         if (key == null) key = "";
 
+        //CTRL + Z | STEP BACK
+        if (Screen.hasControlDown() && (key.equals("z"))) {
+            this.history.stepBack();
+            return true;
+        }
+        //CTRL + Y | STEP FORWARD
+        if (Screen.hasControlDown() && (key.equals("y"))) {
+            this.history.stepForward();
+            return true;
+        }
         //ENTER
         if (keycode == InputConstants.KEY_ENTER) {
             if (!this.isInMouseHighlightingMode() && this.multilineMode) {
                 if (this.isLineFocused()) {
+                    this.history.saveSnapshot();
                     this.resetHighlighting();
                     this.goDownLine(true);
                     this.correctYScroll(1);
@@ -1267,9 +1283,11 @@ public class TextEditorScreen extends Screen {
         if (keycode == InputConstants.KEY_BACKSPACE) {
             if (!this.isInMouseHighlightingMode()) {
                 if (this.isTextHighlighted()) {
+                    this.history.saveSnapshot();
                     this.deleteHighlightedText();
                 } else {
                     if (this.isLineFocused()) {
+                        this.history.saveSnapshot();
                         TextEditorLine focused = this.getFocusedLine();
                         focused.getAsAccessor().setShiftPressedFancyMenu(false);
                         focused.getAsAccessor().invokeDeleteTextFancyMenu(-1);
@@ -1287,6 +1305,7 @@ public class TextEditorScreen extends Screen {
         }
         //CTRL + V
         if (Screen.isPaste(keycode)) {
+            this.history.saveSnapshot();
             this.pasteText(Minecraft.getInstance().keyboardHandler.getClipboard());
             return true;
         }
@@ -1303,6 +1322,7 @@ public class TextEditorScreen extends Screen {
         }
         //CTRL + U
         if (Screen.isCut(keycode)) {
+            this.history.saveSnapshot();
             Minecraft.getInstance().keyboardHandler.setClipboard(this.cutHighlightedText());
             this.resetHighlighting();
             return true;
@@ -1366,9 +1386,9 @@ public class TextEditorScreen extends Screen {
                             this.getFocusedLine().moveCursorToEnd();
                             this.correctYScroll(0);
                         } else if ((button == 1) && !isHighlightedHovered) {
-                            //Focus line in case it is right-clicked
+                            //Focus focusedLineIndex in case it is right-clicked
                             this.setFocusedLine(this.getLineIndex(hoveredLine));
-                            //Set cursor in case line is right-clicked
+                            //Set cursor in case focusedLineIndex is right-clicked
                             String s = this.font.plainSubstrByWidth(hoveredLine.getValue().substring(hoveredLine.getAsAccessor().getDisplayPosFancyMenu()), hoveredLine.getInnerWidth());
                             hoveredLine.moveCursorTo(this.font.plainSubstrByWidth(s, MouseInput.getMouseX() - hoveredLine.getX()).length() + hoveredLine.getAsAccessor().getDisplayPosFancyMenu());
                         }
@@ -1378,7 +1398,7 @@ public class TextEditorScreen extends Screen {
                         this.rightClickContextMenu.openMenuAtMouse();
                     } else if (this.rightClickContextMenu.isOpen() && !this.rightClickContextMenu.isHovered()) {
                         this.rightClickContextMenu.closeMenu();
-                        //Call mouseClicked of lines after closing the menu, so the focused line and cursor pos gets updated
+                        //Call mouseClicked of lines after closing the menu, so the focused focusedLineIndex and cursor pos gets updated
                         this.textFieldLines.forEach((line) -> {
                             line.mouseClicked(mouseX, mouseY, button);
                         });
@@ -1485,7 +1505,7 @@ public class TextEditorScreen extends Screen {
 
     public void correctYScroll(int lineCountOffsetAfterRemovingAdding) {
 
-        //Don't fix scroll if in mouse-highlighting mode or no line is focused
+        //Don't fix scroll if in mouse-highlighting mode or no focusedLineIndex is focused
         if (this.isInMouseHighlightingMode() || !this.isLineFocused()) {
             return;
         }
@@ -1559,7 +1579,7 @@ public class TextEditorScreen extends Screen {
                 float f = (float)(cursorX - maxToRight) / (float)currentLineW;
                 this.horizontalScrollBar.setScroll(currentScrollX + f);
             } else if (cursorX < maxToLeft) {
-                //By default, move back the line just a little when moving the cursor to the left side by using the mouse or arrow keys
+                //By default, move back the focusedLineIndex just a little when moving the cursor to the left side by using the mouse or arrow keys
                 float f = (float)(maxToLeft - cursorX) / (float)currentLineW;
                 //But move it back a big chunk when deleting chars (by pressing backspace)
                 if (textGotDeleted) {

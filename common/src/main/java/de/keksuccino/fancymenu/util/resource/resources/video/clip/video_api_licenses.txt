@@ -1,4 +1,0 @@
-
-JCodec: FreeBSD (aka. Clause-2) (aka. BSD License) by JCodec Team
-
-JAAD: Apache-2 by in-somnia (fork by Tianscar)

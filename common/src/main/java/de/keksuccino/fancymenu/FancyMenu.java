@@ -22,11 +22,6 @@ public class FancyMenu {
 
 	//TODO Text Editor: Undo/Redo adden
 
-	//TODO Simple Video Renderer schreiben
-	// - SIEHE ORDNER DESKTOP: video_rendering   !!!!!!!!!!!!!!!!!!!!
-	// - Nach "Video Frame InputStream" googlen (audio evtl. separat getten?)
-	// - Evtl. mit Java-eigenen libs arbeiten
-
 	//TODO Make FMv3 wiki accessible via docs.fancymenu.net
 
 	//TODO Make resources.fancymenu.net redirect to the wiki page for ResourceLocations
