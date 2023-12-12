@@ -175,6 +175,7 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 --> Accessible via Customization Menu Bar -> Customization -> Pre-Load Resources
 --> Recommended for APNGs used as game intro
 - The game intro now fades to the Title screen like the loading overlay (can be toggled off)
+- You can now undo/redo steps in the text editor
  
 - Animations are now deprecated!
 --> APNGs exist now (and maybe videos soon), so there's no real need for animations anymore

@@ -1,10 +1,14 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
 public class TextEditorHistory {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     protected TextEditorScreen parent;
     protected List<Snapshot> snapshots = new ArrayList<>();
@@ -15,40 +19,58 @@ public class TextEditorHistory {
     }
 
     public void saveSnapshot() {
-        if (this.index < this.snapshots.size()) {
-            if (this.index == 0) {
-                this.snapshots.clear();
-            } else {
-                //TODO check if index needs -/+ 1
-                this.snapshots = this.snapshots.subList(0, this.index);
+        try {
+            if (this.index > 0) {
+                if (this.snapshots.get(this.index-1).text.equals(this.parent.getText())) {
+                    return; //don't save snapshot if duplicate of index-1 (to not create two identical snaps in a row)
+                }
             }
+            if (this.index < this.snapshots.size()) {
+                if (this.index == 0) {
+                    this.snapshots.clear();
+                } else {
+                    this.snapshots = this.snapshots.subList(0, this.index);
+                }
+            }
+            TextEditorLine focusedLine = this.parent.getFocusedLine();
+            int cursorPos = (focusedLine != null) ? focusedLine.getCursorPosition() : 0;
+            this.snapshots.add(new Snapshot(this.parent.getText(), this.parent.getFocusedLineIndex(), cursorPos, this.parent.verticalScrollBar.getScroll(), this.parent.horizontalScrollBar.getScroll()));
+            this.index = this.snapshots.size();
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
-        TextEditorLine focusedLine = this.parent.getFocusedLine();
-        int cursorPos = (focusedLine != null) ? focusedLine.getCursorPosition() : 0;
-        this.snapshots.add(new Snapshot(this.parent.getText(), this.parent.getFocusedLineIndex(), cursorPos, this.parent.verticalScrollBar.getScroll(), this.parent.horizontalScrollBar.getScroll()));
-        this.index = this.snapshots.size();
     }
 
     public void stepBack() {
-        if (this.index > 0) {
-            this.index--;
-            this.restoreFrom(this.snapshots.get(this.index));
+        try {
+            if (this.snapshots.isEmpty()) return;
+            if (this.index > 0) {
+                if (this.index == this.snapshots.size()) {
+                    if (!this.snapshots.get(this.index-1).text.equals(this.parent.getText())) {
+                        //save snapshot before going back if index at end of snapshots and no snapshot with the current content already exists
+                        this.saveSnapshot();
+                        this.index--;
+                    } else if (this.index > 1) {
+                        this.index--;
+                    }
+                }
+                this.index--;
+                this.restoreFrom(this.snapshots.get(this.index));
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 
-    //TODO Fixen: bei step forward wird letzter char nicht zurückgebracht
-    //TODO Fixen: bei step forward wird letzter char nicht zurückgebracht
-    //TODO Fixen: bei step forward wird letzter char nicht zurückgebracht
-    //TODO Fixen: bei step forward wird letzter char nicht zurückgebracht
     public void stepForward() {
-        if (this.index < this.snapshots.size()-1) {
+        try {
+            if (this.snapshots.isEmpty()) return;
             this.index++;
+            if (this.index >= this.snapshots.size()) this.index = this.snapshots.size()-1;
             this.restoreFrom(this.snapshots.get(this.index));
-        } else if (this.index < this.snapshots.size()) {
-            this.restoreFrom(this.snapshots.get(this.index));
-            this.index++;
-        } else if (this.index == this.snapshots.size()) {
-            this.restoreFrom(this.snapshots.get(this.index-1));
+            if (this.index == this.snapshots.size()-1) this.index = this.snapshots.size();
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 

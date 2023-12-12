@@ -30,6 +30,7 @@ CHANGELOG | FANCYMENU v3.0.0 CLOSED BETA 1 / RELEASE CANDIDATE 1
 --> Since they start playing while still loading, the first loop could stutter a bit (low framerate), because the image can't load its frames fast enough
  
 - The game intro now fades to the Title screen like the loading overlay (can be toggled off)
+- You can now undo/redo steps in the text editor
  
 - Added: Placeholder "Max Number" that returns the greater of two numbers
 - Added: Placeholder "Min Number" that returns the smaller of two numbers

@@ -236,12 +236,14 @@ public class TextEditorScreen extends Screen {
         }).setIsActiveSupplier((menu, entry) -> {
             if (!menu.isOpen()) return false;
             return this.selectedHoveredOnRightClickMenuOpen;
-        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.copy"));
+        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.copy"))
+                .setIcon(ContextMenu.IconFactory.getIcon("copy"));
 
         this.rightClickContextMenu.addClickableEntry("paste", Component.translatable("fancymenu.ui.text_editor.paste"), (menu, entry) -> {
             this.pasteText(Minecraft.getInstance().keyboardHandler.getClipboard());
             menu.closeMenu();
-        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.paste"));
+        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.paste"))
+                .setIcon(ContextMenu.IconFactory.getIcon("paste"));
 
         this.rightClickContextMenu.addSeparatorEntry("separator_after_paste");
 
@@ -251,7 +253,8 @@ public class TextEditorScreen extends Screen {
         }).setIsActiveSupplier((menu, entry) -> {
             if (!menu.isOpen()) return false;
             return this.selectedHoveredOnRightClickMenuOpen;
-        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.cut"));
+        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.cut"))
+                .setIcon(ContextMenu.IconFactory.getIcon("cut"));
 
         this.rightClickContextMenu.addSeparatorEntry("separator_after_cut");
 
@@ -264,7 +267,20 @@ public class TextEditorScreen extends Screen {
             this.startHighlightLineIndex = 0;
             this.endHighlightLineIndex = this.getLineCount()-1;
             menu.closeMenu();
-        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.select_all"));
+        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.select_all"))
+                .setIcon(ContextMenu.IconFactory.getIcon("select"));
+
+        this.rightClickContextMenu.addSeparatorEntry("separator_after_select_all");
+
+        this.rightClickContextMenu.addClickableEntry("undo", Component.translatable("fancymenu.editor.edit.undo"), (menu, entry) -> {
+            this.history.stepBack();
+        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.undo"))
+                .setIcon(ContextMenu.IconFactory.getIcon("undo"));
+
+        this.rightClickContextMenu.addClickableEntry("redo", Component.translatable("fancymenu.editor.edit.redo"), (menu, entry) -> {
+            this.history.stepForward();
+        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.redo"))
+                .setIcon(ContextMenu.IconFactory.getIcon("redo"));
 
     }
 
@@ -1287,7 +1303,7 @@ public class TextEditorScreen extends Screen {
                     this.deleteHighlightedText();
                 } else {
                     if (this.isLineFocused()) {
-                        this.history.saveSnapshot();
+                        if (!this.getText().isEmpty()) this.history.saveSnapshot();
                         TextEditorLine focused = this.getFocusedLine();
                         focused.getAsAccessor().setShiftPressedFancyMenu(false);
                         focused.getAsAccessor().invokeDeleteTextFancyMenu(-1);
