@@ -1,14 +1,11 @@
 package de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea;
 
-import com.mojang.blaze3d.platform.Window;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollbar.ScrollBar;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -22,7 +19,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @SuppressWarnings("all")
-public class ScrollArea extends UIBase implements GuiEventListener, Renderable, NarratableEntry {
+public class ScrollArea extends UIBase implements GuiEventListener, Widget, NarratableEntry {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -489,15 +486,6 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollDelta) {
         if (this.verticalScrollBar.mouseScrolled(mouseX, mouseY, scrollDelta)) return true;
         if (this.horizontalScrollBar.mouseScrolled(mouseX, mouseY, scrollDelta)) return true;
-        return false;
-    }
-
-    @Override
-    public void setFocused(boolean var1) {
-    }
-
-    @Override
-    public boolean isFocused() {
         return false;
     }
 

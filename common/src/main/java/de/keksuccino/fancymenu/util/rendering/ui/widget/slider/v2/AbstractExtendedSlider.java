@@ -2,10 +2,10 @@ package de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractSliderButton;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
@@ -47,14 +47,14 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     @Nullable
     protected SliderValueUpdateListener sliderValueUpdateListener;
     @NotNull
-    protected ConsumingSupplier<AbstractExtendedSlider, Component> labelSupplier = slider -> Component.literal(slider.getValueDisplayText());
+    protected ConsumingSupplier<AbstractExtendedSlider, Component> labelSupplier = slider -> Components.literal(slider.getValueDisplayText());
 
     public AbstractExtendedSlider(int x, int y, int width, int height, Component label, double value) {
         super(x, y, width, height, label, value);
     }
 
     @Override
-    public void renderWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void renderButton(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
         this.renderBackground(pose, mouseX, mouseY, partial);
         RenderingUtils.resetShaderColor();
@@ -69,7 +69,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
 
     protected void renderBackground(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
         boolean renderVanilla = this.renderColorBackground(pose, mouseX, mouseY, partial);
-        if (renderVanilla) renderVanilla = this.getAsCustomizableSlider().renderSliderBackgroundFancyMenu(pose, this, this.getAccessor().getCanChangeValueFancyMenu());
+        if (renderVanilla) renderVanilla = this.getAsCustomizableSlider().renderSliderBackgroundFancyMenu(pose, this, true);
         if (renderVanilla) this.renderVanillaBackground(pose, mouseX, mouseY, partial);
     }
 
@@ -79,16 +79,10 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     protected boolean renderColorBackground(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
         RenderSystem.enableBlend();
         RenderingUtils.resetShaderColor();
-        if ((this.isFocused() && !this.getAccessor().getCanChangeValueFancyMenu()) && (this.sliderBackgroundColorHighlighted != null)) {
-            fill(pose, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.sliderBackgroundColorHighlighted.getColorInt());
-            if (this.sliderBorderColorHighlighted != null) {
-                UIBase.renderBorder(pose, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.sliderBorderColorHighlighted.getColorInt(), true, true, true, true);
-            }
-            return false;
-        } else if (this.sliderBackgroundColorNormal != null) {
-            fill(pose, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.sliderBackgroundColorNormal.getColorInt());
+        if (this.sliderBackgroundColorNormal != null) {
+            fill(pose, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), this.sliderBackgroundColorNormal.getColorInt());
             if (this.sliderBorderColorNormal != null) {
-                UIBase.renderBorder(pose, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.sliderBorderColorNormal.getColorInt(), true, true, true, true);
+                UIBase.renderBorder(pose, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), 1, this.sliderBorderColorNormal.getColorInt(), true, true, true, true);
             }
             return false;
         }
@@ -101,17 +95,17 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();
-        blitNineSliced(pose, this.getX(), this.getY(), this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getBackgroundTextureY());
+        RenderingUtils.blitNineSliced(pose, this.x, this.y, this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getBackgroundTextureY());
     }
 
     protected int getBackgroundTextureY() {
-        int i = this.isFocused() && !this.getAccessor().getCanChangeValueFancyMenu() ? 1 : 0;
+        int i = 1;
         return i * 20;
     }
 
     protected void renderHandle(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
         boolean renderVanilla = this.renderColorHandle(pose, mouseX, mouseY, partial);
-        if (renderVanilla) renderVanilla = this.getAsCustomizableWidget().renderCustomBackgroundFancyMenu(this, pose, this.getHandleX(), this.getY(), this.getHandleWidth(), this.getHeight());
+        if (renderVanilla) renderVanilla = this.getAsCustomizableWidget().renderCustomBackgroundFancyMenu(this, pose, this.getHandleX(), this.y, this.getHandleWidth(), this.getHeight());
         if (renderVanilla) this.renderVanillaHandle(pose, mouseX, mouseY, partial);
     }
 
@@ -125,18 +119,18 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
         if (this.active) {
             if (this.isHoveredOrFocused()) {
                 if (this.sliderHandleColorHover != null) {
-                    fill(pose, handleX, this.getY(), handleX + handleWidth, this.getY() + this.getHeight(), this.sliderHandleColorHover.getColorInt());
+                    fill(pose, handleX, this.y, handleX + handleWidth, this.y + this.getHeight(), this.sliderHandleColorHover.getColorInt());
                     return false;
                 }
             } else {
                 if (this.sliderHandleColorNormal != null) {
-                    fill(pose, handleX, this.getY(), handleX + handleWidth, this.getY() + this.getHeight(), this.sliderHandleColorNormal.getColorInt());
+                    fill(pose, handleX, this.y, handleX + handleWidth, this.y + this.getHeight(), this.sliderHandleColorNormal.getColorInt());
                     return false;
                 }
             }
         } else {
             if (this.sliderHandleColorInactive != null) {
-                fill(pose, handleX, this.getY(), handleX + handleWidth, this.getY() + this.getHeight(), this.sliderHandleColorInactive.getColorInt());
+                fill(pose, handleX, this.y, handleX + handleWidth, this.y + this.getHeight(), this.sliderHandleColorInactive.getColorInt());
                 return false;
             }
         }
@@ -149,11 +143,11 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();
-        blitNineSliced(pose, this.getHandleX(), this.getY(), this.getHandleWidth(), 20, 20, 4, 200, 20, 0, this.getHandleTextureY());
+        RenderingUtils.blitNineSliced(pose, this.getHandleX(), this.y, this.getHandleWidth(), 20, 20, 4, 200, 20, 0, this.getHandleTextureY());
     }
 
     protected int getHandleTextureY() {
-        int i = !this.isHovered && !this.getAccessor().getCanChangeValueFancyMenu() ? 2 : 3;
+        int i = !this.isHovered ? 2 : 3;
         return i * 20;
     }
 
@@ -163,7 +157,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     }
 
     public int getHandleX() {
-        return this.getX() + (int)(this.value * (double)(this.getWidth() - this.getHandleWidth()));
+        return this.x + (int)(this.value * (double)(this.getWidth() - this.getHandleWidth()));
     }
 
     public int getHandleWidth() {
@@ -173,7 +167,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     @Override
     public void updateMessage() {
         Component label = this.labelSupplier.get(this);
-        if (label == null) label = Component.empty();
+        if (label == null) label = Components.empty();
         this.setMessage(label);
     }
 
@@ -363,10 +357,6 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     public AbstractExtendedSlider setLabelSupplier(@NotNull ConsumingSupplier<AbstractExtendedSlider, Component> labelSupplier) {
         this.labelSupplier = labelSupplier;
         return this;
-    }
-
-    public IMixinAbstractSliderButton getAccessor() {
-        return (IMixinAbstractSliderButton) this;
     }
 
     public CustomizableSlider getAsCustomizableSlider() {

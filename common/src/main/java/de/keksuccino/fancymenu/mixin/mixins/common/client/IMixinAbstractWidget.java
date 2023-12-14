@@ -14,4 +14,8 @@ public interface IMixinAbstractWidget {
 
     @Accessor("message") void setMessageFieldFancyMenu(Component message);
 
+    @Accessor("focused") void setFocusedFancyMenu(boolean focused);
+
+    @Accessor("isHovered") boolean getIsHoveredFancyMenu();
+
 }

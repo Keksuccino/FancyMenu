@@ -2,9 +2,9 @@ package de.keksuccino.fancymenu.util.file.type;
 
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.WebUtils;
+import de.keksuccino.fancymenu.util.resource.MinecraftResourceUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
-import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -51,7 +51,7 @@ public abstract class FileCodec<T> {
         Objects.requireNonNull(streamReader);
         ConsumingSupplier<ResourceLocation, T> locationReader = consumes -> {
           try {
-              InputStream in = Minecraft.getInstance().getResourceManager().open(consumes);
+              InputStream in = MinecraftResourceUtils.open(consumes);
               return streamReader.get(in);
           } catch (Exception ex) {
               ex.printStackTrace();

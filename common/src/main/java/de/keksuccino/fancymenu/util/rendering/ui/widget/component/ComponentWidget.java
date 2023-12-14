@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.Minecraft;
@@ -17,7 +18,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -48,19 +48,19 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
     }
 
     public static ComponentWidget literal(@NotNull String text, int x, int y) {
-        ComponentWidget w = new ComponentWidget(Minecraft.getInstance().font, x, y, Component.literal(""));
-        w.setTextSupplier(consumes -> Component.literal(PlaceholderParser.replacePlaceholders(text)));
+        ComponentWidget w = new ComponentWidget(Minecraft.getInstance().font, x, y, Components.literal(""));
+        w.setTextSupplier(consumes -> Components.literal(PlaceholderParser.replacePlaceholders(text)));
         return w;
     }
 
     public static ComponentWidget translatable(@NotNull String key, int x, int y) {
-        ComponentWidget w = new ComponentWidget(Minecraft.getInstance().font, x, y, Component.literal(""));
-        w.setTextSupplier(consumes -> Component.translatable(key));
+        ComponentWidget w = new ComponentWidget(Minecraft.getInstance().font, x, y, Components.literal(""));
+        w.setTextSupplier(consumes -> Components.translatable(key));
         return w;
     }
 
     public static ComponentWidget empty(int x, int y) {
-        return new ComponentWidget(Minecraft.getInstance().font, x, y, Component.literal(""));
+        return new ComponentWidget(Minecraft.getInstance().font, x, y, Components.literal(""));
     }
 
     protected ComponentWidget(@NotNull Font font, int x, int y, @NotNull MutableComponent text) {
@@ -77,22 +77,22 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
     }
 
     @Override
-    public void renderWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void renderButton(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
         this.handleComponentHover();
 
         RenderSystem.enableBlend();
 
-        this.endX = this.getX();
+        this.endX = this.x;
         if (this.shadow) {
-            this.endX = this.font.drawShadow(pose, this.getText(), this.getX(), this.getY(), this.getBaseColor().getColorInt());
+            this.endX = this.font.drawShadow(pose, this.getText(), this.x, this.y, this.getBaseColor().getColorInt());
         } else {
-            this.endX = this.font.draw(pose, this.getText(), this.getX(), this.getY(), this.getBaseColor().getColorInt());
+            this.endX = this.font.draw(pose, this.getText(), this.x, this.y, this.getBaseColor().getColorInt());
         }
 
         for (ComponentWidget c : this.children) {
-            c.setX(this.endX);
-            c.setY(this.getY());
+            c.x = this.endX;
+            c.y = this.y;
             c.render(pose, mouseX, mouseY, partial);
             this.endX = c.endX;
         }
@@ -127,7 +127,7 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
     @NotNull
     public MutableComponent getText() {
         MutableComponent c = this.textSupplier.get(this);
-        if (c == null) c = Component.literal("");
+        if (c == null) c = Components.literal("");
         return c;
     }
 
@@ -236,7 +236,7 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
     }
 
     @Override
-    protected void updateWidgetNarration(@NotNull NarrationElementOutput var1) {
+    public void updateNarration(@NotNull NarrationElementOutput var1) {
     }
 
     @Deprecated

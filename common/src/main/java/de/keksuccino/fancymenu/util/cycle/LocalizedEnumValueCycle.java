@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.util.enums.LocalizedEnum;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TranslatableComponent;
 import org.jetbrains.annotations.NotNull;
 import java.security.InvalidParameterException;
 import java.util.Arrays;
@@ -45,7 +46,7 @@ public class LocalizedEnumValueCycle<E extends LocalizedEnum<?>> extends ValueCy
     }
 
     public MutableComponent getCycleComponent() {
-        return Component.translatable(this.getCycleLocalizationKey(), this.getCurrentValueComponent()).withStyle(this.cycleStyle.get(this.current()));
+        return new TranslatableComponent(this.getCycleLocalizationKey(), this.getCurrentValueComponent()).withStyle(this.cycleStyle.get(this.current()));
     }
 
     public MutableComponent getCurrentValueComponent() {

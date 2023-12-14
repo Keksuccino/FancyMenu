@@ -1,9 +1,9 @@
-
 package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.MouseInput;
@@ -16,7 +16,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -67,11 +66,11 @@ public class TextEditorLine extends AdvancedTextField {
                     style = rs.applyTo(style);
                 }
             }
-            chars.add(Component.literal(String.valueOf(c)).withStyle(style));
+            chars.add(Components.literal(String.valueOf(c)).withStyle(style));
             this.currentCharacterRenderIndex++;
             this.parent.currentRenderCharacterIndexTotal++;
         }
-        MutableComponent comp = Component.literal("");
+        MutableComponent comp = Components.literal("");
         for (Component c : chars) {
             comp.append(c);
         }
@@ -125,10 +124,6 @@ public class TextEditorLine extends AdvancedTextField {
                 this.font2.draw(matrix, this.getFormattedText(text.substring(cursorPos)), (float)textXRender, (float)textY, textColorInt);
             }
 
-            if (this.getAsAccessor().getHintFancyMenu() != null && text.isEmpty() && !this.isFocused()) {
-                this.font2.draw(matrix, this.getAsAccessor().getHintFancyMenu(), (float)textXRender, (float)textY, textColorInt);
-            }
-
             if (!isCursorNotAtEndOfLine && this.getAsAccessor().getSuggestionFancyMenu() != null) {
                 this.font2.draw(matrix, this.getAsAccessor().getSuggestionFancyMenu(), (float)(cursorPosRender - 1), (float)textY, -8355712);
             }
@@ -144,7 +139,7 @@ public class TextEditorLine extends AdvancedTextField {
             if (highlightPos != cursorPos) {
                 this.currentHighlightPosXStart = cursorPosRender;
                 this.currentHighlightPosXEnd = textX + this.font2.width(text.substring(0, highlightPos)) - 1;
-                this.getAsAccessor().invokeRenderHighlightFancyMenu(matrix, this.currentHighlightPosXStart, textY - 1, this.currentHighlightPosXEnd, textY + 1 + 9);
+                this.getAsAccessor().invokeRenderHighlightFancyMenu(this.currentHighlightPosXStart, textY - 1, this.currentHighlightPosXEnd, textY + 1 + 9);
             } else {
                 this.currentHighlightPosXStart = 0;
                 this.currentHighlightPosXEnd = 0;

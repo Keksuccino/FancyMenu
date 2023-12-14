@@ -2,17 +2,18 @@ package de.keksuccino.fancymenu.util.window;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Base64;
 import javax.imageio.ImageIO;
-
-import com.mojang.blaze3d.platform.MacosUtil;
+import ca.weblite.objc.Client;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.server.packs.resources.IoSupplier;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -41,21 +42,21 @@ public class WindowHandler {
 	@Nullable
 	public static File getCustomWindowIcon16() {
 		String path = FancyMenu.getOptions().customWindowIcon16.getValue();
-		if (!path.replace(" ", "").isEmpty()) return new File(ScreenCustomization.getAbsoluteGameDirectoryPath(path));
+		if (!path.replace(" ", "").isEmpty()) return new File(GameDirectoryUtils.getAbsoluteGameDirectoryPath(path));
 		return null;
 	}
 
 	@Nullable
 	public static File getCustomWindowIcon32() {
 		String path = FancyMenu.getOptions().customWindowIcon32.getValue();
-		if (!path.replace(" ", "").isEmpty()) return new File(ScreenCustomization.getAbsoluteGameDirectoryPath(path));
+		if (!path.replace(" ", "").isEmpty()) return new File(GameDirectoryUtils.getAbsoluteGameDirectoryPath(path));
 		return null;
 	}
 
 	@Nullable
 	public static File getCustomWindowIconMacOS() {
 		String path = FancyMenu.getOptions().customWindowIconMacOS.getValue();
-		if (!path.replace(" ", "").isEmpty()) return new File(ScreenCustomization.getAbsoluteGameDirectoryPath(path));
+		if (!path.replace(" ", "").isEmpty()) return new File(GameDirectoryUtils.getAbsoluteGameDirectoryPath(path));
 		return null;
 	}
 
@@ -82,7 +83,7 @@ public class WindowHandler {
 					LOGGER.error("[FANCYMENU] Unable to set custom window icons! 16x16 icon or 32x32 icon not found!");
 					return;
 				}
-				MacosUtil.loadIcon(IoSupplier.create(iMacOS.toPath()));
+				loadMacOsIcon(InputStreamSupplier.create(iMacOS.toPath()));
 			} catch (Exception ex) {
 				LOGGER.error("[FANCYMENU] Failed to set custom window icon!");
 				ex.printStackTrace();
@@ -109,7 +110,7 @@ public class WindowHandler {
 					LOGGER.error("[FANCYMENU] Unable to set custom window icons! 32x32 icon has wrong resolution! Has To be exactly 32x32 pixels!");
 					return;
 				}
-				Minecraft.getInstance().getWindow().setIcon(IoSupplier.create(i16.toPath()), IoSupplier.create(i32.toPath()));
+				Minecraft.getInstance().getWindow().setIcon(InputStreamSupplier.create(i16.toPath()).get(), InputStreamSupplier.create(i32.toPath()).get());
 				LOGGER.info("[FANCYMENU] Custom window icon successfully updated!");
 			} catch (Exception e) {
 				LOGGER.error("[FANCYMENU] Failed to set custom window icon!");
@@ -120,22 +121,24 @@ public class WindowHandler {
 
 	public static void resetWindowIcon() {
 		try {
-			if (Minecraft.ON_OSX) {
-				MacosUtil.loadIcon(getVanillaWindowIconFile("icons", "minecraft.icns"));
-			} else {
-				Minecraft.getInstance().getWindow().setIcon(getVanillaWindowIconFile("icons", "icon_16x16.png"), getVanillaWindowIconFile("icons", "icon_32x32.png"));
-			}
+			setVanillaIcons();
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 	}
 
-	private static IoSupplier<InputStream> getVanillaWindowIconFile(String... $$0) throws IOException {
-		IoSupplier<InputStream> $$1 = Minecraft.getInstance().getVanillaPackResources().getRootResource($$0);
-		if ($$1 == null) {
-			throw new FileNotFoundException(String.join("/", $$0));
-		} else {
-			return $$1;
+	private static void setVanillaIcons() {
+		if (Minecraft.ON_OSX) return;
+		try {
+			InputStream $$9 = Minecraft.getInstance().getClientPackSource()
+					.getVanillaPack()
+					.getResource(PackType.CLIENT_RESOURCES, new ResourceLocation("icons/icon_16x16.png"));
+			InputStream $$10 = Minecraft.getInstance().getClientPackSource()
+					.getVanillaPack()
+					.getResource(PackType.CLIENT_RESOURCES, new ResourceLocation("icons/icon_32x32.png"));
+			Minecraft.getInstance().getWindow().setIcon($$9, $$10);
+		} catch (IOException ex) {
+			LOGGER.error("Couldn't set icon", ex);
 		}
 	}
 
@@ -150,6 +153,28 @@ public class WindowHandler {
 			windowTitle = null;
 		}
 		return windowTitle;
+	}
+
+	@SuppressWarnings("all")
+	public static void loadMacOsIcon(InputStreamSupplier<InputStream> inputStreamSupplier) throws IOException {
+		try (InputStream in = inputStreamSupplier.get()) {
+			String $$2 = Base64.getEncoder().encodeToString(in.readAllBytes());
+			Client $$3 = Client.getInstance();
+			Object $$4 = $$3.sendProxy("NSData", "alloc", new Object[0]).send("initWithBase64Encoding:", new Object[]{$$2});
+			Object $$5 = $$3.sendProxy("NSImage", "alloc", new Object[0]).send("initWithData:", new Object[]{$$4});
+			$$3.sendProxy("NSApplication", "sharedApplication", new Object[0]).send("setApplicationIconImage:", new Object[]{$$5});
+		}
+	}
+
+	@FunctionalInterface
+	private interface InputStreamSupplier<T> {
+
+		static InputStreamSupplier<InputStream> create(Path $$0) {
+			return () -> Files.newInputStream($$0);
+		}
+
+		T get() throws IOException;
+
 	}
 
 }

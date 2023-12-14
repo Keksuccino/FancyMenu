@@ -50,7 +50,7 @@ public interface CustomizableSlider {
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)this).getAlphaFancyMenu());
             RenderSystem.enableBlend();
             RenderingUtils.bindTexture(location);
-            GuiComponent.blit(pose, widget.getX(), widget.getY(), 0.0F, 0.0F, widget.getWidth(), widget.getHeight(), widget.getWidth(), widget.getHeight());
+            GuiComponent.blit(pose, widget.x, widget.y, 0.0F, 0.0F, widget.getWidth(), widget.getHeight(), widget.getWidth(), widget.getHeight());
             RenderingUtils.resetShaderColor();
             return false;
         }

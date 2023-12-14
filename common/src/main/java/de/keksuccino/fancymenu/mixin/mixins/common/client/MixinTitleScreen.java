@@ -12,7 +12,6 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.LogoRenderer;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import org.spongepowered.asm.mixin.Mixin;
@@ -20,9 +19,9 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import java.util.function.BiConsumer;
 
 @Mixin(TitleScreen.class)
 public abstract class MixinTitleScreen {
@@ -30,13 +29,18 @@ public abstract class MixinTitleScreen {
     @Shadow public boolean fading;
     @Unique boolean handleRealmsNotificationFancyMenu = false;
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/LogoRenderer;renderLogo(Lcom/mojang/blaze3d/vertex/PoseStack;IF)V"))
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/TitleScreen;blit(Lcom/mojang/blaze3d/vertex/PoseStack;IIIIFFIIII)V", shift = At.Shift.AFTER))
     private void fireBackgroundRenderedEventAfterPanoramaOverlayFancyMenu(PoseStack pose, int $$1, int $$2, float $$3, CallbackInfo info) {
         EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent((Screen)((Object)this), pose));
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/LogoRenderer;renderLogo(Lcom/mojang/blaze3d/vertex/PoseStack;IF)V"))
-    private boolean cancelVanillaLogoRenderingFancyMenu(LogoRenderer instance, PoseStack poseStack, int i, float f) {
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/TitleScreen;blitOutlineBlack(IILjava/util/function/BiConsumer;)V"))
+    private boolean cancelVanillaLogoRenderingFancyMenu(TitleScreen instance, int i1, int i2, BiConsumer biConsumer) {
+        return !ScreenCustomization.isCustomizationEnabledForScreen((Screen)((Object)this));
+    }
+
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/TitleScreen;blit(Lcom/mojang/blaze3d/vertex/PoseStack;IIFFIIII)V"))
+    private boolean cancelVanillaLogoEditionRenderingFancyMenu(TitleScreen instance, int i1, int i2, BiConsumer biConsumer) {
         return !ScreenCustomization.isCustomizationEnabledForScreen((Screen)((Object)this));
     }
 

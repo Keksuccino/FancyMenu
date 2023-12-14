@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.resource.MinecraftResourceUtils;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.melody.resources.audio.openal.ALAudioBuffer;
 import de.keksuccino.melody.resources.audio.openal.ALAudioClip;
@@ -78,9 +79,9 @@ public class WavAudio implements IAudio {
         }
 
         try {
-            Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(location);
+            Optional<Resource> resource = MinecraftResourceUtils.get(location);
             if (resource.isPresent()) {
-                InputStream in = resource.get().open();
+                InputStream in = resource.get().getInputStream();
                 of(in, location.toString(), audio, clip);
             }
         } catch (Exception ex) {
@@ -363,7 +364,7 @@ public class WavAudio implements IAudio {
     public @Nullable InputStream open() throws IOException {
         if (this.sourceURL != null) return WebUtils.openResourceStream(this.sourceURL);
         if (this.sourceFile != null) return new FileInputStream(this.sourceFile);
-        if (this.sourceLocation != null) return Minecraft.getInstance().getResourceManager().open(this.sourceLocation);
+        if (this.sourceLocation != null) return MinecraftResourceUtils.open(this.sourceLocation);
         return null;
     }
 

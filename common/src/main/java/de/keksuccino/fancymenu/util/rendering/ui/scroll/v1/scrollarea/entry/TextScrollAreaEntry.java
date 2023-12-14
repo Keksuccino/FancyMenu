@@ -8,7 +8,6 @@ import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.function.Consumer;
 
 public class TextScrollAreaEntry extends ScrollAreaEntry {

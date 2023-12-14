@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
@@ -54,7 +55,7 @@ public class ConfirmationScreen extends Screen {
     public static ConfirmationScreen ofStrings(@NotNull Consumer<Boolean> callback, @NotNull String... textLines) {
         ConfirmationScreen s = new ConfirmationScreen(callback, new ArrayList<>());
         for (String line : textLines) {
-            s.textLines.add(Component.literal(line));
+            s.textLines.add(Components.literal(line));
         }
         return s;
     }
@@ -75,7 +76,7 @@ public class ConfirmationScreen extends Screen {
     }
 
     protected ConfirmationScreen(@NotNull Consumer<Boolean> callback, @NotNull List<Component> textLines) {
-        super((!textLines.isEmpty()) ? textLines.get(0) : Component.empty());
+        super((!textLines.isEmpty()) ? textLines.get(0) : Components.empty());
         this.callback = callback;
         this.textLines = textLines;
     }
@@ -83,7 +84,7 @@ public class ConfirmationScreen extends Screen {
     @Override
     protected void init() {
 
-        this.confirmButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.ok"), (button) -> {
+        this.confirmButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.guicomponents.ok"), (button) -> {
             this.callback.accept(true);
         }).setForceDefaultTooltipStyle(true).setTooltipSupplier(consumes -> {
             if (!consumes.active) {
@@ -95,7 +96,7 @@ public class ConfirmationScreen extends Screen {
         this.addWidget(this.confirmButton);
         UIBase.applyDefaultWidgetSkinTo(this.confirmButton);
 
-        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
+        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.guicomponents.cancel"), (button) -> {
             this.callback.accept(false);
         });
         this.addWidget(this.cancelButton);
@@ -123,12 +124,12 @@ public class ConfirmationScreen extends Screen {
         }
 
         this.confirmButton.active = this.delayEnd <= System.currentTimeMillis();
-        this.confirmButton.setX((this.width / 2) - this.confirmButton.getWidth() - 5);
-        this.confirmButton.setY(this.height - 40);
+        this.confirmButton.x = (this.width / 2) - this.confirmButton.getWidth() - 5;
+        this.confirmButton.y = this.height - 40;
         this.confirmButton.render(pose, mouseX, mouseY, partial);
 
-        this.cancelButton.setX((this.width / 2) + 5);
-        this.cancelButton.setY(this.height - 40);
+        this.cancelButton.x = (this.width / 2) + 5;
+        this.cancelButton.y = this.height - 40;
         this.cancelButton.render(pose, mouseX, mouseY, partial);
 
         super.render(pose, mouseX, mouseY, partial);

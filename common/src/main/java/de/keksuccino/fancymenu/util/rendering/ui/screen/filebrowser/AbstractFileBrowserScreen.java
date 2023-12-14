@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.file.FileUtils;
@@ -14,6 +15,7 @@ import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
 import de.keksuccino.fancymenu.util.file.type.types.TextFileType;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.component.ComponentWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
@@ -57,7 +59,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
     protected static final ResourceLocation GO_UP_ICON_TEXTURE = new ResourceLocation("fancymenu", "textures/go_up_icon.png");
     protected static final ResourceLocation FILE_ICON_TEXTURE = new ResourceLocation("fancymenu", "textures/file_icon.png");
     protected static final ResourceLocation FOLDER_ICON_TEXTURE = new ResourceLocation("fancymenu", "textures/folder_icon.png");
-    protected static final Component FILE_TYPE_PREFIX_TEXT = Component.translatable("fancymenu.file_browser.file_type");
+    protected static final Component FILE_TYPE_PREFIX_TEXT = Components.translatable("fancymenu.file_browser.file_type");
 
     @Nullable
     protected static File lastDirectory;
@@ -123,20 +125,20 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         this.addWidget(this.confirmButton);
         UIBase.applyDefaultWidgetSkinTo(this.confirmButton);
 
-        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
+        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.guicomponents.cancel"), (button) -> {
             this.callback.accept(null);
         });
         this.addWidget(this.cancelButton);
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
-        this.openInExplorerButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.ui.filechooser.open_in_explorer"), (button) -> {
+        this.openInExplorerButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.ui.filechooser.open_in_explorer"), (button) -> {
             File selected = this.getSelectedFile();
             if ((selected != null) && selected.isDirectory()) {
                 FileUtils.openFile(selected);
             } else if (this.currentDir != null) {
                 FileUtils.openFile(this.currentDir);
             }
-            MainThreadTaskExecutor.executeInMainThread(() -> button.setFocused(false), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+            MainThreadTaskExecutor.executeInMainThread(() -> ((IMixinAbstractWidget)button).setFocusedFancyMenu(false), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
         });
         this.addWidget(this.openInExplorerButton);
         UIBase.applyDefaultWidgetSkinTo(this.openInExplorerButton);
@@ -170,7 +172,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         this.font.draw(pose, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
 
-        this.font.draw(pose, Component.translatable("fancymenu.ui.filechooser.files"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        this.font.draw(pose, Components.translatable("fancymenu.ui.filechooser.files"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
 
         int currentDirFieldYEnd = this.renderCurrentDirectoryField(pose, mouseX, mouseY, partial, 20, 50 + 15, this.width - 260 - 20, this.font.lineHeight + 6);
 
@@ -178,7 +180,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
         this.renderFileTypeScrollArea(pose, mouseX, mouseY, partial);
 
-        Component previewLabel = Component.translatable("fancymenu.ui.filechooser.preview");
+        Component previewLabel = Components.translatable("fancymenu.ui.filechooser.preview");
         int previewLabelWidth = this.font.width(previewLabel);
         this.font.draw(pose, previewLabel, this.width - 20 - previewLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
 
@@ -195,20 +197,20 @@ public abstract class AbstractFileBrowserScreen extends Screen {
     }
 
     protected void renderOpenInExplorerButton(PoseStack pose, int mouseX, int mouseY, float partial) {
-        this.openInExplorerButton.setX(this.width - 20 - this.openInExplorerButton.getWidth());
-        this.openInExplorerButton.setY(this.cancelButton.getY() - 15 - 20);
+        this.openInExplorerButton.x = this.width - 20 - this.openInExplorerButton.getWidth();
+        this.openInExplorerButton.y = this.cancelButton.y - 15 - 20;
         this.openInExplorerButton.render(pose, mouseX, mouseY, partial);
     }
 
     protected void renderConfirmButton(PoseStack pose, int mouseX, int mouseY, float partial) {
-        this.confirmButton.setX(this.width - 20 - this.confirmButton.getWidth());
-        this.confirmButton.setY(this.height - 20 - 20);
+        this.confirmButton.x = this.width - 20 - this.confirmButton.getWidth();
+        this.confirmButton.y = this.height - 20 - 20;
         this.confirmButton.render(pose, mouseX, mouseY, partial);
     }
 
     protected void renderCancelButton(PoseStack pose, int mouseX, int mouseY, float partial) {
-        this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
-        this.cancelButton.setY(this.confirmButton.getY() - 5 - 20);
+        this.cancelButton.x = this.width - 20 - this.cancelButton.getWidth();
+        this.cancelButton.y = this.confirmButton.y - 5 - 20;
         this.cancelButton.render(pose, mouseX, mouseY, partial);
     }
 
@@ -236,7 +238,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
             ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
             if (loc != null) {
                 AspectRatio ratio = t.getAspectRatio();
-                int[] size = ratio.getAspectRatioSizeByMaximumSize(200, (this.cancelButton.getY() - 50) - (50 + 15));
+                int[] size = ratio.getAspectRatioSizeByMaximumSize(200, (this.cancelButton.y - 50) - (50 + 15));
                 int w = size[0];
                 int h = size[1];
                 int x = this.width - 20 - w;
@@ -265,8 +267,8 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         int yEnd = y + height;
         fill(pose, x + 1, y + 1, xEnd - 1, yEnd - 1, UIBase.getUIColorTheme().area_background_color.getColorInt());
         UIBase.renderBorder(pose, x, y, xEnd, yEnd, 1, UIBase.getUIColorTheme().element_border_color_normal.getColor(), true, true, true, true);
-        this.currentDirectoryComponent.setX(x + 4);
-        this.currentDirectoryComponent.setY(y + (height / 2) - (this.currentDirectoryComponent.getHeight() / 2));
+        this.currentDirectoryComponent.x = x + 4;
+        this.currentDirectoryComponent.y = y + (height / 2) - (this.currentDirectoryComponent.getHeight() / 2);
         this.currentDirectoryComponent.render(pose, mouseX, mouseY, partial);
         return yEnd;
     }
@@ -301,8 +303,8 @@ public abstract class AbstractFileBrowserScreen extends Screen {
                         File fFinal = f2;
                         this.currentDirectoryComponent.append(ComponentWidget.empty(0, 0)
                                 .setTextSupplier(consumes -> {
-                                    if (consumes.isHoveredOrFocused()) return Component.literal(fFinal.getName()).setStyle(Style.EMPTY.withStrikethrough(true).withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
-                                    return Component.literal(fFinal.getName());
+                                    if (consumes.isHoveredOrFocused()) return Components.literal(fFinal.getName()).setStyle(Style.EMPTY.withStrikethrough(true).withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+                                    return Components.literal(fFinal.getName());
                                 })
                         );
                         this.currentDirectoryComponent.append(ComponentWidget.literal("/", 0, 0));
@@ -312,8 +314,8 @@ public abstract class AbstractFileBrowserScreen extends Screen {
             for (File f : this.splitCurrentIntoSeparateDirectories()) {
                 ComponentWidget w = ComponentWidget.empty(0, 0)
                         .setTextSupplier(consumes -> {
-                            if (consumes.isHoveredOrFocused()) return Component.literal(f.getName()).withStyle(Style.EMPTY.withUnderlined(true));
-                            return Component.literal(f.getName());
+                            if (consumes.isHoveredOrFocused()) return Components.literal(f.getName()).withStyle(Style.EMPTY.withUnderlined(true));
+                            return Components.literal(f.getName());
                         })
                         .setOnClick(componentWidget -> {
                             this.setDirectory(f, true);
@@ -474,7 +476,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
     public void updateFileTypeScrollArea() {
         this.fileTypeScrollArea.clearEntries();
-        this.currentFileTypesComponent = Component.translatable("fancymenu.file_browser.file_type.types.all").append(" (*)");
+        this.currentFileTypesComponent = Components.translatable("fancymenu.file_browser.file_type.types.all").append(" (*)");
         if (this.fileTypes != null) {
             String types = "";
             for (FileType<?> type : this.fileTypes.getFileTypes()) {
@@ -484,8 +486,8 @@ public abstract class AbstractFileBrowserScreen extends Screen {
                 }
             }
             Component fileTypeDisplayName = this.fileTypes.getDisplayName();
-            if (fileTypeDisplayName == null) fileTypeDisplayName = Component.empty();
-            this.currentFileTypesComponent = Component.empty().append(fileTypeDisplayName).append(Component.literal(" (")).append(Component.literal(types)).append(Component.literal(")"));
+            if (fileTypeDisplayName == null) fileTypeDisplayName = Components.empty();
+            this.currentFileTypesComponent = Components.empty().append(fileTypeDisplayName).append(Components.literal(" (")).append(Components.literal(types)).append(Components.literal(")"));
         }
         this.currentFileTypesComponent = this.currentFileTypesComponent.withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
         TextScrollAreaEntry entry = new TextScrollAreaEntry(this.fileTypeScrollArea, this.currentFileTypesComponent, textScrollAreaEntry -> {});
@@ -539,18 +541,18 @@ public abstract class AbstractFileBrowserScreen extends Screen {
                         for (String s : lines) {
                             line++;
                             if (line < 70) {
-                                TextScrollAreaEntry e = new TextScrollAreaEntry(this.previewTextScrollArea, Component.literal(s).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), (entry) -> {});
+                                TextScrollAreaEntry e = new TextScrollAreaEntry(this.previewTextScrollArea, Components.literal(s).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), (entry) -> {});
                                 e.setSelectable(false);
                                 e.setBackgroundColorHover(e.getBackgroundColorIdle());
                                 e.setPlayClickSound(false);
                                 this.previewTextScrollArea.addEntry(e);
                             } else {
-                                TextScrollAreaEntry e = new TextScrollAreaEntry(this.previewTextScrollArea, Component.literal("......").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), (entry) -> {});
+                                TextScrollAreaEntry e = new TextScrollAreaEntry(this.previewTextScrollArea, Components.literal("......").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), (entry) -> {});
                                 e.setSelectable(false);
                                 e.setBackgroundColorHover(e.getBackgroundColorIdle());
                                 e.setPlayClickSound(false);
                                 this.previewTextScrollArea.addEntry(e);
-                                TextScrollAreaEntry e2 = new TextScrollAreaEntry(this.previewTextScrollArea, Component.literal("  ").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), (entry) -> {});
+                                TextScrollAreaEntry e2 = new TextScrollAreaEntry(this.previewTextScrollArea, Components.literal("  ").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), (entry) -> {});
                                 e2.setSelectable(false);
                                 e2.setBackgroundColorHover(e2.getBackgroundColorIdle());
                                 e2.setPlayClickSound(false);
@@ -578,7 +580,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
     protected void setNoTextPreview() {
         if (this.previewTextScrollArea == null) return;
         this.previewTextScrollArea.clearEntries();
-        TextScrollAreaEntry e = new TextScrollAreaEntry(this.previewTextScrollArea, Component.translatable("fancymenu.ui.filechooser.no_preview").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), (entry) -> {});
+        TextScrollAreaEntry e = new TextScrollAreaEntry(this.previewTextScrollArea, Components.translatable("fancymenu.ui.filechooser.no_preview").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), (entry) -> {});
         e.setSelectable(false);
         e.setBackgroundColorHover(e.getBackgroundColorIdle());
         e.setPlayClickSound(false);
@@ -666,7 +668,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
     protected boolean isWidgetHovered() {
         for (GuiEventListener l : this.children()) {
             if (l instanceof AbstractWidget w) {
-                if (w.isHovered()) return true;
+                if (((IMixinAbstractWidget)w).getIsHoveredFancyMenu()) return true;
             }
         }
         return false;
@@ -686,7 +688,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
             super(parent, 100, 30);
             this.file = file;
-            this.fileNameComponent = Component.literal(this.file.getName());
+            this.fileNameComponent = Components.literal(this.file.getName());
 
             this.setWidth(this.font.width(this.fileNameComponent) + (BORDER * 2) + 20 + 3);
             this.setHeight((BORDER * 2) + 20);
@@ -739,7 +741,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         public ParentDirScrollAreaEntry(@NotNull ScrollArea parent) {
 
             super(parent, 100, 30);
-            this.labelComponent = Component.translatable("fancymenu.ui.filechooser.go_up").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()).withBold(true));
+            this.labelComponent = Components.translatable("fancymenu.ui.filechooser.go_up").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()).withBold(true));
 
             this.setWidth(this.font.width(this.labelComponent) + (BORDER * 2) + 20 + 3);
             this.setHeight((BORDER * 2) + 20);

@@ -10,6 +10,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.level.progress.StoringChunkProgressListener;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;
@@ -48,7 +49,7 @@ public abstract class MixinLevelLoadingScreen extends Screen {
 
     @Inject(method = "render", at = @At("HEAD"))
     private void beforeRenderFancyMenu(PoseStack $$0, int $$1, int $$2, float $$3, CallbackInfo info) {
-        this.percentageTextFancyMenu.setMessage(Component.literal(this.getFormattedProgress()));
+        this.percentageTextFancyMenu.setMessage(new TextComponent(this.getFormattedProgress()));
     }
 
     @Inject(method = "render", at = @At("HEAD"))

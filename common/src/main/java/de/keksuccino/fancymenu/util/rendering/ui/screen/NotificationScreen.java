@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.client.gui.screens.Screen;
@@ -10,7 +11,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -60,7 +60,7 @@ public class NotificationScreen extends Screen {
     public static NotificationScreen ofStrings(@NotNull Consumer<Boolean> callback, @NotNull String... textLines) {
         NotificationScreen s = new NotificationScreen(callback, new ArrayList<>());
         for (String line : textLines) {
-            s.textLines.add(Component.literal(line));
+            s.textLines.add(Components.literal(line));
         }
         return s;
     }
@@ -81,7 +81,7 @@ public class NotificationScreen extends Screen {
     }
 
     protected NotificationScreen(@NotNull Consumer<Boolean> callback, @NotNull List<Component> textLines) {
-        super((!textLines.isEmpty()) ? textLines.get(0) : Component.empty());
+        super((!textLines.isEmpty()) ? textLines.get(0) : Components.empty());
         this.callback = callback;
         this.textLines = textLines;
     }
@@ -89,7 +89,7 @@ public class NotificationScreen extends Screen {
     @Override
     protected void init() {
 
-        this.okayButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.ok"), (button) -> {
+        this.okayButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.guicomponents.ok"), (button) -> {
             this.callback.accept(true);
         });
         this.addWidget(this.okayButton);
@@ -116,8 +116,8 @@ public class NotificationScreen extends Screen {
             lineCounter++;
         }
 
-        this.okayButton.setX((this.width / 2) - (this.okayButton.getWidth() / 2));
-        this.okayButton.setY(this.height - 40);
+        this.okayButton.x = (this.width / 2) - (this.okayButton.getWidth() / 2);
+        this.okayButton.y = this.height - 40;
         this.okayButton.render(pose, mouseX, mouseY, partial);
 
         super.render(pose, mouseX, mouseY, partial);

@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
@@ -15,7 +16,7 @@ import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -33,7 +34,7 @@ import java.util.List;
 import java.util.Objects;
 
 @SuppressWarnings("all")
-public class ContextMenu extends GuiComponent implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget {
+public class ContextMenu extends GuiComponent implements Widget, GuiEventListener, NarratableEntry, NavigatableWidget {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -724,15 +725,6 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
     }
 
     @Override
-    public void setFocused(boolean var1) {
-    }
-
-    @Override
-    public boolean isFocused() {
-        return false;
-    }
-
-    @Override
     public @NotNull NarrationPriority narrationPriority() {
         return NarrationPriority.NONE;
     }
@@ -871,7 +863,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         return l;
     }
 
-    public static abstract class ContextMenuEntry<T extends ContextMenuEntry<T>> extends GuiComponent implements Renderable, GuiEventListener {
+    public static abstract class ContextMenuEntry<T extends ContextMenuEntry<T>> extends GuiComponent implements Widget, GuiEventListener {
 
         protected String identifier;
         protected ContextMenu parent;
@@ -1185,7 +1177,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         @Override
         public ClickableContextMenuEntry<T> copy() {
-            ClickableContextMenuEntry<T> copy = new ClickableContextMenuEntry<>(this.identifier, this.parent, Component.literal(""), this.clickAction);
+            ClickableContextMenuEntry<T> copy = new ClickableContextMenuEntry<>(this.identifier, this.parent, Components.literal(""), this.clickAction);
             copy.shortcutTextSupplier = this.shortcutTextSupplier;
             copy.labelSupplier = this.labelSupplier;
             copy.height = this.height;
@@ -1213,15 +1205,6 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         }
 
         @Override
-        public void setFocused(boolean var1) {
-        }
-
-        @Override
-        public boolean isFocused() {
-            return false;
-        }
-
-        @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             if ((button == 0) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered() && !this.tooltipIconHovered) {
                 if (FancyMenu.getOptions().playUiClickSounds.getValue() && this.enableClickSound) {
@@ -1245,7 +1228,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
         protected final ILocalizedValueCycle<V> valueCycle;
 
         public ValueCycleContextMenuEntry(@NotNull String identifier, @NotNull ContextMenu parent, @NotNull ILocalizedValueCycle<V> valueCycle) {
-            super(identifier, parent, Component.empty(), (menu, entry) -> valueCycle.next());
+            super(identifier, parent, Components.empty(), (menu, entry) -> valueCycle.next());
             this.valueCycle = valueCycle;
             this.labelSupplier = (menu, entry) -> this.valueCycle.getCycleComponent();
         }
@@ -1428,7 +1411,7 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
 
         @Override
         public SubMenuContextMenuEntry copy() {
-            SubMenuContextMenuEntry copy = new SubMenuContextMenuEntry(this.identifier, this.parent, Component.literal(""), new ContextMenu());
+            SubMenuContextMenuEntry copy = new SubMenuContextMenuEntry(this.identifier, this.parent, Components.literal(""), new ContextMenu());
             copy.height = this.height;
             copy.tickAction = this.tickAction;
             copy.tooltipSupplier = this.tooltipSupplier;
@@ -1507,15 +1490,6 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             return i;
         }
 
-        @Override
-        public void setFocused(boolean var1) {
-        }
-
-        @Override
-        public boolean isFocused() {
-            return false;
-        }
-
     }
 
     public static class SpacerContextMenuEntry extends ContextMenuEntry<SpacerContextMenuEntry> {
@@ -1541,15 +1515,6 @@ public class ContextMenu extends GuiComponent implements Renderable, GuiEventLis
             SpacerContextMenuEntry e = new SpacerContextMenuEntry(this.identifier, this.parent);
             e.height = this.height;
             return e;
-        }
-
-        @Override
-        public void setFocused(boolean var1) {
-        }
-
-        @Override
-        public boolean isFocused() {
-            return false;
         }
 
     }

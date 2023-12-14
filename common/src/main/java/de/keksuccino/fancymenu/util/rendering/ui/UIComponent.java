@@ -2,16 +2,15 @@ package de.keksuccino.fancymenu.util.rendering.ui;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class UIComponent extends UIBase implements FocuslessContainerEventHandler, Renderable, NarratableEntry {
+public abstract class UIComponent extends UIBase implements FocuslessContainerEventHandler, Widget, NarratableEntry {
 
     public float posZ = 0f;
     protected boolean hovered = false;
@@ -269,15 +268,6 @@ public abstract class UIComponent extends UIBase implements FocuslessContainerEv
     @Override
     public boolean isMouseOver(double ignoredMouseX, double ignoredMouseY) {
         return this.isMouseOver();
-    }
-
-    @Override
-    public void setFocused(boolean var1) {
-    }
-
-    @Override
-    public boolean isFocused() {
-        return false;
     }
 
     @Override

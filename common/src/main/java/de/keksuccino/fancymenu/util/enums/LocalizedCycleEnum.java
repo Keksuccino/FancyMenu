@@ -5,6 +5,7 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TranslatableComponent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,7 +16,7 @@ public interface LocalizedCycleEnum<E> extends LocalizedEnum<E> {
 
     @NotNull
     default MutableComponent getCycleComponent() {
-        return Component.translatable(this.getLocalizationKeyBase(), this.getValueComponent()).withStyle(this.getCycleComponentStyle());
+        return new TranslatableComponent(this.getLocalizationKeyBase(), this.getValueComponent()).withStyle(this.getCycleComponentStyle());
     }
 
     @NotNull

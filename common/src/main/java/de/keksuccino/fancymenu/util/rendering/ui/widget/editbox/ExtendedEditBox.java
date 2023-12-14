@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
@@ -43,30 +44,33 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     protected String inputPrefix;
     @Nullable
     protected String inputSuffix;
+    protected Component hint;
 
     public ExtendedEditBox(Font font, int x, int y, int width, int height, Component hint) {
         super(font, x, y, width, height, hint);
         this.font = font;
+        this.hint = hint;
     }
 
     public ExtendedEditBox(Font font, int x, int y, int width, int height, @Nullable EditBox editBox, Component hint) {
         super(font, x, y, width, height, editBox, hint);
         this.font = font;
+        this.hint = hint;
     }
 
     @Override
-    public void renderWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void renderButton(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
         IMixinEditBox access = ((IMixinEditBox)this);
         boolean bordered = access.getBorderedFancyMenu();
 
         if (this.isVisible()) {
 
-            fill(pose, this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, this.backgroundColor.getColorInt());
+            fill(pose, this.x, this.y, this.x + this.width, this.y + this.height, this.backgroundColor.getColorInt());
             if (bordered) {
                 int borderColor = this.isFocused() ? this.borderFocusedColor.getColorInt() : this.borderNormalColor.getColorInt();
-//                fill(pose, this.getX() - 1, this.getY() - 1, this.getX() + this.width + 1, this.getY() + this.height + 1, borderColor);
-                UIBase.renderBorder(pose, this.getX() - 1, this.getY() - 1, this.getX() + this.width + 1, this.getY() + this.height + 1, 1, borderColor, true, true, true, true);
+//                fill(pose, this.x - 1, this.y - 1, this.x + this.width + 1, this.y + this.height + 1, borderColor);
+                UIBase.renderBorder(pose, this.x - 1, this.y - 1, this.x + this.width + 1, this.y + this.height + 1, 1, borderColor, true, true, true, true);
             }
 
             int textColor = access.getIsEditableFancyMenu() ? this.textColor.getColorInt() : this.textColorUneditable.getColorInt();
@@ -75,8 +79,8 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             String text = this.font.plainSubstrByWidth(this.getValue().substring(access.getDisplayPosFancyMenu()), this.getInnerWidth());
             boolean isCursorInsideVisibleText = cursorPos >= 0 && cursorPos <= text.length();
             boolean isCursorVisible = this.isFocused() && access.getFrameFancyMenu() / 6 % 2 == 0 && isCursorInsideVisibleText;
-            int textX = bordered ? this.getX() + 4 : this.getX();
-            int textY = bordered ? this.getY() + (this.height - 8) / 2 : this.getY();
+            int textX = bordered ? this.x + 4 : this.x;
+            int textY = bordered ? this.y + (this.height - 8) / 2 : this.y;
             int textXAfterCursor = textX;
             if (highlightPos > text.length()) {
                 highlightPos = text.length();
@@ -86,12 +90,12 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
 
             if (!text.isEmpty()) {
                 String textBeforeCursor = isCursorInsideVisibleText ? text.substring(0, cursorPos) : text;
-                MutableComponent beforeCursorComp = Component.literal("");
+                MutableComponent beforeCursorComp = Components.literal("");
                 if (this.characterRenderFormatter == null) {
-                    beforeCursorComp = Component.literal(textBeforeCursor);
+                    beforeCursorComp = Components.literal(textBeforeCursor);
                 } else {
                     for (char c : textBeforeCursor.toCharArray()) {
-                        MutableComponent comp = this.characterRenderFormatter.formatComponent(this, Component.literal(String.valueOf(c)), textCharacterRenderIndex, c, text, this.getValue());
+                        MutableComponent comp = this.characterRenderFormatter.formatComponent(this, Components.literal(String.valueOf(c)), textCharacterRenderIndex, c, text, this.getValue());
                         beforeCursorComp.append(comp);
                         textCharacterRenderIndex++;
                     }
@@ -114,12 +118,12 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
 
             if (!text.isEmpty() && isCursorInsideVisibleText && cursorPos < text.length()) {
                 String textAfterCursor = text.substring(cursorPos);
-                MutableComponent afterCursorComp = Component.literal("");
+                MutableComponent afterCursorComp = Components.literal("");
                 if (this.characterRenderFormatter == null) {
-                    afterCursorComp = Component.literal(textAfterCursor);
+                    afterCursorComp = Components.literal(textAfterCursor);
                 } else {
                     for (char c : textAfterCursor.toCharArray()) {
-                        MutableComponent comp = this.characterRenderFormatter.formatComponent(this, Component.literal(String.valueOf(c)), textCharacterRenderIndex, c, text, this.getValue());
+                        MutableComponent comp = this.characterRenderFormatter.formatComponent(this, Components.literal(String.valueOf(c)), textCharacterRenderIndex, c, text, this.getValue());
                         afterCursorComp.append(comp);
                         textCharacterRenderIndex++;
                     }
@@ -131,7 +135,6 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
                 }
             }
 
-            Component hint = access.getHintFancyMenu();
             if ((hint != null) && text.isEmpty() && !this.isFocused()) {
                 if (this.textShadow) {
                     this.font.drawShadow(pose, hint, (float) textXAfterCursor, (float) textY, textColor);
@@ -158,7 +161,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
 
             if (highlightPos != cursorPos) {
                 int l1 = textX + this.font.width(text.substring(0, highlightPos));
-                access.invokeRenderHighlightFancyMenu(pose, finalTextXAfterCursor, textY - 1, l1 - 1, textY + 1 + 9);
+                access.invokeRenderHighlightFancyMenu(finalTextXAfterCursor, textY - 1, l1 - 1, textY + 1 + 9);
             }
 
         }

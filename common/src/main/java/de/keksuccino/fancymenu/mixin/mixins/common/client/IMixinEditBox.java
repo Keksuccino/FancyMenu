@@ -1,4 +1,3 @@
-
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -8,7 +7,6 @@ import net.minecraft.util.FormattedCharSequence;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
-
 import java.util.function.BiFunction;
 
 @Mixin(EditBox.class)
@@ -38,10 +36,10 @@ public interface IMixinEditBox {
 
     @Accessor("frame") int getFrameFancyMenu();
 
-    @Accessor("hint") Component getHintFancyMenu();
+//    @Accessor("hint") Component getHintFancyMenu();
 
     @Accessor("suggestion") String getSuggestionFancyMenu();
 
-    @Invoker("renderHighlight") void invokeRenderHighlightFancyMenu(PoseStack matrix, int xStart, int yStart, int xEnd, int yEnd);
+    @Invoker("renderHighlight") void invokeRenderHighlightFancyMenu(int xStart, int yStart, int xEnd, int yEnd);
 
 }

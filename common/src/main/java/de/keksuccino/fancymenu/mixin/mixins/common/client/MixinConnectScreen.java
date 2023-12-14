@@ -13,6 +13,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
@@ -26,7 +27,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ConnectScreen.class)
 public abstract class MixinConnectScreen extends Screen {
 
-    private static final Logger LOGGER = LogManager.getLogger();
+    @Unique
+    private static final Logger LOGGER_FANCYMENU = LogManager.getLogger();
 
     @Shadow private Component status;
 
@@ -56,7 +58,7 @@ public abstract class MixinConnectScreen extends Screen {
     }
 
     @Inject(at = @At("HEAD"), method = "connect", cancellable = true)
-    private void onConnectFancyMenu(Minecraft p_251955_, ServerAddress address, ServerData p_252078_, CallbackInfo info) {
+    private void onConnectFancyMenu(Minecraft p_251955_, ServerAddress address, CallbackInfo info) {
         if (address.getHost().equals("%fancymenu_dummy_address%")) {
             info.cancel();
         }
@@ -64,7 +66,7 @@ public abstract class MixinConnectScreen extends Screen {
 
     @Inject(method = "updateStatus", at = @At("RETURN"))
     private void afterUpdateStatusFancyMenu(Component component, CallbackInfo info) {
-        this.statusTextFancyMenu.setMessage((component != null) ? component : Component.empty());
+        this.statusTextFancyMenu.setMessage((component != null) ? component : new TextComponent(""));
     }
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/ConnectScreen;drawCenteredString(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)V"))

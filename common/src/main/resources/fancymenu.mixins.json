@@ -4,7 +4,6 @@
   "compatibilityLevel": "JAVA_17",
   "client": [
     "client.IMixinAbstractSelectionList",
-    "client.IMixinAbstractSliderButton",
     "client.IMixinAbstractWidget",
     "client.IMixinButton",
     "client.IMixinChatScreen",
@@ -21,7 +20,6 @@
     "client.IMixinScreen",
     "client.IMixinServerList",
     "client.IMixinSuggestionsList",
-    "client.MixinAbstractButton",
     "client.MixinAbstractContainerEventHandler",
     "client.MixinAbstractSelectionList",
     "client.MixinAbstractSliderButton",
@@ -44,7 +42,6 @@
     "client.MixinScreen",
     "client.MixinSoundEngine",
     "client.MixinStringDecomposer",
-    "client.MixinTabManager",
     "client.MixinTitleScreen",
     "client.MixinWorldListEntry"
   ],

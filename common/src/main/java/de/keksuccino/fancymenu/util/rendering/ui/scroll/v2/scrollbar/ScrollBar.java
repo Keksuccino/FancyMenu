@@ -5,7 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.konkrete.rendering.RenderUtils;
-import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -13,14 +13,13 @@ import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
-public class ScrollBar extends UIBase implements GuiEventListener, Renderable, NarratableEntry {
+public class ScrollBar extends UIBase implements GuiEventListener, Widget, NarratableEntry {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -262,15 +261,6 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
     public boolean isMouseOver(double mouseX, double mouseY) {
         if (this.leftMouseDownOnGrabber) return true;
         return this.isMouseInsideScrollArea(mouseX, mouseY, true);
-    }
-
-    @Override
-    public void setFocused(boolean var1) {
-    }
-
-    @Override
-    public boolean isFocused() {
-        return false;
     }
 
     @Override

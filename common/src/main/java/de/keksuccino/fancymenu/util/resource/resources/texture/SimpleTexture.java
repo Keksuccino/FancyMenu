@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.resource.MinecraftResourceUtils;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
@@ -60,9 +61,9 @@ public class SimpleTexture implements ITexture {
         texture.sourceLocation = location;
 
         try {
-            Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(location);
+            Optional<Resource> resource = MinecraftResourceUtils.get(location);
             if (resource.isPresent()) {
-                NativeImage image = NativeImage.read(resource.get().open());
+                NativeImage image = NativeImage.read(resource.get().getInputStream());
                 texture.width = image.getWidth();
                 texture.height = image.getHeight();
                 texture.aspectRatio = new AspectRatio(texture.width, texture.height);

@@ -16,6 +16,7 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.texture.SimpleTexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -50,7 +51,7 @@ public class FileTypes {
     public static final ImageFileType APNG_IMAGE = new ImageFileType(
             FileCodec.advanced(ITexture.class, ApngTexture::of, ApngTexture::location, ApngTexture::local, ApngTexture::web),
             "image/apng", "apng")
-            .setCustomDisplayName(Component.translatable("fancymenu.file_types.apng"))
+            .setCustomDisplayName(new TranslatableComponent("fancymenu.file_types.apng"))
             .setAnimated(true);
 
     public static final AudioFileType OGG_AUDIO = new AudioFileType(

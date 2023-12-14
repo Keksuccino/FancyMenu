@@ -3,18 +3,23 @@ package de.keksuccino.fancymenu.util.rendering;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
+import com.mojang.math.Matrix4f;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinMinecraft;
+import it.unimi.dsi.fastutil.ints.IntIterator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
+import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Matrix4f;
-
+import javax.annotation.Nullable;
 import java.awt.*;
+import java.util.NoSuchElementException;
 
 public class RenderingUtils extends GuiComponent {
+
+    public static final RenderingUtils INSTANCE = new RenderingUtils();
 
     public static float getPartialTick() {
         return Minecraft.getInstance().isPaused() ? ((IMixinMinecraft)Minecraft.getInstance()).getPausePartialTickFancyMenu() : Minecraft.getInstance().getFrameTime();
@@ -30,7 +35,7 @@ public class RenderingUtils extends GuiComponent {
 
     public static void resetGuiScale() {
         Window m = Minecraft.getInstance().getWindow();
-        m.setGuiScale(m.calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().options.forceUnicodeFont().get()));
+        m.setGuiScale(m.calculateScale(Minecraft.getInstance().options.guiScale, Minecraft.getInstance().options.forceUnicodeFont));
     }
 
     public static void resetShaderColor() {
@@ -101,15 +106,15 @@ public class RenderingUtils extends GuiComponent {
         float green = (float)FastColor.ARGB32.green(color) / 255.0F;
         float blue = (float)FastColor.ARGB32.blue(color) / 255.0F;
         float alpha = (float) FastColor.ARGB32.alpha(color) / 255.0F;
-        BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
+        BufferBuilder builder = Tesselator.getInstance().getBuilder();
         RenderSystem.enableBlend();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-        bufferBuilder.vertex(matrix4f, minX, minY, z).color(red, green, blue, alpha).endVertex();
-        bufferBuilder.vertex(matrix4f, minX, maxY, z).color(red, green, blue, alpha).endVertex();
-        bufferBuilder.vertex(matrix4f, maxX, maxY, z).color(red, green, blue, alpha).endVertex();
-        bufferBuilder.vertex(matrix4f, maxX, minY, z).color(red, green, blue, alpha).endVertex();
-        BufferUploader.drawWithShader(bufferBuilder.end());
+        builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        builder.vertex(matrix4f, minX, minY, z).color(red, green, blue, alpha).endVertex();
+        builder.vertex(matrix4f, minX, maxY, z).color(red, green, blue, alpha).endVertex();
+        builder.vertex(matrix4f, maxX, maxY, z).color(red, green, blue, alpha).endVertex();
+        builder.vertex(matrix4f, maxX, minY, z).color(red, green, blue, alpha).endVertex();
+        BufferUploader.end(builder);
         RenderSystem.disableBlend();
     }
 
@@ -127,13 +132,171 @@ public class RenderingUtils extends GuiComponent {
 
     private static void innerBlit(Matrix4f $$0, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        BufferBuilder $$10 = Tesselator.getInstance().getBuilder();
-        $$10.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-        $$10.vertex($$0, $$1, $$3, $$5).uv($$6, $$8).endVertex();
-        $$10.vertex($$0, $$1, $$4, $$5).uv($$6, $$9).endVertex();
-        $$10.vertex($$0, $$2, $$4, $$5).uv($$7, $$9).endVertex();
-        $$10.vertex($$0, $$2, $$3, $$5).uv($$7, $$8).endVertex();
-        BufferUploader.drawWithShader($$10.end());
+        BufferBuilder builder = Tesselator.getInstance().getBuilder();
+        builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        builder.vertex($$0, $$1, $$3, $$5).uv($$6, $$8).endVertex();
+        builder.vertex($$0, $$1, $$4, $$5).uv($$6, $$9).endVertex();
+        builder.vertex($$0, $$2, $$4, $$5).uv($$7, $$9).endVertex();
+        builder.vertex($$0, $$2, $$3, $$5).uv($$7, $$8).endVertex();
+        BufferUploader.end(builder);
+    }
+
+    public static void blitNineSliced(PoseStack $$0, int $$1, int $$2, int $$3, int $$4, int $$5, int $$6, int $$7, int $$8, int $$9) {
+        blitNineSliced($$0, $$1, $$2, $$3, $$4, $$5, $$5, $$5, $$5, $$6, $$7, $$8, $$9);
+    }
+
+    public static void blitNineSliced(PoseStack $$0, int $$1, int $$2, int $$3, int $$4, int $$5, int $$6, int $$7, int $$8, int $$9, int $$10) {
+        blitNineSliced($$0, $$1, $$2, $$3, $$4, $$5, $$6, $$5, $$6, $$7, $$8, $$9, $$10);
+    }
+
+    public static void blitNineSliced(PoseStack $$0, int $$1, int $$2, int $$3, int $$4, int $$5, int $$6, int $$7, int $$8, int $$9, int $$10, int $$11, int $$12) {
+        $$5 = Math.min($$5, $$3 / 2);
+        $$7 = Math.min($$7, $$3 / 2);
+        $$6 = Math.min($$6, $$4 / 2);
+        $$8 = Math.min($$8, $$4 / 2);
+        if ($$3 == $$9 && $$4 == $$10) {
+            INSTANCE.blit($$0, $$1, $$2, $$11, $$12, $$3, $$4);
+        } else if ($$4 == $$10) {
+            INSTANCE.blit($$0, $$1, $$2, $$11, $$12, $$5, $$4);
+            blitRepeating($$0, $$1 + $$5, $$2, $$3 - $$7 - $$5, $$4, $$11 + $$5, $$12, $$9 - $$7 - $$5, $$10);
+            INSTANCE.blit($$0, $$1 + $$3 - $$7, $$2, $$11 + $$9 - $$7, $$12, $$7, $$4);
+        } else if ($$3 == $$9) {
+            INSTANCE.blit($$0, $$1, $$2, $$11, $$12, $$3, $$6);
+            blitRepeating($$0, $$1, $$2 + $$6, $$3, $$4 - $$8 - $$6, $$11, $$12 + $$6, $$9, $$10 - $$8 - $$6);
+            INSTANCE.blit($$0, $$1, $$2 + $$4 - $$8, $$11, $$12 + $$10 - $$8, $$3, $$8);
+        } else {
+            INSTANCE.blit($$0, $$1, $$2, $$11, $$12, $$5, $$6);
+            blitRepeating($$0, $$1 + $$5, $$2, $$3 - $$7 - $$5, $$6, $$11 + $$5, $$12, $$9 - $$7 - $$5, $$6);
+            INSTANCE.blit($$0, $$1 + $$3 - $$7, $$2, $$11 + $$9 - $$7, $$12, $$7, $$6);
+            INSTANCE.blit($$0, $$1, $$2 + $$4 - $$8, $$11, $$12 + $$10 - $$8, $$5, $$8);
+            blitRepeating($$0, $$1 + $$5, $$2 + $$4 - $$8, $$3 - $$7 - $$5, $$8, $$11 + $$5, $$12 + $$10 - $$8, $$9 - $$7 - $$5, $$8);
+            INSTANCE.blit($$0, $$1 + $$3 - $$7, $$2 + $$4 - $$8, $$11 + $$9 - $$7, $$12 + $$10 - $$8, $$7, $$8);
+            blitRepeating($$0, $$1, $$2 + $$6, $$5, $$4 - $$8 - $$6, $$11, $$12 + $$6, $$5, $$10 - $$8 - $$6);
+            blitRepeating($$0, $$1 + $$5, $$2 + $$6, $$3 - $$7 - $$5, $$4 - $$8 - $$6, $$11 + $$5, $$12 + $$6, $$9 - $$7 - $$5, $$10 - $$8 - $$6);
+            blitRepeating($$0, $$1 + $$3 - $$7, $$2 + $$6, $$5, $$4 - $$8 - $$6, $$11 + $$9 - $$7, $$12 + $$6, $$7, $$10 - $$8 - $$6);
+        }
+    }
+
+    public static void blitRepeating(PoseStack $$0, int $$1, int $$2, int $$3, int $$4, int $$5, int $$6, int $$7, int $$8) {
+        int $$9 = $$1;
+
+        int $$11;
+        for(IntIterator $$10 = slices($$3, $$7); $$10.hasNext(); $$9 += $$11) {
+            $$11 = $$10.nextInt();
+            int $$12 = ($$7 - $$11) / 2;
+            int $$13 = $$2;
+
+            int $$15;
+            for(IntIterator $$14 = slices($$4, $$8); $$14.hasNext(); $$13 += $$15) {
+                $$15 = $$14.nextInt();
+                int $$16 = ($$8 - $$15) / 2;
+                INSTANCE.blit($$0, $$9, $$13, $$5 + $$12, $$6 + $$16, $$11, $$15);
+            }
+        }
+    }
+
+    private static IntIterator slices(int $$0, int $$1) {
+        int $$2 = Mth.positiveCeilDiv($$0, $$1);
+        return new Divisor($$0, $$2);
+    }
+
+    public static void enableScissor(int xStart, int yStart, int xEnd, int yEnd) {
+        applyScissor(new ScreenRectangle(xStart, yStart, xEnd - xStart, yEnd - yStart));
+    }
+
+    public static void disableScissor() {
+        applyScissor(null);
+    }
+
+    private static void applyScissor(@Nullable ScreenRectangle rectangle) {
+        if (rectangle != null) {
+            Window window = Minecraft.getInstance().getWindow();
+            int windowHeight = window.getHeight();
+            double windowScale = window.getGuiScale();
+            double $$4 = (double)rectangle.left() * windowScale;
+            double $$5 = (double)windowHeight - (double)rectangle.bottom() * windowScale;
+            double $$6 = (double)rectangle.width() * windowScale;
+            double $$7 = (double)rectangle.height() * windowScale;
+            RenderSystem.enableScissor((int)$$4, (int)$$5, Math.max(0, (int)$$6), Math.max(0, (int)$$7));
+        } else {
+            RenderSystem.disableScissor();
+        }
+    }
+
+    public record ScreenRectangle(ScreenPosition position, int width, int height) {
+
+        private static final ScreenRectangle EMPTY = new ScreenRectangle(0, 0, 0, 0);
+
+        public ScreenRectangle(int x, int y, int width, int height) {
+            this(new ScreenPosition(x, y), width, height);
+        }
+
+        public static ScreenRectangle empty() {
+            return EMPTY;
+        }
+
+        public int top() {
+            return this.position.y();
+        }
+
+        public int bottom() {
+            return this.position.y() + this.height;
+        }
+
+        public int left() {
+            return this.position.x();
+        }
+
+        public int right() {
+            return this.position.x() + this.width;
+        }
+
+    }
+
+    public record ScreenPosition(int x, int y) {
+    }
+
+    public static class Divisor implements IntIterator {
+
+        private final int denominator;
+        private final int quotient;
+        private final int mod;
+        private int returnedParts;
+        private int remainder;
+
+        public Divisor(int $$0, int $$1) {
+            this.denominator = $$1;
+            if ($$1 > 0) {
+                this.quotient = $$0 / $$1;
+                this.mod = $$0 % $$1;
+            } else {
+                this.quotient = 0;
+                this.mod = 0;
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            return this.returnedParts < this.denominator;
+        }
+
+        @Override
+        public int nextInt() {
+            if (!this.hasNext()) {
+                throw new NoSuchElementException();
+            } else {
+                int $$0 = this.quotient;
+                this.remainder += this.mod;
+                if (this.remainder >= this.denominator) {
+                    this.remainder -= this.denominator;
+                    ++$$0;
+                }
+
+                ++this.returnedParts;
+                return $$0;
+            }
+        }
+
     }
 
 }

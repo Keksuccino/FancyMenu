@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.widget;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -26,7 +27,7 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
 
     @NotNull
     public static TextWidget empty(int x, int y, int width) {
-        return new TextWidget(x, y, width, 9, Minecraft.getInstance().font, Component.empty());
+        return new TextWidget(x, y, width, 9, Minecraft.getInstance().font, Components.empty());
     }
 
     @NotNull
@@ -36,7 +37,7 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
 
     @NotNull
     public static TextWidget of(@NotNull String text, int x, int y, int width) {
-        return of(Component.literal(text), x, y, width);
+        return of(Components.literal(text), x, y, width);
     }
 
     public TextWidget(int x, int y, int width, int height, @NotNull Font font, @NotNull Component text) {
@@ -45,15 +46,15 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
     }
 
     @Override
-    public void renderWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void renderButton(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
         int textWidth = this.getTextWidth();
-        int textX = this.getX();
-        int textY = this.getY();
+        int textX = this.x;
+        int textY = this.y;
         if (this.alignment == TextAlignment.CENTER) {
-            textX = this.getX() + (this.getWidth() / 2) - (textWidth / 2);
+            textX = this.x + (this.getWidth() / 2) - (textWidth / 2);
         }
         if (this.alignment == TextAlignment.RIGHT) {
-            textX = this.getX() + this.getWidth() - textWidth;
+            textX = this.x + this.getWidth() - textWidth;
         }
         RenderingUtils.resetShaderColor();
         if (this.shadow) {
@@ -105,7 +106,7 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
     }
 
     public TextWidget centerWidget(@NotNull Screen parent) {
-        this.setX((parent.width / 2) - (this.getWidth() / 2));
+        this.x = (parent.width / 2) - (this.getWidth() / 2);
         return this;
     }
 
@@ -122,7 +123,7 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
     }
 
     @Override
-    protected void updateWidgetNarration(@NotNull NarrationElementOutput var1) {
+    public void updateNarration(@NotNull NarrationElementOutput var1) {
     }
 
     @Override

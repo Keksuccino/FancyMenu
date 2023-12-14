@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.widget.button;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
-import net.minecraft.network.chat.Component;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 
@@ -12,7 +12,7 @@ public class CycleButton<T> extends ExtendedButton {
     protected final CycleButtonClickFeedback<T> clickFeedback;
 
     public CycleButton(int x, int y, int width, int height, @NotNull ILocalizedValueCycle<T> cycle, @NotNull CycleButtonClickFeedback<T> clickFeedback) {
-        super(x, y, width, height, Component.empty(), var1 -> {});
+        super(x, y, width, height, Components.empty(), var1 -> {});
         this.cycle = cycle;
         this.clickFeedback = clickFeedback;
         this.setPressAction(var1 -> {

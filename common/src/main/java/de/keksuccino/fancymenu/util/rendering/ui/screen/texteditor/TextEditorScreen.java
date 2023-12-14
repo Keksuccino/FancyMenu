@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollbar.ScrollBar;
@@ -32,7 +33,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
-
 import java.awt.*;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -43,18 +43,6 @@ import java.util.function.Consumer;
 
 @SuppressWarnings("all")
 public class TextEditorScreen extends Screen {
-
-    //TODO Ganze Zeile markieren, wenn zwischen highlightStart und highlightEnd cursorPos
-
-    //TODO Bei highlight start und end Zeilen alles markieren, was innerhalb von markiertem bereich liegt, selbst wenn eigentlicher Text kürzer (also alles NACH cursor bei end und alles VOR cursor bei start)
-
-    //TODO Style.withFont() nutzen, um eventuell in editor mit eigener Font zu arbeiten
-
-    //TODO Auto-scrollen bei maus außerhalb von editor area während markieren verbessern (ist zu schnell bei langen Texten)
-
-    //TODO fixen: bei korrigieren von Y scroll scrollt es ab und zu nach unten (vermutlich Rundungsfehler in Offset Berechnung)
-
-    //TODO zum korrigieren nicht mehr unnötig zeilen updaten, sondern stattdessen checken, wie yOffset mit alter Zeilenanzahl und neuer Zeilenanzahl ist, dann Differenz berechnen
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -127,7 +115,7 @@ public class TextEditorScreen extends Screen {
     }
 
     public TextEditorScreen(@Nullable Component title, @Nullable CharacterFilter characterFilter, @NotNull Consumer<String> callback) {
-        super((title != null) ? title : Component.literal(""));
+        super((title != null) ? title : Components.literal(""));
         this.minecraft = Minecraft.getInstance();
         this.font = Minecraft.getInstance().font;
         this.characterFilter = characterFilter;
@@ -201,7 +189,7 @@ public class TextEditorScreen extends Screen {
                 } else {
                     extendedPlaceholderMenu = true;
                 }
-                this.rebuildWidgets();
+                this.resize(Minecraft.getInstance(), this.width, this.height);
             }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.dynamicvariabletextfield.variables.desc")).setDefaultStyle());
             this.addWidget(this.placeholderButton);
             UIBase.applyDefaultWidgetSkinTo(this.placeholderButton);
@@ -230,35 +218,35 @@ public class TextEditorScreen extends Screen {
         }
         this.rightClickContextMenu = new ContextMenu();
 
-        this.rightClickContextMenu.addClickableEntry("copy", Component.translatable("fancymenu.ui.text_editor.copy"), (menu, entry) -> {
+        this.rightClickContextMenu.addClickableEntry("copy", Components.translatable("fancymenu.ui.text_editor.copy"), (menu, entry) -> {
             Minecraft.getInstance().keyboardHandler.setClipboard(this.getHighlightedText());
             menu.closeMenu();
         }).setIsActiveSupplier((menu, entry) -> {
             if (!menu.isOpen()) return false;
             return this.selectedHoveredOnRightClickMenuOpen;
-        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.copy"))
+        }).setShortcutTextSupplier((menu, entry) -> Components.translatable("fancymenu.editor.shortcuts.copy"))
                 .setIcon(ContextMenu.IconFactory.getIcon("copy"));
 
-        this.rightClickContextMenu.addClickableEntry("paste", Component.translatable("fancymenu.ui.text_editor.paste"), (menu, entry) -> {
+        this.rightClickContextMenu.addClickableEntry("paste", Components.translatable("fancymenu.ui.text_editor.paste"), (menu, entry) -> {
             this.pasteText(Minecraft.getInstance().keyboardHandler.getClipboard());
             menu.closeMenu();
-        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.paste"))
+        }).setShortcutTextSupplier((menu, entry) -> Components.translatable("fancymenu.editor.shortcuts.paste"))
                 .setIcon(ContextMenu.IconFactory.getIcon("paste"));
 
         this.rightClickContextMenu.addSeparatorEntry("separator_after_paste");
 
-        this.rightClickContextMenu.addClickableEntry("cut", Component.translatable("fancymenu.ui.text_editor.cut"), (menu, entry) -> {
+        this.rightClickContextMenu.addClickableEntry("cut", Components.translatable("fancymenu.ui.text_editor.cut"), (menu, entry) -> {
             Minecraft.getInstance().keyboardHandler.setClipboard(this.cutHighlightedText());
             menu.closeMenu();
         }).setIsActiveSupplier((menu, entry) -> {
             if (!menu.isOpen()) return false;
             return this.selectedHoveredOnRightClickMenuOpen;
-        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.cut"))
+        }).setShortcutTextSupplier((menu, entry) -> Components.translatable("fancymenu.editor.shortcuts.cut"))
                 .setIcon(ContextMenu.IconFactory.getIcon("cut"));
 
         this.rightClickContextMenu.addSeparatorEntry("separator_after_cut");
 
-        this.rightClickContextMenu.addClickableEntry("select_all", Component.translatable("fancymenu.ui.text_editor.select_all"), (menu, entry) -> {
+        this.rightClickContextMenu.addClickableEntry("select_all", Components.translatable("fancymenu.ui.text_editor.select_all"), (menu, entry) -> {
             for (TextEditorLine t : this.textFieldLines) {
                 t.setHighlightPos(0);
                 t.setCursorPosition(t.getValue().length());
@@ -267,19 +255,19 @@ public class TextEditorScreen extends Screen {
             this.startHighlightLineIndex = 0;
             this.endHighlightLineIndex = this.getLineCount()-1;
             menu.closeMenu();
-        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.select_all"))
+        }).setShortcutTextSupplier((menu, entry) -> Components.translatable("fancymenu.editor.shortcuts.select_all"))
                 .setIcon(ContextMenu.IconFactory.getIcon("select"));
 
         this.rightClickContextMenu.addSeparatorEntry("separator_after_select_all");
 
-        this.rightClickContextMenu.addClickableEntry("undo", Component.translatable("fancymenu.editor.edit.undo"), (menu, entry) -> {
+        this.rightClickContextMenu.addClickableEntry("undo", Components.translatable("fancymenu.editor.edit.undo"), (menu, entry) -> {
             this.history.stepBack();
-        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.undo"))
+        }).setShortcutTextSupplier((menu, entry) -> Components.translatable("fancymenu.editor.shortcuts.undo"))
                 .setIcon(ContextMenu.IconFactory.getIcon("undo"));
 
-        this.rightClickContextMenu.addClickableEntry("redo", Component.translatable("fancymenu.editor.edit.redo"), (menu, entry) -> {
+        this.rightClickContextMenu.addClickableEntry("redo", Components.translatable("fancymenu.editor.edit.redo"), (menu, entry) -> {
             this.history.stepForward();
-        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.redo"))
+        }).setShortcutTextSupplier((menu, entry) -> Components.translatable("fancymenu.editor.shortcuts.redo"))
                 .setIcon(ContextMenu.IconFactory.getIcon("redo"));
 
     }
@@ -464,7 +452,7 @@ public class TextEditorScreen extends Screen {
                     //Add category entries
                     for (Map.Entry<String, List<Placeholder>> m : categories.entrySet()) {
                         if (m.getValue() != otherCategory) {
-                            PlaceholderMenuEntry entry = new PlaceholderMenuEntry(this, Component.literal(m.getKey()), () -> {
+                            PlaceholderMenuEntry entry = new PlaceholderMenuEntry(this, Components.literal(m.getKey()), () -> {
                                 this.updatePlaceholderEntries(m.getKey(), true, true);
                             });
                             entry.dotColor = this.placeholderEntryDotColorCategory;
@@ -478,7 +466,7 @@ public class TextEditorScreen extends Screen {
                 } else {
 
                     if (addBackButton) {
-                        PlaceholderMenuEntry backToCategoriesEntry = new PlaceholderMenuEntry(this, Component.literal(I18n.get("fancymenu.ui.text_editor.placeholders.back_to_categories")), () -> {
+                        PlaceholderMenuEntry backToCategoriesEntry = new PlaceholderMenuEntry(this, Components.literal(I18n.get("fancymenu.ui.text_editor.placeholders.back_to_categories")), () -> {
                             this.updatePlaceholderEntries(null, true, true);
                         });
                         backToCategoriesEntry.dotColor = this.placeholderEntryDotColorCategory;
@@ -489,7 +477,7 @@ public class TextEditorScreen extends Screen {
                     List<Placeholder> placeholders = categories.get(category);
                     if (placeholders != null) {
                         for (Placeholder p : placeholders) {
-                            PlaceholderMenuEntry entry = new PlaceholderMenuEntry(this, Component.literal(p.getDisplayName()), () -> {
+                            PlaceholderMenuEntry entry = new PlaceholderMenuEntry(this, Components.literal(p.getDisplayName()), () -> {
                                 this.pasteText(p.getDefaultPlaceholderString().toString());
                             });
                             List<String> desc = p.getDescription();
@@ -1466,7 +1454,7 @@ public class TextEditorScreen extends Screen {
             int j = editBox.getCursorPosition() - b.getDisplayPosFancyMenu();
             boolean flag = j >= 0 && j <= s.length();
             boolean flag2 = editBox.getCursorPosition() < editBox.getValue().length() || editBox.getValue().length() >= b.getMaxLengthFancyMenu();
-            int l = b.getBorderedFancyMenu() ? editBox.getX() + 4 : editBox.getX();
+            int l = b.getBorderedFancyMenu() ? editBox.x + 4 : editBox.x;
             int j1 = l;
             if (!s.isEmpty()) {
                 String s1 = flag ? s.substring(0, j) : s;
@@ -1705,8 +1693,8 @@ public class TextEditorScreen extends Screen {
                     DrawableColor.of(this.backgroundColorIdle)
             );
             //Update the button pos
-            this.buttonBase.setX(this.x);
-            this.buttonBase.setY(this.y);
+            this.buttonBase.x = this.x;
+            this.buttonBase.y = this.y;
             int yCenter = this.y + (this.getHeight() / 2);
             //Render the button
             this.buttonBase.render(matrix, mouseX, mouseY, partial);

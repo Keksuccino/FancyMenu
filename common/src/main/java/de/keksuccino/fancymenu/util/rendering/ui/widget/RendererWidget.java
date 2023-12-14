@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
@@ -15,17 +16,17 @@ public class RendererWidget extends AbstractWidget implements UniqueWidget, Navi
     protected String identifier;
 
     public RendererWidget(int x, int y, int width, int height, @NotNull RendererWidgetBody body) {
-        super(x, y, width, height, Component.empty());
+        super(x, y, width, height, Components.empty());
         this.body = body;
     }
 
     @Override
-    public void renderWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-        this.body.render(pose, mouseX, mouseY, partial, this.getX(), this.getY(), this.getWidth(), this.getHeight(), this);
+    public void renderButton(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        this.body.render(pose, mouseX, mouseY, partial, this.x, this.y, this.getWidth(), this.getHeight(), this);
     }
 
     @Override
-    protected void updateWidgetNarration(@NotNull NarrationElementOutput var1) {
+    public void updateNarration(@NotNull NarrationElementOutput var1) {
     }
 
     public RendererWidget setBody(@NotNull RendererWidgetBody body) {

@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorThemeRegistry;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
@@ -162,7 +163,7 @@ public class UIBase extends RenderingUtils {
 	}
 
 	public static int drawElementLabelF(PoseStack pose, Font font, String text, float x, float y) {
-		return drawElementLabelF(pose, font, Component.literal(text), x, y);
+		return drawElementLabelF(pose, font, Components.literal(text), x, y);
 	}
 
 	public static int drawElementLabelF(PoseStack pose, Font font, Component text, float x, float y) {
@@ -177,7 +178,7 @@ public class UIBase extends RenderingUtils {
 	}
 
 	public static int drawElementLabel(PoseStack pose, Font font, String text, int x, int y) {
-		return drawElementLabel(pose, font, Component.literal(text), x, y, getUIColorTheme().element_label_color_normal.getColorInt());
+		return drawElementLabel(pose, font, Components.literal(text), x, y, getUIColorTheme().element_label_color_normal.getColorInt());
 	}
 
 	public static int drawElementLabel(PoseStack pose, Font font, Component text, int x, int y, int baseColor) {
@@ -185,7 +186,7 @@ public class UIBase extends RenderingUtils {
 	}
 
 	public static int drawElementLabel(PoseStack pose, Font font, String text, int x, int y, int baseColor) {
-		return drawElementLabel(pose, font, Component.literal(text), x, y, baseColor);
+		return drawElementLabel(pose, font, Components.literal(text), x, y, baseColor);
 	}
 
 	@NotNull

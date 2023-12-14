@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.resource.MinecraftResourceUtils;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
@@ -46,7 +47,7 @@ public class PlainText implements IText {
         text.sourceLocation = location;
 
         try {
-            of(Minecraft.getInstance().getResourceManager().open(location), location.toString(), text);
+            of(MinecraftResourceUtils.open(location), location.toString(), text);
         } catch (Exception ex) {
             text.loadingFailed = true;
             LOGGER.error("[FANCYMENU] Failed to read text content from ResourceLocation: " + location, ex);
@@ -189,7 +190,7 @@ public class PlainText implements IText {
     public @Nullable InputStream open() throws IOException {
         if (this.sourceURL != null) return WebUtils.openResourceStream(this.sourceURL);
         if (this.sourceFile != null) return new FileInputStream(this.sourceFile);
-        if (this.sourceLocation != null) return Minecraft.getInstance().getResourceManager().open(this.sourceLocation);
+        if (this.sourceLocation != null) return MinecraftResourceUtils.open(this.sourceLocation);
         return null;
     }
 

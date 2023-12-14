@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.util.ObjectHolder;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.resource.MinecraftResourceUtils;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.rendering.GifDecoder;
@@ -61,7 +62,7 @@ public class GifTexture implements ITexture, PlayableResource {
         texture.sourceLocation = location;
 
         try {
-            of(Minecraft.getInstance().getResourceManager().open(location), location.toString(), texture);
+            of(MinecraftResourceUtils.open(location), location.toString(), texture);
         } catch (Exception ex) {
             texture.loadingFailed = true;
             LOGGER.error("[FANCYMENU] Failed to read GIF image from ResourceLocation: " + location, ex);
@@ -316,7 +317,7 @@ public class GifTexture implements ITexture, PlayableResource {
     public @Nullable InputStream open() throws IOException {
         if (this.sourceURL != null) return WebUtils.openResourceStream(this.sourceURL);
         if (this.sourceFile != null) return new FileInputStream(this.sourceFile);
-        if (this.sourceLocation != null) return Minecraft.getInstance().getResourceManager().open(this.sourceLocation);
+        if (this.sourceLocation != null) return MinecraftResourceUtils.open(this.sourceLocation);
         return null;
     }
 

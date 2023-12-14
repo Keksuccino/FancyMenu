@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
-import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
@@ -14,7 +14,7 @@ public interface IMixinScreen {
 
     @Accessor("children") List<GuiEventListener> getChildrenFancyMenu();
 
-    @Accessor("renderables") List<Renderable> getRenderablesFancyMenu();
+    @Accessor("renderables") List<Widget> getRenderablesFancyMenu();
 
     @Accessor("narratables") List<NarratableEntry> getNarratablesFancyMenu();
 

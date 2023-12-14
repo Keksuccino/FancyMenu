@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
@@ -20,12 +21,12 @@ public class ChooseFileScreen extends AbstractFileBrowserScreen {
     }
 
     public ChooseFileScreen(@Nullable File rootDirectory, @NotNull File startDirectory, @NotNull Consumer<File> callback) {
-        super(Component.translatable("fancymenu.ui.filechooser.choose.file"), rootDirectory, startDirectory, callback);
+        super(Components.translatable("fancymenu.ui.filechooser.choose.file"), rootDirectory, startDirectory, callback);
     }
 
     @Override
     protected @NotNull ExtendedButton buildConfirmButton() {
-        return new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.ok"), (button) -> {
+        return new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.guicomponents.ok"), (button) -> {
             AbstractFileScrollAreaEntry selected = this.getSelectedEntry();
             if ((selected != null) && !selected.resourceUnfriendlyFileName) {
                 this.callback.accept(new File(selected.file.getPath().replace("\\", "/")));

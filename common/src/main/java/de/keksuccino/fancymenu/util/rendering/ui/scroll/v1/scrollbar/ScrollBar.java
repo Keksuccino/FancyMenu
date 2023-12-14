@@ -1,4 +1,3 @@
-
 package de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollbar;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -11,7 +10,6 @@ import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;

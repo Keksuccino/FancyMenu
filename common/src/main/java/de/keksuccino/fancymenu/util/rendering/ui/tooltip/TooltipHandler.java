@@ -1,16 +1,14 @@
 package de.keksuccino.fancymenu.util.rendering.ui.tooltip;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
-import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.client.gui.components.AbstractWidget;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -62,7 +60,7 @@ public class TooltipHandler {
         if (this.widgetTooltips.containsKey(widget)) {
             this.removeTooltip(this.widgetTooltips.get(widget));
         }
-        HandledTooltip t = this.addTooltip(tooltip, widget::isHovered, removeOnScreenInitOrResize, removeAfterScreenRender);
+        HandledTooltip t = this.addTooltip(tooltip, () -> ((IMixinAbstractWidget)widget).getIsHoveredFancyMenu(), removeOnScreenInitOrResize, removeAfterScreenRender);
         t.widget = widget;
         this.widgetTooltips.put(widget, t);
         return t;

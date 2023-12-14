@@ -1,14 +1,14 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.Widget;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MarkdownTextLine implements Renderable {
+public class MarkdownTextLine implements Widget {
 
     public MarkdownRenderer parent;
     public float offsetX;

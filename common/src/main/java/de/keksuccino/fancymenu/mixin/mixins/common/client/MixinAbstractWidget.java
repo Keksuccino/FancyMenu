@@ -1,19 +1,24 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import com.llamalad7.mixinextras.injector.WrapWithCondition;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
-import net.minecraft.client.gui.ComponentPath;
+import net.minecraft.client.gui.components.AbstractButton;
+import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -30,12 +35,16 @@ import java.util.function.Consumer;
 @Mixin(value = AbstractWidget.class)
 public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueWidget {
 
+	@Shadow @Final public static ResourceLocation WIDGETS_LOCATION;
+
 	@Shadow protected float alpha;
 	@Shadow public boolean visible;
 	@Shadow public boolean active;
 	@Shadow protected boolean isHovered;
 	@Shadow protected int height;
 	@Shadow protected int width;
+	@Shadow public int x;
+	@Shadow public int y;
 
 	@Unique @Nullable
 	private String widgetIdentifierFancyMenu;
@@ -69,6 +78,10 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	private Integer cachedOriginalWidthFancyMenu;
 	@Unique @Nullable
 	private Integer cachedOriginalHeightFancyMenu;
+	@Unique @Nullable
+	private Integer cachedOriginalXFancyMenu;
+	@Unique @Nullable
+	private Integer cachedOriginalYFancyMenu;
 	@Unique
 	private final List<Consumer<Boolean>> hoverStateListenersFancyMenu = new ArrayList<>();
 	@Unique
@@ -93,7 +106,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		this.widgetInitializedFancyMenu = true;
 
 		//Manually update isHovered before AbstractWidget, to correctly notify hover listeners
-		this.isHovered = mouseX >= this.getX() && mouseY >= this.getY() && mouseX < this.getX() + this.width && mouseY < this.getY() + this.height;
+		this.isHovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
 
 		if (this.customWidthFancyMenu != null) {
 			if (this.cachedOriginalWidthFancyMenu == null) this.cachedOriginalWidthFancyMenu = this.width;
@@ -102,6 +115,14 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		if (this.customHeightFancyMenu != null) {
 			if (this.cachedOriginalHeightFancyMenu == null) this.cachedOriginalHeightFancyMenu = this.height;
 			this.height = this.customHeightFancyMenu;
+		}
+		if (this.customXFancyMenu != null) {
+			if (this.cachedOriginalXFancyMenu == null) this.cachedOriginalXFancyMenu = this.x;
+			this.x = this.customXFancyMenu;
+		}
+		if (this.customYFancyMenu != null) {
+			if (this.cachedOriginalYFancyMenu == null) this.cachedOriginalYFancyMenu = this.y;
+			this.y = this.customYFancyMenu;
 		}
 
 		//Handle Hidden State
@@ -144,6 +165,31 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		}
 
 	}
+
+	@Unique private Boolean cachedRenderCustomBackgroundFancyMenu = null;
+
+	@WrapWithCondition(method = "renderButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractWidget;blit(Lcom/mojang/blaze3d/vertex/PoseStack;IIIIII)V"))
+	private boolean wrapBlitInRenderButtonFancyMenu(AbstractWidget instance, PoseStack pose, int i1, int i2, int i3, int i4, int i5, int i6) {
+
+		if (this.cachedRenderCustomBackgroundFancyMenu != null) {
+			boolean b = this.cachedRenderCustomBackgroundFancyMenu;
+			this.cachedRenderCustomBackgroundFancyMenu = null;
+			return b;
+		}
+
+		//TODO 1.18: Checken, ob Slider background hier korrekt gerendert wird
+		AbstractButton button = (AbstractButton)((Object)this);
+		if ((this instanceof CustomizableSlider s) && (((Object)this) instanceof AbstractSliderButton as)) {
+			this.cachedRenderCustomBackgroundFancyMenu = s.renderSliderBackgroundFancyMenu(pose, as, true);
+			//Re-bind default texture after rendering custom
+			RenderSystem.setShaderTexture(0, WIDGETS_LOCATION);
+		} else {
+			this.cachedRenderCustomBackgroundFancyMenu = this.renderCustomBackgroundFancyMenu(button, pose, button.x, button.y, button.getWidth(), button.getHeight());
+		}
+
+		return this.cachedRenderCustomBackgroundFancyMenu;
+
+	}
 	
 	@Inject(method = "playDownSound", at = @At(value = "HEAD"), cancellable = true)
 	private void beforeWidgetClickSoundFancyMenu(SoundManager manager, CallbackInfo info) {
@@ -171,24 +217,11 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		if (this.hiddenFancyMenu) info.setReturnValue(false);
 	}
 
-	@Inject(method = "nextFocusPath", at = @At("HEAD"), cancellable = true)
-	private void beforeNextFocusPathFancyMenu(FocusNavigationEvent $$0, CallbackInfoReturnable<ComponentPath> info) {
-		if (this.hiddenFancyMenu) info.setReturnValue(null);
-	}
-
-	@Inject(method = "getX", at = @At("RETURN"), cancellable = true)
-	private void atReturnGetXFancyMenu(CallbackInfoReturnable<Integer> info) {
-		if (this.customXFancyMenu != null) {
-			info.setReturnValue(this.customXFancyMenu);
-		}
-	}
-
-	@Inject(method = "getY", at = @At("RETURN"), cancellable = true)
-	private void atReturnGetYFancyMenu(CallbackInfoReturnable<Integer> info) {
-		if (this.customYFancyMenu != null) {
-			info.setReturnValue(this.customYFancyMenu);
-		}
-	}
+	//TODO 1.18: Checken, ob arrow/tab navigation in 1.18 existiert und wenn ja, eventuell in ContainerEventHandler auf hiddenFancyMenu checken?
+//	@Inject(method = "nextFocusPath", at = @At("HEAD"), cancellable = true)
+//	private void beforeNextFocusPathFancyMenu(FocusNavigationEvent $$0, CallbackInfoReturnable<ComponentPath> info) {
+//		if (this.hiddenFancyMenu) info.setReturnValue(null);
+//	}
 
 	@Inject(method = "getWidth", at = @At("RETURN"), cancellable = true)
 	private void atReturnGetWidthFancyMenu(CallbackInfoReturnable<Integer> info) {
@@ -209,10 +242,6 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Shadow public abstract boolean isFocused();
 
 	@Shadow public abstract boolean isHoveredOrFocused();
-
-	@Shadow public abstract int getX();
-
-	@Shadow public abstract int getY();
 
 	@Unique
 	private void initWidgetFancyMenu() {
@@ -364,6 +393,10 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		if (this.cachedOriginalHeightFancyMenu != null) this.height = this.cachedOriginalHeightFancyMenu;
 		this.cachedOriginalWidthFancyMenu = null;
 		this.cachedOriginalHeightFancyMenu = null;
+		if (this.cachedOriginalXFancyMenu != null) this.x = this.cachedOriginalXFancyMenu;
+		if (this.cachedOriginalYFancyMenu != null) this.y = this.cachedOriginalYFancyMenu;
+		this.cachedOriginalXFancyMenu = null;
+		this.cachedOriginalYFancyMenu = null;
 	}
 
 	@Unique
@@ -377,6 +410,10 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		if (this.cachedOriginalHeightFancyMenu != null) this.height = this.cachedOriginalHeightFancyMenu;
 		this.cachedOriginalWidthFancyMenu = null;
 		this.cachedOriginalHeightFancyMenu = null;
+		if (this.cachedOriginalXFancyMenu != null) this.x = this.cachedOriginalXFancyMenu;
+		if (this.cachedOriginalYFancyMenu != null) this.y = this.cachedOriginalYFancyMenu;
+		this.cachedOriginalXFancyMenu = null;
+		this.cachedOriginalYFancyMenu = null;
 		this.customWidthFancyMenu = null;
 		this.customHeightFancyMenu = null;
 		this.customXFancyMenu = null;

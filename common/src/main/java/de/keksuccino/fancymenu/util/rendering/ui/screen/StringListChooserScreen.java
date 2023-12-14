@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.List;
@@ -50,7 +51,7 @@ public class StringListChooserScreen extends CellScreen {
         public String string;
 
         public StringCell(@NotNull String string) {
-            super(Component.literal(string));
+            super(Components.literal(string));
             this.string = string;
         }
 

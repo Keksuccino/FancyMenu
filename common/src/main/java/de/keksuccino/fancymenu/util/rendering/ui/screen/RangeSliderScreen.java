@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -30,7 +31,7 @@ public class RangeSliderScreen extends CellScreen {
 
         this.addStartEndSpacerCell();
 
-        RangeSlider slider = new RangeSlider(0, 0, 20, 20, Component.empty(), this.minValue, this.maxValue, this.currentValue);
+        RangeSlider slider = new RangeSlider(0, 0, 20, 20, Components.empty(), this.minValue, this.maxValue, this.currentValue);
         slider.setRoundingDecimalPlace(2);
         slider.setLabelSupplier(consumes -> this.labelSupplier.get(((RangeSlider)consumes).getRangeValue()));
         slider.setSliderValueUpdateListener((slider1, valueDisplayText, value) -> this.currentValue = ((RangeSlider)slider1).getRangeValue());

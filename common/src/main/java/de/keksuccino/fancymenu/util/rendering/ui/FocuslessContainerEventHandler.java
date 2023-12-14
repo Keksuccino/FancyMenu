@@ -70,8 +70,4 @@ public interface FocuslessContainerEventHandler extends ContainerEventHandler {
     default void setFocused(@Nullable GuiEventListener var1) {
     }
 
-    @Override
-    default void setFocused(boolean $$0) {
-    }
-
 }

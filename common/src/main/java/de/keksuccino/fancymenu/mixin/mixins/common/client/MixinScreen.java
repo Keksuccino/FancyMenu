@@ -29,8 +29,8 @@ public class MixinScreen implements CustomizableScreen {
 	@Unique
 	private final List<GuiEventListener> removeOnInitChildrenFancyMenu = new ArrayList<>();
 
-	@Inject(method = "renderBackground", at = @At(value = "RETURN"))
-	private void afterRenderScreenBackgroundFancyMenu(PoseStack matrix, CallbackInfo info) {
+	@Inject(method = "renderBackground(Lcom/mojang/blaze3d/vertex/PoseStack;I)V", at = @At(value = "RETURN"))
+	private void afterRenderScreenBackgroundFancyMenu(PoseStack matrix, int i, CallbackInfo info) {
 		EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent((Screen)((Object)this), matrix));
 	}
 

@@ -6,11 +6,12 @@ import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -22,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class MarkdownTextFragment implements Renderable, GuiEventListener {
+public class MarkdownTextFragment implements Widget, GuiEventListener {
 
     protected static final int BULLET_LIST_SPACE_AFTER_INDENT = 5;
 
@@ -228,9 +229,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if (this.parent.textCase == MarkdownRenderer.TextCase.ALL_LOWER) {
             t = t.toLowerCase();
         }
-        MutableComponent comp = Component.literal(t).setStyle(style);
+        MutableComponent comp = Components.literal(t).setStyle(style);
         if (addSpaceComponentAtEnd) {
-            comp.append(Component.literal(" ").setStyle(Style.EMPTY.withUnderlined(false)));
+            comp.append(Components.literal(" ").setStyle(Style.EMPTY.withUnderlined(false)));
         }
         return comp;
     }
@@ -383,15 +384,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             WebUtils.openWebLink(this.hyperlink.link);
             return true;
         }
-        return false;
-    }
-
-    @Override
-    public void setFocused(boolean var1) {
-    }
-
-    @Override
-    public boolean isFocused() {
         return false;
     }
 

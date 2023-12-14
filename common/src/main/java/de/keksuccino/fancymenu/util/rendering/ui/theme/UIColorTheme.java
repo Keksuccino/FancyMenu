@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.theme;
 
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -97,8 +98,8 @@ public class UIColorTheme {
 
     @NotNull
     public Component getDisplayName() {
-        if (this.display_name.startsWith("fancymenu.ui.themes.")) return Component.translatable(this.display_name);
-        return Component.literal(this.display_name);
+        if (this.display_name.startsWith("fancymenu.ui.themes.")) return Components.translatable(this.display_name);
+        return Components.literal(this.display_name);
     }
     
 }

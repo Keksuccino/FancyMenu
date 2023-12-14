@@ -1,14 +1,13 @@
 package de.keksuccino.fancymenu.util;
 
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinClientLanguage;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.resources.language.ClientLanguage;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.ComponentContents;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.network.chat.TranslatableComponent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -20,7 +19,7 @@ public class LocalizationUtils {
     public static Component[] splitLocalizedLines(@NotNull String localizationKey, String... placeholderReplacements) {
         List<Component> l = new ArrayList<>();
         for (String s : splitLocalizedStringLines(localizationKey, placeholderReplacements)) {
-            l.add(Component.literal(s));
+            l.add(Components.literal(s));
         }
         return l.toArray(new Component[]{});
     }
@@ -47,11 +46,8 @@ public class LocalizationUtils {
 
     @Nullable
     public static String getComponentLocalizationKey(@NotNull Component component) {
-        if (component instanceof MutableComponent m) {
-            ComponentContents cc = m.getContents();
-            if (cc instanceof TranslatableContents t) {
-                return t.getKey();
-            }
+        if (component instanceof TranslatableComponent m) {
+            return m.getKey();
         }
         return null;
     }

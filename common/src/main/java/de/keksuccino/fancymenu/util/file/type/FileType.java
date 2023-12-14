@@ -4,6 +4,7 @@ import com.google.common.io.Files;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import net.minecraft.network.chat.Component;
@@ -177,8 +178,8 @@ public class FileType<T> {
     @NotNull
     public Component getDisplayName() {
         if (this.customDisplayName != null) return this.customDisplayName;
-        if (!this.extensions.isEmpty()) return Component.literal(this.extensions.get(0).toUpperCase());
-        return Component.empty();
+        if (!this.extensions.isEmpty()) return Components.literal(this.extensions.get(0).toUpperCase());
+        return Components.empty();
     }
 
     public FileType<T> setCustomDisplayName(@Nullable Component name) {

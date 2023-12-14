@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroups;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.RangeSliderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
@@ -57,7 +58,7 @@ public class NonStackableOverlayUI {
 
         ContextMenu subMenu = new ContextMenu();
 
-        subMenu.addClickableEntry("choose_file", Component.translatable("fancymenu.ui.resources.choose"),
+        subMenu.addClickableEntry("choose_file", Components.translatable("fancymenu.ui.resources.choose"),
                 (menu, entry) -> {
                     Screen current = Minecraft.getInstance().screen;
                     ResourceSupplier<R> supplier = targetFieldGetter.get();
@@ -79,7 +80,7 @@ public class NonStackableOverlayUI {
                 }).setStackable(false);
 
         if (addResetOption) {
-            subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.ui.resources.reset"),
+            subMenu.addClickableEntry("reset_to_default", Components.translatable("fancymenu.ui.resources.reset"),
                     (menu, entry) -> {
                         targetFieldSetter.accept(defaultValue);
                     }).setStackable(false);
@@ -90,7 +91,7 @@ public class NonStackableOverlayUI {
             ResourceSupplier<R> supplier = targetFieldGetter.get();
             String val = (supplier != null) ? supplier.getSourceWithoutPrefix() : null;
             if (val == null) {
-                valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+                valueComponent = Components.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
             } else {
                 val = GameDirectoryUtils.getPathWithoutGameDirectory(val);
                 if (Minecraft.getInstance().font.width(val) > 150) {
@@ -99,12 +100,12 @@ public class NonStackableOverlayUI {
                     val = new StringBuilder(val).reverse().toString();
                     val = ".." + val;
                 }
-                valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+                valueComponent = Components.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
             }
-            return Component.translatable("fancymenu.ui.resources.current", valueComponent);
+            return Components.translatable("fancymenu.ui.resources.current", valueComponent);
         };
         subMenu.addSeparatorEntry("separator_before_current_value_display");
-        subMenu.addClickableEntry("current_value_display", Component.empty(), (menu, entry) -> {})
+        subMenu.addClickableEntry("current_value_display", Components.empty(), (menu, entry) -> {})
                 .setLabelSupplier((menu, entry) -> currentValueDisplayLabelSupplier.get())
                 .setClickSoundEnabled(false)
                 .setIcon(ContextMenu.IconFactory.getIcon("info"));
@@ -128,7 +129,7 @@ public class NonStackableOverlayUI {
 
         ContextMenu subMenu = new ContextMenu();
 
-        subMenu.addClickableEntry("choose_file", Component.translatable("fancymenu.ui.filechooser.choose.file"), (menu, entry) -> {
+        subMenu.addClickableEntry("choose_file", Components.translatable("fancymenu.ui.filechooser.choose.file"), (menu, entry) -> {
             File startDir = LayoutHandler.ASSETS_DIR;
             String path = getter.get();
             if (path != null) {
@@ -154,7 +155,7 @@ public class NonStackableOverlayUI {
         });
 
         if (addResetOption) {
-            subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.editor.filechooser.reset"), (menu, entry) -> {
+            subMenu.addClickableEntry("reset_to_default", Components.translatable("fancymenu.editor.filechooser.reset"), (menu, entry) -> {
                 setter.accept(defaultValue);
             });
         }
@@ -163,7 +164,7 @@ public class NonStackableOverlayUI {
             Component valueComponent;
             String val = getter.get();
             if (val == null) {
-                valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+                valueComponent = Components.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
             } else {
                 val = GameDirectoryUtils.getPathWithoutGameDirectory(val);
                 if (Minecraft.getInstance().font.width(val) > 150) {
@@ -172,12 +173,12 @@ public class NonStackableOverlayUI {
                     val = new StringBuilder(val).reverse().toString();
                     val = ".." + val;
                 }
-                valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+                valueComponent = Components.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
             }
-            return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
+            return Components.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
         };
         subMenu.addSeparatorEntry("separator_before_current_value_display");
-        subMenu.addClickableEntry("current_value_display", Component.empty(), (menu, entry) -> {})
+        subMenu.addClickableEntry("current_value_display", Components.empty(), (menu, entry) -> {})
                 .setLabelSupplier((menu, entry) -> currentValueDisplayLabelSupplier.get())
                 .setClickSoundEnabled(false)
                 .setChangeBackgroundColorOnHover(false)
@@ -191,13 +192,13 @@ public class NonStackableOverlayUI {
 
         ContextMenu subMenu = new ContextMenu();
 
-        subMenu.addClickableEntry("input_value", Component.translatable("fancymenu.guicomponents.set"), (menu, entry) -> {
+        subMenu.addClickableEntry("input_value", Components.translatable("fancymenu.guicomponents.set"), (menu, entry) -> {
             menu.closeMenu();
             inputLogic.accept(setter);
         });
 
         if (addResetOption) {
-            subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.guicomponents.reset"), (menu, entry) -> {
+            subMenu.addClickableEntry("reset_to_default", Components.translatable("fancymenu.guicomponents.reset"), (menu, entry) -> {
                 setter.accept(defaultValue);
             });
         }
@@ -206,7 +207,7 @@ public class NonStackableOverlayUI {
             Component valueComponent;
             T val = getter.get();
             if (val == null) {
-                valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+                valueComponent = Components.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
             } else {
                 String valString = val.toString();
                 if (Minecraft.getInstance().font.width(valString) > 150) {
@@ -215,12 +216,12 @@ public class NonStackableOverlayUI {
                     valString = new StringBuilder(valString).reverse().toString();
                     valString = ".." + valString;
                 }
-                valueComponent = Component.literal(valString).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+                valueComponent = Components.literal(valString).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
             }
-            return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
+            return Components.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
         };
         subMenu.addSeparatorEntry("separator_before_current_value_display");
-        subMenu.addClickableEntry("current_value_display", Component.empty(), (menu, entry) -> {})
+        subMenu.addClickableEntry("current_value_display", Components.empty(), (menu, entry) -> {})
                 .setLabelSupplier((menu, entry) -> currentValueDisplayLabelSupplier.get())
                 .setClickSoundEnabled(false)
                 .setChangeBackgroundColorOnHover(false)

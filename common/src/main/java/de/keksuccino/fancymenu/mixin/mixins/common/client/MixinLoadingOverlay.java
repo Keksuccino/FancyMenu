@@ -61,15 +61,6 @@ public abstract class MixinLoadingOverlay {
 
 		boolean isPlayingIntro = false;
 
-//		if (!GameIntroHandler.introPlayed && GameIntroHandler.shouldPlayIntro()) {
-//			PlayableResource intro = GameIntroHandler.getIntro();
-//			if (intro != null) {
-//				isPlayingIntro = true;
-//				Minecraft.getInstance().setScreen(new GameIntroScreen((Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen : new TitleScreen(), intro));
-//			}
-//		}
-//		GameIntroHandler.introPlayed = true;
-
 		if (!GameIntroHandler.introPlayed && GameIntroHandler.shouldPlayIntro()) {
 			GameIntroHandler.introPlayed = true;
 			PlayableResource intro = GameIntroHandler.getIntro();

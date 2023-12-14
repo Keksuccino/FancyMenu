@@ -9,14 +9,17 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.ReceivingLevelScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
 @WidgetifiedScreen
 @Mixin(ReceivingLevelScreen.class)
 public class MixinReceivingLevelScreen extends Screen {
 
-    private static final Component DOWNLOADING_TERRAIN_TEXT_FANCYMENU = Component.translatable("multiplayer.downloadingTerrain");
+    @Unique
+    private static final Component DOWNLOADING_TERRAIN_TEXT_FANCYMENU = new TranslatableComponent("multiplayer.downloadingTerrain");
 
     protected MixinReceivingLevelScreen(Component $$0) {
         super($$0);

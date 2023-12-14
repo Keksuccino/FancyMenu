@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.util.minecraftoptions;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinOptions;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.OptionInstance;
 import net.minecraft.client.Options;
 import net.minecraft.world.entity.player.PlayerModelPart;
 import org.jetbrains.annotations.NotNull;

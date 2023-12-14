@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen.resource;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.cycle.LocalizedGenericValueCycle;
 import de.keksuccino.fancymenu.util.file.FileFilter;
@@ -15,6 +16,7 @@ import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
 import de.keksuccino.fancymenu.util.file.type.types.TextFileType;
 import de.keksuccino.fancymenu.util.file.type.types.VideoFileType;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseFileScreen;
@@ -46,9 +48,6 @@ import java.util.function.Consumer;
 @SuppressWarnings("unused")
 public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> extends CellScreen {
 
-    //TODO Somehow tell the user what source types are possible for all allowed file types
-    // (maybe tell the user if some source type for some file type is NOT available?? inform only about NOT available source types; maybe under the control cells)
-
     private static final Logger LOGGER = LogManager.getLogger();
     protected static final SimpleTexture WARNING_TEXTURE = SimpleTexture.location(new ResourceLocation("fancymenu", "textures/warning_framed_24x24.png"));
 
@@ -73,7 +72,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
     @NotNull
     public static ResourceChooserScreen<Resource, FileType<Resource>> generic(@Nullable FileTypeGroup<FileType<Resource>> fileTypes, @Nullable FileFilter fileFilter, @NotNull Consumer<String> resourceSourceCallback) {
-        return new ResourceChooserScreen<>(Component.translatable("fancymenu.resources.chooser_screen.choose.generic"), fileTypes, fileFilter, resourceSourceCallback);
+        return new ResourceChooserScreen<>(Components.translatable("fancymenu.resources.chooser_screen.choose.generic"), fileTypes, fileFilter, resourceSourceCallback);
     }
 
     @NotNull
@@ -88,7 +87,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
     @NotNull
     public static ResourceChooserScreen<ITexture, ImageFileType> image(@Nullable FileFilter fileFilter, @NotNull Consumer<String> resourceSourceCallback) {
-        return image(Component.translatable("fancymenu.resources.chooser_screen.choose.image"), fileFilter, resourceSourceCallback);
+        return image(Components.translatable("fancymenu.resources.chooser_screen.choose.image"), fileFilter, resourceSourceCallback);
     }
 
     @NotNull
@@ -98,7 +97,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
     @NotNull
     public static ResourceChooserScreen<IAudio, AudioFileType> audio(@Nullable FileFilter fileFilter, @NotNull Consumer<String> resourceSourceCallback) {
-        return audio(Component.translatable("fancymenu.resources.chooser_screen.choose.audio"), fileFilter, resourceSourceCallback);
+        return audio(Components.translatable("fancymenu.resources.chooser_screen.choose.audio"), fileFilter, resourceSourceCallback);
     }
 
     @NotNull
@@ -108,7 +107,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
     @NotNull
     public static ResourceChooserScreen<IVideo, VideoFileType> video(@Nullable FileFilter fileFilter, @NotNull Consumer<String> resourceSourceCallback) {
-        return video(Component.translatable("fancymenu.resources.chooser_screen.choose.video"), fileFilter, resourceSourceCallback);
+        return video(Components.translatable("fancymenu.resources.chooser_screen.choose.video"), fileFilter, resourceSourceCallback);
     }
 
     @NotNull
@@ -118,7 +117,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
     @NotNull
     public static ResourceChooserScreen<IText, TextFileType> text(@Nullable FileFilter fileFilter, @NotNull Consumer<String> resourceSourceCallback) {
-        return text(Component.translatable("fancymenu.resources.chooser_screen.choose.text"), fileFilter, resourceSourceCallback);
+        return text(Components.translatable("fancymenu.resources.chooser_screen.choose.text"), fileFilter, resourceSourceCallback);
     }
 
     public ResourceChooserScreen(@NotNull Component title, @Nullable FileTypeGroup<F> allowedFileTypes, @Nullable FileFilter fileFilter, @NotNull Consumer<String> resourceSourceCallback) {
@@ -175,7 +174,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
         this.addCellGroupEndSpacerCell();
 
-        this.addLabelCell(Component.translatable("fancymenu.resources.chooser_screen.source"));
+        this.addLabelCell(Components.translatable("fancymenu.resources.chooser_screen.source"));
 
         TextInputCell sourceInputCell = this.addTextInputCell(null, !isLegacyLocal, !isLegacyLocal);
         this.editBox = sourceInputCell.editBox;
@@ -196,7 +195,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
         sourceInputCell.setEditorPresetTextSupplier(consumes -> consumes.editBox.getValueWithoutPrefixSuffix());
 
         if (isLocal) {
-            this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.resources.chooser_screen.choose_local"), var1 -> {
+            this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Components.translatable("fancymenu.resources.chooser_screen.choose_local"), var1 -> {
                 File startDir = LayoutHandler.ASSETS_DIR;
                 String path = this.resourceSource;
                 if (path != null) {
@@ -222,9 +221,9 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
         this.addCellGroupEndSpacerCell();
 
-        this.addLabelCell(Component.translatable("fancymenu.resources.chooser_screen.allowed_file_types"));
+        this.addLabelCell(Components.translatable("fancymenu.resources.chooser_screen.allowed_file_types"));
 
-        MutableComponent typesComponent = Component.translatable("fancymenu.file_browser.file_type.types.all").append(" (*)");
+        MutableComponent typesComponent = Components.translatable("fancymenu.file_browser.file_type.types.all").append(" (*)");
         if (this.allowedFileTypes != null) {
             String types = "";
             for (FileType<?> type : this.allowedFileTypes.getFileTypes()) {
@@ -234,8 +233,8 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
                 }
             }
             Component fileTypeDisplayName = this.allowedFileTypes.getDisplayName();
-            if (fileTypeDisplayName == null) fileTypeDisplayName = Component.empty();
-            typesComponent = Component.empty().append(fileTypeDisplayName).append(Component.literal(" (")).append(Component.literal(types)).append(Component.literal(")"));
+            if (fileTypeDisplayName == null) fileTypeDisplayName = Components.empty();
+            typesComponent = Components.empty().append(fileTypeDisplayName).append(Components.literal(" (")).append(Components.literal(types)).append(Components.literal(")"));
         }
         this.addLabelCell(typesComponent.setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
 
@@ -261,19 +260,19 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
     protected void updateInputFieldTooltips() {
         //Update Location Source Input Box Tooltip
-        if (!this.showWarningNoExtension && (this.resourceSourceType == ResourceSourceType.LOCATION) && (this.editBox != null) && (this.editBox.isHovered() || this.warningHovered)) {
+        if (!this.showWarningNoExtension && (this.resourceSourceType == ResourceSourceType.LOCATION) && (this.editBox != null) && (((IMixinAbstractWidget)this.editBox).getIsHoveredFancyMenu() || this.warningHovered)) {
             TooltipHandler.INSTANCE.addTooltip(
                     Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.source_type.location.desc.input")).setDefaultStyle(),
                     () -> true, false, true);
         }
         //Update Legacy Local Warning Tooltip
-        if (this.showWarningLegacyLocal && (this.editBox != null) && (this.editBox.isHovered() || this.warningHovered)) {
+        if (this.showWarningLegacyLocal && (this.editBox != null) && (((IMixinAbstractWidget)this.editBox).getIsHoveredFancyMenu() || this.warningHovered)) {
             TooltipHandler.INSTANCE.addTooltip(
                     Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.chooser_screen.legacy_local.warning")).setDefaultStyle().setTextBaseColor(UIBase.getUIColorTheme().warning_text_color),
                     () -> true, false, true);
         }
         //Update No Extension Warning Tooltip
-        if (!this.showWarningLegacyLocal && this.showWarningNoExtension && (this.editBox != null) && (this.editBox.isHovered() || this.warningHovered)) {
+        if (!this.showWarningLegacyLocal && this.showWarningNoExtension && (this.editBox != null) && (((IMixinAbstractWidget)this.editBox).getIsHoveredFancyMenu() || this.warningHovered)) {
             TooltipHandler.INSTANCE.addTooltip(
                     Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.resources.chooser_screen.no_extension.warning")).setDefaultStyle().setTextBaseColor(UIBase.getUIColorTheme().warning_text_color),
                     () -> true, false, true);
@@ -286,8 +285,8 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
             if (loc != null) {
                 int h = this.editBox.getHeight() - 4;
                 int w = WARNING_TEXTURE.getAspectRatio().getAspectRatioWidth(h);
-                int x = this.editBox.getX() - w - 2;
-                int y = this.editBox.getY() + 2;
+                int x = this.editBox.x - w - 2;
+                int y = this.editBox.y + 2;
                 this.warningHovered = UIBase.isXYInArea(mouseX, mouseY, x, y, w, h);
                 RenderingUtils.setShaderColor(UIBase.getUIColorTheme().warning_text_color, 1.0F);
                 RenderingUtils.bindTexture(loc);

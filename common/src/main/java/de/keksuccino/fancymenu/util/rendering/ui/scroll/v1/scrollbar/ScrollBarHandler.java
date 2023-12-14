@@ -1,4 +1,3 @@
-
 package de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollbar;
 
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
@@ -7,7 +6,6 @@ import de.keksuccino.fancymenu.events.screen.ScreenMouseScrollEvent;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

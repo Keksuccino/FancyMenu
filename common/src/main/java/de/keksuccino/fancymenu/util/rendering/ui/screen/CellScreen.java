@@ -2,12 +2,14 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
@@ -18,13 +20,11 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.gui.navigation.FocusNavigationEvent;
-import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -99,11 +99,11 @@ public abstract class CellScreen extends Screen {
 
         this.addRightSideDefaultSpacer();
 
-        this.cancelButton = this.addRightSideButton(20, Component.translatable("fancymenu.guicomponents.cancel"), button -> {
+        this.cancelButton = this.addRightSideButton(20, Components.translatable("fancymenu.guicomponents.cancel"), button -> {
             this.onCancel();
         });
 
-        this.doneButton = this.addRightSideButton(20, Component.translatable("fancymenu.guicomponents.done"), button -> {
+        this.doneButton = this.addRightSideButton(20, Components.translatable("fancymenu.guicomponents.done"), button -> {
             if (this.allowDone()) this.onDone();
         }).setIsActiveSupplier(consumes -> this.allowDone());
 
@@ -113,8 +113,8 @@ public abstract class CellScreen extends Screen {
         for (AbstractWidget w : Lists.reverse(this.rightSideWidgets)) {
             if (!(w instanceof RightSideSpacer)) {
                 UIBase.applyDefaultWidgetSkinTo(w);
-                w.setX(widgetX);
-                w.setY(widgetY - w.getHeight());
+                w.x = widgetX;
+                w.y = widgetY - w.getHeight();
                 w.setWidth(widgetWidth);
                 this.addRenderableWidget(w);
             }
@@ -278,16 +278,6 @@ public abstract class CellScreen extends Screen {
 
     }
 
-    @Override
-    public FocusNavigationEvent.ArrowNavigation createArrowEvent(ScreenDirection $$0) {
-        return null;
-    }
-
-    @Override
-    public FocusNavigationEvent.TabNavigation createTabEvent() {
-        return null;
-    }
-
     protected class CellScrollEntry extends ScrollAreaEntry {
 
         public final RenderCell cell;
@@ -421,8 +411,8 @@ public abstract class CellScreen extends Screen {
 
         @Override
         public void renderCell(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-            this.widget.setX(this.getX());
-            this.widget.setY(this.getY());
+            this.widget.x = this.getX();
+            this.widget.y = this.getY();
             this.widget.setWidth(this.getWidth());
         }
 
@@ -481,14 +471,14 @@ public abstract class CellScreen extends Screen {
 
             this.allowEditor = allowEditor;
 
-            this.editBox = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 20, 18, Component.empty());
+            this.editBox = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 20, 18, Components.empty());
             this.editBox.setMaxLength(100000);
             this.editBox.setCharacterFilter(characterFilter);
             UIBase.applyDefaultWidgetSkinTo(this.editBox);
             this.children().add(this.editBox);
 
             if (this.allowEditor) {
-                this.openEditorButton = new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.ui.screens.string_builder_screen.edit_in_editor"), button -> {
+                this.openEditorButton = new ExtendedButton(0, 0, 20, 20, Components.translatable("fancymenu.ui.screens.string_builder_screen.edit_in_editor"), button -> {
                     if (allowEditor) {
                         TextEditorScreen s = new TextEditorScreen((characterFilter != null) ? characterFilter.convertToLegacyFilter() : null, callback -> {
                             if (callback != null) {
@@ -517,14 +507,14 @@ public abstract class CellScreen extends Screen {
             }
 
             this.editBox.setX(this.getX() + 1);
-            this.editBox.setY(this.getY() + 1);
+            this.editBox.y = this.getY() + 1;
 
             if (this.allowEditor) {
-                this.openEditorButton.setX(this.getX() + this.getWidth() - this.openEditorButton.getWidth());
-                this.openEditorButton.setY(this.getY());
+                this.openEditorButton.x = this.getX() + this.getWidth() - this.openEditorButton.getWidth();
+                this.openEditorButton.y = this.getY();
             }
 
-            if (MouseInput.isLeftMouseDown() && !this.editBox.isHovered()) {
+            if (MouseInput.isLeftMouseDown() && !((IMixinAbstractWidget)this.editBox).getIsHoveredFancyMenu()) {
                 this.editBox.setFocused(false);
             }
 
@@ -578,7 +568,7 @@ public abstract class CellScreen extends Screen {
 
     }
 
-    public abstract class RenderCell extends AbstractContainerEventHandler implements Renderable, NarratableEntry {
+    public abstract class RenderCell extends AbstractContainerEventHandler implements Widget, NarratableEntry {
 
         protected int x;
         protected int y;
@@ -601,7 +591,7 @@ public abstract class CellScreen extends Screen {
             this.renderCell(pose, mouseX, mouseY, partial);
 
             for (GuiEventListener l : this.children) {
-                if (l instanceof Renderable r) {
+                if (l instanceof Widget r) {
                     r.render(pose, mouseX, mouseY, partial);
                 }
             }
@@ -750,7 +740,7 @@ public abstract class CellScreen extends Screen {
     protected class RightSideSpacer extends AbstractWidget {
 
         protected RightSideSpacer(int height) {
-            super(0, 0, 0, height, Component.empty());
+            super(0, 0, 0, height, Components.empty());
         }
 
         @Override
@@ -758,7 +748,7 @@ public abstract class CellScreen extends Screen {
         }
 
         @Override
-        public void renderWidget(PoseStack var1, int var2, int var3, float var4) {
+        public void renderButton(PoseStack var1, int var2, int var3, float var4) {
         }
 
         @Override
@@ -767,7 +757,7 @@ public abstract class CellScreen extends Screen {
         }
 
         @Override
-        protected void updateWidgetNarration(NarrationElementOutput var1) {
+        public void updateNarration(NarrationElementOutput var1) {
         }
 
     }

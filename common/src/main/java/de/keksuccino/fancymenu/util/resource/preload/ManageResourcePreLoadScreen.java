@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.resource.preload;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
@@ -25,7 +26,7 @@ public class ManageResourcePreLoadScreen extends CellScreen {
     protected Consumer<Boolean> callback;
 
     public ManageResourcePreLoadScreen(@NotNull Consumer<Boolean> callback) {
-        super(Component.translatable("fancymenu.resources.pre_loading.manage"));
+        super(Components.translatable("fancymenu.resources.pre_loading.manage"));
         this.callback = callback;
     }
 
@@ -36,7 +37,7 @@ public class ManageResourcePreLoadScreen extends CellScreen {
 
         for (ResourceSource source : ResourcePreLoader.getRegisteredResourceSources(this.cachedSerialized)) {
 
-            this.addLabelCell(Component.literal(source.getSourceWithoutPrefix()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt())))
+            this.addLabelCell(Components.literal(source.getSourceWithoutPrefix()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt())))
                     .putMemoryValue("source", source.getSerializationSource())
                     .setSelectable(true);
 
@@ -49,7 +50,7 @@ public class ManageResourcePreLoadScreen extends CellScreen {
     @Override
     protected void initRightSideWidgets() {
 
-        this.addRightSideButton(20, Component.translatable("fancymenu.resources.pre_loading.manage.add"), extendedButton -> {
+        this.addRightSideButton(20, Components.translatable("fancymenu.resources.pre_loading.manage.add"), extendedButton -> {
             ResourceChooserScreen<?,?> s = ResourceChooserScreen.generic(FileTypeGroup.allSupported(), null, source -> {
                 if (source != null) {
                     //TODO remove debug
@@ -63,7 +64,7 @@ public class ManageResourcePreLoadScreen extends CellScreen {
 
         this.addRightSideDefaultSpacer();
 
-        this.addRightSideButton(20, Component.translatable("fancymenu.resources.pre_loading.manage.remove"), extendedButton -> {
+        this.addRightSideButton(20, Components.translatable("fancymenu.resources.pre_loading.manage.remove"), extendedButton -> {
             String source = this.getSelectedSource();
             if (source != null) {
                 ConfirmationScreen s = ConfirmationScreen.warning(aBoolean -> {

@@ -98,16 +98,20 @@ public class EditBoxSuggestions extends CommandSuggestions {
 
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY) {
+
+        List<FormattedCharSequence> cachedUsage = null;
+        if (!this.isAllowRenderUsage()) {
+            cachedUsage = new ArrayList<>(this.getAccessor().getCommandUsageFancyMenu());
+            this.getAccessor().getCommandUsageFancyMenu().clear();
+        }
+
         if (!this.input.isFocused()) {
             this.setSuggestions(null);
         }
         super.render(pose, mouseX, mouseY);
-    }
 
-    @Override
-    public void renderUsage(@NotNull PoseStack pose) {
-        if (!this.isAllowRenderUsage()) return;
-        super.renderUsage(pose);
+        if (cachedUsage != null) this.getAccessor().getCommandUsageFancyMenu().addAll(cachedUsage);
+
     }
 
     @Override
@@ -155,11 +159,11 @@ public class EditBoxSuggestions extends CommandSuggestions {
             int lastWordIndex = getLastWordIndex(editBoxSubValue);
             Collection<String> suggestionStringList = new ArrayList<>(this.customSuggestionsList);
             if (suggestionStringList.isEmpty() && (this.minecraft.player != null)) {
-                suggestionStringList = this.minecraft.player.connection.getSuggestionsProvider().getCustomTabSugggestions();
+                suggestionStringList = this.minecraft.player.connection.getSuggestionsProvider().getOnlinePlayerNames();
             }
             this.setPendingSuggestions(SharedSuggestionProvider.suggest(suggestionStringList, new SuggestionsBuilder(editBoxSubValue, lastWordIndex)));
             //Always show suggestions without pressing TAB
-            if (this.autoSuggestions && this.suggestionsAllowed() && this.minecraft.options.autoSuggestions().get()) {
+            if (this.autoSuggestions && this.suggestionsAllowed() && this.minecraft.options.autoSuggestions) {
                 this.showSuggestions(false);
             }
         }
@@ -184,10 +188,10 @@ public class EditBoxSuggestions extends CommandSuggestions {
                 int listY = this.anchorToBottom ? this.screen.height - 12 : 72;
                 int listHeight = Math.min(sortedSuggestions.size(), this.suggestionLineLimit) * 12;
                 if (this.renderPosition == SuggestionsRenderPosition.ABOVE_EDIT_BOX) {
-                    listY = this.input.getY() - listHeight - 2;
+                    listY = this.input.y - listHeight - 2;
                 }
                 if (this.renderPosition == SuggestionsRenderPosition.BELOW_EDIT_BOX) {
-                    listY = this.input.getY() + this.input.getHeight() + 2;
+                    listY = this.input.y + this.input.getHeight() + 2;
                 }
                 this.setSuggestions(new EditBoxSuggestionsList(listX, listY, totalSuggestionsWidth, sortedSuggestions, someNarratingRelatedBoolean));
 

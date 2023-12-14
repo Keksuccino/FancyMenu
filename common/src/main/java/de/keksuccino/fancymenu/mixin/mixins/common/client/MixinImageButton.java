@@ -19,19 +19,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ImageButton.class)
 public abstract class MixinImageButton extends GuiComponent {
 
-	@WrapWithCondition(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/ImageButton;renderTexture(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/resources/ResourceLocation;IIIIIIIII)V"))
+	@WrapWithCondition(method = "renderButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/ImageButton;blit(Lcom/mojang/blaze3d/vertex/PoseStack;IIFFIIII)V"))
 	private boolean wrapRenderTextureFancyMenu(ImageButton instance, PoseStack pose, ResourceLocation resourceLocation, int i1, int i2, int i3, int i4, int i5, int i6, int i7, int i8, int i9) {
 
 		ImageButton button = (ImageButton)((Object)this);
 		CustomizableWidget customizable = ((CustomizableWidget)this);
 
 		//Render custom background if present
-		boolean renderVanilla = ((CustomizableWidget)this).renderCustomBackgroundFancyMenu(button, pose, button.getX(), button.getY(), button.getWidth(), button.getHeight());
+		boolean renderVanilla = ((CustomizableWidget)this).renderCustomBackgroundFancyMenu(button, pose, button.x, button.y, button.getWidth(), button.getHeight());
 
 		//Render custom labels if present
 		if (!renderVanilla && (((customizable.getCustomLabelFancyMenu() != null) && !button.isHoveredOrFocused()) || ((customizable.getHoverLabelFancyMenu() != null) && button.isHoveredOrFocused()))) {
 			int labelColor = button.active ? 16777215 : 10526880;
-			button.renderString(pose, Minecraft.getInstance().font, labelColor | Mth.ceil(((IMixinAbstractWidget)button).getAlphaFancyMenu() * 255.0F) << 24);
+			drawCenteredString(pose, Minecraft.getInstance().font, button.getMessage(), button.x + button.getWidth() / 2, button.y + (button.getHeight() - 8) / 2, labelColor | Mth.ceil(((IMixinAbstractWidget)button).getAlphaFancyMenu() * 255.0F) << 24);
 		}
 
 		RenderSystem.enableBlend();
@@ -43,7 +43,7 @@ public abstract class MixinImageButton extends GuiComponent {
 
 	}
 
-	@Inject(method = "renderWidget", at = @At("RETURN"))
+	@Inject(method = "renderButton", at = @At("RETURN"))
 	private void afterRenderWidgetFancyMenu(PoseStack $$0, int $$1, int $$2, float $$3, CallbackInfo info) {
 		//Reset shader color after alpha handling
 		RenderingUtils.resetShaderColor();

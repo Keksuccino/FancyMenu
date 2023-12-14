@@ -2,9 +2,9 @@ package de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v1;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractSliderButton;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
@@ -13,7 +13,6 @@ import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.AbstractSliderButton;
-import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
@@ -22,6 +21,7 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 import java.util.function.Consumer;
 
+@SuppressWarnings("unused")
 @Deprecated
 public abstract class ExtendedSliderButton extends AbstractSliderButton implements UniqueWidget, NavigatableWidget {
 
@@ -59,13 +59,13 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
 
     @Deprecated
     public ExtendedSliderButton(int x, int y, int width, int height, boolean handleClick, double value, Consumer<ExtendedSliderButton> applyValueCallback) {
-        super(x, y, width, height, CommonComponents.EMPTY, value);
+        super(x, y, width, height, Components.empty(), value);
         this.handleClick = handleClick;
         this.applyValueCallback = applyValueCallback;
     }
 
     @Override
-    public void renderWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void renderButton(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
         this.renderBackground(pose);
         this.renderHandle(pose);
         int labelColorInt = this.active ? this.labelColorNormal.getColorInt() : this.labelColorInactive.getColorInt();
@@ -77,14 +77,14 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();
-        int handleX = this.getX() + (int)(this.value * (double)(this.width - 8));
+        int handleX = this.x + (int)(this.value * (double)(this.width - 8));
         DrawableColor c = this.getHandleRenderColor();
         if (c == null) {
             RenderSystem.setShaderTexture(0, SLIDER_LOCATION);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
-            blitNineSliced(pose, handleX, this.getY(), 8, 20, 20, 4, 200, 20, 0, this.getHandleTextureY());
+            RenderingUtils.blitNineSliced(pose, handleX, this.y, 8, 20, 20, 4, 200, 20, 0, this.getHandleTextureY());
         } else {
-            fill(pose, handleX, this.getY(), handleX + 8, this.getY() + this.getHeight(), RenderingUtils.replaceAlphaInColor(c.getColorInt(), this.alpha));
+            fill(pose, handleX, this.y, handleX + 8, this.y + this.getHeight(), RenderingUtils.replaceAlphaInColor(c.getColorInt(), this.alpha));
         }
         RenderingUtils.resetShaderColor();
     }
@@ -102,12 +102,12 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
         if (this.backgroundColor == null) {
             RenderSystem.setShaderTexture(0, SLIDER_LOCATION);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
-            blitNineSliced(pose, this.getX(), this.getY(), this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureY());
+            RenderingUtils.blitNineSliced(pose, this.x, this.y, this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureY());
         } else {
             int borderOffset = (this.borderColor != null) ? 1 : 0;
-            fill(pose, this.getX() + borderOffset, this.getY() + borderOffset, this.getX() + this.getWidth() - borderOffset, this.getY() + this.getHeight() - borderOffset, RenderingUtils.replaceAlphaInColor(this.backgroundColor.getColorInt(), this.alpha));
+            fill(pose, this.x + borderOffset, this.y + borderOffset, this.x + this.getWidth() - borderOffset, this.y + this.getHeight() - borderOffset, RenderingUtils.replaceAlphaInColor(this.backgroundColor.getColorInt(), this.alpha));
             if (this.borderColor != null) {
-                UIBase.renderBorder(pose, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.borderColor, true, true, true, true);
+                UIBase.renderBorder(pose, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), 1, this.borderColor, true, true, true, true);
             }
         }
         RenderingUtils.resetShaderColor();
@@ -118,7 +118,7 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
 
         if (this.visible) {
 
-            this.isHovered = mouseX >= this.getX() && mouseY >= this.getY() && mouseX < this.getX() + this.width && mouseY < this.getY() + this.height;
+            this.isHovered = mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height;
 
             if (!this.isHoveredOrFocused() && MouseInput.isLeftMouseDown()) {
                 this.leftDownNotHovered = true;
@@ -154,9 +154,9 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
     }
 
     protected void renderScrollingLabel(@NotNull PoseStack pose, @NotNull Font font, int spaceLeftRight, int textColor) {
-        int xMin = this.getX() + spaceLeftRight;
-        int xMax = this.getX() + this.getWidth() - spaceLeftRight;
-        this.renderScrollingLabelInternal(pose, font, this.getMessage(), xMin, this.getY(), xMax, this.getY() + this.getHeight(), textColor);
+        int xMin = this.x + spaceLeftRight;
+        int xMax = this.x + this.getWidth() - spaceLeftRight;
+        this.renderScrollingLabelInternal(pose, font, this.getMessage(), xMin, this.y, xMax, this.y + this.getHeight(), textColor);
     }
 
     protected void renderScrollingLabelInternal(@NotNull PoseStack pose, Font font, @NotNull Component text, int xMin, int yMin, int xMax, int yMax, int textColor) {
@@ -169,13 +169,13 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
             double $$13 = Math.max((double)diffTextWidth * 0.5D, 3.0D);
             double $$14 = Math.sin((Math.PI / 2D) * Math.cos((Math.PI * 2D) * scrollTime / $$13)) / 2.0D + 0.5D;
             double textPosX = Mth.lerp($$14, 0.0D, diffTextWidth);
-            enableScissor(xMin, yMin, xMax, yMax);
+            RenderingUtils.enableScissor(xMin, yMin, xMax, yMax);
             if (!this.labelShadow) {
                 font.draw(pose, text, xMin - (int)textPosX, textPosY, textColor);
             } else {
                 font.drawShadow(pose, text, xMin - (int)textPosX, textPosY, textColor);
             }
-            disableScissor();
+            RenderingUtils.disableScissor();
         } else {
             if (!this.labelShadow) {
                 font.draw(pose, text, (int)(((xMin + xMax) / 2F) - (font.width(text) / 2F)), textPosY, textColor);
@@ -248,11 +248,7 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
     }
 
     public boolean canChangeValue() {
-        return this.getAccessor().getCanChangeValueFancyMenu();
-    }
-
-    public IMixinAbstractSliderButton getAccessor() {
-        return (IMixinAbstractSliderButton) this;
+        return true;
     }
 
     protected int getTextureY() {
@@ -297,7 +293,7 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
         if (this.messageSuffix != null) {
             s += this.messageSuffix;
         }
-        this.setMessage(Component.literal(s));
+        this.setMessage(Components.literal(s));
     }
 
     public abstract String getSliderMessageWithoutPrefixSuffix();

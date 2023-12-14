@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -18,7 +19,7 @@ import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -35,7 +36,7 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
-public class MenuBar extends GuiComponent implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget {
+public class MenuBar extends GuiComponent implements Widget, GuiEventListener, NarratableEntry, NavigatableWidget {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -52,7 +53,7 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
     protected ClickableMenuBarEntry collapseOrExpandEntry;
 
     public MenuBar() {
-        this.collapseOrExpandEntry = this.addClickableEntry(Side.RIGHT, "collapse_or_expand", Component.empty(), (bar, entry) -> {
+        this.collapseOrExpandEntry = this.addClickableEntry(Side.RIGHT, "collapse_or_expand", Components.empty(), (bar, entry) -> {
             this.setExpanded(!this.expanded);
         }).setIconTextureSupplier((bar, entry) -> COLLAPSE_EXPAND_TEXTURE);
         this.addSpacerEntry(Side.RIGHT, "spacer_after_collapse_or_expand_entry").setWidth(10);
@@ -459,15 +460,6 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
     }
 
     @Override
-    public void setFocused(boolean var1) {
-    }
-
-    @Override
-    public boolean isFocused() {
-        return false;
-    }
-
-    @Override
     @NotNull
     public NarrationPriority narrationPriority() {
         return NarrationPriority.NONE;
@@ -529,7 +521,7 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         throw new RuntimeException("ContextMenus are not navigatable!");
     }
 
-    public static abstract class MenuBarEntry extends GuiComponent implements Renderable, GuiEventListener {
+    public static abstract class MenuBarEntry extends GuiComponent implements Widget, GuiEventListener {
 
         protected final String identifier;
         @NotNull
@@ -607,15 +599,6 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         @NotNull
         public String getIdentifier() {
             return this.identifier;
-        }
-
-        @Override
-        public void setFocused(boolean var1) {
-        }
-
-        @Override
-        public boolean isFocused() {
-            return false;
         }
 
         @Override
@@ -731,7 +714,7 @@ public class MenuBar extends GuiComponent implements Renderable, GuiEventListene
         @NotNull
         protected Component getLabel() {
             Component c = this.labelSupplier.get(this.parent, this);
-            return (c != null) ? c : Component.empty();
+            return (c != null) ? c : Components.empty();
         }
 
         public ClickableMenuBarEntry setLabelSupplier(@NotNull MenuBarEntrySupplier<Component> labelSupplier) {

@@ -1,16 +1,15 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
-import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -19,14 +18,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@SuppressWarnings("unused")
 @Mixin(AbstractSliderButton.class)
 public abstract class MixinAbstractSliderButton extends AbstractWidget implements CustomizableSlider {
 
-    @Unique
-    private static final ResourceLocation SLIDER_LOCATION_FANCYMENU = new ResourceLocation("textures/gui/slider.png");
-
-    @Shadow private boolean canChangeValue;
     @Shadow protected double value;
 
     @Unique @Nullable
@@ -40,28 +34,29 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
         super($$0, $$1, $$2, $$3, $$4);
     }
 
-    @Inject(method = "renderWidget", at = @At("HEAD"))
-    private void beforeRenderWidgetFancyMenu(PoseStack pose, int $$1, int $$2, float $$3, CallbackInfo info) {
+    @Override
+    public void renderButton(PoseStack $$0, int $$1, int $$2, float $$3) {
+
         if (!this.sliderInitializedFancyMenu) this.initializeSliderFancyMenu();
         this.sliderInitializedFancyMenu = true;
+
+        super.renderButton($$0, $$1, $$2, $$3);
+
     }
 
-    @WrapWithCondition(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSliderButton;blitNineSliced(Lcom/mojang/blaze3d/vertex/PoseStack;IIIIIIIIII)V"))
-    private boolean wrapBlitNineSlicedInRenderWidgetFancyMenu(PoseStack pose, int x, int y, int width, int height, int i5, int i6, int i7, int i8, int i9, int i10) {
+    //TODO 1.18: Checken, ob Slider handle hier korrekt gerendert wird
+    @Inject(method = "renderBg", at = @At("HEAD"), cancellable = true)
+    private void beforeRenderHandleFancyMenu(PoseStack pose, Minecraft mc, int $$2, int $$3, CallbackInfo info) {
         CustomizableWidget cus = this.getAsCustomizableWidgetFancyMenu();
         boolean isHandle = (width == 8);
         boolean renderVanilla;
-        if (isHandle) {
-            int handleX = this.getX() + (int)(this.value * (double)(this.getWidth() - 8));
-            //For sliders, the normal widget background is the slider handle texture
-            renderVanilla = cus.renderCustomBackgroundFancyMenu(this, pose, handleX, this.getY(), 8, this.getHeight());
-        } else {
-            renderVanilla = this.renderSliderBackgroundFancyMenu(pose, (AbstractSliderButton)((Object)this), this.canChangeValue);
-        }
+        int handleX = this.x + (int)(this.value * (double)(this.getWidth() - 8));
+        //For sliders, the normal widget background is the slider handle texture
+        renderVanilla = cus.renderCustomBackgroundFancyMenu(this, pose, handleX, this.y, 8, this.getHeight());
         //Re-bind default texture after rendering custom
-        RenderSystem.setShaderTexture(0, SLIDER_LOCATION_FANCYMENU);
+        RenderSystem.setShaderTexture(0, WIDGETS_LOCATION);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
-        return renderVanilla;
+        if (!renderVanilla) info.cancel();
     }
 
     @Unique

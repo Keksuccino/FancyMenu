@@ -1,4 +1,3 @@
-
 package de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -8,7 +7,6 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import net.minecraft.client.sounds.SoundManager;
 import org.jetbrains.annotations.NotNull;
-
 import java.awt.*;
 
 @SuppressWarnings("unused")
@@ -129,7 +127,7 @@ public abstract class ScrollAreaEntry extends UIBase {
     }
 
     public boolean isHovered() {
-        return this.buttonBase.isHovered();
+        return ((IMixinAbstractWidget)this.buttonBase).getIsHoveredFancyMenu();
     }
 
     public boolean isSelected() {
