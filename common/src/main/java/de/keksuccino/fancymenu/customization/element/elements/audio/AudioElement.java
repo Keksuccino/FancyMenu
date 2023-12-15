@@ -30,17 +30,6 @@ public class AudioElement extends AbstractElement {
     private static final DrawableColor BACKGROUND_COLOR = DrawableColor.of(new Color(92, 166, 239));
     private static final long AUDIO_START_COOLDOWN_MS = 2000;
 
-    //TODO Actions
-    // - Add as new category if possible ("Audio Element"); alternatively add prefix to all Actions ("Audio Element: ...")
-    // - Set Volume
-    // - Next Track
-    // - Previous Track
-    // - Toggle Mute
-    // - Restart (set to start of first track)
-
-    //TODO Placeholders
-    // - Get Volume
-
     @NotNull
     protected PlayMode playMode = PlayMode.NORMAL;
     protected boolean loop = false;
@@ -336,9 +325,9 @@ public class AudioElement extends AbstractElement {
             int h = this.getAbsoluteHeight();
             RenderSystem.enableBlend();
             fill(pose, x, y, x + w, y + h, BACKGROUND_COLOR.getColorInt());
-            enableScissor(x, y, x + w, y + h);
+            RenderingUtils.enableScissor(x, y, x + w, y + h);
             drawCenteredString(pose, Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
-            disableScissor();
+            RenderingUtils.disableScissor();
             RenderingUtils.resetShaderColor();
         }
 

@@ -4,15 +4,14 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.Widget;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.*;
 import java.util.function.Supplier;
 
-public class EditorElementBorderDisplay implements Renderable {
+public class EditorElementBorderDisplay implements Widget {
 
     public final AbstractEditorElement editorElement;
     public Font font = Minecraft.getInstance().font;

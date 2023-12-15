@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.element.elements.playerentity;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -47,7 +48,7 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                                 i.setSkinByPlayerName();
                             }
                         },
-                        null, false, true, Component.translatable("fancymenu.helper.editor.items.playerentity.set_player_name"),
+                        null, false, true, Components.translatable("fancymenu.helper.editor.items.playerentity.set_player_name"),
                         true, null, null, null)
                 .setIsActiveSupplier((menu, entry) -> !((PlayerEntityElement) this.element).copyClientPlayer)
                 .setTooltipSupplier((menu, entry) -> {
@@ -116,7 +117,7 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                                 element.getElement().skinTextureSupplier = null;
                             }
                         },
-                        Component.translatable("fancymenu.elements.player_entity.skin_texture"),
+                        Components.translatable("fancymenu.elements.player_entity.skin_texture"),
                         true, null, true, true, true)
                 .setStackable(false)
                 .setIcon(ContextMenu.IconFactory.getIcon("image"))
@@ -163,7 +164,7 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                                 element.getElement().capeTextureSupplier = null;
                             }
                         },
-                        Component.translatable("fancymenu.elements.player_entity.cape_texture"),
+                        Components.translatable("fancymenu.elements.player_entity.cape_texture"),
                         true, null, true, true, true)
                 .setStackable(false)
                 .setIcon(ContextMenu.IconFactory.getIcon("image"))
@@ -190,7 +191,7 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                 (element, follow) -> element.getElement().bodyFollowsMouse = follow,
                 "fancymenu.editor.elements.player_entity.body_follows_mouse");
 
-        this.rightClickMenu.addClickableEntry("entity_pose", Component.translatable("fancymenu.editor.elements.player_entity.edit_pose"),
+        this.rightClickMenu.addClickableEntry("entity_pose", Components.translatable("fancymenu.editor.elements.player_entity.edit_pose"),
                 (menu, entry) -> {
                     Minecraft.getInstance().setScreen(new PlayerEntityPoseScreen(this.getElement(), this.editor, () -> {
                         Minecraft.getInstance().setScreen(this.editor);
@@ -200,7 +201,7 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "entity_scale", PlayerEntityEditorElement.class,
                 consumes -> consumes.getElement().scale,
                 (playerEntityEditorElement, s) -> playerEntityEditorElement.getElement().scale = s,
-                null, false, true, Component.translatable("fancymenu.helper.editor.items.playerentity.scale"),
+                null, false, true, Components.translatable("fancymenu.helper.editor.items.playerentity.scale"),
                 true, "30", null, null);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_entity_scale");

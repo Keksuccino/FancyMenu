@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +30,7 @@ public class OpenLinkAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.openlink");
+        return Components.translatable("fancymenu.editor.custombutton.config.actiontype.openlink");
     }
 
     @Override
@@ -39,7 +40,7 @@ public class OpenLinkAction extends Action {
 
     @Override
     public Component getValueDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.openlink.desc.value");
+        return Components.translatable("fancymenu.editor.custombutton.config.actiontype.openlink.desc.value");
     }
 
     @Override

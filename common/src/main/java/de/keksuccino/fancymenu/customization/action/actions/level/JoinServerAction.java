@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.action.actions.level;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinServerList;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConnectScreen;
@@ -49,7 +50,7 @@ public class JoinServerAction extends Action {
             }
             if (d == null) {
                 d = new ServerData(value.replace(" ", ""), value.replace(" ", ""), false);
-                l.add(d, false);
+                l.add(d);
                 l.save();
             }
             Screen current = Minecraft.getInstance().screen;
@@ -60,7 +61,7 @@ public class JoinServerAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.joinserver");
+        return Components.translatable("fancymenu.editor.custombutton.config.actiontype.joinserver");
     }
 
     @Override
@@ -70,7 +71,7 @@ public class JoinServerAction extends Action {
 
     @Override
     public Component getValueDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.joinserver.desc.value");
+        return Components.translatable("fancymenu.editor.custombutton.config.actiontype.joinserver.desc.value");
     }
 
     @Override

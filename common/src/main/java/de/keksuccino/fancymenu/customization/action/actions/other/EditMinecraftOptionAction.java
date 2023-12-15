@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.minecraftoptions.MinecraftOptions;
 import de.keksuccino.fancymenu.util.minecraftoptions.MinecraftOption;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
@@ -68,7 +69,7 @@ public class EditMinecraftOptionAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.actions.edit_minecraft_option");
+        return Components.translatable("fancymenu.actions.edit_minecraft_option");
     }
 
     @Override
@@ -78,7 +79,7 @@ public class EditMinecraftOptionAction extends Action {
 
     @Override
     public Component getValueDisplayName() {
-        return Component.empty();
+        return Components.empty();
     }
 
     @Override
@@ -109,7 +110,7 @@ public class EditMinecraftOptionAction extends Action {
 
         @SuppressWarnings("all")
         protected EditMinecraftOptionActionValueScreen(@NotNull String value, @NotNull Consumer<String> callback) {
-            super(Component.translatable("fancymenu.editor.actions.generic_edit_value"), callback);
+            super(Components.translatable("fancymenu.editor.actions.generic_edit_value"), callback);
             if (value.contains(":")) {
                 this.name = value.split(":", 2)[0];
                 this.setTo = value.split(":", 2)[1];
@@ -121,7 +122,7 @@ public class EditMinecraftOptionAction extends Action {
 
             this.addStartEndSpacerCell();
 
-            this.addLabelCell(Component.translatable("fancymenu.actions.edit_minecraft_option.edit.option_name"));
+            this.addLabelCell(Components.translatable("fancymenu.actions.edit_minecraft_option.edit.option_name"));
             TextInputCell nameCell = this.addTextInputCell(null, true, true).setText(this.name);
 
             this.optionNameSuggestions = EditBoxSuggestions.createWithCustomSuggestions(this, nameCell.editBox, EditBoxSuggestions.SuggestionsRenderPosition.ABOVE_EDIT_BOX, getSupportedOptionNames());
@@ -136,7 +137,7 @@ public class EditMinecraftOptionAction extends Action {
 
             this.addCellGroupEndSpacerCell();
 
-            this.addLabelCell(Component.translatable("fancymenu.actions.edit_minecraft_option.edit.set_to_value"));
+            this.addLabelCell(Components.translatable("fancymenu.actions.edit_minecraft_option.edit.set_to_value"));
             this.addTextInputCell(null, true, true).setEditListener(s -> this.setTo = s).setText(this.setTo);
 
             this.addCellGroupEndSpacerCell();
@@ -152,8 +153,8 @@ public class EditMinecraftOptionAction extends Action {
             MinecraftOption instance = MinecraftOptions.getOption(this.name);
             String current = (instance != null) ? instance.get() : "-----";
             if (current == null) current = "-----";
-            Component curComp = Component.literal(current).setStyle(Style.EMPTY.withBold(false));
-            return Component.translatable("fancymenu.actions.edit_minecraft_option.edit.current_value", curComp).setStyle(Style.EMPTY.withBold(true));
+            Component curComp = Components.literal(current).setStyle(Style.EMPTY.withBold(false));
+            return Components.translatable("fancymenu.actions.edit_minecraft_option.edit.current_value", curComp).setStyle(Style.EMPTY.withBold(true));
         }
 
         @Override

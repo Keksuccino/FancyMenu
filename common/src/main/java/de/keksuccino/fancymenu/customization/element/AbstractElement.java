@@ -12,11 +12,12 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.internal.Loading
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -28,7 +29,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Objects;
 
-public abstract class AbstractElement extends GuiComponent implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget {
+public abstract class AbstractElement extends GuiComponent implements Widget, GuiEventListener, NarratableEntry, NavigatableWidget {
 
 	/** The {@link AbstractElement#builder} field is NULL for this element! Keep that in mind when using it as placeholder! **/
 	@SuppressWarnings("all")
@@ -333,7 +334,7 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 
 	@NotNull
 	public Component getDisplayName() {
-		if (this.customElementLayerName != null) return Component.literal(this.customElementLayerName);
+		if (this.customElementLayerName != null) return Components.literal(this.customElementLayerName);
 		return this.builder.getDisplayName(this);
 	}
 
@@ -394,21 +395,12 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	@NotNull
 	public static Component buildComponent(@NotNull String serializedComponentOrPlainText) {
 		serializedComponentOrPlainText = PlaceholderParser.replacePlaceholders(serializedComponentOrPlainText);
-		if (!serializedComponentOrPlainText.startsWith("{")) return Component.literal(serializedComponentOrPlainText);
+		if (!serializedComponentOrPlainText.startsWith("{")) return Components.literal(serializedComponentOrPlainText);
 		try {
 			Component c = Component.Serializer.fromJson(serializedComponentOrPlainText);
 			if (c != null) return c;
 		} catch (Exception ignore) {}
-		return Component.literal(serializedComponentOrPlainText);
-	}
-
-	@Override
-	public void setFocused(boolean var1) {
-	}
-
-	@Override
-	public boolean isFocused() {
-		return false;
+		return Components.literal(serializedComponentOrPlainText);
 	}
 
 	@Override

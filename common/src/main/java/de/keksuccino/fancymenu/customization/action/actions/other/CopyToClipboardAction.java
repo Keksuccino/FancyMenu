@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.action.actions.other;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -27,7 +28,7 @@ public class CopyToClipboardAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.copytoclipboard");
+        return Components.translatable("fancymenu.editor.custombutton.config.actiontype.copytoclipboard");
     }
 
     @Override
@@ -37,7 +38,7 @@ public class CopyToClipboardAction extends Action {
 
     @Override
     public Component getValueDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.copytoclipboard.desc.value");
+        return Components.translatable("fancymenu.editor.custombutton.config.actiontype.copytoclipboard.desc.value");
     }
 
     @Override

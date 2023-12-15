@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.action.actions.level;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
 import net.minecraft.network.chat.Component;
@@ -23,15 +24,15 @@ public class EnterWorldAction extends Action {
     public void execute(@Nullable String value) {
         if (value != null) {
             if (Minecraft.getInstance().getLevelSource().levelExists(value) && (Minecraft.getInstance().screen != null)) {
-                Minecraft.getInstance().forceSetScreen(new GenericDirtMessageScreen(Component.translatable("selectWorld.data_read")));
-                Minecraft.getInstance().createWorldOpenFlows().loadLevel(Minecraft.getInstance().screen, value);
+                Minecraft.getInstance().forceSetScreen(new GenericDirtMessageScreen(Components.translatable("selectWorld.data_read")));
+                Minecraft.getInstance().loadLevel(value);
             }
         }
     }
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.loadworld");
+        return Components.translatable("fancymenu.editor.custombutton.config.actiontype.loadworld");
     }
 
     @Override
@@ -41,7 +42,7 @@ public class EnterWorldAction extends Action {
 
     @Override
     public Component getValueDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.loadworld.desc.value");
+        return Components.translatable("fancymenu.editor.custombutton.config.actiontype.loadworld.desc.value");
     }
 
     @Override

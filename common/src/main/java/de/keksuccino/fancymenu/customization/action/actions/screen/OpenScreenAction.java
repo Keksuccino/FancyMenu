@@ -5,9 +5,9 @@ import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screen.ScreenInstanceFactory;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,19 +31,15 @@ public class OpenScreenAction extends Action {
     public void execute(@Nullable String value) {
         if (value != null) {
             value = ScreenIdentifierHandler.tryFixInvalidIdentifierWithNonUniversal(value);
-            if (value.equals(CreateWorldScreen.class.getName())) {
-                CreateWorldScreen.openFresh(Minecraft.getInstance(), Minecraft.getInstance().screen);
+            if (CustomGuiHandler.guiExists(value)) {
+                Screen custom = CustomGuiHandler.constructInstance(value, Minecraft.getInstance().screen, null);
+                if (custom != null) Minecraft.getInstance().setScreen(custom);
             } else {
-                if (CustomGuiHandler.guiExists(value)) {
-                    Screen custom = CustomGuiHandler.constructInstance(value, Minecraft.getInstance().screen, null);
-                    if (custom != null) Minecraft.getInstance().setScreen(custom);
+                Screen s = ScreenInstanceFactory.tryConstruct(value);
+                if (s != null) {
+                    Minecraft.getInstance().setScreen(s);
                 } else {
-                    Screen s = ScreenInstanceFactory.tryConstruct(value);
-                    if (s != null) {
-                        Minecraft.getInstance().setScreen(s);
-                    } else {
-                        LOGGER.error("[FANCYMENU] Unable to construct screen instance for '" + value + "'!");
-                    }
+                    LOGGER.error("[FANCYMENU] Unable to construct screen instance for '" + value + "'!");
                 }
             }
         }
@@ -51,7 +47,7 @@ public class OpenScreenAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.opengui");
+        return Components.translatable("fancymenu.editor.custombutton.config.actiontype.opengui");
     }
 
     @Override
@@ -61,7 +57,7 @@ public class OpenScreenAction extends Action {
 
     @Override
     public Component getValueDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.opengui.desc.value");
+        return Components.translatable("fancymenu.editor.custombutton.config.actiontype.opengui.desc.value");
     }
 
     @Override

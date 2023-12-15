@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.util.resource.MinecraftResourceUtils;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -256,7 +257,7 @@ public class ResourcePackAnimationRenderer implements IAnimationRenderer {
             if (!l.isEmpty()) {
                 ResourceLocation r = l.get(0);
                 if (r != null) {
-                    NativeImage i = NativeImage.read(Minecraft.getInstance().getResourceManager().open(r));
+                    NativeImage i = NativeImage.read(MinecraftResourceUtils.open(r));
                     this.width = i.getWidth();
                     this.height = i.getHeight();
                     this.sizeSet = true;

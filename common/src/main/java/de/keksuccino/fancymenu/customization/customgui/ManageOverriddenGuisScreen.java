@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.customgui;
 
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
@@ -19,7 +20,7 @@ public class ManageOverriddenGuisScreen extends CellScreen {
     protected List<String> removedOverrides = new ArrayList<>();
 
     public ManageOverriddenGuisScreen(@NotNull Runnable onClose) {
-        super(Component.translatable("fancymenu.custom_guis.manage_overridden"));
+        super(Components.translatable("fancymenu.custom_guis.manage_overridden"));
         this.onCloseRunnable = onClose;
     }
 
@@ -41,9 +42,9 @@ public class ManageOverriddenGuisScreen extends CellScreen {
                 }
                 first = false;
 
-                this.addLabelCell(Component.translatable("fancymenu.custom_guis.manage_overridden.screen", Component.literal(overriddenScreen).setStyle(Style.EMPTY.withBold(false))).setStyle(Style.EMPTY.withBold(true)));
-                this.addLabelCell(Component.translatable("fancymenu.custom_guis.manage_overridden.overridden_with", Component.literal(overriddenWith).setStyle(Style.EMPTY.withBold(false))).setStyle(Style.EMPTY.withBold(true)));
-                this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.custom_guis.manage_overridden.remove_override").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), var1 -> {
+                this.addLabelCell(Components.translatable("fancymenu.custom_guis.manage_overridden.screen", Components.literal(overriddenScreen).setStyle(Style.EMPTY.withBold(false))).setStyle(Style.EMPTY.withBold(true)));
+                this.addLabelCell(Components.translatable("fancymenu.custom_guis.manage_overridden.overridden_with", Components.literal(overriddenWith).setStyle(Style.EMPTY.withBold(false))).setStyle(Style.EMPTY.withBold(true)));
+                this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Components.translatable("fancymenu.custom_guis.manage_overridden.remove_override").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), var1 -> {
                     Minecraft.getInstance().setScreen(ConfirmationScreen.warning(remove -> {
                         if (remove) this.removedOverrides.add(overriddenScreen);
                         Minecraft.getInstance().setScreen(this);

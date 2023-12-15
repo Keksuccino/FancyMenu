@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.ChooseAnimationScreen
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.ObjectUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -24,7 +25,7 @@ public class AnimationEditorElement extends AbstractEditorElement {
 
         super.init();
 
-        this.rightClickMenu.addClickableEntry("choose_animation", Component.translatable("fancymenu.elements.animation.set_animation"), (menu, entry) -> {
+        this.rightClickMenu.addClickableEntry("choose_animation", Components.translatable("fancymenu.elements.animation.set_animation"), (menu, entry) -> {
             List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof AnimationEditorElement));
             String preSelectedAnimation = null;
             List<String> allAnimations = ObjectUtils.getOfAll(String.class, selectedElements, consumes -> ((AnimationElement)consumes.element).animationName);
@@ -44,7 +45,7 @@ public class AnimationEditorElement extends AbstractEditorElement {
         }).setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("video"));
 
-        this.rightClickMenu.addClickableEntry("restore_aspect_ratio", Component.translatable("fancymenu.elements.animation.restore_aspect_ratio"), (menu, entry) -> {
+        this.rightClickMenu.addClickableEntry("restore_aspect_ratio", Components.translatable("fancymenu.elements.animation.restore_aspect_ratio"), (menu, entry) -> {
             List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof AnimationEditorElement));
             this.editor.history.saveSnapshot();
             for (AbstractEditorElement e : selectedElements) {

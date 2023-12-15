@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.element.elements.image;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
@@ -23,7 +24,7 @@ public class ImageEditorElement extends AbstractEditorElement {
 
         super.init();
 
-        this.rightClickMenu.addClickableEntry("set_source", Component.translatable("fancymenu.elements.image.set_source"), (menu, entry) -> {
+        this.rightClickMenu.addClickableEntry("set_source", Components.translatable("fancymenu.elements.image.set_source"), (menu, entry) -> {
             Minecraft.getInstance().setScreen(ResourceChooserScreen.image(null, source -> {
                 if (source != null) {
                     this.editor.history.saveSnapshot();
@@ -35,7 +36,7 @@ public class ImageEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("image_separator_1");
 
-        this.rightClickMenu.addClickableEntry("restore_aspect_ratio", Component.translatable("fancymenu.elements.image.restore_aspect_ratio"), (menu, entry) -> {
+        this.rightClickMenu.addClickableEntry("restore_aspect_ratio", Components.translatable("fancymenu.elements.image.restore_aspect_ratio"), (menu, entry) -> {
             List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof ImageEditorElement));
             this.editor.history.saveSnapshot();
             for (AbstractEditorElement e : selectedElements) {

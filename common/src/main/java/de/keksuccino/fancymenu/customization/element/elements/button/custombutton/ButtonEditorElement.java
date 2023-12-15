@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.ChooseAnimationScreen
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
@@ -32,7 +33,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
         boolean isButton = (this.getElement().getWidget() instanceof AbstractButton);
         boolean isSlider = (this.getElement().getWidget() instanceof CustomizableSlider);
 
-        this.rightClickMenu.addClickableEntry("manage_actions", Component.translatable("fancymenu.editor.action.screens.manage_screen.manage"), (menu, entry) -> {
+        this.rightClickMenu.addClickableEntry("manage_actions", Components.translatable("fancymenu.editor.action.screens.manage_screen.manage"), (menu, entry) -> {
             ManageActionsScreen s = new ManageActionsScreen(this.getElement().getExecutableBlock(), (call) -> {
                 if (call != null) {
                     this.editor.history.saveSnapshot();
@@ -49,17 +50,17 @@ public class ButtonEditorElement extends AbstractEditorElement {
 
         ContextMenu buttonBackgroundMenu = new ContextMenu();
         if (isSlider || isButton) {
-            this.rightClickMenu.addSubMenuEntry("button_background", isButton ? Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground") : Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.alternate.slider"), buttonBackgroundMenu)
+            this.rightClickMenu.addSubMenuEntry("button_background", isButton ? Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground") : Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.alternate.slider"), buttonBackgroundMenu)
                     .setIcon(ContextMenu.IconFactory.getIcon("image"))
                     .setStackable(true);
         }
 
         ContextMenu setBackMenu = new ContextMenu();
-        buttonBackgroundMenu.addSubMenuEntry("set_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.set"), setBackMenu)
+        buttonBackgroundMenu.addSubMenuEntry("set_background", Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.set"), setBackMenu)
                 .setStackable(true);
 
         ContextMenu normalBackMenu = new ContextMenu();
-        setBackMenu.addSubMenuEntry("set_normal_background", isButton ? Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.normal") : Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.normal.alternate.slider"), normalBackMenu)
+        setBackMenu.addSubMenuEntry("set_normal_background", isButton ? Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.normal") : Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.normal.alternate.slider"), normalBackMenu)
                 .setStackable(true);
 
         this.addImageResourceChooserContextMenuEntryTo(normalBackMenu, "normal_background_texture",
@@ -69,11 +70,11 @@ public class ButtonEditorElement extends AbstractEditorElement {
                 (buttonEditorElement, iTextureResourceSupplier) -> {
                     buttonEditorElement.getElement().backgroundTextureNormal = iTextureResourceSupplier;
                     buttonEditorElement.getElement().backgroundAnimationNormal = null;
-                }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null, true, true, true);
+                }, Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null, true, true, true);
 
         normalBackMenu.addSeparatorEntry("separator_1").setStackable(true);
 
-        normalBackMenu.addClickableEntry("reset_normal_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.reset"), (menu, entry) -> {
+        normalBackMenu.addClickableEntry("reset_normal_background", Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.reset"), (menu, entry) -> {
             this.editor.history.saveSnapshot();
             List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof ButtonEditorElement));
             for (AbstractEditorElement e : selectedElements) {
@@ -83,7 +84,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
         }).setStackable(true);
 
         ContextMenu hoverBackMenu = new ContextMenu();
-        setBackMenu.addSubMenuEntry("set_hover_background", isButton ? Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.hover") : Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.hover.alternate.slider"), hoverBackMenu)
+        setBackMenu.addSubMenuEntry("set_hover_background", isButton ? Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.hover") : Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.hover.alternate.slider"), hoverBackMenu)
                 .setStackable(true);
 
         this.addImageResourceChooserContextMenuEntryTo(hoverBackMenu, "hover_background_texture",
@@ -93,9 +94,9 @@ public class ButtonEditorElement extends AbstractEditorElement {
                 (buttonEditorElement, iTextureResourceSupplier) -> {
                     buttonEditorElement.getElement().backgroundTextureHover = iTextureResourceSupplier;
                     buttonEditorElement.getElement().backgroundAnimationHover = null;
-                }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null, true, true, true);
+                }, Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null, true, true, true);
 
-//        hoverBackMenu.addClickableEntry("hover_background_animation", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation"), (menu, entry) -> {
+//        hoverBackMenu.addClickableEntry("hover_background_animation", Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation"), (menu, entry) -> {
 //            List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof ButtonEditorElement));
 //            String preSelectedAnimation = null;
 //            List<String> allAnimations = ObjectUtils.getOfAll(String.class, selectedElements, consumes -> ((ButtonElement)consumes.element).backgroundAnimationHover);
@@ -117,7 +118,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
 
         hoverBackMenu.addSeparatorEntry("separator_1").setStackable(true);
 
-        hoverBackMenu.addClickableEntry("reset_hover_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.reset"), (menu, entry) -> {
+        hoverBackMenu.addClickableEntry("reset_hover_background", Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.reset"), (menu, entry) -> {
             this.editor.history.saveSnapshot();
             List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof ButtonEditorElement));
             for (AbstractEditorElement e : selectedElements) {
@@ -127,7 +128,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
         }).setStackable(true);
 
         ContextMenu inactiveBackMenu = new ContextMenu();
-        setBackMenu.addSubMenuEntry("set_inactive_background", isButton ? Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.inactive") : Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.inactive.alternate.slider"), inactiveBackMenu)
+        setBackMenu.addSubMenuEntry("set_inactive_background", isButton ? Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.inactive") : Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.inactive.alternate.slider"), inactiveBackMenu)
                 .setStackable(true);
 
         this.addImageResourceChooserContextMenuEntryTo(inactiveBackMenu, "inactive_background_texture",
@@ -137,11 +138,11 @@ public class ButtonEditorElement extends AbstractEditorElement {
                 (buttonEditorElement, iTextureResourceSupplier) -> {
                     buttonEditorElement.getElement().backgroundTextureInactive = iTextureResourceSupplier;
                     buttonEditorElement.getElement().backgroundAnimationInactive = null;
-                }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null, true, true, true);
+                }, Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null, true, true, true);
 
         inactiveBackMenu.addSeparatorEntry("separator_after_inactive_back_animation").setStackable(true);
 
-        inactiveBackMenu.addClickableEntry("reset_inactive_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.reset"), (menu, entry) -> {
+        inactiveBackMenu.addClickableEntry("reset_inactive_background", Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.reset"), (menu, entry) -> {
             this.editor.history.saveSnapshot();
             List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof ButtonEditorElement));
             for (AbstractEditorElement e : selectedElements) {
@@ -174,7 +175,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
                             ButtonEditorElement.class,
                             consumes -> ((ButtonElement)consumes.element).label,
                             (element1, s) -> ((ButtonElement)element1.element).label = s,
-                            null, false, true, Component.translatable(isButton ? "fancymenu.editor.items.button.editlabel" : "fancymenu.editor.items.button.label.generic"),
+                            null, false, true, Components.translatable(isButton ? "fancymenu.editor.items.button.editlabel" : "fancymenu.editor.items.button.label.generic"),
                             true, null, null, null)
                     .setStackable(true)
                     .setIcon(ContextMenu.IconFactory.getIcon("text"));
@@ -183,7 +184,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
                             ButtonEditorElement.class,
                             consumes -> ((ButtonElement)consumes.element).hoverLabel,
                             (element1, s) -> ((ButtonElement)element1.element).hoverLabel = s,
-                            null, false, true, Component.translatable(isButton ? "fancymenu.editor.items.button.hoverlabel" : "fancymenu.editor.items.button.hover_label.generic"),
+                            null, false, true, Components.translatable(isButton ? "fancymenu.editor.items.button.hoverlabel" : "fancymenu.editor.items.button.hover_label.generic"),
                             true, null, null, null)
                     .setStackable(true)
                     .setIcon(ContextMenu.IconFactory.getIcon("text"));
@@ -197,7 +198,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
                         null,
                         consumes -> consumes.getElement().hoverSound,
                         (buttonEditorElement, supplier) -> buttonEditorElement.getElement().hoverSound = supplier,
-                        Component.translatable("fancymenu.editor.items.button.hoversound"), true, null, true, true, true)
+                        Components.translatable("fancymenu.editor.items.button.hoversound"), true, null, true, true, true)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
         this.addAudioResourceChooserContextMenuEntryTo(this.rightClickMenu, "click_sound",
@@ -205,7 +206,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
                         null,
                         consumes -> consumes.getElement().clickSound,
                         (buttonEditorElement, supplier) -> buttonEditorElement.getElement().clickSound = supplier,
-                        Component.translatable("fancymenu.editor.items.button.clicksound"), true, null, true, true, true)
+                        Components.translatable("fancymenu.editor.items.button.clicksound"), true, null, true, true, true)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
         this.rightClickMenu.addSeparatorEntry("button_separator_4").setStackable(true);
@@ -223,7 +224,7 @@ public class ButtonEditorElement extends AbstractEditorElement {
                             }
                             ((ButtonElement)element1.element).tooltip = s;
                         },
-                        null, true, true, Component.translatable("fancymenu.editor.items.button.btndescription"),
+                        null, true, true, Components.translatable("fancymenu.editor.items.button.btndescription"),
                         true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.button.btndescription.desc")))

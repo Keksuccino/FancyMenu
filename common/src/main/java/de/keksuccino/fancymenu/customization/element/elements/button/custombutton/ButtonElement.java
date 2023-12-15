@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinButton;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -86,7 +87,6 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
             }
             this.getWidget().visible = true;
             this.getWidget().active = true;
-            this.getWidget().setTooltip(null);
         }
 
         this.renderElementWidget(pose, mouseX, mouseY, partial);
@@ -132,8 +132,8 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
     public void updateWidgetPosition() {
         if (this.getWidget() == null) return;
-        this.getWidget().setX(this.getAbsoluteX());
-        this.getWidget().setY(this.getAbsoluteY());
+        this.getWidget().x = this.getAbsoluteX();
+        this.getWidget().y = this.getAbsoluteY();
     }
 
     public void updateWidgetSize() {
@@ -143,7 +143,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     }
 
     public void updateWidgetTooltip() {
-        if ((this.tooltip != null) && (this.getWidget() != null) && this.getWidget().isHovered() && !isEditor()) {
+        if ((this.tooltip != null) && (this.getWidget() != null) && ((IMixinAbstractWidget)this.getWidget()).getIsHoveredFancyMenu() && !isEditor()) {
             String tooltip = this.tooltip.replace("%n%", "\n");
             TooltipHandler.INSTANCE.addWidgetTooltip(this.getWidget(), Tooltip.of(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(tooltip), "\n")), false, true);
         }
@@ -154,7 +154,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         if (this.label != null) {
             this.getWidget().setMessage(buildComponent(this.label));
         } else {
-            this.getWidget().setMessage(Component.empty());
+            this.getWidget().setMessage(Components.empty());
         }
         if ((this.hoverLabel != null) && this.getWidget().isHoveredOrFocused() && this.getWidget().active) {
             this.getWidget().setMessage(buildComponent(this.hoverLabel));

@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -15,7 +15,7 @@ import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class MenuBackground extends GuiComponent implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget {
+public abstract class MenuBackground extends GuiComponent implements Widget, GuiEventListener, NarratableEntry, NavigatableWidget {
 
     public final MenuBackgroundBuilder<?> builder;
     /** This gets set by the {@link ScreenCustomizationLayer} when screens fade in or out and should only get used as getter. **/
@@ -82,15 +82,6 @@ public abstract class MenuBackground extends GuiComponent implements Renderable,
 
     public static int getScreenHeight() {
         return AbstractElement.getScreenHeight();
-    }
-
-    @Override
-    public void setFocused(boolean var1) {
-    }
-
-    @Override
-    public boolean isFocused() {
-        return false;
     }
 
     @Override

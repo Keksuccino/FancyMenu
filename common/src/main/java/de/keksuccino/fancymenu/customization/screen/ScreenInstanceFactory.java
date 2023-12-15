@@ -6,16 +6,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import com.google.common.collect.ImmutableList;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screen.identifier.UniversalScreenIdentifierRegistry;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.packs.PackSelectionScreen;
+import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.client.multiplayer.ClientAdvancements;
 import net.minecraft.client.resources.language.LanguageManager;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -34,7 +40,7 @@ public class ScreenInstanceFactory {
 		DEFAULT_PARAMETERS.put(Player.class, null);
 		DEFAULT_PARAMETERS.put(String.class, "");
 		DEFAULT_PARAMETERS.put(ClientAdvancements.class, null);
-		DEFAULT_PARAMETERS.put(Component.class, Component.empty());
+		DEFAULT_PARAMETERS.put(Component.class, Components.empty());
 		DEFAULT_PARAMETERS.put(boolean.class, true);
 		DEFAULT_PARAMETERS.put(int.class, 0);
 		DEFAULT_PARAMETERS.put(long.class, 0L);
@@ -46,12 +52,35 @@ public class ScreenInstanceFactory {
 		DEFAULT_PARAMETERS.put(Double.class, 0D);
 		DEFAULT_PARAMETERS.put(Float.class, 0F);
 
+		ScreenInstanceFactory.registerScreenProvider(CreateWorldScreen.class.getName(),
+				() -> CreateWorldScreen.createFresh((Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen : new TitleScreen()));
+
 		ScreenInstanceFactory.registerScreenProvider(PackSelectionScreen.class.getName(),
-				() -> new PackSelectionScreen(Minecraft.getInstance().getResourcePackRepository(), (repo) -> {
-					Minecraft.getInstance().options.updateResourcePacks(repo);
-					Minecraft.getInstance().setScreen(Minecraft.getInstance().screen);
-				}, Minecraft.getInstance().getResourcePackDirectory(), Component.translatable("resourcePack.title"))
-		);
+				() -> new PackSelectionScreen(
+						(Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen : new TitleScreen(),
+						Minecraft.getInstance().getResourcePackRepository(),
+						repository -> {
+							Options options = Minecraft.getInstance().options;
+							List<String> $$1 = ImmutableList.copyOf(options.resourcePacks);
+							options.resourcePacks.clear();
+							options.incompatibleResourcePacks.clear();
+							for(Pack $$2 : repository.getSelectedPacks()) {
+								if (!$$2.isFixedPosition()) {
+									options.resourcePacks.add($$2.getId());
+									if (!$$2.getCompatibility().isCompatible()) {
+										options.incompatibleResourcePacks.add($$2.getId());
+									}
+								}
+							}
+							options.save();
+							List<String> $$3 = ImmutableList.copyOf(options.resourcePacks);
+							if (!$$3.equals($$1)) {
+								Minecraft.getInstance().reloadResourcePacks();
+							}
+						},
+						Minecraft.getInstance().getResourcePackDirectory(),
+						new TranslatableComponent("resourcePack.title")
+				));
 
 	}
 

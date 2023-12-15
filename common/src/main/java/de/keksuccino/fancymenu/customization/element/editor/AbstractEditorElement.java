@@ -25,6 +25,7 @@ import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
@@ -44,7 +45,7 @@ import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -57,7 +58,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
-public abstract class AbstractEditorElement extends GuiComponent implements Renderable, GuiEventListener {
+public abstract class AbstractEditorElement extends GuiComponent implements Widget, GuiEventListener {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -127,18 +128,18 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		this.topLeftDisplay.clearLines();
 		this.bottomRightDisplay.clearLines();
 
-		this.topLeftDisplay.addLine("anchor_point", () -> Component.translatable("fancymenu.element.border_display.anchor_point", this.element.anchorPoint.getDisplayName()));
-		this.topLeftDisplay.addLine("pos_x", () -> Component.translatable("fancymenu.element.border_display.pos_x", "" + this.getX()));
-		this.topLeftDisplay.addLine("width", () -> Component.translatable("fancymenu.element.border_display.width", "" + this.getWidth()));
+		this.topLeftDisplay.addLine("anchor_point", () -> Components.translatable("fancymenu.element.border_display.anchor_point", this.element.anchorPoint.getDisplayName()));
+		this.topLeftDisplay.addLine("pos_x", () -> Components.translatable("fancymenu.element.border_display.pos_x", "" + this.getX()));
+		this.topLeftDisplay.addLine("width", () -> Components.translatable("fancymenu.element.border_display.width", "" + this.getWidth()));
 		if (this.element.builder.isDeprecated()) {
-			this.topLeftDisplay.addLine("deprecated_warning_line0", Component::empty);
-			this.topLeftDisplay.addLine("deprecated_warning_line1", () -> Component.translatable("fancymenu.editor.elements.deprecated_warning.line1").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
-			this.topLeftDisplay.addLine("deprecated_warning_line2", () -> Component.translatable("fancymenu.editor.elements.deprecated_warning.line2").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
-			this.topLeftDisplay.addLine("deprecated_warning_line3", () -> Component.translatable("fancymenu.editor.elements.deprecated_warning.line3").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
+			this.topLeftDisplay.addLine("deprecated_warning_line0", Components::empty);
+			this.topLeftDisplay.addLine("deprecated_warning_line1", () -> Components.translatable("fancymenu.editor.elements.deprecated_warning.line1").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
+			this.topLeftDisplay.addLine("deprecated_warning_line2", () -> Components.translatable("fancymenu.editor.elements.deprecated_warning.line2").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
+			this.topLeftDisplay.addLine("deprecated_warning_line3", () -> Components.translatable("fancymenu.editor.elements.deprecated_warning.line3").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
 		}
 
-		this.bottomRightDisplay.addLine("pos_y", () -> Component.translatable("fancymenu.element.border_display.pos_y", "" + this.getY()));
-		this.bottomRightDisplay.addLine("height", () -> Component.translatable("fancymenu.element.border_display.height", "" + this.getHeight()));
+		this.bottomRightDisplay.addLine("pos_y", () -> Components.translatable("fancymenu.element.border_display.pos_y", "" + this.getY()));
+		this.bottomRightDisplay.addLine("height", () -> Components.translatable("fancymenu.element.border_display.height", "" + this.getHeight()));
 
 		ContextMenu pickElementMenu = new ContextMenu() {
 			@Override
@@ -155,14 +156,14 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				return super.openMenuAt(x, y);
 			}
 		};
-		this.rightClickMenu.addSubMenuEntry("pick_element", Component.translatable("fancymenu.element.general.pick_element"), pickElementMenu)
+		this.rightClickMenu.addSubMenuEntry("pick_element", Components.translatable("fancymenu.element.general.pick_element"), pickElementMenu)
 				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.general.pick_element.desc")));
 
 		this.rightClickMenu.addSeparatorEntry("separator_1");
 
 		if (this.settings.isIdentifierCopyable()) {
 
-			this.rightClickMenu.addClickableEntry("copy_id", Component.translatable("fancymenu.helper.editor.items.copyid"), (menu, entry) -> {
+			this.rightClickMenu.addClickableEntry("copy_id", Components.translatable("fancymenu.helper.editor.items.copyid"), (menu, entry) -> {
 				Minecraft.getInstance().keyboardHandler.setClipboard(this.element.getInstanceIdentifier());
 				menu.closeMenu();
 			}).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.copyid.btn.desc")))
@@ -175,7 +176,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		if (this.settings.isAnchorPointChangeable()) {
 
 			ContextMenu anchorPointMenu = new ContextMenu();
-			this.rightClickMenu.addSubMenuEntry("anchor_point", Component.translatable("fancymenu.editor.items.setorientation"), anchorPointMenu)
+			this.rightClickMenu.addSubMenuEntry("anchor_point", Components.translatable("fancymenu.editor.items.setorientation"), anchorPointMenu)
 					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.orientation.btndesc")))
 					.setStackable(true)
 					.setIcon(ContextMenu.IconFactory.getIcon("anchor"));
@@ -185,7 +186,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				anchorPointMenu.addClickableEntry("anchor_point_element", ElementAnchorPoints.ELEMENT.getDisplayName(),
 								(menu, entry) -> {
 									if (entry.getStackMeta().isFirstInStack()) {
-										TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.helper.editor.items.orientation.element.setidentifier"), null, call -> {
+										TextInputScreen s = new TextInputScreen(Components.translatable("fancymenu.helper.editor.items.orientation.element.setidentifier"), null, call -> {
 											if (call != null) {
 												AbstractEditorElement editorElement = this.editor.getElementByInstanceIdentifier(call);
 												if (editorElement != null) {
@@ -251,7 +252,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		if (this.settings.isAdvancedPositioningSupported()) {
 
 			ContextMenu advancedPositioningMenu = new ContextMenu();
-			this.rightClickMenu.addSubMenuEntry("advanced_positioning", Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning"), advancedPositioningMenu)
+			this.rightClickMenu.addSubMenuEntry("advanced_positioning", Components.translatable("fancymenu.helper.editor.items.features.advanced_positioning"), advancedPositioningMenu)
 					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.features.advanced_positioning.desc")))
 					.setStackable(true)
 					.setIcon(ContextMenu.IconFactory.getIcon("move"));
@@ -260,7 +261,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							element -> element.settings.isAdvancedPositioningSupported(),
 							consumes -> consumes.element.advancedX,
 							(element, input) -> element.element.advancedX = input,
-							null, false, true, Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning.posx"),
+							null, false, true, Components.translatable("fancymenu.helper.editor.items.features.advanced_positioning.posx"),
 							true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
 					.setStackable(true);
 
@@ -268,7 +269,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							element -> element.settings.isAdvancedPositioningSupported(),
 							consumes -> consumes.element.advancedY,
 							(element, input) -> element.element.advancedY = input,
-							null, false, true, Component.translatable("fancymenu.helper.editor.items.features.advanced_positioning.posy"),
+							null, false, true, Components.translatable("fancymenu.helper.editor.items.features.advanced_positioning.posy"),
 							true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
 					.setStackable(true);
 
@@ -277,7 +278,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		if (this.settings.isAdvancedSizingSupported()) {
 
 			ContextMenu advancedSizingMenu = new ContextMenu();
-			this.rightClickMenu.addSubMenuEntry("advanced_sizing", Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing"), advancedSizingMenu)
+			this.rightClickMenu.addSubMenuEntry("advanced_sizing", Components.translatable("fancymenu.helper.editor.items.features.advanced_sizing"), advancedSizingMenu)
 					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.features.advanced_sizing.desc")))
 					.setStackable(true)
 					.setIcon(ContextMenu.IconFactory.getIcon("resize"));
@@ -288,7 +289,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							(element, input) -> {
 								element.element.advancedWidth = input;
 								element.element.baseWidth = 50;
-							}, null, false, true, Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing.width"),
+							}, null, false, true, Components.translatable("fancymenu.helper.editor.items.features.advanced_sizing.width"),
 							true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
 					.setStackable(true);
 
@@ -297,7 +298,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							consumes -> consumes.element.advancedHeight, (element, input) -> {
 								element.element.advancedHeight = input;
 								element.element.baseHeight = 50;
-							}, null, false, true, Component.translatable("fancymenu.helper.editor.items.features.advanced_sizing.height"),
+							}, null, false, true, Components.translatable("fancymenu.helper.editor.items.features.advanced_sizing.height"),
 							true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
 					.setStackable(true);
 
@@ -331,7 +332,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		if (this.settings.isLoadingRequirementsEnabled()) {
 
-			this.rightClickMenu.addClickableEntry("loading_requirements", Component.translatable("fancymenu.editor.loading_requirement.elements.loading_requirements"), (menu, entry) ->
+			this.rightClickMenu.addClickableEntry("loading_requirements", Components.translatable("fancymenu.editor.loading_requirement.elements.loading_requirements"), (menu, entry) ->
 					{
 						if (!entry.getStackMeta().isPartOfStack()) {
 							ManageRequirementsScreen s = new ManageRequirementsScreen(this.element.loadingRequirementContainer.copy(false), (call) -> {
@@ -382,7 +383,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		if (this.settings.isOrderable()) {
 
-			this.rightClickMenu.addClickableEntry("move_up_element", Component.translatable("fancymenu.editor.object.moveup"),
+			this.rightClickMenu.addClickableEntry("move_up_element", Components.translatable("fancymenu.editor.object.moveup"),
 							(menu, entry) -> {
 								this.editor.moveLayerUp(this);
 								this.editor.layoutEditorWidgets.forEach(widget -> widget.editorElementOrderChanged(this, true));
@@ -391,7 +392,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 					.setIsActiveSupplier((menu, entry) -> this.editor.canMoveLayerUp(this))
 					.setIcon(ContextMenu.IconFactory.getIcon("arrow_up"));
 
-			this.rightClickMenu.addClickableEntry("move_down_element", Component.translatable("fancymenu.editor.object.movedown"),
+			this.rightClickMenu.addClickableEntry("move_down_element", Components.translatable("fancymenu.editor.object.movedown"),
 							(menu, entry) -> {
 								this.editor.moveLayerDown(this);
 								this.editor.layoutEditorWidgets.forEach(widget -> widget.editorElementOrderChanged(this, false));
@@ -406,7 +407,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		if (this.settings.isCopyable()) {
 
-			this.rightClickMenu.addClickableEntry("copy_element", Component.translatable("fancymenu.editor.edit.copy"), (menu, entry) ->
+			this.rightClickMenu.addClickableEntry("copy_element", Components.translatable("fancymenu.editor.edit.copy"), (menu, entry) ->
 					{
 						if (!entry.getStackMeta().isPartOfStack()) {
 							this.editor.copyElementsToClipboard(this);
@@ -416,14 +417,14 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 						menu.closeMenu();
 					})
 					.setStackable(true)
-					.setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.copy"))
+					.setShortcutTextSupplier((menu, entry) -> Components.translatable("fancymenu.editor.shortcuts.copy"))
 					.setIcon(ContextMenu.IconFactory.getIcon("copy"));
 
 		}
 
 		if (this.settings.isDestroyable()) {
 
-			this.rightClickMenu.addClickableEntry("delete_element", Component.translatable("fancymenu.editor.items.delete"), (menu, entry) ->
+			this.rightClickMenu.addClickableEntry("delete_element", Components.translatable("fancymenu.editor.items.delete"), (menu, entry) ->
 					{
 						this.editor.history.saveSnapshot();
 						for (AbstractEditorElement e : this.editor.getSelectedElements()) {
@@ -432,7 +433,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 						menu.closeMenu();
 					})
 					.setStackable(true)
-					.setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.delete"))
+					.setShortcutTextSupplier((menu, entry) -> Components.translatable("fancymenu.editor.shortcuts.delete"))
 					.setIcon(ContextMenu.IconFactory.getIcon("delete"));
 
 		}
@@ -442,7 +443,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		if (this.settings.isDelayable()) {
 
 			ContextMenu appearanceDelayMenu = new ContextMenu();
-			this.rightClickMenu.addSubMenuEntry("appearance_delay", Component.translatable("fancymenu.element.general.appearance_delay"), appearanceDelayMenu)
+			this.rightClickMenu.addSubMenuEntry("appearance_delay", Components.translatable("fancymenu.element.general.appearance_delay"), appearanceDelayMenu)
 					.setStackable(true)
 					.setIcon(ContextMenu.IconFactory.getIcon("timer"));
 
@@ -452,7 +453,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							consumes -> consumes.element.appearanceDelay,
 							(element, switcherValue) -> element.element.appearanceDelay = switcherValue,
 							(menu, entry, switcherValue) -> {
-								return Component.translatable("fancymenu.element.general.appearance_delay." + switcherValue.name);
+								return Components.translatable("fancymenu.element.general.appearance_delay." + switcherValue.name);
 							})
 					.setStackable(true);
 
@@ -470,7 +471,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							element -> element.settings.isDelayable(),
 							element -> element.element.appearanceDelayInSeconds,
 							(element, input) -> element.element.appearanceDelayInSeconds = input,
-							Component.translatable("fancymenu.element.general.appearance_delay.seconds"),
+							Components.translatable("fancymenu.element.general.appearance_delay.seconds"),
 							true, 1.0F, null, null)
 					.setIsActiveSupplier((menu, entry) -> appearanceDelayIsActive.get())
 					.setStackable(true);
@@ -489,7 +490,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 							element -> element.settings.isDelayable(),
 							element -> element.element.fadeInSpeed,
 							(element, input) -> element.element.fadeInSpeed = input,
-							Component.translatable("fancymenu.element.general.appearance_delay.fade_in.speed"),
+							Components.translatable("fancymenu.element.general.appearance_delay.fade_in.speed"),
 							true, 1.0F, null, null)
 					.setIsActiveSupplier((menu, entry) -> appearanceDelayIsActive.get())
 					.setStackable(true);
@@ -523,13 +524,13 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 	protected void tick() {
 		if ((this.element.advancedWidth != null) || (this.element.advancedHeight != null) && !this.topLeftDisplay.hasLine("advanced_sizing_enabled")) {
-			this.topLeftDisplay.addLine("advanced_sizing_enabled", () -> Component.translatable("fancymenu.elements.advanced_sizing.enabled_notification"));
+			this.topLeftDisplay.addLine("advanced_sizing_enabled", () -> Components.translatable("fancymenu.elements.advanced_sizing.enabled_notification"));
 		}
 		if ((this.element.advancedWidth == null) && (this.element.advancedHeight == null) && this.topLeftDisplay.hasLine("advanced_sizing_enabled")) {
 			this.topLeftDisplay.removeLine("advanced_sizing_enabled");
 		}
 		if ((this.element.advancedX != null) || (this.element.advancedY != null) && !this.topLeftDisplay.hasLine("advanced_positioning_enabled")) {
-			this.topLeftDisplay.addLine("advanced_positioning_enabled", () -> Component.translatable("fancymenu.elements.advanced_positioning.enabled_notification"));
+			this.topLeftDisplay.addLine("advanced_positioning_enabled", () -> Components.translatable("fancymenu.elements.advanced_positioning.enabled_notification"));
 		}
 		if ((this.element.advancedX == null) && (this.element.advancedY == null) && this.topLeftDisplay.hasLine("advanced_positioning_enabled")) {
 			this.topLeftDisplay.removeLine("advanced_positioning_enabled");
@@ -765,14 +766,6 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		return UIBase.isXYInArea((int) mouseX, (int) mouseY, this.getX(), this.getY(), this.getWidth(), this.getHeight());
 	}
 
-	@Override
-	public void setFocused(boolean var1) {}
-
-	@Override
-	public boolean isFocused() {
-		return false;
-	}
-
 	public boolean isSelected() {
 		return this.selected;
 	}
@@ -848,7 +841,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		return null;
 	}
 
-	public class ResizeGrabber extends GuiComponent implements Renderable {
+	public class ResizeGrabber extends GuiComponent implements Widget {
 
 		protected int width = 4;
 		protected int height = 4;
@@ -962,7 +955,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 		ContextMenu subMenu = new ContextMenu();
 
-		subMenu.addClickableEntry("choose_file", Component.translatable("fancymenu.ui.resources.choose"),
+		subMenu.addClickableEntry("choose_file", Components.translatable("fancymenu.ui.resources.choose"),
 				(menu, entry) -> {
 					List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
 					if (entry.getStackMeta().isFirstInStack() && !selectedElements.isEmpty()) {
@@ -996,7 +989,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				}).setStackable(true);
 
 		if (addResetOption) {
-			subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.ui.resources.reset"),
+			subMenu.addClickableEntry("reset_to_default", Components.translatable("fancymenu.ui.resources.reset"),
 					(menu, entry) -> {
 						if (entry.getStackMeta().isFirstInStack()) {
 							List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
@@ -1015,7 +1008,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				ResourceSupplier<R> supplier = targetFieldGetter.get(selectedElements.get(0));
 				String val = (supplier != null) ? supplier.getSourceWithoutPrefix() : null;
 				if (val == null) {
-					valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+					valueComponent = Components.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
 				} else {
 					val = GameDirectoryUtils.getPathWithoutGameDirectory(val);
 					if (Minecraft.getInstance().font.width(val) > 150) {
@@ -1024,15 +1017,15 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 						val = new StringBuilder(val).reverse().toString();
 						val = ".." + val;
 					}
-					valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+					valueComponent = Components.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
 				}
-				return Component.translatable("fancymenu.ui.resources.current", valueComponent);
+				return Components.translatable("fancymenu.ui.resources.current", valueComponent);
 			}
-			return Component.empty();
+			return Components.empty();
 		};
 		subMenu.addSeparatorEntry("separator_before_current_value_display")
 				.setIsVisibleSupplier((menu, entry) -> this.getFilteredSelectedElementList(selectedElementsFilter).size() == 1);
-		subMenu.addClickableEntry("current_value_display", Component.empty(), (menu, entry) -> {})
+		subMenu.addClickableEntry("current_value_display", Components.empty(), (menu, entry) -> {})
 				.setLabelSupplier((menu, entry) -> currentValueDisplayLabelSupplier.get())
 				.setClickSoundEnabled(false)
 				.setChangeBackgroundColorOnHover(false)
@@ -1045,7 +1038,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 
 	protected ContextMenu.ClickableContextMenuEntry<?> addInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, String> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, Tooltip> textValidatorUserFeedback) {
 		ContextMenu subMenu = new ContextMenu();
-		ContextMenu.ClickableContextMenuEntry<?> inputEntry = subMenu.addClickableEntry("input_value", Component.translatable("fancymenu.guicomponents.set"), (menu, entry) ->
+		ContextMenu.ClickableContextMenuEntry<?> inputEntry = subMenu.addClickableEntry("input_value", Components.translatable("fancymenu.guicomponents.set"), (menu, entry) ->
 		{
 			if (entry.getStackMeta().isFirstInStack()) {
 				List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
@@ -1104,7 +1097,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		}).setStackable(true);
 
 		if (addResetOption) {
-			subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.guicomponents.reset"), (menu, entry) -> {
+			subMenu.addClickableEntry("reset_to_default", Components.translatable("fancymenu.guicomponents.reset"), (menu, entry) -> {
 				if (entry.getStackMeta().isFirstInStack()) {
 					List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
 					this.editor.history.saveSnapshot();
@@ -1121,7 +1114,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 				Component valueComponent;
 				String val = targetFieldGetter.get(selectedElements.get(0));
 				if (val == null) {
-					valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+					valueComponent = Components.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
 				} else {
 					val = GameDirectoryUtils.getPathWithoutGameDirectory(val);
 					if (Minecraft.getInstance().font.width(val) > 150) {
@@ -1130,15 +1123,15 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 						val = new StringBuilder(val).reverse().toString();
 						val = ".." + val;
 					}
-					valueComponent = Component.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+					valueComponent = Components.literal(val).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
 				}
-				return Component.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
+				return Components.translatable("fancymenu.context_menu.entries.choose_or_set.current", valueComponent);
 			}
-			return Component.empty();
+			return Components.empty();
 		};
 		subMenu.addSeparatorEntry("separator_before_current_value_display")
 				.setIsVisibleSupplier((menu, entry) -> this.getFilteredSelectedElementList(selectedElementsFilter).size() == 1);
-		subMenu.addClickableEntry("current_value_display", Component.empty(), (menu, entry) -> {})
+		subMenu.addClickableEntry("current_value_display", Components.empty(), (menu, entry) -> {})
 				.setLabelSupplier((menu, entry) -> currentValueDisplayLabelSupplier.get())
 				.setClickSoundEnabled(false)
 				.setChangeBackgroundColorOnHover(false)
@@ -1256,7 +1249,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	}
 
 	protected <V> ContextMenu.ClickableContextMenuEntry<?> addGenericCycleContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, List<V> switcherValues, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, V> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, V> targetFieldSetter, @NotNull AbstractEditorElement.SwitcherContextMenuEntryLabelSupplier<V> labelSupplier) {
-		return addTo.addClickableEntry(entryIdentifier, Component.literal(""), (menu, entry) ->
+		return addTo.addClickableEntry(entryIdentifier, Components.literal(""), (menu, entry) ->
 				{
 					List<AbstractEditorElement> selectedElements = this.getFilteredSelectedElementList(selectedElementsFilter);
 					ValueCycle<V> cycle = this.setupValueCycle("switcher", ValueCycle.fromList(switcherValues), selectedElements, entry.getStackMeta(), targetFieldGetter);
@@ -1291,11 +1284,11 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		BiConsumer<AbstractEditorElement, Boolean> setter = (BiConsumer<AbstractEditorElement, Boolean>) targetFieldSetter;
 		return addGenericCycleContextMenuEntryTo(addTo, entryIdentifier, ListUtils.of(false, true), consumes -> elementType.isAssignableFrom(consumes.getClass()), getter, setter, (menu, entry, switcherValue) -> {
 			if (switcherValue && entry.isActive()) {
-				MutableComponent enabled = Component.translatable("fancymenu.general.cycle.enabled_disabled.enabled").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
-				return Component.translatable(labelLocalizationKeyBase, enabled);
+				MutableComponent enabled = Components.translatable("fancymenu.general.cycle.enabled_disabled.enabled").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+				return Components.translatable(labelLocalizationKeyBase, enabled);
 			}
-			MutableComponent disabled = Component.translatable("fancymenu.general.cycle.enabled_disabled.disabled").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
-			return Component.translatable(labelLocalizationKeyBase, disabled);
+			MutableComponent disabled = Components.translatable("fancymenu.general.cycle.enabled_disabled.disabled").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+			return Components.translatable(labelLocalizationKeyBase, disabled);
 		}).setStackable(true);
 	}
 
@@ -1308,9 +1301,9 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	protected ContextMenu.ClickableContextMenuEntry<?> addGenericBooleanSwitcherContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<AbstractEditorElement, Boolean> selectedElementsFilter, @NotNull ConsumingSupplier<AbstractEditorElement, Boolean> targetFieldGetter, @NotNull BiConsumer<AbstractEditorElement, Boolean> targetFieldSetter, @NotNull String labelLocalizationKeyBase) {
 		return addGenericCycleContextMenuEntryTo(addTo, entryIdentifier, ListUtils.of(false, true), selectedElementsFilter, targetFieldGetter, targetFieldSetter, (menu, entry, switcherValue) -> {
 			if (switcherValue && entry.isActive()) {
-				return Component.translatable(labelLocalizationKeyBase + ".on");
+				return Components.translatable(labelLocalizationKeyBase + ".on");
 			}
-			return Component.translatable(labelLocalizationKeyBase + ".off");
+			return Components.translatable(labelLocalizationKeyBase + ".off");
 		}).setStackable(true);
 	}
 

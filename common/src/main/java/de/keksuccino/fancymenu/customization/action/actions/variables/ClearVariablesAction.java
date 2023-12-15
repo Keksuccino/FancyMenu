@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.action.actions.variables;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -24,7 +25,7 @@ public class ClearVariablesAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.helper.buttonaction.variables.clearall");
+        return Components.translatable("fancymenu.helper.buttonaction.variables.clearall");
     }
 
     @Override

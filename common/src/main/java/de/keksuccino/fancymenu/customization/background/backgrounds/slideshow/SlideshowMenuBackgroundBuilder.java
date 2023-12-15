@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.SerializedMenuBackground;
 import de.keksuccino.fancymenu.customization.layout.editor.ChooseSlideshowScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -64,7 +65,7 @@ public class SlideshowMenuBackgroundBuilder extends MenuBackgroundBuilder<Slides
 
     @Override
     public @NotNull Component getDisplayName() {
-        return Component.translatable("fancymenu.background.slideshow");
+        return Components.translatable("fancymenu.background.slideshow");
     }
 
     @Override

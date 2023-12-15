@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.element.elements.audio;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
@@ -31,7 +32,7 @@ public class ManageAudiosScreen extends CellScreen {
     protected String lastSelectedSource;
 
     protected ManageAudiosScreen(@NotNull AudioElement element, @NotNull List<AudioElement.AudioInstance> audios, @NotNull LayoutEditorScreen editor) {
-        super(Component.translatable("fancymenu.elements.audio.manage_audios"));
+        super(Components.translatable("fancymenu.elements.audio.manage_audios"));
         this.audios = Objects.requireNonNull(audios);
         this.tempAudios = new ArrayList<>(audios);
         this.element = element;
@@ -44,8 +45,8 @@ public class ManageAudiosScreen extends CellScreen {
         this.addSpacerCell(10);
 
         for (AudioElement.AudioInstance instance : this.tempAudios) {
-            MutableComponent sourceName = Component.literal("[").append(instance.supplier.getSourceType().getValueComponent().setStyle(Style.EMPTY)).append("] ").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()));
-            MutableComponent name = Component.literal(instance.supplier.getSourceWithoutPrefix()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
+            MutableComponent sourceName = Components.literal("[").append(instance.supplier.getSourceType().getValueComponent().setStyle(Style.EMPTY)).append("] ").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()));
+            MutableComponent name = Components.literal(instance.supplier.getSourceWithoutPrefix()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
             RenderCell cell = this.addLabelCell(sourceName.append(name))
                     .putMemoryValue("source", instance.supplier.getSourceWithPrefix())
                     .setHeight(80)
@@ -77,7 +78,7 @@ public class ManageAudiosScreen extends CellScreen {
     @Override
     protected void initRightSideWidgets() {
 
-        this.addRightSideButton(20, Component.translatable("fancymenu.elements.audio.manage_audios.add_audio"), button -> {
+        this.addRightSideButton(20, Components.translatable("fancymenu.elements.audio.manage_audios.add_audio"), button -> {
             Minecraft.getInstance().setScreen(
                     ResourceChooserScreen.audio(null, s -> {
                         if (s != null) this.addAudio(s);
@@ -88,7 +89,7 @@ public class ManageAudiosScreen extends CellScreen {
 
         this.addRightSideDefaultSpacer();
 
-        this.addRightSideButton(20, Component.translatable("fancymenu.elements.audio.manage_audios.remove_audio"), extendedButton -> {
+        this.addRightSideButton(20, Components.translatable("fancymenu.elements.audio.manage_audios.remove_audio"), extendedButton -> {
             RenderCell selected = this.getSelectedCell();
             if (selected != null) {
                 String source = selected.getMemoryValue("source");
@@ -103,7 +104,7 @@ public class ManageAudiosScreen extends CellScreen {
 
         this.addRightSideDefaultSpacer();
 
-        this.addRightSideButton(20, Component.translatable("fancymenu.elements.audio.manage_audios.move_up"), extendedButton -> {
+        this.addRightSideButton(20, Components.translatable("fancymenu.elements.audio.manage_audios.move_up"), extendedButton -> {
             RenderCell selected = this.getSelectedCell();
             if (selected != null) {
                 String source = selected.getMemoryValue("source");
@@ -111,7 +112,7 @@ public class ManageAudiosScreen extends CellScreen {
             }
         }).setIsActiveSupplier(consumes -> (this.getSelectedCell() != null));
 
-        this.addRightSideButton(20, Component.translatable("fancymenu.elements.audio.manage_audios.move_down"), extendedButton -> {
+        this.addRightSideButton(20, Components.translatable("fancymenu.elements.audio.manage_audios.move_down"), extendedButton -> {
             RenderCell selected = this.getSelectedCell();
             if (selected != null) {
                 String source = selected.getMemoryValue("source");

@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.client.gui.components.AbstractButton;
@@ -29,7 +30,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         element.baseWidth = 100;
         element.baseHeight = 20;
         element.label = "New Button";
-        element.setWidget(new ExtendedButton(0, 0, 0, 0, Component.empty(), (press) -> {
+        element.setWidget(new ExtendedButton(0, 0, 0, 0, Components.empty(), (press) -> {
             if ((CustomizationOverlay.getCurrentMenuBarInstance() == null) || !CustomizationOverlay.getCurrentMenuBarInstance().isUserNavigatingInMenuBar()) {
                 element.getExecutableBlock().execute();
             }
@@ -63,7 +64,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
 
         element.tooltip = serialized.getValue("description");
 
-        element.setWidget(new ExtendedButton(0, 0, 0, 0, Component.literal(""), (press) -> {
+        element.setWidget(new ExtendedButton(0, 0, 0, 0, Components.literal(""), (press) -> {
             element.getExecutableBlock().execute();
         }));
 
@@ -152,11 +153,11 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
             return b.getWidget().getMessage();
         }
         if (element instanceof VanillaWidgetElement b) {
-            if (b.getWidget() instanceof AbstractButton) return Component.translatable("fancymenu.editor.elements.vanilla_widget.button");
-            if (b.getWidget() instanceof CustomizableSlider) return Component.translatable("fancymenu.editor.elements.vanilla_widget.slider");
-            return Component.translatable("fancymenu.editor.elements.vanilla_widget.generic");
+            if (b.getWidget() instanceof AbstractButton) return Components.translatable("fancymenu.editor.elements.vanilla_widget.button");
+            if (b.getWidget() instanceof CustomizableSlider) return Components.translatable("fancymenu.editor.elements.vanilla_widget.slider");
+            return Components.translatable("fancymenu.editor.elements.vanilla_widget.generic");
         }
-        return Component.translatable("fancymenu.editor.add.button");
+        return Components.translatable("fancymenu.editor.add.button");
     }
 
     @Override

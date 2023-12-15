@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.Trio;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import net.minecraft.network.chat.Component;
@@ -138,7 +139,7 @@ public class AudioElementBuilder extends ElementBuilder<AudioElement, AudioEdito
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Component.translatable("fancymenu.elements.audio");
+        return Components.translatable("fancymenu.elements.audio");
     }
 
     @Override

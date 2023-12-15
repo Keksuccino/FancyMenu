@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.background.backgrounds.image;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
@@ -23,7 +24,7 @@ public class ImageMenuBackgroundConfigScreen extends CellScreen {
     @NotNull ImageMenuBackground background;
 
     protected ImageMenuBackgroundConfigScreen(@NotNull ImageMenuBackground background, @NotNull Consumer<ImageMenuBackground> callback) {
-        super(Component.translatable("fancymenu.background.image.configure"));
+        super(Components.translatable("fancymenu.background.image.configure"));
         this.background = background;
         this.callback = callback;
     }
@@ -33,7 +34,7 @@ public class ImageMenuBackgroundConfigScreen extends CellScreen {
 
         this.addStartEndSpacerCell();
 
-        this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.background.image.configure.choose_image.local"), button -> {
+        this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Components.translatable("fancymenu.background.image.configure.choose_image.local"), button -> {
             ResourceChooserScreen<ITexture, ImageFileType> s = ResourceChooserScreen.image(null, source -> {
                 if (source != null) {
                     this.background.textureSupplier = ResourceSupplier.image(source);
@@ -44,7 +45,7 @@ public class ImageMenuBackgroundConfigScreen extends CellScreen {
             Minecraft.getInstance().setScreen(s);
         }), true);
 
-        this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.background.image.type.web.fallback"), var1 -> {
+        this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Components.translatable("fancymenu.background.image.type.web.fallback"), var1 -> {
             ResourceChooserScreen<ITexture, ImageFileType> s = ResourceChooserScreen.image(null, source -> {
                 if (source != null) {
                     this.background.fallbackTextureSupplier = ResourceSupplier.image(source);
@@ -55,7 +56,7 @@ public class ImageMenuBackgroundConfigScreen extends CellScreen {
             Minecraft.getInstance().setScreen(s);
         }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.background.image.type.web.fallback.desc"))), true);
 
-        this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.background.image.type.web.fallback.reset").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())), var1 -> {
+        this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Components.translatable("fancymenu.background.image.type.web.fallback.reset").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())), var1 -> {
             this.background.fallbackTextureSupplier = null;
         }), true);
 

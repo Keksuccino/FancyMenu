@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinChatScreen;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinMinecraft;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
@@ -63,7 +64,7 @@ public class PasteToChatAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.helper.buttonaction.paste_to_chat");
+        return Components.translatable("fancymenu.helper.buttonaction.paste_to_chat");
     }
 
     @Override
@@ -73,7 +74,7 @@ public class PasteToChatAction extends Action {
 
     @Override
     public Component getValueDisplayName() {
-        return Component.translatable("fancymenu.helper.buttonaction.paste_to_chat.value.desc");
+        return Components.translatable("fancymenu.helper.buttonaction.paste_to_chat.value.desc");
     }
 
     @Override
@@ -98,7 +99,7 @@ public class PasteToChatAction extends Action {
         protected String msg = "";
 
         protected PasteToChatActionValueScreen(@NotNull String value, @NotNull Consumer<String> callback) {
-            super(Component.translatable("fancymenu.editor.actions.generic_edit_value"), callback);
+            super(Components.translatable("fancymenu.editor.actions.generic_edit_value"), callback);
             if (value.contains(":")) {
                 this.msg = value.split(":", 2)[1];
                 String appendString = value.split(":", 2)[0];
@@ -111,7 +112,7 @@ public class PasteToChatAction extends Action {
 
             this.addSpacerCell(20);
 
-            this.addLabelCell(Component.translatable("fancymenu.editor.actions.paste_to_chat.text"));
+            this.addLabelCell(Components.translatable("fancymenu.editor.actions.paste_to_chat.text"));
             this.addTextInputCell(null, true, true).setEditListener(s -> this.msg = s).setText(this.msg);
 
             this.addCellGroupEndSpacerCell();

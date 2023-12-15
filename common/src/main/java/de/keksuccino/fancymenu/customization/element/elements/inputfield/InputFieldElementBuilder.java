@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
@@ -25,7 +26,7 @@ public class InputFieldElementBuilder extends ElementBuilder<InputFieldElement, 
         InputFieldElement e = new InputFieldElement(this);
         e.baseWidth = 100;
         e.baseHeight = 20;
-        e.editBox = new ExtendedEditBox(Minecraft.getInstance().font, e.getAbsoluteX(), e.getAbsoluteY(), e.getAbsoluteWidth(), e.getAbsoluteHeight(), Component.empty());
+        e.editBox = new ExtendedEditBox(Minecraft.getInstance().font, e.getAbsoluteX(), e.getAbsoluteY(), e.getAbsoluteWidth(), e.getAbsoluteHeight(), Components.empty());
         e.editBox.setCharacterFilter(e.type.filter);
         return e;
     }
@@ -55,7 +56,7 @@ public class InputFieldElementBuilder extends ElementBuilder<InputFieldElement, 
             element.maxTextLength = 1;
         }
 
-        element.editBox = new ExtendedEditBox(Minecraft.getInstance().font, element.getAbsoluteX(), element.getAbsoluteY(), element.getAbsoluteWidth(), element.getAbsoluteHeight(), Component.empty());
+        element.editBox = new ExtendedEditBox(Minecraft.getInstance().font, element.getAbsoluteX(), element.getAbsoluteY(), element.getAbsoluteWidth(), element.getAbsoluteHeight(), Components.empty());
         element.editBox.setCharacterFilter(element.type.filter);
         element.editBox.setMaxLength(element.maxTextLength);
         if (element.linkedVariable != null) {
@@ -91,7 +92,7 @@ public class InputFieldElementBuilder extends ElementBuilder<InputFieldElement, 
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Component.translatable("fancymenu.customization.items.input_field");
+        return Components.translatable("fancymenu.customization.items.input_field");
     }
 
     @Override

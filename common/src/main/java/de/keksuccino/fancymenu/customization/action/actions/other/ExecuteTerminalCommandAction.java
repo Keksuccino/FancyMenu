@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -112,7 +113,7 @@ public class ExecuteTerminalCommandAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.runcmd");
+        return Components.translatable("fancymenu.editor.custombutton.config.actiontype.runcmd");
     }
 
     @Override
@@ -122,7 +123,7 @@ public class ExecuteTerminalCommandAction extends Action {
 
     @Override
     public Component getValueDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.runcmd.desc.value");
+        return Components.translatable("fancymenu.editor.custombutton.config.actiontype.runcmd.desc.value");
     }
 
     @Override
@@ -152,7 +153,7 @@ public class ExecuteTerminalCommandAction extends Action {
 
         @SuppressWarnings("all")
         protected ExecuteTerminalCommandActionValueScreen(@NotNull String value, @NotNull Consumer<String> callback) {
-            super(Component.translatable("fancymenu.editor.actions.execute_terminal_command.edit"), callback);
+            super(Components.translatable("fancymenu.editor.actions.execute_terminal_command.edit"), callback);
             this.windowsCommand = getOSCommand(value, "windows");
             this.macOsCommand = getOSCommand(value, "macos");
             this.linuxCommand = getOSCommand(value, "linux");
@@ -171,23 +172,23 @@ public class ExecuteTerminalCommandAction extends Action {
 
             this.addSpacerCell(20);
 
-            this.addLabelCell(Component.translatable("fancymenu.editor.actions.execute_terminal_command.edit.desc.line1"));
-            this.addLabelCell(Component.translatable("fancymenu.editor.actions.execute_terminal_command.edit.desc.line2"));
-            this.addLabelCell(Component.translatable("fancymenu.editor.actions.execute_terminal_command.edit.desc.line3"));
+            this.addLabelCell(Components.translatable("fancymenu.editor.actions.execute_terminal_command.edit.desc.line1"));
+            this.addLabelCell(Components.translatable("fancymenu.editor.actions.execute_terminal_command.edit.desc.line2"));
+            this.addLabelCell(Components.translatable("fancymenu.editor.actions.execute_terminal_command.edit.desc.line3"));
 
             this.addDescriptionEndSeparatorCell();
 
-            this.addLabelCell(Component.translatable("fancymenu.editor.actions.execute_terminal_command.windows"));
+            this.addLabelCell(Components.translatable("fancymenu.editor.actions.execute_terminal_command.windows"));
             this.addTextInputCell(null, true, true).setEditListener(s -> this.windowsCommand = s).setText(this.windowsCommand);
 
             this.addCellGroupEndSpacerCell();
 
-            this.addLabelCell(Component.translatable("fancymenu.editor.actions.execute_terminal_command.macos"));
+            this.addLabelCell(Components.translatable("fancymenu.editor.actions.execute_terminal_command.macos"));
             this.addTextInputCell(null, true, true).setEditListener(s -> this.macOsCommand = s).setText(this.macOsCommand);
 
             this.addCellGroupEndSpacerCell();
 
-            this.addLabelCell(Component.translatable("fancymenu.editor.actions.execute_terminal_command.linux"));
+            this.addLabelCell(Components.translatable("fancymenu.editor.actions.execute_terminal_command.linux"));
             this.addTextInputCell(null, true, true).setEditListener(s -> this.linuxCommand = s).setText(this.linuxCommand);
 
             this.addSpacerCell(20);

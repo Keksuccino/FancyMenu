@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.action.actions.variables;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -30,7 +31,7 @@ public class SetVariableAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.helper.buttonaction.variables.set");
+        return Components.translatable("fancymenu.helper.buttonaction.variables.set");
     }
 
     @Override
@@ -40,7 +41,7 @@ public class SetVariableAction extends Action {
 
     @Override
     public Component getValueDisplayName() {
-        return Component.translatable("fancymenu.helper.buttonaction.variables.set.value.desc");
+        return Components.translatable("fancymenu.helper.buttonaction.variables.set.value.desc");
     }
 
     @Override

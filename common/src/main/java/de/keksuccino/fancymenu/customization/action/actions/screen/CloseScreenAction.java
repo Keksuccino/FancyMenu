@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.action.actions.screen;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -25,7 +26,7 @@ public class CloseScreenAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.closegui");
+        return Components.translatable("fancymenu.editor.custombutton.config.actiontype.closegui");
     }
 
     @Override

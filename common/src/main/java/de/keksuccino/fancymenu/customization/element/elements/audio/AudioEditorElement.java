@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
@@ -35,7 +36,7 @@ public class AudioEditorElement extends AbstractEditorElement {
                 (audioEditorElement, aBoolean) -> audioEditorElement.getElement().setLooping(aBoolean, true),
                 "fancymenu.elements.audio.looping");
 
-        this.rightClickMenu.addClickableEntry("manage_tracks", Component.translatable("fancymenu.elements.audio.manage_audios"),
+        this.rightClickMenu.addClickableEntry("manage_tracks", Components.translatable("fancymenu.elements.audio.manage_audios"),
                         (menu, entry) -> Minecraft.getInstance().setScreen(new ManageAudiosScreen(this.getElement(), this.getElement().audios, this.editor)))
                 .setStackable(false)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
@@ -47,10 +48,10 @@ public class AudioEditorElement extends AbstractEditorElement {
                         AudioEditorElement.class,
                         consumes -> consumes.getElement().soundSource,
                         (audioEditorElement, soundSource) -> audioEditorElement.getElement().setSoundSource(soundSource),
-                        (menu, entry, switcherValue) -> Component.translatable("fancymenu.elements.audio.sound_channel", Component.translatable("soundCategory." + switcherValue.getName()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()))))
+                        (menu, entry, switcherValue) -> Components.translatable("fancymenu.elements.audio.sound_channel", Components.translatable("soundCategory." + switcherValue.getName()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()))))
                 .setStackable(false);
 
-        this.rightClickMenu.addClickableEntry("volume", Component.translatable("fancymenu.elements.audio.set_volume"), (menu, entry) -> {
+        this.rightClickMenu.addClickableEntry("volume", Components.translatable("fancymenu.elements.audio.set_volume"), (menu, entry) -> {
             Minecraft.getInstance().setScreen(new SetAudioVolumeScreen(this.getElement().volume, aFloat -> {
                 if (aFloat != null) {
                     this.getElement().setVolume(aFloat);
@@ -61,7 +62,7 @@ public class AudioEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("separator_after_volume");
 
-        this.rightClickMenu.addClickableEntry("disable_vanilla_music", Component.translatable("fancymenu.elements.audio.disable_vanilla_music"), (menu, entry) -> {
+        this.rightClickMenu.addClickableEntry("disable_vanilla_music", Components.translatable("fancymenu.elements.audio.disable_vanilla_music"), (menu, entry) -> {
                     Minecraft.getInstance().setScreen(NotificationScreen.notificationWithHeadline(
                             aBoolean -> Minecraft.getInstance().setScreen(this.editor),
                             LocalizationUtils.splitLocalizedLines("fancymenu.elements.audio.disable_vanilla_music.desc")));

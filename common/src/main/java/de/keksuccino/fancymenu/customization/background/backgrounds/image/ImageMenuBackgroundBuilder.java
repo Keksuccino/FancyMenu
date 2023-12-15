@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.SerializedMenuBackground;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -76,7 +77,7 @@ public class ImageMenuBackgroundBuilder extends MenuBackgroundBuilder<ImageMenuB
 
     @Override
     public @NotNull Component getDisplayName() {
-        return Component.translatable("fancymenu.background.image");
+        return Components.translatable("fancymenu.background.image");
     }
 
     @Override

@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.background.backgrounds.animation;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.SerializedMenuBackground;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -70,7 +71,7 @@ public class AnimationMenuBackgroundBuilder extends MenuBackgroundBuilder<Animat
 
     @Override
     public @NotNull Component getDisplayName() {
-        return Component.translatable("fancymenu.background.animation");
+        return Components.translatable("fancymenu.background.animation");
     }
 
     @Override

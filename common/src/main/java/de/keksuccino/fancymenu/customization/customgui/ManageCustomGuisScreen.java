@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.customgui;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import net.minecraft.client.Minecraft;
@@ -20,7 +21,7 @@ public class ManageCustomGuisScreen extends CellScreen {
     protected CustomGui selected;
 
     public ManageCustomGuisScreen(@NotNull Runnable onClose) {
-        super(Component.translatable("fancymenu.custom_guis.manage"));
+        super(Components.translatable("fancymenu.custom_guis.manage"));
         for (CustomGui g : CustomGuiHandler.getGuis()) {
             guis.add(g.copy());
         }
@@ -47,7 +48,7 @@ public class ManageCustomGuisScreen extends CellScreen {
     @Override
     protected void initRightSideWidgets() {
 
-        this.addRightSideButton(20, Component.translatable("fancymenu.custom_guis.manage.add"), var1 -> {
+        this.addRightSideButton(20, Components.translatable("fancymenu.custom_guis.manage.add"), var1 -> {
             Screen s = Minecraft.getInstance().screen;
             Minecraft.getInstance().setScreen(new BuildCustomGuiScreen(null, customGui -> {
                 if (customGui != null) this.guis.add(customGui);
@@ -57,14 +58,14 @@ public class ManageCustomGuisScreen extends CellScreen {
 
         this.addRightSideDefaultSpacer();
 
-        this.addRightSideButton(20, Component.translatable("fancymenu.custom_guis.manage.open"), var1 -> {
+        this.addRightSideButton(20, Components.translatable("fancymenu.custom_guis.manage.open"), var1 -> {
             CustomGui selected = this.selected;
             if (selected != null) {
                 Minecraft.getInstance().setScreen(CustomGuiHandler.constructInstance(selected, Minecraft.getInstance().screen, null));
             }
         }).setIsActiveSupplier(consumes -> this.selected != null);
 
-        this.addRightSideButton(20, Component.translatable("fancymenu.custom_guis.manage.edit"), var1 -> {
+        this.addRightSideButton(20, Components.translatable("fancymenu.custom_guis.manage.edit"), var1 -> {
             Screen s = Minecraft.getInstance().screen;
             CustomGui selected = this.selected;
             if (selected != null) {
@@ -74,7 +75,7 @@ public class ManageCustomGuisScreen extends CellScreen {
             }
         }).setIsActiveSupplier(consumes -> this.selected != null);
 
-        this.addRightSideButton(20, Component.translatable("fancymenu.custom_guis.manage.remove"), var1 -> {
+        this.addRightSideButton(20, Components.translatable("fancymenu.custom_guis.manage.remove"), var1 -> {
             Screen s = Minecraft.getInstance().screen;
             CustomGui selected = this.selected;
             if (selected != null) {
@@ -122,7 +123,7 @@ public class ManageCustomGuisScreen extends CellScreen {
         protected CustomGui gui;
 
         public CustomGuiCell(@NotNull CustomGui gui) {
-            super(Component.literal(gui.identifier));
+            super(Components.literal(gui.identifier));
             this.gui = gui;
         }
 

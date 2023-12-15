@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.background.backgrounds.animation;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.layout.editor.ChooseAnimationScreen;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
@@ -31,7 +32,7 @@ public class AnimationMenuBackgroundConfigScreen extends Screen {
 
     protected AnimationMenuBackgroundConfigScreen(@Nullable Screen parent, @NotNull AnimationMenuBackground background, @NotNull Consumer<AnimationMenuBackground> callback) {
 
-        super(Component.translatable("fancymenu.background.animation.configure"));
+        super(Components.translatable("fancymenu.background.animation.configure"));
 
         this.parent = parent;
         this.background = background;
@@ -44,7 +45,7 @@ public class AnimationMenuBackgroundConfigScreen extends Screen {
 
         super.init();
 
-        this.chooseAnimationButton = new ExtendedButton(0, 0, 300, 20, Component.translatable("fancymenu.background.animation.configure.choose_animation"), (press) -> {
+        this.chooseAnimationButton = new ExtendedButton(0, 0, 300, 20, Components.translatable("fancymenu.background.animation.configure.choose_animation"), (press) -> {
             ChooseAnimationScreen s = new ChooseAnimationScreen(this.background.animationName, (call) -> {
                 if (call != null) {
                     this.background.animationName = call;
@@ -56,15 +57,15 @@ public class AnimationMenuBackgroundConfigScreen extends Screen {
         this.addWidget(this.chooseAnimationButton);
         UIBase.applyDefaultWidgetSkinTo(this.chooseAnimationButton);
 
-        this.toggleRestartOnLoadButton = new ExtendedButton(0, 0, 300, 20, Component.literal(""), (press) -> {
+        this.toggleRestartOnLoadButton = new ExtendedButton(0, 0, 300, 20, Components.literal(""), (press) -> {
             this.background.restartOnMenuLoad = !this.background.restartOnMenuLoad;
         }) {
             @Override
             public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
                 if (!AnimationMenuBackgroundConfigScreen.this.background.restartOnMenuLoad) {
-                    this.setMessage(Component.translatable("fancymenu.background.animation.configure.restart_on_load.off"));
+                    this.setMessage(Components.translatable("fancymenu.background.animation.configure.restart_on_load.off"));
                 } else {
-                    this.setMessage(Component.translatable("fancymenu.background.animation.configure.restart_on_load.on"));
+                    this.setMessage(Components.translatable("fancymenu.background.animation.configure.restart_on_load.on"));
                 }
                 super.render(pose, mouseX, mouseY, partial);
             }
@@ -72,7 +73,7 @@ public class AnimationMenuBackgroundConfigScreen extends Screen {
         this.addWidget(this.toggleRestartOnLoadButton);
         UIBase.applyDefaultWidgetSkinTo(this.toggleRestartOnLoadButton);
 
-        this.doneButton = new ExtendedButton(0, 0, 145, 20, Component.translatable("fancymenu.guicomponents.done"), (press) -> {
+        this.doneButton = new ExtendedButton(0, 0, 145, 20, Components.translatable("fancymenu.guicomponents.done"), (press) -> {
             Minecraft.getInstance().setScreen(this.parent);
             this.callback.accept(this.background);
         }) {
@@ -88,7 +89,7 @@ public class AnimationMenuBackgroundConfigScreen extends Screen {
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
-        this.cancelButton = new ExtendedButton(0, 0, 145, 20, Component.translatable("fancymenu.guicomponents.cancel"), (press) -> {
+        this.cancelButton = new ExtendedButton(0, 0, 145, 20, Components.translatable("fancymenu.guicomponents.cancel"), (press) -> {
             this.onClose();
         });
         this.addWidget(this.cancelButton);
@@ -110,20 +111,20 @@ public class AnimationMenuBackgroundConfigScreen extends Screen {
         int titleWidth = this.font.width(title);
         this.font.draw(pose, title, (float)centerX - ((float)titleWidth / 2F), 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
 
-        this.chooseAnimationButton.setX(centerX - (this.chooseAnimationButton.getWidth() / 2));
-        this.chooseAnimationButton.setY(centerY - 20 - 3);
+        this.chooseAnimationButton.x = centerX - (this.chooseAnimationButton.getWidth() / 2);
+        this.chooseAnimationButton.y = centerY - 20 - 3;
         this.chooseAnimationButton.render(pose, mouseX, mouseY, partial);
 
-        this.toggleRestartOnLoadButton.setX(centerX - (this.toggleRestartOnLoadButton.getWidth() / 2));
-        this.toggleRestartOnLoadButton.setY(centerY + 2);
+        this.toggleRestartOnLoadButton.x = centerX - (this.toggleRestartOnLoadButton.getWidth() / 2);
+        this.toggleRestartOnLoadButton.y = centerY + 2;
         this.toggleRestartOnLoadButton.render(pose, mouseX, mouseY, partial);
 
-        this.doneButton.setX((this.width / 2) - this.doneButton.getWidth() - 5);
-        this.doneButton.setY(this.height - 40);
+        this.doneButton.x = (this.width / 2) - this.doneButton.getWidth() - 5;
+        this.doneButton.y = this.height - 40;
         this.doneButton.render(pose, mouseX, mouseY, partial);
 
-        this.cancelButton.setX((this.width / 2) + 5);
-        this.cancelButton.setY(this.height - 40);
+        this.cancelButton.x = (this.width / 2) + 5;
+        this.cancelButton.y = this.height - 40;
         this.cancelButton.render(pose, mouseX, mouseY, partial);
 
     }

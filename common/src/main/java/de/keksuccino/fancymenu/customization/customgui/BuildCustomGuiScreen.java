@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.customgui;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
@@ -26,7 +27,7 @@ public class BuildCustomGuiScreen extends CellScreen {
     protected LabelCell settingsFeedbackCell;
 
     protected BuildCustomGuiScreen(@Nullable CustomGui guiToEdit, @NotNull Consumer<CustomGui> callback) {
-        super(Component.translatable("fancymenu.custom_guis.build"));
+        super(Components.translatable("fancymenu.custom_guis.build"));
         this.gui = (guiToEdit != null) ? guiToEdit : new CustomGui();
         if (guiToEdit != null) this.identifierOfEdit = guiToEdit.identifier;
         this.guiTemp = (guiToEdit != null) ? this.gui.copy() : this.gui;
@@ -38,14 +39,14 @@ public class BuildCustomGuiScreen extends CellScreen {
 
         this.addSpacerCell(20);
 
-        this.addLabelCell(Component.translatable("fancymenu.custom_guis.build.identifier"));
+        this.addLabelCell(Components.translatable("fancymenu.custom_guis.build.identifier"));
         this.addTextInputCell(CharacterFilter.buildOnlyLowercaseFileNameFilter(), false, false)
                 .setEditListener(s -> this.guiTemp.identifier = s)
                 .setText(this.guiTemp.identifier);
 
         this.addCellGroupEndSpacerCell();
 
-        this.addLabelCell(Component.translatable("fancymenu.custom_guis.build.title"));
+        this.addLabelCell(Components.translatable("fancymenu.custom_guis.build.title"));
         this.addTextInputCell(null, true, true)
                 .setEditListener(s -> this.guiTemp.title = s)
                 .setText(this.guiTemp.title);
@@ -58,7 +59,7 @@ public class BuildCustomGuiScreen extends CellScreen {
 
         this.addSpacerCell(10);
 
-        this.settingsFeedbackCell = this.addLabelCell(Component.empty());
+        this.settingsFeedbackCell = this.addLabelCell(Components.empty());
 
         this.addSpacerCell(20);
 
@@ -73,13 +74,13 @@ public class BuildCustomGuiScreen extends CellScreen {
     public void render(PoseStack pose, int mouseX, int mouseY, float partial) {
 
         if (this.guiTemp.identifier.isEmpty()) {
-            this.settingsFeedbackCell.setText(Component.translatable("fancymenu.custom_guis.build.identifier.invalid").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())));
+            this.settingsFeedbackCell.setText(Components.translatable("fancymenu.custom_guis.build.identifier.invalid").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())));
             this.allSettingsValid = false;
         } else if (CustomGuiHandler.guiExists(this.guiTemp.identifier) && !Objects.equals(this.guiTemp.identifier, this.identifierOfEdit)) {
-            this.settingsFeedbackCell.setText(Component.translatable("fancymenu.custom_guis.build.identifier.already_in_use").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())));
+            this.settingsFeedbackCell.setText(Components.translatable("fancymenu.custom_guis.build.identifier.already_in_use").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())));
             this.allSettingsValid = false;
         } else {
-            this.settingsFeedbackCell.setText(Component.empty());
+            this.settingsFeedbackCell.setText(Components.empty());
             this.allSettingsValid = true;
         }
 

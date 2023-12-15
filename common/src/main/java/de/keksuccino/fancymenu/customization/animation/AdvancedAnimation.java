@@ -12,19 +12,17 @@ import java.util.function.Supplier;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.animation.exceptions.AnimationNotFoundException;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.resource.MinecraftResourceUtils;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.konkrete.rendering.animation.ExternalTextureAnimationRenderer;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.sound.SoundHandler;
-import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-//TODO Rewrite animations
 
 @SuppressWarnings("all")
 public class AdvancedAnimation implements IAnimationRenderer, RenderableResource, PlayableResource {
@@ -504,7 +502,7 @@ public class AdvancedAnimation implements IAnimationRenderer, RenderableResource
 					if (!l.isEmpty()) {
 						if (l.size() > frame) {
 							ResourceLocation r = l.get(frame);
-							Resource res = Minecraft.getInstance().getResourceManager().getResource(r).get();
+							Resource res = MinecraftResourceUtils.get(r).get();
 							return (res != null);
 						} else {
 							return true;
@@ -517,7 +515,7 @@ public class AdvancedAnimation implements IAnimationRenderer, RenderableResource
 					if ((l != null) && (l.size() > frame)) {
 						ResourceLocation r = l.get(frame).getResourceLocation();
 						if (r != null) {
-							Resource res = Minecraft.getInstance().getResourceManager().getResource(r).get();
+							Resource res = MinecraftResourceUtils.get(r).get();
 							return (res != null);
 						}
 					} else {

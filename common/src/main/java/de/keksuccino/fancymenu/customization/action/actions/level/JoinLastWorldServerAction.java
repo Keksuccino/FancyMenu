@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.world.LastWorldHandler;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinServerList;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConnectScreen;
@@ -33,8 +34,8 @@ public class JoinLastWorldServerAction extends Action {
             if (!LastWorldHandler.isLastWorldServer()) {
                 File f = new File(LastWorldHandler.getLastWorld());
                 if (Minecraft.getInstance().getLevelSource().levelExists(f.getName())) {
-                    Minecraft.getInstance().forceSetScreen(new GenericDirtMessageScreen(Component.translatable("selectWorld.data_read")));
-                    Minecraft.getInstance().createWorldOpenFlows().loadLevel(Minecraft.getInstance().screen, f.getName());
+                    Minecraft.getInstance().forceSetScreen(new GenericDirtMessageScreen(Components.translatable("selectWorld.data_read")));
+                    Minecraft.getInstance().loadLevel(f.getName());
                 }
             } else {
                 String ipRaw = LastWorldHandler.getLastWorld().replace(" ", "");
@@ -58,7 +59,7 @@ public class JoinLastWorldServerAction extends Action {
                 }
                 if (d == null) {
                     d = new ServerData(ipRaw, ipRaw, false);
-                    l.add(d, false);
+                    l.add(d);
                     l.save();
                 }
                 ConnectScreen.startConnecting(Minecraft.getInstance().screen, Minecraft.getInstance(), new ServerAddress(ip, port), d);
@@ -68,7 +69,7 @@ public class JoinLastWorldServerAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.join_last_world");
+        return Components.translatable("fancymenu.editor.custombutton.config.actiontype.join_last_world");
     }
 
     @Override

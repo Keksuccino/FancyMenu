@@ -1,10 +1,10 @@
-
 package de.keksuccino.fancymenu.customization.background;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.background.backgrounds.image.ImageMenuBackground;
 import de.keksuccino.fancymenu.customization.background.backgrounds.image.ImageMenuBackgroundBuilder;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
@@ -20,7 +20,6 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -41,7 +40,7 @@ public class ChooseMenuBackgroundScreen extends Screen {
 
     public ChooseMenuBackgroundScreen(@Nullable MenuBackground backgroundToEdit, boolean addResetBackgroundEntry, @NotNull Consumer<MenuBackground> callback) {
 
-        super(Component.translatable("fancymenu.menu_background.choose"));
+        super(Components.translatable("fancymenu.menu_background.choose"));
 
         this.background = backgroundToEdit;
         this.callback = callback;
@@ -75,7 +74,7 @@ public class ChooseMenuBackgroundScreen extends Screen {
 
         super.init();
 
-        this.configureButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.menu_background.choose.configure_background"), (button) -> {
+        this.configureButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.menu_background.choose.configure_background"), (button) -> {
             if (this.backgroundType != null) {
                 this.backgroundType.buildNewOrEditInstanceInternal(this, this.background, (back) -> {
                     if (back != null) {
@@ -98,11 +97,11 @@ public class ChooseMenuBackgroundScreen extends Screen {
         this.addWidget(this.configureButton);
         UIBase.applyDefaultWidgetSkinTo(this.configureButton);
 
-        this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
+        this.doneButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.guicomponents.done"), (button) -> {
             this.callback.accept(this.background);
         }) {
             @Override
-            public void renderWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+            public void renderButton(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
                 if (ChooseMenuBackgroundScreen.this.backgroundType == null) {
                     TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.menu_background.choose.not_background_selected")).setDefaultStyle(), false, true);
                     this.active = false;
@@ -112,13 +111,13 @@ public class ChooseMenuBackgroundScreen extends Screen {
                 } else {
                     this.active = true;
                 }
-                super.renderWidget(pose, mouseX, mouseY, partial);
+                super.renderButton(pose, mouseX, mouseY, partial);
             }
         };
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
-        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
+        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.guicomponents.cancel"), (button) -> {
             this.callback.accept(null);
         });
         this.addWidget(this.cancelButton);
@@ -141,7 +140,7 @@ public class ChooseMenuBackgroundScreen extends Screen {
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         this.font.draw(matrix, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
 
-        this.font.draw(matrix, Component.translatable("fancymenu.menu_background.choose.available_types"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        this.font.draw(matrix, Components.translatable("fancymenu.menu_background.choose.available_types"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
 
         this.backgroundTypeListScrollArea.setWidth((this.width / 2) - 40, true);
         this.backgroundTypeListScrollArea.setHeight(this.height - 85, true);
@@ -149,7 +148,7 @@ public class ChooseMenuBackgroundScreen extends Screen {
         this.backgroundTypeListScrollArea.setY(50 + 15, true);
         this.backgroundTypeListScrollArea.render(matrix, mouseX, mouseY, partial);
 
-        Component descLabel = Component.translatable("fancymenu.menu_background.choose.type_description");
+        Component descLabel = Components.translatable("fancymenu.menu_background.choose.type_description");
         int descLabelWidth = this.font.width(descLabel);
         this.font.draw(matrix, descLabel, this.width - 20 - descLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
 
@@ -159,16 +158,16 @@ public class ChooseMenuBackgroundScreen extends Screen {
         this.backgroundDescriptionScrollArea.setY(50 + 15, true);
         this.backgroundDescriptionScrollArea.render(matrix, mouseX, mouseY, partial);
 
-        this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
-        this.doneButton.setY(this.height - 20 - 20);
+        this.doneButton.x = this.width - 20 - this.doneButton.getWidth();
+        this.doneButton.y = this.height - 20 - 20;
         this.doneButton.render(matrix, mouseX, mouseY, partial);
 
-        this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
-        this.cancelButton.setY(this.doneButton.getY() - 5 - 20);
+        this.cancelButton.x = this.width - 20 - this.cancelButton.getWidth();
+        this.cancelButton.y = this.doneButton.y - 5 - 20;
         this.cancelButton.render(matrix, mouseX, mouseY, partial);
 
-        this.configureButton.setX(this.width - 20 - this.configureButton.getWidth());
-        this.configureButton.setY(this.cancelButton.getY() - 15 - 20);
+        this.configureButton.x = this.width - 20 - this.configureButton.getWidth();
+        this.configureButton.y = this.cancelButton.y - 15 - 20;
         this.configureButton.render(matrix, mouseX, mouseY, partial);
 
         super.render(matrix, mouseX, mouseY, partial);
@@ -263,10 +262,10 @@ public class ChooseMenuBackgroundScreen extends Screen {
 
         private static Component getText(MenuBackgroundBuilder<?> backgroundType) {
             if (backgroundType == NO_BACKGROUND_TYPE) {
-                return Component.translatable("fancymenu.menu_background.choose.entry.no_background").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+                return Components.translatable("fancymenu.menu_background.choose.entry.no_background").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
             }
             MutableComponent c = backgroundType.getDisplayName().copy().setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
-            if (backgroundType.isDeprecated()) c.append(Component.translatable("fancymenu.menu_background.deprecated").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
+            if (backgroundType.isDeprecated()) c.append(Components.translatable("fancymenu.menu_background.deprecated").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
             return c;
         }
 
