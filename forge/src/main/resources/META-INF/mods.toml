@@ -53,7 +53,7 @@ side="BOTH"
 modId="drippyloadingscreen"
 mandatory=false
 ordering="NONE"
-versionRange="[2.2.0,)"
+versionRange="[3.0.0,)"
 side="BOTH"
 
 [[dependencies.fancymenu]]
