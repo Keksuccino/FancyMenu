@@ -26,8 +26,8 @@ public class WidgetMeta {
 		this.widget = widget;
 		this.screen = parentScreen;
 		this.label = widget.getMessage();
-		this.x = widget.getX();
-		this.y = widget.getY();
+		this.x = widget.x;
+		this.y = widget.y;
 		this.width = widget.getWidth();
 		this.height = widget.getHeight();
 	}

@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
@@ -20,7 +21,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -37,7 +37,7 @@ public class ManageVariablesScreen extends Screen {
 
     public ManageVariablesScreen(@NotNull Consumer<List<Variable>> callback) {
 
-        super(Component.translatable("fancymenu.overlay.menu_bar.variables.manage"));
+        super(Components.translatable("fancymenu.overlay.menu_bar.variables.manage"));
 
         this.callback = callback;
         this.updateVariableScrollArea();
@@ -49,8 +49,8 @@ public class ManageVariablesScreen extends Screen {
 
         super.init();
 
-        this.addVariableButton = new ExtendedButton(0, 0, 220, 20, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.add_variable"), (button) -> {
-            TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.overlay.menu_bar.variables.manage.add_variable.input_name"), CharacterFilter.buildOnlyLowercaseFileNameFilter(), (call) -> {
+        this.addVariableButton = new ExtendedButton(0, 0, 220, 20, Components.translatable("fancymenu.overlay.menu_bar.variables.manage.add_variable"), (button) -> {
+            TextInputScreen s = new TextInputScreen(Components.translatable("fancymenu.overlay.menu_bar.variables.manage.add_variable.input_name"), CharacterFilter.buildOnlyLowercaseFileNameFilter(), (call) -> {
                 if (call != null) {
                     if (!VariableHandler.variableExists(call)) {
                         VariableHandler.setVariable(call, "");
@@ -64,10 +64,10 @@ public class ManageVariablesScreen extends Screen {
         this.addWidget(this.addVariableButton);
         UIBase.applyDefaultWidgetSkinTo(this.addVariableButton);
 
-        this.setValueButton = new ExtendedButton(0, 0, 220, 20, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.set_value"), (button) -> {
+        this.setValueButton = new ExtendedButton(0, 0, 220, 20, Components.translatable("fancymenu.overlay.menu_bar.variables.manage.set_value"), (button) -> {
             VariableScrollEntry e = this.getSelectedEntry();
             if (e != null) {
-                TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.overlay.menu_bar.variables.manage.set_value"), null, (call) -> {
+                TextInputScreen s = new TextInputScreen(Components.translatable("fancymenu.overlay.menu_bar.variables.manage.set_value"), null, (call) -> {
                     if (call != null) {
                         e.variable.setValue(call);
                     }
@@ -80,7 +80,7 @@ public class ManageVariablesScreen extends Screen {
         this.addWidget(this.setValueButton);
         UIBase.applyDefaultWidgetSkinTo(this.setValueButton);
 
-        this.deleteVariableButton = new ExtendedButton(0, 0, 220, 20, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.delete_variable"), (button) -> {
+        this.deleteVariableButton = new ExtendedButton(0, 0, 220, 20, Components.translatable("fancymenu.overlay.menu_bar.variables.manage.delete_variable"), (button) -> {
             VariableScrollEntry e = this.getSelectedEntry();
             if (e != null) {
                 Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings(call -> {
@@ -96,7 +96,7 @@ public class ManageVariablesScreen extends Screen {
         UIBase.applyDefaultWidgetSkinTo(this.deleteVariableButton);
 
         LocalizedEnumValueCycle<CommonCycles.CycleEnabledDisabled> resetOnLaunchDisabled = CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.variables.manage.clear_on_launch", false);
-        this.toggleResetOnLaunchButton = new ExtendedButton(0, 0, 220, 20, Component.empty(), (button) -> {
+        this.toggleResetOnLaunchButton = new ExtendedButton(0, 0, 220, 20, Components.empty(), (button) -> {
             VariableScrollEntry e = this.getSelectedEntry();
             if (e != null) {
                 e.variable.setResetOnLaunch(!e.variable.isResetOnLaunch());
@@ -114,7 +114,7 @@ public class ManageVariablesScreen extends Screen {
         this.addWidget(this.toggleResetOnLaunchButton);
         UIBase.applyDefaultWidgetSkinTo(this.toggleResetOnLaunchButton);
 
-        this.doneButton = new ExtendedButton(0, 0, 220, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
+        this.doneButton = new ExtendedButton(0, 0, 220, 20, Components.translatable("fancymenu.guicomponents.done"), (button) -> {
             this.callback.accept(VariableHandler.getVariables());
         });
         this.addWidget(this.doneButton);
@@ -137,7 +137,7 @@ public class ManageVariablesScreen extends Screen {
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         this.font.draw(pose, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
 
-        this.font.draw(pose, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.variables"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        this.font.draw(pose, Components.translatable("fancymenu.overlay.menu_bar.variables.manage.variables"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
 
         this.variableListScrollArea.setWidth((this.width / 2) - 40, true);
         this.variableListScrollArea.setHeight(this.height - 85, true);
@@ -196,7 +196,7 @@ public class ManageVariablesScreen extends Screen {
             this.variableListScrollArea.addEntry(e);
         }
         if (this.variableListScrollArea.getEntries().isEmpty()) {
-            this.variableListScrollArea.addEntry(new TextScrollAreaEntry(this.variableListScrollArea, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.no_variables").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())), (entry) -> {}));
+            this.variableListScrollArea.addEntry(new TextScrollAreaEntry(this.variableListScrollArea, Components.translatable("fancymenu.overlay.menu_bar.variables.manage.no_variables").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())), (entry) -> {}));
         }
     }
 
@@ -205,7 +205,7 @@ public class ManageVariablesScreen extends Screen {
         public Variable variable;
 
         public VariableScrollEntry(ScrollArea parent, @NotNull Variable variable, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(variable.name).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), UIBase.getUIColorTheme().listing_dot_color_1.getColor(), onClick);
+            super(parent, Components.literal(variable.name).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), UIBase.getUIColorTheme().listing_dot_color_1.getColor(), onClick);
             this.variable = variable;
         }
 

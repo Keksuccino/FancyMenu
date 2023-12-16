@@ -161,8 +161,10 @@ public class PlayerEntityElement extends AbstractElement {
         innerPoseStack.translate(0.0F, 0.0F, 1000.0F);
         innerPoseStack.scale((float)scale, (float)scale, (float)scale);
 
-        Quaternion quat1 = this.bodyFollowsMouse ? Vector3f..rotateZ((float)Math.PI) : Vector3f.ZP.rotationDegrees(180.0F);
-        Quaternion quat2 = this.bodyFollowsMouse ? new Quaternion().rotateX(angleYComponent * 20.0F * ((float)Math.PI / 180F)) : Vector3f.XP.rotationDegrees(bodyYRot);
+        float $$7 = (float)Math.atan((double)(angleYComponent / 40.0F));
+//        Quaternion quat1 = this.bodyFollowsMouse ? Vector3f.rotateZ((float)Math.PI) : Vector3f.ZP.rotationDegrees(180.0F);
+        Quaternion quat1 = Vector3f.ZP.rotationDegrees(180.0F);
+        Quaternion quat2 = this.bodyFollowsMouse ? Vector3f.XP.rotationDegrees($$7 * 20.0F) : Vector3f.XP.rotationDegrees(bodyYRot);
         quat1.mul(quat2);
         innerPoseStack.mulPose(quat1);
 

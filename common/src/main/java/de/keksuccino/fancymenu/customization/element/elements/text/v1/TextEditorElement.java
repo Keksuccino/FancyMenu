@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseFileScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
@@ -41,16 +42,16 @@ public class TextEditorElement extends AbstractEditorElement {
                         },
                         (menu, entry, switcherValue) -> {
                             if (switcherValue == TextElement.SourceMode.LOCAL_SOURCE) {
-                                return Component.translatable("fancymenu.customization.items.text.source_mode.mode.local");
+                                return Components.translatable("fancymenu.customization.items.text.source_mode.mode.local");
                             }
                             if (switcherValue == TextElement.SourceMode.WEB_SOURCE) {
-                                return Component.translatable("fancymenu.customization.items.text.source_mode.mode.web");
+                                return Components.translatable("fancymenu.customization.items.text.source_mode.mode.web");
                             }
-                            return Component.translatable("fancymenu.customization.items.text.source_mode.mode.direct");
+                            return Components.translatable("fancymenu.customization.items.text.source_mode.mode.direct");
                         })
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.source_mode.desc")));
 
-        this.rightClickMenu.addClickableEntry("set_source", Component.literal(""), (menu, entry) ->
+        this.rightClickMenu.addClickableEntry("set_source", Components.literal(""), (menu, entry) ->
                 {
                     if (this.getTextElement().sourceMode == TextElement.SourceMode.LOCAL_SOURCE) {
                         ChooseFileScreen s = new ChooseFileScreen(LayoutHandler.ASSETS_DIR, LayoutHandler.ASSETS_DIR, call -> {
@@ -101,12 +102,12 @@ public class TextEditorElement extends AbstractEditorElement {
                 })
                 .setLabelSupplier((menu, entry) -> {
                     if (this.getTextElement().sourceMode == TextElement.SourceMode.LOCAL_SOURCE) {
-                        return Component.translatable("fancymenu.customization.items.text.set_source.local");
+                        return Components.translatable("fancymenu.customization.items.text.set_source.local");
                     }
                     if (this.getTextElement().sourceMode == TextElement.SourceMode.WEB_SOURCE) {
-                        return Component.translatable("fancymenu.customization.items.text.set_source.web");
+                        return Components.translatable("fancymenu.customization.items.text.set_source.web");
                     }
-                    return Component.translatable("fancymenu.customization.items.text.set_source.direct");
+                    return Components.translatable("fancymenu.customization.items.text.set_source.direct");
                 });
 
         this.rightClickMenu.addSeparatorEntry("text_separator_1");
@@ -121,12 +122,12 @@ public class TextEditorElement extends AbstractEditorElement {
                 },
                 (menu, entry, switcherValue) -> {
                     if (switcherValue == TextElement.CaseMode.NORMAL) {
-                        return Component.translatable("fancymenu.customization.items.text.case_mode.normal");
+                        return Components.translatable("fancymenu.customization.items.text.case_mode.normal");
                     }
                     if (switcherValue == TextElement.CaseMode.ALL_LOWER) {
-                        return Component.translatable("fancymenu.customization.items.text.case_mode.lower");
+                        return Components.translatable("fancymenu.customization.items.text.case_mode.lower");
                     }
-                    return Component.translatable("fancymenu.customization.items.text.case_mode.upper");
+                    return Components.translatable("fancymenu.customization.items.text.case_mode.upper");
                 });
 
         this.addGenericFloatInputContextMenuEntryTo(this.rightClickMenu, "set_scale",
@@ -136,7 +137,7 @@ public class TextEditorElement extends AbstractEditorElement {
                             ((TextElement)element1.element).scale = Math.min(0.2F, aFloat);
                             ((TextElement)element1.element).updateContent();
                         },
-                        Component.translatable("fancymenu.customization.items.text.scale"),
+                        Components.translatable("fancymenu.customization.items.text.scale"),
                         true, 1.0F, null, null)
                 .setStackable(true);
 
@@ -161,12 +162,12 @@ public class TextEditorElement extends AbstractEditorElement {
                         },
                         (menu, entry, switcherValue) -> {
                             if (switcherValue == AbstractElement.Alignment.LEFT) {
-                                return Component.translatable("fancymenu.customization.items.text.alignment.left");
+                                return Components.translatable("fancymenu.customization.items.text.alignment.left");
                             }
                             if (switcherValue == AbstractElement.Alignment.CENTERED) {
-                                return Component.translatable("fancymenu.customization.items.text.alignment.center");
+                                return Components.translatable("fancymenu.customization.items.text.alignment.center");
                             }
-                            return Component.translatable("fancymenu.customization.items.text.alignment.right");
+                            return Components.translatable("fancymenu.customization.items.text.alignment.right");
                         })
                 .setStackable(true);
 
@@ -176,7 +177,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         (element, colorHex) -> {
                             ((TextElement)element.element).baseColorHex = colorHex;
                             ((TextElement)element.element).updateContent();
-                        }, null, false, false, Component.translatable("fancymenu.customization.items.text.base_color"),
+                        }, null, false, false, Components.translatable("fancymenu.customization.items.text.base_color"),
                         true, null, TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.base_color.desc")));
@@ -188,7 +189,7 @@ public class TextEditorElement extends AbstractEditorElement {
                             ((TextElement)element.element).textBorder = Math.min(0, border);
                             ((TextElement)element.element).updateContent();
                         },
-                        Component.translatable("fancymenu.customization.items.text.text_border"),
+                        Components.translatable("fancymenu.customization.items.text.text_border"),
                         true, 10, null, null)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.text_border.desc")));
@@ -200,7 +201,7 @@ public class TextEditorElement extends AbstractEditorElement {
                             ((TextElement)element.element).lineSpacing = Math.min(0, border);
                             ((TextElement)element.element).updateContent();
                         },
-                        Component.translatable("fancymenu.customization.items.text.line_spacing"),
+                        Components.translatable("fancymenu.customization.items.text.line_spacing"),
                         true, 10, null, null)
                 .setStackable(true);
 
@@ -217,7 +218,7 @@ public class TextEditorElement extends AbstractEditorElement {
         this.rightClickMenu.addSeparatorEntry("text_separator_2").setStackable(true);
 
         ContextMenu grabberTextureMenu = new ContextMenu();
-        this.rightClickMenu.addSubMenuEntry("grabber_texture", Component.translatable("fancymenu.customization.items.text.scroll_grabber_texture"), grabberTextureMenu)
+        this.rightClickMenu.addSubMenuEntry("grabber_texture", Components.translatable("fancymenu.customization.items.text.scroll_grabber_texture"), grabberTextureMenu)
                 .setStackable(true);
 
 //        this.addGenericFileChooserContextMenuEntryTo(grabberTextureMenu, "normal_grabber_texture",
@@ -228,7 +229,7 @@ public class TextEditorElement extends AbstractEditorElement {
 //                            ((TextElement)element1.element).scrollGrabberTextureNormal = s;
 //                            ((TextElement)element1.element).updateContent();
 //                        },
-//                        Component.translatable("fancymenu.customization.items.text.scroll_grabber_texture.normal"),
+//                        Components.translatable("fancymenu.customization.items.text.scroll_grabber_texture.normal"),
 //                        true,
 //                        FileFilter.IMAGE_FILE_FILTER)
 //                .setStackable(true);
@@ -241,13 +242,13 @@ public class TextEditorElement extends AbstractEditorElement {
 //                            ((TextElement)element1.element).scrollGrabberTextureHover = s;
 //                            ((TextElement)element1.element).updateContent();
 //                        },
-//                        Component.translatable("fancymenu.customization.items.text.scroll_grabber_texture.hover"),
+//                        Components.translatable("fancymenu.customization.items.text.scroll_grabber_texture.hover"),
 //                        true,
 //                        FileFilter.IMAGE_FILE_FILTER)
 //                .setStackable(true);
 
         ContextMenu grabberColorMenu = new ContextMenu();
-        this.rightClickMenu.addSubMenuEntry("grabber_color", Component.translatable("fancymenu.customization.items.text.scroll_grabber_color"), grabberColorMenu)
+        this.rightClickMenu.addSubMenuEntry("grabber_color", Components.translatable("fancymenu.customization.items.text.scroll_grabber_color"), grabberColorMenu)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.scroll_grabber_color.desc")));
 
@@ -257,7 +258,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         (element, colorHex) -> {
                             ((TextElement)element.element).scrollGrabberColorHexNormal = colorHex;
                             ((TextElement)element.element).updateContent();
-                        }, null, false, false, Component.translatable("fancymenu.customization.items.text.scroll_grabber_color.normal"),
+                        }, null, false, false, Components.translatable("fancymenu.customization.items.text.scroll_grabber_color.normal"),
                         true, null, TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .setStackable(true);
 
@@ -267,7 +268,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         (element, colorHex) -> {
                             ((TextElement)element.element).scrollGrabberColorHexHover = colorHex;
                             ((TextElement)element.element).updateContent();
-                        }, null, false, false, Component.translatable("fancymenu.customization.items.text.scroll_grabber_color.hover"),
+                        }, null, false, false, Components.translatable("fancymenu.customization.items.text.scroll_grabber_color.hover"),
                         true, null, TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .setStackable(true);
 

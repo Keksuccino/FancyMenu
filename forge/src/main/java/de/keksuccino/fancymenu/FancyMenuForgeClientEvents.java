@@ -8,7 +8,6 @@ import de.keksuccino.fancymenu.events.screen.ScreenKeyPressedEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.event.RegisterClientCommandsEvent;
-import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -29,21 +28,13 @@ public class FancyMenuForgeClientEvents {
     }
 
     @SubscribeEvent
-    public void afterScreenKeyPress(ScreenEvent.KeyPressed.Post e) {
+    public void afterScreenKeyPress(ScreenEvent.KeyboardKeyPressedEvent.Post e) {
 
         ScreenKeyPressedEvent event = new ScreenKeyPressedEvent(e.getScreen(), e.getKeyCode(), e.getScanCode(), e.getModifiers());
         EventHandler.INSTANCE.postEvent(event);
 
         if (Minecraft.getInstance().getOverlay() instanceof GameIntroOverlay o) o.keyPressed(e.getKeyCode(), e.getScanCode(), e.getModifiers());
 
-    }
-
-    @SubscribeEvent
-    public void onRegisterKeyMappings(RegisterKeyMappingsEvent e) {
-//        for (KeyMapping m : KeyMappings.KEY_MAPPINGS) {
-//            e.register(m);
-//        }
-//        KeyMappings.init();
     }
 
 }

@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -19,7 +20,7 @@ import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -37,7 +38,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @SuppressWarnings("all")
-public class DebugOverlay extends GuiComponent implements Renderable, NarratableEntry, ContainerEventHandler {
+public class DebugOverlay extends GuiComponent implements Widget, NarratableEntry, ContainerEventHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -337,7 +338,7 @@ public class DebugOverlay extends GuiComponent implements Renderable, Narratable
         ContextMenu menu = new ContextMenu();
 
         if (element instanceof VanillaWidgetElement v) {
-            menu.addClickableEntry("copy_vanilla_widget_locator", Component.translatable("fancymenu.helper.editor.items.vanilla_button.copy_locator"), (menu1, entry) -> {
+            menu.addClickableEntry("copy_vanilla_widget_locator", Components.translatable("fancymenu.helper.editor.items.vanilla_button.copy_locator"), (menu1, entry) -> {
                         if (v.widgetMeta != null) {
                             Minecraft.getInstance().keyboardHandler.setClipboard(v.widgetMeta.getLocator());
                         }
@@ -347,7 +348,7 @@ public class DebugOverlay extends GuiComponent implements Renderable, Narratable
                     .setIcon(ContextMenu.IconFactory.getIcon("notes"));
         }
 
-        menu.addClickableEntry("copy_id", Component.translatable("fancymenu.helper.editor.items.copyid"), (menu1, entry) -> {
+        menu.addClickableEntry("copy_id", Components.translatable("fancymenu.helper.editor.items.copyid"), (menu1, entry) -> {
                     Minecraft.getInstance().keyboardHandler.setClipboard(element.getInstanceIdentifier());
                     MainThreadTaskExecutor.executeInMainThread(() -> this.closeRightClickContextMenu(), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                 }).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.copyid.btn.desc")))
@@ -372,15 +373,6 @@ public class DebugOverlay extends GuiComponent implements Renderable, Narratable
                 }
             }
         }
-        return false;
-    }
-
-    @Override
-    public void setFocused(boolean var1) {
-    }
-
-    @Override
-    public boolean isFocused() {
         return false;
     }
 
@@ -434,7 +426,7 @@ public class DebugOverlay extends GuiComponent implements Renderable, Narratable
         @NotNull
         protected LinePosition linePosition = LinePosition.TOP_LEFT;
         @NotNull
-        protected ConsumingSupplier<DebugOverlayLine, Component> textSupplier = consumes -> Component.empty();
+        protected ConsumingSupplier<DebugOverlayLine, Component> textSupplier = consumes -> Components.empty();
         protected boolean clickable = false;
         @NotNull
         protected Consumer<DebugOverlayLine> clickAction = line -> {};

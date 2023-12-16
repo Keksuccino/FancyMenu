@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayout
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
@@ -27,7 +28,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -41,7 +41,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         super(editor, builder);
 
-        this.displayLabel = Component.translatable("fancymenu.editor.widgets.layers");
+        this.displayLabel = Components.translatable("fancymenu.editor.widgets.layers");
 
         this.scrollArea = new ScrollArea(0, 0, 0, 0) {
             @Override
@@ -215,7 +215,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             this.playClickSound = false;
             this.selectable = false;
             this.selectOnClick = false;
-            this.editLayerNameBox = new ExtendedEditBox(this.font, 0, 0, 0, 0, Component.empty()) {
+            this.editLayerNameBox = new ExtendedEditBox(this.font, 0, 0, 0, 0, Components.empty()) {
                 @Override
                 public boolean keyPressed(int keycode, int scancode, int modifiers) {
                     if (this.isVisible() && LayerElementEntry.this.displayEditLayerNameBox) {
@@ -257,12 +257,12 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
             if (!this.displayEditLayerNameBox) {
                 this.layerWidget.enableComponentScissor((int) (this.x + this.getButtonWidth() + 1f), (int) this.y, (int) (this.getWidth() - this.getButtonWidth() - 4f), (int) this.getHeight(), true);
-                UIBase.drawElementLabelF(pose, this.font, Component.literal(this.getLayerName()), (int)this.getLayerNameX(), (int)this.getLayerNameY());
+                UIBase.drawElementLabelF(pose, this.font, Components.literal(this.getLayerName()), (int)this.getLayerNameX(), (int)this.getLayerNameY());
                 this.layerWidget.disableComponentScissor();
             } else {
                 UIBase.applyDefaultWidgetSkinTo(this.editLayerNameBox);
                 this.editLayerNameBox.setX((int)this.getLayerNameX());
-                this.editLayerNameBox.setY((int)this.getLayerNameY() - 1);
+                this.editLayerNameBox.y = ((int)this.getLayerNameY() - 1);
                 this.editLayerNameBox.setWidth((int) Math.min(this.getMaxLayerNameWidth(), this.font.width(this.editLayerNameBox.getValue() + 13)));
                 if (this.editLayerNameBox.getWidth() < this.getMaxLayerNameWidth()) {
                     this.editLayerNameBox.setDisplayPosition(0);
@@ -425,7 +425,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             RenderingUtils.resetShaderColor();
 
             this.layerWidget.enableComponentScissor((int)(this.x + this.getButtonWidth() + 1f), (int) this.y, (int) (this.getWidth() - this.getButtonWidth() - 4f), (int) this.getHeight(), true);
-            UIBase.drawElementLabelF(pose, this.font, Component.translatable("fancymenu.editor.widgets.layers.vanilla_elements").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), (int)(this.getX() + this.getButtonWidth() + 3f), (int)(this.getY() + (this.getHeight() / 2f) - (this.font.lineHeight / 2f)));
+            UIBase.drawElementLabelF(pose, this.font, Components.translatable("fancymenu.editor.widgets.layers.vanilla_elements").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), (int)(this.getX() + this.getButtonWidth() + 3f), (int)(this.getY() + (this.getHeight() / 2f) - (this.font.lineHeight / 2f)));
             this.layerWidget.disableComponentScissor();
 
         }

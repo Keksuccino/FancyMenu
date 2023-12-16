@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.commands.client;
 
 import com.mojang.brigadier.CommandDispatcher;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.commands.CommandSourceStack;
@@ -20,7 +21,7 @@ public class CloseGuiScreenCommand {
             try {
                 Minecraft.getInstance().setScreen(null);
             } catch (Exception e) {
-                stack.sendFailure(Component.literal("Error while executing command!"));
+                stack.sendFailure(Components.literal("Error while executing command!"));
                 e.printStackTrace();
             }
         }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);

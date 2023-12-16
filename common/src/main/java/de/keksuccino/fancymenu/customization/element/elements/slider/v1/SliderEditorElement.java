@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
@@ -30,7 +31,7 @@ public class SliderEditorElement extends AbstractEditorElement {
                         consumes -> (consumes instanceof SliderEditorElement),
                         consumes -> ((SliderElement)consumes.element).linkedVariable,
                         (element, varName) -> ((SliderElement)element.element).linkedVariable = varName,
-                        null, false, false, Component.translatable("fancymenu.customization.items.slider.editor.set_variable"),
+                        null, false, false, Components.translatable("fancymenu.customization.items.slider.editor.set_variable"),
                         false, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.slider.editor.set_variable.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"));
@@ -47,9 +48,9 @@ public class SliderEditorElement extends AbstractEditorElement {
                         },
                         (menu, entry, switcherValue) -> {
                             if (switcherValue == SliderElement.SliderType.LIST) {
-                                return Component.translatable("fancymenu.customization.items.slider.editor.type.list");
+                                return Components.translatable("fancymenu.customization.items.slider.editor.type.list");
                             }
-                            return Component.translatable("fancymenu.customization.items.slider.editor.type.range");
+                            return Components.translatable("fancymenu.customization.items.slider.editor.type.range");
                         })
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.slider.editor.type.desc")));
 
@@ -73,7 +74,7 @@ public class SliderEditorElement extends AbstractEditorElement {
                                 ((SliderElement)element1.element).initializeSlider();
                             }
                         }, null, true, true,
-                        Component.translatable("fancymenu.customization.items.slider.editor.list.set_list_values"),
+                        Components.translatable("fancymenu.customization.items.slider.editor.list.set_list_values"),
                         false, "", TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.slider.editor.list.set_list_values.desc")))
                 .setIsVisibleSupplier((menu, entry) -> ((SliderElement)this.element).type == SliderElement.SliderType.LIST);
@@ -85,7 +86,7 @@ public class SliderEditorElement extends AbstractEditorElement {
                             ((SliderElement)element.element).minRangeValue = range;
                             ((SliderElement)element.element).initializeSlider();
                         },
-                        Component.translatable("fancymenu.customization.items.slider.editor.range.set_min_range_value"),
+                        Components.translatable("fancymenu.customization.items.slider.editor.range.set_min_range_value"),
                         true, 0, null, null)
                 .setIsVisibleSupplier((menu, entry) -> ((SliderElement)this.element).type == SliderElement.SliderType.RANGE);
 
@@ -96,7 +97,7 @@ public class SliderEditorElement extends AbstractEditorElement {
                             ((SliderElement)element.element).maxRangeValue = range;
                             ((SliderElement)element.element).initializeSlider();
                         },
-                        Component.translatable("fancymenu.customization.items.slider.editor.range.set_max_range_value"),
+                        Components.translatable("fancymenu.customization.items.slider.editor.range.set_max_range_value"),
                         true, 0, null, null)
                 .setIsVisibleSupplier((menu, entry) -> ((SliderElement)this.element).type == SliderElement.SliderType.RANGE);
 
@@ -109,7 +110,7 @@ public class SliderEditorElement extends AbstractEditorElement {
                             ((SliderElement)element.element).labelPrefix = label;
                             ((SliderElement)element.element).initializeSlider();
                         },
-                        null, false, false, Component.translatable("fancymenu.customization.items.slider.editor.set_label_prefix"),
+                        null, false, false, Components.translatable("fancymenu.customization.items.slider.editor.set_label_prefix"),
                         true, null, null, null)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.slider.editor.set_label_prefix.desc")))
@@ -122,7 +123,7 @@ public class SliderEditorElement extends AbstractEditorElement {
                             ((SliderElement)element.element).labelSuffix = label;
                             ((SliderElement)element.element).initializeSlider();
                         },
-                        null, false, false, Component.translatable("fancymenu.customization.items.slider.editor.set_label_suffix"),
+                        null, false, false, Components.translatable("fancymenu.customization.items.slider.editor.set_label_suffix"),
                         true, null, null, null)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.slider.editor.set_label_suffix.desc")))

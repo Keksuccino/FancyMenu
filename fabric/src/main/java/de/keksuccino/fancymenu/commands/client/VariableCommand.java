@@ -9,16 +9,16 @@ import de.keksuccino.fancymenu.networking.packets.command.commands.variable.Serv
 import de.keksuccino.fancymenu.networking.packets.command.commands.variable.VariableCommandSuggestionsPacketMessage;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.command.CommandUtils;
 import net.minecraft.client.resources.language.I18n;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
-import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.Component;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -28,14 +28,14 @@ public class VariableCommand {
     protected static Screen lastScreen = null;
     protected static boolean initialized = false;
 
-    public static void register(CommandDispatcher<FabricClientCommandSource> d) {
+    public static void register(CommandDispatcher<CommandSourceStack> d) {
         if (!initialized) {
             EventHandler.INSTANCE.registerListenersOf(new VariableCommand());
             initialized = true;
         }
-        d.register(ClientCommandManager.literal("fmvariable")
-                .then(ClientCommandManager.literal("get")
-                        .then(ClientCommandManager.argument("variable_name", StringArgumentType.string())
+        d.register(Commands.literal("fmvariable")
+                .then(Commands.literal("get")
+                        .then(Commands.argument("variable_name", StringArgumentType.string())
                                 .suggests(((context, builder) -> {
                                     return CommandUtils.getStringSuggestions(builder, getVariableNameSuggestions());
                                 }))
@@ -44,13 +44,13 @@ public class VariableCommand {
                                 })
                         )
                 )
-                .then(ClientCommandManager.literal("set")
-                        .then(ClientCommandManager.argument("variable_name", StringArgumentType.string())
+                .then(Commands.literal("set")
+                        .then(Commands.argument("variable_name", StringArgumentType.string())
                                 .suggests((context, builder) -> {
                                     return CommandUtils.getStringSuggestions(builder, getVariableNameSuggestions());
                                 })
-                                .then(ClientCommandManager.argument("send_chat_feedback", BoolArgumentType.bool())
-                                        .then(ClientCommandManager.argument("set_to_value", StringArgumentType.greedyString())
+                                .then(Commands.argument("send_chat_feedback", BoolArgumentType.bool())
+                                        .then(Commands.argument("set_to_value", StringArgumentType.greedyString())
                                                 .suggests(((context, builder) -> {
                                                     return CommandUtils.getStringSuggestions(builder, "<set_to_value>");
                                                 }))
@@ -73,32 +73,32 @@ public class VariableCommand {
         return l.toArray(new String[0]);
     }
 
-    private static int getVariable(FabricClientCommandSource stack, String variableName) {
+    private static int getVariable(CommandSourceStack stack, String variableName) {
         MainThreadTaskExecutor.executeInMainThread(() -> {
             try {
                 String s = VariableHandler.variableExists(variableName) ? Objects.requireNonNull(VariableHandler.getVariable(variableName)).getValue() : null;
                 if (s != null) {
-                    stack.sendFeedback(Component.literal(I18n.get("fancymenu.commands.variable.get.success", s)));
+                    stack.sendSuccess(Components.literal(I18n.get("fancymenu.commands.variable.get.success", s)), false);
                 } else {
-                    stack.sendError(Component.literal(I18n.get("fancymenu.commands.variable.not_found")));
+                    stack.sendFailure(Components.literal(I18n.get("fancymenu.commands.variable.not_found")));
                 }
             } catch (Exception e) {
-                stack.sendError(Component.literal("Error while executing command!"));
+                stack.sendFailure(Components.literal("Error while executing command!"));
                 e.printStackTrace();
             }
         }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
         return 1;
     }
 
-    private static int setVariable(FabricClientCommandSource stack, String variableName, String setToValue, boolean sendFeedback) {
+    private static int setVariable(CommandSourceStack stack, String variableName, String setToValue, boolean sendFeedback) {
         MainThreadTaskExecutor.executeInMainThread(() -> {
             try {
                 VariableHandler.setVariable(variableName, setToValue);
                 if (sendFeedback) {
-                    stack.sendFeedback(Component.literal(I18n.get("fancymenu.commands.variable.set.success", setToValue)));
+                    stack.sendSuccess(Components.literal(I18n.get("fancymenu.commands.variable.set.success", setToValue)), false);
                 }
             } catch (Exception e) {
-                stack.sendError(Component.literal("Error while executing command!"));
+                stack.sendFailure(Components.literal("Error while executing command!"));
                 e.printStackTrace();
             }
         }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);

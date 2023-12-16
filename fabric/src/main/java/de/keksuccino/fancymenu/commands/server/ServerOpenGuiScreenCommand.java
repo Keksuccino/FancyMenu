@@ -4,12 +4,12 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import de.keksuccino.fancymenu.networking.packets.command.execute.ClientboundExecuteCommandPacketHandler;
 import de.keksuccino.fancymenu.networking.packets.command.execute.ExecuteCommandPacketMessage;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.konkrete.command.CommandUtils;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
@@ -49,7 +49,7 @@ public class ServerOpenGuiScreenCommand {
                 }
             }
         } catch (Exception e) {
-            stack.sendFailure(Component.literal("Error while executing command!"));
+            stack.sendFailure(Components.literal("Error while executing command!"));
             e.printStackTrace();
         }
         return 1;

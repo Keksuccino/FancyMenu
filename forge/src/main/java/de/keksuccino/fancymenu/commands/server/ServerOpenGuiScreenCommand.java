@@ -5,6 +5,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import de.keksuccino.fancymenu.commands.client.CommandUtils;
 import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.networking.packets.command.execute.ExecuteCommandPacketMessage;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -50,7 +51,7 @@ public class ServerOpenGuiScreenCommand {
                 }
             }
         } catch (Exception e) {
-            stack.sendFailure(Component.literal("Error while trying to execute command!"));
+            stack.sendFailure(Components.literal("Error while trying to execute command!"));
             e.printStackTrace();
         }
         return 1;

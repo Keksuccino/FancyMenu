@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
@@ -27,7 +28,7 @@ public class TickerEditorElement extends AbstractEditorElement {
 
         super.init();
 
-        this.rightClickMenu.addClickableEntry("manage_actions", Component.translatable("fancymenu.editor.action.screens.manage_screen.manage"), (menu, entry) -> {
+        this.rightClickMenu.addClickableEntry("manage_actions", Components.translatable("fancymenu.editor.action.screens.manage_screen.manage"), (menu, entry) -> {
             ManageActionsScreen s = new ManageActionsScreen(this.getTickerElement().actionExecutor, (call) -> {
                 if (call != null) {
                     this.editor.history.saveSnapshot();
@@ -46,7 +47,7 @@ public class TickerEditorElement extends AbstractEditorElement {
                         consumes -> (consumes instanceof TickerEditorElement),
                         consumes -> ((TickerElement)consumes.element).tickDelayMs,
                         (element, delay) -> ((TickerElement)element.element).tickDelayMs = Math.min(0L, delay),
-                        Component.translatable("fancymenu.customization.items.ticker.tick_delay"),
+                        Components.translatable("fancymenu.customization.items.ticker.tick_delay"),
                         true, 0L, null, null)
                 .setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("timer"))
@@ -67,12 +68,12 @@ public class TickerEditorElement extends AbstractEditorElement {
                         (element, mode) -> ((TickerElement)element.element).tickMode = mode,
                         (menu, entry, switcherValue) -> {
                             if (switcherValue == TickerElement.TickMode.NORMAL) {
-                                return Component.translatable("fancymenu.customization.items.ticker.tick_mode.normal");
+                                return Components.translatable("fancymenu.customization.items.ticker.tick_mode.normal");
                             }
                             if (switcherValue == TickerElement.TickMode.ONCE_PER_SESSION) {
-                                return Component.translatable("fancymenu.customization.items.ticker.tick_mode.once_per_session");
+                                return Components.translatable("fancymenu.customization.items.ticker.tick_mode.once_per_session");
                             }
-                            return Component.translatable("fancymenu.customization.items.ticker.tick_mode.on_menu_load");
+                            return Components.translatable("fancymenu.customization.items.ticker.tick_mode.on_menu_load");
                         })
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.ticker.tick_mode.desc")));

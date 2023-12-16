@@ -101,7 +101,7 @@ public class WidgetLocatorHandler {
     public static boolean invokeWidgetOnClick(@NotNull WidgetMeta meta) {
         try {
             AbstractWidget w = meta.getWidget();
-            w.onClick(w.getX() + 1, w.getY() + 1);
+            w.onClick(w.x + 1, w.y + 1);
             return true;
         } catch (Exception ex) {
             ex.printStackTrace();

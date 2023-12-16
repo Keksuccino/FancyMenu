@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.customization.element.ExecutableElement;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
@@ -99,7 +100,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
             if ((preSelectedString != null) && MathUtils.isDouble(preSelectedString)) {
                 preSelected = (int) Double.parseDouble(preSelectedString);
             }
-            this.slider = new RangeSlider(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), Component.empty(), min, max, preSelected);
+            this.slider = new RangeSlider(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), Components.empty(), min, max, preSelected);
             ((RangeSlider)this.slider).setShowAsInteger(true);
         }
         if (this.type == SliderType.DECIMAL_RANGE) {
@@ -107,7 +108,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
             if ((preSelectedString != null) && MathUtils.isDouble(preSelectedString)) {
                 preSelected = Double.parseDouble(preSelectedString);
             }
-            this.slider = new RangeSlider(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), Component.empty(), this.minRangeValue, this.maxRangeValue, preSelected);
+            this.slider = new RangeSlider(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), Components.empty(), this.minRangeValue, this.maxRangeValue, preSelected);
             ((RangeSlider)this.slider).setRoundingDecimalPlace(this.roundingDecimalPlace);
         }
         if (this.type == SliderType.LIST) {
@@ -115,7 +116,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
             if (this.listValues.size() < 2) this.listValues.add("placeholder_1");
             int preSelectedIndex = (preSelectedString != null) ? this.listValues.indexOf(preSelectedString) : 0;
             if (preSelectedIndex < 0) preSelectedIndex = 0;
-            this.slider = new ListSlider<>(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), Component.empty(), this.listValues, preSelectedIndex);
+            this.slider = new ListSlider<>(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), Components.empty(), this.listValues, preSelectedIndex);
         }
 
         //Set label supplier and value update listener
@@ -151,8 +152,8 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
 
         if (!this.shouldRender()) return;
 
-        this.slider.setX(this.getAbsoluteX());
-        this.slider.setY(this.getAbsoluteY());
+        this.slider.x = this.getAbsoluteX();
+        this.slider.y = this.getAbsoluteY();
         this.slider.setWidth(this.getAbsoluteWidth());
         ((IMixinAbstractWidget)this.slider).setHeightFancyMenu(this.getAbsoluteHeight());
 
@@ -170,7 +171,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     }
 
     public void updateWidgetTooltip() {
-        if ((this.tooltip != null) && (this.slider != null) && this.slider.isHovered() && !isEditor()) {
+        if ((this.tooltip != null) && (this.slider != null) && ((IMixinAbstractWidget)this.slider).getIsHoveredFancyMenu() && !isEditor()) {
             String tooltip = this.tooltip.replace("%n%", "\n");
             TooltipHandler.INSTANCE.addWidgetTooltip(this.slider, Tooltip.of(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(tooltip), "\n")), false, true);
         }

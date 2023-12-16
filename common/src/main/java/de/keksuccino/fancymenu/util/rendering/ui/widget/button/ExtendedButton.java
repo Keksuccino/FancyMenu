@@ -431,6 +431,22 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
         return (CustomizableWidget) this;
     }
 
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public int getX() {
+        return this.x;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
+
+    public int getY() {
+        return this.y;
+    }
+
     //This is to make the button work in FocuslessEventHandlers
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {

@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.loadingrequirement.requirements;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
@@ -11,6 +12,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestio
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.language.LanguageInfo;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
@@ -92,7 +94,7 @@ public class IsLanguageRequirement extends LoadingRequirement {
         protected EditBoxSuggestions langIdSuggestions;
 
         protected IsLanguageValueConfigScreen(@NotNull String value, @NotNull Consumer<String> callback) {
-            super(Component.translatable("fancymenu.editor.elements.visibilityrequirements.edit_value"), callback);
+            super(Components.translatable("fancymenu.editor.elements.visibilityrequirements.edit_value"), callback);
             this.langId = value;
         }
 
@@ -102,12 +104,16 @@ public class IsLanguageRequirement extends LoadingRequirement {
             this.addSpacerCell(20);
 
             String id = this.getLangIdString();
-            this.addLabelCell(Component.translatable("fancymenu.loading_requirements.is_language.lang_id"));
+            this.addLabelCell(Components.translatable("fancymenu.loading_requirements.is_language.lang_id"));
             this.langIdCell = this.addTextInputCell(null, true, true).setText(id);
 
             this.addCellGroupEndSpacerCell();
 
-            this.langIdSuggestions = EditBoxSuggestions.createWithCustomSuggestions(this, this.langIdCell.editBox, EditBoxSuggestions.SuggestionsRenderPosition.ABOVE_EDIT_BOX, new ArrayList<>(Minecraft.getInstance().getLanguageManager().getLanguages().keySet()));
+            List<String> keys = new ArrayList<>();
+            for (LanguageInfo info : Minecraft.getInstance().getLanguageManager().getLanguages()) {
+                keys.add(info.getCode());
+            }
+            this.langIdSuggestions = EditBoxSuggestions.createWithCustomSuggestions(this, this.langIdCell.editBox, EditBoxSuggestions.SuggestionsRenderPosition.ABOVE_EDIT_BOX, keys);
             UIBase.applyDefaultWidgetSkinTo(this.langIdSuggestions);
             this.langIdCell.editBox.setResponder(s -> this.langIdSuggestions.updateCommandInfo());
 

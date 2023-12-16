@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.events.ModReloadEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -130,9 +131,9 @@ public class SplashTextElementBuilder extends ElementBuilder<SplashTextElement, 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
         if ((element instanceof SplashTextElement e) && (e.renderText != null)) {
-            return Component.literal(e.renderText);
+            return Components.literal(e.renderText);
         }
-        return Component.translatable("fancymenu.element.elements.splash_text");
+        return Components.translatable("fancymenu.element.elements.splash_text");
     }
 
     @Override

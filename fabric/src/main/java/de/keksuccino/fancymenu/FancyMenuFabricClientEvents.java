@@ -6,16 +6,20 @@ import de.keksuccino.fancymenu.commands.client.VariableCommand;
 import de.keksuccino.fancymenu.customization.gameintro.GameIntroOverlay;
 import de.keksuccino.fancymenu.events.screen.ScreenKeyPressedEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import de.keksuccino.konkrete.Konkrete;
+import de.keksuccino.konkrete.events.SubscribeEvent;
+import de.keksuccino.konkrete.events.client.ClientCommandRegistrationEvent;
+import net.fabricmc.api.EnvType;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 
 public class FancyMenuFabricClientEvents {
 
     public static void registerAll() {
 
-        registerClientCommands();
+        Konkrete.getEventHandler().registerEventsFrom(new FancyMenuFabricClientEvents());
 
         registerKeyMappings();
 
@@ -23,12 +27,17 @@ public class FancyMenuFabricClientEvents {
 
     }
 
-    private static void registerClientCommands() {
-        ClientCommandRegistrationCallback.EVENT.register((dispatcher, context) -> {
-            OpenGuiScreenCommand.register(dispatcher);
-            CloseGuiScreenCommand.register(dispatcher);
-            VariableCommand.register(dispatcher);
-        });
+    @SubscribeEvent
+    public void onRegisterCommands(ClientCommandRegistrationEvent e) {
+
+        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
+
+            OpenGuiScreenCommand.register(e.dispatcher);
+            CloseGuiScreenCommand.register(e.dispatcher);
+            VariableCommand.register(e.dispatcher);
+
+        }
+
     }
 
     private static void registerKeyMappings() {

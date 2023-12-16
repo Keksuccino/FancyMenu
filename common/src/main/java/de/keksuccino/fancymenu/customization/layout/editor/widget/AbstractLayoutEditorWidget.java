@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.UIComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
@@ -38,7 +39,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     protected final AbstractLayoutEditorWidgetBuilder<?> builder;
     protected final LayoutEditorScreen editor;
     @NotNull
-    protected Component displayLabel = Component.literal("Widget");
+    protected Component displayLabel = Components.literal("Widget");
     private float unscaledWidgetOffsetX = 0;
     private float unscaledWidgetOffsetY = 0;
     private float bodyWidth = 100;
@@ -517,15 +518,6 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
         public boolean isHovered() {
             return this.hovered;
-        }
-
-        @Override
-        public void setFocused(boolean var1) {
-        }
-
-        @Override
-        public boolean isFocused() {
-            return false;
         }
 
         @Override

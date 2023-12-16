@@ -11,6 +11,8 @@ import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.slideshow.ExternalTextureSlideshowRenderer;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinMinecraft;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
@@ -48,7 +50,7 @@ public class DebugOverlayBuilder {
 
         addSystemCategory(overlay);
 
-        overlay.addLine("right_click_elements", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.right_click_elements"));
+        overlay.addLine("right_click_elements", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Components.translatable("fancymenu.overlay.debug.right_click_elements"));
 
         return overlay;
 
@@ -71,21 +73,21 @@ public class DebugOverlayBuilder {
 
             overlay.addLine("screen_identifier", DebugOverlay.LinePosition.TOP_LEFT,
                             consumes -> {
-                                MutableComponent c = Component.translatable("fancymenu.overlay.debug.screen_identifier", currentIdentifier);
+                                MutableComponent c = Components.translatable("fancymenu.overlay.debug.screen_identifier", currentIdentifier);
                                 if (consumes.isHovered()) c = c.setStyle(Style.EMPTY.withUnderlined(true));
-                                if (consumes.recentlyClicked()) c = Component.translatable("fancymenu.overlay.debug.screen_identifier.copied").setStyle(Style.EMPTY.withColor(ChatFormatting.GREEN));
+                                if (consumes.recentlyClicked()) c = Components.translatable("fancymenu.overlay.debug.screen_identifier.copied").setStyle(Style.EMPTY.withColor(ChatFormatting.GREEN));
                                 return c;
                             })
                     .setClickAction(line -> Minecraft.getInstance().keyboardHandler.setClipboard(currentIdentifier));
-            overlay.addLine("screen_size", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.screen_size", "" + Minecraft.getInstance().getWindow().getScreenWidth(), "" + Minecraft.getInstance().getWindow().getScreenHeight()));
+            overlay.addLine("screen_size", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Components.translatable("fancymenu.overlay.debug.screen_size", "" + Minecraft.getInstance().getWindow().getScreenWidth(), "" + Minecraft.getInstance().getWindow().getScreenHeight()));
 
         }
 
         if (FancyMenu.getOptions().debugOverlayShowAdvancedScreenCategory.getValue()) {
 
-            overlay.addLine("active_layout_count", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.screen_active_layout_count", "" + (customizationEnabled ? currentScreenLayer.activeLayouts.size() : 0), "" + (customizationEnabled ? enabledUniversalLayoutsCurrent.size() : 0)));
-            overlay.addLine("total_layout_count", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.screen_total_layout_count", "" + (allLayoutsCurrent.size() + allUniversalLayoutsCurrent.size()), "" + allUniversalLayoutsCurrent.size()));
-            overlay.addLine("active_elements_count", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.screen_active_element_count", "" + (customizationEnabled ? currentScreenLayer.allElements.size() : 0)));
+            overlay.addLine("active_layout_count", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Components.translatable("fancymenu.overlay.debug.screen_active_layout_count", "" + (customizationEnabled ? currentScreenLayer.activeLayouts.size() : 0), "" + (customizationEnabled ? enabledUniversalLayoutsCurrent.size() : 0)));
+            overlay.addLine("total_layout_count", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Components.translatable("fancymenu.overlay.debug.screen_total_layout_count", "" + (allLayoutsCurrent.size() + allUniversalLayoutsCurrent.size()), "" + allUniversalLayoutsCurrent.size()));
+            overlay.addLine("active_elements_count", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Components.translatable("fancymenu.overlay.debug.screen_active_element_count", "" + (customizationEnabled ? currentScreenLayer.allElements.size() : 0)));
 
         }
 
@@ -113,14 +115,14 @@ public class DebugOverlayBuilder {
         }
         final int finalTotalSlideshowImages = totalSlideshowImages;
 
-        overlay.addLine("total_animations", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.loaded_animations", "" + animationCount, "" + finalTotalAnimationFrameCount));
+        overlay.addLine("total_animations", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Components.translatable("fancymenu.overlay.debug.loaded_animations", "" + animationCount, "" + finalTotalAnimationFrameCount));
         if (tooManyAnimationFrames) {
-            overlay.addLine("too_many_animation_frames", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.loaded_animations.too_many_frames").setStyle(Style.EMPTY.withColor(ChatFormatting.RED)));
+            overlay.addLine("too_many_animation_frames", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Components.translatable("fancymenu.overlay.debug.loaded_animations.too_many_frames").setStyle(Style.EMPTY.withColor(ChatFormatting.RED)));
         }
         if (tooHighAnimationResolution) {
-            overlay.addLine("too_high_resolution", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.loaded_animations.resolution_too_high").setStyle(Style.EMPTY.withColor(ChatFormatting.RED)));
+            overlay.addLine("too_high_resolution", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Components.translatable("fancymenu.overlay.debug.loaded_animations.resolution_too_high").setStyle(Style.EMPTY.withColor(ChatFormatting.RED)));
         }
-        overlay.addLine("total_slideshows", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.loaded_slideshows", "" + slideshowCount, "" + finalTotalSlideshowImages));
+        overlay.addLine("total_slideshows", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Components.translatable("fancymenu.overlay.debug.loaded_slideshows", "" + slideshowCount, "" + finalTotalSlideshowImages));
 
         overlay.addSpacerLine("spacer_after_total_slideshows", DebugOverlay.LinePosition.TOP_LEFT, 5);
 
@@ -131,11 +133,11 @@ public class DebugOverlayBuilder {
         if (!FancyMenu.getOptions().debugOverlayShowSystemCategory.getValue()) return;
 
         overlay.addLine("frames_per_second", DebugOverlay.LinePosition.TOP_LEFT, consumes -> {
-            int fps = Minecraft.getInstance().getFps();
-            MutableComponent fpsComp = Component.literal("" + fps);
+            int fps = IMixinMinecraft.getFpsFancyMenu();
+            MutableComponent fpsComp = Components.literal("" + fps);
             if (fps < 20) fpsComp = fpsComp.setStyle(Style.EMPTY.withColor(ChatFormatting.GOLD));
             if (fps < 10) fpsComp = fpsComp.setStyle(Style.EMPTY.withColor(ChatFormatting.RED));
-            return Component.translatable("fancymenu.overlay.debug.fps", fpsComp);
+            return Components.translatable("fancymenu.overlay.debug.fps", fpsComp);
         });
         overlay.addLine("ram_usage", DebugOverlay.LinePosition.TOP_LEFT, consumes -> {
             long max = Runtime.getRuntime().maxMemory();
@@ -147,10 +149,10 @@ public class DebugOverlayBuilder {
             String percentString = percent + "%";
             if (percent >= 60) percentString = ChatFormatting.GOLD + "" + percent + "%" + ChatFormatting.RESET;
             if (percent >= 80) percentString = ChatFormatting.RED + "" + percent + "%" + ChatFormatting.RESET;
-            return Component.translatable("fancymenu.overlay.debug.memory", ramString, percentString);
+            return Components.translatable("fancymenu.overlay.debug.memory", ramString, percentString);
         });
-        overlay.addLine("cpu_info", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.cpu", GlUtil.getCpuInfo()));
-        overlay.addLine("gpu_info", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.gpu", GlUtil.getRenderer(), GlUtil.getOpenGLVersion()));
+        overlay.addLine("cpu_info", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Components.translatable("fancymenu.overlay.debug.cpu", GlUtil.getCpuInfo()));
+        overlay.addLine("gpu_info", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Components.translatable("fancymenu.overlay.debug.gpu", GlUtil.getRenderer(), GlUtil.getOpenGLVersion()));
 
         overlay.addSpacerLine("spacer_after_gpu_info", DebugOverlay.LinePosition.TOP_LEFT, 5);
 

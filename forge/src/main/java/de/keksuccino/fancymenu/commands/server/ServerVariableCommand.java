@@ -6,6 +6,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import de.keksuccino.fancymenu.commands.client.CommandUtils;
 import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.networking.packets.command.execute.ExecuteCommandPacketMessage;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -72,7 +73,7 @@ public class ServerVariableCommand {
                 PacketHandler.send(PacketDistributor.PLAYER.with(() -> sender), msg);
             }
         } catch (Exception e) {
-            stack.sendFailure(Component.literal("Error while executing command!"));
+            stack.sendFailure(Components.literal("Error while executing command!"));
             e.printStackTrace();
         }
         return 1;
@@ -88,7 +89,7 @@ public class ServerVariableCommand {
                 PacketHandler.send(PacketDistributor.PLAYER.with(() -> sender), msg);
             }
         } catch (Exception e) {
-            stack.sendFailure(Component.literal("Error while executing command!"));
+            stack.sendFailure(Components.literal("Error while executing command!"));
             e.printStackTrace();
         }
         return 1;

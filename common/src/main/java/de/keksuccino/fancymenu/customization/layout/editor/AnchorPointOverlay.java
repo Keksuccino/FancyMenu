@@ -16,7 +16,7 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Style;
 import org.apache.commons.lang3.StringUtils;
@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiEventListener {
+public class AnchorPointOverlay extends GuiComponent implements Widget, GuiEventListener {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -447,15 +447,6 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
 
     }
 
-    @Override
-    public void setFocused(boolean var1) {
-    }
-
-    @Override
-    public boolean isFocused() {
-        return false;
-    }
-
     public class ElementAnchorPointArea extends AnchorPointArea {
 
         @NotNull
@@ -511,7 +502,7 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
 
     }
 
-    public class AnchorPointArea extends GuiComponent implements Renderable, GuiEventListener {
+    public class AnchorPointArea extends GuiComponent implements Widget, GuiEventListener {
 
         public final ElementAnchorPoint anchorPoint;
         private int x;
@@ -581,15 +572,6 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
         @Override
         public boolean isMouseOver(double mouseX, double mouseY) {
             return UIBase.isXYInArea((int) mouseX, (int) mouseY, this.getX(), this.getY(), this.getWidth(), this.getWidth());
-        }
-
-        @Override
-        public void setFocused(boolean var1) {
-        }
-
-        @Override
-        public boolean isFocused() {
-            return false;
         }
 
         protected enum ProgressDirection {

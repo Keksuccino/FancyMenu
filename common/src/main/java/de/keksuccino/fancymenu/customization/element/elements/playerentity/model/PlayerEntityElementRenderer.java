@@ -2,7 +2,8 @@ package de.keksuccino.fancymenu.customization.element.elements.playerentity.mode
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Axis;
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Vector3f;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.model.layers.PlayerEntityRenderLayer;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.model.layers.PlayerEntityShoulderParrotLayer;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.model.layers.PlayerEntityCapeLayer;
@@ -33,13 +34,12 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
 
 @SuppressWarnings("all")
 public class PlayerEntityElementRenderer extends PlayerRenderer {
 
     public static final EntityModelSet ENTITY_MODEL_SET = Minecraft.getInstance().getEntityModels();
-    public static final EntityRendererProvider.Context RENDER_CONTEXT = new EntityRendererProvider.Context(Minecraft.getInstance().getEntityRenderDispatcher(), Minecraft.getInstance().getItemRenderer(), Minecraft.getInstance().getBlockRenderer(), Minecraft.getInstance().getEntityRenderDispatcher().getItemInHandRenderer(), Minecraft.getInstance().getResourceManager(), ENTITY_MODEL_SET, Minecraft.getInstance().font);
+    public static final EntityRendererProvider.Context RENDER_CONTEXT = new EntityRendererProvider.Context(Minecraft.getInstance().getEntityRenderDispatcher(), Minecraft.getInstance().getItemRenderer(), Minecraft.getInstance().getResourceManager(), ENTITY_MODEL_SET, Minecraft.getInstance().font);
 
     public final PlayerEntityProperties properties;
     public final PlayerEntityModel playerModel;
@@ -201,9 +201,6 @@ public class PlayerEntityElementRenderer extends PlayerRenderer {
                 if (useanim == UseAnim.SPYGLASS) {
                     return HumanoidModel.ArmPose.SPYGLASS;
                 }
-                if (useanim == UseAnim.TOOT_HORN) {
-                    return HumanoidModel.ArmPose.TOOT_HORN;
-                }
             } else if (itemstack.getItem() instanceof CrossbowItem && CrossbowItem.isCharged(itemstack)) {
                 return HumanoidModel.ArmPose.CROSSBOW_HOLD;
             }
@@ -247,9 +244,9 @@ public class PlayerEntityElementRenderer extends PlayerRenderer {
         Font font = this.getFont();
         float f2 = (float)(-font.width(content) / 2);
         
-        font.drawInBatch(content, f2, (float)i, 553648127, false, matrix4f, bufferSource, flag ? Font.DisplayMode.SEE_THROUGH : Font.DisplayMode.NORMAL, j, p_114502_);
+        font.drawInBatch(content, f2, (float)i, 553648127, false, matrix4f, bufferSource, flag, j, p_114502_);
         if (flag) {
-            font.drawInBatch(content, f2, (float)i, -1, false, matrix4f, bufferSource, Font.DisplayMode.NORMAL, 0, p_114502_);
+            font.drawInBatch(content, f2, (float)i, -1, false, matrix4f, bufferSource, false, 0, p_114502_);
         }
         
         matrix.popPose();
@@ -257,7 +254,7 @@ public class PlayerEntityElementRenderer extends PlayerRenderer {
 
     protected void setupRotations(PoseStack matrix, float f11, float f12, float f13) {
         if (!this.properties.hasPose(Pose.SLEEPING)) {
-            matrix.mulPose(Axis.YP.rotationDegrees(180.0F - f12));
+            matrix.mulPose(Vector3f.YP.rotationDegrees(180.0F - f12));
         }
     }
 

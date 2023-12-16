@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
@@ -39,7 +40,7 @@ public class ManageRequirementsScreen extends Screen {
     protected ExtendedButton cancelButton;
 
     public ManageRequirementsScreen(@NotNull LoadingRequirementContainer container, @NotNull Consumer<LoadingRequirementContainer> callback) {
-        super(Component.literal(I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.manage")));
+        super(Components.literal(I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.manage")));
         this.container = container;
         this.callback = callback;
         this.updateRequirementsScrollArea();
@@ -197,28 +198,28 @@ public class ManageRequirementsScreen extends Screen {
         this.requirementsScrollArea.setY(50 + 15, true);
         this.requirementsScrollArea.render(matrix, mouseX, mouseY, partial);
 
-        this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
-        this.doneButton.setY(this.height - 20 - 20);
+        this.doneButton.x = (this.width - 20 - this.doneButton.getWidth());
+        this.doneButton.y = (this.height - 20 - 20);
         this.doneButton.render(matrix, mouseX, mouseY, partial);
 
-        this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
-        this.cancelButton.setY(this.doneButton.getY() - 5 - 20);
+        this.cancelButton.x = (this.width - 20 - this.cancelButton.getWidth());
+        this.cancelButton.y = (this.doneButton.y - 5 - 20);
         this.cancelButton.render(matrix, mouseX, mouseY, partial);
 
-        this.removeButton.setX(this.width - 20 - this.removeButton.getWidth());
-        this.removeButton.setY(this.cancelButton.getY() - 15 - 20);
+        this.removeButton.x = (this.width - 20 - this.removeButton.getWidth());
+        this.removeButton.y = (this.cancelButton.y - 15 - 20);
         this.removeButton.render(matrix, mouseX, mouseY, partial);
 
-        this.editButton.setX(this.width - 20 - this.editButton.getWidth());
-        this.editButton.setY(this.removeButton.getY() - 5 - 20);
+        this.editButton.x = (this.width - 20 - this.editButton.getWidth());
+        this.editButton.y = (this.removeButton.y - 5 - 20);
         this.editButton.render(matrix, mouseX, mouseY, partial);
 
-        this.addGroupButton.setX(this.width - 20 - this.addGroupButton.getWidth());
-        this.addGroupButton.setY(this.editButton.getY() - 5 - 20);
+        this.addGroupButton.x = (this.width - 20 - this.addGroupButton.getWidth());
+        this.addGroupButton.y = (this.editButton.y - 5 - 20);
         this.addGroupButton.render(matrix, mouseX, mouseY, partial);
 
-        this.addRequirementButton.setX(this.width - 20 - this.addRequirementButton.getWidth());
-        this.addRequirementButton.setY(this.addGroupButton.getY() - 5 - 20);
+        this.addRequirementButton.x = (this.width - 20 - this.addRequirementButton.getWidth());
+        this.addRequirementButton.y = (this.addGroupButton.y - 5 - 20);
         this.addRequirementButton.render(matrix, mouseX, mouseY, partial);
 
         super.render(matrix, mouseX, mouseY, partial);
@@ -274,7 +275,7 @@ public class ManageRequirementsScreen extends Screen {
         public LoadingRequirementGroup group;
 
         public RequirementGroupEntry(ScrollArea parent, LoadingRequirementGroup group) {
-            super(parent, Component.literal(group.identifier).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())).append(Component.literal(" (" + I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.group.info", "" + group.getInstances().size()) + ")").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()))), UIBase.getUIColorTheme().listing_dot_color_3.getColor(), (entry) -> {});
+            super(parent, Components.literal(group.identifier).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())).append(Components.literal(" (" + I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.group.info", "" + group.getInstances().size()) + ")").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()))), UIBase.getUIColorTheme().listing_dot_color_3.getColor(), (entry) -> {});
             this.group = group;
             this.setHeight(this.getHeight() + (HEADER_FOOTER_HEIGHT * 2));
         }
@@ -299,11 +300,11 @@ public class ManageRequirementsScreen extends Screen {
             this.instance = instance;
             this.lineHeight = lineHeight;
 
-            this.displayNameComponent = Component.literal(this.instance.requirement.getDisplayName()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
+            this.displayNameComponent = Components.literal(this.instance.requirement.getDisplayName()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
             String modeString = (this.instance.mode == LoadingRequirementInstance.RequirementMode.IF) ? I18n.get("fancymenu.editor.loading_requirement.screens.requirement.info.mode.normal") : I18n.get("fancymenu.editor.loading_requirement.screens.requirement.info.mode.opposite");
-            this.modeComponent = Component.literal(I18n.get("fancymenu.editor.loading_requirement.screens.requirement.info.mode") + " ").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())).append(Component.literal(modeString).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt())));
+            this.modeComponent = Components.literal(I18n.get("fancymenu.editor.loading_requirement.screens.requirement.info.mode") + " ").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())).append(Components.literal(modeString).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt())));
             String valueString = (this.instance.value != null) ? this.instance.value : I18n.get("fancymenu.editor.loading_requirement.screens.requirement.info.value.none");
-            this.valueComponent = Component.literal(I18n.get("fancymenu.editor.loading_requirement.screens.requirement.info.value") + " ").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())).append(Component.literal(valueString).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt())));
+            this.valueComponent = Components.literal(I18n.get("fancymenu.editor.loading_requirement.screens.requirement.info.value") + " ").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())).append(Components.literal(valueString).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt())));
 
             this.setWidth(this.calculateWidth());
             this.setHeight((lineHeight * 3) + (HEADER_FOOTER_HEIGHT * 2));

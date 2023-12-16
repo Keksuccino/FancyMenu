@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.commands.server;
 import com.mojang.brigadier.CommandDispatcher;
 import de.keksuccino.fancymenu.networking.packets.command.execute.ClientboundExecuteCommandPacketHandler;
 import de.keksuccino.fancymenu.networking.packets.command.execute.ExecuteCommandPacketMessage;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -42,7 +43,7 @@ public class ServerCloseGuiScreenCommand {
                 }
             }
         } catch (Exception e) {
-            stack.sendFailure(Component.literal("Error while executing command!"));
+            stack.sendFailure(Components.literal("Error while executing command!"));
             e.printStackTrace();
         }
         return 1;

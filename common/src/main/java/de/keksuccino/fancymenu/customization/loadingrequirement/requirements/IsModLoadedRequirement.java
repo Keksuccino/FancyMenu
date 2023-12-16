@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.loadingrequirement.requirements;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
@@ -120,7 +121,7 @@ public class IsModLoadedRequirement extends LoadingRequirement {
         protected EditBoxSuggestions modIdSuggestions;
 
         protected IsModLoadedValueConfigScreen(@NotNull String value, @NotNull Consumer<String> callback) {
-            super(Component.translatable("fancymenu.helper.editor.items.visibilityrequirements.modloaded.valuename"), callback);
+            super(Components.translatable("fancymenu.helper.editor.items.visibilityrequirements.modloaded.valuename"), callback);
             this.modId = value;
         }
 
@@ -130,7 +131,7 @@ public class IsModLoadedRequirement extends LoadingRequirement {
             this.addSpacerCell(20);
 
             String id = this.getModIdString();
-            this.addLabelCell(Component.translatable("fancymenu.loading_requirements.is_mod_loaded.mod_id"));
+            this.addLabelCell(Components.translatable("fancymenu.loading_requirements.is_mod_loaded.mod_id"));
             this.modIdCell = this.addTextInputCell(null, true, true).setText(id);
 
             this.modIdSuggestions = EditBoxSuggestions.createWithCustomSuggestions(this, this.modIdCell.editBox, EditBoxSuggestions.SuggestionsRenderPosition.ABOVE_EDIT_BOX, Services.PLATFORM.getLoadedModIds());

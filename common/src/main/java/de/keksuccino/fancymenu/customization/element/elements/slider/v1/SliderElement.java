@@ -88,8 +88,8 @@ public class SliderElement extends AbstractElement {
                 this.slider.active = false;
             }
 
-            this.slider.setX(this.getAbsoluteX());
-            this.slider.setY(this.getAbsoluteY());
+            this.slider.x = this.getAbsoluteX();
+            this.slider.y = this.getAbsoluteY();
             this.slider.setWidth(this.getAbsoluteWidth());
             ((IMixinAbstractWidget)this.slider).setHeightFancyMenu(this.getAbsoluteHeight());
             this.slider.render(pose, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime());

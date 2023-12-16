@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.loadingrequirement;
 
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.konkrete.input.CharacterFilter;
@@ -109,7 +110,7 @@ public abstract class LoadingRequirement {
     public void editValue(@NotNull Screen parentScreen, @NotNull LoadingRequirementInstance requirementInstance) {
         if (this.hasValue()) {
             String displayName = this.getValueDisplayName();
-            TextEditorScreen s = new TextEditorScreen((displayName != null) ? Component.literal(displayName) : Component.translatable("fancymenu.editor.elements.visibilityrequirements.edit_value"), null, (call) -> {
+            TextEditorScreen s = new TextEditorScreen((displayName != null) ? Components.literal(displayName) : Components.translatable("fancymenu.editor.elements.visibilityrequirements.edit_value"), null, (call) -> {
                 if (call != null) {
                     requirementInstance.value = call;
                 }

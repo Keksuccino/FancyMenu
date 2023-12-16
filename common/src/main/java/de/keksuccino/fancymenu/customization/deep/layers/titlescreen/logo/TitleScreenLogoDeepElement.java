@@ -5,15 +5,16 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.RandomSource;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Random;
 
 public class TitleScreenLogoDeepElement extends AbstractDeepElement {
 
     private static final ResourceLocation MINECRAFT_LOGO = new ResourceLocation("textures/gui/title/minecraft.png");
     private static final ResourceLocation MINECRAFT_EDITION = new ResourceLocation("textures/gui/title/edition.png");
 
-    private final boolean showEasterEgg = (double) RandomSource.create().nextFloat() < 1.0E-4D;
+    private final boolean showEasterEgg = (double)new Random().nextFloat() < 1.0E-4;
 
     public TitleScreenLogoDeepElement(DeepElementBuilder<?, ?, ?> builder) {
         super(builder);

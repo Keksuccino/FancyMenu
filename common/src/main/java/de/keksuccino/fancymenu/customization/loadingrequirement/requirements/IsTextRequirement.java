@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.loadingrequirement.requirements;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
@@ -188,7 +189,7 @@ public class IsTextRequirement extends LoadingRequirement {
         protected TextInputCell secondTextCell;
 
         protected IsTextValueConfigScreen(String value, @NotNull Consumer<String> callback) {
-            super(Component.translatable("fancymenu.helper.editor.items.visibilityrequirements.is_text.valuename"), callback);
+            super(Components.translatable("fancymenu.helper.editor.items.visibilityrequirements.is_text.valuename"), callback);
             if (value == null) value = "";
             List<String> sections = getSections(value);
             if (!sections.isEmpty()) {
@@ -221,13 +222,13 @@ public class IsTextRequirement extends LoadingRequirement {
             this.addCellGroupEndSpacerCell();
 
             String fText = this.getFirstTextString();
-            this.addLabelCell(Component.translatable("fancymenu.loading_requirements.is_text.compare_mode.first_text"));
+            this.addLabelCell(Components.translatable("fancymenu.loading_requirements.is_text.compare_mode.first_text"));
             this.firstTextCell = this.addTextInputCell(null, true, true).setText(fText);
 
             this.addCellGroupEndSpacerCell();
 
             String sText = this.getSecondTextString();
-            this.addLabelCell(Component.translatable("fancymenu.loading_requirements.is_text.compare_mode.second_text"));
+            this.addLabelCell(Components.translatable("fancymenu.loading_requirements.is_text.compare_mode.second_text"));
             this.secondTextCell = this.addTextInputCell(null, true, true).setText(sText);
 
             this.addSpacerCell(20);

@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -118,7 +119,7 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Component.translatable("fancymenu.customization.items.slider");
+        return Components.translatable("fancymenu.customization.items.slider");
     }
 
     @Override

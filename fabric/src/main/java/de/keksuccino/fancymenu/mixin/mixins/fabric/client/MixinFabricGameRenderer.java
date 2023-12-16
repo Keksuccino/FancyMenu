@@ -21,7 +21,7 @@ public class MixinFabricGameRenderer {
     private float cachedPartial = 0.0F;
 
     //I'm wrapping this to easily cache the render() params
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderWithTooltip(Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V"))
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V"))
     private boolean wrapRenderScreenFancyMenu(Screen instance, PoseStack poseStack, int mouseX, int mouseY, float partial) {
         if (Minecraft.getInstance().screen == null) return true;
         this.cachedStack = poseStack;
@@ -33,7 +33,7 @@ public class MixinFabricGameRenderer {
         return true;
     }
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderWithTooltip(Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V", shift = At.Shift.AFTER))
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V", shift = At.Shift.AFTER))
     private void afterRenderScreenFancyMenu(float $$0, long $$1, boolean $$2, CallbackInfo info) {
         if (Minecraft.getInstance().screen == null) return;
         RenderScreenEvent.Post e = new RenderScreenEvent.Post(Minecraft.getInstance().screen, (this.cachedStack != null) ? this.cachedStack : new PoseStack(), this.cachedMouseX, this.cachedMouseY, this.cachedPartial);

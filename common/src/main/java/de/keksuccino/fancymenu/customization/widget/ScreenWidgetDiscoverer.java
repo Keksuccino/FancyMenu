@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.screens.Screen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -71,9 +71,9 @@ public class ScreenWidgetDiscoverer {
 				screen.resize(Minecraft.getInstance(), screenWidth, screenHeight);
 			}
 
-			for (Renderable r : ((IMixinScreen)screen).getRenderablesFancyMenu()) {
+			for (Widget r : ((IMixinScreen)screen).getRenderablesFancyMenu()) {
 				if (r instanceof AbstractWidget w) {
-					String idRaw = w.getX() + "" + w.getY();
+					String idRaw = w.x + "" + w.y;
 					long id = 0;
 					if (MathUtils.isLong(idRaw)) {
 						id = getAvailableIdFromBaseId(Long.parseLong(idRaw), ids);

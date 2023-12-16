@@ -3,11 +3,10 @@ package de.keksuccino.fancymenu.customization.panorama;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
 import com.mojang.blaze3d.systems.RenderSystem;
-
 import com.mojang.blaze3d.vertex.*;
-import com.mojang.math.Axis;
+import com.mojang.math.Matrix4f;
+import com.mojang.math.Vector3f;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
@@ -17,7 +16,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.util.Mth;
-import org.joml.Matrix4f;
 
 public class ExternalTexturePanoramaRenderer extends GuiComponent {
 
@@ -141,13 +139,13 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 
 			Tesselator tesselator = Tesselator.getInstance();
 			BufferBuilder bufferBuilder = tesselator.getBuilder();
-			Matrix4f matrix4f = new Matrix4f().setPerspective(fovF, (float)mc.getWindow().getWidth() / (float)mc.getWindow().getHeight(), 0.05F, 10.0F);
+			Matrix4f matrix4f = Matrix4f.perspective(fovF, (float)mc.getWindow().getWidth() / (float)mc.getWindow().getHeight(), 0.05F, 10.0F);
 			RenderSystem.backupProjectionMatrix();
 			RenderSystem.setProjectionMatrix(matrix4f);
 			PoseStack poseStack = RenderSystem.getModelViewStack();
 			poseStack.pushPose();
 			poseStack.setIdentity();
-			poseStack.mulPose(Axis.XP.rotationDegrees(180.0f));
+			poseStack.mulPose(Vector3f.XP.rotationDegrees(180.0f));
 			RenderSystem.applyModelViewMatrix();
 			RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
 			
@@ -162,8 +160,8 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 				float k = ((float)(j % 2) / 2.0f - 0.5f) / 256.0f;
 				float l = ((float)(j / 2) / 2.0f - 0.5f) / 256.0f;
 				poseStack.translate(k, l, 0.0f);
-				poseStack.mulPose(Axis.XP.rotationDegrees(pitch));
-				poseStack.mulPose(Axis.YP.rotationDegrees(yaw));
+				poseStack.mulPose(Vector3f.XP.rotationDegrees(pitch));
+				poseStack.mulPose(Vector3f.YP.rotationDegrees(yaw));
 				RenderSystem.applyModelViewMatrix();
 				for (int n = 0; n < 6; ++n) {
 					ExternalTextureResourceLocation r = this.panoramaImageLocations.get(n);

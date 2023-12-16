@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.element.anchor;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -20,7 +21,7 @@ public class ElementAnchorPoint {
     }
 
     public Component getDisplayName() {
-        return Component.translatable("fancymenu.element.anchor_point." + this.getName().replace("-", "_"));
+        return Components.translatable("fancymenu.element.anchor_point." + this.getName().replace("-", "_"));
     }
 
     public int getElementPositionX(@NotNull AbstractElement element) {

@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.cycle;
 
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -41,11 +42,11 @@ public class LocalizedGenericValueCycle<T> extends ValueCycle<T> implements ILoc
     }
 
     public MutableComponent getCycleComponent() {
-        return Component.translatable(this.getCycleLocalizationKey(), this.getCurrentValueComponent()).withStyle(this.cycleStyle.get(this.current()));
+        return Components.translatable(this.getCycleLocalizationKey(), this.getCurrentValueComponent()).withStyle(this.cycleStyle.get(this.current()));
     }
 
     public MutableComponent getCurrentValueComponent() {
-        return Component.literal(this.valueNameSupplier.get(this.current())).withStyle(this.valueStyle.get(this.current()));
+        return Components.literal(this.valueNameSupplier.get(this.current())).withStyle(this.valueStyle.get(this.current()));
     }
 
     public LocalizedGenericValueCycle<T> setValueNameSupplier(@NotNull ConsumingSupplier<T, String> supplier) {

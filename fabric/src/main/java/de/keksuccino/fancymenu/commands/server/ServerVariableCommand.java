@@ -5,13 +5,12 @@ import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import de.keksuccino.fancymenu.networking.packets.command.execute.ClientboundExecuteCommandPacketHandler;
 import de.keksuccino.fancymenu.networking.packets.command.execute.ExecuteCommandPacketMessage;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.konkrete.command.CommandUtils;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -72,7 +71,7 @@ public class ServerVariableCommand {
                 ServerPlayNetworking.send(sender, ClientboundExecuteCommandPacketHandler.PACKET_ID, ClientboundExecuteCommandPacketHandler.writeToByteBuf(msg));
             }
         } catch (Exception e) {
-            stack.sendFailure(Component.literal("Error while executing command!"));
+            stack.sendFailure(Components.literal("Error while executing command!"));
             e.printStackTrace();
         }
         return 1;
@@ -88,7 +87,7 @@ public class ServerVariableCommand {
                 ServerPlayNetworking.send(sender, ClientboundExecuteCommandPacketHandler.PACKET_ID, ClientboundExecuteCommandPacketHandler.writeToByteBuf(msg));
             }
         } catch (Exception e) {
-            stack.sendFailure(Component.literal("Error while executing command!"));
+            stack.sendFailure(Components.literal("Error while executing command!"));
             e.printStackTrace();
         }
         return 1;

@@ -68,13 +68,13 @@ dependencies {
         jarJar.ranged(it, "[0.3.1,)")
     }
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
-    implementation fg.deobf("curse.maven:konkrete-410295:4514916")
-    implementation fg.deobf("curse.maven:load-my-resources-forge-534502:4203277")
+    implementation fg.deobf("curse.maven:konkrete-410295:4514907")
+    implementation fg.deobf("curse.maven:load-my-resources-forge-534502:4118355")
     //Even with minecraftLibrary it fails to load the library in-dev for some frickin reason, so lets just ignore the class-not-found errors
     minecraftLibrary(jarJar("com.github.Keksuccino:japng:0.5.3")) {
         jarJar.ranged(it, "[0.5.3,)")
     }
-    implementation fg.deobf("curse.maven:melody-938643:4869647")
+    implementation fg.deobf("curse.maven:melody-938643:4953567")
 }
 
 tasks.withType(JavaCompile).configureEach {

@@ -78,7 +78,7 @@ public class TextEditorLine extends AdvancedTextField {
     }
 
     @Override
-    public void renderWidget(PoseStack matrix, int mouseX, int mouseY, float partial) {
+    public void renderButton(PoseStack matrix, int mouseX, int mouseY, float partial) {
 
         this.currentCharacterRenderIndex = 0;
 

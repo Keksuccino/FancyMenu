@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -140,7 +141,7 @@ public class TickerElementBuilder extends ElementBuilder<TickerElement, TickerEd
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Component.translatable("fancymenu.customization.items.ticker");
+        return Components.translatable("fancymenu.customization.items.ticker");
     }
 
     @Override

@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.resources.language.I18n;
@@ -239,7 +240,7 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Component.translatable("fancymenu.customization.items.text");
+        return Components.translatable("fancymenu.customization.items.text");
     }
 
     @Override

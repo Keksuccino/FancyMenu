@@ -2,6 +2,7 @@
 package de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
@@ -42,7 +43,7 @@ public class BuildRequirementGroupScreen extends Screen {
 
     public BuildRequirementGroupScreen(@Nullable Screen parentScreen, @NotNull LoadingRequirementContainer parent, @Nullable LoadingRequirementGroup groupToEdit, @NotNull Consumer<LoadingRequirementGroup> callback) {
 
-        super((groupToEdit != null) ? Component.literal(I18n.get("fancymenu.editor.loading_requirement.screens.edit_group")) : Component.literal(I18n.get("fancymenu.editor.loading_requirement.screens.add_group")));
+        super((groupToEdit != null) ? Components.literal(I18n.get("fancymenu.editor.loading_requirement.screens.edit_group")) : Components.literal(I18n.get("fancymenu.editor.loading_requirement.screens.add_group")));
 
         this.parentScreen = parentScreen;
         this.parent = parent;
@@ -68,7 +69,7 @@ public class BuildRequirementGroupScreen extends Screen {
     protected void init() {
 
         //Reset the GUI scale in case the layout editor changed it
-        Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().isEnforceUnicode()));
+        Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale, Minecraft.getInstance().isEnforceUnicode()));
 		this.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
 		this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
 
@@ -168,7 +169,7 @@ public class BuildRequirementGroupScreen extends Screen {
             this.callback.accept(this.group);
         }) {
             @Override
-            public void renderWidget(@NotNull PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+            public void renderButton(@NotNull PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
                 BuildRequirementGroupScreen s = BuildRequirementGroupScreen.this;
                 if (s.group.getInstances().isEmpty()) {
                     this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.build_group_screen.finish.no_requirements_added")));
@@ -183,7 +184,7 @@ public class BuildRequirementGroupScreen extends Screen {
                     this.setTooltip((Tooltip) null);
                     this.active = true;
                 }
-                super.renderWidget(matrix, mouseX, mouseY, partialTicks);
+                super.renderButton(matrix, mouseX, mouseY, partialTicks);
             }
         };
         this.addWidget(this.doneButton);
@@ -228,36 +229,36 @@ public class BuildRequirementGroupScreen extends Screen {
         this.requirementsScrollArea.setY(50 + 15, true);
         this.requirementsScrollArea.render(matrix, mouseX, mouseY, partial);
 
-        this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
-        this.doneButton.setY(this.height - 20 - 20);
+        this.doneButton.x = (this.width - 20 - this.doneButton.getWidth());
+        this.doneButton.y = (this.height - 20 - 20);
         this.doneButton.render(matrix, mouseX, mouseY, partial);
 
         if (!this.isEdit) {
-            this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
-            this.cancelButton.setY(this.doneButton.getY() - 5 - 20);
+            this.cancelButton.x = (this.width - 20 - this.cancelButton.getWidth());
+            this.cancelButton.y = (this.doneButton.y - 5 - 20);
             this.cancelButton.render(matrix, mouseX, mouseY, partial);
         } else {
             this.cancelButton.active = false;
         }
 
-        this.removeRequirementButton.setX(this.width - 20 - this.removeRequirementButton.getWidth());
-        this.removeRequirementButton.setY(((this.isEdit) ? this.doneButton.getY() : this.cancelButton.getY()) - 15 - 20);
+        this.removeRequirementButton.x = (this.width - 20 - this.removeRequirementButton.getWidth());
+        this.removeRequirementButton.y = (((this.isEdit) ? this.doneButton.y : this.cancelButton.y) - 15 - 20);
         this.removeRequirementButton.render(matrix, mouseX, mouseY, partial);
 
-        this.editRequirementButton.setX(this.width - 20 - this.editRequirementButton.getWidth());
-        this.editRequirementButton.setY(this.removeRequirementButton.getY() - 5 - 20);
+        this.editRequirementButton.x = (this.width - 20 - this.editRequirementButton.getWidth());
+        this.editRequirementButton.y = (this.removeRequirementButton.y - 5 - 20);
         this.editRequirementButton.render(matrix, mouseX, mouseY, partial);
 
-        this.addRequirementButton.setX(this.width - 20 - this.addRequirementButton.getWidth());
-        this.addRequirementButton.setY(this.editRequirementButton.getY() - 5 - 20);
+        this.addRequirementButton.x = (this.width - 20 - this.addRequirementButton.getWidth());
+        this.addRequirementButton.y = (this.editRequirementButton.y - 5 - 20);
         this.addRequirementButton.render(matrix, mouseX, mouseY, partial);
 
-        this.groupModeButton.setX(this.width - 20 - this.groupModeButton.getWidth());
-        this.groupModeButton.setY(this.addRequirementButton.getY() - 5 - 20);
+        this.groupModeButton.x = (this.width - 20 - this.groupModeButton.getWidth());
+        this.groupModeButton.y = (this.addRequirementButton.y - 5 - 20);
         this.groupModeButton.render(matrix, mouseX, mouseY, partial);
 
         this.groupIdentifierTextField.setX(this.width - 20 - this.groupIdentifierTextField.getWidth());
-        this.groupIdentifierTextField.setY(this.groupModeButton.getY() - 15 - 20);
+        this.groupIdentifierTextField.setY(this.groupModeButton.y - 15 - 20);
         this.groupIdentifierTextField.render(matrix, mouseX, mouseY, partial);
 
         String idLabel = I18n.get("fancymenu.editor.loading_requirement.screens.build_group_screen.group_identifier");

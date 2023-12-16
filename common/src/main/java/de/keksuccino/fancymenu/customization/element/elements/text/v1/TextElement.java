@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
@@ -163,7 +164,7 @@ public class TextElement extends AbstractElement {
                 } else if (isEditor()) {
                     //Render "updating" view in editor
                     fill(pose, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), Color.MAGENTA.getRGB());
-                    drawCenteredString(pose, font, Component.translatable("fancymenu.customization.items.text.status.loading"), this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY() + (this.getAbsoluteHeight() / 2) - (font.lineHeight / 2), -1);
+                    drawCenteredString(pose, font, Components.translatable("fancymenu.customization.items.text.status.loading"), this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY() + (this.getAbsoluteHeight() / 2) - (font.lineHeight / 2), -1);
                 }
 
                 RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
@@ -368,7 +369,7 @@ public class TextElement extends AbstractElement {
         protected String lastTextToRender;
 
         public LineScrollEntry(ScrollArea parent, String textRaw, boolean bold, float scale, TextElement parentItem) {
-            super(parent, Component.literal(""), (entry) -> {});
+            super(parent, Components.literal(""), (entry) -> {});
             this.textRaw = textRaw;
             this.bold = bold;
             this.scale = scale;
@@ -393,7 +394,7 @@ public class TextElement extends AbstractElement {
                 textToRender = textToRender.toUpperCase();
             }
             if ((lastTextToRender == null) || !lastTextToRender.equals(textToRender)) {
-                this.setTextOfLine(Component.literal(textToRender));
+                this.setTextOfLine(Components.literal(textToRender));
                 ((MutableComponent)this.getText()).withStyle(Style.EMPTY.withBold(this.bold));
             }
             this.lastTextToRender = textToRender;

@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.loadingrequirement.requirements;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
@@ -198,7 +199,7 @@ public class IsNumberRequirement extends LoadingRequirement {
         protected TextInputCell secondNumberCell;
 
         protected IsNumberValueConfigScreen(String value, @NotNull Consumer<String> callback) {
-            super(Component.translatable("fancymenu.helper.editor.items.visibilityrequirements.is_number.valuename"), callback);
+            super(Components.translatable("fancymenu.helper.editor.items.visibilityrequirements.is_number.valuename"), callback);
             if (value == null) value = "";
             List<String> sections = getSections(value);
             if (!sections.isEmpty()) {
@@ -232,13 +233,13 @@ public class IsNumberRequirement extends LoadingRequirement {
             this.addCellGroupEndSpacerCell();
 
             String fNumber = this.getFirstNumberString();
-            this.addLabelCell(Component.translatable("fancymenu.loading_requirements.is_number.compare_mode.first_number"));
+            this.addLabelCell(Components.translatable("fancymenu.loading_requirements.is_number.compare_mode.first_number"));
             this.firstNumberCell = this.addTextInputCell(null, true, true).setText(fNumber);
 
             this.addCellGroupEndSpacerCell();
 
             String sNumber = this.getSecondNumberString();
-            this.addLabelCell(Component.translatable("fancymenu.loading_requirements.is_number.compare_mode.second_number"));
+            this.addLabelCell(Components.translatable("fancymenu.loading_requirements.is_number.compare_mode.second_number"));
             this.secondNumberCell = this.addTextInputCell(null, true, true).setText(sNumber);
 
             this.addSpacerCell(20);

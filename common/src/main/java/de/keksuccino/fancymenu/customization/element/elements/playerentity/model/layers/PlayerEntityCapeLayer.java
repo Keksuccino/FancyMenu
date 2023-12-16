@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.element.elements.playerentity.mode
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Axis;
+import com.mojang.math.Vector3f;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.model.PlayerEntityElementRenderer;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.model.PlayerEntityProperties;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -50,9 +50,9 @@ public class PlayerEntityCapeLayer extends PlayerEntityRenderLayer {
                 f1 += 25.0F;
             }
 
-            matrix.mulPose(Axis.XP.rotationDegrees(6.0F + f2 / 2.0F + f1));
-            matrix.mulPose(Axis.ZP.rotationDegrees(f3 / 2.0F));
-            matrix.mulPose(Axis.YP.rotationDegrees(180.0F - f3 / 2.0F));
+            matrix.mulPose(Vector3f.XP.rotationDegrees(6.0F + f2 / 2.0F + f1));
+            matrix.mulPose(Vector3f.ZP.rotationDegrees(f3 / 2.0F));
+            matrix.mulPose(Vector3f.YP.rotationDegrees(180.0F - f3 / 2.0F));
             VertexConsumer vertexconsumer = p_116616_.getBuffer(RenderType.entitySolid(this.properties.getCapeTextureLocation()));
             this.renderer.getModel().renderCloak(matrix, vertexconsumer, p_116617_, OverlayTexture.NO_OVERLAY);
             matrix.popPose();

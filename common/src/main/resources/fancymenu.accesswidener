@@ -6,8 +6,8 @@ accessible field net/minecraft/client/gui/screens/Screen title Lnet/minecraft/ne
 mutable field net/minecraft/client/gui/screens/TitleScreen fading Z
 accessible field net/minecraft/client/gui/screens/TitleScreen fading Z
 
-extendable method net/minecraft/client/gui/screens/Screen createArrowEvent (Lnet/minecraft/client/gui/navigation/ScreenDirection;)Lnet/minecraft/client/gui/navigation/FocusNavigationEvent$ArrowNavigation;
-extendable method net/minecraft/client/gui/screens/Screen createTabEvent ()Lnet/minecraft/client/gui/navigation/FocusNavigationEvent$TabNavigation;
+#extendable method net/minecraft/client/gui/screens/Screen createArrowEvent (Lnet/minecraft/client/gui/navigation/ScreenDirection;)Lnet/minecraft/client/gui/navigation/FocusNavigationEvent$ArrowNavigation;
+#extendable method net/minecraft/client/gui/screens/Screen createTabEvent ()Lnet/minecraft/client/gui/navigation/FocusNavigationEvent$TabNavigation;
 
 accessible method net/minecraft/client/gui/components/CommandSuggestions$SuggestionsList <init> (Lnet/minecraft/client/gui/components/CommandSuggestions;IIILjava/util/List;Z)V
 

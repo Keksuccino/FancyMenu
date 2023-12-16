@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
@@ -28,9 +29,9 @@ public class TitleScreenForgeTopDeepElement extends AbstractDeepElement {
         Font font = Minecraft.getInstance().font;
         if (isEditor()) {
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
-            Component line1 = Component.literal(I18n.get("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.forge.top.example.line1"));
+            Component line1 = Components.literal(I18n.get("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.forge.top.example.line1"));
             drawCenteredString(pose, font, line1, getScreenWidth() / 2, 4 + (0 * (font.lineHeight + 1)), RenderingUtils.replaceAlphaInColor(DrawableColor.WHITE.getColorInt(), this.opacity));
-            Component line2 = Component.literal(I18n.get("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.forge.top.example.line2"));
+            Component line2 = Components.literal(I18n.get("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.forge.top.example.line2"));
             drawCenteredString(pose, font, line2, getScreenWidth() / 2, 4 + (1 * (font.lineHeight + 1)), RenderingUtils.replaceAlphaInColor(DrawableColor.WHITE.getColorInt(), this.opacity));
             this.baseWidth = font.width(line1);
             int w2 = font.width(line2);

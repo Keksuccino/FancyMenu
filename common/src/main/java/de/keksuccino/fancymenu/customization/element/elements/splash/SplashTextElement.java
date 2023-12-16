@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.customization.element.elements.splash;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
+import com.mojang.math.Vector3f;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -144,7 +144,7 @@ public class SplashTextElement extends AbstractElement {
 
         pose.pushPose();
         pose.translate(((this.getAbsoluteX() + (this.getAbsoluteWidth() / 2F)) / this.scale), this.getAbsoluteY() / this.scale, 0.0F);
-        pose.mulPose(Axis.ZP.rotationDegrees(this.rotation));
+        pose.mulPose(Vector3f.ZP.rotationDegrees(this.rotation));
         pose.scale(splashBaseScale, splashBaseScale, splashBaseScale);
 
         int alpha = this.baseColor.getColor().getAlpha();

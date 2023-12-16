@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -40,7 +41,7 @@ public class TitleScreenSplashBuilder extends DeepElementBuilder<TitleScreenLaye
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Component.translatable("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.splash");
+        return Components.translatable("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.splash");
     }
 
     @Override

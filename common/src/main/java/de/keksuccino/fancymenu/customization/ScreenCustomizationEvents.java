@@ -21,7 +21,7 @@ import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.fancymenu.events.ModReloadEvent;
 import de.keksuccino.konkrete.file.FileUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
@@ -87,7 +87,7 @@ public class ScreenCustomizationEvents {
 			if (e.getScreen() instanceof CustomizableScreen c) {
 				for (GuiEventListener l : c.removeOnInitChildrenFancyMenu()) {
 					((IMixinScreen)e.getScreen()).getChildrenFancyMenu().remove(l);
-					if (l instanceof Renderable r) ((IMixinScreen)e.getScreen()).getRenderablesFancyMenu().remove(r);
+					if (l instanceof Widget r) ((IMixinScreen)e.getScreen()).getRenderablesFancyMenu().remove(r);
 					if (l instanceof NarratableEntry n) ((IMixinScreen)e.getScreen()).getNarratablesFancyMenu().remove(n);
 				}
 				c.removeOnInitChildrenFancyMenu().clear();
@@ -160,7 +160,7 @@ public class ScreenCustomizationEvents {
 						e1.printStackTrace();
 					}
 					LOGGER.info("[FANCYMENU] Setting default GUI scale..");
-					Minecraft.getInstance().options.guiScale().set(scale);
+					Minecraft.getInstance().options.guiScale = scale;
 					Minecraft.getInstance().options.save();
 					Minecraft.getInstance().resizeDisplay();
 				}

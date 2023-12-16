@@ -32,6 +32,7 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.ScreenTitleUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -399,7 +400,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 
 		//Set custom menu title
 		if ((this.layoutBase.customMenuTitle != null) && !this.forceDisableCustomMenuTitle) {
-			ScreenTitleUtils.setScreenTitle(e.getScreen(), Component.literal(PlaceholderParser.replacePlaceholders(this.layoutBase.customMenuTitle)));
+			ScreenTitleUtils.setScreenTitle(e.getScreen(), Components.literal(PlaceholderParser.replacePlaceholders(this.layoutBase.customMenuTitle)));
 		}
 
 	}
@@ -470,9 +471,9 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 						int headerHeight = headerSize[1];
 						int headerX = access.getX0FancyMenu() + (access.getWidthFancyMenu() / 2) - (headerWidth / 2);
 						int headerY = (access.getY0FancyMenu() / 2) - (headerHeight / 2);
-						enableScissor(access.getX0FancyMenu(), 0, access.getX0FancyMenu() + access.getWidthFancyMenu(), access.getY0FancyMenu());
+						RenderingUtils.enableScissor(access.getX0FancyMenu(), 0, access.getX0FancyMenu() + access.getWidthFancyMenu(), access.getY0FancyMenu());
 						blit(e.getPoseStack(), headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
-						disableScissor();
+						RenderingUtils.disableScissor();
 					} else {
 						blit(e.getPoseStack(), access.getX0FancyMenu(), 0, 0.0F, 0.0F, access.getWidthFancyMenu(), access.getY0FancyMenu(), access.getWidthFancyMenu(), access.getY0FancyMenu());
 					}
@@ -495,9 +496,9 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 						int footerHeight = footerSize[1];
 						int footerX = access.getX0FancyMenu() + (access.getWidthFancyMenu() / 2) - (footerWidth / 2);
 						int footerY = access.getY1FancyMenu() + (footerOriginalHeight / 2) - (footerHeight / 2);
-						enableScissor(access.getX0FancyMenu(), access.getY1FancyMenu(), access.getX0FancyMenu() + access.getWidthFancyMenu(), access.getY1FancyMenu() + footerOriginalHeight);
+						RenderingUtils.enableScissor(access.getX0FancyMenu(), access.getY1FancyMenu(), access.getX0FancyMenu() + access.getWidthFancyMenu(), access.getY1FancyMenu() + footerOriginalHeight);
 						blit(e.getPoseStack(), footerX, footerY, 0.0F, 0.0F, footerWidth, footerHeight, footerWidth, footerHeight);
-						disableScissor();
+						RenderingUtils.disableScissor();
 					} else {
 						int footerHeight = access.getHeightFancyMenu() - access.getY1FancyMenu();
 						blit(e.getPoseStack(), access.getX0FancyMenu(), access.getY1FancyMenu(), 0.0F, 0.0F, access.getWidthFancyMenu(), footerHeight, access.getWidthFancyMenu(), footerHeight);

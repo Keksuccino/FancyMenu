@@ -65,9 +65,9 @@ public class TickerElement extends AbstractElement implements ExecutableElement 
             int h = this.getAbsoluteHeight();
             RenderSystem.enableBlend();
             fill(pose, x, y, x + w, y + h, BACKGROUND_COLOR.getColorInt());
-            enableScissor(x, y, x + w, y + h);
+            RenderingUtils.enableScissor(x, y, x + w, y + h);
             drawCenteredString(pose, Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
-            disableScissor();
+            RenderingUtils.disableScissor();
             RenderingUtils.resetShaderColor();
         } else if (!this.isAsync) {
             this.tickerElementTick();

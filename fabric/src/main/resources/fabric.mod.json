@@ -34,7 +34,7 @@
     "java": ">=17"
   },
   "breaks": {
-    "drippyloadingscreen": "<2.2.0"
+    "drippyloadingscreen": "<3.0.0"
   },
   "accessWidener": "fancymenu.accesswidener"
 }

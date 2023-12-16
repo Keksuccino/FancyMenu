@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.cycle.ValueCycle;
 import de.keksuccino.fancymenu.util.file.FileUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
@@ -41,7 +42,7 @@ public class ManageLayoutsScreen extends Screen {
 
     public ManageLayoutsScreen(@NotNull List<Layout> layouts, @Nullable Screen layoutTargetScreen, @NotNull Consumer<List<Layout>> callback) {
 
-        super(Component.translatable("fancymenu.layout.manage"));
+        super(Components.translatable("fancymenu.layout.manage"));
 
         this.layouts = layouts;
         this.layoutTargetScreen = layoutTargetScreen;
@@ -55,20 +56,20 @@ public class ManageLayoutsScreen extends Screen {
 
         super.init();
 
-        this.sortingButton = new ExtendedButton(0, 0, 150, this.font.lineHeight + 4, Component.literal(""), (button) -> {
+        this.sortingButton = new ExtendedButton(0, 0, 150, this.font.lineHeight + 4, Components.literal(""), (button) -> {
             this.sortBy.next();
             this.updateLayoutScrollArea();
         }).setLabelSupplier(consumes -> this.sortBy.current().getCycleComponent());
         this.addWidget(this.sortingButton);
         UIBase.applyDefaultWidgetSkinTo(this.sortingButton);
 
-        this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
+        this.doneButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.guicomponents.done"), (button) -> {
             this.callback.accept(this.layouts);
         });
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
-        this.editButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.layout.manage.edit"), (button) -> {
+        this.editButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.layout.manage.edit"), (button) -> {
             LayoutScrollEntry e = this.getSelectedEntry();
             if (e != null) {
                 LayoutHandler.openLayoutEditor(e.layout, e.layout.isUniversalLayout() ? null : this.layoutTargetScreen);
@@ -77,7 +78,7 @@ public class ManageLayoutsScreen extends Screen {
         this.addWidget(this.editButton);
         UIBase.applyDefaultWidgetSkinTo(this.editButton);
 
-        this.deleteButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.layout.manage.delete"), (button) -> {
+        this.deleteButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.layout.manage.delete"), (button) -> {
             LayoutScrollEntry e = this.getSelectedEntry();
             if (e != null) {
                 Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings(call -> {
@@ -93,7 +94,7 @@ public class ManageLayoutsScreen extends Screen {
         this.addWidget(this.deleteButton);
         UIBase.applyDefaultWidgetSkinTo(this.deleteButton);
 
-        this.openInTextEditorButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.layout.manage.open_in_text_editor"), (button) -> {
+        this.openInTextEditorButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.layout.manage.open_in_text_editor"), (button) -> {
             LayoutScrollEntry e = this.getSelectedEntry();
             if ((e != null) && (e.layout.layoutFile != null)) {
                 FileUtils.openFile(e.layout.layoutFile);
@@ -102,7 +103,7 @@ public class ManageLayoutsScreen extends Screen {
         this.addWidget(this.openInTextEditorButton);
         UIBase.applyDefaultWidgetSkinTo(this.openInTextEditorButton);
 
-        this.toggleStatusButton = new ExtendedButton(0, 0, 150, 20, Component.literal(""), (button) -> {
+        this.toggleStatusButton = new ExtendedButton(0, 0, 150, 20, Components.literal(""), (button) -> {
             LayoutScrollEntry e = this.getSelectedEntry();
             if (e != null) {
                 e.layout.setEnabled(!e.layout.isEnabled(), false);
@@ -134,7 +135,7 @@ public class ManageLayoutsScreen extends Screen {
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         this.font.draw(pose, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
 
-        this.font.draw(pose, Component.translatable("fancymenu.layout.manage.layouts"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        this.font.draw(pose, Components.translatable("fancymenu.layout.manage.layouts"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
 
         this.layoutListScrollArea.setWidth((this.width / 2) - 40, true);
         this.layoutListScrollArea.setHeight(this.height - 85, true);
@@ -143,28 +144,28 @@ public class ManageLayoutsScreen extends Screen {
         this.layoutListScrollArea.render(pose, mouseX, mouseY, partial);
 
         this.sortingButton.setWidth(this.font.width(this.sortingButton.getMessage()) + 10);
-        this.sortingButton.setX(this.layoutListScrollArea.getXWithBorder() + this.layoutListScrollArea.getWidthWithBorder() - this.sortingButton.getWidth());
-        this.sortingButton.setY(this.layoutListScrollArea.getYWithBorder() - 5 - this.sortingButton.getHeight());
+        this.sortingButton.x = (this.layoutListScrollArea.getXWithBorder() + this.layoutListScrollArea.getWidthWithBorder() - this.sortingButton.getWidth());
+        this.sortingButton.y = (this.layoutListScrollArea.getYWithBorder() - 5 - this.sortingButton.getHeight());
         this.sortingButton.render(pose, mouseX, mouseY, partial);
 
-        this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
-        this.doneButton.setY(this.height - 20 - 20);
+        this.doneButton.x = (this.width - 20 - this.doneButton.getWidth());
+        this.doneButton.y = (this.height - 20 - 20);
         this.doneButton.render(pose, mouseX, mouseY, partial);
 
-        this.openInTextEditorButton.setX(this.width - 20 - this.openInTextEditorButton.getWidth());
-        this.openInTextEditorButton.setY(this.doneButton.getY() - 15 - 20);
+        this.openInTextEditorButton.x = (this.width - 20 - this.openInTextEditorButton.getWidth());
+        this.openInTextEditorButton.y = (this.doneButton.y - 15 - 20);
         this.openInTextEditorButton.render(pose, mouseX, mouseY, partial);
 
-        this.deleteButton.setX(this.width - 20 - this.deleteButton.getWidth());
-        this.deleteButton.setY(this.openInTextEditorButton.getY() - 5 - 20);
+        this.deleteButton.x = (this.width - 20 - this.deleteButton.getWidth());
+        this.deleteButton.y = (this.openInTextEditorButton.y - 5 - 20);
         this.deleteButton.render(pose, mouseX, mouseY, partial);
 
-        this.editButton.setX(this.width - 20 - this.editButton.getWidth());
-        this.editButton.setY(this.deleteButton.getY() - 5 - 20);
+        this.editButton.x = (this.width - 20 - this.editButton.getWidth());
+        this.editButton.y = (this.deleteButton.y - 5 - 20);
         this.editButton.render(pose, mouseX, mouseY, partial);
 
-        this.toggleStatusButton.setX(this.width - 20 - this.toggleStatusButton.getWidth());
-        this.toggleStatusButton.setY(this.editButton.getY() - 5 - 20);
+        this.toggleStatusButton.x = (this.width - 20 - this.toggleStatusButton.getWidth());
+        this.toggleStatusButton.y = (this.editButton.y - 5 - 20);
         this.toggleStatusButton.render(pose, mouseX, mouseY, partial);
 
         super.render(pose, mouseX, mouseY, partial);
@@ -196,7 +197,7 @@ public class ManageLayoutsScreen extends Screen {
             this.layoutListScrollArea.addEntry(e);
         }
         if (this.layoutListScrollArea.getEntries().isEmpty()) {
-            this.layoutListScrollArea.addEntry(new TextScrollAreaEntry(this.layoutListScrollArea, Component.translatable("fancymenu.layout.manage.no_layouts_found").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())), (entry) -> {}));
+            this.layoutListScrollArea.addEntry(new TextScrollAreaEntry(this.layoutListScrollArea, Components.translatable("fancymenu.layout.manage.no_layouts_found").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())), (entry) -> {}));
         }
     }
 
@@ -205,17 +206,17 @@ public class ManageLayoutsScreen extends Screen {
         public Layout layout;
 
         public LayoutScrollEntry(ScrollArea parent, @NotNull Layout layout, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(""), UIBase.getUIColorTheme().listing_dot_color_1.getColor(), onClick);
+            super(parent, Components.literal(""), UIBase.getUIColorTheme().listing_dot_color_1.getColor(), onClick);
             this.layout = layout;
             this.updateName();
         }
 
         protected void updateName() {
             Style style = this.layout.getStatus().getValueComponentStyle();
-            MutableComponent c = Component.literal(layout.getLayoutName()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
-            c.append(Component.literal(" (").setStyle(style));
+            MutableComponent c = Components.literal(layout.getLayoutName()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
+            c.append(Components.literal(" (").setStyle(style));
             c.append(this.layout.getStatus().getValueComponent());
-            c.append(Component.literal(")").setStyle(style));
+            c.append(Components.literal(")").setStyle(style));
             this.setText(c);
         }
 

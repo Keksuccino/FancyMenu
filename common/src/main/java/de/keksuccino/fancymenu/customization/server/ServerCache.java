@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.server;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ServerData;
@@ -13,7 +14,7 @@ import java.util.Map;
 
 public class ServerCache {
 
-    protected static final Component CANT_CONNECT_TEXT = (Component.translatable("multiplayer.status.cannot_connect")).withStyle(ChatFormatting.DARK_RED);
+    protected static final Component CANT_CONNECT_TEXT = (Components.translatable("multiplayer.status.cannot_connect")).withStyle(ChatFormatting.DARK_RED);
 
     protected static ServerStatusPinger pinger = new ServerStatusPinger();
     protected static Map<String, ServerData> servers = new HashMap<>();
@@ -59,7 +60,7 @@ public class ServerCache {
 
         //Copy server data from old to new array only when server is done pinging
         if (servers.get(ip).motd != null) {
-            if (!servers.get(ip).motd.equals(Component.translatable("multiplayer.status.pinging"))) {
+            if (!servers.get(ip).motd.equals(Components.translatable("multiplayer.status.pinging"))) {
                 serversUpdated.get(ip).ping = servers.get(ip).ping;
                 serversUpdated.get(ip).protocol = servers.get(ip).protocol;
                 serversUpdated.get(ip).motd = servers.get(ip).motd;

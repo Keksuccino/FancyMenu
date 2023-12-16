@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
@@ -33,12 +34,12 @@ public class SplashTextEditorElement extends AbstractEditorElement {
                 },
                 (menu, entry, switcherValue) -> {
                     if (switcherValue == SplashTextElement.SourceMode.VANILLA) {
-                        return Component.translatable("fancymenu.elements.splash.source_mode.vanilla");
+                        return Components.translatable("fancymenu.elements.splash.source_mode.vanilla");
                     }
                     if (switcherValue == SplashTextElement.SourceMode.DIRECT_TEXT) {
-                        return Component.translatable("fancymenu.elements.splash.source_mode.direct");
+                        return Components.translatable("fancymenu.elements.splash.source_mode.direct");
                     }
-                    return Component.translatable("fancymenu.elements.splash.source_mode.text_file");
+                    return Components.translatable("fancymenu.elements.splash.source_mode.text_file");
                 });
 
         this.addTextResourceChooserContextMenuEntryTo(this.rightClickMenu, "set_source_file",
@@ -51,7 +52,7 @@ public class SplashTextEditorElement extends AbstractEditorElement {
                             splashTextEditorElement.getElement().refresh();
                             splashTextEditorElement.getElement().updateSplash();
                         },
-                        Component.translatable("fancymenu.elements.splash.source_mode.text_file.set_source"),
+                        Components.translatable("fancymenu.elements.splash.source_mode.text_file.set_source"),
                         false, null, true, true, true)
                 .setIsVisibleSupplier((menu, entry) -> ((SplashTextElement)this.element).sourceMode == SplashTextElement.SourceMode.TEXT_FILE)
                 .setIcon(ContextMenu.IconFactory.getIcon("text"));
@@ -63,7 +64,7 @@ public class SplashTextEditorElement extends AbstractEditorElement {
                             ((SplashTextElement)element1.element).source = s;
                             ((SplashTextElement)element1.element).updateSplash();
                         },
-                        null, false, true, Component.translatable("fancymenu.elements.splash.source_mode.direct.set_source"),
+                        null, false, true, Components.translatable("fancymenu.elements.splash.source_mode.direct.set_source"),
                         false, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
                 .setIsVisibleSupplier((menu, entry) -> ((SplashTextElement)this.element).sourceMode == SplashTextElement.SourceMode.DIRECT_TEXT)
                 .setIcon(ContextMenu.IconFactory.getIcon("text"));
@@ -77,7 +78,7 @@ public class SplashTextEditorElement extends AbstractEditorElement {
                             ((SplashTextElement)element.element).scale = Math.max(0.2F, scale);
                             ((SplashTextElement)element.element).updateSplash();
                         },
-                        Component.translatable("fancymenu.elements.splash.set_scale"),
+                        Components.translatable("fancymenu.elements.splash.set_scale"),
                         true, 1.0F, null, null)
                 .setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("measure"));
@@ -89,7 +90,7 @@ public class SplashTextEditorElement extends AbstractEditorElement {
                             ((SplashTextElement)element.element).rotation = rot;
                             ((SplashTextElement)element.element).updateSplash();
                         },
-                        Component.translatable("fancymenu.editor.items.splash.rotation"),
+                        Components.translatable("fancymenu.editor.items.splash.rotation"),
                         true, 20.0F, null, null)
                 .setStackable(true);
 
@@ -100,7 +101,7 @@ public class SplashTextEditorElement extends AbstractEditorElement {
                             ((SplashTextElement)element1.element).baseColor = DrawableColor.of(s);
                             ((SplashTextElement)element1.element).updateSplash();
                         },
-                        null, false, true, Component.translatable("fancymenu.editor.items.splash.basecolor"),
+                        null, false, true, Components.translatable("fancymenu.editor.items.splash.basecolor"),
                         true, DrawableColor.of(255, 255, 0).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .setStackable(true);
 

@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.M
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementGroup;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
@@ -64,7 +65,7 @@ public class ManageActionsScreen extends Screen {
 
     public ManageActionsScreen(@NotNull GenericExecutableBlock executableBlock, @NotNull Consumer<GenericExecutableBlock> callback) {
 
-        super(Component.translatable("fancymenu.editor.action.screens.manage_screen.manage"));
+        super(Components.translatable("fancymenu.editor.action.screens.manage_screen.manage"));
 
         this.executableBlock = executableBlock.copy(false);
         this.callback = callback;
@@ -75,7 +76,7 @@ public class ManageActionsScreen extends Screen {
     @Override
     protected void init() {
 
-        this.addIfButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.editor.actions.blocks.add.if"), button -> {
+        this.addIfButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.editor.actions.blocks.add.if"), button -> {
             ManageRequirementsScreen s = new ManageRequirementsScreen(new LoadingRequirementContainer(), container -> {
                 if (container != null) {
                     this.executableBlock.addExecutable(new IfExecutableBlock(container));
@@ -89,7 +90,7 @@ public class ManageActionsScreen extends Screen {
         this.addWidget(this.addIfButton);
         UIBase.applyDefaultWidgetSkinTo(this.addIfButton);
 
-        this.appendElseIfButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.editor.actions.blocks.add.else_if"), button -> {
+        this.appendElseIfButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.editor.actions.blocks.add.else_if"), button -> {
             ExecutableEntry selected = this.getSelectedEntry();
             if ((selected != null) && ((selected.executable instanceof IfExecutableBlock) || (selected.executable instanceof ElseIfExecutableBlock))) {
                 ManageRequirementsScreen s = new ManageRequirementsScreen(new LoadingRequirementContainer(), container -> {
@@ -111,7 +112,7 @@ public class ManageActionsScreen extends Screen {
         this.addWidget(this.appendElseIfButton);
         UIBase.applyDefaultWidgetSkinTo(this.appendElseIfButton);
 
-        this.appendElseButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.editor.actions.blocks.add.else"), button -> {
+        this.appendElseButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.editor.actions.blocks.add.else"), button -> {
             ExecutableEntry selected = this.getSelectedEntry();
             if ((selected != null) && ((selected.executable instanceof IfExecutableBlock) || (selected.executable instanceof ElseIfExecutableBlock))) {
                 ElseExecutableBlock b = new ElseExecutableBlock();
@@ -264,7 +265,7 @@ public class ManageActionsScreen extends Screen {
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
-        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
+        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.guicomponents.cancel"), (button) -> {
             this.callback.accept(null);
         });
         this.addWidget(this.cancelButton);
@@ -322,44 +323,44 @@ public class ManageActionsScreen extends Screen {
             fill(pose, this.actionsScrollArea.getInnerX(), dY + dH - 1, this.actionsScrollArea.getInnerX() + this.actionsScrollArea.getInnerWidth(), dY + dH, UIBase.getUIColorTheme().description_area_text_color.getColorInt());
         }
 
-        this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
-        this.doneButton.setY(this.height - 20 - 20);
+        this.doneButton.x = (this.width - 20 - this.doneButton.getWidth());
+        this.doneButton.y = (this.height - 20 - 20);
         this.doneButton.render(pose, mouseX, mouseY, partial);
 
-        this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
-        this.cancelButton.setY(this.doneButton.getY() - 5 - 20);
+        this.cancelButton.x = (this.width - 20 - this.cancelButton.getWidth());
+        this.cancelButton.y = (this.doneButton.y - 5 - 20);
         this.cancelButton.render(pose, mouseX, mouseY, partial);
 
-        this.removeButton.setX(this.width - 20 - this.removeButton.getWidth());
-        this.removeButton.setY(this.cancelButton.getY() - 15 - 20);
+        this.removeButton.x = (this.width - 20 - this.removeButton.getWidth());
+        this.removeButton.y = (this.cancelButton.y - 15 - 20);
         this.removeButton.render(pose, mouseX, mouseY, partial);
 
-        this.editButton.setX(this.width - 20 - this.editButton.getWidth());
-        this.editButton.setY(this.removeButton.getY() - 5 - 20);
+        this.editButton.x = (this.width - 20 - this.editButton.getWidth());
+        this.editButton.y = (this.removeButton.y - 5 - 20);
         this.editButton.render(pose, mouseX, mouseY, partial);
 
-        this.moveDownButton.setX(this.width - 20 - this.moveDownButton.getWidth());
-        this.moveDownButton.setY(this.editButton.getY() - 5 - 20);
+        this.moveDownButton.x = (this.width - 20 - this.moveDownButton.getWidth());
+        this.moveDownButton.y = (this.editButton.y - 5 - 20);
         this.moveDownButton.render(pose, mouseX, mouseY, partial);
 
-        this.moveUpButton.setX(this.width - 20 - this.moveUpButton.getWidth());
-        this.moveUpButton.setY(this.moveDownButton.getY() - 5 - 20);
+        this.moveUpButton.x = (this.width - 20 - this.moveUpButton.getWidth());
+        this.moveUpButton.y = (this.moveDownButton.y - 5 - 20);
         this.moveUpButton.render(pose, mouseX, mouseY, partial);
 
-        this.appendElseButton.setX(this.width - 20 - this.appendElseButton.getWidth());
-        this.appendElseButton.setY(this.moveUpButton.getY() - 15 - 20);
+        this.appendElseButton.x = (this.width - 20 - this.appendElseButton.getWidth());
+        this.appendElseButton.y = (this.moveUpButton.y - 15 - 20);
         this.appendElseButton.render(pose, mouseX, mouseY, partial);
 
-        this.appendElseIfButton.setX(this.width - 20 - this.appendElseIfButton.getWidth());
-        this.appendElseIfButton.setY(this.appendElseButton.getY() - 5 - 20);
+        this.appendElseIfButton.x = (this.width - 20 - this.appendElseIfButton.getWidth());
+        this.appendElseIfButton.y = (this.appendElseButton.y - 5 - 20);
         this.appendElseIfButton.render(pose, mouseX, mouseY, partial);
 
-        this.addIfButton.setX(this.width - 20 - this.addIfButton.getWidth());
-        this.addIfButton.setY(this.appendElseIfButton.getY() - 5 - 20);
+        this.addIfButton.x = (this.width - 20 - this.addIfButton.getWidth());
+        this.addIfButton.y = (this.appendElseIfButton.y - 5 - 20);
         this.addIfButton.render(pose, mouseX, mouseY, partial);
 
-        this.addActionButton.setX(this.width - 20 - this.addActionButton.getWidth());
-        this.addActionButton.setY(this.addIfButton.getY() - 5 - 20);
+        this.addActionButton.x = (this.width - 20 - this.addActionButton.getWidth());
+        this.addActionButton.y = (this.addIfButton.y - 5 - 20);
         this.addActionButton.render(pose, mouseX, mouseY, partial);
 
         super.render(pose, mouseX, mouseY, partial);
@@ -804,7 +805,7 @@ public class ManageActionsScreen extends Screen {
                 this.displayNameComponent = i.action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
                 String cachedValue = i.value;
                 String valueString = ((cachedValue != null) && i.action.hasValue()) ? cachedValue : I18n.get("fancymenu.editor.action.screens.manage_screen.info.value.none");
-                this.valueComponent = Component.literal(I18n.get("fancymenu.editor.action.screens.manage_screen.info.value") + " ").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())).append(Component.literal(valueString).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt())));
+                this.valueComponent = Components.literal(I18n.get("fancymenu.editor.action.screens.manage_screen.info.value") + " ").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())).append(Components.literal(valueString).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt())));
             } else if (this.executable instanceof IfExecutableBlock b) {
                 String requirements = "";
                 for (LoadingRequirementGroup g : b.condition.getGroups()) {
@@ -815,8 +816,8 @@ public class ManageActionsScreen extends Screen {
                     if (!requirements.isEmpty()) requirements += ", ";
                     requirements += i.requirement.getDisplayName();
                 }
-                this.displayNameComponent = Component.translatable("fancymenu.editor.actions.blocks.if", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
-                this.valueComponent = Component.empty();
+                this.displayNameComponent = Components.translatable("fancymenu.editor.actions.blocks.if", Components.literal(requirements)).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
+                this.valueComponent = Components.empty();
             } else if (this.executable instanceof ElseIfExecutableBlock b) {
                 String requirements = "";
                 for (LoadingRequirementGroup g : b.condition.getGroups()) {
@@ -827,14 +828,14 @@ public class ManageActionsScreen extends Screen {
                     if (!requirements.isEmpty()) requirements += ", ";
                     requirements += i.requirement.getDisplayName();
                 }
-                this.displayNameComponent = Component.translatable("fancymenu.editor.actions.blocks.else_if", Component.literal(requirements)).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
-                this.valueComponent = Component.empty();
+                this.displayNameComponent = Components.translatable("fancymenu.editor.actions.blocks.else_if", Components.literal(requirements)).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
+                this.valueComponent = Components.empty();
             } else if (this.executable instanceof ElseExecutableBlock b) {
-                this.displayNameComponent = Component.translatable("fancymenu.editor.actions.blocks.else").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
-                this.valueComponent = Component.empty();
+                this.displayNameComponent = Components.translatable("fancymenu.editor.actions.blocks.else").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
+                this.valueComponent = Components.empty();
             } else {
-                this.displayNameComponent = Component.literal("[UNKNOWN EXECUTABLE]").withStyle(ChatFormatting.RED);
-                this.valueComponent = Component.empty();
+                this.displayNameComponent = Components.literal("[UNKNOWN EXECUTABLE]").withStyle(ChatFormatting.RED);
+                this.valueComponent = Components.empty();
             }
 
             this.setWidth(this.calculateWidth());

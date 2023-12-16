@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -215,7 +216,7 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Component.translatable("fancymenu.helper.editor.items.playerentity");
+        return Components.translatable("fancymenu.helper.editor.items.playerentity");
     }
 
     @Override

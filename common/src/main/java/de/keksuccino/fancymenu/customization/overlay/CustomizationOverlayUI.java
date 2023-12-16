@@ -25,6 +25,7 @@ import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroups;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.NonStackableOverlayUI;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
@@ -111,7 +112,7 @@ public class CustomizationOverlayUI {
 
         // CUSTOMIZATION
         ContextMenu customizationMenu = new ContextMenu();
-        menuBar.addContextMenuEntry("screen", Component.translatable("fancymenu.overlay.menu_bar.customization"), customizationMenu);
+        menuBar.addContextMenuEntry("screen", Components.translatable("fancymenu.overlay.menu_bar.customization"), customizationMenu);
 
         customizationMenu.addValueCycleEntry("toggle_current_customization", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.current_customization", ScreenCustomization.isCustomizationEnabledForScreen(screen))
                 .addCycleListener(cycle -> {
@@ -128,7 +129,7 @@ public class CustomizationOverlayUI {
                 })
                 .setIcon(ContextMenu.IconFactory.getIcon("edit"));
 
-        customizationMenu.addClickableEntry("copy_current_screen_identifier", Component.translatable("fancymenu.overlay.menu_bar.customization.copy_current_screen_identifier"), (menu, entry) -> {
+        customizationMenu.addClickableEntry("copy_current_screen_identifier", Components.translatable("fancymenu.overlay.menu_bar.customization.copy_current_screen_identifier"), (menu, entry) -> {
             if (identifier != null) {
                 Minecraft.getInstance().keyboardHandler.setClipboard(identifier);
                 menu.closeMenu();
@@ -136,7 +137,7 @@ public class CustomizationOverlayUI {
         }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.copy_current_screen_identifier.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("copy"));
 
-        customizationMenu.addClickableEntry("force_close_current_screen", Component.translatable("fancymenu.overlay.menu_bar.customization.close_current_screen"), (menu, entry) -> {
+        customizationMenu.addClickableEntry("force_close_current_screen", Components.translatable("fancymenu.overlay.menu_bar.customization.close_current_screen"), (menu, entry) -> {
             menu.closeMenu();
             Minecraft.getInstance().setScreen(null);
         }).setIcon(ContextMenu.IconFactory.getIcon("exit"));
@@ -144,14 +145,14 @@ public class CustomizationOverlayUI {
         customizationMenu.addSeparatorEntry("separator_after_override_current");
 
         ContextMenu layoutMenu = new ContextMenu();
-        customizationMenu.addSubMenuEntry("layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout"), layoutMenu)
+        customizationMenu.addSubMenuEntry("layouts", Components.translatable("fancymenu.overlay.menu_bar.customization.layout"), layoutMenu)
                 .setIcon(ContextMenu.IconFactory.getIcon("layout"));
 
         ContextMenu layoutNewMenu = new ContextMenu();
-        layoutMenu.addSubMenuEntry("new_layout", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.new"), layoutNewMenu)
+        layoutMenu.addSubMenuEntry("new_layout", Components.translatable("fancymenu.overlay.menu_bar.customization.layout.new"), layoutNewMenu)
                 .setIcon(ContextMenu.IconFactory.getIcon("add"));
 
-        layoutNewMenu.addClickableEntry("new_layout_for_current", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.new.current"), (menu, entry) -> {
+        layoutNewMenu.addClickableEntry("new_layout_for_current", Components.translatable("fancymenu.overlay.menu_bar.customization.layout.new.current"), (menu, entry) -> {
                     if (screen != null) {
                         LayoutHandler.openLayoutEditor(new Layout(screen), screen);
                     }
@@ -163,16 +164,16 @@ public class CustomizationOverlayUI {
                     return null;
                 });
 
-        layoutNewMenu.addClickableEntry("new_universal_layout", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.new.universal"), (menu, entry) -> {
+        layoutNewMenu.addClickableEntry("new_universal_layout", Components.translatable("fancymenu.overlay.menu_bar.customization.layout.new.universal"), (menu, entry) -> {
             LayoutHandler.openLayoutEditor(new Layout(), null);
         });
 
         ContextMenu layoutManageMenu = new ContextMenu();
-        layoutMenu.addSubMenuEntry("manage_layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage"), layoutManageMenu)
+        layoutMenu.addSubMenuEntry("manage_layouts", Components.translatable("fancymenu.overlay.menu_bar.customization.layout.manage"), layoutManageMenu)
                 .setIcon(ContextMenu.IconFactory.getIcon("edit"));
 
         ContextMenu layoutManageCurrentMenu = new ContextMenu();
-        layoutManageMenu.addSubMenuEntry("manage_layouts_for_current", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.current"), layoutManageCurrentMenu)
+        layoutManageMenu.addSubMenuEntry("manage_layouts_for_current", Components.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.current"), layoutManageCurrentMenu)
                 .setIsActiveSupplier((menu, entry) -> ScreenCustomization.isCustomizationEnabledForScreen(screen))
                 .setTooltipSupplier((menu, entry) -> {
                     if (!ScreenCustomization.isCustomizationEnabledForScreen(screen)) {
@@ -186,20 +187,20 @@ public class CustomizationOverlayUI {
             List<Layout> allLayouts = LayoutHandler.getAllLayoutsForScreenIdentifier(identifier, false);
             int allLayoutsCount = allLayouts.size();
             for (Layout l : LayoutHandler.sortLayoutListByLastEdited(allLayouts, true, 8)) {
-                layoutManageCurrentMenu.addSubMenuEntry("layout_" + i, Component.empty(), buildManageLayoutSubMenu(l, List.of("layouts", "manage_layouts", "manage_layouts_for_current")))
+                layoutManageCurrentMenu.addSubMenuEntry("layout_" + i, Components.empty(), buildManageLayoutSubMenu(l, List.of("layouts", "manage_layouts", "manage_layouts_for_current")))
                         .setLabelSupplier((menu, entry) -> {
                             Style style = l.getStatus().getValueComponentStyle();
-                            MutableComponent c = Component.literal(l.getLayoutName());
-                            c.append(Component.literal(" (").setStyle(style));
+                            MutableComponent c = Components.literal(l.getLayoutName());
+                            c.append(Components.literal(" (").setStyle(style));
                             c.append(l.getStatus().getValueComponent());
-                            c.append(Component.literal(")").setStyle(style));
+                            c.append(Components.literal(")").setStyle(style));
                             return c;
                         });
                 i++;
             }
             if (allLayoutsCount > 8) {
                 String moreLayoutCount = "" + (allLayoutsCount-8);
-                layoutManageCurrentMenu.addClickableEntry("x_more_layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.more_layouts", moreLayoutCount), (menu, entry) -> {
+                layoutManageCurrentMenu.addClickableEntry("x_more_layouts", Components.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.more_layouts", moreLayoutCount), (menu, entry) -> {
                     Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(identifier, false), screen, layouts -> {
                         Minecraft.getInstance().setScreen(screen);
                     }));
@@ -209,7 +210,7 @@ public class CustomizationOverlayUI {
 
         layoutManageCurrentMenu.addSeparatorEntry("layout.manage.current.separator_1");
 
-        layoutManageCurrentMenu.addClickableEntry("layout_manage_current_all", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.all"), (menu, entry) -> {
+        layoutManageCurrentMenu.addClickableEntry("layout_manage_current_all", Components.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.all"), (menu, entry) -> {
             if (identifier != null) {
                 Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(identifier, false), screen, layouts -> {
                     Minecraft.getInstance().setScreen(screen);
@@ -218,26 +219,26 @@ public class CustomizationOverlayUI {
         });
 
         ContextMenu layoutManageUniversalMenu = new ContextMenu();
-        layoutManageMenu.addSubMenuEntry("layout_manage_universal", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.universal"), layoutManageUniversalMenu);
+        layoutManageMenu.addSubMenuEntry("layout_manage_universal", Components.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.universal"), layoutManageUniversalMenu);
 
         int i = 0;
         List<Layout> allLayouts = LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true);
         int allLayoutsCount = allLayouts.size();
         for (Layout l : LayoutHandler.sortLayoutListByLastEdited(allLayouts, true, 8)) {
-            layoutManageUniversalMenu.addSubMenuEntry("layout.manage.universal.recent_" + i, Component.empty(), buildManageLayoutSubMenu(l, List.of("layouts", "manage_layouts", "layout_manage_universal")))
+            layoutManageUniversalMenu.addSubMenuEntry("layout.manage.universal.recent_" + i, Components.empty(), buildManageLayoutSubMenu(l, List.of("layouts", "manage_layouts", "layout_manage_universal")))
                     .setLabelSupplier((menu, entry) -> {
                         Style style = l.getStatus().getValueComponentStyle();
-                        MutableComponent c = Component.literal(l.getLayoutName());
-                        c.append(Component.literal(" (").setStyle(style));
+                        MutableComponent c = Components.literal(l.getLayoutName());
+                        c.append(Components.literal(" (").setStyle(style));
                         c.append(l.getStatus().getValueComponent());
-                        c.append(Component.literal(")").setStyle(style));
+                        c.append(Components.literal(")").setStyle(style));
                         return c;
                     });
             i++;
         }
         if (allLayoutsCount > 8) {
             String moreLayoutCount = "" + (allLayoutsCount-8);
-            layoutManageUniversalMenu.addClickableEntry("x_more_layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.more_layouts", moreLayoutCount), (menu, entry) -> {
+            layoutManageUniversalMenu.addClickableEntry("x_more_layouts", Components.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.more_layouts", moreLayoutCount), (menu, entry) -> {
                 Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), null, (layouts -> {
                     Minecraft.getInstance().setScreen(screen);
                 })));
@@ -246,7 +247,7 @@ public class CustomizationOverlayUI {
 
         layoutManageUniversalMenu.addSeparatorEntry("layout.manage.universal.separator_1");
 
-        layoutManageUniversalMenu.addClickableEntry("layout.manage.universal.all", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.all"), (menu, entry) -> {
+        layoutManageUniversalMenu.addClickableEntry("layout.manage.universal.all", Components.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.all"), (menu, entry) -> {
             Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), null, (layouts -> {
                 Minecraft.getInstance().setScreen(screen);
             })));
@@ -261,28 +262,28 @@ public class CustomizationOverlayUI {
 //            allLayouts2.removeIf(layout -> !layout.isEnabled());
             int allLayoutsCount2 = allLayouts2.size();
             for (Layout layout : LayoutHandler.sortLayoutListByLastEdited(allLayouts2, true, 8)) {
-                layoutMenu.addSubMenuEntry("layout_" + layoutIndex, Component.empty(), buildManageLayoutSubMenu(layout, List.of("layouts")))
+                layoutMenu.addSubMenuEntry("layout_" + layoutIndex, Components.empty(), buildManageLayoutSubMenu(layout, List.of("layouts")))
                         .setLabelSupplier((menu, entry) -> {
                             Style style = layout.getStatus().getValueComponentStyle();
-                            MutableComponent c = Component.literal(layout.getLayoutName());
-                            c.append(Component.literal(" "));
+                            MutableComponent c = Components.literal(layout.getLayoutName());
+                            c.append(Components.literal(" "));
                             if (layout.isUniversalLayout()) {
-                                MutableComponent universalSuffix = Component.translatable("fancymenu.ui.customization_overlay.layouts.universal_suffix").setStyle(Style.EMPTY.withBold(true));
+                                MutableComponent universalSuffix = Components.translatable("fancymenu.ui.customization_overlay.layouts.universal_suffix").setStyle(Style.EMPTY.withBold(true));
                                 c.append(universalSuffix);
                             } else {
-                                MutableComponent normalSuffix = Component.translatable("fancymenu.ui.customization_overlay.layouts.normal_suffix").setStyle(Style.EMPTY.withBold(true));
+                                MutableComponent normalSuffix = Components.translatable("fancymenu.ui.customization_overlay.layouts.normal_suffix").setStyle(Style.EMPTY.withBold(true));
                                 c.append(normalSuffix);
                             }
-                            c.append(Component.literal(" (").setStyle(style));
+                            c.append(Components.literal(" (").setStyle(style));
                             c.append(layout.getStatus().getValueComponent());
-                            c.append(Component.literal(")").setStyle(style));
+                            c.append(Components.literal(")").setStyle(style));
                             return c;
                         });
                 layoutIndex++;
             }
             if (allLayoutsCount2 > 8) {
                 String moreLayoutCount = "" + (allLayoutsCount2-8);
-                layoutMenu.addClickableEntry("x_more_layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.more_layouts", moreLayoutCount), (menu, entry) -> {})
+                layoutMenu.addClickableEntry("x_more_layouts", Components.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.more_layouts", moreLayoutCount), (menu, entry) -> {})
                         .setClickSoundEnabled(false)
                         .setChangeBackgroundColorOnHover(false);
             }
@@ -291,7 +292,7 @@ public class CustomizationOverlayUI {
         customizationMenu.addSeparatorEntry("separator_after_layout_menu");
 
         ContextMenu customizationSettingsMenu = new ContextMenu();
-        customizationMenu.addSubMenuEntry("screen_settings", Component.translatable("fancymenu.overlay.menu_bar.customization.settings"), customizationSettingsMenu)
+        customizationMenu.addSubMenuEntry("screen_settings", Components.translatable("fancymenu.overlay.menu_bar.customization.settings"), customizationSettingsMenu)
                 .setIcon(ContextMenu.IconFactory.getIcon("settings"));
 
         customizationSettingsMenu.addValueCycleEntry("advanced_customization_mode", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.advanced_customization_mode", FancyMenu.getOptions().advancedCustomizationMode.getValue())
@@ -313,7 +314,7 @@ public class CustomizationOverlayUI {
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
         NonStackableOverlayUI.addIntegerInputContextMenuEntryTo(customizationSettingsMenu, "default_gui_scale",
-                        Component.translatable("fancymenu.overlay.menu_bar.customization.settings.set_default_gui_scale"),
+                        Components.translatable("fancymenu.overlay.menu_bar.customization.settings.set_default_gui_scale"),
                         () -> FancyMenu.getOptions().defaultGuiScale.getValue(),
                         integer -> FancyMenu.getOptions().defaultGuiScale.setValue(integer),
                         true, FancyMenu.getOptions().defaultGuiScale.getDefaultValue(), null, null, (screen1, s) -> {
@@ -329,7 +330,7 @@ public class CustomizationOverlayUI {
                 })).setIcon(ContextMenu.IconFactory.getIcon("fullscreen"));
 
         ContextMenu screenSettingsGameIntroMenu = new ContextMenu();
-        customizationSettingsMenu.addSubMenuEntry("game_intro", Component.translatable("fancymenu.overlay.menu_bar.customization.settings.game_intro"), screenSettingsGameIntroMenu)
+        customizationSettingsMenu.addSubMenuEntry("game_intro", Components.translatable("fancymenu.overlay.menu_bar.customization.settings.game_intro"), screenSettingsGameIntroMenu)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.game_intro.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("video"));
 
@@ -337,7 +338,7 @@ public class CustomizationOverlayUI {
         FileTypeGroup<ImageFileType> introFileTypeGroup = FileTypeGroup.of(FileTypes.APNG_IMAGE);
 
         NonStackableOverlayUI.addGenericResourceChooserContextMenuEntryTo(screenSettingsGameIntroMenu, "set_game_intro",
-                () -> new ResourceChooserScreen<>(Component.empty(), introFileTypeGroup, null, s -> {}),
+                () -> new ResourceChooserScreen<>(Components.empty(), introFileTypeGroup, null, s -> {}),
                 ResourceSupplier::image, emptyImageSupplier,
                 () -> {
                     if (GameIntroHandler.introIsAnimation()) return emptyImageSupplier;
@@ -348,7 +349,7 @@ public class CustomizationOverlayUI {
                     FancyMenu.getOptions().gameIntroAnimation.setValue(supplier.getSourceWithPrefix());
                     forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("screen_settings", "game_intro", "set_game_intro")));
                 },
-                Component.translatable("fancymenu.overlay.menu_bar.customization.settings.game_intro.set"), true, introFileTypeGroup, null, true, true, false);
+                Components.translatable("fancymenu.overlay.menu_bar.customization.settings.game_intro.set"), true, introFileTypeGroup, null, true, true, false);
 
         screenSettingsGameIntroMenu.addSeparatorEntry("separator_after_game_intro_set_animation");
 
@@ -363,7 +364,7 @@ public class CustomizationOverlayUI {
                 }));
 
         NonStackableOverlayUI.addInputContextMenuEntryTo(screenSettingsGameIntroMenu, "game_intro_set_custom_skip_text",
-                        Component.translatable("fancymenu.overlay.menu_bar.customization.settings.game_intro.set_custom_skip_text"),
+                        Components.translatable("fancymenu.overlay.menu_bar.customization.settings.game_intro.set_custom_skip_text"),
                         () -> {
                             String s = FancyMenu.getOptions().gameIntroCustomSkipText.getValue();
                             if (s.equals("")) return null;
@@ -396,7 +397,7 @@ public class CustomizationOverlayUI {
         customizationSettingsMenu.addSeparatorEntry("separator_after_mp_server_icons");
 
         ContextMenu windowIconMenu = new ContextMenu();
-        customizationSettingsMenu.addSubMenuEntry("window_icon", Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon"), windowIconMenu)
+        customizationSettingsMenu.addSubMenuEntry("window_icon", Components.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon"), windowIconMenu)
                 .setIcon(ContextMenu.IconFactory.getIcon("image"));
 
         LocalizedEnumValueCycle<CommonCycles.CycleEnabledDisabled> windowIconToggleCycle = CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.toggle", FancyMenu.getOptions().showCustomWindowIcon.getValue())
@@ -416,7 +417,7 @@ public class CustomizationOverlayUI {
         pngFileGroup.setDisplayName(FileTypeGroups.IMAGE_GROUP_COMPONENT);
 
         NonStackableOverlayUI.addFileChooserContextMenuEntryTo(windowIconMenu, "icon_16",
-                        Component.empty(),
+                        Components.empty(),
                         () -> FancyMenu.getOptions().customWindowIcon16.getValue(),
                         s -> {
                             FancyMenu.getOptions().customWindowIcon16.setValue(s);
@@ -449,13 +450,13 @@ public class CustomizationOverlayUI {
                             }
                         })
                 .setLabelSupplier((menu, entry) -> {
-                    MutableComponent notFound = Component.literal("✖").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
-                    MutableComponent found = Component.literal("✔").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
-                    return Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_16", (WindowHandler.getCustomWindowIcon16() != null) ? found : notFound);
+                    MutableComponent notFound = Components.literal("✖").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+                    MutableComponent found = Components.literal("✔").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+                    return Components.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_16", (WindowHandler.getCustomWindowIcon16() != null) ? found : notFound);
                 });
 
         NonStackableOverlayUI.addFileChooserContextMenuEntryTo(windowIconMenu, "icon_32",
-                        Component.empty(),
+                        Components.empty(),
                         () -> FancyMenu.getOptions().customWindowIcon32.getValue(),
                         s -> {
                             FancyMenu.getOptions().customWindowIcon32.setValue(s);
@@ -488,16 +489,16 @@ public class CustomizationOverlayUI {
                             }
                         })
                 .setLabelSupplier((menu, entry) -> {
-                    MutableComponent notFound = Component.literal("✖").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
-                    MutableComponent found = Component.literal("✔").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
-                    return Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_32", (WindowHandler.getCustomWindowIcon32() != null) ? found : notFound);
+                    MutableComponent notFound = Components.literal("✖").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+                    MutableComponent found = Components.literal("✔").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+                    return Components.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_32", (WindowHandler.getCustomWindowIcon32() != null) ? found : notFound);
                 });
 
         FileTypeGroup<?> macOsIconTypeGroup = FileTypeGroup.of(new ImageFileType(FileCodec.empty(ITexture.class), null, "icns"));
-        macOsIconTypeGroup.setDisplayName(Component.translatable("fancymenu.file_types.icns"));
+        macOsIconTypeGroup.setDisplayName(Components.translatable("fancymenu.file_types.icns"));
 
         NonStackableOverlayUI.addFileChooserContextMenuEntryTo(windowIconMenu, "icon_macos",
-                        Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_macos"),
+                        Components.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_macos"),
                         () -> FancyMenu.getOptions().customWindowIconMacOS.getValue(),
                         s -> {
                             FancyMenu.getOptions().customWindowIconMacOS.setValue(s);
@@ -510,18 +511,18 @@ public class CustomizationOverlayUI {
                             forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("screen_settings", "window_icon")));
                         })
                 .setLabelSupplier((menu, entry) -> {
-                    MutableComponent notFound = Component.literal("✖").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
-                    MutableComponent found = Component.literal("✔").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
-                    return Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_macos", (WindowHandler.getCustomWindowIconMacOS() != null) ? found : notFound);
+                    MutableComponent notFound = Components.literal("✖").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
+                    MutableComponent found = Components.literal("✔").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
+                    return Components.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_macos", (WindowHandler.getCustomWindowIconMacOS() != null) ? found : notFound);
                 });
 
         windowIconMenu.addSeparatorEntry("separator_after_macos_icon");
 
-        windowIconMenu.addClickableEntry("convert_png_to_macos_icon", Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.convert_to_macos_icon"), (menu, entry) -> {
+        windowIconMenu.addClickableEntry("convert_png_to_macos_icon", Components.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.convert_to_macos_icon"), (menu, entry) -> {
             WebUtils.openWebLink("https://miconv.com/convert-png-to-icns/");
         });
 
-        NonStackableOverlayUI.addInputContextMenuEntryTo(customizationSettingsMenu, "window_title", Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_title"),
+        NonStackableOverlayUI.addInputContextMenuEntryTo(customizationSettingsMenu, "window_title", Components.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_title"),
                         () -> FancyMenu.getOptions().customWindowTitle.getValue(),
                         s -> {
                             FancyMenu.getOptions().customWindowTitle.setValue(s);
@@ -536,23 +537,23 @@ public class CustomizationOverlayUI {
         customizationMenu.addSeparatorEntry("separator_after_settings");
 
         ContextMenu customGuiMenu = new ContextMenu();
-        customizationMenu.addSubMenuEntry("custom_guis", Component.translatable("fancymenu.overlay.menu_bar.customization.custom_guis"), customGuiMenu)
+        customizationMenu.addSubMenuEntry("custom_guis", Components.translatable("fancymenu.overlay.menu_bar.customization.custom_guis"), customGuiMenu)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.custom_guis.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("gui"));
 
-        customGuiMenu.addClickableEntry("manage_custom_guis", Component.translatable("fancymenu.overlay.menu_bar.customization.custom_guis.manage"), (menu, entry) -> {
+        customGuiMenu.addClickableEntry("manage_custom_guis", Components.translatable("fancymenu.overlay.menu_bar.customization.custom_guis.manage"), (menu, entry) -> {
             Screen s = Minecraft.getInstance().screen;
             Minecraft.getInstance().setScreen(new ManageCustomGuisScreen(() -> Minecraft.getInstance().setScreen(s)));
         });
 
         customGuiMenu.addSeparatorEntry("separator_after_manage_custom_guis");
 
-        customGuiMenu.addClickableEntry("override_current", Component.translatable("fancymenu.overlay.menu_bar.customization.custom_guis.override_current"), (menu, entry) -> {
+        customGuiMenu.addClickableEntry("override_current", Components.translatable("fancymenu.overlay.menu_bar.customization.custom_guis.override_current"), (menu, entry) -> {
                     Screen current = Minecraft.getInstance().screen;
                     if (!(current instanceof CustomGuiBaseScreen)) {
                         Minecraft.getInstance().setScreen(ConfirmationScreen.warning(override -> {
                             if (override) {
-                                Minecraft.getInstance().setScreen(new StringListChooserScreen(Component.translatable("fancymenu.custom_guis.override.choose_custom"), CustomGuiHandler.getGuiIdentifiers(), s -> {
+                                Minecraft.getInstance().setScreen(new StringListChooserScreen(Components.translatable("fancymenu.custom_guis.override.choose_custom"), CustomGuiHandler.getGuiIdentifiers(), s -> {
                                     CustomGuiBaseScreen customInstance = null;
                                     if (s != null) {
                                         CustomGuiHandler.overrideScreenWithCustomGui(current.getClass().getName(), s);
@@ -577,24 +578,24 @@ public class CustomizationOverlayUI {
                     return null;
                 });
 
-        customGuiMenu.addClickableEntry("manage_overridden_screens", Component.translatable("fancymenu.custom_guis.manage_overridden"), (menu, entry) -> {
+        customGuiMenu.addClickableEntry("manage_overridden_screens", Components.translatable("fancymenu.custom_guis.manage_overridden"), (menu, entry) -> {
             Screen s = Minecraft.getInstance().screen;
             Minecraft.getInstance().setScreen(new ManageOverriddenGuisScreen(() -> Minecraft.getInstance().setScreen(s)));
         }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.custom_guis.manage_overridden.desc")));
 
         ContextMenu variablesMenu = new ContextMenu();
-        customizationMenu.addSubMenuEntry("variables", Component.translatable("fancymenu.overlay.menu_bar.variables"), variablesMenu)
+        customizationMenu.addSubMenuEntry("variables", Components.translatable("fancymenu.overlay.menu_bar.variables"), variablesMenu)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.variables.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"));
 
-        variablesMenu.addClickableEntry("manage_variables", Component.translatable("fancymenu.overlay.menu_bar.variables.manage"), (menu, entry) -> {
+        variablesMenu.addClickableEntry("manage_variables", Components.translatable("fancymenu.overlay.menu_bar.variables.manage"), (menu, entry) -> {
             ManageVariablesScreen s = new ManageVariablesScreen(call -> {
                 Minecraft.getInstance().setScreen(screen);
             });
             Minecraft.getInstance().setScreen(s);
         });
 
-        customizationMenu.addClickableEntry("pre_load_resources", Component.translatable("fancymenu.resources.pre_loading"),
+        customizationMenu.addClickableEntry("pre_load_resources", Components.translatable("fancymenu.resources.pre_loading"),
                         (menu, entry) -> {
                             Screen current = Minecraft.getInstance().screen;
                             ManageResourcePreLoadScreen s = new ManageResourcePreLoadScreen(aBoolean -> {
@@ -608,7 +609,7 @@ public class CustomizationOverlayUI {
         customizationMenu.addSeparatorEntry("separator_after_pre_load_resources");
 
         ContextMenu debugOverlayMenu = new ContextMenu();
-        customizationMenu.addSubMenuEntry("debug_overlay", Component.translatable("fancymenu.overlay.debug"), debugOverlayMenu)
+        customizationMenu.addSubMenuEntry("debug_overlay", Components.translatable("fancymenu.overlay.debug"), debugOverlayMenu)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.debug.toggle.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"));
 
@@ -616,7 +617,7 @@ public class CustomizationOverlayUI {
                         .addCycleListener(cycleEnabledDisabled -> {
                             FancyMenu.getOptions().showDebugOverlay.setValue(cycleEnabledDisabled.getAsBoolean());
                         }))
-                .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.overlay.debug.toggle.shortcut"));
+                .setShortcutTextSupplier((menu, entry) -> Components.translatable("fancymenu.overlay.debug.toggle.shortcut"));
 
         debugOverlayMenu.addSeparatorEntry("separator_after_toggle_debug_overlay");
 
@@ -644,15 +645,15 @@ public class CustomizationOverlayUI {
                     CustomizationOverlay.rebuildDebugOverlay();
                 }));
 
-        customizationMenu.addClickableEntry("reload_fancymenu", Component.translatable("fancymenu.overlay.menu_bar.customization.reload_fancymenu"), (menu, entry) -> {
+        customizationMenu.addClickableEntry("reload_fancymenu", Components.translatable("fancymenu.overlay.menu_bar.customization.reload_fancymenu"), (menu, entry) -> {
             MainThreadTaskExecutor.executeInMainThread(() -> {
                 grandfatheredMenuBar = CustomizationOverlay.getCurrentMenuBarInstance();
                 ScreenCustomization.reloadFancyMenu();
             }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
-        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.overlay.menu_bar.customization.reload_fancymenu.shortcut"))
+        }).setShortcutTextSupplier((menu, entry) -> Components.translatable("fancymenu.overlay.menu_bar.customization.reload_fancymenu.shortcut"))
                 .setIcon(ContextMenu.IconFactory.getIcon("reload"));
 
-        customizationMenu.addClickableEntry("disable_customization_for_all", Component.translatable("fancymenu.overlay.menu_bar.customization.disable_customization_for_all"), (menu, entry) -> {
+        customizationMenu.addClickableEntry("disable_customization_for_all", Components.translatable("fancymenu.overlay.menu_bar.customization.disable_customization_for_all"), (menu, entry) -> {
             Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call) -> {
                 Minecraft.getInstance().setScreen(screen);
                 if (call) {
@@ -668,22 +669,22 @@ public class CustomizationOverlayUI {
 
         customizationMenu.addSeparatorEntry("separator_before_hide_menu_bar");
 
-        customizationMenu.addClickableEntry("hide_menu_bar", Component.translatable("fancymenu.overlay.menu_bar.customization.hide_overlay"), (menu, entry) -> {
+        customizationMenu.addClickableEntry("hide_menu_bar", Components.translatable("fancymenu.overlay.menu_bar.customization.hide_overlay"), (menu, entry) -> {
             Minecraft.getInstance().setScreen(ConfirmationScreen.critical((call) -> {
                 if (call) {
                     FancyMenu.getOptions().showCustomizationOverlay.setValue(!FancyMenu.getOptions().showCustomizationOverlay.getValue());
                 }
                 Minecraft.getInstance().setScreen(screen);
             }, LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.hide_overlay.confirm")).setDelay(4000));
-        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.overlay.menu_bar.customization.hide_overlay.shortcut"))
+        }).setShortcutTextSupplier((menu, entry) -> Components.translatable("fancymenu.overlay.menu_bar.customization.hide_overlay.shortcut"))
                 .setIcon(ContextMenu.IconFactory.getIcon("close"));
 
         // TOOLS
         ContextMenu toolsMenu = new ContextMenu();
-        menuBar.addContextMenuEntry("tools", Component.translatable("fancymenu.overlay.menu_bar.tools"), toolsMenu);
+        menuBar.addContextMenuEntry("tools", Components.translatable("fancymenu.overlay.menu_bar.tools"), toolsMenu);
 
         ContextMenu dummyScreenMenu = new ContextMenu();
-        toolsMenu.addSubMenuEntry("dummy_screens", Component.translatable("fancymenu.overlay.menu_bar.tools.dummy_screen_instances"), dummyScreenMenu)
+        toolsMenu.addSubMenuEntry("dummy_screens", Components.translatable("fancymenu.overlay.menu_bar.tools.dummy_screen_instances"), dummyScreenMenu)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.tools.dummy_screen_instances.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("gui"));
 
@@ -703,7 +704,7 @@ public class CustomizationOverlayUI {
         buildHelpTabAndAddTo(menuBar);
 
         //LEAVE CURRENT SCREEN BUTTON
-        menuBar.addClickableEntry(MenuBar.Side.RIGHT, "leave_current_screen", Component.empty(), (bar, entry) -> {
+        menuBar.addClickableEntry(MenuBar.Side.RIGHT, "leave_current_screen", Components.empty(), (bar, entry) -> {
             Minecraft.getInstance().setScreen(null);
         }).setIconTexture(LEAVE_CURRENT_SCREEN_TEXTURE)
                 .setTooltipSupplier(consumes -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.leave_current_menu.desc")));
@@ -713,42 +714,42 @@ public class CustomizationOverlayUI {
     }
 
     public static MenuBar.ClickableMenuBarEntry buildFMIconTabAndAddTo(MenuBar menuBar) {
-        return menuBar.addClickableEntry(MenuBar.Side.LEFT, "fancymenu_icon", Component.empty(), (bar, entry) -> {}).setIconTexture(FM_LOGO_ICON_TEXTURE).setActive(false);
+        return menuBar.addClickableEntry(MenuBar.Side.LEFT, "fancymenu_icon", Components.empty(), (bar, entry) -> {}).setIconTexture(FM_LOGO_ICON_TEXTURE).setActive(false);
     }
 
     public static ContextMenu buildHelpTabAndAddTo(MenuBar menuBar) {
 
         ContextMenu helpMenu = new ContextMenu();
-        menuBar.addContextMenuEntry("help", Component.translatable("fancymenu.overlay.menu_bar.help"), helpMenu);
+        menuBar.addContextMenuEntry("help", Components.translatable("fancymenu.overlay.menu_bar.help"), helpMenu);
 
-        helpMenu.addClickableEntry("fancymenu_wiki", Component.translatable("fancymenu.overlay.menu_bar.help.wiki"), (menu, entry) -> {
+        helpMenu.addClickableEntry("fancymenu_wiki", Components.translatable("fancymenu.overlay.menu_bar.help.wiki"), (menu, entry) -> {
             WebUtils.openWebLink("https://docs.fancymenu.net");
         }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.help.wiki.tooltip")))
                 .setIcon(ContextMenu.IconFactory.getIcon("book"));
 
-        helpMenu.addClickableEntry("join_the_discord", Component.translatable("fancymenu.overlay.menu_bar.help.discord"), (menu, entry) -> {
+        helpMenu.addClickableEntry("join_the_discord", Components.translatable("fancymenu.overlay.menu_bar.help.discord"), (menu, entry) -> {
             WebUtils.openWebLink("https://discord.gg/UzmeWkD");
         }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.help.discord.tooltip")))
                 .setIcon(ContextMenu.IconFactory.getIcon("talk"));
 
-        helpMenu.addClickableEntry("report_issue", Component.translatable("fancymenu.overlay.menu_bar.help.report_issue"), (menu, entry) -> {
+        helpMenu.addClickableEntry("report_issue", Components.translatable("fancymenu.overlay.menu_bar.help.report_issue"), (menu, entry) -> {
             WebUtils.openWebLink("https://github.com/Keksuccino/FancyMenu/issues");
         }).setIcon(ContextMenu.IconFactory.getIcon("notes"));
 
         helpMenu.addSeparatorEntry("separator_after_report_issue");
 
-        helpMenu.addClickableEntry("curseforge_fancymenu_category", Component.translatable("fancymenu.overlay.menu_bar.help.curseforge_fancymenu_category"), (menu, entry) -> {
+        helpMenu.addClickableEntry("curseforge_fancymenu_category", Components.translatable("fancymenu.overlay.menu_bar.help.curseforge_fancymenu_category"), (menu, entry) -> {
             WebUtils.openWebLink("https://www.curseforge.com/minecraft/search?page=1&class=customization&categoryIds=5186");
         }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.help.curseforge_fancymenu_category.tooltip")))
                 .setIcon(ContextMenu.IconFactory.getIcon("curseforge"));
 
         helpMenu.addSeparatorEntry("separator_after_curseforge");
 
-        helpMenu.addClickableEntry("keksuccino_patreon", Component.translatable("fancymenu.overlay.menu_bar.help.patreon"), (menu, entry) -> {
+        helpMenu.addClickableEntry("keksuccino_patreon", Components.translatable("fancymenu.overlay.menu_bar.help.patreon"), (menu, entry) -> {
             WebUtils.openWebLink("https://www.patreon.com/keksuccino");
         }).setIcon(ContextMenu.IconFactory.getIcon("patreon"));
 
-        helpMenu.addClickableEntry("paypal_tip_jar", Component.translatable("fancymenu.overlay.menu_bar.help.paypal"), (menu, entry) -> {
+        helpMenu.addClickableEntry("paypal_tip_jar", Components.translatable("fancymenu.overlay.menu_bar.help.paypal"), (menu, entry) -> {
             WebUtils.openWebLink("https://www.paypal.com/paypalme/TimSchroeter");
         }).setIcon(ContextMenu.IconFactory.getIcon("coin"));
 
@@ -759,7 +760,7 @@ public class CustomizationOverlayUI {
     public static ContextMenu buildUITabAndAddTo(MenuBar menuBar) {
 
         ContextMenu userInterfaceMenu = new ContextMenu();
-        menuBar.addContextMenuEntry("user_interface", Component.translatable("fancymenu.overlay.menu_bar.user_interface"), userInterfaceMenu);
+        menuBar.addContextMenuEntry("user_interface", Components.translatable("fancymenu.overlay.menu_bar.user_interface"), userInterfaceMenu);
 
         int preSelectedUiScale = (int)FancyMenu.getOptions().uiScale.getValue().floatValue();
         if ((preSelectedUiScale != 1) && (preSelectedUiScale != 2) && (preSelectedUiScale != 3) && (preSelectedUiScale != 4)) {
@@ -808,7 +809,7 @@ public class CustomizationOverlayUI {
                 .setIcon(ContextMenu.IconFactory.getIcon("timer"));
 
         ContextMenu windowUiThemeMenu = new ContextMenu();
-        userInterfaceMenu.addSubMenuEntry("ui_theme", Component.translatable("fancymenu.overlay.menu_bar.user_interface.ui_theme"), windowUiThemeMenu)
+        userInterfaceMenu.addSubMenuEntry("ui_theme", Components.translatable("fancymenu.overlay.menu_bar.user_interface.ui_theme"), windowUiThemeMenu)
                 .setIcon(ContextMenu.IconFactory.getIcon("edit"));
 
         int i2 = 0;
@@ -833,19 +834,19 @@ public class CustomizationOverlayUI {
         ContextMenu menu = new ContextMenu();
         Screen screen = Minecraft.getInstance().screen;
 
-        menu.addClickableEntry("toggle_layout_status", Component.empty(), (menu1, entry) -> {
+        menu.addClickableEntry("toggle_layout_status", Components.empty(), (menu1, entry) -> {
             MainThreadTaskExecutor.executeInMainThread(() -> {
                 grandfatheredMenuBar = CustomizationOverlay.getCurrentMenuBarInstance();
                 layout.setEnabled(!layout.isEnabled(), true);
             }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
         }).setLabelSupplier((menu1, entry) -> layout.getStatus().getCycleComponent());
 
-        menu.addClickableEntry("edit_layout", Component.translatable("fancymenu.layout.manage.edit"), (menu1, entry) -> {
+        menu.addClickableEntry("edit_layout", Components.translatable("fancymenu.layout.manage.edit"), (menu1, entry) -> {
             menu1.closeMenu();
             MainThreadTaskExecutor.executeInMainThread(() -> LayoutHandler.openLayoutEditor(layout, layout.isUniversalLayout() ? null : screen), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
         }).setIcon(ContextMenu.IconFactory.getIcon("edit"));
 
-        menu.addClickableEntry("delete_layout", Component.translatable("fancymenu.layout.manage.delete"), (menu1, entry) -> {
+        menu.addClickableEntry("delete_layout", Components.translatable("fancymenu.layout.manage.delete"), (menu1, entry) -> {
             menu1.closeMenu();
             Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings(call -> {
                 if (call) {
@@ -856,7 +857,7 @@ public class CustomizationOverlayUI {
             }, LocalizationUtils.splitLocalizedStringLines("fancymenu.layout.manage.delete.confirm")));
         }).setIcon(ContextMenu.IconFactory.getIcon("delete"));
 
-        menu.addClickableEntry("edit_in_system_text_editor", Component.translatable("fancymenu.layout.manage.open_in_text_editor"), (menu1, entry) -> {
+        menu.addClickableEntry("edit_in_system_text_editor", Components.translatable("fancymenu.layout.manage.open_in_text_editor"), (menu1, entry) -> {
             if (layout.layoutFile != null) {
                 FileUtils.openFile(layout.layoutFile);
             }

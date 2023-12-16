@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.multiplayer.ServerData;
 import org.jetbrains.annotations.NotNull;
-
 import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;

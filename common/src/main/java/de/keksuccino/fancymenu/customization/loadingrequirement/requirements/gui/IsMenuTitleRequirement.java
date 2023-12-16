@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequireme
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.ScreenTitleUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
@@ -14,10 +15,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.ComponentContents;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.network.chat.TranslatableComponent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -49,11 +49,8 @@ public class IsMenuTitleRequirement extends LoadingRequirement {
                 String key = null;
                 String text;
                 Component title = ScreenTitleUtils.getTitleOfScreen(s);
-                if (title instanceof MutableComponent) {
-                    ComponentContents cc = title.getContents();
-                    if (cc instanceof TranslatableContents t) {
-                        key = t.getKey();
-                    }
+                if (title instanceof TranslatableComponent t) {
+                    key = t.getKey();
                 }
                 text = title.getString();
                 if ((key != null) && !I18n.get(value).equals(value)) {
@@ -117,7 +114,7 @@ public class IsMenuTitleRequirement extends LoadingRequirement {
         protected EditBoxSuggestions localizationKeySuggestions;
 
         protected IsMenuTitleValueConfigScreen(@NotNull String value, @NotNull Consumer<String> callback) {
-            super(Component.translatable("fancymenu.editor.elements.visibilityrequirements.edit_value"), callback);
+            super(Components.translatable("fancymenu.editor.elements.visibilityrequirements.edit_value"), callback);
             this.menuTitleOrKey = value;
         }
 
@@ -127,7 +124,7 @@ public class IsMenuTitleRequirement extends LoadingRequirement {
             this.addSpacerCell(20);
 
             String id = this.getMenuTitleOrKeyString();
-            this.addLabelCell(Component.translatable("fancymenu.editor.loading_requirements.is_menu_title.value"));
+            this.addLabelCell(Components.translatable("fancymenu.editor.loading_requirements.is_menu_title.value"));
             this.menuTitleOrKeyCell = this.addTextInputCell(null, true, true).setText(id);
 
             this.localizationKeySuggestions = EditBoxSuggestions.createWithCustomSuggestions(this, this.menuTitleOrKeyCell.editBox, EditBoxSuggestions.SuggestionsRenderPosition.ABOVE_EDIT_BOX, LocalizationUtils.getLocalizationKeys());
@@ -146,8 +143,8 @@ public class IsMenuTitleRequirement extends LoadingRequirement {
                     plain = ScreenTitleUtils.getTitleOfScreen(editor.layoutTargetScreen).getString();
                 }
             }
-            this.addLabelCell(Component.translatable("fancymenu.editor.loading_requirements.is_menu_title.value.current_menu_title_key", Component.literal(key).setStyle(Style.EMPTY.withBold(false))).setStyle(Style.EMPTY.withBold(true)));
-            this.addLabelCell(Component.translatable("fancymenu.editor.loading_requirements.is_menu_title.value.current_menu_title_plain", Component.literal(plain).setStyle(Style.EMPTY.withBold(false))).setStyle(Style.EMPTY.withBold(true)));
+            this.addLabelCell(Components.translatable("fancymenu.editor.loading_requirements.is_menu_title.value.current_menu_title_key", Components.literal(key).setStyle(Style.EMPTY.withBold(false))).setStyle(Style.EMPTY.withBold(true)));
+            this.addLabelCell(Components.translatable("fancymenu.editor.loading_requirements.is_menu_title.value.current_menu_title_plain", Components.literal(plain).setStyle(Style.EMPTY.withBold(false))).setStyle(Style.EMPTY.withBold(true)));
 
             this.addSpacerCell(20);
 

@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.networking.packets.command.commands.variable.VariableCommandSuggestionsPacketMessage;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
@@ -78,12 +79,12 @@ public class VariableCommand {
             try {
                 String s = VariableHandler.variableExists(variableName) ? Objects.requireNonNull(VariableHandler.getVariable(variableName)).getValue() : null;
                 if (s != null) {
-                    stack.sendSuccess(Component.literal(I18n.get("fancymenu.commands.variable.get.success", s)), false);
+                    stack.sendSuccess(Components.literal(I18n.get("fancymenu.commands.variable.get.success", s)), false);
                 } else {
-                    stack.sendFailure(Component.literal(I18n.get("fancymenu.commands.variable.not_found")));
+                    stack.sendFailure(Components.literal(I18n.get("fancymenu.commands.variable.not_found")));
                 }
             } catch (Exception e) {
-                stack.sendFailure(Component.literal("Error while executing command!"));
+                stack.sendFailure(Components.literal("Error while executing command!"));
                 e.printStackTrace();
             }
         }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
@@ -95,10 +96,10 @@ public class VariableCommand {
             try {
                 VariableHandler.setVariable(variableName, setToValue);
                 if (sendFeedback) {
-                    stack.sendSuccess(Component.literal(I18n.get("fancymenu.commands.variable.set.success", setToValue)), false);
+                    stack.sendSuccess(Components.literal(I18n.get("fancymenu.commands.variable.set.success", setToValue)), false);
                 }
             } catch (Exception e) {
-                stack.sendFailure(Component.literal("Error while executing command!"));
+                stack.sendFailure(Components.literal("Error while executing command!"));
                 e.printStackTrace();
             }
         }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);

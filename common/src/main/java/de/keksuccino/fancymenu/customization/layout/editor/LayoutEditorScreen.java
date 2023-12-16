@@ -34,6 +34,7 @@ import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.*;
@@ -90,6 +91,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	protected int rightClickMenuOpenPosY = -1000;
 	protected LayoutEditorHistory.Snapshot preDragElementSnapshot;
 	public final List<WidgetMeta> cachedVanillaWidgetMetas = new ArrayList<>();
+	protected boolean addedCalled = false;
 
 	public LayoutEditorScreen(@NotNull Layout layout) {
 		this(null, layout);
@@ -97,7 +99,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	public LayoutEditorScreen(@Nullable Screen layoutTargetScreen, @NotNull Layout layout) {
 
-		super(Component.literal(""));
+		super(Components.literal(""));
 
 		currentInstance = this;
 
@@ -190,6 +192,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			w.refresh();
 		}
 
+		if (!this.addedCalled) this.added();
+		this.addedCalled = true;
+
 	}
 
 	@Override
@@ -223,7 +228,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	}
 
-	@Override
 	public void added() {
 
 		for (AbstractEditorElement e : this.getAllElements()) {
@@ -353,9 +357,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 						int headerHeight = headerSize[1];
 						int headerX = x0 + (this.width / 2) - (headerWidth / 2);
 						int headerY = (y0 / 2) - (headerHeight / 2);
-						enableScissor(x0, 0, x0 + this.width, y0);
+						RenderingUtils.enableScissor(x0, 0, x0 + this.width, y0);
 						blit(pose, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
-						disableScissor();
+						RenderingUtils.disableScissor();
 					} else {
 						blit(pose, x0, 0, 0.0F, 0.0F, this.width, y0, this.width, y0);
 					}
@@ -378,9 +382,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 						int footerHeight = footerSize[1];
 						int footerX = x0 + (this.width / 2) - (footerWidth / 2);
 						int footerY = y1 + (footerOriginalHeight / 2) - (footerHeight / 2);
-						enableScissor(x0, y1, x0 + this.width, y1 + footerOriginalHeight);
+						RenderingUtils.enableScissor(x0, y1, x0 + this.width, y1 + footerOriginalHeight);
 						blit(pose, footerX, footerY, 0.0F, 0.0F, footerWidth, footerHeight, footerWidth, footerHeight);
-						disableScissor();
+						RenderingUtils.disableScissor();
 					} else {
 						int footerHeight = this.height - y1;
 						blit(pose, x0, y1, 0.0F, 0.0F, this.width, footerHeight, this.width, footerHeight);
@@ -840,7 +844,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			Minecraft.getInstance().setScreen(this);
 		}).setVisibleDirectoryLevelsAboveRoot(2).setShowSubDirectories(false);
 		FileTypeGroup<?> fileTypeGroup = FileTypeGroup.of(FileTypes.TXT_TEXT);
-		fileTypeGroup.setDisplayName(Component.translatable("fancymenu.file_types.groups.text"));
+		fileTypeGroup.setDisplayName(Components.translatable("fancymenu.file_types.groups.text"));
 		s.setFileTypes(fileTypeGroup);
 		Minecraft.getInstance().setScreen(s);
 	}

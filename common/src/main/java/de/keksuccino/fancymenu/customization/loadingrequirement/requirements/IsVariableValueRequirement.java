@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
@@ -102,7 +103,7 @@ public class IsVariableValueRequirement extends LoadingRequirement {
         protected EditBoxSuggestions variableNameSuggestions;
 
         protected IsVariableValueConfigScreen(String value, @NotNull Consumer<String> callback) {
-            super(Component.translatable("fancymenu.helper.visibilityrequirement.is_variable_value.value.desc"), callback);
+            super(Components.translatable("fancymenu.helper.visibilityrequirement.is_variable_value.value.desc"), callback);
             if (value == null) value = "";
             if (value.contains(":")) {
                 this.variableName = value.split(":", 2)[0];
@@ -116,7 +117,7 @@ public class IsVariableValueRequirement extends LoadingRequirement {
             this.addSpacerCell(20);
 
             String name = this.getVarNameString();
-            this.addLabelCell(Component.translatable("fancymenu.loading_requirements.is_variable_value.var_name"));
+            this.addLabelCell(Components.translatable("fancymenu.loading_requirements.is_variable_value.var_name"));
             this.nameCell = this.addTextInputCell(null, true, true).setText(name);
 
             this.addCellGroupEndSpacerCell();
@@ -128,7 +129,7 @@ public class IsVariableValueRequirement extends LoadingRequirement {
             this.addCellGroupEndSpacerCell();
 
             String value = this.getVarValueString();
-            this.addLabelCell(Component.translatable("fancymenu.loading_requirements.is_variable_value.var_value"));
+            this.addLabelCell(Components.translatable("fancymenu.loading_requirements.is_variable_value.var_value"));
             this.valueCell = this.addTextInputCell(null, true, true).setText(value);
 
             this.addSpacerCell(20);
