@@ -541,10 +541,6 @@ public class MarkdownRenderer extends GuiComponent implements Widget, FocuslessC
     }
 
     @Override
-    public void setFocused(boolean var1) {
-    }
-
-    @Override
     public @NotNull NarrationPriority narrationPriority() {
         return NarrationPriority.NONE;
     }

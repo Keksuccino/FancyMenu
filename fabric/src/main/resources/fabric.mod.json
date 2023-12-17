@@ -3,7 +3,7 @@
   "id": "fancymenu",
   "version": "${version}",
   "name": "FancyMenu",
-  "description": "Give your life a fancy touch. You deserve it. | FancyMenu © Copyright 2020-2023 Keksuccino. FancyMenu is licensed under DSMSL (DON'T SNATCH MA STUFF LICENSE). See https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md for more information about this license. | Japng © Copyright A. Ellerton. Japng is licensed under Apache-2.0.",
+  "description": "Give your life a fancy touch. You deserve it. | FancyMenu © Copyright 2020-2023 Keksuccino. FancyMenu is licensed under DSMSLv2 (DON'T SNATCH MA STUFF LICENSE v2). See https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md for more information about this license. | Japng © Copyright A. Ellerton. Japng is licensed under Apache-2.0.",
   "environment": "*",
   "authors": [
     "Keksuccino"
@@ -12,7 +12,7 @@
     "xllifi - Made a lot of great looking icons for context menus!"
   ],
   "contact": {},
-  "license": "DSMSL (DON'T SNATCH MA STUFF LICENSE)",
+  "license": "DSMSLv2 (DON'T SNATCH MA STUFF LICENSE v2)",
   "icon": "fancymenu_logo_128x128.png",
   "entrypoints": {
     "main": [

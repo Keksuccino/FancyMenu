@@ -5,9 +5,8 @@ import net.minecraft.client.model.AnimationUtils;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelPart;
-import net.minecraft.world.entity.LivingEntity;
 
-public class PlayerEntityModel extends PlayerModel<LivingEntity> {
+public class PlayerEntityModel extends PlayerModel {
 
     public final PlayerEntityProperties properties;
 

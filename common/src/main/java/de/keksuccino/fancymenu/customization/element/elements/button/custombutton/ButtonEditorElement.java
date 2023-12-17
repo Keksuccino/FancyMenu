@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.element.elements.button.custombutt
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
-import de.keksuccino.fancymenu.customization.layout.editor.ChooseAnimationScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
 import de.keksuccino.fancymenu.util.input.TextValidators;
@@ -11,11 +10,9 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.ObjectUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractButton;
-import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
@@ -95,26 +92,6 @@ public class ButtonEditorElement extends AbstractEditorElement {
                     buttonEditorElement.getElement().backgroundTextureHover = iTextureResourceSupplier;
                     buttonEditorElement.getElement().backgroundAnimationHover = null;
                 }, Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null, true, true, true);
-
-//        hoverBackMenu.addClickableEntry("hover_background_animation", Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation"), (menu, entry) -> {
-//            List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof ButtonEditorElement));
-//            String preSelectedAnimation = null;
-//            List<String> allAnimations = ObjectUtils.getOfAll(String.class, selectedElements, consumes -> ((ButtonElement)consumes.element).backgroundAnimationHover);
-//            if (!allAnimations.isEmpty() && ListUtils.allInListEqual(allAnimations)) {
-//                preSelectedAnimation = allAnimations.get(0);
-//            }
-//            ChooseAnimationScreen s = new ChooseAnimationScreen(preSelectedAnimation, (call) -> {
-//                if (call != null) {
-//                    this.editor.history.saveSnapshot();
-//                    for (AbstractEditorElement e : selectedElements) {
-//                        ((ButtonElement)e.element).backgroundAnimationHover = call;
-//                        ((ButtonElement)e.element).backgroundTextureHover = null;
-//                    }
-//                }
-//                Minecraft.getInstance().setScreen(this.editor);
-//            });
-//            Minecraft.getInstance().setScreen(s);
-//        }).setStackable(true);
 
         hoverBackMenu.addSeparatorEntry("separator_1").setStackable(true);
 

@@ -114,6 +114,7 @@ public class RenderingUtils extends GuiComponent {
         builder.vertex(matrix4f, minX, maxY, z).color(red, green, blue, alpha).endVertex();
         builder.vertex(matrix4f, maxX, maxY, z).color(red, green, blue, alpha).endVertex();
         builder.vertex(matrix4f, maxX, minY, z).color(red, green, blue, alpha).endVertex();
+        builder.end();
         BufferUploader.end(builder);
         RenderSystem.disableBlend();
     }
@@ -138,6 +139,7 @@ public class RenderingUtils extends GuiComponent {
         builder.vertex($$0, $$1, $$4, $$5).uv($$6, $$9).endVertex();
         builder.vertex($$0, $$2, $$4, $$5).uv($$7, $$9).endVertex();
         builder.vertex($$0, $$2, $$3, $$5).uv($$7, $$8).endVertex();
+        builder.end();
         BufferUploader.end(builder);
     }
 

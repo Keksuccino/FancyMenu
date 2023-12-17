@@ -23,7 +23,7 @@ import java.awt.*;
 @SuppressWarnings("unused")
 public abstract class AbstractExtendedSlider extends AbstractSliderButton implements IExtendedWidget {
 
-    protected static final ResourceLocation SLIDER_LOCATION = new ResourceLocation("textures/gui/slider.png");
+    protected static final ResourceLocation SLIDER_LOCATION = new ResourceLocation("textures/gui/widgets.png");
 
     @Nullable
     protected DrawableColor sliderBackgroundColorNormal;
@@ -90,17 +90,16 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     }
 
     protected void renderVanillaBackground(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-        RenderSystem.setShaderTexture(0, SLIDER_LOCATION);
+        RenderSystem.setShaderTexture(0, WIDGETS_LOCATION);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
         RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();
         RenderingUtils.blitNineSliced(pose, this.x, this.y, this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getBackgroundTextureY());
+        RenderingUtils.resetShaderColor();
     }
 
     protected int getBackgroundTextureY() {
-        int i = 1;
-        return i * 20;
+        return 46;
     }
 
     protected void renderHandle(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
@@ -138,17 +137,24 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     }
 
     protected void renderVanillaHandle(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-        RenderSystem.setShaderTexture(0, SLIDER_LOCATION);
+        RenderSystem.setShaderTexture(0, WIDGETS_LOCATION);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
         RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();
-        RenderingUtils.blitNineSliced(pose, this.getHandleX(), this.y, this.getHandleWidth(), 20, 20, 4, 200, 20, 0, this.getHandleTextureY());
+        RenderingUtils.blitNineSliced(pose, this.getSliderHandleX(), this.y, this.getHandleWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getHandleTextureY());
+        RenderingUtils.resetShaderColor();
+    }
+
+    protected int getSliderHandleX() {
+        return this.x + (int)(this.value * (double)(this.getWidth() - this.getHandleWidth()));
     }
 
     protected int getHandleTextureY() {
-        int i = !this.isHovered ? 2 : 3;
-        return i * 20;
+        int i = 1;
+        if (this.isHoveredOrFocused()) {
+            i = 2;
+        }
+        return 46 + i * 20;
     }
 
     protected void renderLabel(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {

@@ -25,7 +25,7 @@ import java.util.Objects;
 public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final ResourceLocation DEFAULT_SKIN_LOCATION = new ResourceLocation("textures/entity/player/wide/zuri.png");
+    public static final ResourceLocation DEFAULT_SKIN_LOCATION = new ResourceLocation("textures/entity/steve.png");
     public static final SimpleTexture DEFAULT_SKIN = SimpleTexture.location(DEFAULT_SKIN_LOCATION);
     protected static final Map<String, SkinMetadata> CACHED_SKIN_METADATA = new HashMap<>();
 

@@ -12,3 +12,5 @@ accessible field net/minecraft/client/gui/screens/TitleScreen fading Z
 accessible method net/minecraft/client/gui/components/CommandSuggestions$SuggestionsList <init> (Lnet/minecraft/client/gui/components/CommandSuggestions;IIILjava/util/List;Z)V
 
 accessible class net/minecraft/client/Options$FieldAccess
+
+accessible method net/minecraft/client/gui/components/AbstractWidget setFocused (Z)V

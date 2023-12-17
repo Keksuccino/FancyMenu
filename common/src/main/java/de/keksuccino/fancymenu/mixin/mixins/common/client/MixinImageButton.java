@@ -13,6 +13,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import net.minecraft.client.gui.GuiComponent;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @SuppressWarnings("unused")
@@ -20,7 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinImageButton extends GuiComponent {
 
 	@WrapWithCondition(method = "renderButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/ImageButton;blit(Lcom/mojang/blaze3d/vertex/PoseStack;IIFFIIII)V"))
-	private boolean wrapRenderTextureFancyMenu(ImageButton instance, PoseStack pose, ResourceLocation resourceLocation, int i1, int i2, int i3, int i4, int i5, int i6, int i7, int i8, int i9) {
+	private boolean wrapRenderTextureFancyMenu(PoseStack pose, int i1, int i2, float v3, float v4, int i5, int i6, int i7, int i8) {
 
 		ImageButton button = (ImageButton)((Object)this);
 		CustomizableWidget customizable = ((CustomizableWidget)this);

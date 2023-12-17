@@ -2,19 +2,16 @@ package de.keksuccino.fancymenu.customization.element.elements.slider.v2;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
-import de.keksuccino.fancymenu.customization.layout.editor.ChooseAnimationScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.ObjectUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.List;
@@ -156,26 +153,6 @@ public class SliderEditorElement extends AbstractEditorElement {
                     buttonEditorElement.getElement().handleAnimationNormal = null;
                 }, Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null, true, true, true);
 
-        normalBackMenu.addClickableEntry("normal_background_animation", Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation"), (menu, entry) -> {
-            List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof SliderEditorElement));
-            String preSelectedAnimation = null;
-            List<String> allAnimations = ObjectUtils.getOfAll(String.class, selectedElements, consumes -> ((SliderElement)consumes.element).handleAnimationNormal);
-            if (!allAnimations.isEmpty() && ListUtils.allInListEqual(allAnimations)) {
-                preSelectedAnimation = allAnimations.get(0);
-            }
-            ChooseAnimationScreen s = new ChooseAnimationScreen(preSelectedAnimation, (call) -> {
-                if (call != null) {
-                    this.editor.history.saveSnapshot();
-                    for (AbstractEditorElement e : selectedElements) {
-                        ((SliderElement)e.element).handleAnimationNormal = call;
-                        ((SliderElement)e.element).handleTextureNormal = null;
-                    }
-                }
-                Minecraft.getInstance().setScreen(this.editor);
-            });
-            Minecraft.getInstance().setScreen(s);
-        }).setStackable(true);
-
         normalBackMenu.addSeparatorEntry("separator_1").setStackable(true);
 
         normalBackMenu.addClickableEntry("reset_normal_background", Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.reset"), (menu, entry) -> {
@@ -200,26 +177,6 @@ public class SliderEditorElement extends AbstractEditorElement {
                     buttonEditorElement.getElement().handleAnimationHover = null;
                 }, Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null, true, true, true);
 
-        hoverBackMenu.addClickableEntry("hover_background_animation", Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation"), (menu, entry) -> {
-            List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof SliderEditorElement));
-            String preSelectedAnimation = null;
-            List<String> allAnimations = ObjectUtils.getOfAll(String.class, selectedElements, consumes -> ((SliderElement)consumes.element).handleAnimationHover);
-            if (!allAnimations.isEmpty() && ListUtils.allInListEqual(allAnimations)) {
-                preSelectedAnimation = allAnimations.get(0);
-            }
-            ChooseAnimationScreen s = new ChooseAnimationScreen(preSelectedAnimation, (call) -> {
-                if (call != null) {
-                    this.editor.history.saveSnapshot();
-                    for (AbstractEditorElement e : selectedElements) {
-                        ((SliderElement)e.element).handleAnimationHover = call;
-                        ((SliderElement)e.element).handleTextureHover = null;
-                    }
-                }
-                Minecraft.getInstance().setScreen(this.editor);
-            });
-            Minecraft.getInstance().setScreen(s);
-        }).setStackable(true);
-
         hoverBackMenu.addSeparatorEntry("separator_1").setStackable(true);
 
         hoverBackMenu.addClickableEntry("reset_hover_background", Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.reset"), (menu, entry) -> {
@@ -243,27 +200,6 @@ public class SliderEditorElement extends AbstractEditorElement {
                     buttonEditorElement.getElement().handleTextureInactive = iTextureResourceSupplier;
                     buttonEditorElement.getElement().handleAnimationInactive = null;
                 }, Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null, true, true, true);
-
-        inactiveBackMenu.addClickableEntry("inactive_background_animation", Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation"),
-                (menu, entry) -> {
-                    List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof SliderEditorElement));
-                    String preSelectedAnimation = null;
-                    List<String> allAnimations = ObjectUtils.getOfAll(String.class, selectedElements, consumes -> ((SliderElement)consumes.element).handleAnimationInactive);
-                    if (!allAnimations.isEmpty() && ListUtils.allInListEqual(allAnimations)) {
-                        preSelectedAnimation = allAnimations.get(0);
-                    }
-                    ChooseAnimationScreen s = new ChooseAnimationScreen(preSelectedAnimation, (call) -> {
-                        if (call != null) {
-                            this.editor.history.saveSnapshot();
-                            for (AbstractEditorElement e : selectedElements) {
-                                ((SliderElement)e.element).handleAnimationInactive = call;
-                                ((SliderElement)e.element).handleTextureInactive = null;
-                            }
-                        }
-                        Minecraft.getInstance().setScreen(this.editor);
-                    });
-                    Minecraft.getInstance().setScreen(s);
-                }).setStackable(true);
 
         inactiveBackMenu.addSeparatorEntry("separator_after_inactive_back_animation").setStackable(true);
 
@@ -292,26 +228,6 @@ public class SliderEditorElement extends AbstractEditorElement {
                     buttonEditorElement.getElement().sliderBackgroundAnimationNormal = null;
                 }, Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null, true, true, true);
 
-        normalSliderBackMenu.addClickableEntry("normal_slider_background_animation", Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation"), (menu, entry) -> {
-            List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof SliderEditorElement));
-            String preSelectedAnimation = null;
-            List<String> allAnimations = ObjectUtils.getOfAll(String.class, selectedElements, consumes -> ((SliderElement)consumes.element).sliderBackgroundAnimationNormal);
-            if (!allAnimations.isEmpty() && ListUtils.allInListEqual(allAnimations)) {
-                preSelectedAnimation = allAnimations.get(0);
-            }
-            ChooseAnimationScreen s = new ChooseAnimationScreen(preSelectedAnimation, (call) -> {
-                if (call != null) {
-                    this.editor.history.saveSnapshot();
-                    for (AbstractEditorElement e : selectedElements) {
-                        ((SliderElement)e.element).sliderBackgroundAnimationNormal = call;
-                        ((SliderElement)e.element).sliderBackgroundTextureNormal = null;
-                    }
-                }
-                Minecraft.getInstance().setScreen(this.editor);
-            });
-            Minecraft.getInstance().setScreen(s);
-        }).setStackable(true);
-
         normalSliderBackMenu.addSeparatorEntry("separator_1").setStackable(true);
 
         normalSliderBackMenu.addClickableEntry("reset_normal_slider_background", Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.reset"), (menu, entry) -> {
@@ -337,26 +253,6 @@ public class SliderEditorElement extends AbstractEditorElement {
                     buttonEditorElement.getElement().sliderBackgroundAnimationHighlighted = null;
                 }, Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"), false, null, true, true, true);
 
-        highlightedSliderBackMenu.addClickableEntry("highlighted_slider_background_animation", Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation"), (menu, entry) -> {
-            List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof SliderEditorElement));
-            String preSelectedAnimation = null;
-            List<String> allAnimations = ObjectUtils.getOfAll(String.class, selectedElements, consumes -> ((SliderElement)consumes.element).sliderBackgroundAnimationHighlighted);
-            if (!allAnimations.isEmpty() && ListUtils.allInListEqual(allAnimations)) {
-                preSelectedAnimation = allAnimations.get(0);
-            }
-            ChooseAnimationScreen s = new ChooseAnimationScreen(preSelectedAnimation, (call) -> {
-                if (call != null) {
-                    this.editor.history.saveSnapshot();
-                    for (AbstractEditorElement e : selectedElements) {
-                        ((SliderElement)e.element).sliderBackgroundAnimationHighlighted = call;
-                        ((SliderElement)e.element).sliderBackgroundTextureHighlighted = null;
-                    }
-                }
-                Minecraft.getInstance().setScreen(this.editor);
-            });
-            Minecraft.getInstance().setScreen(s);
-        }).setStackable(true);
-
         highlightedSliderBackMenu.addSeparatorEntry("separator_1").setStackable(true);
 
         highlightedSliderBackMenu.addClickableEntry("reset_highlighted_slider_background", Components.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.reset"), (menu, entry) -> {
@@ -370,18 +266,18 @@ public class SliderEditorElement extends AbstractEditorElement {
 
         buttonBackgroundMenu.addSeparatorEntry("separator_1").setStackable(true);
 
-        this.addGenericBooleanSwitcherContextMenuEntryTo(buttonBackgroundMenu, "loop_animation",
-                        consumes -> (consumes instanceof SliderEditorElement),
-                        consumes -> ((SliderElement)consumes.element).loopBackgroundAnimations,
-                        (element1, s) -> ((SliderElement)element1.element).loopBackgroundAnimations = s,
-                        "fancymenu.helper.editor.items.buttons.buttonbackground.loopanimation")
+        this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "loop_animated",
+                        SliderEditorElement.class,
+                        consumes -> consumes.getElement().loopBackgroundAnimations,
+                        (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().loopBackgroundAnimations = aBoolean,
+                        "fancymenu.helper.editor.items.buttons.textures.loop_animated")
                 .setStackable(true);
 
-        this.addGenericBooleanSwitcherContextMenuEntryTo(buttonBackgroundMenu, "restart_animation_on_hover",
-                        consumes -> (consumes instanceof SliderEditorElement),
-                        consumes -> ((SliderElement)consumes.element).restartBackgroundAnimationsOnHover,
-                        (element1, s) -> ((SliderElement)element1.element).restartBackgroundAnimationsOnHover = s,
-                        "fancymenu.helper.editor.items.buttons.buttonbackground.restartonhover")
+        this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "restart_animated_on_hover",
+                        SliderEditorElement.class,
+                        consumes -> consumes.getElement().restartBackgroundAnimationsOnHover,
+                        (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().restartBackgroundAnimationsOnHover = aBoolean,
+                        "fancymenu.helper.editor.items.buttons.textures.restart_animated_on_hover")
                 .setStackable(true);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_texture_settings").setStackable(true);

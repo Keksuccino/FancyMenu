@@ -19,6 +19,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.function.BiConsumer;
@@ -40,7 +41,7 @@ public abstract class MixinTitleScreen {
     }
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/TitleScreen;blit(Lcom/mojang/blaze3d/vertex/PoseStack;IIFFIIII)V"))
-    private boolean cancelVanillaLogoEditionRenderingFancyMenu(TitleScreen instance, int i1, int i2, BiConsumer biConsumer) {
+    private boolean cancelVanillaLogoEditionRenderingFancyMenu(PoseStack poseStack, int i1, int i2, float v3, float v4, int i5, int i6, int i7, int i8) {
         return !ScreenCustomization.isCustomizationEnabledForScreen((Screen)((Object)this));
     }
 

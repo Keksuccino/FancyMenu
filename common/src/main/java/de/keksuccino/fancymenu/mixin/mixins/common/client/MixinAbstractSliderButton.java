@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
@@ -10,6 +11,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -35,7 +37,7 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
     }
 
     @Override
-    public void renderButton(PoseStack $$0, int $$1, int $$2, float $$3) {
+    public void renderButton(@NotNull PoseStack $$0, int $$1, int $$2, float $$3) {
 
         if (!this.sliderInitializedFancyMenu) this.initializeSliderFancyMenu();
         this.sliderInitializedFancyMenu = true;
@@ -44,11 +46,9 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
 
     }
 
-    //TODO 1.18: Checken, ob Slider handle hier korrekt gerendert wird
     @Inject(method = "renderBg", at = @At("HEAD"), cancellable = true)
     private void beforeRenderHandleFancyMenu(PoseStack pose, Minecraft mc, int $$2, int $$3, CallbackInfo info) {
         CustomizableWidget cus = this.getAsCustomizableWidgetFancyMenu();
-        boolean isHandle = (width == 8);
         boolean renderVanilla;
         int handleX = this.x + (int)(this.value * (double)(this.getWidth() - 8));
         //For sliders, the normal widget background is the slider handle texture
@@ -56,7 +56,35 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
         //Re-bind default texture after rendering custom
         RenderSystem.setShaderTexture(0, WIDGETS_LOCATION);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
-        if (!renderVanilla) info.cancel();
+        if (renderVanilla) this.render119VanillaHandleFancyMenu(pose);
+        info.cancel();
+    }
+
+    /**
+     * This is to backport the 1.19+ slider handle rendering
+     */
+    @Unique
+    private void render119VanillaHandleFancyMenu(PoseStack pose) {
+        RenderSystem.setShaderTexture(0, WIDGETS_LOCATION);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
+        RenderSystem.enableBlend();
+        RenderSystem.enableDepthTest();
+        RenderingUtils.blitNineSliced(pose, this.getSliderHandleXFancyMenu(), this.y, 8, this.getHeight(), 20, 4, 200, 20, 0, this.getHandleTextureYFancyMenu());
+        RenderingUtils.resetShaderColor();
+    }
+
+    @Unique
+    private int getSliderHandleXFancyMenu() {
+        return this.x + (int)(this.value * (double)(this.getWidth() - 8));
+    }
+
+    @Unique
+    private int getHandleTextureYFancyMenu() {
+        int i = 1;
+        if (this.isHoveredOrFocused()) {
+            i = 2;
+        }
+        return 46 + i * 20;
     }
 
     @Unique

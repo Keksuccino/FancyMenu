@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.resources.ResourceLocation;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -33,18 +34,10 @@ public interface CustomizableSlider {
      */
     default boolean renderSliderBackgroundFancyMenu(PoseStack pose, AbstractSliderButton widget, boolean canChangeValue) {
         ResourceLocation location = null;
-        if (widget.isFocused() && !canChangeValue) {
-            if (this.getCustomSliderBackgroundNormalFancyMenu() instanceof PlayableResource p) p.pause();
-            if (this.getCustomSliderBackgroundHighlightedFancyMenu() != null) {
-                if (this.getCustomSliderBackgroundHighlightedFancyMenu() instanceof PlayableResource p) p.play();
-                location = this.getCustomSliderBackgroundHighlightedFancyMenu().getResourceLocation();
-            }
-        } else {
-            if (this.getCustomSliderBackgroundHighlightedFancyMenu() instanceof PlayableResource p) p.pause();
-            if (this.getCustomSliderBackgroundNormalFancyMenu() != null) {
-                if (this.getCustomSliderBackgroundNormalFancyMenu() instanceof PlayableResource p) p.play();
-                location = this.getCustomSliderBackgroundNormalFancyMenu().getResourceLocation();
-            }
+        if (this.getCustomSliderBackgroundHighlightedFancyMenu() instanceof PlayableResource p) p.pause();
+        if (this.getCustomSliderBackgroundNormalFancyMenu() != null) {
+            if (this.getCustomSliderBackgroundNormalFancyMenu() instanceof PlayableResource p) p.play();
+            location = this.getCustomSliderBackgroundNormalFancyMenu().getResourceLocation();
         }
         if (location != null) {
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)this).getAlphaFancyMenu());

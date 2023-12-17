@@ -78,7 +78,6 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
         super.updateWidgetTexture();
 
         RenderableResource sliderBackNormal = null;
-        RenderableResource sliderBackHighlighted = null;
 
         //Normal
         if ((this.sliderBackgroundAnimationNormal != null) && AnimationHandler.animationExists(this.sliderBackgroundAnimationNormal)) {
@@ -88,24 +87,12 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
                 sliderBackNormal = a;
             }
         }
-        if ((sliderBackNormal == null) && (this.sliderBackgroundTextureNormal != null)) {
+        if (this.sliderBackgroundTextureNormal != null) {
             sliderBackNormal = this.sliderBackgroundTextureNormal.get();
-        }
-        //Highlighted
-        if ((this.sliderBackgroundAnimationHighlighted != null) && AnimationHandler.animationExists(this.sliderBackgroundAnimationHighlighted)) {
-            IAnimationRenderer r = AnimationHandler.getAnimation(this.sliderBackgroundAnimationHighlighted);
-            if (r instanceof AdvancedAnimation a) {
-                a.setLooped(this.loopBackgroundAnimations);
-                sliderBackHighlighted = a;
-            }
-        }
-        if ((sliderBackHighlighted == null) && (this.sliderBackgroundTextureHighlighted != null)) {
-            sliderBackHighlighted = this.sliderBackgroundTextureHighlighted.get();
         }
 
         if (this.getWidget() instanceof CustomizableSlider w) {
             w.setCustomSliderBackgroundNormalFancyMenu(sliderBackNormal);
-            w.setCustomSliderBackgroundHighlightedFancyMenu(sliderBackHighlighted);
         }
 
     }

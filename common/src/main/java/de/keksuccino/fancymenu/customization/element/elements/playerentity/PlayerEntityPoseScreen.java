@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
@@ -68,7 +69,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
 
     protected PlayerEntityPoseScreen(@NotNull PlayerEntityElement element, @NotNull LayoutEditorScreen editor, @NotNull Runnable runOnClose) {
 
-        super(Component.translatable("fancymenu.editor.elements.player_entity.edit_pose"));
+        super(Components.translatable("fancymenu.editor.elements.player_entity.edit_pose"));
 
         this.element = element;
         this.editor = editor;
@@ -122,7 +123,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
 
         this.addSpacerCell(20);
 
-        this.addLabelCell(Component.translatable("fancymenu.editor.elements.player_entity.pose.body"));
+        this.addLabelCell(Components.translatable("fancymenu.editor.elements.player_entity.pose.body"));
 
         this.addCell(new RotationCell("body_x_rot",
                 () -> this.bodyXRot,
@@ -136,7 +137,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
                 () -> this.bodyYRotAdvancedMode,
                 aBoolean -> this.bodyYRotAdvancedMode = aBoolean));
 
-        this.addLabelCell(Component.translatable("fancymenu.editor.elements.player_entity.pose.head"));
+        this.addLabelCell(Components.translatable("fancymenu.editor.elements.player_entity.pose.head"));
 
         this.addCell(new RotationCell("head_x_rot",
                 () -> this.headXRot,
@@ -156,7 +157,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
                 () -> this.headZRotAdvancedMode,
                 aBoolean -> this.headZRotAdvancedMode = aBoolean));
 
-        this.addLabelCell(Component.translatable("fancymenu.editor.elements.player_entity.pose.left_arm"));
+        this.addLabelCell(Components.translatable("fancymenu.editor.elements.player_entity.pose.left_arm"));
 
         this.addCell(new RotationCell("left_arm_x_rot",
                 () -> this.leftArmXRot,
@@ -176,7 +177,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
                 () -> this.leftArmZRotAdvancedMode,
                 aBoolean -> this.leftArmZRotAdvancedMode = aBoolean));
 
-        this.addLabelCell(Component.translatable("fancymenu.editor.elements.player_entity.pose.right_arm"));
+        this.addLabelCell(Components.translatable("fancymenu.editor.elements.player_entity.pose.right_arm"));
 
         this.addCell(new RotationCell("right_arm_x_rot",
                 () -> this.rightArmXRot,
@@ -196,7 +197,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
                 () -> this.rightArmZRotAdvancedMode,
                 aBoolean -> this.rightArmZRotAdvancedMode = aBoolean));
 
-        this.addLabelCell(Component.translatable("fancymenu.editor.elements.player_entity.pose.left_leg"));
+        this.addLabelCell(Components.translatable("fancymenu.editor.elements.player_entity.pose.left_leg"));
 
         this.addCell(new RotationCell("left_leg_x_rot",
                 () -> this.leftLegXRot,
@@ -216,7 +217,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
                 () -> this.leftLegZRotAdvancedMode,
                 aBoolean -> this.leftLegZRotAdvancedMode = aBoolean));
 
-        this.addLabelCell(Component.translatable("fancymenu.editor.elements.player_entity.pose.right_leg"));
+        this.addLabelCell(Components.translatable("fancymenu.editor.elements.player_entity.pose.right_leg"));
 
         this.addCell(new RotationCell("right_leg_x_rot",
                 () -> this.rightLegXRot,
@@ -398,8 +399,8 @@ public class PlayerEntityPoseScreen extends CellScreen {
             });
             UIBase.applyDefaultWidgetSkinTo(this.toggleModeButton);
 
-            this.rotationStringButton = new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.editor.elements.player_entity.pose.advanced." + localizationKeySuffix), button -> {
-                TextEditorScreen s = new TextEditorScreen(Component.translatable("fancymenu.editor.elements.player_entity.pose.advanced." + localizationKeySuffix), null, call -> {
+            this.rotationStringButton = new ExtendedButton(0, 0, 20, 20, Components.translatable("fancymenu.editor.elements.player_entity.pose.advanced." + localizationKeySuffix), button -> {
+                TextEditorScreen s = new TextEditorScreen(Components.translatable("fancymenu.editor.elements.player_entity.pose.advanced." + localizationKeySuffix), null, call -> {
                     if (call != null) {
                         rotationValueSetter.accept(call);
                     }
@@ -432,8 +433,8 @@ public class PlayerEntityPoseScreen extends CellScreen {
 
             int toggleModeButtonWidth = Minecraft.getInstance().font.width(this.toggleModeButton.getLabelSupplier().get(this.toggleModeButton)) + 6;
 
-            this.activeWidget.setX(this.getX());
-            this.activeWidget.setY(this.getY());
+            this.activeWidget.x = this.getX();
+            this.activeWidget.y = this.getY();
             this.activeWidget.setWidth(this.getWidth() - toggleModeButtonWidth - 5);
 
             this.toggleModeButton.setX(this.getX() + this.getWidth() - toggleModeButtonWidth);

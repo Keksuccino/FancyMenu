@@ -4,13 +4,15 @@ import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.IExtendedWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
-import net.minecraft.client.gui.components.AbstractButton;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.sounds.SoundManager;
@@ -32,8 +34,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+@SuppressWarnings("all")
 @Mixin(value = AbstractWidget.class)
-public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueWidget {
+public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueWidget, IExtendedWidget {
 
 	@Shadow @Final public static ResourceLocation WIDGETS_LOCATION;
 
@@ -98,7 +101,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	private boolean widgetInitializedFancyMenu = false;
 	@Unique
 	private final List<Runnable> resetCustomizationsListenersFancyMenu = new ArrayList<>();
-	
+
 	@Inject(method = "render", at = @At(value = "HEAD"), cancellable = true)
 	private void beforeRenderFancyMenu(PoseStack pose, int mouseX, int mouseY, float partial, CallbackInfo info) {
 
@@ -172,14 +175,12 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	private boolean wrapBlitInRenderButtonFancyMenu(AbstractWidget instance, PoseStack pose, int i1, int i2, int i3, int i4, int i5, int i6) {
 
 		if (this.cachedRenderCustomBackgroundFancyMenu != null) {
-			boolean b = this.cachedRenderCustomBackgroundFancyMenu;
 			this.cachedRenderCustomBackgroundFancyMenu = null;
-			return b;
+			return false;
 		}
 
-		//TODO 1.18: Checken, ob Slider background hier korrekt gerendert wird
-		AbstractButton button = (AbstractButton)((Object)this);
-		if ((this instanceof CustomizableSlider s) && (((Object)this) instanceof AbstractSliderButton as)) {
+		AbstractWidget button = (AbstractWidget)((Object)this);
+		if ((button instanceof CustomizableSlider s) && ((Object)this instanceof AbstractSliderButton as)) {
 			this.cachedRenderCustomBackgroundFancyMenu = s.renderSliderBackgroundFancyMenu(pose, as, true);
 			//Re-bind default texture after rendering custom
 			RenderSystem.setShaderTexture(0, WIDGETS_LOCATION);
@@ -187,8 +188,44 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 			this.cachedRenderCustomBackgroundFancyMenu = this.renderCustomBackgroundFancyMenu(button, pose, button.x, button.y, button.getWidth(), button.getHeight());
 		}
 
-		return this.cachedRenderCustomBackgroundFancyMenu;
+		if (this.cachedRenderCustomBackgroundFancyMenu) this.render119VanillaBackgroundFancyMenu(pose);
 
+		return false;
+
+	}
+
+	/**
+	 * This is to backport the 1.19+ widget background rendering
+	 */
+	@Unique
+	private void render119VanillaBackgroundFancyMenu(PoseStack pose) {
+		RenderSystem.setShaderTexture(0, WIDGETS_LOCATION);
+		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
+		RenderSystem.enableBlend();
+		RenderSystem.enableDepthTest();
+		RenderingUtils.blitNineSliced(pose, this.x, this.y, this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureYFancyMenu());
+		RenderingUtils.resetShaderColor();
+	}
+
+	@Unique
+	private int getTextureYFancyMenu() {
+		boolean isSlider =((Object)this instanceof AbstractSliderButton);
+		int i = 1;
+		if (!this.active || isSlider) {
+			i = 0;
+		} else if (this.isHoveredOrFocused()) {
+			i = 2;
+		}
+		return 46 + i * 20;
+	}
+
+	/**
+	 * @reason Backporting the 1.19+ label rendering (sliding left to right)
+	 */
+	@WrapWithCondition(method = "renderButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractWidget;drawCenteredString(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)V"))
+	private boolean wrapLabelRenderingFancyMenu(PoseStack pose, Font font, Component component, int i1, int i2, int i3) {
+		this.renderScrollingLabel(this.getWidgetFancyMenu(), pose, font, 2, true, -1);
+		return false;
 	}
 	
 	@Inject(method = "playDownSound", at = @At(value = "HEAD"), cancellable = true)
@@ -217,12 +254,6 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		if (this.hiddenFancyMenu) info.setReturnValue(false);
 	}
 
-	//TODO 1.18: Checken, ob arrow/tab navigation in 1.18 existiert und wenn ja, eventuell in ContainerEventHandler auf hiddenFancyMenu checken?
-//	@Inject(method = "nextFocusPath", at = @At("HEAD"), cancellable = true)
-//	private void beforeNextFocusPathFancyMenu(FocusNavigationEvent $$0, CallbackInfoReturnable<ComponentPath> info) {
-//		if (this.hiddenFancyMenu) info.setReturnValue(null);
-//	}
-
 	@Inject(method = "getWidth", at = @At("RETURN"), cancellable = true)
 	private void atReturnGetWidthFancyMenu(CallbackInfoReturnable<Integer> info) {
 		if (this.customWidthFancyMenu != null) {
@@ -242,6 +273,10 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Shadow public abstract boolean isFocused();
 
 	@Shadow public abstract boolean isHoveredOrFocused();
+
+	@Shadow public abstract int getWidth();
+
+	@Shadow public abstract int getHeight();
 
 	@Unique
 	private void initWidgetFancyMenu() {

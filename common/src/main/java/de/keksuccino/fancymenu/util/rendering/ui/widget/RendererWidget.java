@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -64,6 +65,11 @@ public class RendererWidget extends AbstractWidget implements UniqueWidget, Navi
     @Override
     public void setNavigatable(boolean navigatable) {
         throw new RuntimeException("RendererWidgets are not navigatable!");
+    }
+
+    @Override
+    public void playDownSound(@NotNull SoundManager $$0) {
+        //no click sound
     }
 
     @FunctionalInterface
