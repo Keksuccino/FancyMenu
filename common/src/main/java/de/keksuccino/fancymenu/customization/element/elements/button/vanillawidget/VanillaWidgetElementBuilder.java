@@ -157,6 +157,18 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
         if (!e.restartBackgroundAnimationsOnHover) {
             stack.restartBackgroundAnimationsOnHover = false;
         }
+        if (e.sliderBackgroundTextureNormal != null) {
+            stack.sliderBackgroundTextureNormal = e.sliderBackgroundTextureNormal;
+        }
+        if (e.sliderBackgroundTextureHighlighted != null) {
+            stack.sliderBackgroundTextureHighlighted = e.sliderBackgroundTextureHighlighted;
+        }
+        if (e.sliderBackgroundAnimationNormal != null) {
+            stack.sliderBackgroundAnimationNormal = e.sliderBackgroundAnimationNormal;
+        }
+        if (e.sliderBackgroundAnimationHighlighted != null) {
+            stack.sliderBackgroundAnimationHighlighted = e.sliderBackgroundAnimationHighlighted;
+        }
 
     }
 

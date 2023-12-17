@@ -8,6 +8,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -143,6 +144,11 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
     @Override
     public void setNavigatable(boolean navigatable) {
         throw new RuntimeException("TextWidgets are not navigatable!");
+    }
+
+    @Override
+    public void playDownSound(@NotNull SoundManager $$0) {
+        //no click sound
     }
 
     public enum TextAlignment {
