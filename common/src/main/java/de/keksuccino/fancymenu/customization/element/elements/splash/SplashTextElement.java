@@ -56,7 +56,7 @@ public class SplashTextElement extends AbstractElement {
 
             this.renderSplash(pose);
 
-            RenderingUtils.resetShaderColor();
+            RenderingUtils.resetShaderColor(graphics);
 
         }
 

@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization.background.backgrounds.image;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
@@ -9,7 +8,7 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.konkrete.rendering.RenderUtils;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
@@ -30,11 +29,11 @@ public class ImageMenuBackground extends MenuBackground {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        fill(pose, 0, 0, getScreenWidth(), getScreenHeight(), BACKGROUND_COLOR.getColorInt());
+        graphics.fill(0, 0, getScreenWidth(), getScreenHeight(), BACKGROUND_COLOR.getColorInt());
 
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
 
         ResourceLocation resourceLocation = null;
         AspectRatio ratio = new AspectRatio(10, 10);
@@ -56,7 +55,6 @@ public class ImageMenuBackground extends MenuBackground {
         if (resourceLocation != null) {
 
             RenderSystem.enableBlend();
-            RenderUtils.bindTexture(resourceLocation);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
 
             if (this.slideLeftRight) {
@@ -102,9 +100,9 @@ public class ImageMenuBackground extends MenuBackground {
                     }
                 }
                 if (w <= getScreenWidth()) {
-                    blit(pose, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
+                    graphics.blit(resourceLocation, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
                 } else {
-                    RenderUtils.doubleBlit(slidePos, 0, 0.0F, 0.0F, w,getScreenHeight());
+                    RenderingUtils.blitF(graphics, resourceLocation, (float)slidePos, 0.0F, 0.0F, 0.0F, w, getScreenHeight(), w, getScreenHeight());
                 }
             } else if (this.keepBackgroundAspectRatio) {
                 int[] size = ratio.getAspectRatioSizeByMinimumSize(getScreenWidth(), getScreenHeight());
@@ -116,14 +114,14 @@ public class ImageMenuBackground extends MenuBackground {
                 if (size[1] > getScreenHeight()) {
                     y = -((size[1] - getScreenHeight()) / 2);
                 }
-                blit(pose, x, y, 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
+                graphics.blit(resourceLocation, x, y, 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
             } else {
-                blit(pose, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
+                graphics.blit(resourceLocation, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
             }
 
         }
 
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
 
     }
 

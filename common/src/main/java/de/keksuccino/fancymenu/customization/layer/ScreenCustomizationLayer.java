@@ -463,7 +463,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 				ResourceLocation loc = headerTexture.getResourceLocation();
 				if (loc != null) {
 					RenderingUtils.bindTexture(loc);
-					RenderingUtils.resetShaderColor();
+					RenderingUtils.resetShaderColor(graphics);
 					if (this.layoutBase.preserveScrollListHeaderFooterAspectRatio) {
 						int[] headerSize = headerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(access.getWidthFancyMenu(), access.getY0FancyMenu());
 						int headerWidth = headerSize[0];
@@ -487,7 +487,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 				ResourceLocation loc = footerTexture.getResourceLocation();
 				if (loc != null) {
 					RenderingUtils.bindTexture(loc);
-					RenderingUtils.resetShaderColor();
+					RenderingUtils.resetShaderColor(graphics);
 					if (this.layoutBase.preserveScrollListHeaderFooterAspectRatio) {
 						int footerOriginalHeight = access.getHeightFancyMenu() - access.getY1FancyMenu();
 						int[] footerSize = footerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(access.getWidthFancyMenu(), footerOriginalHeight);
@@ -509,7 +509,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 				blit(e.getPoseStack(), access.getX0FancyMenu(), access.getY1FancyMenu(), 0.0F, (float)access.getY1FancyMenu(), access.getWidthFancyMenu(), access.getHeightFancyMenu() - access.getY1FancyMenu(), 32, 32);
 			}
 
-			RenderingUtils.resetShaderColor();
+			RenderingUtils.resetShaderColor(graphics);
 
 			if (this.layoutBase.renderScrollListHeaderShadow) {
 				fillGradient(e.getPoseStack(), access.getX0FancyMenu(), access.getY0FancyMenu(), access.getX1FancyMenu(), access.getY0FancyMenu() + 4, -16777216, 0);
@@ -518,7 +518,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 				fillGradient(e.getPoseStack(), access.getX0FancyMenu(), access.getY1FancyMenu() - 4, access.getX1FancyMenu(), access.getY1FancyMenu(), 0, -16777216);
 			}
 
-			RenderingUtils.resetShaderColor();
+			RenderingUtils.resetShaderColor(graphics);
 
 		}
 

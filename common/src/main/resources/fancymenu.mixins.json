@@ -43,6 +43,7 @@
     "client.MixinResourceLoadStateTracker",
     "client.MixinScreen",
     "client.MixinSoundEngine",
+    "client.IMixinSplashRenderer",
     "client.MixinStringDecomposer",
     "client.MixinTabManager",
     "client.MixinTitleScreen",

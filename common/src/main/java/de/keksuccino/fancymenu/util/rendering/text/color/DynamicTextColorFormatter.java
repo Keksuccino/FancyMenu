@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.util.rendering.text.color;
 
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.function.Supplier;
 
 public class DynamicTextColorFormatter extends TextColorFormatter {

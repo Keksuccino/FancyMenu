@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v1;
 import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import java.util.function.Consumer;
 
 public class RangeSliderButton extends ExtendedSliderButton {

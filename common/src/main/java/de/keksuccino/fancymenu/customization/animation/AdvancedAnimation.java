@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.animation.exceptions.AnimationNotFoundException;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
@@ -19,12 +18,11 @@ import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-//TODO Rewrite animations
 
 @SuppressWarnings("all")
 public class AdvancedAnimation implements IAnimationRenderer, RenderableResource, PlayableResource {
@@ -130,7 +128,7 @@ public class AdvancedAnimation implements IAnimationRenderer, RenderableResource
 
 	@Deprecated
 	@Override
-	public void render(PoseStack pose) {
+	public void render(GuiGraphics graphics) {
 		if (this.isReady()) {
 
 			//This is to force-start playing the animation if the (deprecated) render method is used
@@ -168,16 +166,16 @@ public class AdvancedAnimation implements IAnimationRenderer, RenderableResource
 				this.introRenderer.setLooped(false);
 				if (!this.introRenderer.isFinished()) {
 					if (canRenderFrameOf(this.introRenderer, this.introRenderer.currentFrame())) {
-						this.introRenderer.render(pose);
+						this.introRenderer.render(graphics);
 					}
 				} else {
 					if (canRenderFrameOf(this.animationRenderer, this.animationRenderer.currentFrame())) {
-						this.animationRenderer.render(pose);
+						this.animationRenderer.render(graphics);
 					}
 				}
 			} else {
 				if (canRenderFrameOf(this.animationRenderer, this.animationRenderer.currentFrame())) {
-					this.animationRenderer.render(pose);
+					this.animationRenderer.render(graphics);
 				}
 			}
 

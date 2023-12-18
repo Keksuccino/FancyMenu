@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.sounds.SoundManager;
@@ -21,8 +22,8 @@ public class RendererWidget extends AbstractWidget implements UniqueWidget, Navi
     }
 
     @Override
-    public void renderWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-        this.body.render(pose, mouseX, mouseY, partial, this.getX(), this.getY(), this.getWidth(), this.getHeight(), this);
+    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        this.body.render(graphics, mouseX, mouseY, partial, this.getX(), this.getY(), this.getWidth(), this.getHeight(), this);
     }
 
     @Override
@@ -73,7 +74,7 @@ public class RendererWidget extends AbstractWidget implements UniqueWidget, Navi
 
     @FunctionalInterface
     public interface RendererWidgetBody {
-        void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial, int x, int y, int width, int height, @NotNull RendererWidget renderer);
+        void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial, int x, int y, int width, int height, @NotNull RendererWidget renderer);
     }
 
 }

@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui;
 
 import java.awt.Color;
-import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -14,6 +13,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v1.ExtendedSlider
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtendedSlider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -130,62 +130,51 @@ public class UIBase extends RenderingUtils {
 		return (float)(1.0D * (1.0D / guiScale) * fixedScale);
 	}
 
-	public static void renderListingDot(PoseStack matrix, float x, float y, int color) {
-		fillF(matrix, x, y, x + 4, y + 4, color);
+	public static void renderListingDot(GuiGraphics graphics, float x, float y, int color) {
+		fillF(graphics, x, y, x + 4, y + 4, color);
 	}
 
-	public static void renderListingDot(PoseStack matrix, int x, int y, Color color) {
-		fill(matrix, x, y, x + 4, y + 4, color.getRGB());
+	public static void renderListingDot(GuiGraphics graphics, int x, int y, Color color) {
+		graphics.fill(x, y, x + 4, y + 4, color.getRGB());
 	}
 
-	public static void renderBorder(PoseStack matrix, int xMin, int yMin, int xMax, int yMax, int borderThickness, DrawableColor borderColor, boolean renderTop, boolean renderLeft, boolean renderRight, boolean renderBottom) {
-		renderBorder(matrix, xMin, yMin, xMax, yMax, borderThickness, borderColor.getColorInt(), renderTop, renderLeft, renderRight, renderBottom);
+	public static void renderBorder(GuiGraphics graphics, int xMin, int yMin, int xMax, int yMax, int borderThickness, DrawableColor borderColor, boolean renderTop, boolean renderLeft, boolean renderRight, boolean renderBottom) {
+		renderBorder(graphics, xMin, yMin, xMax, yMax, borderThickness, borderColor.getColorInt(), renderTop, renderLeft, renderRight, renderBottom);
 	}
 
-	public static void renderBorder(PoseStack matrix, int xMin, int yMin, int xMax, int yMax, int borderThickness, Color borderColor, boolean renderTop, boolean renderLeft, boolean renderRight, boolean renderBottom) {
-		renderBorder(matrix, xMin, yMin, xMax, yMax, borderThickness, borderColor.getRGB(), renderTop, renderLeft, renderRight, renderBottom);
+	public static void renderBorder(GuiGraphics graphics, int xMin, int yMin, int xMax, int yMax, int borderThickness, Color borderColor, boolean renderTop, boolean renderLeft, boolean renderRight, boolean renderBottom) {
+		renderBorder(graphics, xMin, yMin, xMax, yMax, borderThickness, borderColor.getRGB(), renderTop, renderLeft, renderRight, renderBottom);
 	}
 
-	public static void renderBorder(PoseStack pose, float xMin, float yMin, float xMax, float yMax, float borderThickness, int borderColor, boolean renderTop, boolean renderLeft, boolean renderRight, boolean renderBottom) {
+	public static void renderBorder(GuiGraphics graphics, float xMin, float yMin, float xMax, float yMax, float borderThickness, int borderColor, boolean renderTop, boolean renderLeft, boolean renderRight, boolean renderBottom) {
 		if (renderTop) {
-			RenderingUtils.fillF(pose, xMin, yMin, xMax, yMin + borderThickness, borderColor);
+			RenderingUtils.fillF(graphics, xMin, yMin, xMax, yMin + borderThickness, borderColor);
 		}
 		if (renderLeft) {
-			RenderingUtils.fillF(pose, xMin, yMin + borderThickness, xMin + borderThickness, yMax - borderThickness, borderColor);
+			RenderingUtils.fillF(graphics, xMin, yMin + borderThickness, xMin + borderThickness, yMax - borderThickness, borderColor);
 		}
 		if (renderRight) {
-			RenderingUtils.fillF(pose, xMax - borderThickness, yMin + borderThickness, xMax, yMax - borderThickness, borderColor);
+			RenderingUtils.fillF(graphics, xMax - borderThickness, yMin + borderThickness, xMax, yMax - borderThickness, borderColor);
 		}
 		if (renderBottom) {
-			RenderingUtils.fillF(pose, xMin, yMax - borderThickness, xMax, yMax, borderColor);
+			RenderingUtils.fillF(graphics, xMin, yMax - borderThickness, xMax, yMax, borderColor);
 		}
 	}
 
-	public static int drawElementLabelF(PoseStack pose, Font font, String text, float x, float y) {
-		return drawElementLabelF(pose, font, Component.literal(text), x, y);
+	public static int drawElementLabel(GuiGraphics graphics, Font font, Component text, int x, int y) {
+		return drawElementLabel(graphics, font, text, x, y, getUIColorTheme().element_label_color_normal.getColorInt());
 	}
 
-	public static int drawElementLabelF(PoseStack pose, Font font, Component text, float x, float y) {
-		if (!FancyMenu.getOptions().enableUiTextShadow.getValue()) {
-			return font.draw(pose, text, x, y, getUIColorTheme().element_label_color_normal.getColorInt());
-		}
-		return font.drawShadow(pose, text, x, y, getUIColorTheme().element_label_color_normal.getColorInt());
+	public static int drawElementLabel(GuiGraphics graphics, Font font, String text, int x, int y) {
+		return drawElementLabel(graphics, font, Component.literal(text), x, y, getUIColorTheme().element_label_color_normal.getColorInt());
 	}
 
-	public static int drawElementLabel(PoseStack pose, Font font, Component text, int x, int y) {
-		return drawElementLabel(pose, font, text, x, y, getUIColorTheme().element_label_color_normal.getColorInt());
+	public static int drawElementLabel(GuiGraphics graphics, Font font, Component text, int x, int y, int baseColor) {
+		return graphics.drawString(font, text, x, y, baseColor, FancyMenu.getOptions().enableUiTextShadow.getValue());
 	}
 
-	public static int drawElementLabel(PoseStack pose, Font font, String text, int x, int y) {
-		return drawElementLabel(pose, font, Component.literal(text), x, y, getUIColorTheme().element_label_color_normal.getColorInt());
-	}
-
-	public static int drawElementLabel(PoseStack pose, Font font, Component text, int x, int y, int baseColor) {
-		return FancyMenu.getOptions().enableUiTextShadow.getValue() ? font.drawShadow(pose, text, x, y, baseColor) : font.draw(pose, text, x, y, baseColor);
-	}
-
-	public static int drawElementLabel(PoseStack pose, Font font, String text, int x, int y, int baseColor) {
-		return drawElementLabel(pose, font, Component.literal(text), x, y, baseColor);
+	public static int drawElementLabel(GuiGraphics graphics, Font font, String text, int x, int y, int baseColor) {
+		return drawElementLabel(graphics, font, Component.literal(text), x, y, baseColor);
 	}
 
 	@NotNull

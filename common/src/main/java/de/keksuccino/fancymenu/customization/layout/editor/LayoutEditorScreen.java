@@ -346,7 +346,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				ResourceLocation loc = headerTexture.getResourceLocation();
 				if (loc != null) {
 					RenderingUtils.bindTexture(loc);
-					RenderingUtils.resetShaderColor();
+					RenderingUtils.resetShaderColor(graphics);
 					if (this.layout.preserveScrollListHeaderFooterAspectRatio) {
 						int[] headerSize = headerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(this.width, y0);
 						int headerWidth = headerSize[0];
@@ -370,7 +370,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				ResourceLocation loc = footerTexture.getResourceLocation();
 				if (loc != null) {
 					RenderingUtils.bindTexture(loc);
-					RenderingUtils.resetShaderColor();
+					RenderingUtils.resetShaderColor(graphics);
 					if (this.layout.preserveScrollListHeaderFooterAspectRatio) {
 						int footerOriginalHeight = this.height - y1;
 						int[] footerSize = footerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(this.width, footerOriginalHeight);
@@ -392,7 +392,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				blit(pose, x0, y1, 0.0F, (float) y1, this.width, this.height - y1, 32, 32);
 			}
 
-			RenderingUtils.resetShaderColor();
+			RenderingUtils.resetShaderColor(graphics);
 
 			//Header Shadow
 			if (this.layout.renderScrollListHeaderShadow) {
@@ -403,7 +403,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				fillGradient(pose, x0, y1 - 4, x1, y1, 0, -16777216);
 			}
 
-			RenderingUtils.resetShaderColor();
+			RenderingUtils.resetShaderColor(graphics);
 
 		}
 

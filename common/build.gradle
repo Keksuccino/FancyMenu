@@ -19,11 +19,10 @@ dependencies {
     compileOnly group:'org.spongepowered', name:'mixin', version:'0.8.5'
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
     implementation group: 'org.ow2.asm', name: 'asm-tree', version: '9.3'
-//    implementation "curse.maven:konkrete-fabric-416797:4514891"
-    implementation "curse.maven:load-my-resources-fabric-534835:4203280"
+    implementation "maven.modrinth:load-my-resources:1.0.4-1-1.20-fabric"
     implementation fileTree('libs') { include '*.jar' }
     implementation 'com.github.Keksuccino:japng:0.5.3'
-    implementation "curse.maven:melody-938643:4871682"
+    implementation "curse.maven:melody-938643:4953732"
 }
 
 publishing {

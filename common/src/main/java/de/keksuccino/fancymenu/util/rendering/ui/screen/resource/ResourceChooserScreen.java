@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen.resource;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -31,6 +30,7 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.texture.SimpleTexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -45,9 +45,6 @@ import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> extends CellScreen {
-
-    //TODO Somehow tell the user what source types are possible for all allowed file types
-    // (maybe tell the user if some source type for some file type is NOT available?? inform only about NOT available source types; maybe under the control cells)
 
     private static final Logger LOGGER = LogManager.getLogger();
     protected static final SimpleTexture WARNING_TEXTURE = SimpleTexture.location(new ResourceLocation("fancymenu", "textures/warning_framed_24x24.png"));
@@ -246,14 +243,14 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
     }
 
     @Override
-    public void render(PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.updateLegacyLocalWarning();
         this.updateNoExtensionWarning();
 
-        super.render(pose, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
 
-        this.renderWarning(pose, mouseX, mouseY, partial);
+        this.renderWarning(graphics, mouseX, mouseY, partial);
 
         this.updateInputFieldTooltips();
 
@@ -280,7 +277,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
         }
     }
 
-    protected void renderWarning(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    protected void renderWarning(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         if ((this.showWarningLegacyLocal || this.showWarningNoExtension) && (this.editBox != null)) {
             ResourceLocation loc = WARNING_TEXTURE.getResourceLocation();
             if (loc != null) {
@@ -290,9 +287,8 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
                 int y = this.editBox.getY() + 2;
                 this.warningHovered = UIBase.isXYInArea(mouseX, mouseY, x, y, w, h);
                 RenderingUtils.setShaderColor(UIBase.getUIColorTheme().warning_text_color, 1.0F);
-                RenderingUtils.bindTexture(loc);
-                blit(pose, x, y, 0.0F, 0.0F, w, h, w, h);
-                RenderingUtils.resetShaderColor();
+                graphics.blit(loc, x, y, 0.0F, 0.0F, w, h, w, h);
+                RenderingUtils.resetShaderColor(graphics);
             }
         }
     }

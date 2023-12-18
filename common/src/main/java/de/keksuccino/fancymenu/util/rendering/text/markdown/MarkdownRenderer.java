@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.FocuslessContainerEventHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Objects;
 
 @SuppressWarnings("unused")
-public class MarkdownRenderer extends GuiComponent implements Renderable, FocuslessContainerEventHandler, NarratableEntry, NavigatableWidget {
+public class MarkdownRenderer implements Renderable, FocuslessContainerEventHandler, NarratableEntry, NavigatableWidget {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -88,12 +88,12 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
     protected final List<ConsumingSupplier<MarkdownTextLine, Boolean>> lineRenderValidators = new ArrayList<>();
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.tick();
-        this.onRender(pose, mouseX, mouseY, partial, true);
+        this.onRender(graphics, mouseX, mouseY, partial, true);
     }
 
-    protected void onRender(PoseStack pose, int mouseX, int mouseY, float partial, boolean shouldRender) {
+    protected void onRender(GuiGraphics graphics, int mouseX, int mouseY, float partial, boolean shouldRender) {
 
         float lineOffsetY = this.border;
         for (MarkdownTextLine line : this.lines) {
@@ -111,7 +111,7 @@ public class MarkdownRenderer extends GuiComponent implements Renderable, Focusl
             line.offsetX = this.border + lineAlignmentOffsetX;
             line.offsetY = lineOffsetY;
             if (shouldRender && this.isLineRenderingAllowedByValidators(line)) {
-                line.render(pose, mouseX, mouseY, partial);
+                line.render(graphics, mouseX, mouseY, partial);
             }
             lineOffsetY += line.getLineHeight() + this.lineSpacing;
         }

@@ -91,7 +91,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
         this.renderElementWidget(pose, mouseX, mouseY, partial);
 
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
 
     }
 

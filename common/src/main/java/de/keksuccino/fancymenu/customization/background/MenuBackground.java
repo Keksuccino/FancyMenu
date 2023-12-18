@@ -1,12 +1,11 @@
 package de.keksuccino.fancymenu.customization.background;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -15,7 +14,7 @@ import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class MenuBackground extends GuiComponent implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget {
+public abstract class MenuBackground implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget {
 
     public final MenuBackgroundBuilder<?> builder;
     /** This gets set by the {@link ScreenCustomizationLayer} when screens fade in or out and should only get used as getter. **/
@@ -28,7 +27,7 @@ public abstract class MenuBackground extends GuiComponent implements Renderable,
     }
 
     @Override
-    public abstract void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial);
+    public abstract void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
 
     /** Gets called every {@link Screen} tick, after {@link Screen#tick()} got called. **/
     public void tick() {

@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.events.widget;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractSelectionList;
 import de.keksuccino.fancymenu.util.event.acara.EventBase;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
@@ -10,11 +10,11 @@ import java.util.Objects;
 public class RenderGuiListHeaderFooterEvent extends EventBase {
 
     protected AbstractSelectionList<?> list;
-    protected PoseStack pose;
+    protected GuiGraphics graphics;
 
-    protected RenderGuiListHeaderFooterEvent(@NotNull PoseStack pose, @NotNull AbstractSelectionList<?> list) {
+    protected RenderGuiListHeaderFooterEvent(@NotNull GuiGraphics graphics, @NotNull AbstractSelectionList<?> list) {
         this.list = Objects.requireNonNull(list);
-        this.pose = Objects.requireNonNull(pose);
+        this.graphics = Objects.requireNonNull(graphics);
     }
 
     @Override
@@ -33,14 +33,14 @@ public class RenderGuiListHeaderFooterEvent extends EventBase {
     }
 
     @NotNull
-    public PoseStack getPoseStack() {
-        return this.pose;
+    public GuiGraphics getGraphics() {
+        return graphics;
     }
 
     public static class Pre extends RenderGuiListHeaderFooterEvent {
 
-        public Pre(PoseStack pose, AbstractSelectionList<?> list) {
-            super(pose, list);
+        public Pre(GuiGraphics graphics, AbstractSelectionList<?> list) {
+            super(graphics, list);
         }
 
         @Override
@@ -52,8 +52,8 @@ public class RenderGuiListHeaderFooterEvent extends EventBase {
 
     public static class Post extends RenderGuiListHeaderFooterEvent {
 
-        public Post(PoseStack pose, AbstractSelectionList<?> list) {
-            super(pose, list);
+        public Post(GuiGraphics graphics, AbstractSelectionList<?> list) {
+            super(graphics, list);
         }
 
     }

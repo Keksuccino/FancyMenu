@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.events.widget.RenderGuiListHeaderFooterEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -20,32 +20,32 @@ public abstract class MixinAbstractSelectionList {
 
 	@Unique private boolean shouldFireRenderHeaderFooterEvents;
 
-	@Inject(method = "render(Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSelectionList;isMouseOver(DD)Z", shift = Shift.AFTER))
-	private void beforeRenderListBackgroundFancyMenu(PoseStack matrix, int mouseX, int mouseY, float partial, CallbackInfo info) {
-		RenderGuiListBackgroundEvent.Pre e = new RenderGuiListBackgroundEvent.Pre(matrix, (AbstractSelectionList) ((Object)this));
+	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSelectionList;isMouseOver(DD)Z", shift = Shift.AFTER))
+	private void beforeRenderListBackgroundFancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo ci) {
+		RenderGuiListBackgroundEvent.Pre e = new RenderGuiListBackgroundEvent.Pre(graphics, (AbstractSelectionList) ((Object)this));
 		EventHandler.INSTANCE.postEvent(e);
 	}
 	
-	@Inject(method = "render(Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSelectionList;getRowLeft()I"))
-	private void afterRenderListBackgroundFancyMenu(PoseStack matrix, int mouseX, int mouseY, float partial, CallbackInfo info) {
-		RenderGuiListBackgroundEvent.Post e = new RenderGuiListBackgroundEvent.Post(matrix, (AbstractSelectionList) ((Object)this));
+	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSelectionList;getRowLeft()I"))
+	private void afterRenderListBackgroundFancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo ci) {
+		RenderGuiListBackgroundEvent.Post e = new RenderGuiListBackgroundEvent.Post(graphics, (AbstractSelectionList) ((Object)this));
 		EventHandler.INSTANCE.postEvent(e);
 	}
 
-	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSelectionList;disableScissor()V", shift = Shift.AFTER))
-	private void beforeRenderListHeaderFooterFancyMenu(PoseStack pose, int $$1, int $$2, float $$3, CallbackInfo info) {
+	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;disableScissor()V", shift = Shift.AFTER))
+	private void beforeRenderListHeaderFooterFancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo ci) {
 		this.shouldFireRenderHeaderFooterEvents = this.renderTopAndBottom;
 		if (this.shouldFireRenderHeaderFooterEvents) {
-			RenderGuiListHeaderFooterEvent.Pre e = new RenderGuiListHeaderFooterEvent.Pre(pose, (AbstractSelectionList) ((Object)this));
+			RenderGuiListHeaderFooterEvent.Pre e = new RenderGuiListHeaderFooterEvent.Pre(graphics, (AbstractSelectionList) ((Object)this));
 			EventHandler.INSTANCE.postEvent(e);
 			if (e.isCanceled()) this.renderTopAndBottom = false;
 		}
 	}
 
 	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSelectionList;getMaxScroll()I"))
-	private void afterRenderListHeaderFooterFancyMenu(PoseStack pose, int $$1, int $$2, float $$3, CallbackInfo info) {
+	private void afterRenderListHeaderFooterFancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo ci) {
 		if (this.shouldFireRenderHeaderFooterEvents) {
-			RenderGuiListHeaderFooterEvent.Post e = new RenderGuiListHeaderFooterEvent.Post(pose, (AbstractSelectionList) ((Object)this));
+			RenderGuiListHeaderFooterEvent.Post e = new RenderGuiListHeaderFooterEvent.Post(graphics, (AbstractSelectionList) ((Object)this));
 			EventHandler.INSTANCE.postEvent(e);
 			this.renderTopAndBottom = true;
 		}

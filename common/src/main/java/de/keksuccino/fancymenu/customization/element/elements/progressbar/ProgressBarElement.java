@@ -97,13 +97,13 @@ public class ProgressBarElement extends AbstractElement {
                     RenderUtils.bindTexture(loc);
                     RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
                     blit(pose, progressX, progressY, offsetX, offsetY, progressWidth, progressHeight, this.getAbsoluteWidth(), this.getAbsoluteHeight());
-                    RenderingUtils.resetShaderColor();
+                    RenderingUtils.resetShaderColor(graphics);
                 }
             }
         } else if (this.barColor != null) {
-            RenderingUtils.resetShaderColor();
+            RenderingUtils.resetShaderColor(graphics);
             fill(pose, progressX, progressY, progressX + progressWidth, progressY + progressHeight, RenderingUtils.replaceAlphaInColor(this.barColor.getColorInt(), this.opacity));
-            RenderingUtils.resetShaderColor();
+            RenderingUtils.resetShaderColor(graphics);
         }
 
     }
@@ -115,12 +115,12 @@ public class ProgressBarElement extends AbstractElement {
                 RenderUtils.bindTexture(location);
                 RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
                 blit(pose, this.getAbsoluteX(), this.getAbsoluteY(), 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
-                RenderingUtils.resetShaderColor();
+                RenderingUtils.resetShaderColor(graphics);
             });
         } else if (this.backgroundColor != null) {
-            RenderingUtils.resetShaderColor();
+            RenderingUtils.resetShaderColor(graphics);
             fill(pose, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), RenderingUtils.replaceAlphaInColor(this.backgroundColor.getColorInt(), this.opacity));
-            RenderingUtils.resetShaderColor();
+            RenderingUtils.resetShaderColor(graphics);
         }
     }
 

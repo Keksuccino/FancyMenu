@@ -157,7 +157,7 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
 
         this.tickAreaMouseOver(mouseX, mouseY);
 
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
         RenderSystem.enableBlend();
         //Invert color of overlay based on what's rendered behind it
         if (this.invertOverlayColors()) {
@@ -168,7 +168,7 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
         this.renderConnectionLines(pose);
 
         RenderSystem.defaultBlendFunc();
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
 
     }
 
@@ -265,12 +265,12 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
         }
 
         RenderSystem.enableBlend();
-        UIBase.resetShaderColor();
+        UIBase.resetShaderColor(graphics);
         //Horizontal Line
         fill(pose, horizontalX, horizontalY, horizontalX + horizontalWidth, horizontalY + lineThickness, color);
         //Vertical Line
         fill(pose, verticalX, verticalY, verticalX + lineThickness, verticalY + verticalHeight, color);
-        UIBase.resetShaderColor();
+        UIBase.resetShaderColor(graphics);
 
     }
 
@@ -538,7 +538,7 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
             int endY = this.getY() + this.getHeight();
             fill(pose, this.getX(), this.getY(), endX, endY, RenderingUtils.replaceAlphaInColor(getOverlayColorBase().getColorInt(), getOverlayOpacity()));
             UIBase.renderBorder(pose, this.getX(), this.getY(), endX, endY, 1, RenderingUtils.replaceAlphaInColor(getOverlayColorBorder().getColorInt(), getOverlayOpacity()), true, true, true, true);
-            UIBase.resetShaderColor();
+            UIBase.resetShaderColor(graphics);
         }
 
         protected void renderMouseOverProgress(@NotNull PoseStack pose, float progress) {
@@ -559,7 +559,7 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
                 startY = endY - progressHeight;
             }
             fill(pose, startX, startY, endX, endY, RenderingUtils.replaceAlphaInColor(getOverlayColorBorder().getColorInt(), getOverlayOpacity()));
-            UIBase.resetShaderColor();
+            UIBase.resetShaderColor(graphics);
         }
 
         protected int getWidth() {

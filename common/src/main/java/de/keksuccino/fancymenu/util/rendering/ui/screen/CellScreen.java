@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
 import com.google.common.collect.Lists;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
@@ -17,6 +16,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
@@ -133,18 +133,18 @@ public abstract class CellScreen extends Screen {
     }
 
     @Override
-    public void render(PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.updateSelectedCell();
 
-        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(pose, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        this.scrollArea.render(pose, mouseX, mouseY, partial);
+        this.scrollArea.render(graphics, mouseX, mouseY, partial);
 
-        super.render(pose, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
 
     }
 
@@ -303,7 +303,7 @@ public abstract class CellScreen extends Screen {
         }
 
         @Override
-        public void renderEntry(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             this.cell.updateSize(this);
             this.setWidth(this.cell.getWidth() + 40);
             if (this.getWidth() < this.parent.getInnerWidth()) this.setWidth(this.parent.getInnerWidth());
@@ -312,11 +312,11 @@ public abstract class CellScreen extends Screen {
             //Use the scroll entry position and size to check for cell hover, to cover the whole cell line and not just the (sometimes too small) actual cell size
             this.cell.hovered = UIBase.isXYInArea(mouseX, mouseY, this.getX(), this.getY(), this.parent.getInnerWidth(), this.getHeight());
             if ((cell.isSelectable() && cell.isHovered()) || (cell == CellScreen.this.selectedCell)) {
-                RenderingUtils.resetShaderColor();
-                fill(pose, (int) this.getX(), (int) this.getY(), (int) (this.getX() + this.parent.getInnerWidth()), (int) (this.getY() + this.getHeight()), this.cell.hoverColorSupplier.get().getColorInt());
-                RenderingUtils.resetShaderColor();
+                RenderingUtils.resetShaderColor(graphics);
+                graphics.fill((int) this.getX(), (int) this.getY(), (int) (this.getX() + this.parent.getInnerWidth()), (int) (this.getY() + this.getHeight()), this.cell.hoverColorSupplier.get().getColorInt());
+                RenderingUtils.resetShaderColor(graphics);
             }
-            this.cell.render(pose, mouseX, mouseY, partial);
+            this.cell.render(graphics, mouseX, mouseY, partial);
         }
 
         @Override
@@ -344,11 +344,11 @@ public abstract class CellScreen extends Screen {
         }
 
         @Override
-        public void renderCell(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             int centerY = this.getY() + (this.getHeight() / 2);
             int halfThickness = Math.max(1, this.separatorThickness / 2);
-            fill(pose, this.getX(), centerY - ((halfThickness > 1) ? halfThickness : 0), this.getX() + this.getWidth(), centerY + halfThickness, this.separatorColorSupplier.get().getColorInt());
-            RenderingUtils.resetShaderColor();
+            graphics.fill(this.getX(), centerY - ((halfThickness > 1) ? halfThickness : 0), this.getX() + this.getWidth(), centerY + halfThickness, this.separatorColorSupplier.get().getColorInt());
+            RenderingUtils.resetShaderColor(graphics);
         }
 
         @Override
@@ -400,7 +400,7 @@ public abstract class CellScreen extends Screen {
         }
 
         @Override
-        public void renderCell(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         }
 
         @Override
@@ -420,7 +420,7 @@ public abstract class CellScreen extends Screen {
         }
 
         @Override
-        public void renderCell(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             this.widget.setX(this.getX());
             this.widget.setY(this.getY());
             this.widget.setWidth(this.getWidth());
@@ -444,10 +444,10 @@ public abstract class CellScreen extends Screen {
         }
 
         @Override
-        public void renderCell(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-            RenderingUtils.resetShaderColor();
-            UIBase.drawElementLabel(pose, Minecraft.getInstance().font, this.text, this.getX(), this.getY());
-            RenderingUtils.resetShaderColor();
+        public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            RenderingUtils.resetShaderColor(graphics);
+            UIBase.drawElementLabel(graphics, Minecraft.getInstance().font, this.text, this.getX(), this.getY());
+            RenderingUtils.resetShaderColor(graphics);
         }
 
         @Override
@@ -509,7 +509,7 @@ public abstract class CellScreen extends Screen {
         }
 
         @Override
-        public void renderCell(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
             if (!this.widgetSizesSet) {
                 this.setWidgetSizes();
@@ -591,18 +591,18 @@ public abstract class CellScreen extends Screen {
         protected final List<GuiEventListener> children = new ArrayList<>();
         protected final Map<String, String> memory = new HashMap<>();
 
-        public abstract void renderCell(@NotNull PoseStack pose, int mouseX, int mouseY, float partial);
+        public abstract void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
 
         @Override
-        public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
             if (!this.selectable) this.selected = false;
 
-            this.renderCell(pose, mouseX, mouseY, partial);
+            this.renderCell(graphics, mouseX, mouseY, partial);
 
             for (GuiEventListener l : this.children) {
                 if (l instanceof Renderable r) {
-                    r.render(pose, mouseX, mouseY, partial);
+                    r.render(graphics, mouseX, mouseY, partial);
                 }
             }
 
@@ -758,7 +758,7 @@ public abstract class CellScreen extends Screen {
         }
 
         @Override
-        public void renderWidget(PoseStack var1, int var2, int var3, float var4) {
+        public void renderWidget(GuiGraphics graphics, int var2, int var3, float var4) {
         }
 
         @Override

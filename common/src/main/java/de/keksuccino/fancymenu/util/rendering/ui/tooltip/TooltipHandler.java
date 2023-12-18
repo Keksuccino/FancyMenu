@@ -43,7 +43,7 @@ public class TooltipHandler {
             }
         }
         if (renderTooltip != null) {
-            renderTooltip.tooltip.render(e.getPoseStack(), e.getMouseX(), e.getMouseY(), e.getPartial());
+            renderTooltip.tooltip.render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
         }
     }
 

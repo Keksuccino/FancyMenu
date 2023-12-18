@@ -4,11 +4,11 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.function.Consumer;
 
 public class TextScrollAreaEntry extends ScrollAreaEntry {
@@ -27,13 +27,13 @@ public class TextScrollAreaEntry extends ScrollAreaEntry {
     }
 
     @Override
-    public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        super.render(matrix, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
 
         int centerY = this.getY() + (this.getHeight() / 2);
 
-        this.font.draw(matrix, this.text, (float)(this.getX() + 5), (float)(centerY - (this.font.lineHeight / 2)), -1);
+        graphics.drawString(this.font, this.text, (this.getX() + 5), (centerY - (this.font.lineHeight / 2)), -1, false);
 
     }
 

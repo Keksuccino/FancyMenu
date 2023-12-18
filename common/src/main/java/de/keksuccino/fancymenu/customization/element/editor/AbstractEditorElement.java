@@ -6,7 +6,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
@@ -41,9 +40,8 @@ import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
@@ -57,7 +55,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
-public abstract class AbstractEditorElement extends GuiComponent implements Renderable, GuiEventListener {
+public abstract class AbstractEditorElement implements Renderable, GuiEventListener {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -501,23 +499,23 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 	}
 
 	@Override
-	public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+	public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
 		this.tick();
 
 		this.hovered = this.isMouseOver(mouseX, mouseY);
 
-		this.element.render(pose, mouseX, mouseY, partial);
+		this.element.render(graphics, mouseX, mouseY, partial);
 
-		this.renderDraggingNotAllowedOverlay(pose);
+		this.renderDraggingNotAllowedOverlay(graphics);
 
-		this.renderDeprecatedIndicator(pose);
+		this.renderDeprecatedIndicator(graphics);
 
 		//Update cursor
 		ResizeGrabber hoveredGrabber = this.getHoveredResizeGrabber();
 		if (hoveredGrabber != null) CursorHandler.setClientTickCursor(hoveredGrabber.getCursor());
 
-		this.renderBorder(pose, mouseX, mouseY, partial);
+		this.renderBorder(graphics, mouseX, mouseY, partial);
 
 	}
 
@@ -536,22 +534,21 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		}
 	}
 
-	protected void renderDraggingNotAllowedOverlay(PoseStack pose) {
+	protected void renderDraggingNotAllowedOverlay(GuiGraphics graphics) {
 		if (this.renderMovingNotAllowedTime >= System.currentTimeMillis()) {
 			RenderSystem.enableBlend();
-			fill(pose, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), UIBase.getUIColorTheme().layout_editor_element_dragging_not_allowed_color.getColorInt());
+			graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), UIBase.getUIColorTheme().layout_editor_element_dragging_not_allowed_color.getColorInt());
 			AspectRatio ratio = new AspectRatio(32, 32);
 			int[] size = ratio.getAspectRatioSizeByMaximumSize(this.getWidth(), this.getHeight());
 			int texW = size[0];
 			int texH = size[1];
 			int texX = this.getX() + (this.getWidth() / 2) - (texW / 2);
 			int texY = this.getY() + (this.getHeight() / 2) - (texH / 2);
-			RenderUtils.bindTexture(DRAGGING_NOT_ALLOWED_TEXTURE);
-			blit(pose, texX, texY, 0.0F, 0.0F, texW, texH, texW, texH);
+			graphics.blit(DRAGGING_NOT_ALLOWED_TEXTURE, texX, texY, 0.0F, 0.0F, texW, texH, texW, texH);
 		}
 	}
 
-	protected void renderDeprecatedIndicator(PoseStack pose) {
+	protected void renderDeprecatedIndicator(GuiGraphics graphics) {
 		if (this.element.builder.isDeprecated()) {
 			RenderSystem.enableBlend();
 			AspectRatio ratio = new AspectRatio(32, 32);
@@ -560,35 +557,34 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 			int texH = size[1];
 			int texX = this.getX() + this.getWidth() - texW;
 			int texY = this.getY();
-			UIBase.setShaderColor(UIBase.getUIColorTheme().warning_text_color);
-			RenderUtils.bindTexture(DEPRECATED_WARNING_TEXTURE);
-			blit(pose, texX, texY, 0.0F, 0.0F, texW, texH, texW, texH);
-			RenderingUtils.resetShaderColor();
+			UIBase.setShaderColor(graphics, UIBase.getUIColorTheme().warning_text_color);
+			graphics.blit(DEPRECATED_WARNING_TEXTURE, texX, texY, 0.0F, 0.0F, texW, texH, texW, texH);
+			RenderingUtils.resetShaderColor(graphics);
 		}
 	}
 
-	protected void renderBorder(PoseStack pose, int mouseX, int mouseY, float partial) {
+	protected void renderBorder(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
 		if (((this.editor.getTopHoveredElement() == this) && !this.editor.isUserNavigatingInRightClickMenu() && !this.editor.isUserNavigatingInElementMenu()) || this.isSelected() || this.isMultiSelected()) {
 
 			//TOP
-			fill(pose, this.getX() + 1, this.getY(), this.getX() + this.getWidth() - 1, this.getY() + 1, BORDER_COLOR.get(this));
+			graphics.fill(this.getX() + 1, this.getY(), this.getX() + this.getWidth() - 1, this.getY() + 1, BORDER_COLOR.get(this));
 			//BOTTOM
-			fill(pose, this.getX() + 1, this.getY() + this.getHeight() - 1, this.getX() + this.getWidth() - 1, this.getY() + this.getHeight(), BORDER_COLOR.get(this));
+			graphics.fill(this.getX() + 1, this.getY() + this.getHeight() - 1, this.getX() + this.getWidth() - 1, this.getY() + this.getHeight(), BORDER_COLOR.get(this));
 			//LEFT
-			fill(pose, this.getX(), this.getY(), this.getX() + 1, this.getY() + this.getHeight(), BORDER_COLOR.get(this));
+			graphics.fill(this.getX(), this.getY(), this.getX() + 1, this.getY() + this.getHeight(), BORDER_COLOR.get(this));
 			//RIGHT
-			fill(pose, this.getX() + this.getWidth() - 1, this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), BORDER_COLOR.get(this));
+			graphics.fill(this.getX() + this.getWidth() - 1, this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), BORDER_COLOR.get(this));
 
 			for (ResizeGrabber g : this.resizeGrabbers) {
-				g.render(pose, mouseX, mouseY, partial);
+				g.render(graphics, mouseX, mouseY, partial);
 			}
 
 		}
 
 		if (this.isSelected()) {
-			this.topLeftDisplay.render(pose, mouseX, mouseY, partial);
-			this.bottomRightDisplay.render(pose, mouseX, mouseY, partial);
+			this.topLeftDisplay.render(graphics, mouseX, mouseY, partial);
+			this.bottomRightDisplay.render(graphics, mouseX, mouseY, partial);
 		}
 
 	}
@@ -848,7 +844,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		return null;
 	}
 
-	public class ResizeGrabber extends GuiComponent implements Renderable {
+	public class ResizeGrabber implements Renderable {
 
 		protected int width = 4;
 		protected int height = 4;
@@ -860,10 +856,10 @@ public abstract class AbstractEditorElement extends GuiComponent implements Rend
 		}
 
 		@Override
-		public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+		public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 			this.hovered = AbstractEditorElement.this.isSelected() && this.isGrabberEnabled() && this.isMouseOver(mouseX, mouseY);
 			if (AbstractEditorElement.this.isSelected() && this.isGrabberEnabled()) {
-				fill(pose, this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, BORDER_COLOR.get(AbstractEditorElement.this));
+				graphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, BORDER_COLOR.get(AbstractEditorElement.this));
 			}
 		}
 

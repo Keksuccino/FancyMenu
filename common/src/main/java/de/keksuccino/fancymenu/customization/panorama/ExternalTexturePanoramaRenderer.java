@@ -3,23 +3,29 @@ package de.keksuccino.fancymenu.customization.panorama;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
 import com.mojang.blaze3d.systems.RenderSystem;
-
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.util.Mth;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.joml.Matrix4f;
 
-public class ExternalTexturePanoramaRenderer extends GuiComponent {
+//TODO rewrite this at some point
+
+@SuppressWarnings("all")
+public class ExternalTexturePanoramaRenderer {
+
+	private static final Logger LOGGER = LogManager.getLogger();
 
 	private ExternalTextureResourceLocation overlay_texture;
 	private float time;
@@ -40,6 +46,7 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 	 *   - A properties file named 'properties.txt', containing the name of the panorama cube
 	 */
 	public ExternalTexturePanoramaRenderer(String panoDir) {
+
 		this.dir = panoDir;
 		File props = new File(this.dir + "/properties.txt");
 
@@ -52,9 +59,7 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 				if ((l != null) && !l.isEmpty()) {
 					this.name = l.get(0).getValue("name");
 					if (this.name == null) {
-						System.out.println("############## ERROR [FANCYMENU] ##############");
-						System.out.println("Missing 'name' value in properties file for panorama cube: " + this.dir);
-						System.out.println("###############################################");
+						LOGGER.error("[FANCYMENU] Unable to load panorama! Missing 'name' value in properties file: " + this.dir);
 					}
 					String sp = l.get(0).getValue("speed");
 					if ((sp != null) && MathUtils.isFloat(sp)) {
@@ -69,20 +74,14 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 						this.angle = Float.parseFloat(an);
 					}
 				} else {
-					System.out.println("############## ERROR [FANCYMENU] ##############");
-					System.out.println("Missing 'panorama-meta' section in properties file for panorama cube: " + this.dir);
-					System.out.println("###############################################");
+					LOGGER.error("[FANCYMENU] Unable to load panorama! Missing 'panorama-meta' section in properties file: " + this.dir);
 				}
 			} else {
-				System.out.println("############## ERROR [FANCYMENU] ##############");
-				System.out.println("An error happened while trying to get properties for panorama cube: " + this.dir);
-				System.out.println("###############################################");
+				LOGGER.error("[FANCYMENU] Unable to load panorama! PropertyContainerSet was NULL: " + this.dir);
 			}
 
 		} else {
-			System.out.println("############## ERROR [FANCYMENU] ##############");
-			System.out.println("Properties file not found for panorama cube: " + this.dir);
-			System.out.println("###############################################");
+			LOGGER.error("[FANCYMENU] Unable to load panorama! Properties file not found: " + this.dir);
 		}
 	}
 
@@ -101,9 +100,7 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 						this.panoramaImageLocations.add(r);
 
 					} else {
-						System.out.println("############## ERROR [FANCYMENU] ##############");
-						System.out.println("Missing panorama image 'panorama_" + i + ".png' for panorama cube: " + this.name);
-						System.out.println("###############################################");
+						LOGGER.error("[FANCYMENU] Unable to load panorama! Missing panorama image 'panorama_" + i + ".png': " + this.name);
 						return;
 					}
 					i++;
@@ -121,16 +118,16 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 		}
 	}
 
-	public void render(PoseStack matrix) {
+	public void render(GuiGraphics graphics) {
 		try {
 			
-			this.renderRaw(matrix, this.opacity);
+			this.renderRaw(graphics, this.opacity);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	public void renderRaw(PoseStack matrix, float panoramaAlpha) {
+	public void renderRaw(GuiGraphics graphics, float panoramaAlpha) {
 		if (this.prepared) {
 
 			this.time += Minecraft.getInstance().getDeltaFrameTime() * this.speed;
@@ -143,7 +140,7 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 			BufferBuilder bufferBuilder = tesselator.getBuilder();
 			Matrix4f matrix4f = new Matrix4f().setPerspective(fovF, (float)mc.getWindow().getWidth() / (float)mc.getWindow().getHeight(), 0.05F, 10.0F);
 			RenderSystem.backupProjectionMatrix();
-			RenderSystem.setProjectionMatrix(matrix4f);
+			RenderSystem.setProjectionMatrix(matrix4f, VertexSorting.DISTANCE_TO_ORIGIN);
 			PoseStack poseStack = RenderSystem.getModelViewStack();
 			poseStack.pushPose();
 			poseStack.setIdentity();
@@ -232,16 +229,14 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 				if (!this.overlay_texture.isReady()) {
 					this.overlay_texture.loadTexture();
 				}
-				RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
+				graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
 				RenderSystem.enableBlend();
-				RenderSystem.setShaderTexture(0, this.overlay_texture.getResourceLocation());
-				blit(matrix, 0, 0, 0.0F, 0.0F, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height);
+				graphics.blit(this.overlay_texture.getResourceLocation(), 0, 0, 0.0F, 0.0F, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height);
 			}
 
 		}
-		
-		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0F);
+
+		RenderingUtils.resetShaderColor(graphics);
 	}
 
 	public String getName() {

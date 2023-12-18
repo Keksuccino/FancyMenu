@@ -1,13 +1,10 @@
 package de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea;
 
-import com.mojang.blaze3d.platform.Window;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollbar.ScrollBar;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -61,7 +58,7 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.hovered = this.isMouseOver(mouseX, mouseY);
         this.innerAreaHovered = this.isMouseOverInnerArea(mouseX, mouseY);
@@ -70,30 +67,30 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
         this.updateWheelScrollSpeed();
         this.resetScrollOnFit();
 
-        this.renderBackground(pose, mouseX, mouseY, partial);
+        this.renderBackground(graphics, mouseX, mouseY, partial);
 
-        this.renderEntries(pose, mouseX, mouseY, partial);
+        this.renderEntries(graphics, mouseX, mouseY, partial);
 
-        this.renderBorder(pose, mouseX, mouseY, partial);
+        this.renderBorder(graphics, mouseX, mouseY, partial);
 
         if (this.verticalScrollBar.active) {
-            this.verticalScrollBar.render(pose, mouseX, mouseY, partial);
+            this.verticalScrollBar.render(graphics, mouseX, mouseY, partial);
         }
         if (this.horizontalScrollBar.active) {
-            this.horizontalScrollBar.render(pose, mouseX, mouseY, partial);
+            this.horizontalScrollBar.render(graphics, mouseX, mouseY, partial);
         }
 
     }
 
-    public void renderBackground(PoseStack pose, int mouseX, int mouseY, float partial) {
-        fillF(pose, this.getInnerX(), this.getInnerY(), this.getInnerX() + this.getInnerWidth(), this.getInnerY() + this.getInnerHeight(), this.backgroundColor.get().getColorInt());
+    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        fillF(graphics, this.getInnerX(), this.getInnerY(), this.getInnerX() + this.getInnerWidth(), this.getInnerY() + this.getInnerHeight(), this.backgroundColor.get().getColorInt());
     }
 
-    public void renderBorder(PoseStack pose, int mouseX, int mouseY, float partial) {
-        renderBorder(pose, this.getXWithBorder(), this.getYWithBorder(), this.getXWithBorder() + this.getWidthWithBorder(), this.getYWithBorder() + this.getHeightWithBorder(), this.getBorderThickness(), this.borderColor.get().getColorInt(), true, true, true, true);
+    public void renderBorder(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        renderBorder(graphics, this.getXWithBorder(), this.getYWithBorder(), this.getXWithBorder() + this.getWidthWithBorder(), this.getYWithBorder() + this.getHeightWithBorder(), this.getBorderThickness(), this.borderColor.get().getColorInt(), true, true, true, true);
     }
 
-    public void renderEntries(PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void renderEntries(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         
         if (this.isApplyScissor()) {
             //TODO this is probably broken if actually used (leftover from old scissor stuff)
@@ -104,7 +101,7 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
             int yMin = (int)(this.getInnerY() * scale);
             int xMax = xMin + (int)this.getInnerWidth();
             int yMax = yMin + (int)this.getInnerHeight();
-            this.enableScissor(xMin, yMin, xMax, yMax);
+            graphics.enableScissor(xMin, yMin, xMax, yMax);
         }
 
         final float totalWidth = this.makeAllEntriesWidthOfWidestEntry ? this.getTotalEntryWidth() : 0;
@@ -113,10 +110,10 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
             if (this.minimumEntryWidthIsAreaWidth && (entry.getWidth() < this.getInnerWidth())) {
                 entry.setWidth(this.getInnerWidth());
             }
-            entry.render(pose, mouseX, mouseY, partial);
+            entry.render(graphics, mouseX, mouseY, partial);
         });
 
-        if (this.isApplyScissor()) this.disableScissor();
+        if (this.isApplyScissor()) graphics.disableScissor();
 
     }
 

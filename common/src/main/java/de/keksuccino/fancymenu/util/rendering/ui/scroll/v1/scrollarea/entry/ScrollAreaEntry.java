@@ -1,18 +1,17 @@
-
 package de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.sounds.SoundManager;
 import org.jetbrains.annotations.NotNull;
-
 import java.awt.*;
 
 @SuppressWarnings("unused")
-public abstract class ScrollAreaEntry extends UIBase {
+public abstract class ScrollAreaEntry extends UIBase implements Renderable {
 
     public ScrollArea parent;
     protected int x;
@@ -46,11 +45,11 @@ public abstract class ScrollAreaEntry extends UIBase {
                 }
             }
             @Override
-            public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(@NotNull GuiGraphics graphics, int p_93658_, int p_93659_, float p_93660_) {
                 if (ScrollAreaEntry.this.parent.isMouseInteractingWithGrabbers() || !ScrollAreaEntry.this.parent.isMouseInsideArea()) {
                     this.isHovered = false;
                 }
-                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+                super.render(graphics, p_93658_, p_93659_, p_93660_);
             }
             @Override
             public boolean isHoveredOrFocused() {
@@ -70,11 +69,11 @@ public abstract class ScrollAreaEntry extends UIBase {
         this.updateEntry();
     }
 
-    public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.updateEntry();
 
-        this.buttonBase.render(matrix, mouseX, mouseY, partial);
+        this.buttonBase.render(graphics, mouseX, mouseY, partial);
 
     }
 

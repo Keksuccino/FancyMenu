@@ -8,9 +8,9 @@ import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.List;
 
 public class TitleScreenBrandingDeepElement extends AbstractDeepElement {
@@ -20,7 +20,7 @@ public class TitleScreenBrandingDeepElement extends AbstractDeepElement {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (!this.shouldRender()) return;
 
@@ -41,7 +41,7 @@ public class TitleScreenBrandingDeepElement extends AbstractDeepElement {
         int i = 0;
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
         for (Component line : Services.COMPAT.getTitleScreenBrandingLines()) {
-            drawString(pose, font, line, 2, getScreenHeight() - (10 + (i * (font.lineHeight + 1))), DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
+            graphics.drawString(font, line, 2, getScreenHeight() - (10 + (i * (font.lineHeight + 1))), DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
             int lineW = font.width(line);
             if (lineW > w) {
                 w = lineW;

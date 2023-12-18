@@ -1,14 +1,15 @@
 package de.keksuccino.fancymenu.events.screen;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.event.acara.EventBase;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
-
+import org.jetbrains.annotations.NotNull;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Fired after rendering the screen background.<br>
@@ -17,19 +18,21 @@ import java.util.List;
 public class RenderedScreenBackgroundEvent extends EventBase {
 
     private final Screen screen;
-    private final PoseStack poseStack;
+    private final GuiGraphics graphics;
 
-    public RenderedScreenBackgroundEvent(Screen screen, PoseStack poseStack) {
-        this.screen = screen;
-        this.poseStack = poseStack;
+    public RenderedScreenBackgroundEvent(@NotNull Screen screen, @NotNull GuiGraphics graphics) {
+        this.screen = Objects.requireNonNull(screen);
+        this.graphics = Objects.requireNonNull(graphics);
     }
 
+    @NotNull
     public Screen getScreen() {
         return this.screen;
     }
 
-    public PoseStack getPoseStack() {
-        return this.poseStack;
+    @NotNull
+    public GuiGraphics getGraphics() {
+        return graphics;
     }
 
     public <T extends GuiEventListener & NarratableEntry> void addWidget(T widget) {

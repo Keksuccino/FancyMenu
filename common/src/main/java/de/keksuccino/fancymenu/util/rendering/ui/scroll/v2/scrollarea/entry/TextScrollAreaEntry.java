@@ -1,9 +1,9 @@
 package de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.function.Consumer;
@@ -23,9 +23,9 @@ public class TextScrollAreaEntry extends ScrollAreaEntry {
     }
 
     @Override
-    public void renderEntry(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         float centerY = this.getY() + (this.getHeight() / 2f);
-        this.font.draw(pose, this.text, this.getX() + 5f, centerY - (this.font.lineHeight / 2f), -1);
+        graphics.drawString(this.font, this.text, (int)(this.getX() + 5f), (int)(centerY - (this.font.lineHeight / 2f)), -1, false);
     }
 
     @Override

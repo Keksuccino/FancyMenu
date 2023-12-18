@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
@@ -17,6 +18,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @SuppressWarnings("unused")
@@ -41,22 +43,22 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
     }
 
     @Inject(method = "renderWidget", at = @At("HEAD"))
-    private void beforeRenderWidgetFancyMenu(PoseStack pose, int $$1, int $$2, float $$3, CallbackInfo info) {
+    private void beforeRenderWidgetFancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo ci) {
         if (!this.sliderInitializedFancyMenu) this.initializeSliderFancyMenu();
         this.sliderInitializedFancyMenu = true;
     }
 
-    @WrapWithCondition(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSliderButton;blitNineSliced(Lcom/mojang/blaze3d/vertex/PoseStack;IIIIIIIIII)V"))
-    private boolean wrapBlitNineSlicedInRenderWidgetFancyMenu(PoseStack pose, int x, int y, int width, int height, int i5, int i6, int i7, int i8, int i9, int i10) {
+    @WrapWithCondition(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitNineSliced(Lnet/minecraft/resources/ResourceLocation;IIIIIIIIII)V"))
+    private boolean wrapBlitNineSlicedInRenderWidgetFancyMenu(GuiGraphics graphics, ResourceLocation $$0, int $$1, int $$2, int $$3, int $$4, int $$5, int $$6, int $$7, int $$8, int $$9, int $$10) {
         CustomizableWidget cus = this.getAsCustomizableWidgetFancyMenu();
         boolean isHandle = (width == 8);
         boolean renderVanilla;
         if (isHandle) {
             int handleX = this.getX() + (int)(this.value * (double)(this.getWidth() - 8));
             //For sliders, the normal widget background is the slider handle texture
-            renderVanilla = cus.renderCustomBackgroundFancyMenu(this, pose, handleX, this.getY(), 8, this.getHeight());
+            renderVanilla = cus.renderCustomBackgroundFancyMenu(this, graphics, handleX, this.getY(), 8, this.getHeight());
         } else {
-            renderVanilla = this.renderSliderBackgroundFancyMenu(pose, (AbstractSliderButton)((Object)this), this.canChangeValue);
+            renderVanilla = this.renderSliderBackgroundFancyMenu(graphics, (AbstractSliderButton)((Object)this), this.canChangeValue);
         }
         //Re-bind default texture after rendering custom
         RenderSystem.setShaderTexture(0, SLIDER_LOCATION_FANCYMENU);

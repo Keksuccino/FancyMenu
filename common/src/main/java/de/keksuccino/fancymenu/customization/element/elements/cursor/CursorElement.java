@@ -51,17 +51,17 @@ public class CursorElement extends AbstractElement {
                         if (loc != null) {
                             int[] size = t.getAspectRatio().getAspectRatioSizeByMaximumSize(this.getAbsoluteWidth(), this.getAbsoluteHeight());
                             RenderingUtils.bindTexture(loc);
-                            RenderingUtils.resetShaderColor();
+                            RenderingUtils.resetShaderColor(graphics);
                             blit(pose, this.getAbsoluteX(), this.getAbsoluteY(), 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
-                            RenderingUtils.resetShaderColor();
+                            RenderingUtils.resetShaderColor(graphics);
                         }
                     }
                 } else {
-                    RenderingUtils.resetShaderColor();
+                    RenderingUtils.resetShaderColor(graphics);
                     RenderSystem.enableBlend();
                     fill(pose, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY() + this.getAbsoluteHeight(), DrawableColor.WHITE.getColorInt());
                     fill(pose, this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), DrawableColor.BLACK.getColorInt());
-                    RenderingUtils.resetShaderColor();
+                    RenderingUtils.resetShaderColor(graphics);
                 }
             }
 

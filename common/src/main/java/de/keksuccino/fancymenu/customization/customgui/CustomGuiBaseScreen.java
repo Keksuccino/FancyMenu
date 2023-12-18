@@ -1,9 +1,9 @@
 package de.keksuccino.fancymenu.customization.customgui;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -33,15 +33,15 @@ public class CustomGuiBaseScreen extends Screen {
 	}
 	
 	@Override
-	public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+	public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-		this.renderBackground(pose);
+		this.renderBackground(graphics);
 
 		String title = this.getTitleString();
 		Component titleComp = LocalizationUtils.isLocalizationKey(title) ? Component.translatable(title) : Component.literal(PlaceholderParser.replacePlaceholders(title));
-		drawCenteredString(pose, this.font, titleComp, this.width / 2, 8, -1);
+		graphics.drawCenteredString(this.font, titleComp, this.width / 2, 8, -1);
 
-		super.render(pose, mouseX, mouseY, partial);
+		super.render(graphics, mouseX, mouseY, partial);
 
 	}
 

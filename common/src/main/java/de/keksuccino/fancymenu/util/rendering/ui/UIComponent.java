@@ -1,12 +1,11 @@
 package de.keksuccino.fancymenu.util.rendering.ui;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,22 +23,22 @@ public abstract class UIComponent extends UIBase implements FocuslessContainerEv
      * Make sure to render everything here at X=0 and Y=0!<br>
      * The {@link UIComponent} gets translated to the correct position!
      */
-    public abstract void renderComponent(@NotNull PoseStack pose, double mouseX, double mouseY, float partial);
+    public abstract void renderComponent(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial);
 
     @Override
-    public void render(@NotNull PoseStack pose, int ignoredMouseX, int ignoredMouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int ignoredMouseX, int ignoredMouseY, float partial) {
 
         if (!this.isVisible()) return;
 
         this.hovered = this.isMouseOver();
 
-        pose.pushPose();
-        pose.scale(this.getFixedComponentScale(), this.getFixedComponentScale(), this.getFixedComponentScale());
-        pose.translate(this.getTranslatedX(), this.getTranslatedY(), this.posZ);
+        graphics.pose().pushPose();
+        graphics.pose().scale(this.getFixedComponentScale(), this.getFixedComponentScale(), this.getFixedComponentScale());
+        graphics.pose().translate(this.getTranslatedX(), this.getTranslatedY(), this.posZ);
 
-        this.renderComponent(pose, this.getRealMouseX(), this.getRealMouseY(), partial);
+        this.renderComponent(graphics, this.getRealMouseX(), this.getRealMouseY(), partial);
 
-        pose.popPose();
+        graphics.pose().popPose();
 
     }
 
@@ -141,7 +140,7 @@ public abstract class UIComponent extends UIBase implements FocuslessContainerEv
     /**
      * Scissor with automatic scale handling.
      */
-    protected void enableComponentScissor(int x, int y, int width, int height, boolean isRealPosition) {
+    protected void enableComponentScissor(GuiGraphics graphics, int x, int y, int width, int height, boolean isRealPosition) {
         if (isRealPosition) {
             x += this.getTranslatedX();
             y += this.getTranslatedY();
@@ -150,11 +149,11 @@ public abstract class UIComponent extends UIBase implements FocuslessContainerEv
         int scissorY = (int) (y * this.getFixedComponentScale());
         int scissorWidth = (int) (width * this.getFixedComponentScale());
         int scissorHeight = (int) (height * this.getFixedComponentScale());
-        enableScissor(scissorX, scissorY, scissorX + scissorWidth, scissorY + scissorHeight);
+        graphics.enableScissor(scissorX, scissorY, scissorX + scissorWidth, scissorY + scissorHeight);
     }
 
-    protected void disableComponentScissor() {
-        disableScissor();
+    protected void disableComponentScissor(GuiGraphics graphics) {
+        graphics.disableScissor();
     }
 
     public boolean isHovered() {

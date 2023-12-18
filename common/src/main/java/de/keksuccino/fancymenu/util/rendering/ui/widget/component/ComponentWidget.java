@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.component;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -9,6 +8,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
@@ -17,7 +17,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -70,30 +69,26 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.width = this.getWidth();
         this.height = this.getHeight();
-        super.render(pose, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
     }
 
     @Override
-    public void renderWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.handleComponentHover();
 
         RenderSystem.enableBlend();
 
         this.endX = this.getX();
-        if (this.shadow) {
-            this.endX = this.font.drawShadow(pose, this.getText(), this.getX(), this.getY(), this.getBaseColor().getColorInt());
-        } else {
-            this.endX = this.font.draw(pose, this.getText(), this.getX(), this.getY(), this.getBaseColor().getColorInt());
-        }
+        this.endX = graphics.drawString(this.font, this.getText(), this.getX(), this.getY(), this.getBaseColor().getColorInt(), this.shadow);
 
         for (ComponentWidget c : this.children) {
             c.setX(this.endX);
             c.setY(this.getY());
-            c.render(pose, mouseX, mouseY, partial);
+            c.render(graphics, mouseX, mouseY, partial);
             this.endX = c.endX;
         }
 

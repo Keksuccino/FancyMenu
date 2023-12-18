@@ -1,14 +1,13 @@
 package de.keksuccino.fancymenu.customization.element.editor;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -35,15 +34,15 @@ public class EditorElementBorderDisplay implements Renderable {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.updateDisplay();
 
-        this.renderDisplayLines(pose);
+        this.renderDisplayLines(graphics);
 
     }
 
-    protected void renderDisplayLines(PoseStack pose) {
+    protected void renderDisplayLines(GuiGraphics graphics) {
 
         int x = this.editorElement.getX();
         int y = this.editorElement.getY() - this.getHeight() - 2;
@@ -81,18 +80,14 @@ public class EditorElementBorderDisplay implements Renderable {
 
         float scale = this.getScale();
         int lineY = y;
-        pose.pushPose();
-        pose.scale(scale, scale, scale);
+        graphics.pose().pushPose();
+        graphics.pose().scale(scale, scale, scale);
         for (Component c : this.renderLines) {
             int lineX = leftAligned ? x : x + (this.getWidth() - (int)((float)this.font.width(c) * scale));
-            if (this.textShadow) {
-                this.font.drawShadow(pose, c, (float)lineX / scale, (float)lineY / scale, -1);
-            } else {
-                this.font.draw(pose, c, (float)lineX / scale, (float)lineY / scale, -1);
-            }
+            graphics.drawString(this.font, c, (int)(lineX / scale), (int)(lineY / scale), -1, this.textShadow);
             lineY += (this.font.lineHeight + 2) * scale;
         }
-        pose.popPose();
+        graphics.pose().popPose();
 
     }
 

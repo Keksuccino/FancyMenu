@@ -48,13 +48,15 @@ public class JoinServerAction extends Action {
                 }
             }
             if (d == null) {
-                d = new ServerData(value.replace(" ", ""), value.replace(" ", ""), false);
+                boolean isLan = false;
+                d = new ServerData(value.replace(" ", ""), value.replace(" ", ""), isLan);
                 l.add(d, false);
                 l.save();
             }
             Screen current = Minecraft.getInstance().screen;
             if (current == null) current = new TitleScreen();
-            ConnectScreen.startConnecting(current, Minecraft.getInstance(), new ServerAddress(ip, port), d);
+            boolean isQuickPlay = false;
+            ConnectScreen.startConnecting(current, Minecraft.getInstance(), new ServerAddress(ip, port), d, isQuickPlay);
         }
     }
 

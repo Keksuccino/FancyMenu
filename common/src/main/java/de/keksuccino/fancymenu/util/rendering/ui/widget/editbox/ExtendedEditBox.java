@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.editbox;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -8,6 +7,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -55,18 +55,17 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     }
 
     @Override
-    public void renderWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         IMixinEditBox access = ((IMixinEditBox)this);
         boolean bordered = access.getBorderedFancyMenu();
 
         if (this.isVisible()) {
 
-            fill(pose, this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, this.backgroundColor.getColorInt());
+            graphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, this.backgroundColor.getColorInt());
             if (bordered) {
                 int borderColor = this.isFocused() ? this.borderFocusedColor.getColorInt() : this.borderNormalColor.getColorInt();
-//                fill(pose, this.getX() - 1, this.getY() - 1, this.getX() + this.width + 1, this.getY() + this.height + 1, borderColor);
-                UIBase.renderBorder(pose, this.getX() - 1, this.getY() - 1, this.getX() + this.width + 1, this.getY() + this.height + 1, 1, borderColor, true, true, true, true);
+                UIBase.renderBorder(graphics, this.getX() - 1, this.getY() - 1, this.getX() + this.width + 1, this.getY() + this.height + 1, 1, borderColor, true, true, true, true);
             }
 
             int textColor = access.getIsEditableFancyMenu() ? this.textColor.getColorInt() : this.textColorUneditable.getColorInt();
@@ -96,11 +95,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
                         textCharacterRenderIndex++;
                     }
                 }
-                if (this.textShadow) {
-                    textXAfterCursor = this.font.drawShadow(pose, beforeCursorComp, (float)textX, (float)textY, textColor);
-                } else {
-                    textXAfterCursor = this.font.draw(pose, beforeCursorComp, (float)textX, (float)textY, textColor);
-                }
+                textXAfterCursor = graphics.drawString(this.font, beforeCursorComp, textX, textY, textColor, this.textShadow);
             }
 
             boolean renderSmallCursor = (this.getCursorPosition() < this.getValue().length()) || (this.getValue().length() >= access.getMaxLengthFancyMenu());
@@ -124,41 +119,29 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
                         textCharacterRenderIndex++;
                     }
                 }
-                if (this.textShadow) {
-                    this.font.drawShadow(pose, afterCursorComp, (float)textXAfterCursor, (float)textY, textColor);
-                } else {
-                    this.font.draw(pose, afterCursorComp, (float)textXAfterCursor, (float)textY, textColor);
-                }
+                graphics.drawString(this.font, afterCursorComp, textXAfterCursor, textY, textColor, this.textShadow);
             }
 
             Component hint = access.getHintFancyMenu();
             if ((hint != null) && text.isEmpty() && !this.isFocused()) {
-                if (this.textShadow) {
-                    this.font.drawShadow(pose, hint, (float) textXAfterCursor, (float) textY, textColor);
-                } else {
-                    this.font.draw(pose, hint, (float) textXAfterCursor, (float) textY, textColor);
-                }
+                graphics.drawString(this.font, hint, textXAfterCursor, textY, textColor, this.textShadow);
             }
 
             if (!renderSmallCursor && access.getSuggestionFancyMenu() != null) {
-                if (this.textShadow) {
-                    this.font.drawShadow(pose, access.getSuggestionFancyMenu(), (float) (finalTextXAfterCursor - 1), (float) textY, this.suggestionTextColor.getColorInt());
-                } else {
-                    this.font.draw(pose, access.getSuggestionFancyMenu(), (float)finalTextXAfterCursor, (float) textY, this.suggestionTextColor.getColorInt());
-                }
+                graphics.drawString(this.font, access.getSuggestionFancyMenu(), (finalTextXAfterCursor - 1), textY, this.suggestionTextColor.getColorInt(), this.textShadow);
             }
 
             if (isCursorVisible) {
                 if (renderSmallCursor) {
-                    fill(pose, finalTextXAfterCursor, textY - 1, finalTextXAfterCursor + 1, textY + 1 + 9, textColor);
+                    graphics.fill(finalTextXAfterCursor, textY - 1, finalTextXAfterCursor + 1, textY + 1 + 9, textColor);
                 } else {
-                    fill(pose, finalTextXAfterCursor, textY + this.font.lineHeight - 2, finalTextXAfterCursor + 5, textY + this.font.lineHeight - 1, textColor);
+                    graphics.fill(finalTextXAfterCursor, textY + this.font.lineHeight - 2, finalTextXAfterCursor + 5, textY + this.font.lineHeight - 1, textColor);
                 }
             }
 
             if (highlightPos != cursorPos) {
                 int l1 = textX + this.font.width(text.substring(0, highlightPos));
-                access.invokeRenderHighlightFancyMenu(pose, finalTextXAfterCursor, textY - 1, l1 - 1, textY + 1 + 9);
+                access.invokeRenderHighlightFancyMenu(graphics, finalTextXAfterCursor, textY - 1, l1 - 1, textY + 1 + 9);
             }
 
         }

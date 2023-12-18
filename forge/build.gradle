@@ -68,12 +68,12 @@ dependencies {
         jarJar.ranged(it, "[0.3.1,)")
     }
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
-    implementation fg.deobf("curse.maven:konkrete-410295:4514916")
-    implementation fg.deobf("curse.maven:load-my-resources-forge-534502:4203277")
+    implementation fg.deobf("maven.modrinth:konkrete:1.6.1-2-1.20-forge")
+    implementation fg.deobf("maven.modrinth:load-my-resources:1.0.4-1.19.3-forge")
     minecraftLibrary(jarJar("com.github.Keksuccino:japng:0.5.3")) {
         jarJar.ranged(it, "[0.5.3,)")
     }
-    implementation fg.deobf("curse.maven:melody-938643:4869647")
+    implementation fg.deobf("maven.modrinth:melody:1.0.0-1.20.1-1.20.4-forge")
 }
 
 tasks.withType(JavaCompile).configureEach {

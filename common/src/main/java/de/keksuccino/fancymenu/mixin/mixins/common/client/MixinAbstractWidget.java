@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import net.minecraft.client.gui.ComponentPath;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.sounds.SoundManager;
@@ -87,7 +88,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	private final List<Runnable> resetCustomizationsListenersFancyMenu = new ArrayList<>();
 	
 	@Inject(method = "render", at = @At(value = "HEAD"), cancellable = true)
-	private void beforeRenderFancyMenu(PoseStack pose, int mouseX, int mouseY, float partial, CallbackInfo info) {
+	private void beforeRenderFancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
 
 		if (!this.widgetInitializedFancyMenu) this.initWidgetFancyMenu();
 		this.widgetInitializedFancyMenu = true;
@@ -119,7 +120,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 
 		//Fire RenderWidgetEvent.Pre
 		try {
-			RenderWidgetEvent.Pre e = new RenderWidgetEvent.Pre(pose, this.getWidgetFancyMenu(), this.alpha);
+			RenderWidgetEvent.Pre e = new RenderWidgetEvent.Pre(graphics, this.getWidgetFancyMenu(), this.alpha);
 			EventHandler.INSTANCE.postEvent(e);
 			this.alpha = e.getAlpha();
 			if (e.isCanceled()) {
@@ -132,12 +133,12 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	}
 	
 	@Inject(method = "render", at = @At(value = "RETURN"))
-	private void afterRenderFancyMenu(PoseStack pose, int mouseX, int mouseY, float partial, CallbackInfo info) {
+	private void afterRenderFancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
 
 		if (this.hiddenFancyMenu) return;
 
 		try {
-			RenderWidgetEvent.Post e = new RenderWidgetEvent.Post(pose, this.getWidgetFancyMenu(), this.alpha);
+			RenderWidgetEvent.Post e = new RenderWidgetEvent.Post(graphics, this.getWidgetFancyMenu(), this.alpha);
 			EventHandler.INSTANCE.postEvent(e);
 		} catch (Exception e) {
 			e.printStackTrace();

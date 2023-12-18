@@ -51,7 +51,7 @@ public class ImageElement extends AbstractElement {
                 blit(pose, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
             }
 
-            RenderingUtils.resetShaderColor();
+            RenderingUtils.resetShaderColor(graphics);
             RenderSystem.disableBlend();
 
         }

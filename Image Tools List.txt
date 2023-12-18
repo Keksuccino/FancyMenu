@@ -1,8 +1,0 @@
-
-- Good Bulk JPEG to PNG converter: https://imagy.app/jpg-to-png/ [ONLINE TOOL]
-
-- APNG Maker (pack multiple PNGs to APNG animation): https://sourceforge.net/projects/apngasm/ [OFFLINE TOOL]
-
-- APNG Optimizer (Compressor): https://sourceforge.net/projects/apng/ [OFFLINE TOOL] (Not needed if APNG was made with tool above)
-
-- 

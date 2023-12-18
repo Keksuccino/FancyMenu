@@ -79,7 +79,7 @@ public class GameIntroOverlay extends Overlay {
             fill(pose, 0, 0, this.width, this.height, DrawableColor.BLACK.getColorInt());
         }
 
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
 
         this.renderIntro(pose, mouseX, mouseY, partial);
 
@@ -106,7 +106,7 @@ public class GameIntroOverlay extends Overlay {
                 blit(pose, x, y, 0.0F, 0.0F, aspectWidth, aspectHeight, aspectWidth, aspectHeight);
             }
 
-            RenderingUtils.resetShaderColor();
+            RenderingUtils.resetShaderColor(graphics);
 
         }
 
@@ -123,14 +123,14 @@ public class GameIntroOverlay extends Overlay {
             pose.pushPose();
             pose.scale(scale, scale, scale);
             RenderSystem.enableBlend();
-            RenderingUtils.resetShaderColor();
+            RenderingUtils.resetShaderColor(graphics);
             int normalizedWidth = (int)(this.width / scale);
             int normalizedHeight = (int)(this.height / scale);
             int textX = (normalizedWidth / 2) - (this.font.width(skipComp) / 2);
             int textY = normalizedHeight - 40;
             this.font.draw(pose, skipComp, textX, textY, RenderingUtils.replaceAlphaInColor(DrawableColor.WHITE.getColorInt(), Math.max(0.1F, 0.6F * this.opacity)));
             pose.popPose();
-            RenderingUtils.resetShaderColor();
+            RenderingUtils.resetShaderColor(graphics);
         }
     }
 

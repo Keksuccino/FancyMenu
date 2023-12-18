@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v1;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractSliderButton;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -12,6 +11,7 @@ import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -65,28 +65,27 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
     }
 
     @Override
-    public void renderWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-        this.renderBackground(pose);
-        this.renderHandle(pose);
+    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        this.renderBackground(graphics);
+        this.renderHandle(graphics);
         int labelColorInt = this.active ? this.labelColorNormal.getColorInt() : this.labelColorInactive.getColorInt();
-        this.renderScrollingLabel(pose, Minecraft.getInstance().font, 2, labelColorInt | Mth.ceil(this.alpha * 255.0F) << 24);
-        RenderingUtils.resetShaderColor();
+        this.renderScrollingLabel(graphics, Minecraft.getInstance().font, 2, labelColorInt | Mth.ceil(this.alpha * 255.0F) << 24);
+        RenderingUtils.resetShaderColor(graphics);
     }
 
-    protected void renderHandle(@NotNull PoseStack pose) {
+    protected void renderHandle(@NotNull GuiGraphics graphics) {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();
         int handleX = this.getX() + (int)(this.value * (double)(this.width - 8));
         DrawableColor c = this.getHandleRenderColor();
         if (c == null) {
-            RenderSystem.setShaderTexture(0, SLIDER_LOCATION);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
-            blitNineSliced(pose, handleX, this.getY(), 8, 20, 20, 4, 200, 20, 0, this.getHandleTextureY());
+            graphics.blitNineSliced(SLIDER_LOCATION, handleX, this.getY(), 8, 20, 20, 4, 200, 20, 0, this.getHandleTextureY());
         } else {
-            fill(pose, handleX, this.getY(), handleX + 8, this.getY() + this.getHeight(), RenderingUtils.replaceAlphaInColor(c.getColorInt(), this.alpha));
+            graphics.fill(handleX, this.getY(), handleX + 8, this.getY() + this.getHeight(), RenderingUtils.replaceAlphaInColor(c.getColorInt(), this.alpha));
         }
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
     }
 
     @Nullable
@@ -95,26 +94,25 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
         return this.handleColorNormal;
     }
 
-    protected void renderBackground(@NotNull PoseStack pose) {
+    protected void renderBackground(@NotNull GuiGraphics graphics) {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();
         if (this.backgroundColor == null) {
-            RenderSystem.setShaderTexture(0, SLIDER_LOCATION);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
-            blitNineSliced(pose, this.getX(), this.getY(), this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureY());
+            graphics.blitNineSliced(SLIDER_LOCATION, this.getX(), this.getY(), this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureY());
         } else {
             int borderOffset = (this.borderColor != null) ? 1 : 0;
-            fill(pose, this.getX() + borderOffset, this.getY() + borderOffset, this.getX() + this.getWidth() - borderOffset, this.getY() + this.getHeight() - borderOffset, RenderingUtils.replaceAlphaInColor(this.backgroundColor.getColorInt(), this.alpha));
+            graphics.fill(this.getX() + borderOffset, this.getY() + borderOffset, this.getX() + this.getWidth() - borderOffset, this.getY() + this.getHeight() - borderOffset, RenderingUtils.replaceAlphaInColor(this.backgroundColor.getColorInt(), this.alpha));
             if (this.borderColor != null) {
-                UIBase.renderBorder(pose, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.borderColor, true, true, true, true);
+                UIBase.renderBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.borderColor, true, true, true, true);
             }
         }
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (this.visible) {
 
@@ -149,17 +147,17 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
 
         }
 
-        super.render(pose, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
 
     }
 
-    protected void renderScrollingLabel(@NotNull PoseStack pose, @NotNull Font font, int spaceLeftRight, int textColor) {
+    protected void renderScrollingLabel(@NotNull GuiGraphics graphics, @NotNull Font font, int spaceLeftRight, int textColor) {
         int xMin = this.getX() + spaceLeftRight;
         int xMax = this.getX() + this.getWidth() - spaceLeftRight;
-        this.renderScrollingLabelInternal(pose, font, this.getMessage(), xMin, this.getY(), xMax, this.getY() + this.getHeight(), textColor);
+        this.renderScrollingLabelInternal(graphics, font, this.getMessage(), xMin, this.getY(), xMax, this.getY() + this.getHeight(), textColor);
     }
 
-    protected void renderScrollingLabelInternal(@NotNull PoseStack pose, Font font, @NotNull Component text, int xMin, int yMin, int xMax, int yMax, int textColor) {
+    protected void renderScrollingLabelInternal(@NotNull GuiGraphics graphics, Font font, @NotNull Component text, int xMin, int yMin, int xMax, int yMax, int textColor) {
         int textWidth = font.width(text);
         int textPosY = (yMin + yMax - 9) / 2 + 1;
         int maxTextWidth = xMax - xMin;
@@ -169,19 +167,11 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
             double $$13 = Math.max((double)diffTextWidth * 0.5D, 3.0D);
             double $$14 = Math.sin((Math.PI / 2D) * Math.cos((Math.PI * 2D) * scrollTime / $$13)) / 2.0D + 0.5D;
             double textPosX = Mth.lerp($$14, 0.0D, diffTextWidth);
-            enableScissor(xMin, yMin, xMax, yMax);
-            if (!this.labelShadow) {
-                font.draw(pose, text, xMin - (int)textPosX, textPosY, textColor);
-            } else {
-                font.drawShadow(pose, text, xMin - (int)textPosX, textPosY, textColor);
-            }
-            disableScissor();
+            graphics.enableScissor(xMin, yMin, xMax, yMax);
+            graphics.drawString(font, text, xMin - (int)textPosX, textPosY, textColor, this.labelShadow);
+            graphics.disableScissor();
         } else {
-            if (!this.labelShadow) {
-                font.draw(pose, text, (int)(((xMin + xMax) / 2F) - (font.width(text) / 2F)), textPosY, textColor);
-            } else {
-                font.drawShadow(pose, text, (int)(((xMin + xMax) / 2F) - (font.width(text) / 2F)), textPosY, textColor);
-            }
+            graphics.drawString(font, text, (int)(((xMin + xMax) / 2F) - (font.width(text) / 2F)), textPosY, textColor, this.labelShadow);
         }
     }
 

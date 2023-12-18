@@ -5,17 +5,24 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import javax.imageio.ImageIO;
-
 import com.mojang.blaze3d.platform.MacosUtil;
+import com.mojang.blaze3d.platform.TextureUtil;
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.packs.resources.IoSupplier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.glfw.GLFWImage;
+import org.lwjgl.stb.STBImage;
+import org.lwjgl.system.MemoryStack;
+import org.lwjgl.system.MemoryUtil;
 
 public class WindowHandler {
 
@@ -41,21 +48,21 @@ public class WindowHandler {
 	@Nullable
 	public static File getCustomWindowIcon16() {
 		String path = FancyMenu.getOptions().customWindowIcon16.getValue();
-		if (!path.replace(" ", "").isEmpty()) return new File(ScreenCustomization.getAbsoluteGameDirectoryPath(path));
+		if (!path.replace(" ", "").isEmpty()) return new File(GameDirectoryUtils.getAbsoluteGameDirectoryPath(path));
 		return null;
 	}
 
 	@Nullable
 	public static File getCustomWindowIcon32() {
 		String path = FancyMenu.getOptions().customWindowIcon32.getValue();
-		if (!path.replace(" ", "").isEmpty()) return new File(ScreenCustomization.getAbsoluteGameDirectoryPath(path));
+		if (!path.replace(" ", "").isEmpty()) return new File(GameDirectoryUtils.getAbsoluteGameDirectoryPath(path));
 		return null;
 	}
 
 	@Nullable
 	public static File getCustomWindowIconMacOS() {
 		String path = FancyMenu.getOptions().customWindowIconMacOS.getValue();
-		if (!path.replace(" ", "").isEmpty()) return new File(ScreenCustomization.getAbsoluteGameDirectoryPath(path));
+		if (!path.replace(" ", "").isEmpty()) return new File(GameDirectoryUtils.getAbsoluteGameDirectoryPath(path));
 		return null;
 	}
 
@@ -109,7 +116,7 @@ public class WindowHandler {
 					LOGGER.error("[FANCYMENU] Unable to set custom window icons! 32x32 icon has wrong resolution! Has To be exactly 32x32 pixels!");
 					return;
 				}
-				Minecraft.getInstance().getWindow().setIcon(IoSupplier.create(i16.toPath()), IoSupplier.create(i32.toPath()));
+				setIcon(IoSupplier.create(i16.toPath()), IoSupplier.create(i32.toPath()));
 				LOGGER.info("[FANCYMENU] Custom window icon successfully updated!");
 			} catch (Exception e) {
 				LOGGER.error("[FANCYMENU] Failed to set custom window icon!");
@@ -118,12 +125,62 @@ public class WindowHandler {
 		}
 	}
 
+	protected static void setIcon(IoSupplier<InputStream> $$0, IoSupplier<InputStream> $$1) {
+		RenderSystem.assertInInitPhase();
+		try (MemoryStack $$2 = MemoryStack.stackPush()) {
+			IntBuffer $$3 = $$2.mallocInt(1);
+			IntBuffer $$4 = $$2.mallocInt(1);
+			IntBuffer $$5 = $$2.mallocInt(1);
+			GLFWImage.Buffer $$6 = GLFWImage.malloc(2, $$2);
+			ByteBuffer $$7 = readIconPixels($$0, $$3, $$4, $$5);
+			if ($$7 == null) {
+				throw new IllegalStateException("Could not load icon: " + STBImage.stbi_failure_reason());
+			}
+			$$6.position(0);
+			$$6.width($$3.get(0));
+			$$6.height($$4.get(0));
+			$$6.pixels($$7);
+			ByteBuffer $$8 = readIconPixels($$1, $$3, $$4, $$5);
+			if ($$8 == null) {
+				STBImage.stbi_image_free($$7);
+				throw new IllegalStateException("Could not load icon: " + STBImage.stbi_failure_reason());
+			}
+			$$6.position(1);
+			$$6.width($$3.get(0));
+			$$6.height($$4.get(0));
+			$$6.pixels($$8);
+			$$6.position(0);
+			GLFW.glfwSetWindowIcon(Minecraft.getInstance().getWindow().getWindow(), $$6);
+			STBImage.stbi_image_free($$7);
+			STBImage.stbi_image_free($$8);
+		} catch (IOException var12) {
+			LOGGER.error("Couldn't set icon", (Throwable)var12);
+		}
+	}
+
+	@Nullable
+	protected static ByteBuffer readIconPixels(IoSupplier<InputStream> $$0, IntBuffer $$1, IntBuffer $$2, IntBuffer $$3) throws IOException {
+		RenderSystem.assertInInitPhase();
+		ByteBuffer $$4 = null;
+		ByteBuffer var7;
+		try (InputStream $$5 = $$0.get()) {
+			$$4 = TextureUtil.readResource($$5);
+			$$4.rewind();
+			var7 = STBImage.stbi_load_from_memory($$4, $$1, $$2, $$3, 0);
+		} finally {
+			if ($$4 != null) {
+				MemoryUtil.memFree($$4);
+			}
+		}
+		return var7;
+	}
+
 	public static void resetWindowIcon() {
 		try {
 			if (Minecraft.ON_OSX) {
 				MacosUtil.loadIcon(getVanillaWindowIconFile("icons", "minecraft.icns"));
 			} else {
-				Minecraft.getInstance().getWindow().setIcon(getVanillaWindowIconFile("icons", "icon_16x16.png"), getVanillaWindowIconFile("icons", "icon_32x32.png"));
+				setIcon(getVanillaWindowIconFile("icons", "icon_16x16.png"), getVanillaWindowIconFile("icons", "icon_32x32.png"));
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();

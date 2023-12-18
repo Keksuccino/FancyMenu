@@ -1,7 +1,5 @@
-
 package de.keksuccino.fancymenu.customization.background;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.background.backgrounds.image.ImageMenuBackground;
 import de.keksuccino.fancymenu.customization.background.backgrounds.image.ImageMenuBackgroundBuilder;
 import de.keksuccino.fancymenu.util.input.InputConstants;
@@ -14,13 +12,13 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -85,14 +83,14 @@ public class ChooseMenuBackgroundScreen extends Screen {
             }
         }) {
             @Override
-            public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+            public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
                 if (ChooseMenuBackgroundScreen.this.backgroundType == null) {
                     TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.menu_background.choose.not_background_selected")).setDefaultStyle(), false, true);
                     this.active = false;
                 } else {
                     this.active = ChooseMenuBackgroundScreen.this.backgroundType != NO_BACKGROUND_TYPE;
                 }
-                super.render(pose, mouseX, mouseY, partial);
+                super.render(graphics, mouseX, mouseY, partial);
             }
         };
         this.addWidget(this.configureButton);
@@ -102,7 +100,7 @@ public class ChooseMenuBackgroundScreen extends Screen {
             this.callback.accept(this.background);
         }) {
             @Override
-            public void renderWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+            public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
                 if (ChooseMenuBackgroundScreen.this.backgroundType == null) {
                     TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.menu_background.choose.not_background_selected")).setDefaultStyle(), false, true);
                     this.active = false;
@@ -112,7 +110,7 @@ public class ChooseMenuBackgroundScreen extends Screen {
                 } else {
                     this.active = true;
                 }
-                super.renderWidget(pose, mouseX, mouseY, partial);
+                super.renderWidget(graphics, mouseX, mouseY, partial);
             }
         };
         this.addWidget(this.doneButton);
@@ -134,44 +132,44 @@ public class ChooseMenuBackgroundScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull PoseStack matrix, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        fill(matrix, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(matrix, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        this.font.draw(matrix, Component.translatable("fancymenu.menu_background.choose.available_types"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, Component.translatable("fancymenu.menu_background.choose.available_types"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
         this.backgroundTypeListScrollArea.setWidth((this.width / 2) - 40, true);
         this.backgroundTypeListScrollArea.setHeight(this.height - 85, true);
         this.backgroundTypeListScrollArea.setX(20, true);
         this.backgroundTypeListScrollArea.setY(50 + 15, true);
-        this.backgroundTypeListScrollArea.render(matrix, mouseX, mouseY, partial);
+        this.backgroundTypeListScrollArea.render(graphics, mouseX, mouseY, partial);
 
         Component descLabel = Component.translatable("fancymenu.menu_background.choose.type_description");
         int descLabelWidth = this.font.width(descLabel);
-        this.font.draw(matrix, descLabel, this.width - 20 - descLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, descLabel, this.width - 20 - descLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
         this.backgroundDescriptionScrollArea.setWidth((this.width / 2) - 40, true);
         this.backgroundDescriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
         this.backgroundDescriptionScrollArea.setX(this.width - 20 - this.backgroundDescriptionScrollArea.getWidthWithBorder(), true);
         this.backgroundDescriptionScrollArea.setY(50 + 15, true);
-        this.backgroundDescriptionScrollArea.render(matrix, mouseX, mouseY, partial);
+        this.backgroundDescriptionScrollArea.render(graphics, mouseX, mouseY, partial);
 
         this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
         this.doneButton.setY(this.height - 20 - 20);
-        this.doneButton.render(matrix, mouseX, mouseY, partial);
+        this.doneButton.render(graphics, mouseX, mouseY, partial);
 
         this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
         this.cancelButton.setY(this.doneButton.getY() - 5 - 20);
-        this.cancelButton.render(matrix, mouseX, mouseY, partial);
+        this.cancelButton.render(graphics, mouseX, mouseY, partial);
 
         this.configureButton.setX(this.width - 20 - this.configureButton.getWidth());
         this.configureButton.setY(this.cancelButton.getY() - 15 - 20);
-        this.configureButton.render(matrix, mouseX, mouseY, partial);
+        this.configureButton.render(graphics, mouseX, mouseY, partial);
 
-        super.render(matrix, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
 
     }
 
@@ -253,12 +251,12 @@ public class ChooseMenuBackgroundScreen extends Screen {
         }
 
         @Override
-        public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             if (this.tooltipSupplier != null) {
                 Tooltip t = this.tooltipSupplier.get();
                 if (t != null) TooltipHandler.INSTANCE.addTooltip(t, this::isHovered, false, true);
             }
-            super.render(matrix, mouseX, mouseY, partial);
+            super.render(graphics, mouseX, mouseY, partial);
         }
 
         private static Component getText(MenuBackgroundBuilder<?> backgroundType) {

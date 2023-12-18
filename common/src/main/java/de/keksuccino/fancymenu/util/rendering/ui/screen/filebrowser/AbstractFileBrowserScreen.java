@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.file.FileUtils;
@@ -26,9 +25,9 @@ import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
-import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
@@ -156,7 +155,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         //Update horizontal scroll bar of file types area
         if (this.currentFileTypesComponent != null) {
@@ -165,71 +164,71 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
         RenderSystem.enableBlend();
 
-        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(pose, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        this.font.draw(pose, Component.translatable("fancymenu.ui.filechooser.files"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, Component.translatable("fancymenu.ui.filechooser.files"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        int currentDirFieldYEnd = this.renderCurrentDirectoryField(pose, mouseX, mouseY, partial, 20, 50 + 15, this.width - 260 - 20, this.font.lineHeight + 6);
+        int currentDirFieldYEnd = this.renderCurrentDirectoryField(graphics, mouseX, mouseY, partial, 20, 50 + 15, this.width - 260 - 20, this.font.lineHeight + 6);
 
-        this.renderFileScrollArea(pose, mouseX, mouseY, partial, currentDirFieldYEnd);
+        this.renderFileScrollArea(graphics, mouseX, mouseY, partial, currentDirFieldYEnd);
 
-        this.renderFileTypeScrollArea(pose, mouseX, mouseY, partial);
+        this.renderFileTypeScrollArea(graphics, mouseX, mouseY, partial);
 
         Component previewLabel = Component.translatable("fancymenu.ui.filechooser.preview");
         int previewLabelWidth = this.font.width(previewLabel);
-        this.font.draw(pose, previewLabel, this.width - 20 - previewLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, previewLabel, this.width - 20 - previewLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        this.renderConfirmButton(pose, mouseX, mouseY, partial);
+        this.renderConfirmButton(graphics, mouseX, mouseY, partial);
 
-        this.renderCancelButton(pose, mouseX, mouseY, partial);
+        this.renderCancelButton(graphics, mouseX, mouseY, partial);
 
-        this.renderOpenInExplorerButton(pose, mouseX, mouseY, partial);
+        this.renderOpenInExplorerButton(graphics, mouseX, mouseY, partial);
 
-        this.renderPreview(pose, mouseX, mouseY, partial);
+        this.renderPreview(graphics, mouseX, mouseY, partial);
 
-        super.render(pose, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
 
     }
 
-    protected void renderOpenInExplorerButton(PoseStack pose, int mouseX, int mouseY, float partial) {
+    protected void renderOpenInExplorerButton(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.openInExplorerButton.setX(this.width - 20 - this.openInExplorerButton.getWidth());
         this.openInExplorerButton.setY(this.cancelButton.getY() - 15 - 20);
-        this.openInExplorerButton.render(pose, mouseX, mouseY, partial);
+        this.openInExplorerButton.render(graphics, mouseX, mouseY, partial);
     }
 
-    protected void renderConfirmButton(PoseStack pose, int mouseX, int mouseY, float partial) {
+    protected void renderConfirmButton(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.confirmButton.setX(this.width - 20 - this.confirmButton.getWidth());
         this.confirmButton.setY(this.height - 20 - 20);
-        this.confirmButton.render(pose, mouseX, mouseY, partial);
+        this.confirmButton.render(graphics, mouseX, mouseY, partial);
     }
 
-    protected void renderCancelButton(PoseStack pose, int mouseX, int mouseY, float partial) {
+    protected void renderCancelButton(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
         this.cancelButton.setY(this.confirmButton.getY() - 5 - 20);
-        this.cancelButton.render(pose, mouseX, mouseY, partial);
+        this.cancelButton.render(graphics, mouseX, mouseY, partial);
     }
 
-    protected void renderFileTypeScrollArea(PoseStack pose, int mouseX, int mouseY, float partial) {
+    protected void renderFileTypeScrollArea(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.fileTypeScrollArea.verticalScrollBar.active = false;
         this.fileTypeScrollArea.setWidth(this.getBelowFileScrollAreaElementWidth());
         this.fileTypeScrollArea.setX(this.fileListScrollArea.getXWithBorder() + this.fileListScrollArea.getWidthWithBorder() - this.fileTypeScrollArea.getWidthWithBorder());
         this.fileTypeScrollArea.setY(this.fileListScrollArea.getYWithBorder() + this.fileListScrollArea.getHeightWithBorder() + 5 + this.fileTypeScrollListYOffset);
-        this.fileTypeScrollArea.render(pose, mouseX, mouseY, partial);
-        this.font.draw(pose, FILE_TYPE_PREFIX_TEXT, this.fileTypeScrollArea.getXWithBorder() - Minecraft.getInstance().font.width(FILE_TYPE_PREFIX_TEXT) - 5, this.fileTypeScrollArea.getYWithBorder() + (this.fileTypeScrollArea.getHeightWithBorder() / 2) - (Minecraft.getInstance().font.lineHeight / 2), UIBase.getUIColorTheme().element_label_color_normal.getColorInt());
+        this.fileTypeScrollArea.render(graphics, mouseX, mouseY, partial);
+        graphics.drawString(this.font, FILE_TYPE_PREFIX_TEXT, this.fileTypeScrollArea.getXWithBorder() - Minecraft.getInstance().font.width(FILE_TYPE_PREFIX_TEXT) - 5, this.fileTypeScrollArea.getYWithBorder() + (this.fileTypeScrollArea.getHeightWithBorder() / 2) - (Minecraft.getInstance().font.lineHeight / 2), UIBase.getUIColorTheme().element_label_color_normal.getColorInt(), false);
     }
 
-    protected void renderFileScrollArea(PoseStack pose, int mouseX, int mouseY, float partial, int currentDirFieldYEnd) {
+    protected void renderFileScrollArea(GuiGraphics graphics, int mouseX, int mouseY, float partial, int currentDirFieldYEnd) {
         this.fileListScrollArea.setWidth(this.width - 260 - 20, true);
         this.fileListScrollArea.setHeight(this.height - 85 - (this.font.lineHeight + 6) - 2 - 25 + this.fileScrollListHeightOffset, true);
         this.fileListScrollArea.setX(20, true);
         this.fileListScrollArea.setY(currentDirFieldYEnd + 2, true);
-        this.fileListScrollArea.render(pose, mouseX, mouseY, partial);
+        this.fileListScrollArea.render(graphics, mouseX, mouseY, partial);
     }
 
-    protected void renderPreview(PoseStack pose, int mouseX, int mouseY, float partial) {
+    protected void renderPreview(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.tickTextPreview();
         if (this.previewTextureSupplier != null) {
             ITexture t = this.previewTextureSupplier.get();
@@ -241,33 +240,32 @@ public abstract class AbstractFileBrowserScreen extends Screen {
                 int h = size[1];
                 int x = this.width - 20 - w;
                 int y = 50 + 15;
-                UIBase.resetShaderColor();
-                fill(pose, x, y, x + w, y + h, UIBase.getUIColorTheme().area_background_color.getColorInt());
-                RenderingUtils.resetShaderColor();
+                UIBase.resetShaderColor(graphics);
+                graphics.fill(x, y, x + w, y + h, UIBase.getUIColorTheme().area_background_color.getColorInt());
+                RenderingUtils.resetShaderColor(graphics);
                 RenderSystem.enableBlend();
-                RenderUtils.bindTexture(loc);
-                blit(pose, x, y, 0.0F, 0.0F, w, h, w, h);
-                UIBase.resetShaderColor();
-                UIBase.renderBorder(pose, x, y, x + w, y + h, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUIColorTheme().element_border_color_normal.getColor(), true, true, true, true);
+                graphics.blit(loc, x, y, 0.0F, 0.0F, w, h, w, h);
+                UIBase.resetShaderColor(graphics);
+                UIBase.renderBorder(graphics, x, y, x + w, y + h, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUIColorTheme().element_border_color_normal.getColor(), true, true, true, true);
             }
         } else {
             this.previewTextScrollArea.setWidth(200, true);
             this.previewTextScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
             this.previewTextScrollArea.setX(this.width - 20 - this.previewTextScrollArea.getWidthWithBorder(), true);
             this.previewTextScrollArea.setY(50 + 15, true);
-            this.previewTextScrollArea.render(pose, mouseX, mouseY, partial);
+            this.previewTextScrollArea.render(graphics, mouseX, mouseY, partial);
         }
-        UIBase.resetShaderColor();
+        UIBase.resetShaderColor(graphics);
     }
 
-    protected int renderCurrentDirectoryField(PoseStack pose, int mouseX, int mouseY, float partial, int x, int y, int width, int height) {
+    protected int renderCurrentDirectoryField(GuiGraphics graphics, int mouseX, int mouseY, float partial, int x, int y, int width, int height) {
         int xEnd = x + width;
         int yEnd = y + height;
-        fill(pose, x + 1, y + 1, xEnd - 1, yEnd - 1, UIBase.getUIColorTheme().area_background_color.getColorInt());
-        UIBase.renderBorder(pose, x, y, xEnd, yEnd, 1, UIBase.getUIColorTheme().element_border_color_normal.getColor(), true, true, true, true);
+        graphics.fill(x + 1, y + 1, xEnd - 1, yEnd - 1, UIBase.getUIColorTheme().area_background_color.getColorInt());
+        UIBase.renderBorder(graphics, x, y, xEnd, yEnd, 1, UIBase.getUIColorTheme().element_border_color_normal.getColor(), true, true, true, true);
         this.currentDirectoryComponent.setX(x + 4);
         this.currentDirectoryComponent.setY(y + (height / 2) - (this.currentDirectoryComponent.getHeight() / 2));
-        this.currentDirectoryComponent.render(pose, mouseX, mouseY, partial);
+        this.currentDirectoryComponent.render(graphics, mouseX, mouseY, partial);
         return yEnd;
     }
 
@@ -696,9 +694,9 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         }
 
         @Override
-        public void render(PoseStack pose, int mouseX, int mouseY, float partial) {
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-            super.render(pose, mouseX, mouseY, partial);
+            super.render(graphics, mouseX, mouseY, partial);
 
             if (this.file.exists()) {
 
@@ -706,13 +704,13 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
                 //Render icon
                 UIBase.getUIColorTheme().setUITextureShaderColor(1.0F);
-                RenderUtils.bindTexture(this.file.isFile() ? FILE_ICON_TEXTURE : FOLDER_ICON_TEXTURE);
-                blit(pose, this.x + BORDER, this.y + BORDER, 0.0F, 0.0F, 20, 20, 20, 20);
-                UIBase.resetShaderColor();
+                ResourceLocation loc = this.file.isFile() ? FILE_ICON_TEXTURE : FOLDER_ICON_TEXTURE;
+                graphics.blit(loc, this.x + BORDER, this.y + BORDER, 0.0F, 0.0F, 20, 20, 20, 20);
+                UIBase.resetShaderColor(graphics);
 
                 //Render file name
                 int textColor = this.resourceUnfriendlyFileName ? UIBase.getUIColorTheme().error_text_color.getColorInt() : UIBase.getUIColorTheme().description_area_text_color.getColorInt();
-                this.font.draw(pose, this.fileNameComponent, this.x + BORDER + 20 + 3, this.y + ((float)this.height / 2) - ((float)this.font.lineHeight / 2) , textColor);
+                graphics.drawString(this.font, this.fileNameComponent, this.x + BORDER + 20 + 3, this.y + (this.height / 2) - (this.font.lineHeight / 2) , textColor, false);
 
                 //Show "unsupported characters" tooltip on hover, if resource-unfriendly file name
                 if (this.isHovered() && this.parent.isMouseInsideArea() && this.resourceUnfriendlyFileName) {
@@ -749,20 +747,19 @@ public abstract class AbstractFileBrowserScreen extends Screen {
         }
 
         @Override
-        public void render(PoseStack pose, int mouseX, int mouseY, float partial) {
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-            super.render(pose, mouseX, mouseY, partial);
+            super.render(graphics, mouseX, mouseY, partial);
 
             RenderSystem.enableBlend();
 
             //Render icon
             UIBase.getUIColorTheme().setUITextureShaderColor(1.0F);
-            RenderUtils.bindTexture(GO_UP_ICON_TEXTURE);
-            blit(pose, this.x + BORDER, this.y + BORDER, 0.0F, 0.0F, 20, 20, 20, 20);
-            UIBase.resetShaderColor();
+            graphics.blit(GO_UP_ICON_TEXTURE, this.x + BORDER, this.y + BORDER, 0.0F, 0.0F, 20, 20, 20, 20);
+            UIBase.resetShaderColor(graphics);
 
             //Render file name
-            this.font.draw(pose, this.labelComponent, this.x + BORDER + 20 + 3, this.y + ((float)this.height / 2) - ((float)this.font.lineHeight / 2) , -1);
+            graphics.drawString(this.font, this.labelComponent, this.x + BORDER + 20 + 3, this.y + (this.height / 2) - (this.font.lineHeight / 2) , -1, false);
 
         }
 

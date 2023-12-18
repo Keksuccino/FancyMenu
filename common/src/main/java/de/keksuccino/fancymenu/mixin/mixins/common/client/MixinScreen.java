@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;
@@ -30,8 +31,8 @@ public class MixinScreen implements CustomizableScreen {
 	private final List<GuiEventListener> removeOnInitChildrenFancyMenu = new ArrayList<>();
 
 	@Inject(method = "renderBackground", at = @At(value = "RETURN"))
-	private void afterRenderScreenBackgroundFancyMenu(PoseStack matrix, CallbackInfo info) {
-		EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent((Screen)((Object)this), matrix));
+	private void afterRenderScreenBackgroundFancyMenu(GuiGraphics graphics, CallbackInfo info) {
+		EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent((Screen)((Object)this), graphics));
 	}
 
 	@Inject(method = "init(Lnet/minecraft/client/Minecraft;II)V", at = @At("RETURN"))

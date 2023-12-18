@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -13,12 +12,11 @@ import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
-import de.keksuccino.konkrete.rendering.RenderUtils;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 
 @SuppressWarnings("unused")
-public class ExternalTextureSlideshowRenderer extends GuiComponent {
+public class ExternalTextureSlideshowRenderer {
 	
 	protected List<ResourceSupplier<ITexture>> images = new ArrayList<>();
 	protected ResourceSupplier<ITexture> overlayTexture;
@@ -138,26 +136,17 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 		}
 	}
 
-	public void render(PoseStack matrix) {
-
+	public void render(GuiGraphics graphics) {
 		try {
-			
 			if (!this.images.isEmpty()) {
-				
 				this.tick();
-				
-				this.renderCurrent(matrix);
-				
-				this.renderPrevious(matrix);
-				
-				this.renderOverlay(matrix);
-				
+				this.renderCurrent(graphics);
+				this.renderPrevious(graphics);
+				this.renderOverlay(graphics);
 			}
-			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
 	}
 	
 	protected void tick() {
@@ -202,9 +191,9 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 		
 	}
 
-	protected void renderPrevious(PoseStack matrix) {
+	protected void renderPrevious(GuiGraphics graphics) {
 		if ((this.previous != null) && (this.current != this.previous)) {
-			matrix.pushPose();
+			graphics.pose().pushPose();
 			RenderSystem.enableBlend();
 			float o = this.opacity;
 			if (o > this.slideshowOpacity) {
@@ -214,36 +203,33 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 			ITexture t = this.previous.get();
 			ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
 			if (loc != null) {
-				RenderUtils.bindTexture(loc);
-				blit(matrix, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
+				graphics.blit(loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-			matrix.popPose();
+			graphics.pose().popPose();
 		}
 	}
 
-	protected void renderCurrent(PoseStack matrix) {
+	protected void renderCurrent(GuiGraphics graphics) {
 		if (this.current != null) {
 			RenderSystem.enableBlend();
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.slideshowOpacity);
 			ITexture t = this.current.get();
 			ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
 			if (loc != null) {
-				RenderUtils.bindTexture(loc);
-				blit(matrix, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
+				graphics.blit(loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
 		}
 	}
 
-	protected void renderOverlay(PoseStack matrix) {
+	protected void renderOverlay(GuiGraphics graphics) {
 		if (this.overlayTexture != null) {
 			RenderSystem.enableBlend();
 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 			ITexture t = this.overlayTexture.get();
 			ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
 			if (loc != null) {
-				RenderUtils.bindTexture(loc);
-				blit(matrix, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
+				graphics.blit(loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
 		}
 	}

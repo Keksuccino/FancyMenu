@@ -1,10 +1,9 @@
 package de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollbar;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.konkrete.rendering.RenderUtils;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -13,7 +12,6 @@ import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -72,7 +70,7 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.grabberHovered = this.isMouseOverGrabber(mouseX, mouseY);
 
@@ -94,17 +92,15 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
         DrawableColor hoverC = this.hoverBarColor.get();
         if (this.isGrabberHovered() || this.isGrabberGrabbed()) {
             if (this.hoverBarTexture != null) {
-                RenderUtils.bindTexture(this.hoverBarTexture);
-                blitF(pose, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight);
+                blitF(graphics, this.hoverBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight);
             } else if (hoverC != null) {
-                fillF(pose, x, y, x + this.grabberWidth, y + this.grabberHeight, hoverC.getColorInt());
+                fillF(graphics, x, y, x + this.grabberWidth, y + this.grabberHeight, hoverC.getColorInt());
             }
         } else {
             if (this.idleBarTexture != null) {
-                RenderUtils.bindTexture(this.idleBarTexture);
-                blitF(pose, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight);
+                blitF(graphics, this.idleBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight);
             } else if (normalC != null) {
-                fillF(pose, x, y, x + this.grabberWidth, y + this.grabberHeight, normalC.getColorInt());
+                fillF(graphics, x, y, x + this.grabberWidth, y + this.grabberHeight, normalC.getColorInt());
             }
         }
 

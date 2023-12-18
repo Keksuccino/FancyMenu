@@ -98,7 +98,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     @Override
     protected void renderBody(@NotNull PoseStack pose, double mouseX, double mouseY, float partial) {
 
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
         fillF(pose, this.getRealBodyX(), this.getRealBodyY(), this.getRealBodyX() + this.getBodyWidth(), this.getRealBodyY() + this.getBodyHeight(), UIBase.getUIColorTheme().area_background_color.getColorInt());
 
         this.scrollArea.setX(this.getRealBodyX());
@@ -241,7 +241,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             RenderSystem.enableBlend();
 
             if (this.element.isSelected() || this.element.isMultiSelected()) {
-                RenderingUtils.resetShaderColor();
+                RenderingUtils.resetShaderColor(graphics);
                 fillF(pose, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), UIBase.getUIColorTheme().element_background_color_hover.getColorInt());
             }
 
@@ -253,7 +253,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             RenderingUtils.bindTexture(MOVE_DOWN_TEXTURE);
             blitF(pose, this.x, this.y + this.getButtonHeight(), 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight());
 
-            RenderingUtils.resetShaderColor();
+            RenderingUtils.resetShaderColor(graphics);
 
             if (!this.displayEditLayerNameBox) {
                 this.layerWidget.enableComponentScissor((int) (this.x + this.getButtonWidth() + 1f), (int) this.y, (int) (this.getWidth() - this.getButtonWidth() - 4f), (int) this.getHeight(), true);
@@ -422,7 +422,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             RenderingUtils.bindTexture(this.layerWidget.editor.layout.renderElementsBehindVanilla ? MOVE_BEHIND_TEXTURE : MOVE_TO_TOP_TEXTURE);
             blitF(pose, this.x, this.y, 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight());
 
-            RenderingUtils.resetShaderColor();
+            RenderingUtils.resetShaderColor(graphics);
 
             this.layerWidget.enableComponentScissor((int)(this.x + this.getButtonWidth() + 1f), (int) this.y, (int) (this.getWidth() - this.getButtonWidth() - 4f), (int) this.getHeight(), true);
             UIBase.drawElementLabelF(pose, this.font, Component.translatable("fancymenu.editor.widgets.layers.vanilla_elements").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), (int)(this.getX() + this.getButtonWidth() + 3f), (int)(this.getY() + (this.getHeight() / 2f) - (this.font.lineHeight / 2f)));
@@ -475,7 +475,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         public void renderEntry(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
             RenderSystem.enableBlend();
             fillF(pose, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), UIBase.getUIColorTheme().element_border_color_normal.getColorInt());
-            RenderingUtils.resetShaderColor();
+            RenderingUtils.resetShaderColor(graphics);
         }
 
         @Override

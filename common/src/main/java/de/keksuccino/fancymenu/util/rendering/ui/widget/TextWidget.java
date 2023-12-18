@@ -1,10 +1,10 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
@@ -46,7 +46,7 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
     }
 
     @Override
-    public void renderWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         int textWidth = this.getTextWidth();
         int textX = this.getX();
         int textY = this.getY();
@@ -56,13 +56,9 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
         if (this.alignment == TextAlignment.RIGHT) {
             textX = this.getX() + this.getWidth() - textWidth;
         }
-        RenderingUtils.resetShaderColor();
-        if (this.shadow) {
-            this.font.drawShadow(pose, this.getMessage(), textX, textY, this.baseColor.getColorInt());
-        } else {
-            this.font.draw(pose, this.getMessage(), textX, textY, this.baseColor.getColorInt());
-        }
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
+        graphics.drawString(this.font, this.getMessage(), textX, textY, this.baseColor.getColorInt(), this.shadow);
+        RenderingUtils.resetShaderColor(graphics);
     }
 
     public int getTextWidth() {

@@ -1,26 +1,27 @@
 package de.keksuccino.fancymenu.events.screen;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.event.acara.EventBase;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
-
+import org.jetbrains.annotations.NotNull;
 import java.util.List;
+import java.util.Objects;
 
 public class RenderScreenEvent extends EventBase {
 
     private final Screen screen;
-    private final PoseStack poseStack;
+    private final GuiGraphics graphics;
     private final int mouseX;
     private final int mouseY;
     private final float partial;
 
-    protected RenderScreenEvent(Screen screen, PoseStack poseStack, int mouseX, int mouseY, float partial) {
-        this.screen = screen;
-        this.poseStack = poseStack;
+    protected RenderScreenEvent(@NotNull Screen screen, @NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        this.screen = Objects.requireNonNull(screen);
+        this.graphics = Objects.requireNonNull(graphics);
         this.mouseX = mouseX;
         this.mouseY = mouseY;
         this.partial = partial;
@@ -30,8 +31,9 @@ public class RenderScreenEvent extends EventBase {
         return this.screen;
     }
 
-    public PoseStack getPoseStack() {
-        return this.poseStack;
+    @NotNull
+    public GuiGraphics getGraphics() {
+        return graphics;
     }
 
     public int getMouseX() {
@@ -75,16 +77,16 @@ public class RenderScreenEvent extends EventBase {
 
     public static class Pre extends RenderScreenEvent {
 
-        public Pre(Screen screen, PoseStack poseStack, int mouseX, int mouseY, float partial) {
-            super(screen, poseStack, mouseX, mouseY, partial);
+        public Pre(Screen screen, GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            super(screen, graphics, mouseX, mouseY, partial);
         }
 
     }
 
     public static class Post extends RenderScreenEvent {
 
-        public Post(Screen screen, PoseStack poseStack, int mouseX, int mouseY, float partial) {
-            super(screen, poseStack, mouseX, mouseY, partial);
+        public Post(Screen screen, GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            super(screen, graphics, mouseX, mouseY, partial);
         }
 
     }

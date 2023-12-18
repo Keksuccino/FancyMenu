@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.util.rendering.ui.widget.editbox;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.Message;
 import com.mojang.brigadier.ParseResults;
@@ -16,7 +15,7 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.CommandSuggestions;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -97,17 +96,17 @@ public class EditBoxSuggestions extends CommandSuggestions {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY) {
         if (!this.input.isFocused()) {
             this.setSuggestions(null);
         }
-        super.render(pose, mouseX, mouseY);
+        super.render(graphics, mouseX, mouseY);
     }
 
     @Override
-    public void renderUsage(@NotNull PoseStack pose) {
+    public void renderUsage(@NotNull GuiGraphics graphics) {
         if (!this.isAllowRenderUsage()) return;
-        super.renderUsage(pose);
+        super.renderUsage(graphics);
     }
 
     @Override
@@ -368,7 +367,8 @@ public class EditBoxSuggestions extends CommandSuggestions {
             this.suggestionList = suggestionList;
         }
 
-        public void render(@NotNull PoseStack pose, int mouseX, int mouseY) {
+        @Override
+        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY) {
             Message message;
             int suggestionLineCount = Math.min(this.suggestionList.size(), EditBoxSuggestions.this.suggestionLineLimit);
             boolean bl = this.getOffset() > 0;
@@ -380,39 +380,35 @@ public class EditBoxSuggestions extends CommandSuggestions {
             }
             if (bl3) {
                 int m;
-                GuiComponent.fill(pose, this.getRect().getX(), this.getRect().getY() - 1, this.getRect().getX() + this.getRect().getWidth(), this.getRect().getY(), EditBoxSuggestions.this.backgroundColor.getColorInt());
-                GuiComponent.fill(pose, this.getRect().getX(), this.getRect().getY() + this.getRect().getHeight(), this.getRect().getX() + this.getRect().getWidth(), this.getRect().getY() + this.getRect().getHeight() + 1, EditBoxSuggestions.this.backgroundColor.getColorInt());
+                graphics.fill(this.getRect().getX(), this.getRect().getY() - 1, this.getRect().getX() + this.getRect().getWidth(), this.getRect().getY(), EditBoxSuggestions.this.backgroundColor.getColorInt());
+                graphics.fill(this.getRect().getX(), this.getRect().getY() + this.getRect().getHeight(), this.getRect().getX() + this.getRect().getWidth(), this.getRect().getY() + this.getRect().getHeight() + 1, EditBoxSuggestions.this.backgroundColor.getColorInt());
                 if (bl) {
                     for (m = 0; m < this.getRect().getWidth(); ++m) {
                         if (m % 2 != 0) continue;
-                        GuiComponent.fill(pose, this.getRect().getX() + m, this.getRect().getY() - 1, this.getRect().getX() + m + 1, this.getRect().getY(), -1);
+                        graphics.fill(this.getRect().getX() + m, this.getRect().getY() - 1, this.getRect().getX() + m + 1, this.getRect().getY(), -1);
                     }
                 }
                 if (bl2) {
                     for (m = 0; m < this.getRect().getWidth(); ++m) {
                         if (m % 2 != 0) continue;
-                        GuiComponent.fill(pose, this.getRect().getX() + m, this.getRect().getY() + this.getRect().getHeight(), this.getRect().getX() + m + 1, this.getRect().getY() + this.getRect().getHeight() + 1, -1);
+                        graphics.fill(this.getRect().getX() + m, this.getRect().getY() + this.getRect().getHeight(), this.getRect().getX() + m + 1, this.getRect().getY() + this.getRect().getHeight() + 1, -1);
                     }
                 }
             }
             boolean bl52 = false;
             for (int n = 0; n < suggestionLineCount; ++n) {
                 Suggestion suggestion = this.suggestionList.get(n + this.getOffset());
-                GuiComponent.fill(pose, this.getRect().getX(), this.getRect().getY() + 12 * n, this.getRect().getX() + this.getRect().getWidth(), this.getRect().getY() + 12 * n + 12, EditBoxSuggestions.this.backgroundColor.getColorInt());
+                graphics.fill(this.getRect().getX(), this.getRect().getY() + 12 * n, this.getRect().getX() + this.getRect().getWidth(), this.getRect().getY() + 12 * n + 12, EditBoxSuggestions.this.backgroundColor.getColorInt());
                 if (mouseX > this.getRect().getX() && mouseX < this.getRect().getX() + this.getRect().getWidth() && mouseY > this.getRect().getY() + 12 * n && mouseY < this.getRect().getY() + 12 * n + 12) {
                     if (bl4) {
                         this.select(n + this.getOffset());
                     }
                     bl52 = true;
                 }
-                if (EditBoxSuggestions.this.textShadow) {
-                    EditBoxSuggestions.this.font.drawShadow(pose, suggestion.getText(), (float)(this.getRect().getX() + 1), (float)(this.getRect().getY() + 2 + 12 * n), ((n + this.getOffset()) == this.getCurrent()) ? EditBoxSuggestions.this.selectedTextColor.getColorInt() : EditBoxSuggestions.this.normalTextColor.getColorInt());
-                } else {
-                    EditBoxSuggestions.this.font.draw(pose, suggestion.getText(), (float)(this.getRect().getX() + 1), (float)(this.getRect().getY() + 2 + 12 * n), ((n + this.getOffset()) == this.getCurrent()) ? EditBoxSuggestions.this.selectedTextColor.getColorInt() : EditBoxSuggestions.this.normalTextColor.getColorInt());
-                }
+                graphics.drawString(EditBoxSuggestions.this.font, suggestion.getText(), (this.getRect().getX() + 1), (this.getRect().getY() + 2 + 12 * n), ((n + this.getOffset()) == this.getCurrent()) ? EditBoxSuggestions.this.selectedTextColor.getColorInt() : EditBoxSuggestions.this.normalTextColor.getColorInt(), EditBoxSuggestions.this.textShadow);
             }
             if (bl52 && (message = this.suggestionList.get(this.getCurrent()).getTooltip()) != null) {
-                EditBoxSuggestions.this.screen.renderTooltip(pose, ComponentUtils.fromMessage(message), mouseX, mouseY);
+                graphics.renderTooltip(EditBoxSuggestions.this.font, ComponentUtils.fromMessage(message), mouseX, mouseY);
             }
         }
 

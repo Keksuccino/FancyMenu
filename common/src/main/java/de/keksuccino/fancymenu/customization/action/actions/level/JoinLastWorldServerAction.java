@@ -57,11 +57,13 @@ public class JoinLastWorldServerAction extends Action {
                     }
                 }
                 if (d == null) {
-                    d = new ServerData(ipRaw, ipRaw, false);
+                    boolean isLan = false;
+                    d = new ServerData(ipRaw, ipRaw, isLan);
                     l.add(d, false);
                     l.save();
                 }
-                ConnectScreen.startConnecting(Minecraft.getInstance().screen, Minecraft.getInstance(), new ServerAddress(ip, port), d);
+                boolean isQuickPlay = false;
+                ConnectScreen.startConnecting(Minecraft.getInstance().screen, Minecraft.getInstance(), new ServerAddress(ip, port), d, isQuickPlay);
             }
         }
     }

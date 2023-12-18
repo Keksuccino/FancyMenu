@@ -15,7 +15,7 @@ import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -28,11 +28,11 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Objects;
 
-public abstract class AbstractElement extends GuiComponent implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget {
+public abstract class AbstractElement implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget {
 
 	/** The {@link AbstractElement#builder} field is NULL for this element! Keep that in mind when using it as placeholder! **/
 	@SuppressWarnings("all")
-	public static final AbstractElement EMPTY_ELEMENT = new AbstractElement(null){public void render(@NotNull PoseStack p, int i1, int i2, float f){}};
+	public static final AbstractElement EMPTY_ELEMENT = new AbstractElement(null){public void render(@NotNull GuiGraphics g, int i1, int i2, float f){}};
 
 	public static final int STAY_ON_SCREEN_EDGE_ZONE_SIZE = 2;
 
@@ -98,7 +98,7 @@ public abstract class AbstractElement extends GuiComponent implements Renderable
 	}
 
 	@Override
-	public abstract void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial);
+	public abstract void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
 
 	/**
 	 * Gets called every {@link Screen} tick, after {@link Screen#tick()} got called.

@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.customization.slideshow.ExternalTextureSlideshowR
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.konkrete.rendering.RenderUtils;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,7 +26,7 @@ public class SlideshowMenuBackground extends MenuBackground {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (this.slideshowName != null) {
             if ((this.lastSlideshowName == null) || !this.lastSlideshowName.equals(this.slideshowName)) {
@@ -69,14 +70,13 @@ public class SlideshowMenuBackground extends MenuBackground {
 
             this.slideshow.slideshowOpacity = this.opacity;
 
-            this.slideshow.render(pose);
+            this.slideshow.render(graphics);
 
             this.slideshow.slideshowOpacity = 1.0F;
 
         } else {
             RenderSystem.enableBlend();
-            RenderUtils.bindTexture(MISSING);
-            blit(pose, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
+            graphics.blit(MISSING, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
         }
 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
