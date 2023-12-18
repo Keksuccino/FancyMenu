@@ -41,6 +41,7 @@ subprojects {
     repositories {
         mavenCentral()
         maven { url 'https://jitpack.io' }
+        maven { url 'https://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-releases/' }
         maven {
             name = 'Sponge / Mixin'
             url = 'https://repo.spongepowered.org/repository/maven-public/'

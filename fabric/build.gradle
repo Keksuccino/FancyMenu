@@ -17,7 +17,7 @@ dependencies {
     modImplementation "curse.maven:load-my-resources-fabric-534835:4203280"
     modImplementation "maven.modrinth:modmenu:6.3.1"
     implementation fileTree('libs') { include '*.jar' }
-    include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.2.0")))
+    include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.3.1")))
     include(implementation 'com.github.Keksuccino:japng:0.5.3')
     modImplementation "curse.maven:melody-938643:4871682"
 }

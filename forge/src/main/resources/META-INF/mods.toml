@@ -59,7 +59,7 @@ side="BOTH"
 [[dependencies.fancymenu]]
 modId="forge"
 mandatory=true
-versionRange="[45.0.0,)"
+versionRange="[45.2.6,)"
 ordering="NONE"
 side="BOTH"
 
