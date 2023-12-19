@@ -20,7 +20,7 @@ dependencies {
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
     implementation group: 'org.ow2.asm', name: 'asm-tree', version: '9.3'
 //    implementation "curse.maven:konkrete-fabric-416797:4514891"
-    implementation "curse.maven:load-my-resources-fabric-534835:4203280"
+    implementation "curse.maven:load-my-resources-fabric-534835:4118347"
     implementation fileTree('libs') { include '*.jar' }
     implementation 'com.github.Keksuccino:japng:0.5.3'
     implementation "curse.maven:melody-938643:4871682"

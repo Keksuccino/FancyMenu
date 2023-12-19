@@ -25,7 +25,7 @@ public class MixinMouseHandler {
         if (Minecraft.ON_OSX && $$2 == 0) {
             offset = $$1;
         }
-        double scrollDelta = (this.mc.options.discreteMouseScroll ? Math.signum(offset) : offset) * this.mc.options.mouseWheelSensitivity;
+        double scrollDelta = (this.mc.options.discreteMouseScroll().get() ? Math.signum(offset) : offset) * this.mc.options.mouseWheelSensitivity().get();
         double mX = this.xpos * (double)this.mc.getWindow().getGuiScaledWidth() / (double)this.mc.getWindow().getScreenWidth();
         double mY = this.ypos * (double)this.mc.getWindow().getGuiScaledHeight() / (double)this.mc.getWindow().getScreenHeight();
         ScreenMouseScrollEvent.Pre e = new ScreenMouseScrollEvent.Pre(mc.screen, mX, mY, scrollDelta);
@@ -41,7 +41,7 @@ public class MixinMouseHandler {
         if (Minecraft.ON_OSX && $$2 == 0) {
             offset = $$1;
         }
-        double scrollDelta = (this.mc.options.discreteMouseScroll ? Math.signum(offset) : offset) * this.mc.options.mouseWheelSensitivity;
+        double scrollDelta = (this.mc.options.discreteMouseScroll().get() ? Math.signum(offset) : offset) * this.mc.options.mouseWheelSensitivity().get();
         double mX = this.xpos * (double)this.mc.getWindow().getGuiScaledWidth() / (double)this.mc.getWindow().getScreenWidth();
         double mY = this.ypos * (double)this.mc.getWindow().getGuiScaledHeight() / (double)this.mc.getWindow().getScreenHeight();
         ScreenMouseScrollEvent.Post e = new ScreenMouseScrollEvent.Post(mc.screen, mX, mY, scrollDelta);

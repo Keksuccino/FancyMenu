@@ -63,7 +63,7 @@ public class SimpleTexture implements ITexture {
         try {
             Optional<Resource> resource = MinecraftResourceUtils.get(location);
             if (resource.isPresent()) {
-                NativeImage image = NativeImage.read(resource.get().getInputStream());
+                NativeImage image = NativeImage.read(resource.get().open());
                 texture.width = image.getWidth();
                 texture.height = image.getHeight();
                 texture.aspectRatio = new AspectRatio(texture.width, texture.height);

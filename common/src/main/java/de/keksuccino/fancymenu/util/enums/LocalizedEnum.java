@@ -4,7 +4,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.network.chat.TranslatableComponent;
 import org.jetbrains.annotations.NotNull;
 import java.util.function.Supplier;
 
@@ -27,7 +26,7 @@ public interface LocalizedEnum<E> extends NamedEnum<E> {
 
     @NotNull
     default MutableComponent getValueComponent() {
-        return new TranslatableComponent(this.getValueLocalizationKey()).withStyle(this.getValueComponentStyle());
+        return Component.translatable(this.getValueLocalizationKey()).withStyle(this.getValueComponentStyle());
     }
 
     @NotNull

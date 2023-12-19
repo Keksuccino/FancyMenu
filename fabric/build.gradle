@@ -14,12 +14,12 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
     implementation project(":common")
-    modImplementation "curse.maven:load-my-resources-fabric-534835:4118344"
-    modImplementation "maven.modrinth:modmenu:3.2.5"
+    modImplementation "curse.maven:load-my-resources-fabric-534835:4118347"
+    modImplementation "maven.modrinth:modmenu:4.1.2"
     implementation fileTree('libs') { include '*.jar' }
     include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.3.1")))
     include(implementation 'com.github.Keksuccino:japng:0.5.3')
-    modImplementation "curse.maven:melody-938643:4953563"
+    modImplementation "curse.maven:melody-938643:4871682"
     //This is only to fix the missing dependency error in-dev
     implementation group: 'ca.weblite', name: 'java-objc-bridge', version: '1.1'
 }

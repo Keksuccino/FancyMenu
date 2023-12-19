@@ -10,6 +10,7 @@
     "client.IMixinClientLanguage",
     "client.IMixinCommandSuggestions",
     "client.IMixinConnectScreen",
+    "client.IMixinCreateWorldScreen",
     "client.IMixinEditBox",
     "client.IMixinLevelLoadingScreen",
     "client.IMixinMinecraft",

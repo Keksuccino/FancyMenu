@@ -1,21 +1,26 @@
 package de.keksuccino.fancymenu.util.minecraftoptions;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonReader;
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.JsonOps;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinOptions;
-import de.keksuccino.fancymenu.util.ConsumingSupplier;
-import de.keksuccino.fancymenu.util.MathUtils;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.OptionInstance;
 import net.minecraft.world.entity.player.PlayerModelPart;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.Objects;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
-@SuppressWarnings("all")
+import java.io.StringReader;
+import java.util.Set;
+
 public class MinecraftOption {
+
+    private static final Gson GSON = new Gson();
 
     protected String name;
     protected OptionInstance<Object> optionInstance;
@@ -23,9 +28,9 @@ public class MinecraftOption {
     protected PlayerModelPart modelPart;
 
     @NotNull
-    public static MinecraftOption of(@NotNull String name, @NotNull OptionInstance<?> optionInstance) {
+    public static MinecraftOption of(@NotNull String name, @NotNull OptionInstance<Object> optionInstance) {
         MinecraftOption option = new MinecraftOption();
-        option.optionInstance = (OptionInstance<Object>) optionInstance;
+        option.optionInstance = optionInstance;
         option.name = name;
         return option;
     }
@@ -53,7 +58,12 @@ public class MinecraftOption {
     public String get() {
         try {
             if (this.optionInstance != null) {
-                return this.optionInstance.get();
+                DataResult<JsonElement> result = this.optionInstance.codec().encodeStart(JsonOps.INSTANCE, this.optionInstance.get());
+                if (result.error().isPresent()) return null;
+                if (result.result().isPresent()) {
+                    JsonElement json = result.result().get();
+                    return GSON.toJson(json);
+                }
             } else if (this.keyMapping != null) {
                 return this.keyMapping.saveString();
             } else if (this.modelPart != null) {
@@ -68,7 +78,11 @@ public class MinecraftOption {
     public void set(@NotNull String value) {
         try {
             if (this.optionInstance != null) {
-                this.optionInstance.set(value);
+                JsonReader reader = new JsonReader(new StringReader(value.isEmpty() ? "\"\"" : value));
+                JsonElement json = JsonParser.parseReader(reader);
+                DataResult<Object> result = this.optionInstance.codec().parse(JsonOps.INSTANCE, json);
+                if (result.error().isPresent()) return;
+                result.result().ifPresent(this.optionInstance::set);
             } else if (this.keyMapping != null) {
                 this.keyMapping.setKey(InputConstants.getKey(value));
             } else if (this.modelPart != null) {
@@ -82,61 +96,16 @@ public class MinecraftOption {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        Minecraft.getInstance().options.save();
     }
 
-    @Nullable
-    public OptionInstance<Object> getOptionInstance() {
+    @NotNull
+    public OptionInstance<?> getOptionInstance() {
         return this.optionInstance;
     }
 
     @NotNull
     public String getName() {
         return this.name;
-    }
-
-    public static class OptionInstance<T> {
-
-        protected final String name;
-        protected final Consumer<T> setter;
-        protected final Supplier<T> getter;
-        protected final OptionCodec<T> codec;
-
-        public OptionInstance(@NotNull String name, @NotNull Supplier<T> getter, @NotNull Consumer<T> setter, @NotNull OptionCodec<T> codec) {
-            this.name = name;
-            this.getter = getter;
-            this.setter = setter;
-            this.codec = codec;
-        }
-
-        @NotNull
-        public String getName() {
-            return this.name;
-        }
-
-        public void set(@NotNull String value) {
-            T t = this.codec.write.get(Objects.requireNonNull(value));
-            if (t != null) this.setter.accept(t);
-        }
-
-        @Nullable
-        public String get() {
-            T t = this.getter.get();
-            if (t != null) return this.codec.read.get(t);
-            return null;
-        }
-
-    }
-
-    public record OptionCodec<T>(@NotNull ConsumingSupplier<T, String> read, @NotNull ConsumingSupplier<String, T> write) {
-
-        public static final OptionCodec<String> STRING_CODEC = new OptionCodec<>(consumes -> consumes, consumes -> consumes);
-        public static final OptionCodec<Integer> INTEGER_CODEC = new OptionCodec<>(Object::toString, consumes -> MathUtils.isInteger(consumes) ? Integer.parseInt(consumes) : null);
-        public static final OptionCodec<Long> LONG_CODEC = new OptionCodec<>(Object::toString, consumes -> MathUtils.isLong(consumes) ? Long.parseLong(consumes) : null);
-        public static final OptionCodec<Double> DOUBLE_CODEC = new OptionCodec<>(Object::toString, consumes -> MathUtils.isDouble(consumes) ? Double.parseDouble(consumes) : null);
-        public static final OptionCodec<Float> FLOAT_CODEC = new OptionCodec<>(Object::toString, consumes -> MathUtils.isFloat(consumes) ? Float.parseFloat(consumes) : null);
-        public static final OptionCodec<Boolean> BOOLEAN_CODEC = new OptionCodec<>(consumes -> consumes ? "true" : "false", "true"::equalsIgnoreCase);
-
     }
 
 }

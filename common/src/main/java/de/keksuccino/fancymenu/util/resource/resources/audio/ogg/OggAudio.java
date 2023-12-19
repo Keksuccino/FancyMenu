@@ -80,7 +80,7 @@ public class OggAudio implements IAudio {
         try {
             Optional<Resource> resource = MinecraftResourceUtils.get(location);
             if (resource.isPresent()) {
-                InputStream in = resource.get().getInputStream();
+                InputStream in = resource.get().open();
                 of(in, location.toString(), audio, clip);
             }
         } catch (Exception ex) {

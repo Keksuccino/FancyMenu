@@ -28,7 +28,7 @@ public class FancyMenuForgeClientEvents {
     }
 
     @SubscribeEvent
-    public void afterScreenKeyPress(ScreenEvent.KeyboardKeyPressedEvent.Post e) {
+    public void afterScreenKeyPress(ScreenEvent.KeyPressed.Post e) {
 
         ScreenKeyPressedEvent event = new ScreenKeyPressedEvent(e.getScreen(), e.getKeyCode(), e.getScanCode(), e.getModifiers());
         EventHandler.INSTANCE.postEvent(event);

@@ -68,13 +68,12 @@ dependencies {
         jarJar.ranged(it, "[0.3.1,)")
     }
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
-    implementation fg.deobf("curse.maven:konkrete-410295:4514907")
-    implementation fg.deobf("curse.maven:load-my-resources-forge-534502:4118355")
-    //Even with minecraftLibrary it fails to load the library in-dev for some frickin reason, so lets just ignore the class-not-found errors
+    implementation fg.deobf("curse.maven:konkrete-410295:4514911")
+    implementation fg.deobf("curse.maven:load-my-resources-forge-534502:4118358")
     minecraftLibrary(jarJar("com.github.Keksuccino:japng:0.5.3")) {
         jarJar.ranged(it, "[0.5.3,)")
     }
-    implementation fg.deobf("curse.maven:melody-938643:4953567")
+    implementation fg.deobf("curse.maven:melody-938643:4869647")
     //This is only to fix the missing dependency error in-dev
     implementation group: 'ca.weblite', name: 'java-objc-bridge', version: '1.1'
 }

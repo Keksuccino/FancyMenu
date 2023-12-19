@@ -4,7 +4,6 @@ import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.resource.Resource;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.*;
@@ -27,7 +26,7 @@ public class FileTypeGroup<T extends FileType<?>> {
         FileTypes.getAllVideoFileTypes().forEach(imageFileType -> types.add((FileType<Resource>)((FileType<?>)imageFileType)));
         FileTypes.getAllTextFileTypes().forEach(imageFileType -> types.add((FileType<Resource>)((FileType<?>)imageFileType)));
         FileTypeGroup<FileType<Resource>> group = new FileTypeGroup<>(() -> types, null);
-        group.setDisplayName(new TranslatableComponent("fancymenu.file_types.groups.all_supported"));
+        group.setDisplayName(Component.translatable("fancymenu.file_types.groups.all_supported"));
         return group;
     }
 

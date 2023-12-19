@@ -69,7 +69,7 @@ public class BuildRequirementGroupScreen extends Screen {
     protected void init() {
 
         //Reset the GUI scale in case the layout editor changed it
-        Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale, Minecraft.getInstance().isEnforceUnicode()));
+        Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().isEnforceUnicode()));
 		this.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
 		this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
 

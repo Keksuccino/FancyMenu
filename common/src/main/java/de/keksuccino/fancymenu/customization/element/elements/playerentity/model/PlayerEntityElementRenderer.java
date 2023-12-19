@@ -39,7 +39,7 @@ import org.jetbrains.annotations.Nullable;
 public class PlayerEntityElementRenderer extends PlayerRenderer {
 
     public static final EntityModelSet ENTITY_MODEL_SET = Minecraft.getInstance().getEntityModels();
-    public static final EntityRendererProvider.Context RENDER_CONTEXT = new EntityRendererProvider.Context(Minecraft.getInstance().getEntityRenderDispatcher(), Minecraft.getInstance().getItemRenderer(), Minecraft.getInstance().getResourceManager(), ENTITY_MODEL_SET, Minecraft.getInstance().font);
+    public static final EntityRendererProvider.Context RENDER_CONTEXT = new EntityRendererProvider.Context(Minecraft.getInstance().getEntityRenderDispatcher(), Minecraft.getInstance().getItemRenderer(), Minecraft.getInstance().getBlockRenderer(), Minecraft.getInstance().getEntityRenderDispatcher().getItemInHandRenderer(), Minecraft.getInstance().getResourceManager(), ENTITY_MODEL_SET, Minecraft.getInstance().font);
 
     public final PlayerEntityProperties properties;
     public final PlayerEntityModel playerModel;

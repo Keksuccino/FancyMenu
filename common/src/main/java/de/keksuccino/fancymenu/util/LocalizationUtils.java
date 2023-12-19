@@ -7,7 +7,9 @@ import net.minecraft.client.resources.language.ClientLanguage;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.ComponentContents;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -46,8 +48,11 @@ public class LocalizationUtils {
 
     @Nullable
     public static String getComponentLocalizationKey(@NotNull Component component) {
-        if (component instanceof TranslatableComponent m) {
-            return m.getKey();
+        if (component instanceof MutableComponent m) {
+            ComponentContents cc = m.getContents();
+            if (cc instanceof TranslatableContents t) {
+                return t.getKey();
+            }
         }
         return null;
     }

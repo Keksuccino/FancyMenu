@@ -4,8 +4,9 @@ import de.keksuccino.fancymenu.customization.widget.identification.identificatio
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.contents.LiteralContents;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import org.jetbrains.annotations.NotNull;
 
 public class TitleScreenWidgetIdentificationContext extends WidgetIdentificationContext {
@@ -14,8 +15,8 @@ public class TitleScreenWidgetIdentificationContext extends WidgetIdentification
 
         this.addUniversalIdentifierProvider(meta -> {
             Component c = meta.getWidget().getMessage();
-            if (c instanceof TranslatableComponent t) {
-                String key = t.getKey();
+            if ((c instanceof MutableComponent) && (c.getContents() instanceof TranslatableContents)) {
+                String key = meta.getWidgetLocalizationKey();
                 if (key != null) {
                     if (key.equals("fml.menu.mods")) {
                         return "forge_titlescreen_mods_button";
@@ -48,8 +49,8 @@ public class TitleScreenWidgetIdentificationContext extends WidgetIdentification
                         return "modmenu_titlescreen_mods_button";
                     }
                 }
-            } else if (c instanceof TextComponent t) {
-                String label = t.getText();
+            } else if (c.getContents() instanceof LiteralContents) {
+                String label = ((LiteralContents) c.getContents()).text();
                 if (label.equals("Copyright Mojang AB. Do not distribute!")) {
                     return "mc_titlescreen_copyright_button";
                 }

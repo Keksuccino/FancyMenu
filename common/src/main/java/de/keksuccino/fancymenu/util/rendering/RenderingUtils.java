@@ -35,7 +35,7 @@ public class RenderingUtils extends GuiComponent {
 
     public static void resetGuiScale() {
         Window m = Minecraft.getInstance().getWindow();
-        m.setGuiScale(m.calculateScale(Minecraft.getInstance().options.guiScale, Minecraft.getInstance().options.forceUnicodeFont));
+        m.setGuiScale(m.calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().options.forceUnicodeFont().get()));
     }
 
     public static void resetShaderColor() {
@@ -114,8 +114,7 @@ public class RenderingUtils extends GuiComponent {
         builder.vertex(matrix4f, minX, maxY, z).color(red, green, blue, alpha).endVertex();
         builder.vertex(matrix4f, maxX, maxY, z).color(red, green, blue, alpha).endVertex();
         builder.vertex(matrix4f, maxX, minY, z).color(red, green, blue, alpha).endVertex();
-        builder.end();
-        BufferUploader.end(builder);
+        BufferUploader.draw(builder.end());
         RenderSystem.disableBlend();
     }
 
@@ -139,8 +138,7 @@ public class RenderingUtils extends GuiComponent {
         builder.vertex($$0, $$1, $$4, $$5).uv($$6, $$9).endVertex();
         builder.vertex($$0, $$2, $$4, $$5).uv($$7, $$9).endVertex();
         builder.vertex($$0, $$2, $$3, $$5).uv($$7, $$8).endVertex();
-        builder.end();
-        BufferUploader.end(builder);
+        BufferUploader.draw(builder.end());
     }
 
     public static void blitNineSliced(PoseStack $$0, int $$1, int $$2, int $$3, int $$4, int $$5, int $$6, int $$7, int $$8, int $$9) {

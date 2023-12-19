@@ -32,7 +32,7 @@ public abstract class MixinAbstractSelectionList {
 		EventHandler.INSTANCE.postEvent(e);
 	}
 
-	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSelectionList;renderList(Lcom/mojang/blaze3d/vertex/PoseStack;IIIIF)V", shift = Shift.AFTER))
+	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSelectionList;renderList(Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V", shift = Shift.AFTER))
 	private void beforeRenderListHeaderFooterFancyMenu(PoseStack pose, int $$1, int $$2, float $$3, CallbackInfo info) {
 		this.shouldFireRenderHeaderFooterEventsFancyMenu = this.renderTopAndBottom;
 		if (this.shouldFireRenderHeaderFooterEventsFancyMenu) {

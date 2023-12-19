@@ -163,7 +163,7 @@ public class EditBoxSuggestions extends CommandSuggestions {
             }
             this.setPendingSuggestions(SharedSuggestionProvider.suggest(suggestionStringList, new SuggestionsBuilder(editBoxSubValue, lastWordIndex)));
             //Always show suggestions without pressing TAB
-            if (this.autoSuggestions && this.suggestionsAllowed() && this.minecraft.options.autoSuggestions) {
+            if (this.autoSuggestions && this.suggestionsAllowed() && this.minecraft.options.autoSuggestions().get()) {
                 this.showSuggestions(false);
             }
         }

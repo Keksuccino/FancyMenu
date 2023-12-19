@@ -13,7 +13,7 @@ public class MinecraftResourceUtils {
 
     public static Optional<Resource> get(@NotNull ResourceLocation location) {
         try {
-            return Optional.of(Minecraft.getInstance().getResourceManager().getResource(location));
+            return Optional.of(Minecraft.getInstance().getResourceManager().getResourceOrThrow(location));
         } catch (Exception ignore) {}
         return Optional.empty();
     }
@@ -23,7 +23,7 @@ public class MinecraftResourceUtils {
         Optional<Resource> resource = get(location);
         if (resource.isPresent()) {
             try {
-                InputStream in = resource.get().getInputStream();
+                InputStream in = resource.get().open();
                 if (in != null) return in;
             } catch (Exception ex) {
                 throw new IOException("Error while trying to open resource!", ex);

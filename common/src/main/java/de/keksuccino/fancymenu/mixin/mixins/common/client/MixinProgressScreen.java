@@ -9,7 +9,6 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.ProgressScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -58,14 +57,14 @@ public class MixinProgressScreen extends Screen {
     private void updateText() {
 
         if (this.headerTextFancyMenu != null) {
-            this.headerTextFancyMenu.setMessage(Objects.requireNonNullElse(this.header, new TextComponent("")));
+            this.headerTextFancyMenu.setMessage(Objects.requireNonNullElse(this.header, Component.empty()));
         }
 
         if (this.stageTextFancyMenu != null) {
             if ((this.stage != null) && (this.progress != 0)) {
-                this.stageTextFancyMenu.setMessage(new TextComponent("").append(this.stage).append(" " + this.progress + "%"));
+                this.stageTextFancyMenu.setMessage(Component.empty().append(this.stage).append(" " + this.progress + "%"));
             } else {
-                this.stageTextFancyMenu.setMessage(new TextComponent(""));
+                this.stageTextFancyMenu.setMessage(Component.empty());
             }
         }
 
