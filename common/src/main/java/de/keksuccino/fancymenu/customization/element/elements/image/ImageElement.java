@@ -44,8 +44,8 @@ public class ImageElement extends AbstractElement {
                 ResourceLocation loc = t.getResourceLocation();
                 if (loc != null) {
                     RenderUtils.bindTexture(loc);
+                    blit(pose, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
                 }
-                blit(pose, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
             } else if (isEditor()) {
                 RenderUtils.bindTexture(MISSING);
                 blit(pose, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());

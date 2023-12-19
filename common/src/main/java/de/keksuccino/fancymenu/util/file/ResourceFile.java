@@ -79,6 +79,9 @@ public class ResourceFile {
         if (gameDirectoryFilePath.replace(" ", "").replace("/", "").isEmpty()) {
             gameDirectoryFilePath = "";
         }
+        if (gameDirectoryFilePath.startsWith("/./")) {
+            gameDirectoryFilePath = gameDirectoryFilePath.substring(2);
+        }
         resourceFile.file = new File(GameDirectoryUtils.getGameDirectory(), gameDirectoryFilePath);
         resourceFile.shortPath = gameDirectoryFilePath;
         resourceFile.type = FileTypes.getLocalType(resourceFile.file);
