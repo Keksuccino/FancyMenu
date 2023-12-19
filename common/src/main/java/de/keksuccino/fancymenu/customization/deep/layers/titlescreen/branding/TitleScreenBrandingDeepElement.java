@@ -39,7 +39,7 @@ public class TitleScreenBrandingDeepElement extends AbstractDeepElement {
 
         int w = 0;
         int i = 0;
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
+        graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
         for (Component line : Services.COMPAT.getTitleScreenBrandingLines()) {
             graphics.drawString(font, line, 2, getScreenHeight() - (10 + (i * (font.lineHeight + 1))), DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
             int lineW = font.width(line);
@@ -51,7 +51,7 @@ public class TitleScreenBrandingDeepElement extends AbstractDeepElement {
 
         this.baseWidth = w;
 
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 
     }
 

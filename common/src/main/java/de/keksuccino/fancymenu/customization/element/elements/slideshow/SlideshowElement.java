@@ -1,13 +1,12 @@
 package de.keksuccino.fancymenu.customization.element.elements.slideshow;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.slideshow.ExternalTextureSlideshowRenderer;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
-import de.keksuccino.konkrete.rendering.RenderUtils;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,7 +30,7 @@ public class SlideshowElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (!this.shouldRender()) return;
 
@@ -50,7 +49,7 @@ public class SlideshowElement extends AbstractElement {
             this.slideshow.width = this.getAbsoluteWidth();
             this.slideshow.height = this.getAbsoluteHeight();
 
-            this.slideshow.render(pose);
+            this.slideshow.render(graphics);
 
             this.slideshow.x = cachedX;
             this.slideshow.y = cachedY;
@@ -59,11 +58,10 @@ public class SlideshowElement extends AbstractElement {
             this.slideshow.slideshowOpacity = 1.0F;
 
         } else {
-            RenderUtils.bindTexture(MISSING);
-            blit(pose, this.getAbsoluteX(), this.getAbsoluteY(), 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+            graphics.blit(MISSING, this.getAbsoluteX(), this.getAbsoluteY(), 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
         }
 
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 
     }
 

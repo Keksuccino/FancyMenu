@@ -101,7 +101,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
         //Renders the custom widget background if one is present or the Vanilla background if no custom background is present
         if (this.getExtendedAsCustomizableWidget().renderCustomBackgroundFancyMenu(this, graphics, this.getX(), this.getY(), this.getWidth(), this.getHeight())) {
             if (this.renderColorBackground(graphics)) {
-                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
+                graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
                 RenderSystem.enableBlend();
                 RenderSystem.enableDepthTest();
                 graphics.blitNineSliced(WIDGETS_LOCATION, this.getX(), this.getY(), this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureY());

@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.text.v2;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.util.ListUtils;
@@ -16,6 +15,7 @@ import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Style;
@@ -105,7 +105,7 @@ public class TextElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (this.shouldRender()) {
 
@@ -118,7 +118,7 @@ public class TextElement extends AbstractElement {
                 this.scrollArea.setY(this.getAbsoluteY(), true);
                 this.scrollArea.setWidth(this.getAbsoluteWidth(), true);
                 this.scrollArea.setHeight(this.getAbsoluteHeight(), true);
-                this.scrollArea.render(pose, mouseX, mouseY, partial);
+                this.scrollArea.render(graphics, mouseX, mouseY, partial);
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -341,13 +341,13 @@ public class TextElement extends AbstractElement {
         }
 
         @Override
-        public void renderEntry(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             this.markdownRenderer.setOptimalWidth(this.parent.getInnerWidth());
             this.markdownRenderer.setX(this.x);
             this.markdownRenderer.setY(this.y);
             this.setWidth(this.markdownRenderer.getRealWidth());
             this.setHeight(this.markdownRenderer.getRealHeight());
-            this.markdownRenderer.render(pose, mouseX, mouseY, partial);
+            this.markdownRenderer.render(graphics, mouseX, mouseY, partial);
         }
 
         @Override

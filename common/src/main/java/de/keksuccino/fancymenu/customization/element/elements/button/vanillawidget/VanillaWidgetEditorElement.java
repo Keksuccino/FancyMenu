@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.List;
@@ -153,7 +154,7 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements H
     }
 
     @Override
-    protected void renderDraggingNotAllowedOverlay(PoseStack pose) {
+    protected void renderDraggingNotAllowedOverlay(GuiGraphics graphics) {
         if ((this.element.anchorPoint == ElementAnchorPoints.VANILLA) && (this.renderMovingNotAllowedTime >= System.currentTimeMillis()) && !this.topLeftDisplay.hasLine("vanilla_button_dragging_not_allowed")) {
             this.topLeftDisplay.addLine("vanilla_button_dragging_not_allowed", () -> Component.translatable("fancymenu.elements.vanilla_button.dragging_not_allowed"));
         }
@@ -167,7 +168,7 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements H
         if ((this.renderMovingNotAllowedTime < System.currentTimeMillis()) && this.topLeftDisplay.hasLine("vanilla_button_copyright_unable_to_move")) {
             this.topLeftDisplay.removeLine("vanilla_button_copyright_unable_to_move");
         }
-        super.renderDraggingNotAllowedOverlay(pose);
+        super.renderDraggingNotAllowedOverlay(graphics);
     }
 
     protected void handleCopyrightButtonPositionRestrictions() {

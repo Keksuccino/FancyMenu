@@ -18,6 +18,7 @@ import de.keksuccino.fancymenu.util.*;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
 import de.keksuccino.fancymenu.util.file.FileUtils;
+import de.keksuccino.fancymenu.util.file.ResourceFile;
 import de.keksuccino.fancymenu.util.file.type.FileCodec;
 import de.keksuccino.fancymenu.util.file.type.FileMediaType;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
@@ -419,7 +420,8 @@ public class CustomizationOverlayUI {
                         Component.empty(),
                         () -> FancyMenu.getOptions().customWindowIcon16.getValue(),
                         s -> {
-                            FancyMenu.getOptions().customWindowIcon16.setValue(s);
+                            ResourceFile f = ResourceFile.of(s);
+                            FancyMenu.getOptions().customWindowIcon16.setValue(f.getShortPath());
                             FancyMenu.getOptions().showCustomWindowIcon.setValue(false);
                             windowIconToggleCycle.setCurrentValue(CommonCycles.CycleEnabledDisabled.DISABLED);
                             WindowHandler.resetWindowIcon();
@@ -458,7 +460,8 @@ public class CustomizationOverlayUI {
                         Component.empty(),
                         () -> FancyMenu.getOptions().customWindowIcon32.getValue(),
                         s -> {
-                            FancyMenu.getOptions().customWindowIcon32.setValue(s);
+                            ResourceFile f = ResourceFile.of(s);
+                            FancyMenu.getOptions().customWindowIcon32.setValue(f.getShortPath());
                             FancyMenu.getOptions().showCustomWindowIcon.setValue(false);
                             windowIconToggleCycle.setCurrentValue(CommonCycles.CycleEnabledDisabled.DISABLED);
                             WindowHandler.resetWindowIcon();
@@ -500,7 +503,8 @@ public class CustomizationOverlayUI {
                         Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_macos"),
                         () -> FancyMenu.getOptions().customWindowIconMacOS.getValue(),
                         s -> {
-                            FancyMenu.getOptions().customWindowIconMacOS.setValue(s);
+                            ResourceFile f = ResourceFile.of(s);
+                            FancyMenu.getOptions().customWindowIconMacOS.setValue(f.getShortPath());
                             FancyMenu.getOptions().showCustomWindowIcon.setValue(false);
                             windowIconToggleCycle.setCurrentValue(CommonCycles.CycleEnabledDisabled.DISABLED);
                             WindowHandler.resetWindowIcon();

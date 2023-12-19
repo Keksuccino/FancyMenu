@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.loadingrequirement.requirements;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
@@ -11,6 +10,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestio
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
@@ -142,9 +142,9 @@ public class IsModLoadedRequirement extends LoadingRequirement {
         }
 
         @Override
-        public void render(PoseStack pose, int mouseX, int mouseY, float partial) {
-            super.render(pose, mouseX, mouseY, partial);
-            this.modIdSuggestions.render(pose, mouseX, mouseY);
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            super.render(graphics, mouseX, mouseY, partial);
+            this.modIdSuggestions.render(graphics, mouseX, mouseY);
         }
 
         @Override

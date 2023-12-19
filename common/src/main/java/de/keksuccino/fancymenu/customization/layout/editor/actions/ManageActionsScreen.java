@@ -23,6 +23,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -145,7 +146,7 @@ public class ManageActionsScreen extends Screen {
             this.moveUp(this.getSelectedEntry());
         }) {
             @Override
-            public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(@NotNull GuiGraphics graphics, int p_93658_, int p_93659_, float p_93660_) {
                 ManageActionsScreen s = ManageActionsScreen.this;
                 if (!s.isAnyExecutableSelected()) {
                     this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.finish.no_action_selected")));
@@ -154,7 +155,7 @@ public class ManageActionsScreen extends Screen {
                     this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.move_action_up.desc")));
                     this.active = true;
                 }
-                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+                super.render(graphics, p_93658_, p_93659_, p_93660_);
             }
         };
         this.addWidget(this.moveUpButton);
@@ -164,7 +165,7 @@ public class ManageActionsScreen extends Screen {
             this.moveDown(this.getSelectedEntry());
         }) {
             @Override
-            public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(@NotNull GuiGraphics graphics, int p_93658_, int p_93659_, float p_93660_) {
                 ManageActionsScreen s = ManageActionsScreen.this;
                 if (!s.isAnyExecutableSelected()) {
                     this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.finish.no_action_selected")));
@@ -173,7 +174,7 @@ public class ManageActionsScreen extends Screen {
                     this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.move_action_down.desc")));
                     this.active = true;
                 }
-                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+                super.render(graphics, p_93658_, p_93659_, p_93660_);
             }
         };
         this.addWidget(this.moveDownButton);
@@ -243,7 +244,7 @@ public class ManageActionsScreen extends Screen {
             }
         }) {
             @Override
-            public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(@NotNull GuiGraphics graphics, int p_93658_, int p_93659_, float p_93660_) {
                 ManageActionsScreen s = ManageActionsScreen.this;
                 if (!s.isAnyExecutableSelected()) {
                     this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.finish.no_action_selected")));
@@ -252,7 +253,7 @@ public class ManageActionsScreen extends Screen {
                     this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.remove_action.desc")));
                     this.active = true;
                 }
-                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+                super.render(graphics, p_93658_, p_93659_, p_93660_);
             }
         };
         this.addWidget(this.removeButton);
@@ -278,7 +279,7 @@ public class ManageActionsScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.renderTickDragHoveredEntry = this.getDragHoveredEntry();
         this.renderTickDraggedEntry = this.getDraggedEntry();
@@ -294,18 +295,18 @@ public class ManageActionsScreen extends Screen {
             }
         }
 
-        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(pose, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        this.font.draw(pose, I18n.get("fancymenu.editor.action.screens.manage_screen.actions"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, I18n.get("fancymenu.editor.action.screens.manage_screen.actions"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
         this.actionsScrollArea.setWidth(this.width - 20 - 150 - 20 - 20, true);
         this.actionsScrollArea.setHeight(this.height - 85, true);
         this.actionsScrollArea.setX(20, true);
         this.actionsScrollArea.setY(50 + 15, true);
-        this.actionsScrollArea.render(pose, mouseX, mouseY, partial);
+        this.actionsScrollArea.render(graphics, mouseX, mouseY, partial);
 
         //Render line to visualize where the dragged entry gets dropped when stop dragging it
         if (this.renderTickDragHoveredEntry != null) {
@@ -319,50 +320,50 @@ public class ManageActionsScreen extends Screen {
                 dY = this.actionsScrollArea.getInnerY() + this.actionsScrollArea.getInnerHeight() - 1;
                 dH = 1;
             }
-            fill(pose, this.actionsScrollArea.getInnerX(), dY + dH - 1, this.actionsScrollArea.getInnerX() + this.actionsScrollArea.getInnerWidth(), dY + dH, UIBase.getUIColorTheme().description_area_text_color.getColorInt());
+            graphics.fill(this.actionsScrollArea.getInnerX(), dY + dH - 1, this.actionsScrollArea.getInnerX() + this.actionsScrollArea.getInnerWidth(), dY + dH, UIBase.getUIColorTheme().description_area_text_color.getColorInt());
         }
 
         this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
         this.doneButton.setY(this.height - 20 - 20);
-        this.doneButton.render(pose, mouseX, mouseY, partial);
+        this.doneButton.render(graphics, mouseX, mouseY, partial);
 
         this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
         this.cancelButton.setY(this.doneButton.getY() - 5 - 20);
-        this.cancelButton.render(pose, mouseX, mouseY, partial);
+        this.cancelButton.render(graphics, mouseX, mouseY, partial);
 
         this.removeButton.setX(this.width - 20 - this.removeButton.getWidth());
         this.removeButton.setY(this.cancelButton.getY() - 15 - 20);
-        this.removeButton.render(pose, mouseX, mouseY, partial);
+        this.removeButton.render(graphics, mouseX, mouseY, partial);
 
         this.editButton.setX(this.width - 20 - this.editButton.getWidth());
         this.editButton.setY(this.removeButton.getY() - 5 - 20);
-        this.editButton.render(pose, mouseX, mouseY, partial);
+        this.editButton.render(graphics, mouseX, mouseY, partial);
 
         this.moveDownButton.setX(this.width - 20 - this.moveDownButton.getWidth());
         this.moveDownButton.setY(this.editButton.getY() - 5 - 20);
-        this.moveDownButton.render(pose, mouseX, mouseY, partial);
+        this.moveDownButton.render(graphics, mouseX, mouseY, partial);
 
         this.moveUpButton.setX(this.width - 20 - this.moveUpButton.getWidth());
         this.moveUpButton.setY(this.moveDownButton.getY() - 5 - 20);
-        this.moveUpButton.render(pose, mouseX, mouseY, partial);
+        this.moveUpButton.render(graphics, mouseX, mouseY, partial);
 
         this.appendElseButton.setX(this.width - 20 - this.appendElseButton.getWidth());
         this.appendElseButton.setY(this.moveUpButton.getY() - 15 - 20);
-        this.appendElseButton.render(pose, mouseX, mouseY, partial);
+        this.appendElseButton.render(graphics, mouseX, mouseY, partial);
 
         this.appendElseIfButton.setX(this.width - 20 - this.appendElseIfButton.getWidth());
         this.appendElseIfButton.setY(this.appendElseButton.getY() - 5 - 20);
-        this.appendElseIfButton.render(pose, mouseX, mouseY, partial);
+        this.appendElseIfButton.render(graphics, mouseX, mouseY, partial);
 
         this.addIfButton.setX(this.width - 20 - this.addIfButton.getWidth());
         this.addIfButton.setY(this.appendElseIfButton.getY() - 5 - 20);
-        this.addIfButton.render(pose, mouseX, mouseY, partial);
+        this.addIfButton.render(graphics, mouseX, mouseY, partial);
 
         this.addActionButton.setX(this.width - 20 - this.addActionButton.getWidth());
         this.addActionButton.setY(this.addIfButton.getY() - 5 - 20);
-        this.addActionButton.render(pose, mouseX, mouseY, partial);
+        this.addActionButton.render(graphics, mouseX, mouseY, partial);
 
-        super.render(pose, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
 
     }
 
@@ -847,11 +848,11 @@ public class ManageActionsScreen extends Screen {
         }
 
         @Override
-        public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
             this.handleDragging();
 
-            super.render(matrix, mouseX, mouseY, partial);
+            super.render(graphics, mouseX, mouseY, partial);
 
             int centerYLine1 = this.getY() + HEADER_FOOTER_HEIGHT + (this.lineHeight / 2);
             int centerYLine2 = this.getY() + HEADER_FOOTER_HEIGHT + ((this.lineHeight / 2) * 3);
@@ -862,16 +863,16 @@ public class ManageActionsScreen extends Screen {
 
             if (this.executable instanceof ActionInstance) {
 
-                renderListingDot(matrix, renderX + 5, centerYLine1 - 2, UIBase.getUIColorTheme().listing_dot_color_2.getColor());
-                this.font.draw(matrix, this.displayNameComponent, (float)(renderX + 5 + 4 + 3), (float)(centerYLine1 - (this.font.lineHeight / 2)), -1);
+                renderListingDot(graphics, renderX + 5, centerYLine1 - 2, UIBase.getUIColorTheme().listing_dot_color_2.getColor());
+                graphics.drawString(this.font, this.displayNameComponent, (renderX + 5 + 4 + 3), (centerYLine1 - (this.font.lineHeight / 2)), -1, false);
 
-                renderListingDot(matrix, renderX + 5 + 4 + 3, centerYLine2 - 2, UIBase.getUIColorTheme().listing_dot_color_1.getColor());
-                this.font.draw(matrix, this.valueComponent, (float)(renderX + 5 + 4 + 3 + 4 + 3), (float)(centerYLine2 - (this.font.lineHeight / 2)), -1);
+                renderListingDot(graphics, renderX + 5 + 4 + 3, centerYLine2 - 2, UIBase.getUIColorTheme().listing_dot_color_1.getColor());
+                graphics.drawString(this.font, this.valueComponent, (renderX + 5 + 4 + 3 + 4 + 3), (centerYLine2 - (this.font.lineHeight / 2)), -1, false);
 
             } else {
 
-                renderListingDot(matrix, renderX + 5, centerYLine1 - 2, UIBase.getUIColorTheme().warning_text_color.getColor());
-                this.font.draw(matrix, this.displayNameComponent, (float)(renderX + 5 + 4 + 3), (float)(centerYLine1 - (this.font.lineHeight / 2)), -1);
+                renderListingDot(graphics, renderX + 5, centerYLine1 - 2, UIBase.getUIColorTheme().warning_text_color.getColor());
+                graphics.drawString(this.font, this.displayNameComponent, (renderX + 5 + 4 + 3), (centerYLine1 - (this.font.lineHeight / 2)), -1, false);
 
             }
 

@@ -148,7 +148,7 @@ public class ExternalTexturePanoramaRenderer {
 			RenderSystem.applyModelViewMatrix();
 			RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
 			
-			RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, this.opacity);
+			graphics.setColor(1.0f, 1.0f, 1.0f, this.opacity);
 			RenderSystem.enableBlend();
 			RenderSystem.disableCull();
 			RenderSystem.depthMask(false);

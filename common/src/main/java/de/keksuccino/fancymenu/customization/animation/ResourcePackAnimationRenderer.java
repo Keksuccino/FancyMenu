@@ -113,7 +113,7 @@ public class ResourcePackAnimationRenderer implements IAnimationRenderer {
             x2 = 0;
             y2 = 0;
         }
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
+        graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
         graphics.blit(this.resources.get(this.frame), x2, y2, 0.0F, 0.0F, w, h, w, h);
         RenderSystem.disableBlend();
     }

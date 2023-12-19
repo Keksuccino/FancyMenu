@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
@@ -13,6 +12,7 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.internal.Loading
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -74,7 +74,7 @@ public class BuildRequirementScreen extends Screen {
             }
         }) {
             @Override
-            public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(@NotNull GuiGraphics graphics, int p_93658_, int p_93659_, float p_93660_) {
                 LoadingRequirement r = BuildRequirementScreen.this.instance.requirement;
                 if ((r != null) && !r.hasValue()) {
                     this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.build_screen.edit_value.desc.no_value")));
@@ -82,7 +82,7 @@ public class BuildRequirementScreen extends Screen {
                     this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.build_screen.edit_value.desc.normal")));
                 }
                 this.active = (r != null) && r.hasValue();
-                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+                super.render(graphics, p_93658_, p_93659_, p_93660_);
             }
         };
         this.addWidget(this.editValueButton);
@@ -93,7 +93,7 @@ public class BuildRequirementScreen extends Screen {
             this.callback.accept(this.instance);
         }) {
             @Override
-            public void renderWidget(@NotNull PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+            public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
                 if (BuildRequirementScreen.this.instance.requirement == null) {
                     this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.build_screen.finish.desc.no_requirement_selected")));
                     this.active = false;
@@ -104,7 +104,7 @@ public class BuildRequirementScreen extends Screen {
                     this.setTooltip((Tooltip) null);
                     this.active = true;
                 }
-                super.renderWidget(matrix, mouseX, mouseY, partialTicks);
+                super.renderWidget(graphics, mouseX, mouseY, partialTicks);
             }
         };
         this.addWidget(this.doneButton);
@@ -129,13 +129,13 @@ public class BuildRequirementScreen extends Screen {
             }
         }) {
             @Override
-            public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(@NotNull GuiGraphics graphics, int p_93658_, int p_93659_, float p_93660_) {
                 if (BuildRequirementScreen.this.instance.mode == LoadingRequirementInstance.RequirementMode.IF) {
                     this.setLabel(I18n.get("fancymenu.editor.loading_requirement.screens.build_screen.requirement_mode.normal"));
                 } else {
                     this.setLabel(I18n.get("fancymenu.editor.loading_requirement.screens.build_screen.requirement_mode.opposite"));
                 }
-                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+                super.render(graphics, p_93658_, p_93659_, p_93660_);
             }
         };
         this.addWidget(this.requirementModeButton);
@@ -157,52 +157,52 @@ public class BuildRequirementScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull PoseStack matrix, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        fill(matrix, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(matrix, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        this.font.draw(matrix, I18n.get("fancymenu.editor.loading_requirement.screens.build_screen.available_requirements"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, I18n.get("fancymenu.editor.loading_requirement.screens.build_screen.available_requirements"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
         this.requirementsListScrollArea.setWidth((this.width / 2) - 40, true);
         this.requirementsListScrollArea.setHeight(this.height - 85, true);
         this.requirementsListScrollArea.setX(20, true);
         this.requirementsListScrollArea.setY(50 + 15, true);
-        this.requirementsListScrollArea.render(matrix, mouseX, mouseY, partial);
+        this.requirementsListScrollArea.render(graphics, mouseX, mouseY, partial);
 
         String descLabelString = I18n.get("fancymenu.editor.loading_requirement.screens.build_screen.requirement_description");
         int descLabelWidth = this.font.width(descLabelString);
-        this.font.draw(matrix, descLabelString, this.width - 20 - descLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, descLabelString, this.width - 20 - descLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
         this.requirementDescriptionScrollArea.setWidth((this.width / 2) - 40, true);
         this.requirementDescriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
         this.requirementDescriptionScrollArea.setX(this.width - 20 - this.requirementDescriptionScrollArea.getWidthWithBorder(), true);
         this.requirementDescriptionScrollArea.setY(50 + 15, true);
-        this.requirementDescriptionScrollArea.render(matrix, mouseX, mouseY, partial);
+        this.requirementDescriptionScrollArea.render(graphics, mouseX, mouseY, partial);
 
         this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
         this.doneButton.setY(this.height - 20 - 20);
-        this.doneButton.render(matrix, mouseX, mouseY, partial);
+        this.doneButton.render(graphics, mouseX, mouseY, partial);
 
         if (!this.isEdit) {
             this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
             this.cancelButton.setY(this.doneButton.getY() - 5 - 20);
-            this.cancelButton.render(matrix, mouseX, mouseY, partial);
+            this.cancelButton.render(graphics, mouseX, mouseY, partial);
         } else {
             this.cancelButton.active = false;
         }
 
         this.editValueButton.setX(this.width - 20 - this.editValueButton.getWidth());
         this.editValueButton.setY(((this.isEdit) ? this.doneButton.getY() : this.cancelButton.getY()) - 15 - 20);
-        this.editValueButton.render(matrix, mouseX, mouseY, partial);
+        this.editValueButton.render(graphics, mouseX, mouseY, partial);
 
         this.requirementModeButton.setX(this.width - 20 - this.cancelButton.getWidth());
         this.requirementModeButton.setY(this.editValueButton.getY() - 5 - 20);
-        this.requirementModeButton.render(matrix, mouseX, mouseY, partial);
+        this.requirementModeButton.render(graphics, mouseX, mouseY, partial);
 
-        super.render(matrix, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
 
     }
 

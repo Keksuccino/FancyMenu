@@ -1,8 +1,6 @@
-
 package de.keksuccino.fancymenu.customization.layout.editor;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.slideshow.ExternalTextureSlideshowRenderer;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.util.input.InputConstants;
@@ -16,6 +14,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -61,14 +60,14 @@ public class ChooseSlideshowScreen extends Screen {
             this.callback.accept(this.selectedSlideshowName);
         }) {
             @Override
-            public void renderWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+            public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
                 if (ChooseSlideshowScreen.this.selectedSlideshowName == null) {
                     TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.slideshow.choose.no_slideshow_selected")).setDefaultStyle(), false, true);
                     this.active = false;
                 } else {
                     this.active = true;
                 }
-                super.renderWidget(pose, mouseX, mouseY, partial);
+                super.renderWidget(graphics, mouseX, mouseY, partial);
             }
         };
         this.addWidget(this.doneButton);
@@ -88,26 +87,26 @@ public class ChooseSlideshowScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         RenderSystem.enableBlend();
 
-        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(pose, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        this.font.draw(pose, Component.translatable("fancymenu.slideshow.choose.available_slideshows"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, Component.translatable("fancymenu.slideshow.choose.available_slideshows"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
         this.slideshowListScrollArea.setWidth((this.width / 2) - 40, true);
         this.slideshowListScrollArea.setHeight(this.height - 85, true);
         this.slideshowListScrollArea.setX(20, true);
         this.slideshowListScrollArea.setY(50 + 15, true);
-        this.slideshowListScrollArea.render(pose, mouseX, mouseY, partial);
+        this.slideshowListScrollArea.render(graphics, mouseX, mouseY, partial);
 
         Component previewLabel = Component.translatable("fancymenu.slideshow.choose.preview");
         int previewLabelWidth = this.font.width(previewLabel);
-        this.font.draw(pose, previewLabel, this.width - 20 - previewLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, previewLabel, this.width - 20 - previewLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
         if (this.selectedSlideshow != null) {
             int slideW = (this.width / 2) - 40;
@@ -118,24 +117,24 @@ public class ChooseSlideshowScreen extends Screen {
             slideH = size[1];
             int slideX = this.width - 20 - slideW;
             int slideY = 50 + 15;
-            fill(pose, slideX, slideY, slideX + slideW, slideY + slideH, UIBase.getUIColorTheme().area_background_color.getColorInt());
+            graphics.fill(slideX, slideY, slideX + slideW, slideY + slideH, UIBase.getUIColorTheme().area_background_color.getColorInt());
             this.selectedSlideshow.x = slideX;
             this.selectedSlideshow.y = slideY;
             this.selectedSlideshow.width = slideW;
             this.selectedSlideshow.height = slideH;
-            this.selectedSlideshow.render(pose);
-            UIBase.renderBorder(pose, slideX, slideY, slideX + slideW, slideY + slideH, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUIColorTheme().element_border_color_normal.getColor(), true, true, true, true);
+            this.selectedSlideshow.render(graphics);
+            UIBase.renderBorder(graphics, slideX, slideY, slideX + slideW, slideY + slideH, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUIColorTheme().element_border_color_normal.getColor(), true, true, true, true);
         }
 
         this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
         this.doneButton.setY(this.height - 20 - 20);
-        this.doneButton.render(pose, mouseX, mouseY, partial);
+        this.doneButton.render(graphics, mouseX, mouseY, partial);
 
         this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
         this.cancelButton.setY(this.doneButton.getY() - 5 - 20);
-        this.cancelButton.render(pose, mouseX, mouseY, partial);
+        this.cancelButton.render(graphics, mouseX, mouseY, partial);
 
-        super.render(pose, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
 
     }
 

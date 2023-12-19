@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.layout.editor.widget.widgets.layer
 
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -18,6 +17,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
@@ -96,10 +96,10 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     }
 
     @Override
-    protected void renderBody(@NotNull PoseStack pose, double mouseX, double mouseY, float partial) {
+    protected void renderBody(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial) {
 
         RenderingUtils.resetShaderColor(graphics);
-        fillF(pose, this.getRealBodyX(), this.getRealBodyY(), this.getRealBodyX() + this.getBodyWidth(), this.getRealBodyY() + this.getBodyHeight(), UIBase.getUIColorTheme().area_background_color.getColorInt());
+        fillF(graphics, this.getRealBodyX(), this.getRealBodyY(), this.getRealBodyX() + this.getBodyWidth(), this.getRealBodyY() + this.getBodyHeight(), UIBase.getUIColorTheme().area_background_color.getColorInt());
 
         this.scrollArea.setX(this.getRealBodyX());
         this.scrollArea.setY(this.getRealBodyY());
@@ -109,12 +109,12 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         this.scrollArea.horizontalScrollBar.active = false;
         this.scrollArea.makeEntriesWidthOfArea = true;
         this.scrollArea.makeAllEntriesWidthOfWidestEntry = false;
-        this.enableComponentScissor((int) this.getRealBodyX()-5, (int) this.getRealBodyY(), (int) this.getBodyWidth()+10, (int) this.getBodyHeight()+1, true);
-        pose.pushPose();
-        pose.translate(0.0F, 0.0F, 400.0F);
-        this.scrollArea.render(pose, (int) mouseX, (int) mouseY, partial);
-        pose.popPose();
-        this.disableComponentScissor();
+        this.enableComponentScissor(graphics, (int) this.getRealBodyX()-5, (int) this.getRealBodyY(), (int) this.getBodyWidth()+10, (int) this.getBodyHeight()+1, true);
+        graphics.pose().pushPose();
+        graphics.pose().translate(0.0F, 0.0F, 400.0F);
+        this.scrollArea.render(graphics, (int) mouseX, (int) mouseY, partial);
+        graphics.pose().popPose();
+        this.disableComponentScissor(graphics);
 
     }
 
@@ -232,7 +232,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         @Override
-        public void renderEntry(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
             this.moveUpButtonHovered = this.isMoveUpButtonMouseOver(mouseX, mouseY);
             this.moveDownButtonHovered = this.isMoveDownButtonMouseOver(mouseX, mouseY);
@@ -242,23 +242,21 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
             if (this.element.isSelected() || this.element.isMultiSelected()) {
                 RenderingUtils.resetShaderColor(graphics);
-                fillF(pose, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), UIBase.getUIColorTheme().element_background_color_hover.getColorInt());
+                fillF(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), UIBase.getUIColorTheme().element_background_color_hover.getColorInt());
             }
 
-            UIBase.getUIColorTheme().setUITextureShaderColor(this.layerWidget.editor.canMoveLayerUp(this.element) ? 1.0f : 0.3f);
-            RenderingUtils.bindTexture(MOVE_UP_TEXTURE);
-            blitF(pose, this.x, this.y, 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight());
+            UIBase.getUIColorTheme().setUITextureShaderColor(graphics, this.layerWidget.editor.canMoveLayerUp(this.element) ? 1.0f : 0.3f);
+            blitF(graphics, MOVE_UP_TEXTURE, this.x, this.y, 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight());
 
-            UIBase.getUIColorTheme().setUITextureShaderColor(this.layerWidget.editor.canMoveLayerDown(this.element) ? 1.0f : 0.3f);
-            RenderingUtils.bindTexture(MOVE_DOWN_TEXTURE);
-            blitF(pose, this.x, this.y + this.getButtonHeight(), 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight());
+            UIBase.getUIColorTheme().setUITextureShaderColor(graphics, this.layerWidget.editor.canMoveLayerDown(this.element) ? 1.0f : 0.3f);
+            blitF(graphics, MOVE_DOWN_TEXTURE, this.x, this.y + this.getButtonHeight(), 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight());
 
             RenderingUtils.resetShaderColor(graphics);
 
             if (!this.displayEditLayerNameBox) {
-                this.layerWidget.enableComponentScissor((int) (this.x + this.getButtonWidth() + 1f), (int) this.y, (int) (this.getWidth() - this.getButtonWidth() - 4f), (int) this.getHeight(), true);
-                UIBase.drawElementLabelF(pose, this.font, Component.literal(this.getLayerName()), (int)this.getLayerNameX(), (int)this.getLayerNameY());
-                this.layerWidget.disableComponentScissor();
+                this.layerWidget.enableComponentScissor(graphics, (int) (this.x + this.getButtonWidth() + 1f), (int) this.y, (int) (this.getWidth() - this.getButtonWidth() - 4f), (int) this.getHeight(), true);
+                UIBase.drawElementLabel(graphics, this.font, Component.literal(this.getLayerName()), (int)this.getLayerNameX(), (int)this.getLayerNameY());
+                this.layerWidget.disableComponentScissor(graphics);
             } else {
                 UIBase.applyDefaultWidgetSkinTo(this.editLayerNameBox);
                 this.editLayerNameBox.setX((int)this.getLayerNameX());
@@ -268,7 +266,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                     this.editLayerNameBox.setDisplayPosition(0);
                 }
                 ((IMixinAbstractWidget)this.editLayerNameBox).setHeightFancyMenu(this.font.lineHeight + 2);
-                this.editLayerNameBox.render(pose, mouseX, mouseY, partial);
+                this.editLayerNameBox.render(graphics, mouseX, mouseY, partial);
             }
 
         }
@@ -412,21 +410,21 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         @Override
-        public void renderEntry(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
             this.moveTopBottomButtonHovered = this.isMoveTopBottomButtonHovered(mouseX, mouseY);
 
             RenderSystem.enableBlend();
 
-            UIBase.getUIColorTheme().setUITextureShaderColor(1.0F);
-            RenderingUtils.bindTexture(this.layerWidget.editor.layout.renderElementsBehindVanilla ? MOVE_BEHIND_TEXTURE : MOVE_TO_TOP_TEXTURE);
-            blitF(pose, this.x, this.y, 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight());
+            UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
+            ResourceLocation loc = this.layerWidget.editor.layout.renderElementsBehindVanilla ? MOVE_BEHIND_TEXTURE : MOVE_TO_TOP_TEXTURE;
+            blitF(graphics, loc, this.x, this.y, 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight());
 
             RenderingUtils.resetShaderColor(graphics);
 
-            this.layerWidget.enableComponentScissor((int)(this.x + this.getButtonWidth() + 1f), (int) this.y, (int) (this.getWidth() - this.getButtonWidth() - 4f), (int) this.getHeight(), true);
-            UIBase.drawElementLabelF(pose, this.font, Component.translatable("fancymenu.editor.widgets.layers.vanilla_elements").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), (int)(this.getX() + this.getButtonWidth() + 3f), (int)(this.getY() + (this.getHeight() / 2f) - (this.font.lineHeight / 2f)));
-            this.layerWidget.disableComponentScissor();
+            this.layerWidget.enableComponentScissor(graphics, (int)(this.x + this.getButtonWidth() + 1f), (int) this.y, (int) (this.getWidth() - this.getButtonWidth() - 4f), (int) this.getHeight(), true);
+            UIBase.drawElementLabel(graphics, this.font, Component.translatable("fancymenu.editor.widgets.layers.vanilla_elements").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), (int)(this.getX() + this.getButtonWidth() + 3f), (int)(this.getY() + (this.getHeight() / 2f) - (this.font.lineHeight / 2f)));
+            this.layerWidget.disableComponentScissor(graphics);
 
         }
 
@@ -472,9 +470,9 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         @Override
-        public void renderEntry(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             RenderSystem.enableBlend();
-            fillF(pose, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), UIBase.getUIColorTheme().element_border_color_normal.getColorInt());
+            fillF(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), UIBase.getUIColorTheme().element_border_color_normal.getColorInt());
             RenderingUtils.resetShaderColor(graphics);
         }
 

@@ -17,8 +17,6 @@ public class FancyMenuFabricClientEvents {
 
         registerClientCommands();
 
-        registerKeyMappings();
-
         registerScreenEvents();
 
     }
@@ -29,13 +27,6 @@ public class FancyMenuFabricClientEvents {
             CloseGuiScreenCommand.register(dispatcher);
             VariableCommand.register(dispatcher);
         });
-    }
-
-    private static void registerKeyMappings() {
-//        for (KeyMapping m : KeyMappings.KEY_MAPPINGS) {
-//            KeyBindingHelper.registerKeyBinding(m);
-//        }
-//        KeyMappings.init();
     }
 
     private static void registerScreenEvents() {

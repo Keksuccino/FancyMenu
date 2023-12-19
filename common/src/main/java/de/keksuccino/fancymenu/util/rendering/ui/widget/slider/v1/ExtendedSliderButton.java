@@ -80,7 +80,7 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
         int handleX = this.getX() + (int)(this.value * (double)(this.width - 8));
         DrawableColor c = this.getHandleRenderColor();
         if (c == null) {
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
+            graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
             graphics.blitNineSliced(SLIDER_LOCATION, handleX, this.getY(), 8, 20, 20, 4, 200, 20, 0, this.getHandleTextureY());
         } else {
             graphics.fill(handleX, this.getY(), handleX + 8, this.getY() + this.getHeight(), RenderingUtils.replaceAlphaInColor(c.getColorInt(), this.alpha));
@@ -99,7 +99,7 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();
         if (this.backgroundColor == null) {
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
+            graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
             graphics.blitNineSliced(SLIDER_LOCATION, this.getX(), this.getY(), this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureY());
         } else {
             int borderOffset = (this.borderColor != null) ? 1 : 0;

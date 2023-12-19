@@ -11,7 +11,6 @@ import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.PacketDistributor;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

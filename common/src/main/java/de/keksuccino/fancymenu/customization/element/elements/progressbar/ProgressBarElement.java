@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.progressbar;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
@@ -11,7 +10,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.konkrete.rendering.RenderUtils;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
@@ -49,16 +48,16 @@ public class ProgressBarElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (!this.shouldRender()) return;
 
-        this.renderBackground(pose);
-        this.renderProgress(pose);
+        this.renderBackground(graphics);
+        this.renderProgress(graphics);
 
     }
 
-    protected void renderProgress(@NotNull PoseStack pose) {
+    protected void renderProgress(@NotNull GuiGraphics graphics) {
 
         float actualProgress = Math.max(0.0F, Math.min(1.0F, this.getCurrentProgress()));
         this.renderProgress = Mth.clamp(this.renderProgress * 0.95F + actualProgress * 0.050000012F, 0.0F, 1.0F);
@@ -94,32 +93,30 @@ public class ProgressBarElement extends AbstractElement {
             if (t != null) {
                 ResourceLocation loc = t.getResourceLocation();
                 if (loc != null) {
-                    RenderUtils.bindTexture(loc);
-                    RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
-                    blit(pose, progressX, progressY, offsetX, offsetY, progressWidth, progressHeight, this.getAbsoluteWidth(), this.getAbsoluteHeight());
+                    graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
+                    graphics.blit(loc, progressX, progressY, offsetX, offsetY, progressWidth, progressHeight, this.getAbsoluteWidth(), this.getAbsoluteHeight());
                     RenderingUtils.resetShaderColor(graphics);
                 }
             }
         } else if (this.barColor != null) {
             RenderingUtils.resetShaderColor(graphics);
-            fill(pose, progressX, progressY, progressX + progressWidth, progressY + progressHeight, RenderingUtils.replaceAlphaInColor(this.barColor.getColorInt(), this.opacity));
+            graphics.fill(progressX, progressY, progressX + progressWidth, progressY + progressHeight, RenderingUtils.replaceAlphaInColor(this.barColor.getColorInt(), this.opacity));
             RenderingUtils.resetShaderColor(graphics);
         }
 
     }
 
-    protected void renderBackground(@NotNull PoseStack pose) {
+    protected void renderBackground(@NotNull GuiGraphics graphics) {
         RenderSystem.enableBlend();
         if (this.backgroundTextureSupplier != null) {
             this.backgroundTextureSupplier.forRenderable((iTexture, location) -> {
-                RenderUtils.bindTexture(location);
-                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
-                blit(pose, this.getAbsoluteX(), this.getAbsoluteY(), 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+                graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
+                graphics.blit(location, this.getAbsoluteX(), this.getAbsoluteY(), 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
                 RenderingUtils.resetShaderColor(graphics);
             });
         } else if (this.backgroundColor != null) {
             RenderingUtils.resetShaderColor(graphics);
-            fill(pose, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), RenderingUtils.replaceAlphaInColor(this.backgroundColor.getColorInt(), this.opacity));
+            graphics.fill(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), RenderingUtils.replaceAlphaInColor(this.backgroundColor.getColorInt(), this.opacity));
             RenderingUtils.resetShaderColor(graphics);
         }
     }

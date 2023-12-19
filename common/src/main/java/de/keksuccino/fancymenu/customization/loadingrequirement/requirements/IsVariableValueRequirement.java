@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFor
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
@@ -136,9 +137,9 @@ public class IsVariableValueRequirement extends LoadingRequirement {
         }
 
         @Override
-        public void render(PoseStack pose, int mouseX, int mouseY, float partial) {
-            super.render(pose, mouseX, mouseY, partial);
-            this.variableNameSuggestions.render(pose, mouseX, mouseY);
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            super.render(graphics, mouseX, mouseY, partial);
+            this.variableNameSuggestions.render(graphics, mouseX, mouseY);
         }
 
         @Override

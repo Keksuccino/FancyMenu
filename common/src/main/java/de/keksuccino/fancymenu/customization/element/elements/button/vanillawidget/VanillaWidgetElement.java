@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -56,10 +57,10 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
 
     @SuppressWarnings("all")
     @Override
-    protected void renderElementWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    protected void renderElementWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         if (isEditor()) {
             //Only render button in editor
-            super.renderElementWidget(pose, mouseX, mouseY, partial);
+            super.renderElementWidget(graphics, mouseX, mouseY, partial);
         }
         if (this.anchorPoint == ElementAnchorPoints.VANILLA) {
             this.resetVanillaWidgetSizeAndPosition();

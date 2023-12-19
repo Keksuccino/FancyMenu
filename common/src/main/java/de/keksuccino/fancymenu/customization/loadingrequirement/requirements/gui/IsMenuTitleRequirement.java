@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.loadingrequirement.requirements.gui;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
@@ -11,6 +10,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
@@ -154,9 +154,9 @@ public class IsMenuTitleRequirement extends LoadingRequirement {
         }
 
         @Override
-        public void render(PoseStack pose, int mouseX, int mouseY, float partial) {
-            super.render(pose, mouseX, mouseY, partial);
-            this.localizationKeySuggestions.render(pose, mouseX, mouseY);
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            super.render(graphics, mouseX, mouseY, partial);
+            this.localizationKeySuggestions.render(graphics, mouseX, mouseY);
         }
 
         @Override

@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
@@ -18,7 +17,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @SuppressWarnings("unused")
@@ -49,9 +47,9 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
     }
 
     @WrapWithCondition(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitNineSliced(Lnet/minecraft/resources/ResourceLocation;IIIIIIIIII)V"))
-    private boolean wrapBlitNineSlicedInRenderWidgetFancyMenu(GuiGraphics graphics, ResourceLocation $$0, int $$1, int $$2, int $$3, int $$4, int $$5, int $$6, int $$7, int $$8, int $$9, int $$10) {
+    private boolean wrapBlitNineSlicedInRenderWidgetFancyMenu(GuiGraphics graphics, ResourceLocation location, int $$1, int $$2, int blitWidth, int blitHeight, int $$5, int $$6, int $$7, int $$8, int $$9, int $$10) {
         CustomizableWidget cus = this.getAsCustomizableWidgetFancyMenu();
-        boolean isHandle = (width == 8);
+        boolean isHandle = (blitWidth == 8);
         boolean renderVanilla;
         if (isHandle) {
             int handleX = this.getX() + (int)(this.value * (double)(this.getWidth() - 8));
@@ -62,7 +60,7 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
         }
         //Re-bind default texture after rendering custom
         RenderSystem.setShaderTexture(0, SLIDER_LOCATION_FANCYMENU);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
+        graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
         return renderVanilla;
     }
 

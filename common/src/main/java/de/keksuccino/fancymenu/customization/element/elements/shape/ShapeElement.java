@@ -1,10 +1,10 @@
 package de.keksuccino.fancymenu.customization.element.elements.shape;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
@@ -24,7 +24,7 @@ public class ShapeElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (!this.shouldRender()) return;
 
@@ -38,12 +38,12 @@ public class ShapeElement extends AbstractElement {
             int c = FastColor.ARGB32.color(alpha, this.color.getColor().getRed(), this.color.getColor().getGreen(), this.color.getColor().getBlue());
 
             if (this.shape == Shape.RECTANGLE) {
-                fill(pose, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), c);
+                graphics.fill(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), c);
             }
 
         }
 
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 
     }
 

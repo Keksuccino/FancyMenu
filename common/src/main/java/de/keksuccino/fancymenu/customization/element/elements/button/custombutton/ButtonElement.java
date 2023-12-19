@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.button.custombutton;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
@@ -21,6 +20,7 @@ import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -70,7 +70,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (this.getWidget() == null) return;
 
@@ -89,15 +89,15 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
             this.getWidget().setTooltip(null);
         }
 
-        this.renderElementWidget(pose, mouseX, mouseY, partial);
+        this.renderElementWidget(graphics, mouseX, mouseY, partial);
 
         RenderingUtils.resetShaderColor(graphics);
 
     }
 
-    protected void renderElementWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    protected void renderElementWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         if (this.getWidget() != null) {
-            this.getWidget().render(pose, mouseX, mouseY, partial);
+            this.getWidget().render(graphics, mouseX, mouseY, partial);
         }
     }
 

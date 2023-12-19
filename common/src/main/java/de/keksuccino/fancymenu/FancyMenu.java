@@ -20,6 +20,55 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO Make FMv3 wiki accessible via docs.fancymenu.net
+
+	//TODO Make resources.fancymenu.net redirect to the wiki page for ResourceLocations
+
+
+
+
+
+	//TODO ALLE UNGENUTZTEN FileTypes entfernen (ungenutzte video types)
+
+	//TODO Layout Listener System
+	// - Auf Layout Ebene (rechtsklick editor back -> Listeners)
+	// - Jeder Listener hat eine ExecutableBlock instanz, die er ausführen kann
+	// - ExecutableBlock value placeholders nutzen, um values von Listeners an actions zu übergeben
+	// - Listeners:
+	//   - First Menu Open (wenn menu type das erste Mal in einer game session geöffnet wird) (checkt auf menu type von layout oder alle, wenn universal)
+	//   - Open Menu (checkt auf menu type von layout oder alle, wenn universal)
+	//   - Close Menu (checkt auf menu type von layout oder alle, wenn universal)
+	//   - Init Or Re-Init Menu (InitOrResize)
+	//   - Element Loaded (mit element identifier) -> dann bei ausführen von listener checken, ob erstelltes element == identifier
+	//   - Key Typed (mit key name) -> bei ausführen check ob pressed key == given key
+	//   - Mouse Clicked (mit mouseX, mouseY)
+	//   - Mouse Moved (mit mouseX, mouseY)
+	//   - Mouse Scrolled (mit scrollDelta)
+
+	//TODO Button: Nine-Slice Background Mode (toggle on/off)
+	// - Option, um Randbreite zu definieren, wenn möglich
+
+	//TODO add widget label scale option (per CustomizableWidget adden)
+
+	//TODO Add Edit GUI to more Action values, if needed
+
+	//TODO "Split Text" placeholder (regex support) (könnte performance killen)
+
+	//TODO Markdown support for tooltips
+
+	//TODO FIXEN: Splash Elemente werden bei resize reloaded (isNewMenu in builder fixen??)
+
+	//TODO "Key Pressed" Loading Requirement
+	// - Modes: ONCE_PER_KEY_PRESS (nur einen tick pro key press auf true), CONTINUOUS (hält bei key press dauerhaft auf true)
+	// - Setzt "pressed" boolean bei onKeyPress auf true und bei onKeyRelease auf false (für modes)
+
+	//TODO Item Element, das per item meta (wie in give command) customized werden kann
+
+	//TODO Möglichkeit adden, Custom GUIs zu kopieren (bei kopieren öffnet sich input screen, um neuen identifier einzugeben)
+
+
+
+
 	private static final Logger LOGGER = LogManager.getLogger();
 
 	public static final String VERSION = "3.0.0";

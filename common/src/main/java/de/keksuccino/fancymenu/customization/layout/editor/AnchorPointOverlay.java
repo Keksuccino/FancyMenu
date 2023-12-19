@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.layout.editor;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.HideableElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
@@ -15,7 +14,7 @@ import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Style;
@@ -29,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiEventListener {
+public class AnchorPointOverlay implements Renderable, GuiEventListener {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -148,7 +147,7 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (!this.isOverlayVisible()) {
             this.resetOverlay();
@@ -164,57 +163,57 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
             RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.ONE_MINUS_DST_COLOR, GlStateManager.DestFactor.ONE_MINUS_SRC_COLOR, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
         }
 
-        this.renderAreas(pose, mouseX, mouseY, partial);
-        this.renderConnectionLines(pose);
+        this.renderAreas(graphics, mouseX, mouseY, partial);
+        this.renderConnectionLines(graphics);
 
         RenderSystem.defaultBlendFunc();
         RenderingUtils.resetShaderColor(graphics);
 
     }
 
-    protected void renderAreas(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    protected void renderAreas(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         int menuBarHeight = ((this.editor.menuBar != null) ? (int)((float)this.editor.menuBar.getHeight() * UIBase.calculateFixedScale(this.editor.menuBar.getScale())) : 0);
         if ((this.editor.menuBar != null) && !this.editor.menuBar.isExpanded()) menuBarHeight = 0;
 
         this.topLeftArea.x = -1;
         this.topLeftArea.y = -1 + menuBarHeight;
-        this.topLeftArea.render(pose, mouseX, mouseY, partial);
+        this.topLeftArea.render(graphics, mouseX, mouseY, partial);
 
         this.midLeftArea.x = -1;
         this.midLeftArea.y = (ScreenUtils.getScreenHeight() / 2) - (this.midLeftArea.getHeight() / 2);
-        this.midLeftArea.render(pose, mouseX, mouseY, partial);
+        this.midLeftArea.render(graphics, mouseX, mouseY, partial);
 
         this.bottomLeftArea.x = -1;
         this.bottomLeftArea.y = ScreenUtils.getScreenHeight() - this.bottomLeftArea.getHeight() + 1;
-        this.bottomLeftArea.render(pose, mouseX, mouseY, partial);
+        this.bottomLeftArea.render(graphics, mouseX, mouseY, partial);
 
         this.topCenteredArea.x = (ScreenUtils.getScreenWidth() / 2) - (this.topCenteredArea.getWidth() / 2);
         this.topCenteredArea.y = -1 + menuBarHeight;
-        this.topCenteredArea.render(pose, mouseX, mouseY, partial);
+        this.topCenteredArea.render(graphics, mouseX, mouseY, partial);
 
         this.midCenteredArea.x = (ScreenUtils.getScreenWidth() / 2) - (this.midCenteredArea.getWidth() / 2);
         this.midCenteredArea.y = (ScreenUtils.getScreenHeight() / 2) - (this.midCenteredArea.getHeight() / 2);
-        this.midCenteredArea.render(pose, mouseX, mouseY, partial);
+        this.midCenteredArea.render(graphics, mouseX, mouseY, partial);
 
         this.bottomCenteredArea.x = (ScreenUtils.getScreenWidth() / 2) - (this.bottomCenteredArea.getWidth() / 2);
         this.bottomCenteredArea.y = ScreenUtils.getScreenHeight() - this.bottomCenteredArea.getHeight() + 1;
-        this.bottomCenteredArea.render(pose, mouseX, mouseY, partial);
+        this.bottomCenteredArea.render(graphics, mouseX, mouseY, partial);
 
         this.topRightArea.x = ScreenUtils.getScreenWidth() - this.topRightArea.getWidth() + 1;
         this.topRightArea.y = -1 + menuBarHeight;
-        this.topRightArea.render(pose, mouseX, mouseY, partial);
+        this.topRightArea.render(graphics, mouseX, mouseY, partial);
 
         this.midRightArea.x = ScreenUtils.getScreenWidth() - this.midRightArea.getWidth() + 1;
         this.midRightArea.y = (ScreenUtils.getScreenHeight() / 2) - (this.midRightArea.getHeight() / 2);
-        this.midRightArea.render(pose, mouseX, mouseY, partial);
+        this.midRightArea.render(graphics, mouseX, mouseY, partial);
 
         this.bottomRightArea.x = ScreenUtils.getScreenWidth() - this.bottomRightArea.getWidth() + 1;
         this.bottomRightArea.y = ScreenUtils.getScreenHeight() - this.bottomRightArea.getHeight() + 1;
-        this.bottomRightArea.render(pose, mouseX, mouseY, partial);
+        this.bottomRightArea.render(graphics, mouseX, mouseY, partial);
 
         if (this.currentlyHoveredArea != null) {
-            this.currentlyHoveredArea.renderMouseOverProgress(pose, this.calculateMouseOverProgress());
+            this.currentlyHoveredArea.renderMouseOverProgress(graphics, this.calculateMouseOverProgress());
         }
 
     }
@@ -232,27 +231,27 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
         return 0.0F;
     }
 
-    protected void renderConnectionLines(@NotNull PoseStack pose) {
+    protected void renderConnectionLines(@NotNull GuiGraphics graphics) {
         List<AbstractEditorElement> elements = FancyMenu.getOptions().showAllAnchorOverlayConnections.getValue() ? this.editor.getAllElements() : this.editor.getCurrentlyDraggedElements();
         for (AbstractEditorElement e : elements) {
             boolean hidden = (e instanceof HideableElement h) && h.isHidden();
-            if (!hidden) this.renderConnectionLineFor(pose, e);
+            if (!hidden) this.renderConnectionLineFor(graphics, e);
         }
     }
 
-    protected void renderConnectionLineFor(@NotNull PoseStack pose, @NotNull AbstractEditorElement e) {
+    protected void renderConnectionLineFor(@NotNull GuiGraphics graphics, @NotNull AbstractEditorElement e) {
         AnchorPointArea a = this.getParentAreaOfElement(e);
         if (a != null) {
             int xElement = e.getX() + (e.getWidth() / 2);
             int yElement = e.getY() + (e.getHeight() / 2);
             int xArea = a.getX() + (a.getWidth() / 2);
             int yArea = a.getY() + (a.getHeight() / 2);
-            this.renderSquareLine(pose, xElement, yElement, xArea, yArea, 2, RenderingUtils.replaceAlphaInColor(this.getOverlayColorBase().getColorInt(), this.getOverlayOpacity()));
+            this.renderSquareLine(graphics, xElement, yElement, xArea, yArea, 2, RenderingUtils.replaceAlphaInColor(this.getOverlayColorBase().getColorInt(), this.getOverlayOpacity()));
         }
     }
 
     @SuppressWarnings("all")
-    protected void renderSquareLine(@NotNull PoseStack pose, int xElement, int yElement, int xArea, int yArea, int lineThickness, int color) {
+    protected void renderSquareLine(@NotNull GuiGraphics graphics, int xElement, int yElement, int xArea, int yArea, int lineThickness, int color) {
 
         int horizontalWidth = Math.max(xElement, xArea) - Math.min(xElement, xArea);
         int verticalHeight = Math.max(yElement, yArea) - Math.min(yElement, yArea);
@@ -267,9 +266,9 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
         RenderSystem.enableBlend();
         UIBase.resetShaderColor(graphics);
         //Horizontal Line
-        fill(pose, horizontalX, horizontalY, horizontalX + horizontalWidth, horizontalY + lineThickness, color);
+        graphics.fill(horizontalX, horizontalY, horizontalX + horizontalWidth, horizontalY + lineThickness, color);
         //Vertical Line
-        fill(pose, verticalX, verticalY, verticalX + lineThickness, verticalY + verticalHeight, color);
+        graphics.fill(verticalX, verticalY, verticalX + lineThickness, verticalY + verticalHeight, color);
         UIBase.resetShaderColor(graphics);
 
     }
@@ -511,7 +510,7 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
 
     }
 
-    public class AnchorPointArea extends GuiComponent implements Renderable, GuiEventListener {
+    public class AnchorPointArea implements Renderable, GuiEventListener {
 
         public final ElementAnchorPoint anchorPoint;
         private int x;
@@ -533,15 +532,15 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
         }
 
         @Override
-        public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             int endX = this.getX() + this.getWidth();
             int endY = this.getY() + this.getHeight();
-            fill(pose, this.getX(), this.getY(), endX, endY, RenderingUtils.replaceAlphaInColor(getOverlayColorBase().getColorInt(), getOverlayOpacity()));
-            UIBase.renderBorder(pose, this.getX(), this.getY(), endX, endY, 1, RenderingUtils.replaceAlphaInColor(getOverlayColorBorder().getColorInt(), getOverlayOpacity()), true, true, true, true);
+            graphics.fill(this.getX(), this.getY(), endX, endY, RenderingUtils.replaceAlphaInColor(getOverlayColorBase().getColorInt(), getOverlayOpacity()));
+            UIBase.renderBorder(graphics, this.getX(), this.getY(), endX, endY, 1, RenderingUtils.replaceAlphaInColor(getOverlayColorBorder().getColorInt(), getOverlayOpacity()), true, true, true, true);
             UIBase.resetShaderColor(graphics);
         }
 
-        protected void renderMouseOverProgress(@NotNull PoseStack pose, float progress) {
+        protected void renderMouseOverProgress(@NotNull GuiGraphics graphics, float progress) {
             int progressWidth = (int) ((float)this.getWidth() * progress);
             int progressHeight = (int) ((float)this.getHeight() * progress);
             int startX = this.getX();
@@ -558,7 +557,7 @@ public class AnchorPointOverlay extends GuiComponent implements Renderable, GuiE
                 endX = this.getX() + this.getWidth();
                 startY = endY - progressHeight;
             }
-            fill(pose, startX, startY, endX, endY, RenderingUtils.replaceAlphaInColor(getOverlayColorBorder().getColorInt(), getOverlayOpacity()));
+            graphics.fill(startX, startY, endX, endY, RenderingUtils.replaceAlphaInColor(getOverlayColorBorder().getColorInt(), getOverlayOpacity()));
             UIBase.resetShaderColor(graphics);
         }
 

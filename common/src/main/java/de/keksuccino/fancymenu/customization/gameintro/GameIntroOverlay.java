@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization.gameintro;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.events.screen.*;
@@ -14,6 +13,7 @@ import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
@@ -46,7 +46,7 @@ public class GameIntroOverlay extends Overlay {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
         this.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
@@ -72,22 +72,22 @@ public class GameIntroOverlay extends Overlay {
         }
 
         if (this.endOfIntroReached()) {
-            EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(this.fadeTo, pose, mouseX, mouseY, partial));
-            this.fadeTo.render(pose, mouseX, mouseY, partial);
-            EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(this.fadeTo, pose, mouseX, mouseY, partial));
+            EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(this.fadeTo, graphics, mouseX, mouseY, partial));
+            this.fadeTo.render(graphics, mouseX, mouseY, partial);
+            EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(this.fadeTo, graphics, mouseX, mouseY, partial));
         } else {
-            fill(pose, 0, 0, this.width, this.height, DrawableColor.BLACK.getColorInt());
+            graphics.fill(0, 0, this.width, this.height, DrawableColor.BLACK.getColorInt());
         }
 
         RenderingUtils.resetShaderColor(graphics);
 
-        this.renderIntro(pose, mouseX, mouseY, partial);
+        this.renderIntro(graphics, mouseX, mouseY, partial);
 
-        this.renderSkipText(pose, mouseX, mouseY, partial);
+        this.renderSkipText(graphics, mouseX, mouseY, partial);
 
     }
 
-    protected void renderIntro(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    protected void renderIntro(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (this.intro instanceof RenderableResource r) {
 
@@ -101,9 +101,8 @@ public class GameIntroOverlay extends Overlay {
             ResourceLocation location = r.getResourceLocation();
             if (location != null) {
                 RenderSystem.enableBlend();
-                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
-                RenderingUtils.bindTexture(location);
-                blit(pose, x, y, 0.0F, 0.0F, aspectWidth, aspectHeight, aspectWidth, aspectHeight);
+                graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
+                graphics.blit(location, x, y, 0.0F, 0.0F, aspectWidth, aspectHeight, aspectWidth, aspectHeight);
             }
 
             RenderingUtils.resetShaderColor(graphics);
@@ -112,7 +111,7 @@ public class GameIntroOverlay extends Overlay {
 
     }
 
-    protected void renderSkipText(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    protected void renderSkipText(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         if (FancyMenu.getOptions().gameIntroAllowSkip.getValue()) {
             float scale = 1.3F;
             String customSkipText = FancyMenu.getOptions().gameIntroCustomSkipText.getValue();
@@ -120,16 +119,16 @@ public class GameIntroOverlay extends Overlay {
                 customSkipText = I18n.get(customSkipText);
             }
             Component skipComp = customSkipText.isEmpty() ? Component.translatable("fancymenu.game_intro.press_any_key") : Component.literal(customSkipText);
-            pose.pushPose();
-            pose.scale(scale, scale, scale);
+            graphics.pose().pushPose();
+            graphics.pose().scale(scale, scale, scale);
             RenderSystem.enableBlend();
             RenderingUtils.resetShaderColor(graphics);
             int normalizedWidth = (int)(this.width / scale);
             int normalizedHeight = (int)(this.height / scale);
             int textX = (normalizedWidth / 2) - (this.font.width(skipComp) / 2);
             int textY = normalizedHeight - 40;
-            this.font.draw(pose, skipComp, textX, textY, RenderingUtils.replaceAlphaInColor(DrawableColor.WHITE.getColorInt(), Math.max(0.1F, 0.6F * this.opacity)));
-            pose.popPose();
+            graphics.drawString(this.font, skipComp, textX, textY, RenderingUtils.replaceAlphaInColor(DrawableColor.WHITE.getColorInt(), Math.max(0.1F, 0.6F * this.opacity)), false);
+            graphics.pose().popPose();
             RenderingUtils.resetShaderColor(graphics);
         }
     }

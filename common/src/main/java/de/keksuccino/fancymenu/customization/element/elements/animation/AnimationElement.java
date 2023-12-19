@@ -1,13 +1,12 @@
 package de.keksuccino.fancymenu.customization.element.elements.animation;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
-import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,7 +30,7 @@ public class AnimationElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (!this.shouldRender()) return;
 
@@ -50,7 +49,7 @@ public class AnimationElement extends AbstractElement {
             this.animation.setWidth(this.getAbsoluteWidth());
             this.animation.setHeight(this.getAbsoluteHeight());
 
-            this.animation.render(pose);
+            this.animation.render(graphics);
 
             this.animation.setPosX(cachedX);
             this.animation.setPosY(cachedY);
@@ -59,11 +58,10 @@ public class AnimationElement extends AbstractElement {
             this.animation.setOpacity(1.0F);
 
         } else {
-            RenderUtils.bindTexture(MISSING);
-            blit(pose, this.getAbsoluteX(), this.getAbsoluteY(), 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+            graphics.blit(MISSING, this.getAbsoluteX(), this.getAbsoluteY(), 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
         }
 
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 
     }
 

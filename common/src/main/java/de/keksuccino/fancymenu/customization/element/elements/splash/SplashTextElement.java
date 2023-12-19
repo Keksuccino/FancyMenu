@@ -1,10 +1,10 @@
 package de.keksuccino.fancymenu.customization.element.elements.splash;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinSplashRenderer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
@@ -12,6 +12,8 @@ import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.SplashRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
@@ -48,13 +50,13 @@ public class SplashTextElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (this.shouldRender()) {
 
             this.updateSplash();
 
-            this.renderSplash(pose);
+            this.renderSplash(graphics);
 
             RenderingUtils.resetShaderColor(graphics);
 
@@ -90,7 +92,8 @@ public class SplashTextElement extends AbstractElement {
         if (this.renderText == null) {
             //VANILLA
             if (this.sourceMode == SourceMode.VANILLA) {
-                this.renderText = Minecraft.getInstance().getSplashManager().getSplash();
+                SplashRenderer splashRenderer = Minecraft.getInstance().getSplashManager().getSplash();
+                this.renderText = (splashRenderer != null) ? ((IMixinSplashRenderer)splashRenderer).getSplashFancyMenu() : "";
             }
             //TEXT FILE
             if (this.sourceMode == SourceMode.TEXT_FILE) {
@@ -119,7 +122,7 @@ public class SplashTextElement extends AbstractElement {
 
     }
 
-    protected void renderSplash(PoseStack pose) {
+    protected void renderSplash(GuiGraphics graphics) {
 
         if (this.renderText == null) {
             if (isEditor()) {
@@ -139,13 +142,13 @@ public class SplashTextElement extends AbstractElement {
 
         RenderSystem.enableBlend();
 
-        pose.pushPose();
-        pose.scale(this.scale, this.scale, this.scale);
+        graphics.pose().pushPose();
+        graphics.pose().scale(this.scale, this.scale, this.scale);
 
-        pose.pushPose();
-        pose.translate(((this.getAbsoluteX() + (this.getAbsoluteWidth() / 2F)) / this.scale), this.getAbsoluteY() / this.scale, 0.0F);
-        pose.mulPose(Axis.ZP.rotationDegrees(this.rotation));
-        pose.scale(splashBaseScale, splashBaseScale, splashBaseScale);
+        graphics.pose().pushPose();
+        graphics.pose().translate(((this.getAbsoluteX() + (this.getAbsoluteWidth() / 2F)) / this.scale), this.getAbsoluteY() / this.scale, 0.0F);
+        graphics.pose().mulPose(Axis.ZP.rotationDegrees(this.rotation));
+        graphics.pose().scale(splashBaseScale, splashBaseScale, splashBaseScale);
 
         int alpha = this.baseColor.getColor().getAlpha();
         int i = Mth.ceil(this.opacity * 255.0F);
@@ -153,14 +156,10 @@ public class SplashTextElement extends AbstractElement {
             alpha = i;
         }
 
-        if (this.shadow) {
-            font.drawShadow(pose, renderTextComponent, -((float)font.width(renderTextComponent) / 2F), 0F, RenderingUtils.replaceAlphaInColor(this.baseColor.getColorInt(), alpha));
-        } else {
-            font.draw(pose, renderTextComponent, -((float)font.width(renderTextComponent) / 2F), 0F, RenderingUtils.replaceAlphaInColor(this.baseColor.getColorInt(), alpha));
-        }
+        graphics.drawString(font, renderTextComponent, -(font.width(renderTextComponent) / 2), 0, RenderingUtils.replaceAlphaInColor(this.baseColor.getColorInt(), alpha), this.shadow);
 
-        pose.popPose();
-        pose.popPose();
+        graphics.pose().popPose();
+        graphics.pose().popPose();
 
     }
 

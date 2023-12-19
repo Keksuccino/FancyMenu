@@ -14,12 +14,12 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
     implementation project(":common")
-    modImplementation "maven.modrinth:load-my-resources:1.0.4-1-1.20-fabric"
+    modImplementation "curse.maven:load-my-resources-fabric-534835:4583334"
     modImplementation "maven.modrinth:modmenu:7.2.2"
     implementation fileTree('libs') { include '*.jar' }
     include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.3.1")))
     include(implementation 'com.github.Keksuccino:japng:0.5.3')
-    modImplementation "maven.modrinth:melody:1.0.0-1.20.1-1.20.4-fabric"
+    modImplementation "curse.maven:melody-938643:4953732"
 }
 
 loom {

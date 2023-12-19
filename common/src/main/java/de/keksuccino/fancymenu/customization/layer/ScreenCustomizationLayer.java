@@ -6,7 +6,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.events.widget.RenderGuiListHeaderFooterEvent;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractSelectionList;
@@ -39,7 +38,7 @@ import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
@@ -51,7 +50,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
-public class ScreenCustomizationLayer extends GuiComponent implements ElementFactory {
+public class ScreenCustomizationLayer implements ElementFactory {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -413,20 +412,20 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 		//Render background elements in foreground if it wasn't possible to render to the menu background
 		if (!this.backgroundDrawable) {
 			for (AbstractElement element : new ArrayList<>(this.normalElements.backgroundElements)) {
-				element.render(e.getPoseStack(), e.getMouseX(), e.getMouseY(), e.getPartial());
+				element.render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 			}
 		}
 		//Render vanilla button elements
 		for (AbstractElement element : new ArrayList<>(this.vanillaWidgetElements)) {
-			element.render(e.getPoseStack(), e.getMouseX(), e.getMouseY(), e.getPartial());
+			element.render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 		}
 		//Render deep elements
 		for (AbstractElement element : new ArrayList<>(this.deepElements)) {
-			element.render(e.getPoseStack(), e.getMouseX(), e.getMouseY(), e.getPartial());
+			element.render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 		}
 		//Render foreground elements
 		for (AbstractElement element : new ArrayList<>(this.normalElements.foregroundElements)) {
-			element.render(e.getPoseStack(), e.getMouseX(), e.getMouseY(), e.getPartial());
+			element.render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 		}
 
 	}
@@ -434,7 +433,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 	@EventListener
 	public void drawToBackground(RenderedScreenBackgroundEvent e) {
 		if (!ScreenCustomization.isCurrentMenuScrollable()) {
-			this.renderBackground(e.getPoseStack(), MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime(), e.getScreen());
+			this.renderBackground(e.getGraphics(), MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime(), e.getScreen());
 		}
 	}
 
@@ -443,12 +442,14 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 		Screen s = Minecraft.getInstance().screen;
 		if ((s != null) && this.shouldCustomize(s)) {
 			//Allow background rendering in scrollable GUIs
-			this.renderBackground(e.getPoseStack(), MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime(), s);
+			this.renderBackground(e.getGraphics(), MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime(), s);
 		}
 	}
 
 	@EventListener
 	public void onRenderListHeaderFooterPre(RenderGuiListHeaderFooterEvent.Pre e) {
+
+		GuiGraphics graphics = e.getGraphics();
 
 		if (this.shouldCustomize(Minecraft.getInstance().screen)) {
 
@@ -462,7 +463,6 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 			if (headerTexture != null) {
 				ResourceLocation loc = headerTexture.getResourceLocation();
 				if (loc != null) {
-					RenderingUtils.bindTexture(loc);
 					RenderingUtils.resetShaderColor(graphics);
 					if (this.layoutBase.preserveScrollListHeaderFooterAspectRatio) {
 						int[] headerSize = headerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(access.getWidthFancyMenu(), access.getY0FancyMenu());
@@ -470,23 +470,21 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 						int headerHeight = headerSize[1];
 						int headerX = access.getX0FancyMenu() + (access.getWidthFancyMenu() / 2) - (headerWidth / 2);
 						int headerY = (access.getY0FancyMenu() / 2) - (headerHeight / 2);
-						enableScissor(access.getX0FancyMenu(), 0, access.getX0FancyMenu() + access.getWidthFancyMenu(), access.getY0FancyMenu());
-						blit(e.getPoseStack(), headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
-						disableScissor();
+						graphics.enableScissor(access.getX0FancyMenu(), 0, access.getX0FancyMenu() + access.getWidthFancyMenu(), access.getY0FancyMenu());
+						graphics.blit(loc, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
+						graphics.disableScissor();
 					} else {
-						blit(e.getPoseStack(), access.getX0FancyMenu(), 0, 0.0F, 0.0F, access.getWidthFancyMenu(), access.getY0FancyMenu(), access.getWidthFancyMenu(), access.getY0FancyMenu());
+						graphics.blit(loc, access.getX0FancyMenu(), 0, 0.0F, 0.0F, access.getWidthFancyMenu(), access.getY0FancyMenu(), access.getWidthFancyMenu(), access.getY0FancyMenu());
 					}
 				}
 			} else {
-				RenderSystem.setShaderTexture(0, GuiComponent.BACKGROUND_LOCATION);
-				RenderSystem.setShaderColor(0.25F, 0.25F, 0.25F, 1.0F);
-				blit(e.getPoseStack(), access.getX0FancyMenu(), 0, 0.0F, 0.0F, access.getWidthFancyMenu(), access.getY0FancyMenu(), 32, 32);
+				graphics.setColor(0.25F, 0.25F, 0.25F, 1.0F);
+				graphics.blit(Screen.BACKGROUND_LOCATION, access.getX0FancyMenu(), 0, 0.0F, 0.0F, access.getWidthFancyMenu(), access.getY0FancyMenu(), 32, 32);
 			}
 
 			if (footerTexture != null) {
 				ResourceLocation loc = footerTexture.getResourceLocation();
 				if (loc != null) {
-					RenderingUtils.bindTexture(loc);
 					RenderingUtils.resetShaderColor(graphics);
 					if (this.layoutBase.preserveScrollListHeaderFooterAspectRatio) {
 						int footerOriginalHeight = access.getHeightFancyMenu() - access.getY1FancyMenu();
@@ -495,27 +493,26 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 						int footerHeight = footerSize[1];
 						int footerX = access.getX0FancyMenu() + (access.getWidthFancyMenu() / 2) - (footerWidth / 2);
 						int footerY = access.getY1FancyMenu() + (footerOriginalHeight / 2) - (footerHeight / 2);
-						enableScissor(access.getX0FancyMenu(), access.getY1FancyMenu(), access.getX0FancyMenu() + access.getWidthFancyMenu(), access.getY1FancyMenu() + footerOriginalHeight);
-						blit(e.getPoseStack(), footerX, footerY, 0.0F, 0.0F, footerWidth, footerHeight, footerWidth, footerHeight);
-						disableScissor();
+						graphics.enableScissor(access.getX0FancyMenu(), access.getY1FancyMenu(), access.getX0FancyMenu() + access.getWidthFancyMenu(), access.getY1FancyMenu() + footerOriginalHeight);
+						graphics.blit(loc, footerX, footerY, 0.0F, 0.0F, footerWidth, footerHeight, footerWidth, footerHeight);
+						graphics.disableScissor();
 					} else {
 						int footerHeight = access.getHeightFancyMenu() - access.getY1FancyMenu();
-						blit(e.getPoseStack(), access.getX0FancyMenu(), access.getY1FancyMenu(), 0.0F, 0.0F, access.getWidthFancyMenu(), footerHeight, access.getWidthFancyMenu(), footerHeight);
+						graphics.blit(loc, access.getX0FancyMenu(), access.getY1FancyMenu(), 0.0F, 0.0F, access.getWidthFancyMenu(), footerHeight, access.getWidthFancyMenu(), footerHeight);
 					}
 				}
 			} else {
-				RenderSystem.setShaderTexture(0, GuiComponent.BACKGROUND_LOCATION);
-				RenderSystem.setShaderColor(0.25F, 0.25F, 0.25F, 1.0F);
-				blit(e.getPoseStack(), access.getX0FancyMenu(), access.getY1FancyMenu(), 0.0F, (float)access.getY1FancyMenu(), access.getWidthFancyMenu(), access.getHeightFancyMenu() - access.getY1FancyMenu(), 32, 32);
+				graphics.setColor(0.25F, 0.25F, 0.25F, 1.0F);
+				graphics.blit(Screen.BACKGROUND_LOCATION, access.getX0FancyMenu(), access.getY1FancyMenu(), 0.0F, (float)access.getY1FancyMenu(), access.getWidthFancyMenu(), access.getHeightFancyMenu() - access.getY1FancyMenu(), 32, 32);
 			}
 
 			RenderingUtils.resetShaderColor(graphics);
 
 			if (this.layoutBase.renderScrollListHeaderShadow) {
-				fillGradient(e.getPoseStack(), access.getX0FancyMenu(), access.getY0FancyMenu(), access.getX1FancyMenu(), access.getY0FancyMenu() + 4, -16777216, 0);
+				graphics.fillGradient(access.getX0FancyMenu(), access.getY0FancyMenu(), access.getX1FancyMenu(), access.getY0FancyMenu() + 4, -16777216, 0);
 			}
 			if (this.layoutBase.renderScrollListFooterShadow) {
-				fillGradient(e.getPoseStack(), access.getX0FancyMenu(), access.getY1FancyMenu() - 4, access.getX1FancyMenu(), access.getY1FancyMenu(), 0, -16777216);
+				graphics.fillGradient(access.getX0FancyMenu(), access.getY1FancyMenu() - 4, access.getX1FancyMenu(), access.getY1FancyMenu(), 0, -16777216);
 			}
 
 			RenderingUtils.resetShaderColor(graphics);
@@ -524,14 +521,14 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 
 	}
 
-	protected void renderBackground(PoseStack pose, int mouseX, int mouseY, float partial, Screen screen) {
+	protected void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partial, Screen screen) {
 
 		if (!this.shouldCustomize(screen)) return;
 
 		if (this.layoutBase.menuBackground != null) {
 			this.layoutBase.menuBackground.keepBackgroundAspectRatio = this.layoutBase.preserveBackgroundAspectRatio;
 			this.layoutBase.menuBackground.opacity = this.backgroundOpacity;
-			this.layoutBase.menuBackground.render(pose, mouseX, mouseY, partial);
+			this.layoutBase.menuBackground.render(graphics, mouseX, mouseY, partial);
 			this.layoutBase.menuBackground.opacity = 1.0F;
 		}
 
@@ -539,7 +536,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 
 		//Render background elements
 		for (AbstractElement elements : new ArrayList<>(this.normalElements.backgroundElements)) {
-			elements.render(pose, mouseX, mouseY, partial);
+			elements.render(graphics, mouseX, mouseY, partial);
 		}
 
 		this.backgroundDrawable = true;

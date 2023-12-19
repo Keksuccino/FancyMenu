@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.slider.v2;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
@@ -23,6 +22,7 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -142,7 +142,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (this.slider == null) return;
 
@@ -158,7 +158,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
 
         this.updateWidget();
 
-        this.slider.render(pose, mouseX, mouseY, partial);
+        this.slider.render(graphics, mouseX, mouseY, partial);
 
     }
 

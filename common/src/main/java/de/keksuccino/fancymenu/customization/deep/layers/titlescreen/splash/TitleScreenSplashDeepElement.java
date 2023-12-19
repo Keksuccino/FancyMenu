@@ -36,7 +36,7 @@ public class TitleScreenSplashDeepElement extends AbstractDeepElement {
         RenderSystem.enableBlend();
         this.renderSplash(graphics, Minecraft.getInstance().font);
 
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 
     }
 
@@ -58,7 +58,7 @@ public class TitleScreenSplashDeepElement extends AbstractDeepElement {
         f = f * 100.0F / (float) (font.width(cachedSplashText) + 32);
         graphics.pose().scale(f, f, f);
 
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
+        graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
         graphics.drawCenteredString(font, Component.literal(cachedSplashText), 0, -8, DEFAULT_COLOR.getColorIntWithAlpha(this.opacity));
 
         graphics.pose().popPose();

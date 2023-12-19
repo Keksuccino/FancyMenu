@@ -1067,7 +1067,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         protected void renderIcon(GuiGraphics graphics) {
             if (this.icon != null) {
                 RenderSystem.enableBlend();
-                UIBase.getUIColorTheme().setUITextureShaderColor(1.0F);
+                UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
                 graphics.blit(this.icon, (int) (this.x + 10), (int) (this.y + (this.getHeight() / 2) - (ICON_WIDTH_HEIGHT / 2)), 0.0F, 0.0F, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
                 UIBase.resetShaderColor(graphics);
             }
@@ -1090,7 +1090,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 this.tooltipActive = (this.tooltipIconHoverStart != -1) && ((this.tooltipIconHoverStart + 200) < System.currentTimeMillis());
 
                 RenderSystem.enableBlend();
-                UIBase.getUIColorTheme().setUITextureShaderColor(this.tooltipIconHovered ? 1.0F : 0.2F);
+                UIBase.getUIColorTheme().setUITextureShaderColor(graphics, this.tooltipIconHovered ? 1.0F : 0.2F);
                 graphics.blit(CONTEXT_MENU_TOOLTIP_ICON, this.getTooltipIconX() + offsetX, this.getTooltipIconY(), 0.0F, 0.0F, 10, 10, 10, 10);
                 UIBase.resetShaderColor(graphics);
 
@@ -1311,7 +1311,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         protected void renderSubMenuArrow(GuiGraphics graphics) {
             RenderSystem.enableBlend();
-            UIBase.getUIColorTheme().setUITextureShaderColor(1.0F);
+            UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
             graphics.blit(SUB_CONTEXT_MENU_ARROW_ICON, (int) (this.x + this.width - 20), (int) (this.y + 5), 0.0F, 0.0F, 10, 10, 10, 10);
             UIBase.resetShaderColor(graphics);
         }

@@ -37,7 +37,7 @@ public abstract class MixinImageButton {
 
 		RenderSystem.enableBlend();
 		//Fix missing alpha handling for ImageButtons (Vanilla bug)
-		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)button).getAlphaFancyMenu());
+		graphics.setColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)button).getAlphaFancyMenu());
 
 		//If it should render the Vanilla background
 		return renderVanilla;
@@ -45,7 +45,7 @@ public abstract class MixinImageButton {
 	}
 
 	@Inject(method = "renderWidget", at = @At("RETURN"))
-	private void afterRenderWidgetFancyMenu(GuiGraphics $$0, int $$1, int $$2, float $$3, CallbackInfo ci) {
+	private void afterRenderWidgetFancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo ci) {
 		//Reset shader color after alpha handling
 		RenderingUtils.resetShaderColor(graphics);
 	}

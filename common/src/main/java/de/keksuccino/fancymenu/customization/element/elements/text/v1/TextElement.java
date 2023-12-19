@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.element.elements.text.v1;
 
 import com.google.common.collect.LinkedListMultimap;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
@@ -18,6 +17,7 @@ import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.web.WebUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -66,8 +66,8 @@ public class TextElement extends AbstractElement {
 
         this.scrollArea = new ScrollArea(0, 0, this.getAbsoluteWidth(), this.getAbsoluteHeight()) {
             @Override
-            public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
-                super.render(matrix, mouseX, mouseY, partial);
+            public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+                super.render(graphics, mouseX, mouseY, partial);
                 this.verticalScrollBar.active = (this.getTotalEntryHeight() > this.getInnerHeight()) && TextElement.this.enableScrolling;
             }
             @Override
@@ -141,7 +141,7 @@ public class TextElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         try {
 
@@ -157,16 +157,16 @@ public class TextElement extends AbstractElement {
                         this.scrollArea.setY(this.getAbsoluteY(), true);
                         this.scrollArea.setWidth(this.getAbsoluteWidth(), true);
                         this.scrollArea.setHeight(this.getAbsoluteHeight(), true);
-                        this.scrollArea.render(pose, MouseInput.getMouseX(), MouseInput.getMouseY(), RenderingUtils.getPartialTick());
+                        this.scrollArea.render(graphics, MouseInput.getMouseX(), MouseInput.getMouseY(), RenderingUtils.getPartialTick());
                     }
 
                 } else if (isEditor()) {
                     //Render "updating" view in editor
-                    fill(pose, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), Color.MAGENTA.getRGB());
-                    drawCenteredString(pose, font, Component.translatable("fancymenu.customization.items.text.status.loading"), this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY() + (this.getAbsoluteHeight() / 2) - (font.lineHeight / 2), -1);
+                    graphics.fill(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), Color.MAGENTA.getRGB());
+                    graphics.drawCenteredString(font, Component.translatable("fancymenu.customization.items.text.status.loading"), this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY() + (this.getAbsoluteHeight() / 2) - (font.lineHeight / 2), -1);
                 }
 
-                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+                graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 
             }
 
@@ -382,7 +382,7 @@ public class TextElement extends AbstractElement {
         }
 
         @Override
-        public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
             RenderSystem.enableBlend();
 
@@ -400,7 +400,7 @@ public class TextElement extends AbstractElement {
 
             this.updateEntry();
 
-            this.buttonBase.render(matrix, mouseX, mouseY, partial);
+            this.buttonBase.render(graphics, mouseX, mouseY, partial);
 
             int textX = (int)((float)this.getX() / this.scale);
             if (this.parentItem.alignment == Alignment.LEFT) {
@@ -414,8 +414,8 @@ public class TextElement extends AbstractElement {
             int centerY = (int)((float)this.getY() / this.scale) + (this.getHeight() / 2);
             int textY = centerY - (int)((float)(this.font.lineHeight / 2) * this.scale);
 
-            matrix.pushPose();
-            matrix.scale(this.scale, this.scale, this.scale);
+            graphics.pose().pushPose();
+            graphics.pose().scale(this.scale, this.scale, this.scale);
             Color c = this.parentItem.getBaseColor();
             int textColor;
             if (c != null) {
@@ -423,13 +423,9 @@ public class TextElement extends AbstractElement {
             } else {
                 textColor = FastColor.ARGB32.color(Math.max(0, Math.min(255, (int)(this.parentItem.opacity * 255.0F))), 255, 255, 255);
             }
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-            if (!this.parentItem.shadow) {
-                this.font.draw(matrix, this.text, textX, textY, textColor);
-            } else {
-                this.font.drawShadow(matrix, this.text, textX, textY, textColor);
-            }
-            matrix.popPose();
+            graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+            graphics.drawString(this.font, this.text, textX, textY, textColor, this.parentItem.shadow);
+            graphics.pose().popPose();
 
         }
 

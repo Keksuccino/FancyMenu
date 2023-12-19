@@ -46,7 +46,7 @@ public interface CustomizableSlider {
             }
         }
         if (location != null) {
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)this).getAlphaFancyMenu());
+            graphics.setColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)this).getAlphaFancyMenu());
             RenderSystem.enableBlend();
             graphics.blit(location, widget.getX(), widget.getY(), 0.0F, 0.0F, widget.getWidth(), widget.getHeight(), widget.getWidth(), widget.getHeight());
             RenderingUtils.resetShaderColor(graphics);

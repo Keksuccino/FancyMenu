@@ -96,7 +96,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     }
 
     protected void renderVanillaBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
+        graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();
@@ -143,7 +143,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     }
 
     protected void renderVanillaHandle(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
+        graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();

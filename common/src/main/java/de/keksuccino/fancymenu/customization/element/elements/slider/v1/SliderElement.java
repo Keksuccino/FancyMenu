@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
@@ -77,7 +78,7 @@ public class SliderElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (this.shouldRender()) {
 
@@ -92,7 +93,7 @@ public class SliderElement extends AbstractElement {
             this.slider.setY(this.getAbsoluteY());
             this.slider.setWidth(this.getAbsoluteWidth());
             ((IMixinAbstractWidget)this.slider).setHeightFancyMenu(this.getAbsoluteHeight());
-            this.slider.render(pose, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime());
+            this.slider.render(graphics, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime());
 
             //Update variable value on change
             if (this.linkedVariable != null) {
@@ -128,7 +129,7 @@ public class SliderElement extends AbstractElement {
                 ((RangeSliderButton)this.slider).minValue = this.minRangeValue;
             }
 
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+            graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 
         }
 

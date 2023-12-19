@@ -55,7 +55,7 @@ public class ImageMenuBackground extends MenuBackground {
         if (resourceLocation != null) {
 
             RenderSystem.enableBlend();
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
+            graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
 
             if (this.slideLeftRight) {
                 int w = ratio.getAspectRatioWidth(getScreenHeight());

@@ -82,7 +82,7 @@ public class ScrollBar {
         this.lastGrabberY = y;
 
         RenderSystem.enableBlend();
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 
         if (this.isGrabberHovered() || this.isGrabberGrabbed()) {
             if (this.hoverBarTexture != null) {

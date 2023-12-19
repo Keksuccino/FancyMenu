@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.audio;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.util.MathUtils;
@@ -13,6 +12,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Style;
 import net.minecraft.sounds.SoundSource;
 import org.apache.commons.lang3.StringUtils;
@@ -29,17 +29,6 @@ public class AudioElement extends AbstractElement {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final DrawableColor BACKGROUND_COLOR = DrawableColor.of(new Color(92, 166, 239));
     private static final long AUDIO_START_COOLDOWN_MS = 2000;
-
-    //TODO Actions
-    // - Add as new category if possible ("Audio Element"); alternatively add prefix to all Actions ("Audio Element: ...")
-    // - Set Volume
-    // - Next Track
-    // - Previous Track
-    // - Toggle Mute
-    // - Restart (set to start of first track)
-
-    //TODO Placeholders
-    // - Get Volume
 
     @NotNull
     protected PlayMode playMode = PlayMode.NORMAL;
@@ -323,7 +312,7 @@ public class AudioElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.renderTick();
 
@@ -335,10 +324,10 @@ public class AudioElement extends AbstractElement {
             int w = this.getAbsoluteWidth();
             int h = this.getAbsoluteHeight();
             RenderSystem.enableBlend();
-            fill(pose, x, y, x + w, y + h, BACKGROUND_COLOR.getColorInt());
-            enableScissor(x, y, x + w, y + h);
-            drawCenteredString(pose, Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
-            disableScissor();
+            graphics.fill(x, y, x + w, y + h, BACKGROUND_COLOR.getColorInt());
+            graphics.enableScissor(x, y, x + w, y + h);
+            graphics.drawCenteredString(Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
+            graphics.disableScissor();
             RenderingUtils.resetShaderColor(graphics);
         }
 

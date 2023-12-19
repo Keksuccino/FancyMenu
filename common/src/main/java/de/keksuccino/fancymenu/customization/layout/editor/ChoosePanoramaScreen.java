@@ -1,8 +1,6 @@
-
 package de.keksuccino.fancymenu.customization.layout.editor;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -14,6 +12,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -58,14 +57,14 @@ public class ChoosePanoramaScreen extends Screen {
             this.callback.accept(this.selectedPanoramaName);
         }) {
             @Override
-            public void renderWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+            public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
                 if (ChoosePanoramaScreen.this.selectedPanoramaName == null) {
                     TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.panorama.choose.no_panorama_selected")).setDefaultStyle(), false, true);
                     this.active = false;
                 } else {
                     this.active = true;
                 }
-                super.renderWidget(pose, mouseX, mouseY, partial);
+                super.renderWidget(graphics, mouseX, mouseY, partial);
             }
         };
         this.addWidget(this.doneButton);
@@ -85,32 +84,32 @@ public class ChoosePanoramaScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         RenderSystem.enableBlend();
 
-        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(pose, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        this.font.draw(pose, Component.translatable("fancymenu.panorama.choose.available_panoramas"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, Component.translatable("fancymenu.panorama.choose.available_panoramas"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
         this.panoramaListScrollArea.setWidth((this.width / 2) - 40, true);
         this.panoramaListScrollArea.setHeight(this.height - 85, true);
         this.panoramaListScrollArea.setX(20, true);
         this.panoramaListScrollArea.setY(50 + 15, true);
-        this.panoramaListScrollArea.render(pose, mouseX, mouseY, partial);
+        this.panoramaListScrollArea.render(graphics, mouseX, mouseY, partial);
 
         this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
         this.doneButton.setY(this.height - 20 - 20);
-        this.doneButton.render(pose, mouseX, mouseY, partial);
+        this.doneButton.render(graphics, mouseX, mouseY, partial);
 
         this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
         this.cancelButton.setY(this.doneButton.getY() - 5 - 20);
-        this.cancelButton.render(pose, mouseX, mouseY, partial);
+        this.cancelButton.render(graphics, mouseX, mouseY, partial);
 
-        super.render(pose, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
 
     }
 

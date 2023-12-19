@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.ticker;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
@@ -9,6 +8,7 @@ import de.keksuccino.fancymenu.customization.element.ExecutableElement;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
@@ -54,7 +54,7 @@ public class TickerElement extends AbstractElement implements ExecutableElement 
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.ready = true;
 
@@ -64,10 +64,10 @@ public class TickerElement extends AbstractElement implements ExecutableElement 
             int w = this.getAbsoluteWidth();
             int h = this.getAbsoluteHeight();
             RenderSystem.enableBlend();
-            fill(pose, x, y, x + w, y + h, BACKGROUND_COLOR.getColorInt());
-            enableScissor(x, y, x + w, y + h);
-            drawCenteredString(pose, Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
-            disableScissor();
+            graphics.fill(x, y, x + w, y + h, BACKGROUND_COLOR.getColorInt());
+            graphics.enableScissor(x, y, x + w, y + h);
+            graphics.drawCenteredString(Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
+            graphics.disableScissor();
             RenderingUtils.resetShaderColor(graphics);
         } else if (!this.isAsync) {
             this.tickerElementTick();
@@ -97,7 +97,7 @@ public class TickerElement extends AbstractElement implements ExecutableElement 
             this.asyncThreadController.running = false;
         }
 
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 
     }
 

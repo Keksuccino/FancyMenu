@@ -55,10 +55,10 @@ public class CustomizationOverlay {
 	public void onRenderPost(RenderScreenEvent.Post e) {
 		if (!ScreenCustomization.isScreenBlacklisted(e.getScreen().getClass().getName()) && (overlayMenuBar != null) && (debugOverlay != null)) {
 			if (FancyMenu.getOptions().showDebugOverlay.getValue()) {
-				debugOverlay.render(e.getPoseStack(), e.getMouseX(), e.getMouseY(), e.getPartial());
+				debugOverlay.render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 			}
 			if (FancyMenu.getOptions().showCustomizationOverlay.getValue()) {
-				overlayMenuBar.render(e.getPoseStack(), e.getMouseX(), e.getMouseY(), e.getPartial());
+				overlayMenuBar.render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 			}
 		}
 	}

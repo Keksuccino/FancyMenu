@@ -64,7 +64,7 @@ public interface CustomizableWidget {
             ResourceLocation location = customBackground.getResourceLocation();
             if (location != null) {
                 renderVanilla = false;
-                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)widget).getAlphaFancyMenu());
+                graphics.setColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)widget).getAlphaFancyMenu());
                 RenderSystem.enableBlend();
                 graphics.blit(location, x, y, 0.0F, 0.0F, width, height, width, height);
                 RenderingUtils.resetShaderColor(graphics);

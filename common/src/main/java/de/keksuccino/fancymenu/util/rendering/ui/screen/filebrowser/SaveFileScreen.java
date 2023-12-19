@@ -123,10 +123,10 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
             this.trySave();
         }) {
             @Override
-            public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+            public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
                 AbstractFileScrollAreaEntry selected = getSelectedEntry();
                 this.active = canSave();
-                super.render(pose, mouseX, mouseY, partial);
+                super.render(graphics, mouseX, mouseY, partial);
             }
         };
     }

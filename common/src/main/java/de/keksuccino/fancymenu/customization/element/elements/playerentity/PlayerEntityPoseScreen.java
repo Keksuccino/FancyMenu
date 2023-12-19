@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v1.RangeSliderButton;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
@@ -241,19 +242,19 @@ public class PlayerEntityPoseScreen extends CellScreen {
     }
 
     @Override
-    public void render(PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        super.render(pose, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
 
         int entityX = this.width - 20 - (this.getRightSideWidgetWidth() / 2) - ((int)(this.element.getActiveEntityProperties().getDimensions().width * ENTITY_SCALE) / 2);
         int entityY = (int) this.scrollArea.getYWithBorder() + 30;
-        this.renderEntity(pose, mouseX, mouseY, partial, entityX, entityY);
+        this.renderEntity(graphics, mouseX, mouseY, partial, entityX, entityY);
 
         RenderingUtils.resetShaderColor(graphics);
 
     }
 
-    protected void renderEntity(PoseStack pose, int mouseX, int mouseY, float partial, int posX, int posY) {
+    protected void renderEntity(GuiGraphics graphics, int mouseX, int mouseY, float partial, int posX, int posY) {
 
         String cachedBodyXRot = this.element.bodyXRot;
         String cachedBodyYRot = this.element.bodyYRot;
@@ -287,7 +288,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
         this.element.posOffsetX = posX;
         this.element.posOffsetY = posY;
 
-        this.element.render(pose, mouseX, mouseY, partial);
+        this.element.render(graphics, mouseX, mouseY, partial);
 
         this.element.bodyXRot = cachedBodyXRot;
         this.element.bodyYRot = cachedBodyYRot;
@@ -428,7 +429,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
         }
 
         @Override
-        public void renderCell(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
             int toggleModeButtonWidth = Minecraft.getInstance().font.width(this.toggleModeButton.getLabelSupplier().get(this.toggleModeButton)) + 6;
 

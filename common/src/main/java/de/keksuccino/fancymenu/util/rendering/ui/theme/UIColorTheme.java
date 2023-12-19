@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.theme;
 
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.awt.*;
@@ -86,8 +87,8 @@ public class UIColorTheme {
         this.display_name = display_name;
     }
 
-    public void setUITextureShaderColor(float alpha) {
-        UIBase.setShaderColor(ui_texture_color, alpha);
+    public void setUITextureShaderColor(GuiGraphics graphics, float alpha) {
+        UIBase.setShaderColor(graphics, ui_texture_color, alpha);
     }
 
     @NotNull

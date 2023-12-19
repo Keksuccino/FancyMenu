@@ -87,7 +87,7 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
         this.lastGrabberY = y;
 
         RenderSystem.enableBlend();
-        resetShaderColor();
+        resetShaderColor(graphics);
         DrawableColor normalC = this.idleBarColor.get();
         DrawableColor hoverC = this.hoverBarColor.get();
         if (this.isGrabberHovered() || this.isGrabberGrabbed()) {

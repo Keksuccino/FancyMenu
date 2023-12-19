@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.inputfield;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
@@ -10,6 +9,7 @@ import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,7 +29,7 @@ public class InputFieldElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (this.shouldRender()) {
 
@@ -51,7 +51,7 @@ public class InputFieldElement extends AbstractElement {
             this.editBox.setY(this.getAbsoluteY());
             this.editBox.setWidth(this.getAbsoluteWidth());
             ((IMixinAbstractWidget)this.editBox).setHeightFancyMenu(this.getAbsoluteHeight());
-            this.editBox.render(pose, mouseX, mouseY, partial);
+            this.editBox.render(graphics, mouseX, mouseY, partial);
 
             //Update variable value on change
             if (!isEditor()) {
