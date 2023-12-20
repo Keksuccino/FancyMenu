@@ -106,15 +106,15 @@ public class RenderingUtils extends GuiComponent {
         float green = (float)FastColor.ARGB32.green(color) / 255.0F;
         float blue = (float)FastColor.ARGB32.blue(color) / 255.0F;
         float alpha = (float) FastColor.ARGB32.alpha(color) / 255.0F;
-        BufferBuilder builder = Tesselator.getInstance().getBuilder();
+        BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
         RenderSystem.enableBlend();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-        builder.vertex(matrix4f, minX, minY, z).color(red, green, blue, alpha).endVertex();
-        builder.vertex(matrix4f, minX, maxY, z).color(red, green, blue, alpha).endVertex();
-        builder.vertex(matrix4f, maxX, maxY, z).color(red, green, blue, alpha).endVertex();
-        builder.vertex(matrix4f, maxX, minY, z).color(red, green, blue, alpha).endVertex();
-        BufferUploader.draw(builder.end());
+        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        bufferBuilder.vertex(matrix4f, minX, minY, z).color(red, green, blue, alpha).endVertex();
+        bufferBuilder.vertex(matrix4f, minX, maxY, z).color(red, green, blue, alpha).endVertex();
+        bufferBuilder.vertex(matrix4f, maxX, maxY, z).color(red, green, blue, alpha).endVertex();
+        bufferBuilder.vertex(matrix4f, maxX, minY, z).color(red, green, blue, alpha).endVertex();
+        BufferUploader.drawWithShader(bufferBuilder.end());
         RenderSystem.disableBlend();
     }
 
@@ -132,13 +132,13 @@ public class RenderingUtils extends GuiComponent {
 
     private static void innerBlit(Matrix4f $$0, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        BufferBuilder builder = Tesselator.getInstance().getBuilder();
-        builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-        builder.vertex($$0, $$1, $$3, $$5).uv($$6, $$8).endVertex();
-        builder.vertex($$0, $$1, $$4, $$5).uv($$6, $$9).endVertex();
-        builder.vertex($$0, $$2, $$4, $$5).uv($$7, $$9).endVertex();
-        builder.vertex($$0, $$2, $$3, $$5).uv($$7, $$8).endVertex();
-        BufferUploader.draw(builder.end());
+        BufferBuilder $$10 = Tesselator.getInstance().getBuilder();
+        $$10.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        $$10.vertex($$0, $$1, $$3, $$5).uv($$6, $$8).endVertex();
+        $$10.vertex($$0, $$1, $$4, $$5).uv($$6, $$9).endVertex();
+        $$10.vertex($$0, $$2, $$4, $$5).uv($$7, $$9).endVertex();
+        $$10.vertex($$0, $$2, $$3, $$5).uv($$7, $$8).endVertex();
+        BufferUploader.drawWithShader($$10.end());
     }
 
     public static void blitNineSliced(PoseStack $$0, int $$1, int $$2, int $$3, int $$4, int $$5, int $$6, int $$7, int $$8, int $$9) {

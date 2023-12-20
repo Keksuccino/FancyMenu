@@ -179,7 +179,7 @@ public class Tooltip extends GuiComponent implements Widget {
 
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        BufferUploader.draw(builder.end());
+        BufferUploader.drawWithShader(builder.end());
         if (shaderInstance != null) {
             RenderSystem.setShader(() -> shaderInstance);
         }
