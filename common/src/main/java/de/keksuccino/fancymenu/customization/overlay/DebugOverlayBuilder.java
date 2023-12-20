@@ -11,6 +11,8 @@ import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.slideshow.ExternalTextureSlideshowRenderer;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
+import de.keksuccino.fancymenu.util.MathUtils;
+import de.keksuccino.fancymenu.util.PerformanceUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
@@ -148,6 +150,26 @@ public class DebugOverlayBuilder {
             if (percent >= 60) percentString = ChatFormatting.GOLD + "" + percent + "%" + ChatFormatting.RESET;
             if (percent >= 80) percentString = ChatFormatting.RED + "" + percent + "%" + ChatFormatting.RESET;
             return Component.translatable("fancymenu.overlay.debug.memory", ramString, percentString);
+        });
+        overlay.addLine("cpu_jvm_usage", DebugOverlay.LinePosition.TOP_LEFT, consumes -> {
+            double usage = PerformanceUtils.getJvmCpuUsage();
+            if (usage < 0D) usage = 0D;
+            usage = usage * 100.0D;
+            usage = MathUtils.round(usage, 1);
+            String usageString = usage + "%";
+            if (usage > 50) usageString = ChatFormatting.GOLD + "" + usage + "%" + ChatFormatting.RESET;
+            if (usage >= 80) usageString = ChatFormatting.RED + "" + usage + "%" + ChatFormatting.RESET;
+            return Component.translatable("fancymenu.overlay.debug.cpu_usage.jvm", usageString);
+        });
+        overlay.addLine("cpu_os_usage", DebugOverlay.LinePosition.TOP_LEFT, consumes -> {
+            double usage = PerformanceUtils.getOsCpuUsage();
+            if (usage < 0D) usage = 0D;
+            usage = usage * 100.0D;
+            usage = MathUtils.round(usage, 1);
+            String usageString = usage + "%";
+            if (usage > 50) usageString = ChatFormatting.GOLD + "" + usage + "%" + ChatFormatting.RESET;
+            if (usage >= 80) usageString = ChatFormatting.RED + "" + usage + "%" + ChatFormatting.RESET;
+            return Component.translatable("fancymenu.overlay.debug.cpu_usage.os", usageString);
         });
         overlay.addLine("cpu_info", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.cpu", GlUtil.getCpuInfo()));
         overlay.addLine("gpu_info", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.gpu", GlUtil.getRenderer(), GlUtil.getOpenGLVersion()));

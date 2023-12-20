@@ -3,9 +3,14 @@ CHANGELOG | FANCYMENU v3.0.0 CLOSED BETA 2 / RELEASE CANDIDATE 2
  
 - Ported FMv3 to Minecraft 1.18.2
 - Ported FMv3 to Minecraft 1.20.1
+- Ported FMv3 to Minecraft 1.19.2 (and dropped 1.19.4 for it)
  
-- Backported Vanilla 1.19+ widget background rendering (9-slicing) to 1.18
-- Backported Vanilla 1.19+ widget label rendering (sliding left to right) to 1.18
+- Backported Vanilla 1.19.3+ (or .4+ ??) widget background rendering (9-slicing) to 1.18.2 and 1.19.2
+- Backported Vanilla 1.19.3+ (or .4+ ??) widget label rendering (sliding left to right) to 1.18.2 and 1.19.2
+ 
+- Added placeholder "CPU Usage (JVM)" to get the current CPU usage of the Java Virtual Machine
+- Added placeholder "CPU Usage (OS)" to get the current CPU usage of the Operating System
+- Added CPU usage information to the debug overlay
  
 - Fixed: Custom Vanilla slider background not correctly loading if more than one layout is active for a menu
 - Fixed: Leftover "Animation" entries in background customization menu of Slider element

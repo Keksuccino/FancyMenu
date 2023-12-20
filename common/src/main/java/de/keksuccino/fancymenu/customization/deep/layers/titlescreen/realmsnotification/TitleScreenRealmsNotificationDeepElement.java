@@ -58,7 +58,7 @@ public class TitleScreenRealmsNotificationDeepElement extends AbstractDeepElemen
         graphics.pose().popPose();
         $$8 += 14;
 
-        graphics.blit(INVITE_ICON_LOCATION, $$6 - $$8, $$7 - 6, 0.0F, 0.0F, 15, 25, 31, 25);
+        graphics.blit(INVITE_ICON_LOCATION, $$6 - $$8, $$7, 0.0F, 0.0F, 18, 15, 18, 30);
         $$8 += 16;
 
         int $$9 = 0;

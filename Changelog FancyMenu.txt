@@ -210,6 +210,8 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - Added placeholder "Trigonometric Tangent" to calculate the trigonometric tangent of an angle
 - Added placeholder "Hyperbolic Tangent" to calculate the hyperbolic tangent of a double value
 - Added placeholder "Current Time in Millis (Unix Timestamp)" to get the current time in milliseconds, measured by the time that has elapsed since 00:00:00 UTC on 1 January 1970
+- Added placeholder "CPU Usage (JVM)" to get the current CPU usage of the Java Virtual Machine
+- Added placeholder "CPU Usage (OS)" to get the current CPU usage of the Operating System
  
 - Added a bunch of accessibility stuff
 --> UI Themes to change the color scheme of FancyMenu's UI (dark and light themes included by default and you can make your own themes!)

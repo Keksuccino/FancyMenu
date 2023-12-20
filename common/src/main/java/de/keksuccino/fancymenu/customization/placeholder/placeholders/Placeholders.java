@@ -5,6 +5,8 @@ import de.keksuccino.fancymenu.customization.placeholder.placeholders.client.*;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.gui.*;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderRegistry;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.AbsolutePathPlaceholder;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.cpu.JvmCpuUsagePlaceholder;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.cpu.OsCpuUsagePlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.realtime.*;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.server.*;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.RandomTextPlaceholder;
@@ -73,6 +75,8 @@ public class Placeholders {
     public static final RandomTextPlaceholder RANDOM_TEXT = new RandomTextPlaceholder();
     public static final WebTextPlaceholder WEB_TEXT = new WebTextPlaceholder();
     public static final AbsolutePathPlaceholder ABSOLUTE_PATH = new AbsolutePathPlaceholder();
+    public static final JvmCpuUsagePlaceholder JVM_CPU_USAGE = new JvmCpuUsagePlaceholder();
+    public static final OsCpuUsagePlaceholder OS_CPU_USAGE = new OsCpuUsagePlaceholder();
 
     public static void registerAll() {
 
@@ -145,6 +149,8 @@ public class Placeholders {
         PlaceholderRegistry.register(RANDOM_TEXT);
         PlaceholderRegistry.register(WEB_TEXT);
         PlaceholderRegistry.register(ABSOLUTE_PATH);
+        PlaceholderRegistry.register(JVM_CPU_USAGE);
+        PlaceholderRegistry.register(OS_CPU_USAGE);
 
     }
 
