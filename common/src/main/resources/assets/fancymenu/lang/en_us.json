@@ -1198,5 +1198,11 @@
   "fancymenu.resources.pre_loading.manage": "Manage Resources for Pre-Loading",
   "fancymenu.resources.pre_loading.manage.add": "Add",
   "fancymenu.resources.pre_loading.manage.remove": "Remove Selected",
-  "fancymenu.resources.pre_loading.manage.remove.confirm": "Remove Resource?\n\nDo you really want to remove the selected resource?"
+  "fancymenu.resources.pre_loading.manage.remove.confirm": "Remove Resource?\n\nDo you really want to remove the selected resource?",
+  "fancymenu.placeholders.jvm_cpu_usage": "CPU Usage (JVM)",
+  "fancymenu.placeholders.jvm_cpu_usage.desc": "Gets the current CPU usage of the Java Virtual Machine.",
+  "fancymenu.placeholders.os_cpu_usage": "CPU Usage (OS)",
+  "fancymenu.placeholders.os_cpu_usage.desc": "Gets the current CPU usage of the Operating System.",
+  "fancymenu.overlay.debug.cpu_usage.jvm": "§lCPU Usage (JVM):§r %s",
+  "fancymenu.overlay.debug.cpu_usage.os": "§lCPU Usage (OS):§r %s"
 }

@@ -30,7 +30,7 @@ public class TitleScreenRealmsNotificationDeepElement extends AbstractDeepElemen
 
         int yStart = getScreenHeight() / 4 + 48;
         int realmsButtonY = yStart + 24 * 2;
-        this.baseWidth = 14 + 14 + 14 + 16 + 2;
+        this.baseWidth = 14 + 14 + 16 + 2;
         this.baseHeight = 13;
         this.posOffsetX = ((getScreenWidth() / 2) + 80) + 4 - 2;
         this.posOffsetY = realmsButtonY + 4;
@@ -48,11 +48,12 @@ public class TitleScreenRealmsNotificationDeepElement extends AbstractDeepElemen
         int $$5 = getScreenHeight() / 4 + 48;
         int $$6 = getScreenWidth() / 2 + 80;
         int $$7 = $$5 + 48 + 2;
-        int $$8 = -(14 + 14 + 16);
+//        int $$8 = -(14 + 14 + 16);
+        int $$8 = -(14 + 16);
 
-        RenderSystem.setShaderTexture(0, UNSEEN_NOTIFICATION_ICON_LOCATION);
-        GuiComponent.blit(pose, $$6 - $$8 + 5, $$7 + 3, 0.0F, 0.0F, 10, 10, 10, 10);
-        $$8 += 14;
+//        RenderSystem.setShaderTexture(0, UNSEEN_NOTIFICATION_ICON_LOCATION);
+//        GuiComponent.blit(pose, $$6 - $$8 + 5, $$7 + 3, 0.0F, 0.0F, 10, 10, 10, 10);
+//        $$8 += 14;
 
         RenderSystem.setShaderTexture(0, NEWS_ICON_LOCATION);
         pose.pushPose();
