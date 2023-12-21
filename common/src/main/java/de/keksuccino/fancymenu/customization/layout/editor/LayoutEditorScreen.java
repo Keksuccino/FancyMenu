@@ -1108,7 +1108,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				if (!b && hasControlDown()) continue; //skip deselect if CTRL pressed
 				e.setSelected(b);
 			}
-			//TODO eventuell return hier bei isMouseSelection ??? sollte doch okay sein?
 		}
 
 		if (this.preDragElementSnapshot == null) {

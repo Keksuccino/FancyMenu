@@ -206,7 +206,6 @@ public class ChooseMenuBackgroundScreen extends Screen {
             this.backgroundTypeListScrollArea.addEntry(e);
         }
 
-        //TODO handling für deprecated adden ---->
         for (MenuBackgroundBuilder<?> b : MenuBackgroundRegistry.getBuilders()) {
             BackgroundTypeScrollEntry e = new BackgroundTypeScrollEntry(this.backgroundTypeListScrollArea, b, (entry) -> {
                 if (this.backgroundType != b) {

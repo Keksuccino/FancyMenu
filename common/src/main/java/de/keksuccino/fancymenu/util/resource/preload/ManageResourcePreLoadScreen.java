@@ -52,8 +52,6 @@ public class ManageResourcePreLoadScreen extends CellScreen {
         this.addRightSideButton(20, Component.translatable("fancymenu.resources.pre_loading.manage.add"), extendedButton -> {
             ResourceChooserScreen<?,?> s = ResourceChooserScreen.generic(FileTypeGroup.allSupported(), null, source -> {
                 if (source != null) {
-                    //TODO remove debug
-                    LOGGER.info("ADDING SOURCE TO PRE-LOADING: " + source);
                     this.cachedSerialized = ResourcePreLoader.addResourceSource(ResourceSource.of(source), this.cachedSerialized, false);
                 }
                 Minecraft.getInstance().setScreen(this);

@@ -74,7 +74,7 @@ public class AudioElement extends AbstractElement {
     public void renderTick() {
 
         //Don't play music in editor
-        if (isEditor()) return; //TODO Maybe make this a toggleable option in editor???
+        if (isEditor()) return;
 
         boolean loadedFromCache = false;
         if (!this.cacheChecked) {

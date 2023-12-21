@@ -405,7 +405,6 @@ public class MarkdownParser {
                     charsToSkip = 3;
                     continue;
                 }
-                //TODO add more bullet list levels (make better handling for infinite levels)
 
                 //Handle Separation Line
                 if (isStartOfLine && (c == MINUS_CHAR) && (builder.codeBlockContext == null)) {

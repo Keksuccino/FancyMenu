@@ -60,7 +60,6 @@ public class FileTypes {
             FileCodec.advanced(IAudio.class, WavAudio::of, WavAudio::location, WavAudio::local, WavAudio::web),
             "audio/wav", "wav");
 
-    //TODO implement video codecs (and remove file types that have no codec)
     public static final VideoFileType MPEG_VIDEO = new VideoFileType(FileCodec.basic(IVideo.class, consumes -> null, consumes -> null), "video/mpeg", "mpeg", "mpg");
     public static final VideoFileType MP4_VIDEO = new VideoFileType(FileCodec.basic(IVideo.class, consumes -> null, consumes -> null), "video/mp4", "mp4");
     public static final VideoFileType AVI_VIDEO = new VideoFileType(FileCodec.basic(IVideo.class, consumes -> null, consumes -> null), "video/x-msvideo", "avi");

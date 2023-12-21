@@ -28,6 +28,8 @@ public class FancyMenu {
 
 
 
+	//TODO Markdown: Add more bullet list levels (make better handling for infinite levels)
+
 	//TODO ALLE UNGENUTZTEN FileTypes entfernen (ungenutzte video types)
 
 	//TODO Layout Listener System
