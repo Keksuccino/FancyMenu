@@ -119,6 +119,8 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
  
 ------------------------------
  
+- Dropped support for all existing MC versions except 1.18.2, 1.19.2 and 1.20.1 (FM will obviously still get ported to future MC versions, so don't worry)
+ 
 - Button tooltips (custom and vanilla buttons) now look like Vanilla ones
 - Button tooltips will not jump to the complete opposite site of the mouse cursor anymore when hitting the edge of the screen
 - If "Preserve Background Aspect Ratio" is enabled, menu backgrounds will now always get rendered with the correct aspect ratio, no matter how big/small the screen is
@@ -170,18 +172,20 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - Universal layouts now get always loaded BEFORE normal ones, so normal layouts can override parts of universal ones
 - The grid in the layout editor now always gets rendered at the same scale, no matter what GUI scale is used
 - FancyMenu now supports APNG textures (Animated PNGs, like GIFs, but better)
-- ANIMATIONS are DEPRECATED now, since there's APNG support now
 - It is now possible to pre-load specific resources
 --> Accessible via Customization Menu Bar -> Customization -> Pre-Load Resources
 --> Recommended for APNGs used as game intro
 - The game intro now fades to the Title screen like the loading overlay (can be toggled off)
 - You can now undo/redo steps in the text editor
+- Backported Vanilla 1.19.4+ widget background rendering (9-slicing) to 1.18.2 and 1.19.2
+- Backported Vanilla 1.19.4+ widget label rendering (sliding left to right) to 1.18.2 and 1.19.2
  
 - Animations are now deprecated!
 --> APNGs exist now (and maybe videos soon), so there's no real need for animations anymore
 --> It's not possible to add new Animation elements to layouts, but existing ones still work for now
 --> Animations can't get set as game intro anymore, but existing animation intros still work for now
 --> Animations can't get set as button background anymore, but existing animation button backgrounds still work for now
+--> Animations can't get set as menu background anymore, but existing animation menu background still work for now
  
 - Added loading requirement "File/Folder Exists" to check if a file/folder exists
 - Added loading requirement "Is Button Active" to check if a button is active (clickable/not greyed out)
