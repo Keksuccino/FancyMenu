@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.WidgetifiedScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.RendererWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.TextWidget;
@@ -27,48 +28,59 @@ public abstract class MixinLevelLoadingScreen extends Screen {
     @Shadow @Final private StoringChunkProgressListener progressListener;
 
     @Unique private TextWidget percentageTextFancyMenu;
+    @Unique private RendererWidget chunkRendererFancyMenu;
 
-    protected MixinLevelLoadingScreen(Component $$0) {
-        super($$0);
+    protected MixinLevelLoadingScreen(Component component) {
+        super(component);
     }
 
     @Override
     protected void init() {
 
-        this.percentageTextFancyMenu = this.addRenderableWidget(TextWidget.of(this.getFormattedProgress(), 0, (this.height / 2) - 30 - (9 / 2), 200))
-                .setTextAlignment(TextWidget.TextAlignment.CENTER)
-                .centerWidget(this)
-                .setWidgetIdentifierFancyMenu("percentage");
+        if (this.isCustomizableFancyMenu()) {
 
-        this.addRenderableWidget(new RendererWidget((this.width / 2) - 50, (this.height / 2) + 30 - 50, 100, 100, (pose, mouseX, mouseY, partial, x, y, width1, height1, renderer) -> {
-            this.renderChunkBoxFancyMenu(pose, x + 50, y + 50);
-        })).setWidgetIdentifierFancyMenu("chunks");
+            this.chunkRendererFancyMenu = this.addRenderableWidget(new RendererWidget((this.width / 2) - 50, (this.height / 2) + 30 - 50, 100, 100,
+                    (graphics, mouseX, mouseY, partial, x, y, width1, height1, renderer) -> {
+                        this.renderChunkBoxFancyMenu(graphics, x + 50, y + 50, this.progressListener);
+                    }
+            )).setWidgetIdentifierFancyMenu("chunks");
 
-    }
+            this.percentageTextFancyMenu = this.addRenderableWidget(TextWidget.of(Components.literal("0%"), 0, (this.height / 2) - 30 - (9 / 2), 200))
+                    .setTextAlignment(TextWidget.TextAlignment.CENTER)
+                    .centerWidget(this)
+                    .setWidgetIdentifierFancyMenu("percentage");
 
-    @Inject(method = "render", at = @At("HEAD"))
-    private void beforeRenderFancyMenu(PoseStack $$0, int $$1, int $$2, float $$3, CallbackInfo info) {
-        this.percentageTextFancyMenu.setMessage(Component.literal(this.getFormattedProgress()));
-    }
+        } else {
+            this.chunkRendererFancyMenu = null;
+            this.percentageTextFancyMenu = null;
+        }
 
-    @Inject(method = "render", at = @At("HEAD"))
-    private void afterRenderFancyMenu(PoseStack $$0, int $$1, int $$2, float $$3, CallbackInfo info) {
-        super.render($$0, $$1, $$2, $$3);
     }
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/LevelLoadingScreen;renderChunks(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/server/level/progress/StoringChunkProgressListener;IIII)V"))
-    private boolean wrapRenderChunksFancyMenu(PoseStack poseStack, StoringChunkProgressListener storingChunkProgressListener, int i, int j, int k, int l) {
+    private boolean wrapRenderChunksFancyMenu(PoseStack $$0, StoringChunkProgressListener $$1, int $$2, int $$3, int $$4, int $$5) {
         return !this.isCustomizableFancyMenu();
     }
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/LevelLoadingScreen;drawCenteredString(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/gui/Font;Ljava/lang/String;III)V"))
-    private boolean wrapRenderPercentStringFancyMenu(PoseStack poseStack, Font font, String s, int i1, int i2, int i3) {
+    private boolean wrapRenderPercentStringFancyMenu(PoseStack instance, Font $$0, String $$1, int $$2, int $$3, int $$4) {
         return !this.isCustomizableFancyMenu();
     }
 
+    @Inject(method = "render", at = @At("RETURN"))
+    private void afterRenderFancyMenu(PoseStack graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
+        if (this.isCustomizableFancyMenu()) {
+            if (this.chunkRendererFancyMenu != null) this.chunkRendererFancyMenu.render(graphics, mouseX, mouseY, partial);
+            if (this.percentageTextFancyMenu != null) {
+                this.percentageTextFancyMenu.setMessage(Components.literal(this.getFormattedProgress()));
+                this.percentageTextFancyMenu.render(graphics, mouseX, mouseY, partial);
+            }
+        }
+    }
+
     @Unique
-    private void renderChunkBoxFancyMenu(@NotNull PoseStack pose, int xCenter, int yCenter) {
-        LevelLoadingScreen.renderChunks(pose, this.progressListener, xCenter, yCenter, 2, 0);
+    private void renderChunkBoxFancyMenu(@NotNull PoseStack graphics, int xCenter, int yCenter, StoringChunkProgressListener listener) {
+        LevelLoadingScreen.renderChunks(graphics, listener, xCenter, yCenter, 2, 0);
     }
 
     @Unique

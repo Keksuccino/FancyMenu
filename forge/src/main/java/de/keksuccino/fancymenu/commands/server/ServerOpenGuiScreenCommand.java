@@ -9,7 +9,6 @@ import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
@@ -18,17 +17,17 @@ import java.util.Collection;
 public class ServerOpenGuiScreenCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> d) {
-        d.register(Commands.literal("openguiscreen").then(Commands.argument("menu_identifier", StringArgumentType.string())
+        d.register(Commands.literal("openguiscreen").then(Commands.argument("screen_identifier", StringArgumentType.string())
                 .executes((stack) -> {
-                    return openGui(stack.getSource(), StringArgumentType.getString(stack, "menu_identifier"), null);
+                    return openGui(stack.getSource(), StringArgumentType.getString(stack, "screen_identifier"), null);
                 })
                 .suggests((context, provider) -> {
-                    return CommandUtils.getStringSuggestions(provider, "<menu_identifier>");
+                    return CommandUtils.getStringSuggestions(provider, "<screen_identifier>");
                 })
                 .then(Commands.argument("target_players", EntityArgument.players())
                         .requires(stack -> stack.hasPermission(2))
                         .executes(stack -> {
-                            return openGui(stack.getSource(), StringArgumentType.getString(stack, "menu_identifier"), EntityArgument.getPlayers(stack, "target_players"));
+                            return openGui(stack.getSource(), StringArgumentType.getString(stack, "screen_identifier"), EntityArgument.getPlayers(stack, "target_players"));
                         }))
         ));
     }
