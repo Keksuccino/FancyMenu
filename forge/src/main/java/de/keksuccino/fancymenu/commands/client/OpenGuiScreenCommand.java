@@ -11,6 +11,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 
 public class OpenGuiScreenCommand {
@@ -23,6 +24,11 @@ public class OpenGuiScreenCommand {
                 .suggests((context, provider) -> {
                     return CommandUtils.getStringSuggestions(provider, "<screen_identifier>");
                 })
+                .then(Commands.argument("target_players", EntityArgument.players())
+                        .requires(stack -> stack.hasPermission(2))
+                        .executes(stack -> {
+                            return openGui(stack.getSource(), StringArgumentType.getString(stack, "screen_identifier"));
+                        }))
         ));
     }
 

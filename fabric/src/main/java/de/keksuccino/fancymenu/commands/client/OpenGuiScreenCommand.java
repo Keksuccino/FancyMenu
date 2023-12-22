@@ -11,30 +11,29 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
+import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 
 public class OpenGuiScreenCommand {
 
     public static void register(CommandDispatcher<FabricClientCommandSource> d) {
-        d.register(ClientCommandManager.literal("openguiscreen").then(ClientCommandManager.argument("menu_identifier", StringArgumentType.string())
+        d.register(ClientCommandManager.literal("openguiscreen").then(ClientCommandManager.argument("screen_identifier", StringArgumentType.string())
                 .executes((stack) -> {
-                    return openGui(stack.getSource(), StringArgumentType.getString(stack, "menu_identifier"));
+                    return openGui(stack.getSource(), StringArgumentType.getString(stack, "screen_identifier"));
                 })
                 .suggests((context, provider) -> {
-                    return CommandUtils.getStringSuggestions(provider, "<menu_identifier>");
+                    return CommandUtils.getStringSuggestions(provider, "<screen_identifier>");
                 })
+                .then(ClientCommandManager.argument("target_players", EntityArgument.players())
+                        .requires(stack -> stack.hasPermission(2))
+                        .executes(stack -> {
+                            return openGui(stack.getSource(), StringArgumentType.getString(stack, "screen_identifier"));
+                        }))
         ));
     }
 
     private static int openGui(FabricClientCommandSource stack, String menuIdentifierOrCustomGuiName) {
         try {
-
-            if (menuIdentifierOrCustomGuiName.equalsIgnoreCase(CreateWorldScreen.class.getName())) {
-                CreateWorldScreen.openFresh(Minecraft.getInstance(), Minecraft.getInstance().screen);
-                return 1;
-            }
-            
             if (CustomGuiHandler.guiExists(menuIdentifierOrCustomGuiName)) {
                 MainThreadTaskExecutor.executeInMainThread(() -> {
                     Minecraft.getInstance().setScreen(CustomGuiHandler.constructInstance(menuIdentifierOrCustomGuiName, Minecraft.getInstance().screen, null));
