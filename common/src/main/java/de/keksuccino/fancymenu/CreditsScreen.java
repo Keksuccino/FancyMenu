@@ -1,0 +1,110 @@
+package de.keksuccino.fancymenu;
+
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.markdown.ScrollableMarkdownRenderer;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
+import de.keksuccino.fancymenu.util.resource.ResourceSource;
+import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
+import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
+import de.keksuccino.fancymenu.util.resource.resources.text.IText;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
+import java.util.List;
+
+public class CreditsScreen extends Screen {
+
+    private static final ResourceSource CREDITS_SOURCE = ResourceSource.of("fancymenu:credits_and_copyright.md", ResourceSourceType.LOCATION);
+
+    protected ScrollableMarkdownRenderer markdownRenderer;
+    protected int headerHeight = 20;
+    protected int footerHeight = 40;
+    protected int border = 40;
+    protected Screen parent;
+    protected boolean textSet = false;
+    protected ResourceSupplier<IText> creditsTextSupplier = ResourceSupplier.text(CREDITS_SOURCE.getSerializationSource());
+
+    public CreditsScreen(@NotNull Screen parent) {
+        super(Component.empty());
+        this.parent = parent;
+    }
+
+    @Override
+    protected void init() {
+
+        int centerX = this.width / 2;
+        int scrollWidth = this.width - (this.border * 2);
+        int scrollHeight = this.height - this.headerHeight - this.footerHeight;
+
+        if (this.markdownRenderer == null) {
+            this.markdownRenderer = new ScrollableMarkdownRenderer((float)(centerX - (scrollWidth / 2)), this.headerHeight, scrollWidth, scrollHeight);
+        } else {
+            this.markdownRenderer.rebuild((float)(centerX - (scrollWidth / 2)), this.headerHeight, scrollWidth, scrollHeight);
+        }
+        this.markdownRenderer.getMarkdownRenderer().setHeadlineLineColor(DrawableColor.of(0,0,0,0));
+        this.markdownRenderer.getMarkdownRenderer().setTextBaseColor(UIBase.getUIColorTheme().generic_text_base_color);
+        this.markdownRenderer.getMarkdownRenderer().setTextShadow(false);
+        this.addRenderableWidget(this.markdownRenderer);
+
+        UIBase.applyDefaultWidgetSkinTo(this.addRenderableWidget(new ExtendedButton(centerX - 100, this.height - (this.footerHeight / 2) - 10, 200, 20, Component.translatable("fancymenu.common.close"), var1 -> this.onClose())));
+
+    }
+
+    @Override
+    public void render(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {
+
+        if (!this.textSet) {
+            IText text = this.creditsTextSupplier.get();
+            if (text != null) {
+                List<String> lines = text.getTextLines();
+                if (lines != null) {
+                    StringBuilder lineString = new StringBuilder();
+                    for (String s : lines) {
+                        lineString.append(s).append("\n");
+                    }
+                    this.markdownRenderer.setText(lineString.toString());
+                    this.textSet = true;
+                }
+            }
+        }
+
+        RenderSystem.enableBlend();
+
+        //Background
+        fill(graphics, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
+        RenderingUtils.resetShaderColor();
+
+        //Footer
+        fill(graphics, 0, this.height - this.footerHeight, this.width, this.height, UIBase.getUIColorTheme().area_background_color.getColorInt());
+        RenderingUtils.resetShaderColor();
+
+        super.render(graphics, mouseX, mouseY, partial);
+
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDelta) {
+        return this.markdownRenderer.mouseScrolled(mouseX, mouseY, scrollDelta);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        return this.markdownRenderer.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public void onClose() {
+        Minecraft.getInstance().setScreen(this.parent);
+    }
+
+    @Override
+    public boolean shouldCloseOnEsc() {
+        return true;
+    }
+
+}
