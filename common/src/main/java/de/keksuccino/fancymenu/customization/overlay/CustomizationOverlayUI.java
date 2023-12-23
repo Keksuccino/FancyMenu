@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.overlay;
 
+import de.keksuccino.fancymenu.CreditsScreen;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
@@ -50,6 +51,7 @@ import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
@@ -756,6 +758,12 @@ public class CustomizationOverlayUI {
         helpMenu.addClickableEntry("paypal_tip_jar", Components.translatable("fancymenu.overlay.menu_bar.help.paypal"), (menu, entry) -> {
             WebUtils.openWebLink("https://www.paypal.com/paypalme/TimSchroeter");
         }).setIcon(ContextMenu.IconFactory.getIcon("coin"));
+
+        helpMenu.addSeparatorEntry("separator_after_paypal");
+
+        helpMenu.addClickableEntry("credits", Components.translatable("fancymenu.credits"), (menu, entry) -> {
+            Minecraft.getInstance().setScreen(new CreditsScreen((Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen : new TitleScreen()));
+        });
 
         return helpMenu;
 
