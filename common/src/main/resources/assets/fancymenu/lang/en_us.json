@@ -1204,5 +1204,7 @@
   "fancymenu.placeholders.os_cpu_usage": "CPU Usage (OS)",
   "fancymenu.placeholders.os_cpu_usage.desc": "Gets the current CPU usage of the Operating System.",
   "fancymenu.overlay.debug.cpu_usage.jvm": "§lCPU Usage (JVM):§r %s",
-  "fancymenu.overlay.debug.cpu_usage.os": "§lCPU Usage (OS):§r %s"
+  "fancymenu.overlay.debug.cpu_usage.os": "§lCPU Usage (OS):§r %s",
+  "fancymenu.common.close": "Close",
+  "fancymenu.credits": "Credits"
 }
