@@ -23,19 +23,19 @@ Kreezxil
  
 ### ENGLISH (US)
 Keksuccino
- 
- 
+
+
 ## ALPHA & BETA TESTERS
 ankiolyne (rainyatrium)
 ༄ᵘˢ᭄✿ᴋᴀɪ＿カイ࿐ (Kai＿カイ#9782)
 Aaby (aabyy)
 Bee (kompreya)
-J-RAP | LORD SISTEMA (jrap)
+SrRapero720 (jrap)
 JetpackCat (.jetpackcat)
 Jolihan (jolihan)
 Mowzy (mowzy)
 UwUCookies (cookiesred_29)
-xllifi (xllifi)
+хлифи (xllifi)
  
  
 ## SPECIAL THANKS
