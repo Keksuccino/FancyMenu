@@ -59,7 +59,7 @@ public class IsLanguageRequirement extends LoadingRequirement {
 
     @Override
     public String getValueDisplayName() {
-        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.language.valuename");
+        return "";
     }
 
     @Override

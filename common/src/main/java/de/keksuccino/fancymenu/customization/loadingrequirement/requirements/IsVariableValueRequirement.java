@@ -67,7 +67,7 @@ public class IsVariableValueRequirement extends LoadingRequirement {
 
     @Override
     public String getValueDisplayName() {
-        return I18n.get("fancymenu.helper.visibilityrequirement.is_variable_value.value.desc");
+        return "";
     }
 
     @Override

@@ -87,7 +87,7 @@ public class IsModLoadedRequirement extends LoadingRequirement {
 
     @Override
     public String getValueDisplayName() {
-        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.modloaded.valuename");
+        return "";
     }
 
     @Override

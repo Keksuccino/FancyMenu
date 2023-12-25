@@ -226,7 +226,7 @@ public class LayoutEditorUI {
 						CommonCycles.cycleEnabledDisabled("fancymenu.editor.anchor_overlay.change_anchor_on_element_hover",
 										FancyMenu.getOptions().anchorOverlayChangeAnchorOnElementHover.getValue())
 								.addCycleListener(cycle -> FancyMenu.getOptions().anchorOverlayChangeAnchorOnElementHover.setValue(cycle.getAsBoolean())))
-				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.anchor_overlay.change_anchor_on_area_hover.desc")));
+				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.anchor_overlay.change_anchor_on_element_hover.desc")));
 
 		NonStackableOverlayUI.addRangeSliderInputContextMenuEntryTo(windowMenu, "anchor_overlay_hover_charging_time",
 						Component.translatable("fancymenu.editor.anchor_overlay.charging_time"),

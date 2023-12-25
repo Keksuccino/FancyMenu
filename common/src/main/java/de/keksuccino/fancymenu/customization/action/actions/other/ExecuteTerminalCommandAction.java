@@ -122,7 +122,7 @@ public class ExecuteTerminalCommandAction extends Action {
 
     @Override
     public Component getValueDisplayName() {
-        return Component.translatable("fancymenu.editor.custombutton.config.actiontype.runcmd.desc.value");
+        return Component.empty();
     }
 
     @Override

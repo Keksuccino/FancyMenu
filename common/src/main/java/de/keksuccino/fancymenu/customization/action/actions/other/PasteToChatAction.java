@@ -73,7 +73,7 @@ public class PasteToChatAction extends Action {
 
     @Override
     public Component getValueDisplayName() {
-        return Component.translatable("fancymenu.helper.buttonaction.paste_to_chat.value.desc");
+        return Component.empty();
     }
 
     @Override

@@ -151,7 +151,7 @@ public class IsTextRequirement extends LoadingRequirement {
 
     @Override
     public String getValueDisplayName() {
-        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.is_text.valuename");
+        return "";
     }
 
     @Override

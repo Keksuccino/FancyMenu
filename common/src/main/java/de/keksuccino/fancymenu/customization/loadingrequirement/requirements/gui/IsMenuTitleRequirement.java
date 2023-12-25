@@ -84,7 +84,7 @@ public class IsMenuTitleRequirement extends LoadingRequirement {
 
     @Override
     public String getValueDisplayName() {
-        return I18n.get("fancymenu.editor.loading_requirements.is_menu_title.value");
+        return "";
     }
 
     @Override

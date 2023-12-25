@@ -161,7 +161,7 @@ public class IsNumberRequirement extends LoadingRequirement {
 
     @Override
     public String getValueDisplayName() {
-        return I18n.get("fancymenu.helper.editor.items.visibilityrequirements.is_number.valuename");
+        return "";
     }
 
     @Override
