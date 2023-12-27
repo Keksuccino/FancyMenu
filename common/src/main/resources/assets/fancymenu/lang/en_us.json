@@ -1191,5 +1191,19 @@
   "fancymenu.overlay.debug.cpu_usage.jvm": "§lCPU Usage (JVM):§r %s",
   "fancymenu.overlay.debug.cpu_usage.os": "§lCPU Usage (OS):§r %s",
   "fancymenu.common.close": "Close",
-  "fancymenu.credits": "Credits"
+  "fancymenu.credits": "Credits",
+  "fancymenu.placeholders.java_version": "Java Version",
+  "fancymenu.placeholders.java_version.desc": "The Java version.",
+  "fancymenu.placeholders.cpu_info": "CPU Info",
+  "fancymenu.placeholders.cpu_info.desc": "Information about the CPU.",
+  "fancymenu.placeholders.gpu_info": "GPU Info",
+  "fancymenu.placeholders.gpu_info.desc": "Information about the GPU.",
+  "fancymenu.placeholders.opengl_version": "OpenGL Version",
+  "fancymenu.placeholders.opengl_version.desc": "The OpenGL version.",
+  "fancymenu.placeholders.os": "Operating System Name",
+  "fancymenu.placeholders.os.desc": "The name of the Operating System.",
+  "fancymenu.placeholders.jvm_name": "Java Virtual Machine",
+  "fancymenu.placeholders.jvm_name.desc": "The name of the Java Virtual Machine.",
+  "fancymenu.placeholders.fps": "FPS (Frames Per Second)",
+  "fancymenu.placeholders.fps.desc": "The current FPS."
 }
