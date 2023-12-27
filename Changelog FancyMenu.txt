@@ -216,6 +216,13 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - Added placeholder "Current Time in Millis (Unix Timestamp)" to get the current time in milliseconds, measured by the time that has elapsed since 00:00:00 UTC on 1 January 1970
 - Added placeholder "CPU Usage (JVM)" to get the current CPU usage of the Java Virtual Machine
 - Added placeholder "CPU Usage (OS)" to get the current CPU usage of the Operating System
+- Added placeholder "CPU Info" to get information about the CPU
+- Added placeholder "GPU Info" to get information about the GPU
+- Added placeholder "Java Version" to get the Java version
+- Added placeholder "OpenGL version" to get the OpenGL version
+- Added placeholder "Operating System Name" to get the name of the OS
+- Added placeholder "Java Virtual Machine Name" to get the name of the JVM
+- Added placeholder "FPS (Frames Per Second)" to get the current FPS
  
 - Added a bunch of accessibility stuff
 --> UI Themes to change the color scheme of FancyMenu's UI (dark and light themes included by default and you can make your own themes!)

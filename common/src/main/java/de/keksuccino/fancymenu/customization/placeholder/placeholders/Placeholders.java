@@ -4,13 +4,12 @@ import de.keksuccino.fancymenu.customization.placeholder.placeholders.advanced.*
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.client.*;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.gui.*;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderRegistry;
-import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.AbsolutePathPlaceholder;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.*;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.cpu.CpuInfoPlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.cpu.JvmCpuUsagePlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.cpu.OsCpuUsagePlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.realtime.*;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.server.*;
-import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.RandomTextPlaceholder;
-import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.WebTextPlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.ram.MaxRamPlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.ram.PercentRamPlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.ram.UsedRamPlaceholder;
@@ -77,6 +76,13 @@ public class Placeholders {
     public static final AbsolutePathPlaceholder ABSOLUTE_PATH = new AbsolutePathPlaceholder();
     public static final JvmCpuUsagePlaceholder JVM_CPU_USAGE = new JvmCpuUsagePlaceholder();
     public static final OsCpuUsagePlaceholder OS_CPU_USAGE = new OsCpuUsagePlaceholder();
+    public static final CpuInfoPlaceholder CPU_INFO = new CpuInfoPlaceholder();
+    public static final FpsPlaceholder FPS = new FpsPlaceholder();
+    public static final GpuInfoPlaceholder GPU_INFO = new GpuInfoPlaceholder();
+    public static final JavaVersionPlaceholder JAVA_VERSION = new JavaVersionPlaceholder();
+    public static final JvmNamePlaceholder JVM_NAME = new JvmNamePlaceholder();
+    public static final OpenGLVersionPlaceholder OPEN_GL_VERSION = new OpenGLVersionPlaceholder();
+    public static final OSNamePlaceholder OS_NAME = new OSNamePlaceholder();
 
     public static void registerAll() {
 
@@ -151,6 +157,13 @@ public class Placeholders {
         PlaceholderRegistry.register(ABSOLUTE_PATH);
         PlaceholderRegistry.register(JVM_CPU_USAGE);
         PlaceholderRegistry.register(OS_CPU_USAGE);
+        PlaceholderRegistry.register(CPU_INFO);
+        PlaceholderRegistry.register(GPU_INFO);
+        PlaceholderRegistry.register(FPS);
+        PlaceholderRegistry.register(JAVA_VERSION);
+        PlaceholderRegistry.register(JVM_NAME);
+        PlaceholderRegistry.register(OPEN_GL_VERSION);
+        PlaceholderRegistry.register(OS_NAME);
 
     }
 
