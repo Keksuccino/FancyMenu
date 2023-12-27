@@ -31,7 +31,13 @@ public class PlaceholderRegistry {
 
     @Nullable
     public static Placeholder getPlaceholder(String identifier) {
-        return PLACEHOLDERS.get(identifier);
+        Placeholder ph = PLACEHOLDERS.get(identifier);
+        if (ph != null) return ph;
+        for (Placeholder p : PLACEHOLDERS.values()) {
+            List<String> alt = p.getAlternativeIdentifiers();
+            if ((alt != null) && alt.contains(identifier)) return p;
+        }
+        return null;
     }
 
 }

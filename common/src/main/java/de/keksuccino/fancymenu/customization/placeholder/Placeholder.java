@@ -45,4 +45,9 @@ public abstract class Placeholder {
         return this.id;
     }
 
+    @Nullable
+    public List<String> getAlternativeIdentifiers() {
+        return null;
+    }
+
 }
