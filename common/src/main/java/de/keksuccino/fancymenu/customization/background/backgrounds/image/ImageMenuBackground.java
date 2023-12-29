@@ -31,7 +31,8 @@ public class ImageMenuBackground extends MenuBackground {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        graphics.fill(0, 0, getScreenWidth(), getScreenHeight(), BACKGROUND_COLOR.getColorInt());
+        RenderSystem.enableBlend();
+        graphics.fill(0, 0, getScreenWidth(), getScreenHeight(), BACKGROUND_COLOR.getColorIntWithAlpha(this.opacity));
 
         RenderingUtils.resetShaderColor(graphics);
 

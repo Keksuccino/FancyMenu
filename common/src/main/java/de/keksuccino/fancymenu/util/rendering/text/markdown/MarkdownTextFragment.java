@@ -73,14 +73,14 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if (this.imageSupplier != null) {
             this.imageSupplier.forRenderable((iTexture, location) -> {
                 RenderSystem.enableBlend();
-                RenderingUtils.resetShaderColor(graphics);
+                graphics.setColor(1.0F, 1.0F, 1.0F, this.parent.textOpacity);
                 RenderingUtils.blitF(graphics, location, this.x, this.y, 0.0F, 0.0F, this.getRenderWidth(), this.getRenderHeight(), this.getRenderWidth(), this.getRenderHeight());
                 RenderingUtils.resetShaderColor(graphics);
             });
         } else if (this.separationLine) {
 
             RenderSystem.enableBlend();
-            RenderingUtils.fillF(graphics, this.parent.x + this.parent.border, this.y, this.parent.x + this.parent.getRealWidth() - this.parent.border, this.y + this.getRenderHeight(), this.parent.separationLineColor.getColorInt());
+            RenderingUtils.fillF(graphics, this.parent.x + this.parent.border, this.y, this.parent.x + this.parent.getRealWidth() - this.parent.border, this.y + this.getRenderHeight(), this.parent.separationLineColor.getColorIntWithAlpha(this.parent.textOpacity));
             RenderingUtils.resetShaderColor(graphics);
 
         } else {
@@ -90,7 +90,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             RenderSystem.enableBlend();
             graphics.pose().pushPose();
             graphics.pose().scale(this.getScale(), this.getScale(), this.getScale());
-            graphics.drawString(this.parent.font, this.buildRenderComponent(false), (int) this.getTextRenderX(), (int) this.getTextRenderY(), this.parent.textBaseColor.getColorInt(), this.parent.textShadow && (this.codeBlockContext == null));
+            graphics.drawString(this.parent.font, this.buildRenderComponent(false), (int) this.getTextRenderX(), (int) this.getTextRenderY(), this.parent.textBaseColor.getColorIntWithAlpha(this.parent.textOpacity), this.parent.textShadow && (this.codeBlockContext == null));
             graphics.pose().popPose();
             RenderingUtils.resetShaderColor(graphics);
 
@@ -121,9 +121,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                 if (end.text.endsWith(" ")) {
                     xEnd -= (this.parent.font.width(" ") * this.getScale());
                 }
-                renderCodeBlockBackground(graphics, this.x, this.y - 2, xEnd, this.y + this.getTextRenderHeight(), this.parent.codeBlockSingleLineColor.getColorInt());
+                renderCodeBlockBackground(graphics, this.x, this.y - 2, xEnd, this.y + this.getTextRenderHeight(), this.parent.codeBlockSingleLineColor.getColorIntWithAlpha(this.parent.textOpacity));
             } else {
-                renderCodeBlockBackground(graphics, this.parent.x + this.parent.border, this.y, this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, end.y + end.getRenderHeight() - 1, this.parent.codeBlockMultiLineColor.getColorInt());
+                renderCodeBlockBackground(graphics, this.parent.x + this.parent.border, this.y, this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, end.y + end.getRenderHeight() - 1, this.parent.codeBlockMultiLineColor.getColorIntWithAlpha(this.parent.textOpacity));
             }
         }
     }
@@ -142,7 +142,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             float scale = (this.parent.parentRenderScale != null) ? this.parent.parentRenderScale : (float)Minecraft.getInstance().getWindow().getGuiScale();
             float lineThickness = (scale > 1) ? 0.5f : 1f;
             float lineY = this.y + this.getTextRenderHeight() + 1;
-            RenderingUtils.fillF(graphics, this.parent.x + this.parent.border, lineY, this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, lineY + lineThickness, this.parent.headlineUnderlineColor.getColorInt());
+            RenderingUtils.fillF(graphics, this.parent.x + this.parent.border, lineY, this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, lineY + lineThickness, this.parent.headlineUnderlineColor.getColorIntWithAlpha(this.parent.textOpacity));
             RenderingUtils.resetShaderColor(graphics);
         }
     }
@@ -153,9 +153,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             float yEnd = this.y + this.getRenderHeight() + 1;
             RenderSystem.enableBlend();
             if (this.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT) {
-                RenderingUtils.fillF(graphics, this.parent.x, yStart, this.parent.x + 2, yEnd, this.parent.quoteColor.getColorInt());
+                RenderingUtils.fillF(graphics, this.parent.x, yStart, this.parent.x + 2, yEnd, this.parent.quoteColor.getColorIntWithAlpha(this.parent.textOpacity));
             } else if (this.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT) {
-                RenderingUtils.fillF(graphics, this.parent.x + this.parent.getRealWidth() - this.parent.border - 2, yStart, this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, yEnd, this.parent.quoteColor.getColorInt());
+                RenderingUtils.fillF(graphics, this.parent.x + this.parent.getRealWidth() - this.parent.border - 2, yStart, this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, yEnd, this.parent.quoteColor.getColorIntWithAlpha(this.parent.textOpacity));
             }
             RenderingUtils.resetShaderColor(graphics);
         }
@@ -165,7 +165,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if ((this.bulletListLevel > 0) && this.bulletListItemStart) {
             RenderSystem.enableBlend();
             float yStart = this.getTextRenderY() + (this.getTextRenderHeight() / 2) - 2;
-            RenderingUtils.fillF(graphics, this.getTextRenderX() - BULLET_LIST_SPACE_AFTER_INDENT - 3, yStart, this.getTextRenderX() - BULLET_LIST_SPACE_AFTER_INDENT, yStart+3, this.parent.bulletListDotColor.getColorInt());
+            RenderingUtils.fillF(graphics, this.getTextRenderX() - BULLET_LIST_SPACE_AFTER_INDENT - 3, yStart, this.getTextRenderX() - BULLET_LIST_SPACE_AFTER_INDENT, yStart+3, this.parent.bulletListDotColor.getColorIntWithAlpha(this.parent.textOpacity));
             RenderingUtils.resetShaderColor(graphics);
         }
     }
