@@ -75,6 +75,7 @@ public class MarkdownRenderer extends GuiComponent implements Widget, FocuslessC
     protected boolean autoLineBreaks = true;
     protected boolean removeHtmlBreaks = true;
     protected boolean textShadow = true;
+    protected float textOpacity = 1.0F;
     protected float lineSpacing = 2;
     protected float border = 2;
     public boolean skipRefresh = false;
@@ -443,6 +444,23 @@ public class MarkdownRenderer extends GuiComponent implements Widget, FocuslessC
 
     public MarkdownRenderer setTextBaseColor(@NotNull DrawableColor textBaseColor) {
         this.textBaseColor = textBaseColor;
+        return this;
+    }
+
+    /**
+     * Value between 0.0F and 1.0F.
+     */
+    public float getTextOpacity() {
+        return this.textOpacity;
+    }
+
+    /**
+     * Value between 0.0F and 1.0F.
+     */
+    public MarkdownRenderer setTextOpacity(float opacity) {
+        if (opacity > 1.0F) opacity = 1.0F;
+        if (opacity < 0.0F) opacity = 0.0F;
+        this.textOpacity = opacity;
         return this;
     }
 

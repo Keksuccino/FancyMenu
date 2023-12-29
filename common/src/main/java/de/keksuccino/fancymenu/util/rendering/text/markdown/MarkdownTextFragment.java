@@ -62,10 +62,6 @@ public class MarkdownTextFragment implements Widget, GuiEventListener {
         this.unscaledTextHeight = this.parent.font.lineHeight;
     }
 
-    //TODO Wenn Headline über mehrere Zeilen, nur unterste unterstreichen
-
-    //TODO Single-Line Code Block korrekt formatieren, wenn über mehrere Zeilen
-
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
@@ -79,14 +75,14 @@ public class MarkdownTextFragment implements Widget, GuiEventListener {
             this.imageSupplier.forRenderable((iTexture, location) -> {
                 RenderSystem.enableBlend();
                 RenderingUtils.bindTexture(location);
-                RenderingUtils.resetShaderColor();
+                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.parent.textOpacity);
                 RenderingUtils.blitF(pose, this.x, this.y, 0.0F, 0.0F, this.getRenderWidth(), this.getRenderHeight(), this.getRenderWidth(), this.getRenderHeight());
                 RenderingUtils.resetShaderColor();
             });
         } else if (this.separationLine) {
 
             RenderSystem.enableBlend();
-            RenderingUtils.fillF(pose, this.parent.x + this.parent.border, this.y, this.parent.x + this.parent.getRealWidth() - this.parent.border, this.y + this.getRenderHeight(), this.parent.separationLineColor.getColorInt());
+            RenderingUtils.fillF(pose, this.parent.x + this.parent.border, this.y, this.parent.x + this.parent.getRealWidth() - this.parent.border, this.y + this.getRenderHeight(), this.parent.separationLineColor.getColorIntWithAlpha(this.parent.textOpacity));
             RenderingUtils.resetShaderColor();
 
         } else {
@@ -97,9 +93,9 @@ public class MarkdownTextFragment implements Widget, GuiEventListener {
             pose.pushPose();
             pose.scale(this.getScale(), this.getScale(), this.getScale());
             if (this.parent.textShadow && (this.codeBlockContext == null)) {
-                this.parent.font.drawShadow(pose, this.buildRenderComponent(false), (int) this.getTextRenderX(), (int) this.getTextRenderY(), this.parent.textBaseColor.getColorInt());
+                this.parent.font.drawShadow(pose, this.buildRenderComponent(false), (int) this.getTextRenderX(), (int) this.getTextRenderY(), this.parent.textBaseColor.getColorIntWithAlpha(this.parent.textOpacity));
             } else {
-                this.parent.font.draw(pose, this.buildRenderComponent(false), (int) this.getTextRenderX(), (int) this.getTextRenderY(), this.parent.textBaseColor.getColorInt());
+                this.parent.font.draw(pose, this.buildRenderComponent(false), (int) this.getTextRenderX(), (int) this.getTextRenderY(), this.parent.textBaseColor.getColorIntWithAlpha(this.parent.textOpacity));
             }
             pose.popPose();
             RenderingUtils.resetShaderColor();
@@ -131,9 +127,9 @@ public class MarkdownTextFragment implements Widget, GuiEventListener {
                 if (end.text.endsWith(" ")) {
                     xEnd -= (this.parent.font.width(" ") * this.getScale());
                 }
-                renderCodeBlockBackground(pose, this.x, this.y - 2, xEnd, this.y + this.getTextRenderHeight(), this.parent.codeBlockSingleLineColor.getColorInt());
+                renderCodeBlockBackground(pose, this.x, this.y - 2, xEnd, this.y + this.getTextRenderHeight(), this.parent.codeBlockSingleLineColor.getColorIntWithAlpha(this.parent.textOpacity));
             } else {
-                renderCodeBlockBackground(pose, this.parent.x + this.parent.border, this.y, this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, end.y + end.getRenderHeight() - 1, this.parent.codeBlockMultiLineColor.getColorInt());
+                renderCodeBlockBackground(pose, this.parent.x + this.parent.border, this.y, this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, end.y + end.getRenderHeight() - 1, this.parent.codeBlockMultiLineColor.getColorIntWithAlpha(this.parent.textOpacity));
             }
         }
     }
@@ -152,7 +148,7 @@ public class MarkdownTextFragment implements Widget, GuiEventListener {
             float scale = (this.parent.parentRenderScale != null) ? this.parent.parentRenderScale : (float)Minecraft.getInstance().getWindow().getGuiScale();
             float lineThickness = (scale > 1) ? 0.5f : 1f;
             float lineY = this.y + this.getTextRenderHeight() + 1;
-            RenderingUtils.fillF(pose, this.parent.x + this.parent.border, lineY, this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, lineY + lineThickness, this.parent.headlineUnderlineColor.getColorInt());
+            RenderingUtils.fillF(pose, this.parent.x + this.parent.border, lineY, this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, lineY + lineThickness, this.parent.headlineUnderlineColor.getColorIntWithAlpha(this.parent.textOpacity));
             RenderingUtils.resetShaderColor();
         }
     }
@@ -163,9 +159,9 @@ public class MarkdownTextFragment implements Widget, GuiEventListener {
             float yEnd = this.y + this.getRenderHeight() + 1;
             RenderSystem.enableBlend();
             if (this.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT) {
-                RenderingUtils.fillF(pose, this.parent.x, yStart, this.parent.x + 2, yEnd, this.parent.quoteColor.getColorInt());
+                RenderingUtils.fillF(pose, this.parent.x, yStart, this.parent.x + 2, yEnd, this.parent.quoteColor.getColorIntWithAlpha(this.parent.textOpacity));
             } else if (this.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT) {
-                RenderingUtils.fillF(pose, this.parent.x + this.parent.getRealWidth() - this.parent.border - 2, yStart, this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, yEnd, this.parent.quoteColor.getColorInt());
+                RenderingUtils.fillF(pose, this.parent.x + this.parent.getRealWidth() - this.parent.border - 2, yStart, this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, yEnd, this.parent.quoteColor.getColorIntWithAlpha(this.parent.textOpacity));
             }
             RenderingUtils.resetShaderColor();
         }
@@ -175,7 +171,7 @@ public class MarkdownTextFragment implements Widget, GuiEventListener {
         if ((this.bulletListLevel > 0) && this.bulletListItemStart) {
             RenderSystem.enableBlend();
             float yStart = this.getTextRenderY() + (this.getTextRenderHeight() / 2) - 2;
-            RenderingUtils.fillF(pose, this.getTextRenderX() - BULLET_LIST_SPACE_AFTER_INDENT - 3, yStart, this.getTextRenderX() - BULLET_LIST_SPACE_AFTER_INDENT, yStart+3, this.parent.bulletListDotColor.getColorInt());
+            RenderingUtils.fillF(pose, this.getTextRenderX() - BULLET_LIST_SPACE_AFTER_INDENT - 3, yStart, this.getTextRenderX() - BULLET_LIST_SPACE_AFTER_INDENT, yStart+3, this.parent.bulletListDotColor.getColorIntWithAlpha(this.parent.textOpacity));
             RenderingUtils.resetShaderColor();
         }
     }

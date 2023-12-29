@@ -321,9 +321,6 @@ public class ScreenCustomization {
 		addScreenBlacklistRule((screen) -> screen.startsWith("com.github.alexthe666.alexsmobs."));
 		addScreenBlacklistRule((screen) -> screen.startsWith("io.github.lgatodu47.screenshot_viewer."));
 		addScreenBlacklistRule((screen) -> screen.startsWith("twilightforest."));
-		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.spiffyhud."));
-		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.drippyloadingscreen."));
-		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.fmaudio."));
 		addScreenBlacklistRule((screen) -> screen.startsWith("net.mehvahdjukaar.supplementaries."));
 		addScreenBlacklistRule((screen) -> screen.startsWith("net.optifine"));
 		addScreenBlacklistRule((screen) -> screen.startsWith("slimeknights."));
