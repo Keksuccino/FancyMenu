@@ -57,13 +57,25 @@ public class PlaceholderParser {
      * This basically only checks if the {@link String} contains ' {"placeholder" ', so it's not 100% safe, but performance-friendly.
      *
      * @param checkForVariableReferences If the method should check for the short version of variable placeholders ($$variable_name).
+     * @param checkForFormattingCodes If the method should check for "&" formatting codes.
      */
-    public static boolean containsPlaceholders(@Nullable String in, boolean checkForVariableReferences) {
+    public static boolean containsPlaceholders(@Nullable String in, boolean checkForVariableReferences, boolean checkForFormattingCodes) {
         if (in == null) return false;
         if (in.length() <= 2) return false;
         if (StringUtils.contains(in, PLACEHOLDER_PREFIX)) return true;
+        if (checkForFormattingCodes && (in.hashCode() != TextFormattingUtils.replaceFormattingCodes(in, FORMATTING_PREFIX_AND, FORMATTING_PREFIX_PARAGRAPH).hashCode())) return true;
         if (checkForVariableReferences && (in.hashCode() != replaceVariableReferences(in).hashCode())) return true;
         return false;
+    }
+
+    /**
+     * Simple check if the given {@link String} contains placeholders.<br>
+     * This basically only checks if the {@link String} contains ' {"placeholder" ', so it's not 100% safe, but performance-friendly.
+     *
+     * @param checkForVariableReferences If the method should check for the short version of variable placeholders ($$variable_name).
+     */
+    public static boolean containsPlaceholders(@Nullable String in, boolean checkForVariableReferences) {
+        return containsPlaceholders(in, checkForVariableReferences, true);
     }
 
     /**
@@ -111,7 +123,7 @@ public class PlaceholderParser {
 
         Boolean containsPlaceholders = CONTAINS_PLACEHOLDERS.get(in);
         if (containsPlaceholders == null) {
-            containsPlaceholders = containsPlaceholders(in, true);
+            containsPlaceholders = containsPlaceholders(in, true, replaceFormattingCodes);
             CONTAINS_PLACEHOLDERS.put(in, containsPlaceholders);
         }
         if (!containsPlaceholders) return in;

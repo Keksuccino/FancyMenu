@@ -95,6 +95,7 @@ public class TickerElementBuilder extends ElementBuilder<TickerElement, TickerEd
             //Legacy support for old ticker action format
             GenericExecutableBlock g = new GenericExecutableBlock();
             g.getExecutables().addAll(ActionInstance.deserializeAll(serialized));
+            element.actionExecutor = g;
         }
 
         String tickDelayMsString = serialized.getValue("tick_delay");

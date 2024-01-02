@@ -386,7 +386,7 @@ public class TextElement extends AbstractElement {
 
             RenderSystem.enableBlend();
 
-            String textToRender = isEditor() ? StringUtils.convertFormatCodes(this.textRaw, "&", "§") : PlaceholderParser.replacePlaceholders(this.textRaw);
+            String textToRender = PlaceholderParser.replacePlaceholders(this.textRaw, true);
             if (this.parentItem.caseMode == CaseMode.ALL_LOWER) {
                 textToRender = textToRender.toLowerCase();
             } else if (this.parentItem.caseMode == CaseMode.ALL_UPPER) {
