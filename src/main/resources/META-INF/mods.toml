@@ -1,20 +1,14 @@
-# The name of the mod loader type to load - for regular FML @Mod mods it should be javafml
-modLoader="javafml" #mandatory
-# A version range to match for said mod loader - for regular FML @Mod it will be the forge version
-loaderVersion="[48,)" #mandatory This is typically bumped every Minecraft version by Forge. See our download page for lists of versions.
-# The mod license
-license="DSMSL (DON'T SNATCH MA STUFF LICENSE)"
-# A list of mods - how many allowed here is determined by the individual mod loader
-[[mods]] #mandatory
-# The modid of the mod
-modId="fancymenu" #mandatory
-# The version number of the mod - there's a few well known ${} variables useable here or just hardcode it
-version="2.14.9" #mandatory
- # A display name for the mod
-displayName="FancyMenu" #mandatory
-# A text field displayed in the mod UI
-authors="Keksuccino" #optional
-# The description text for the mod (multi line!) (#mandatory)
+modLoader="javafml"
+loaderVersion="${loader_version_range}"
+license="${mod_license}"
+clientSideOnly=false
+[[mods]]
+modId="${mod_id}"
+version="${mod_version}"
+displayName="${mod_name}"
+authors="${mod_authors}" #optional
+#If mod is present on server, only let users with same client-side mod version join
+displayTest="MATCH_VERSION"
 description='''Give your life a fancy touch. You deserve it.
 
 COPYRIGHT:
@@ -23,37 +17,40 @@ COPYRIGHT:
   FancyMenu is licensed under DSMSL (DON'T SNATCH MA STUFF LICENSE).
   See https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md for more information about this license.'''
 
-[[dependencies.fancymenu]]
-modId="konkrete"
-mandatory=true
-ordering="NONE"
-versionRange="[1.6.1,)"
-side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="konkrete"
+    mandatory=true
+    ordering="NONE"
+    versionRange="[1.6.1,)"
+    side="BOTH"
 
-[[dependencies.fancymenu]]
-modId="findme"
-mandatory=false
-ordering="AFTER"
-versionRange="[1.0.0,)"
-side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="findme"
+    mandatory=false
+    ordering="AFTER"
+    versionRange="[1.0.0,)"
+    side="BOTH"
 
-[[dependencies.fancymenu]]
-modId="drippyloadingscreen"
-mandatory=false
-ordering="NONE"
-versionRange="[2.2.3,)"
-side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="drippyloadingscreen"
+    mandatory=false
+    ordering="NONE"
+    versionRange="[2.2.3,3.0.0)"
+    side="BOTH"
 
-[[dependencies.fancymenu]]
-modId="forge"
-mandatory=true
-versionRange="[48.0.0,)"
-ordering="NONE"
-side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="forge"
+    mandatory=true
+    versionRange="${forge_version_range}"
+    ordering="NONE"
+    side="BOTH"
+	
+[[dependencies.${mod_id}]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="${minecraft_version_range}"
+    ordering="NONE"
+    side="BOTH"
 
-[[dependencies.fancymenu]]
-modId="minecraft"
-mandatory=true
-versionRange="[1.20.2,)"
-ordering="NONE"
-side="BOTH"
+#[features.${mod_id}]
+#openGLVersion="[3.2,)"

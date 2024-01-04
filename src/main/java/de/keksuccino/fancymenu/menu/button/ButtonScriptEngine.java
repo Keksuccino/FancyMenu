@@ -41,8 +41,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.packs.PackSelectionScreen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
+import net.minecraft.client.gui.screens.worldselection.WorldSelectionList;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.ServerList;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
@@ -150,8 +152,11 @@ public class ButtonScriptEngine {
 			}
 			if (action.equalsIgnoreCase("loadworld")) {
 				if (Minecraft.getInstance().getLevelSource().levelExists(value)) {
+					Screen current = (Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen : new TitleScreen();
 					Minecraft.getInstance().forceSetScreen(new GenericDirtMessageScreen(Component.translatable("selectWorld.data_read")));
-					Minecraft.getInstance().createWorldOpenFlows().loadLevel(Minecraft.getInstance().screen, value);
+					Minecraft.getInstance().createWorldOpenFlows().checkForBackupAndLoad(value, () -> {
+						Minecraft.getInstance().setScreen(current);
+					});
 				}
 			}
 			if (action.equalsIgnoreCase("openfile")) { //for files and folders
@@ -331,8 +336,11 @@ public class ButtonScriptEngine {
 					if (!LastWorldHandler.isLastWorldServer()) {
 						File f = new File(LastWorldHandler.getLastWorld());
 						if (Minecraft.getInstance().getLevelSource().levelExists(f.getName())) {
+							Screen current = (Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen : new TitleScreen();
 							Minecraft.getInstance().forceSetScreen(new GenericDirtMessageScreen(Component.translatable("selectWorld.data_read")));
-							Minecraft.getInstance().createWorldOpenFlows().loadLevel(Minecraft.getInstance().screen, f.getName());
+							Minecraft.getInstance().createWorldOpenFlows().checkForBackupAndLoad(f.getName(), () -> {
+								Minecraft.getInstance().setScreen(current);
+							});
 						}
 					} else {
 						String ipRaw = LastWorldHandler.getLastWorld().replace(" ", "");

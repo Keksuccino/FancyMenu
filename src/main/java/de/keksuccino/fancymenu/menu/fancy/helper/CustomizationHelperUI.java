@@ -632,7 +632,7 @@ public class CustomizationHelperUI extends UIBase {
 			miscMenu.addContent(openProgressScreenButton);
 
 			CustomizationButton openReceivingLevelScreenButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.misc.receiving_level_screen"), true, (press) -> {
-				ReceivingLevelScreen s = new ReceivingLevelScreen();
+				ReceivingLevelScreen s = new ReceivingLevelScreen(() -> false);
 				Minecraft.getInstance().setScreen(s);
 			}) {
 				@Override

@@ -1635,31 +1635,34 @@ public class MenuHandlerBase {
 						}
 					} else {
 						File f = new File(background);
-						if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
-							background = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + background;
-							f = new File(background);
-						}
-						if (f.isFile()) {
-							if (f.getPath().toLowerCase().endsWith(".gif")) {
-								IAnimationRenderer a =  TextureHandler.getGifResource(f.getPath());
-								if (restartAnimationBackground) {
-									a.resetAnimation();
-								}
-								this.renderBackgroundAnimation(e, a);
-								if (!c.cachedAnimations.contains(a)) {
-									c.cachedAnimations.add(a);
-								}
-								return true;
-							} else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
-								ExternalTextureResourceLocation back = TextureHandler.getResource(f.getPath());
-								if (back != null) {
-//									RenderUtils.bindTexture(back.getResourceLocation());
-									RenderSystem.enableBlend();
-									RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, e.getAlpha());
-									e.getGuiGraphics().blit(back.getResourceLocation(), w.x, w.y, 0.0F, 0.0F, w.getWidth(), w.getHeight(), w.getWidth(), w.getHeight());
+						try {
+							if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
+								background = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + background;
+								f = new File(background);
+							}
+							if (f.isFile()) {
+								if (f.getPath().toLowerCase().endsWith(".gif")) {
+									IAnimationRenderer a =  TextureHandler.getGifResource(f.getPath());
+									if (restartAnimationBackground) {
+										a.resetAnimation();
+									}
+									this.renderBackgroundAnimation(e, a);
+									if (!c.cachedAnimations.contains(a)) {
+										c.cachedAnimations.add(a);
+									}
 									return true;
+								} else if (f.getPath().toLowerCase().endsWith(".jpg") || f.getPath().toLowerCase().endsWith(".jpeg") || f.getPath().toLowerCase().endsWith(".png")) {
+									ExternalTextureResourceLocation back = TextureHandler.getResource(f.getPath());
+									if (back != null) {
+										RenderSystem.enableBlend();
+										RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, e.getAlpha());
+										e.getGuiGraphics().blit(back.getResourceLocation(), w.x, w.y, 0.0F, 0.0F, w.getWidth(), w.getHeight(), w.getWidth(), w.getHeight());
+										return true;
+									}
 								}
 							}
+						} catch (Exception ex) {
+							LOGGER.error("[FancyMenu] Failed to render custom widget background image: " + f.getAbsolutePath(), ex);
 						}
 					}
 				}
