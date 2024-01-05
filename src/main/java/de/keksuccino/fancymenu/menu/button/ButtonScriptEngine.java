@@ -146,8 +146,11 @@ public class ButtonScriptEngine {
 			}
 			if (action.equalsIgnoreCase("loadworld")) {
 				if (Minecraft.getInstance().getLevelSource().levelExists(value)) {
+					Screen current = (Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen : new TitleScreen();
 					Minecraft.getInstance().forceSetScreen(new GenericDirtMessageScreen(Component.translatable("selectWorld.data_read")));
-					Minecraft.getInstance().createWorldOpenFlows().loadLevel(Minecraft.getInstance().screen, value);
+					Minecraft.getInstance().createWorldOpenFlows().checkForBackupAndLoad(value, () -> {
+						Minecraft.getInstance().setScreen(current);
+					});
 				}
 			}
 			if (action.equalsIgnoreCase("openfile")) { //for files and folders
@@ -332,8 +335,11 @@ public class ButtonScriptEngine {
 					if (!LastWorldHandler.isLastWorldServer()) {
 						File f = new File(LastWorldHandler.getLastWorld());
 						if (Minecraft.getInstance().getLevelSource().levelExists(f.getName())) {
+							Screen current = (Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen : new TitleScreen();
 							Minecraft.getInstance().forceSetScreen(new GenericDirtMessageScreen(Component.translatable("selectWorld.data_read")));
-							Minecraft.getInstance().createWorldOpenFlows().loadLevel(Minecraft.getInstance().screen, f.getName());
+							Minecraft.getInstance().createWorldOpenFlows().checkForBackupAndLoad(f.getName(), () -> {
+								Minecraft.getInstance().setScreen(current);
+							});
 						}
 					} else {
 						String ipRaw = LastWorldHandler.getLastWorld().replace(" ", "");

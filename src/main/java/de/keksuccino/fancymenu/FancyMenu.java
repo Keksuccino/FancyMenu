@@ -50,7 +50,7 @@ import org.apache.logging.log4j.Logger;
 @SuppressWarnings("all")
 public class FancyMenu implements ModInitializer {
 
-	public static final String VERSION = "2.14.10";
+	public static final String VERSION = "2.14.11";
 	public static final String MOD_LOADER = "fabric";
 
 	public static final Logger LOGGER = LogManager.getLogger();

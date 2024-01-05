@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.api.visibilityrequirements;
 
 import de.keksuccino.konkrete.input.CharacterFilter;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 /**

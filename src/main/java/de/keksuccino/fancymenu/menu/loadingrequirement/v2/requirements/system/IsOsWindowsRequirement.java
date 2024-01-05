@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.menu.loadingrequirement.v2.LoadingRequirement;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;

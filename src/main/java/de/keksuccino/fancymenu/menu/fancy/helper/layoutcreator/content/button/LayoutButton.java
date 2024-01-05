@@ -3,10 +3,6 @@ package de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.button;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import de.keksuccino.fancymenu.api.buttonaction.ButtonActionContainer;
 import de.keksuccino.fancymenu.api.buttonaction.ButtonActionRegistry;
 import de.keksuccino.fancymenu.menu.button.ButtonScriptEngine;
@@ -24,7 +20,10 @@ import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+@SuppressWarnings("all")
 public class LayoutButton extends LayoutElement {
 
 	public MenuHandlerBase.ButtonCustomizationContainer customizationContainer;
@@ -38,7 +37,7 @@ public class LayoutButton extends LayoutElement {
 	
 	public List<ButtonScriptEngine.ActionContainer> actions = new ArrayList<>();
 
-	public LayoutButton(MenuHandlerBase.ButtonCustomizationContainer customizationContainer, int width, int height, @Nonnull String label, @Nullable String onlydisplayin, LayoutEditorScreen handler) {
+	public LayoutButton(MenuHandlerBase.ButtonCustomizationContainer customizationContainer, int width, int height, @NotNull String label, @Nullable String onlydisplayin, LayoutEditorScreen handler) {
 		super(new LayoutButtonDummyCustomizationItem(customizationContainer, label, width, height, 0, 0), true, handler, false);
 		this.onlydisplayin = onlydisplayin;
 		this.customizationContainer = customizationContainer;

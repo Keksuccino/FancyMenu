@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.api.background;
 
 import net.minecraft.client.gui.GuiGraphics;
-import de.keksuccino.fancymenu.api.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import net.minecraft.client.gui.screens.Screen;
 
 public abstract class MenuBackground {
@@ -18,7 +18,7 @@ public abstract class MenuBackground {
      * @param uniqueBackgroundIdentifier The <b>unique</b> identifier of the background.
      * @param type The {@link MenuBackgroundType} this background is part of.
      */
-    public MenuBackground(@Nonnull String uniqueBackgroundIdentifier, @Nonnull MenuBackgroundType type) {
+    public MenuBackground(@NotNull String uniqueBackgroundIdentifier, @NotNull MenuBackgroundType type) {
         this.backgroundIdentifier = uniqueBackgroundIdentifier;
         this.type = type;
     }

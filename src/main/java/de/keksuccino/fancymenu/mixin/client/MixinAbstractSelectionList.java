@@ -15,14 +15,14 @@ import de.keksuccino.fancymenu.events.RenderListBackgroundEvent;
 @Mixin(AbstractSelectionList.class)
 public abstract class MixinAbstractSelectionList {
 
-	@Inject(method = "render", at = @At("HEAD"))
+	@Inject(method = "renderWidget", at = @At("HEAD"))
 	private void beforeRenderListBackgroundFancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
 
 		Konkrete.getEventHandler().callEventsFor(new RenderListBackgroundEvent.Pre(graphics, (AbstractSelectionList<?>)((Object)this)));
 
 	}
 
-	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSelectionList;enableScissor(Lnet/minecraft/client/gui/GuiGraphics;)V", shift = At.Shift.AFTER))
+	@Inject(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSelectionList;enableScissor(Lnet/minecraft/client/gui/GuiGraphics;)V", shift = At.Shift.AFTER))
 	private void afterRenderListBackgroundFancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
 
 		Konkrete.getEventHandler().callEventsFor(new RenderListBackgroundEvent.Post(graphics, (AbstractSelectionList<?>)((Object)this)));

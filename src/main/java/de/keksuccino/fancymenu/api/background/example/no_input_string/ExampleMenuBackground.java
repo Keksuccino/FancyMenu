@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.api.background.example.no_input_string;
 
 import net.minecraft.client.gui.GuiGraphics;
-import de.keksuccino.fancymenu.api.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import de.keksuccino.fancymenu.api.background.MenuBackground;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundType;
 import java.awt.*;
@@ -14,7 +14,7 @@ public class ExampleMenuBackground extends MenuBackground {
 
     protected Color color;
 
-    public ExampleMenuBackground(@Nonnull String uniqueBackgroundIdentifier, @Nonnull MenuBackgroundType type, Color color) {
+    public ExampleMenuBackground(@NotNull String uniqueBackgroundIdentifier, @NotNull MenuBackgroundType type, Color color) {
         //The identifier needs to be UNIQUE!
         //It's not possible to register multiple backgrounds with the same identifier to the same background type.
         super(uniqueBackgroundIdentifier, type);

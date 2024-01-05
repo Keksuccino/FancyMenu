@@ -13,7 +13,7 @@ import de.keksuccino.konkrete.properties.PropertiesSection;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,12 +27,12 @@ public abstract class DeepCustomizationLayoutEditorElement extends LayoutElement
     protected int dragMouseX = -1000;
     protected int dragMouseY = -1000;
 
-    public DeepCustomizationLayoutEditorElement(@Nonnull DeepCustomizationElement parentDeepCustomizationElement, @Nonnull DeepCustomizationItem customizationItemInstance, boolean destroyable, @Nonnull LayoutEditorScreen handler, boolean doInit) {
+    public DeepCustomizationLayoutEditorElement(@NotNull DeepCustomizationElement parentDeepCustomizationElement, @NotNull DeepCustomizationItem customizationItemInstance, boolean destroyable, @NotNull LayoutEditorScreen handler, boolean doInit) {
         super(customizationItemInstance, destroyable, handler, doInit);
         this.parentDeepCustomizationElement = parentDeepCustomizationElement;
     }
 
-    public DeepCustomizationLayoutEditorElement(@Nonnull DeepCustomizationElement parentDeepCustomizationElement, @Nonnull DeepCustomizationItem customizationItemInstance, boolean destroyable, @Nonnull LayoutEditorScreen handler) {
+    public DeepCustomizationLayoutEditorElement(@NotNull DeepCustomizationElement parentDeepCustomizationElement, @NotNull DeepCustomizationItem customizationItemInstance, boolean destroyable, @NotNull LayoutEditorScreen handler) {
         super(customizationItemInstance, destroyable, handler);
         this.parentDeepCustomizationElement = parentDeepCustomizationElement;
     }

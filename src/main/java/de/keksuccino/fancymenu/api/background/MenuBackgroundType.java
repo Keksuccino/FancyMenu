@@ -1,13 +1,12 @@
 package de.keksuccino.fancymenu.api.background;
 
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.api.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.BackgroundOptionsPopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.localization.Locals;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,7 +26,7 @@ public abstract class MenuBackgroundType {
      *
      * @param uniqueTypeIdentifier The <b>unique</b> identifier of the background type.
      */
-    public MenuBackgroundType(@Nonnull String uniqueTypeIdentifier) {
+    public MenuBackgroundType(@NotNull String uniqueTypeIdentifier) {
         this.typeIdentifier = uniqueTypeIdentifier;
     }
 
@@ -78,7 +77,7 @@ public abstract class MenuBackgroundType {
      *
      * <b>SHOULD NEVER RETURN NULL!</b>
      */
-    @Nonnull
+    @NotNull
     public List<MenuBackground> getBackgrounds() {
         List<MenuBackground> l = new ArrayList<>();
         l.addAll(this.backgrounds.values());

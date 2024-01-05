@@ -1,8 +1,7 @@
 package de.keksuccino.fancymenu.api.buttonaction;
 
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.TextEditorFormattingRule;
-
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 /**

@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.api.background.example.with_input_string;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
-import de.keksuccino.fancymenu.api.Nonnull;
+import org.jetbrains.annotations.NotNull;
 import de.keksuccino.fancymenu.api.background.MenuBackground;
 import de.keksuccino.fancymenu.api.background.MenuBackgroundType;
 import de.keksuccino.konkrete.rendering.RenderUtils;
@@ -18,7 +18,7 @@ public class ExampleMenuBackgroundForInputString extends MenuBackground {
 
     private ExternalTextureResourceLocation imageLocation = null;
 
-    public ExampleMenuBackgroundForInputString(@Nonnull MenuBackgroundType type, String imagePath) {
+    public ExampleMenuBackgroundForInputString(@NotNull MenuBackgroundType type, String imagePath) {
         //Identifiers aren't really used for backgrounds that don't get registered to a type (because the type uses the input string),
         //so just set something random here.
         super("unused_identifier", type);

@@ -62,6 +62,7 @@ import de.keksuccino.konkrete.properties.PropertiesSet;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 
+@SuppressWarnings("all")
 public class CustomizationHelperUI extends UIBase {
 	
 	public static MenuBar bar;
@@ -629,7 +630,7 @@ public class CustomizationHelperUI extends UIBase {
 			miscMenu.addContent(openProgressScreenButton);
 
 			CustomizationButton openReceivingLevelScreenButton = new CustomizationButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.ui.misc.receiving_level_screen"), true, (press) -> {
-				ReceivingLevelScreen s = new ReceivingLevelScreen();
+				ReceivingLevelScreen s = new ReceivingLevelScreen(() -> false);
 				Minecraft.getInstance().setScreen(s);
 			}) {
 				@Override

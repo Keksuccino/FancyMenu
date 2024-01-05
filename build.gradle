@@ -1,29 +1,53 @@
+
 plugins {
-	id 'fabric-loom' version '0.12-SNAPSHOT'
+	id 'fabric-loom' version '1.4-SNAPSHOT'
 	id 'maven-publish'
 }
 
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
+base {
+	archivesName = project.mod_id
+}
 
-archivesBaseName = project.archives_base_name
-version = project.mod_version
+version = "1.0.0"
 group = project.maven_group
 
 repositories {
-	maven { url 'https://jitpack.io' }
-	maven {
-		url "https://cursemaven.com"
-		content {
-			includeGroup "curse.maven"
-		}
-	}
-	maven {
-		url "https://api.modrinth.com/maven"
-		content {
-			includeGroup "maven.modrinth"
-		}
-	}
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+    maven {
+        url "https://cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
+    }
+    maven {
+        url "https://api.modrinth.com/maven"
+        content {
+            includeGroup "maven.modrinth"
+        }
+    }
+    flatDir { dirs 'libs' }
+}
+
+loom {
+    accessWidenerPath = file("src/main/resources/${mod_id}.accesswidener")
+    mixin {
+        defaultRefmapName.set("${mod_id}.refmap.json")
+    }
+    runs {
+        client {
+            client()
+            setConfigName("runClient")
+            ideConfigGenerated(true)
+            runDir("run_client")
+        }
+        server {
+            server()
+            setConfigName("runServer")
+            ideConfigGenerated(true)
+            runDir("run_server")
+        }
+    }
 }
 
 dependencies {
@@ -31,61 +55,58 @@ dependencies {
 	mappings loom.officialMojangMappings()
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-	modImplementation "maven.modrinth:modmenu:8.0.0"
-	implementation fileTree('libs') { include '*.jar' }
-	include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.2.0")))
-}
-
-loom {
-	accessWidenerPath = file("src/main/resources/fancymenu.accessWidener")
+	modImplementation "net.fabricmc.fabric-api:fabric-api-deprecated:${project.fabric_version}"
+    modImplementation "maven.modrinth:modmenu:9.0.0"
+    modImplementation "curse.maven:load-my-resources-fabric-534835:4766205"
+    modImplementation "curse.maven:auudio-fabric-613072:4581988"
+    modImplementation "curse.maven:audio-extension-for-fancymenu-fabric-613070:4804145"
+    modImplementation "flatdir:konkrete_fabric_MC_1.20.4:1.7.0"
 }
 
 processResources {
 	inputs.property "version", project.version
-
-	filesMatching("fabric.mod.json") {
-		expand "version": project.version
-	}
+	
+	filesMatching(['pack.mcmeta', 'fabric.mod.json', 'mods.toml', '*.mixins.json']) {
+        expand project.properties
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {
-
-	it.options.encoding = "UTF-8"
-	
 	it.options.release = 17
-	
 }
 
 java {
 	withSourcesJar()
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
 }
 
 jar {
 	from("LICENSE") {
-		rename { "${it}_${project.archivesBaseName}"}
+		rename { "${it}_${project.base.archivesName.get()}"}
 	}
-	rename 'fancymenu-refmap.json', 'fancymenu.general.mixin-refmap.json'
+	manifest {
+	    attributes([
+            'Specification-Title'     : mod_name,
+            'Specification-Vendor'    : mod_author,
+            'Specification-Version'   : mod_version,
+            'Implementation-Title'    : project.name,
+            'Implementation-Version'  : mod_version,
+            'Implementation-Vendor'   : mod_author,
+            'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+            'Timestamp'               : System.currentTimeMillis(),
+            'Built-On-Java'           : "${System.getProperty('java.vm.version')} (${System.getProperty('java.vm.vendor')})",
+            'Built-On-Minecraft'      : minecraft_version
+        ])
+    }
 }
 
-// configure the maven publication
 publishing {
 	publications {
 		mavenJava(MavenPublication) {
-			// add all the jars that should be included when publishing to maven
-			artifact(remapJar) {
-				builtBy remapJar
-			}
-			artifact(sourcesJar) {
-				builtBy remapSourcesJar
-			}
+			from components.java
 		}
 	}
-
-	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
 	repositories {
-		// Add repositories to publish to here.
-		// Notice: This block does NOT have the same function as the block in the top level.
-		// The repositories here will be used for publishing your artifact, not for
-		// retrieving dependencies.
 	}
 }
