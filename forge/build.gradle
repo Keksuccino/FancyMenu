@@ -5,7 +5,7 @@ plugins {
     id 'org.spongepowered.mixin'
 }
 base {
-    archivesName = "${mod_name}-forge-${minecraft_version}"
+    archivesName = "${mod_id}"
 }
 mixin {
     add(sourceSets.main, "${mod_id}.refmap.json")
@@ -88,8 +88,24 @@ tasks.named("sourcesJar", Jar) {
     from(project(":common").sourceSets.main.allSource)
 }
 
-processResources {
-    from project(":common").sourceSets.main.resources
+//processResources {
+//    from project(":common").sourceSets.main.resources
+//}
+
+tasks.named('processResources', ProcessResources).configure {
+    var replaceProperties = [
+            minecraft_version: minecraft_version,
+            mod_id: mod_id,
+            mod_name: mod_name,
+            mod_license: mod_license,
+            mod_version: mod_version,
+            mod_authors: mod_authors,
+            mod_description: mod_description
+    ]
+    inputs.properties replaceProperties
+    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
+        expand replaceProperties + [project: project]
+    }
 }
 
 jar.finalizedBy('reobfJar')

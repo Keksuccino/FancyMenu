@@ -46,7 +46,7 @@ public class CreditsScreen extends Screen {
         } else {
             this.markdownRenderer.rebuild((float)(centerX - (scrollWidth / 2)), this.headerHeight, scrollWidth, scrollHeight);
         }
-        this.markdownRenderer.getMarkdownRenderer().setHeadlineLineColor(DrawableColor.of(0,0,0,0));
+        this.markdownRenderer.getMarkdownRenderer().setHeadlineLineColor(UIBase.getUIColorTheme().screen_background_color_darker);
         this.markdownRenderer.getMarkdownRenderer().setTextBaseColor(UIBase.getUIColorTheme().generic_text_base_color);
         this.markdownRenderer.getMarkdownRenderer().setTextShadow(false);
         this.addRenderableWidget(this.markdownRenderer);
