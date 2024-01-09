@@ -5,7 +5,7 @@ plugins {
     id 'org.spongepowered.mixin'
 }
 base {
-    archivesName = "${mod_name}-forge-${minecraft_version}"
+    archivesName = "${mod_id}"
 }
 mixin {
     add(sourceSets.main, "${mod_id}.refmap.json")
@@ -63,9 +63,9 @@ sourceSets.main.resources.srcDir 'src/generated/resources'
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     compileOnly project(":common")
-    implementation(annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.1"))
-    implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.3.1")) {
-        jarJar.ranged(it, "[0.3.1,)")
+    implementation(annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.2"))
+    implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.3.2")) {
+        jarJar.ranged(it, "[0.3.2,)")
     }
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
     implementation fg.deobf("maven.modrinth:konkrete:1.6.1-2-1.20-forge")
@@ -86,8 +86,24 @@ tasks.named("sourcesJar", Jar) {
     from(project(":common").sourceSets.main.allSource)
 }
 
-processResources {
-    from project(":common").sourceSets.main.resources
+//processResources {
+//    from project(":common").sourceSets.main.resources
+//}
+
+tasks.named('processResources', ProcessResources).configure {
+    var replaceProperties = [
+            minecraft_version: minecraft_version,
+            mod_id: mod_id,
+            mod_name: mod_name,
+            mod_license: mod_license,
+            mod_version: mod_version,
+            mod_authors: mod_authors,
+            mod_description: mod_description
+    ]
+    inputs.properties replaceProperties
+    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
+        expand replaceProperties + [project: project]
+    }
 }
 
 jar.finalizedBy('reobfJar')
