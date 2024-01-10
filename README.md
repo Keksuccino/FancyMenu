@@ -25,9 +25,9 @@ FancyMenu is available on [CurseForge](https://www.curseforge.com/minecraft/mc-m
 
 ## Licensing
 
-FancyMenu is licensed under DSMSL (DON'T SNATCH MA STUFF LICENSE).<br>
+FancyMenu is licensed under DSMSLv2 (DON'T SNATCH MA STUFF LICENSE V2.0).<br>
 See `LICENSE.md` for more information.
 
 ## Copyright
 
-- FancyMenu Copyright © 2020-2022 Keksuccino.<br>
+- FancyMenu Copyright © 2020-2024 Keksuccino.<br>
