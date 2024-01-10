@@ -6,6 +6,7 @@
   ],
   "client": [
     "client.MixinForgeGameRenderer",
+    "client.MixinForgeLoadingOverlay",
     "client.MixinForgeTitleScreen"
   ],
   "injectors": {

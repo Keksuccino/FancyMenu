@@ -74,34 +74,30 @@ public class ScreenCustomizationEvents {
 	@EventListener
 	public void onInitStarting(InitOrResizeScreenStartingEvent e) {
 
-		if (e.getScreen() != null) {
-
-			//Reset customizable widgets before init/resize (in case the screen doesn't rebuild its widgets on init/resize)
-			for (GuiEventListener l : e.getScreen().children()) {
-				if (l instanceof CustomizableWidget w) {
-					w.resetWidgetCustomizationsFancyMenu();
-				}
+		//Reset customizable widgets before init/resize (in case the screen doesn't rebuild its widgets on init/resize)
+		for (GuiEventListener l : e.getScreen().children()) {
+			if (l instanceof CustomizableWidget w) {
+				w.resetWidgetCustomizationsFancyMenu();
 			}
+		}
 
-			//Remove all remove-on-init widgets from the screen's widgets
-			if (e.getScreen() instanceof CustomizableScreen c) {
-				for (GuiEventListener l : c.removeOnInitChildrenFancyMenu()) {
-					((IMixinScreen)e.getScreen()).getChildrenFancyMenu().remove(l);
-					if (l instanceof Renderable r) ((IMixinScreen)e.getScreen()).getRenderablesFancyMenu().remove(r);
-					if (l instanceof NarratableEntry n) ((IMixinScreen)e.getScreen()).getNarratablesFancyMenu().remove(n);
-				}
-				c.removeOnInitChildrenFancyMenu().clear();
+		//Remove all remove-on-init widgets from the screen's widgets
+		if (e.getScreen() instanceof CustomizableScreen c) {
+			for (GuiEventListener l : c.removeOnInitChildrenFancyMenu()) {
+				((IMixinScreen)e.getScreen()).getChildrenFancyMenu().remove(l);
+				if (l instanceof Renderable r) ((IMixinScreen)e.getScreen()).getRenderablesFancyMenu().remove(r);
+				if (l instanceof NarratableEntry n) ((IMixinScreen)e.getScreen()).getNarratablesFancyMenu().remove(n);
 			}
+			c.removeOnInitChildrenFancyMenu().clear();
+		}
 
-			if (this.lastScreen != null) {
-				ScreenCustomization.isNewMenu = !this.lastScreen.getClass().getName().equals(e.getScreen().getClass().getName());
-				if ((this.lastScreen instanceof CustomGuiBaseScreen cLast) && (e.getScreen() instanceof CustomGuiBaseScreen cNow)) {
-					ScreenCustomization.isNewMenu = !cLast.getIdentifier().equals(cNow.getIdentifier());
-				}
-			} else {
-				ScreenCustomization.isNewMenu = true;
+		if (this.lastScreen != null) {
+			ScreenCustomization.isNewMenu = !this.lastScreen.getClass().getName().equals(e.getScreen().getClass().getName());
+			if ((this.lastScreen instanceof CustomGuiBaseScreen cLast) && (e.getScreen() instanceof CustomGuiBaseScreen cNow)) {
+				ScreenCustomization.isNewMenu = !cLast.getIdentifier().equals(cNow.getIdentifier());
 			}
-
+		} else {
+			ScreenCustomization.isNewMenu = true;
 		}
 
 		this.lastScreen = e.getScreen();

@@ -41,7 +41,10 @@ UwUCookies (cookiesred_29)
 ## SPECIAL THANKS
  
 ### xllifi
-He made lots of beautiful icons for context menus! Thank you!
+Thank you for making tons of great looking icons for context menus!
+ 
+### Mondaze
+Thank you for designing FancyMenu's beautiful new logos!
  
 ### All Alpha & Beta Testers
 You all did an outstanding job helping me find bugs and polish features! Thank you!

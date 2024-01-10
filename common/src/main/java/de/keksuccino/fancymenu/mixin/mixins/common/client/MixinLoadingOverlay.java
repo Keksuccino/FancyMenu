@@ -17,10 +17,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.LoadingOverlay;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.server.packs.resources.ReloadInstance;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -29,8 +26,6 @@ import java.util.function.Consumer;
 
 @Mixin(LoadingOverlay.class)
 public abstract class MixinLoadingOverlay {
-
-	@Unique private static final Logger LOGGER_FANCYMENU = LogManager.getLogger();
 
 	@Inject(method = "<init>", at = @At(value = "RETURN"))
 	private void onConstructFancyMenu(Minecraft mc, ReloadInstance reloadInstance, Consumer<?> consumer, boolean b, CallbackInfo info) {

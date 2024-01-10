@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.Compat;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
@@ -23,9 +22,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Mixin(Screen.class)
-public class MixinScreen implements CustomizableScreen {
+public abstract class MixinScreen implements CustomizableScreen {
 
-	@Unique private static final Logger LOGGER = LogManager.getLogger();
+	@Unique
+	private static final Logger LOGGER = LogManager.getLogger();
 
 	@Unique
 	private final List<GuiEventListener> removeOnInitChildrenFancyMenu = new ArrayList<>();
@@ -36,7 +36,7 @@ public class MixinScreen implements CustomizableScreen {
 	}
 
 	@Inject(method = "init(Lnet/minecraft/client/Minecraft;II)V", at = @At("RETURN"))
-	private void afterInitFancyMenu(Minecraft $$0, int $$1, int $$2, CallbackInfo ci) {
+	private void afterInitFancyMenu(Minecraft $$0, int $$1, int $$2, CallbackInfo info) {
 		Overlay overlay = Minecraft.getInstance().getOverlay();
 		if (Compat.isRRLSLoaded() && (overlay != null) && Compat.isRRLSOverlay(overlay)) {
 			LOGGER.info("[FANCYMENU] Re-initializing screen after init in overlay to fix incompatibility with RemoveReloadingScreen..");
