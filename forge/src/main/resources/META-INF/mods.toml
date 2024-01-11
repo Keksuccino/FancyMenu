@@ -1,7 +1,7 @@
 # The name of the mod loader type to load - for regular FML @Mod mods it should be javafml
 modLoader="javafml" #mandatory
 # A version range to match for said mod loader - for regular FML @Mod it will be the forge version
-loaderVersion="[47,)" #mandatory This is typically bumped every Minecraft version by Forge. See our download page for lists of versions.
+loaderVersion="[${forge_loader_version},)" #mandatory This is typically bumped every Minecraft version by Forge. See our download page for lists of versions.
 # The mod license
 license="${mod_license}"
 # A list of mods - how many allowed here is determined by the individual mod loader
@@ -22,7 +22,7 @@ description='''${mod_description}'''
 modId="konkrete"
 mandatory=true
 ordering="NONE"
-versionRange="[1.6.1,)"
+versionRange="[1.7.1,)"
 side="BOTH"
 
 [[dependencies.${mod_id}]]
@@ -49,13 +49,13 @@ side="BOTH"
 [[dependencies.${mod_id}]]
 modId="forge"
 mandatory=true
-versionRange="[47.2.17,)"
+versionRange="[${forge_version},)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.${mod_id}]]
 modId="minecraft"
 mandatory=true
-versionRange="[1.20.1,)"
+versionRange="[${minecraft_version},)"
 ordering="NONE"
 side="BOTH"

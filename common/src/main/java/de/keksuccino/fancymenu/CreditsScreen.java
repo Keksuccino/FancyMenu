@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.ScrollableMarkdownRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -14,7 +13,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
@@ -89,8 +87,12 @@ public class CreditsScreen extends Screen {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDelta) {
-        return this.markdownRenderer.mouseScrolled(mouseX, mouseY, scrollDelta);
+    public void renderBackground(@NotNull GuiGraphics graphics, int $$1, int $$2, float $$3) {
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
+        return this.markdownRenderer.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
     }
 
     @Override

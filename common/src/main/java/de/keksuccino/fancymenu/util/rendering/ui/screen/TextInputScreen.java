@@ -68,11 +68,6 @@ public class TextInputScreen extends Screen {
     }
 
     @Override
-    public void tick() {
-        this.input.tick();
-    }
-
-    @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         RenderSystem.enableBlend();
@@ -99,6 +94,10 @@ public class TextInputScreen extends Screen {
         this.doneButton.setY(this.height - 40);
         this.doneButton.render(graphics, mouseX, mouseY, partial);
 
+    }
+
+    @Override
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
     }
 
     @Override

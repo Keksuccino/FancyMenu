@@ -133,7 +133,7 @@ public abstract class CellScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.updateSelectedCell();
 
@@ -146,6 +146,10 @@ public abstract class CellScreen extends Screen {
 
         super.render(graphics, mouseX, mouseY, partial);
 
+    }
+
+    @Override
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
     }
 
     @Override
@@ -540,11 +544,6 @@ public abstract class CellScreen extends Screen {
                 this.openEditorButton.setWidth(editorButtonWidth);
             }
 
-        }
-
-        @Override
-        public void tick() {
-            this.editBox.tick();
         }
 
         public TextInputCell setEditorPresetTextSupplier(@NotNull ConsumingSupplier<TextInputCell, String> supplier) {

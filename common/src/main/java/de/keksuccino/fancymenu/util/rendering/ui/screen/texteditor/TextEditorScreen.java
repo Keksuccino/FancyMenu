@@ -348,6 +348,10 @@ public class TextEditorScreen extends Screen {
 
     }
 
+    @Override
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    }
+
     protected void renderMultilineNotSupportedNotification(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         long now = System.currentTimeMillis();
         if (!this.multilineMode && (this.multilineNotSupportedNotificationDisplayStart + 3000L >= now)) {

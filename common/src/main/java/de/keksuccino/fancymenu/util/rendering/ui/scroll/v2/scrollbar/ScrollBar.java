@@ -239,11 +239,11 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDelta) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
 
         if (this.active && this.allowScrollWheel && this.isMouseInsideScrollArea(mouseX, mouseY, true) && !this.leftMouseDownOnGrabber) {
             float scrollOffset = 0.1F * this.wheelScrollSpeed;
-            if (scrollDelta > 0) {
+            if (scrollDeltaY > 0) {
                 scrollOffset = -(scrollOffset);
             }
             this.setScroll(this.getScroll() + scrollOffset);

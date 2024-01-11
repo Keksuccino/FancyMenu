@@ -61,8 +61,8 @@ public abstract class MixinLevelLoadingScreen extends Screen {
         return !this.isCustomizableFancyMenu();
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;drawCenteredString(Lnet/minecraft/client/gui/Font;Ljava/lang/String;III)V"))
-    private boolean wrapRenderPercentStringFancyMenu(GuiGraphics instance, Font $$0, String $$1, int $$2, int $$3, int $$4) {
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;drawCenteredString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)V"))
+    private boolean wrapRenderPercentStringFancyMenu(GuiGraphics instance, Font p_282901_, Component p_282456_, int p_283083_, int p_282276_, int p_281457_) {
         return !this.isCustomizableFancyMenu();
     }
 
@@ -71,11 +71,13 @@ public abstract class MixinLevelLoadingScreen extends Screen {
         if (this.isCustomizableFancyMenu()) {
             if (this.chunkRendererFancyMenu != null) this.chunkRendererFancyMenu.render(graphics, mouseX, mouseY, partial);
             if (this.percentageTextFancyMenu != null) {
-                this.percentageTextFancyMenu.setMessage(Component.literal(this.getFormattedProgress()));
+                this.percentageTextFancyMenu.setMessage(this.getFormattedProgress());
                 this.percentageTextFancyMenu.render(graphics, mouseX, mouseY, partial);
             }
         }
     }
+
+    @Shadow protected abstract Component getFormattedProgress();
 
     @Unique
     private void renderChunkBoxFancyMenu(@NotNull GuiGraphics graphics, int xCenter, int yCenter, StoringChunkProgressListener listener) {
@@ -86,7 +88,5 @@ public abstract class MixinLevelLoadingScreen extends Screen {
     private boolean isCustomizableFancyMenu() {
         return ScreenCustomization.isCustomizationEnabledForScreen(this);
     }
-
-    @Shadow protected abstract String getFormattedProgress();
 
 }

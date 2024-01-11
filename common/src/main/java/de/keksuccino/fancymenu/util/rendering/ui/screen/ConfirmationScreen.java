@@ -134,6 +134,10 @@ public class ConfirmationScreen extends Screen {
 
     }
 
+    @Override
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    }
+
     public ConfirmationScreen setDelay(long delay) {
         this.delayEnd = System.currentTimeMillis() + delay;
         return this;

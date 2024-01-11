@@ -46,8 +46,8 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
         this.sliderInitializedFancyMenu = true;
     }
 
-    @WrapWithCondition(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitNineSliced(Lnet/minecraft/resources/ResourceLocation;IIIIIIIIII)V"))
-    private boolean wrapBlitNineSlicedInRenderWidgetFancyMenu(GuiGraphics graphics, ResourceLocation location, int $$1, int $$2, int blitWidth, int blitHeight, int $$5, int $$6, int $$7, int $$8, int $$9, int $$10) {
+    @WrapWithCondition(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lnet/minecraft/resources/ResourceLocation;IIII)V"))
+    private boolean wrapBlitNineSlicedInRenderWidgetFancyMenu(GuiGraphics graphics, ResourceLocation p_300860_, int p_298718_, int p_298541_, int blitWidth, int p_298426_) {
         CustomizableWidget cus = this.getAsCustomizableWidgetFancyMenu();
         boolean isHandle = (blitWidth == 8);
         boolean renderVanilla;

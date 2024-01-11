@@ -20,14 +20,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO Make FMv3 wiki accessible via docs.fancymenu.net
-
-	//TODO Make resources.fancymenu.net redirect to the wiki page for ResourceLocations
-
-
-
-
-
 	//TODO Markdown: Add more bullet list levels (make better handling for infinite levels)
 
 	//TODO ALLE UNGENUTZTEN FileTypes entfernen (ungenutzte video types)

@@ -25,23 +25,23 @@ import java.util.List;
 public abstract class MixinScreen implements CustomizableScreen {
 
 	@Unique
-	private static final Logger LOGGER = LogManager.getLogger();
+	private static final Logger LOGGER_FANCYMENU = LogManager.getLogger();
 
 	@Unique
 	private final List<GuiEventListener> removeOnInitChildrenFancyMenu = new ArrayList<>();
-
-	@Inject(method = "renderBackground", at = @At(value = "RETURN"))
-	private void afterRenderScreenBackgroundFancyMenu(GuiGraphics graphics, CallbackInfo info) {
-		EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent((Screen)((Object)this), graphics));
-	}
 
 	@Inject(method = "init(Lnet/minecraft/client/Minecraft;II)V", at = @At("RETURN"))
 	private void afterInitFancyMenu(Minecraft $$0, int $$1, int $$2, CallbackInfo info) {
 		Overlay overlay = Minecraft.getInstance().getOverlay();
 		if (Compat.isRRLSLoaded() && (overlay != null) && Compat.isRRLSOverlay(overlay)) {
-			LOGGER.info("[FANCYMENU] Re-initializing screen after init in overlay to fix incompatibility with RemoveReloadingScreen..");
+			LOGGER_FANCYMENU.info("[FANCYMENU] Re-initializing screen after init in overlay to fix incompatibility with RemoveReloadingScreen..");
 			ScreenCustomization.reInitCurrentScreen();
 		}
+	}
+
+	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderBackground(Lnet/minecraft/client/gui/GuiGraphics;IIF)V", shift = At.Shift.AFTER))
+	private void afterRenderBackgroundFancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo info) {
+		EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent((Screen)((Object)this), graphics));
 	}
 
 	@Unique

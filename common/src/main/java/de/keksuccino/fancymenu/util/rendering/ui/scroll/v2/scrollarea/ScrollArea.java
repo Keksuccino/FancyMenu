@@ -483,9 +483,9 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDelta) {
-        if (this.verticalScrollBar.mouseScrolled(mouseX, mouseY, scrollDelta)) return true;
-        if (this.horizontalScrollBar.mouseScrolled(mouseX, mouseY, scrollDelta)) return true;
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
+        if (this.verticalScrollBar.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY)) return true;
+        if (this.horizontalScrollBar.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY)) return true;
         return false;
     }
 

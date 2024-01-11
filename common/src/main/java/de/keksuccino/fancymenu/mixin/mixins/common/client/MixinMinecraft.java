@@ -54,7 +54,7 @@ public class MixinMinecraft {
 			try {
 				r.run();
 			} catch (Exception e) {
-				e.printStackTrace();
+				LOGGER_FANCYMENU.error("[FANCYMENU] Error while executing PRE_CLIENT_TICK MainThread task!", e);
 			}
 		}
 		EventHandler.INSTANCE.postEvent(new ClientTickEvent.Pre());
@@ -67,7 +67,7 @@ public class MixinMinecraft {
 			try {
 				r.run();
 			} catch (Exception e) {
-				e.printStackTrace();
+				LOGGER_FANCYMENU.error("[FANCYMENU] Error while executing POST_CLIENT_TICK MainThread task!", e);
 			}
 		}
 	}

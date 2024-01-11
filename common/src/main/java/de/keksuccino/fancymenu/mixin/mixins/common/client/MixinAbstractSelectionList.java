@@ -20,19 +20,21 @@ public abstract class MixinAbstractSelectionList {
 
 	@Unique private boolean shouldFireRenderHeaderFooterEvents;
 
-	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSelectionList;isMouseOver(DD)Z", shift = Shift.AFTER))
+	.....
+
+	@Inject(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSelectionList;isMouseOver(DD)Z", shift = Shift.AFTER))
 	private void beforeRenderListBackgroundFancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo ci) {
 		RenderGuiListBackgroundEvent.Pre e = new RenderGuiListBackgroundEvent.Pre(graphics, (AbstractSelectionList) ((Object)this));
 		EventHandler.INSTANCE.postEvent(e);
 	}
 	
-	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSelectionList;getRowLeft()I"))
+	@Inject(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSelectionList;getRowLeft()I"))
 	private void afterRenderListBackgroundFancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo ci) {
 		RenderGuiListBackgroundEvent.Post e = new RenderGuiListBackgroundEvent.Post(graphics, (AbstractSelectionList) ((Object)this));
 		EventHandler.INSTANCE.postEvent(e);
 	}
 
-	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;disableScissor()V", shift = Shift.AFTER))
+	@Inject(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;disableScissor()V", shift = Shift.AFTER))
 	private void beforeRenderListHeaderFooterFancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo ci) {
 		this.shouldFireRenderHeaderFooterEvents = this.renderTopAndBottom;
 		if (this.shouldFireRenderHeaderFooterEvents) {
@@ -42,7 +44,7 @@ public abstract class MixinAbstractSelectionList {
 		}
 	}
 
-	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSelectionList;getMaxScroll()I"))
+	@Inject(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSelectionList;getMaxScroll()I"))
 	private void afterRenderListHeaderFooterFancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo ci) {
 		if (this.shouldFireRenderHeaderFooterEvents) {
 			RenderGuiListHeaderFooterEvent.Post e = new RenderGuiListHeaderFooterEvent.Post(graphics, (AbstractSelectionList) ((Object)this));

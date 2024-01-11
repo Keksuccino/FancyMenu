@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
@@ -83,11 +82,6 @@ public class SaveFileScreen extends AbstractFileBrowserScreen {
 
         super.init();
 
-    }
-
-    @Override
-    public void tick() {
-        this.fileNameEditBox.tick();
     }
 
     @Override

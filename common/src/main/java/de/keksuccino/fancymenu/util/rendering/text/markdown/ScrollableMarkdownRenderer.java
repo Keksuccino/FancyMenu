@@ -165,8 +165,8 @@ public class ScrollableMarkdownRenderer implements Renderable, ContainerEventHan
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDelta) {
-        return this.scrollArea.mouseScrolled(mouseX, mouseY, scrollDelta);
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
+        return this.scrollArea.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
     }
 
     @Override

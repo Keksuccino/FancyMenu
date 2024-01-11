@@ -12,3 +12,5 @@ extendable method net/minecraft/client/gui/screens/Screen createTabEvent ()Lnet/
 accessible method net/minecraft/client/gui/components/CommandSuggestions$SuggestionsList <init> (Lnet/minecraft/client/gui/components/CommandSuggestions;IIILjava/util/List;Z)V
 
 accessible class net/minecraft/client/Options$FieldAccess
+
+extendable method net/minecraft/client/gui/components/AbstractWidget render (Lnet/minecraft/client/gui/GuiGraphics;IIF)V

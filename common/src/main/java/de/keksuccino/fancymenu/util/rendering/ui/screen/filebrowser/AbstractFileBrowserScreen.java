@@ -193,6 +193,10 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
     }
 
+    @Override
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    }
+
     protected void renderOpenInExplorerButton(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.openInExplorerButton.setX(this.width - 20 - this.openInExplorerButton.getWidth());
         this.openInExplorerButton.setY(this.cancelButton.getY() - 15 - 20);
