@@ -1,9 +1,6 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import java.io.*;
-import java.util.Objects;
-import java.util.Optional;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
@@ -17,12 +14,17 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.util.Objects;
+import java.util.Optional;
 
 @SuppressWarnings("unused")
-public class SimpleTexture implements ITexture {
+public class JpegTexture implements ITexture {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final SimpleTexture FULLY_TRANSPARENT_SIMPLE_TEXTURE = SimpleTexture.location(FULLY_TRANSPARENT_TEXTURE);
+    public static final JpegTexture FULLY_TRANSPARENT_JPEG_TEXTURE = JpegTexture.location(FULLY_TRANSPARENT_TEXTURE);
 
     @Nullable
     protected ResourceLocation resourceLocation;
@@ -44,7 +46,7 @@ public class SimpleTexture implements ITexture {
      * Supports JPEG and PNG textures.
      */
     @NotNull
-    public static SimpleTexture location(@NotNull ResourceLocation location) {
+    public static JpegTexture location(@NotNull ResourceLocation location) {
         return location(location, null);
     }
 
@@ -52,31 +54,22 @@ public class SimpleTexture implements ITexture {
      * Supports JPEG and PNG textures.
      */
     @NotNull
-    public static SimpleTexture location(@NotNull ResourceLocation location, @Nullable SimpleTexture writeTo) {
+    public static JpegTexture location(@NotNull ResourceLocation location, @Nullable JpegTexture writeTo) {
 
         Objects.requireNonNull(location);
-        SimpleTexture texture = (writeTo != null) ? writeTo : new SimpleTexture();
+        JpegTexture texture = (writeTo != null) ? writeTo : new JpegTexture();
 
         texture.sourceLocation = location;
 
         try {
             Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(location);
             if (resource.isPresent()) {
-                NativeImage image = NativeImage.read(resource.get().open());
-                texture.width = image.getWidth();
-                texture.height = image.getHeight();
-                texture.aspectRatio = new AspectRatio(texture.width, texture.height);
-                CloseableUtils.closeQuietly(image);
+                of(Objects.requireNonNull(resource.get().open()), location.toString(), texture);
             }
         } catch (Exception ex) {
             texture.loadingFailed = true;
             LOGGER.error("[FANCYMENU] Failed to read texture from ResourceLocation: " + location, ex);
         }
-        texture.loadedIntoMinecraft = true;
-        texture.loadingCompleted = true;
-        texture.decoded = true;
-        texture.resourceLocation = location;
-
         return texture;
 
     }
@@ -85,7 +78,7 @@ public class SimpleTexture implements ITexture {
      * Supports JPEG and PNG textures.
      */
     @NotNull
-    public static SimpleTexture local(@NotNull File textureFile) {
+    public static JpegTexture local(@NotNull File textureFile) {
         return local(textureFile, null);
     }
 
@@ -93,10 +86,10 @@ public class SimpleTexture implements ITexture {
      * Supports JPEG and PNG textures.
      */
     @NotNull
-    public static SimpleTexture local(@NotNull File textureFile, @Nullable SimpleTexture writeTo) {
+    public static JpegTexture local(@NotNull File textureFile, @Nullable JpegTexture writeTo) {
 
         Objects.requireNonNull(textureFile);
-        SimpleTexture texture = (writeTo != null) ? writeTo : new SimpleTexture();
+        JpegTexture texture = (writeTo != null) ? writeTo : new JpegTexture();
 
         texture.sourceFile = textureFile;
 
@@ -122,7 +115,7 @@ public class SimpleTexture implements ITexture {
      * Supports JPEG and PNG textures.
      */
     @NotNull
-    public static SimpleTexture web(@NotNull String textureURL) {
+    public static JpegTexture web(@NotNull String textureURL) {
         return web(textureURL, null);
     }
 
@@ -130,10 +123,10 @@ public class SimpleTexture implements ITexture {
      * Supports JPEG and PNG textures.
      */
     @NotNull
-    public static SimpleTexture web(@NotNull String textureURL, @Nullable SimpleTexture writeTo) {
+    public static JpegTexture web(@NotNull String textureURL, @Nullable JpegTexture writeTo) {
 
         Objects.requireNonNull(textureURL);
-        SimpleTexture texture = (writeTo != null) ? writeTo : new SimpleTexture();
+        JpegTexture texture = (writeTo != null) ? writeTo : new JpegTexture();
 
         texture.sourceURL = textureURL;
 
@@ -163,10 +156,10 @@ public class SimpleTexture implements ITexture {
      * Closes the passed {@link InputStream}!
      */
     @NotNull
-    public static SimpleTexture of(@NotNull InputStream in, @Nullable String textureName, @Nullable SimpleTexture writeTo) {
+    public static JpegTexture of(@NotNull InputStream in, @Nullable String textureName, @Nullable JpegTexture writeTo) {
 
         Objects.requireNonNull(in);
-        SimpleTexture texture = (writeTo != null) ? writeTo : new SimpleTexture();
+        JpegTexture texture = (writeTo != null) ? writeTo : new JpegTexture();
 
         new Thread(() -> {
             populateTexture(texture, in, (textureName != null) ? textureName : "[Generic InputStream Source]");
@@ -182,16 +175,16 @@ public class SimpleTexture implements ITexture {
      * Closes the passed {@link InputStream}!
      */
     @NotNull
-    public static SimpleTexture of(@NotNull InputStream in) {
+    public static JpegTexture of(@NotNull InputStream in) {
         return of(in, null, null);
     }
 
     @NotNull
-    public static SimpleTexture of(@NotNull NativeImage nativeImage) {
+    public static JpegTexture of(@NotNull NativeImage nativeImage) {
 
         Objects.requireNonNull(nativeImage);
 
-        SimpleTexture texture = new SimpleTexture();
+        JpegTexture texture = new JpegTexture();
 
         texture.nativeImage = nativeImage;
         texture.width = nativeImage.getWidth();
@@ -204,13 +197,13 @@ public class SimpleTexture implements ITexture {
 
     }
 
-    protected SimpleTexture() {
+    protected JpegTexture() {
     }
 
-    protected static void populateTexture(@NotNull SimpleTexture texture, @NotNull InputStream in, @NotNull String textureName) {
+    protected static void populateTexture(@NotNull JpegTexture texture, @NotNull InputStream in, @NotNull String textureName) {
         if (!texture.closed) {
             try {
-                texture.nativeImage = NativeImage.read(in);
+                texture.nativeImage = convertJpegToPng(in);
                 if (texture.nativeImage != null) {
                     texture.width = texture.nativeImage.getWidth();
                     texture.height = texture.nativeImage.getHeight();
@@ -229,6 +222,27 @@ public class SimpleTexture implements ITexture {
         CloseableUtils.closeQuietly(in);
     }
 
+    /**
+     * Converts JPEG images to PNG, because Minecraft dropped support for JPEGs.
+     */
+    @Nullable
+    protected static NativeImage convertJpegToPng(@NotNull InputStream in) {
+        NativeImage nativeImage = null;
+        ByteArrayOutputStream byteArrayOut = null;
+        try {
+            BufferedImage bufferedImage = ImageIO.read(in);
+            byteArrayOut = new ByteArrayOutputStream();
+            ImageIO.write(bufferedImage, "png", byteArrayOut);
+            //ByteArrayInputStream is important, because using NativeImage#read(byte[]) causes OutOfMemoryExceptions
+            nativeImage = NativeImage.read(new ByteArrayInputStream(byteArrayOut.toByteArray()));
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to convert JPEG image to PNG!", ex);
+        }
+        CloseableUtils.closeQuietly(in);
+        CloseableUtils.closeQuietly(byteArrayOut);
+        return nativeImage;
+    }
+
     @Nullable
     public ResourceLocation getResourceLocation() {
         if (this.closed) return FULLY_TRANSPARENT_TEXTURE;
@@ -237,7 +251,7 @@ public class SimpleTexture implements ITexture {
                 this.dynamicTexture = new DynamicTexture(this.nativeImage);
                 this.resourceLocation = Minecraft.getInstance().getTextureManager().register("fancymenu_simple_texture", this.dynamicTexture);
             } catch (Exception ex) {
-                ex.printStackTrace();
+                LOGGER.error("[FANCYMENU] Failed to get ResourceLocation of JpegTexture!", ex);
             }
             this.loadedIntoMinecraft = true;
         }
@@ -298,12 +312,12 @@ public class SimpleTexture implements ITexture {
         try {
             if (this.dynamicTexture != null) this.dynamicTexture.close();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.error("[FANCYMENU] An error happened while trying to close the DynamicTexture!", ex);
         }
         try {
             if (this.nativeImage != null) this.nativeImage.close();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.error("[FANCYMENU] An error happened while trying to close the NativeImage!", ex);
         }
         this.dynamicTexture = null;
         this.nativeImage = null;

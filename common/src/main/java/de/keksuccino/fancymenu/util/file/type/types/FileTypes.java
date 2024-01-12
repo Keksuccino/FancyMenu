@@ -10,10 +10,7 @@ import de.keksuccino.fancymenu.util.resource.resources.audio.ogg.OggAudio;
 import de.keksuccino.fancymenu.util.resource.resources.audio.wav.WavAudio;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.text.PlainText;
-import de.keksuccino.fancymenu.util.resource.resources.texture.ApngTexture;
-import de.keksuccino.fancymenu.util.resource.resources.texture.GifTexture;
-import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resource.resources.texture.SimpleTexture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.*;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -38,10 +35,10 @@ public class FileTypes {
     };
 
     public static final ImageFileType JPEG_IMAGE = new ImageFileType(
-            FileCodec.advanced(ITexture.class, SimpleTexture::of, SimpleTexture::location, SimpleTexture::local, SimpleTexture::web),
+            FileCodec.advanced(ITexture.class, JpegTexture::of, JpegTexture::location, JpegTexture::local, JpegTexture::web),
             "image/jpeg", "jpg", "jpeg");
     public static final ImageFileType PNG_IMAGE = new ImageFileType(
-            FileCodec.advanced(ITexture.class, SimpleTexture::of, SimpleTexture::location, SimpleTexture::local, SimpleTexture::web),
+            FileCodec.advanced(ITexture.class, PngTexture::of, PngTexture::location, PngTexture::local, PngTexture::web),
             "image/png", "png");
     public static final ImageFileType GIF_IMAGE = new ImageFileType(
             FileCodec.advanced(ITexture.class, GifTexture::of, GifTexture::location, GifTexture::local, GifTexture::web),

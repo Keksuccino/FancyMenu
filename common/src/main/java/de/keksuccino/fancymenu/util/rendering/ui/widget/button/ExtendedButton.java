@@ -17,7 +17,9 @@ import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -28,6 +30,12 @@ import java.awt.*;
 public class ExtendedButton extends Button implements IExtendedWidget, UniqueWidget, NavigatableWidget {
 
     private static final Logger LOGGER = LogManager.getLogger();
+
+    public static final WidgetSprites SPRITES = new WidgetSprites(
+            new ResourceLocation("widget/button"),
+            new ResourceLocation("widget/button_disabled"),
+            new ResourceLocation("widget/button_highlighted")
+    );
 
     protected final Minecraft mc = Minecraft.getInstance();
     protected boolean enableLabel = true;
@@ -104,7 +112,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
                 graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
                 RenderSystem.enableBlend();
                 RenderSystem.enableDepthTest();
-                graphics.blitNineSliced(WIDGETS_LOCATION, this.getX(), this.getY(), this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureY());
+                graphics.blitSprite(SPRITES.get(this.active, this.isHoveredOrFocused()), this.getX(), this.getY(), this.getWidth(), this.getHeight());
                 RenderingUtils.resetShaderColor(graphics);
             }
             RenderingUtils.resetShaderColor(graphics);
@@ -173,16 +181,6 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     protected int getHoverState() {
         if (this.isHovered) return 1;
         return 0;
-    }
-
-    protected int getTextureY() {
-        int i = 1;
-        if (!this.active) {
-            i = 0;
-        } else if (this.isHoveredOrFocused()) {
-            i = 2;
-        }
-        return 46 + i * 20;
     }
 
     public boolean isFocusable() {

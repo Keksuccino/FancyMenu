@@ -237,17 +237,17 @@ public abstract class UIComponent extends UIBase implements FocuslessContainerEv
         this.dragging = dragging;
     }
 
-    protected boolean mouseScrolledComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, double scrollDelta) {
+    protected boolean mouseScrolledComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, double scrollDeltaX, double scrollDeltaY) {
         for(GuiEventListener child : this.children()) {
-            if (child.mouseScrolled(realMouseX, realMouseY, scrollDelta)) return true;
+            if (child.mouseScrolled(realMouseX, realMouseY, scrollDeltaX, scrollDeltaY)) return true;
         }
         return false;
     }
 
     @Deprecated
     @Override
-    public boolean mouseScrolled(double ignoredMouseX, double ignoredMouseY, double scrollDelta) {
-        return this.mouseScrolledComponent(this.getRealMouseX(), this.getRealMouseY(), this.getTranslatedMouseX(), this.getTranslatedMouseY(), scrollDelta);
+    public boolean mouseScrolled(double ignoredMouseX, double ignoredMouseY, double scrollDeltaX, double scrollDeltaY) {
+        return this.mouseScrolledComponent(this.getRealMouseX(), this.getRealMouseY(), this.getTranslatedMouseX(), this.getTranslatedMouseY(), scrollDeltaX, scrollDeltaY);
     }
 
     protected void mouseMovedComponent(double realMouseX, double realMouseY) {

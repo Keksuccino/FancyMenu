@@ -59,7 +59,7 @@ public class PlayerEntityProperties {
     public float animationPosition;
     public int tickCount = 1000;
 
-    protected volatile ResourceLocation playerSkinLocation = DefaultPlayerSkin.getDefaultSkin();
+    protected volatile ResourceLocation playerSkinLocation = DefaultPlayerSkin.getDefaultTexture();
     protected volatile ResourceLocation capeLocation = null;
     public boolean shouldSit = false;
     public boolean isBaby = false;
@@ -127,7 +127,7 @@ public class PlayerEntityProperties {
     @NotNull
     public ResourceLocation getSkinTextureLocation() {
         if (this.playerSkinLocation == null) {
-            return DefaultPlayerSkin.getDefaultSkin();
+            return DefaultPlayerSkin.getDefaultTexture();
         }
         return this.playerSkinLocation;
     }

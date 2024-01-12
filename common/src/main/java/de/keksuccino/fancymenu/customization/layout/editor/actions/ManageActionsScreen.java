@@ -367,6 +367,10 @@ public class ManageActionsScreen extends Screen {
 
     }
 
+    @Override
+    public void renderBackground(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {
+    }
+
     protected boolean isContentOfStatementChain(@NotNull ExecutableEntry entry, @NotNull List<ExecutableEntry> statementChain) {
         List<ExecutableEntry> parentBlockHierarchy = this.getParentBlockHierarchyOf(entry);
         for (ExecutableEntry parentBlock : parentBlockHierarchy) {

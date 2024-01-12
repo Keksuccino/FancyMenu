@@ -1,4 +1,3 @@
-
 package de.keksuccino.fancymenu.networking;
 
 import de.keksuccino.fancymenu.networking.packets.command.commands.variable.ServerboundVariableCommandSuggestionsPacketHandler;
@@ -30,7 +29,7 @@ public class Packets {
         }, (msg, context) -> {
 
             //Handle packet
-            context.get().enqueueWork(() -> {
+            context.enqueueWork(() -> {
                 //Handle on client
                 DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
                     //Handle both sides on client, because integrated server needs handling too
@@ -47,7 +46,7 @@ public class Packets {
                     }
                 });
             });
-            context.get().setPacketHandled(true);
+            context.setPacketHandled(true);
 
         });
 
@@ -80,12 +79,12 @@ public class Packets {
         }, (msg, context) -> {
 
             //Handle packet
-            context.get().enqueueWork(() -> {
+            context.enqueueWork(() -> {
                 //Handle on client
                 DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
                     //Handle both sides on client, because integrated server needs handling too
                     if (msg.direction.equals("server")) {
-                        ServerboundVariableCommandSuggestionsPacketHandler.handle(msg, context.get().getSender());
+                        ServerboundVariableCommandSuggestionsPacketHandler.handle(msg, context.getSender());
                     } else if (msg.direction.equals("client")) { //Will never happen for this packet
 //                        ClientboundPacketHandler.handle(msg);
                     }
@@ -93,11 +92,11 @@ public class Packets {
                 //Handle on server
                 DistExecutor.unsafeRunWhenOn(Dist.DEDICATED_SERVER, () -> () -> {
                     if (msg.direction.equals("server")) {
-                        ServerboundVariableCommandSuggestionsPacketHandler.handle(msg, context.get().getSender());
+                        ServerboundVariableCommandSuggestionsPacketHandler.handle(msg, context.getSender());
                     }
                 });
             });
-            context.get().setPacketHandled(true);
+            context.setPacketHandled(true);
 
         });
 

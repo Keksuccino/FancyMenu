@@ -5,15 +5,14 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.events.widget.RenderGuiListHeaderFooterEvent;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractSelectionList;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutBase;
 import de.keksuccino.fancymenu.customization.widget.ScreenWidgetDiscoverer;
+import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventPriority;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
@@ -39,9 +38,11 @@ import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -453,33 +454,34 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		if (this.shouldCustomize(Minecraft.getInstance().screen)) {
 
-			e.setCanceled(true);
-
-			IMixinAbstractSelectionList access = e.getAccessor();
+			AbstractSelectionList<?> list = e.getList();
 
 			ITexture headerTexture = (this.layoutBase.scrollListHeaderTexture != null) ? this.layoutBase.scrollListHeaderTexture.get() : null;
 			ITexture footerTexture = (this.layoutBase.scrollListFooterTexture != null) ? this.layoutBase.scrollListFooterTexture.get() : null;
+
+			if ((headerTexture != null) || (footerTexture != null) || !this.layoutBase.renderScrollListHeaderShadow || !this.layoutBase.renderScrollListFooterShadow) {
+				e.setCanceled(true);
+			} else {
+				return;
+			}
 
 			if (headerTexture != null) {
 				ResourceLocation loc = headerTexture.getResourceLocation();
 				if (loc != null) {
 					RenderingUtils.resetShaderColor(graphics);
 					if (this.layoutBase.preserveScrollListHeaderFooterAspectRatio) {
-						int[] headerSize = headerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(access.getWidthFancyMenu(), access.getY0FancyMenu());
+						int[] headerSize = headerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(list.getWidth(), list.getY());
 						int headerWidth = headerSize[0];
 						int headerHeight = headerSize[1];
-						int headerX = access.getX0FancyMenu() + (access.getWidthFancyMenu() / 2) - (headerWidth / 2);
-						int headerY = (access.getY0FancyMenu() / 2) - (headerHeight / 2);
-						graphics.enableScissor(access.getX0FancyMenu(), 0, access.getX0FancyMenu() + access.getWidthFancyMenu(), access.getY0FancyMenu());
+						int headerX = list.getX() + (list.getWidth() / 2) - (headerWidth / 2);
+						int headerY = (list.getY() / 2) - (headerHeight / 2);
+						graphics.enableScissor(list.getX(), 0, list.getRight(), list.getY());
 						graphics.blit(loc, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
 						graphics.disableScissor();
 					} else {
-						graphics.blit(loc, access.getX0FancyMenu(), 0, 0.0F, 0.0F, access.getWidthFancyMenu(), access.getY0FancyMenu(), access.getWidthFancyMenu(), access.getY0FancyMenu());
+						graphics.blit(loc, list.getX(), 0, 0.0F, 0.0F, list.getWidth(), list.getY(), list.getWidth(), list.getY());
 					}
 				}
-			} else {
-				graphics.setColor(0.25F, 0.25F, 0.25F, 1.0F);
-				graphics.blit(Screen.BACKGROUND_LOCATION, access.getX0FancyMenu(), 0, 0.0F, 0.0F, access.getWidthFancyMenu(), access.getY0FancyMenu(), 32, 32);
 			}
 
 			if (footerTexture != null) {
@@ -487,32 +489,31 @@ public class ScreenCustomizationLayer implements ElementFactory {
 				if (loc != null) {
 					RenderingUtils.resetShaderColor(graphics);
 					if (this.layoutBase.preserveScrollListHeaderFooterAspectRatio) {
-						int footerOriginalHeight = access.getHeightFancyMenu() - access.getY1FancyMenu();
-						int[] footerSize = footerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(access.getWidthFancyMenu(), footerOriginalHeight);
+						int footerOriginalHeight = ScreenUtils.getScreenHeight() - list.getBottom();
+						if (footerOriginalHeight <= 0) footerOriginalHeight = 1;
+						int[] footerSize = footerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(list.getWidth(), footerOriginalHeight);
 						int footerWidth = footerSize[0];
 						int footerHeight = footerSize[1];
-						int footerX = access.getX0FancyMenu() + (access.getWidthFancyMenu() / 2) - (footerWidth / 2);
-						int footerY = access.getY1FancyMenu() + (footerOriginalHeight / 2) - (footerHeight / 2);
-						graphics.enableScissor(access.getX0FancyMenu(), access.getY1FancyMenu(), access.getX0FancyMenu() + access.getWidthFancyMenu(), access.getY1FancyMenu() + footerOriginalHeight);
+						int footerX = list.getY() + (list.getWidth() / 2) - (footerWidth / 2);
+						int footerY = list.getBottom() + (footerOriginalHeight / 2) - (footerHeight / 2);
+						graphics.enableScissor(list.getX(), list.getBottom(), list.getRight(), list.getBottom() + footerOriginalHeight);
 						graphics.blit(loc, footerX, footerY, 0.0F, 0.0F, footerWidth, footerHeight, footerWidth, footerHeight);
 						graphics.disableScissor();
 					} else {
-						int footerHeight = access.getHeightFancyMenu() - access.getY1FancyMenu();
-						graphics.blit(loc, access.getX0FancyMenu(), access.getY1FancyMenu(), 0.0F, 0.0F, access.getWidthFancyMenu(), footerHeight, access.getWidthFancyMenu(), footerHeight);
+						int footerHeight = ScreenUtils.getScreenHeight() - list.getBottom();
+						if (footerHeight <= 0) footerHeight = 1;
+						graphics.blit(loc, list.getX(), list.getBottom(), 0.0F, 0.0F, list.getWidth(), footerHeight, list.getWidth(), footerHeight);
 					}
 				}
-			} else {
-				graphics.setColor(0.25F, 0.25F, 0.25F, 1.0F);
-				graphics.blit(Screen.BACKGROUND_LOCATION, access.getX0FancyMenu(), access.getY1FancyMenu(), 0.0F, (float)access.getY1FancyMenu(), access.getWidthFancyMenu(), access.getHeightFancyMenu() - access.getY1FancyMenu(), 32, 32);
 			}
 
 			RenderingUtils.resetShaderColor(graphics);
 
 			if (this.layoutBase.renderScrollListHeaderShadow) {
-				graphics.fillGradient(access.getX0FancyMenu(), access.getY0FancyMenu(), access.getX1FancyMenu(), access.getY0FancyMenu() + 4, -16777216, 0);
+				graphics.fillGradient(RenderType.guiOverlay(), list.getX(), list.getY(), list.getRight(), list.getY() + 4, -16777216, 0, 0);
 			}
 			if (this.layoutBase.renderScrollListFooterShadow) {
-				graphics.fillGradient(access.getX0FancyMenu(), access.getY1FancyMenu() - 4, access.getX1FancyMenu(), access.getY1FancyMenu(), 0, -16777216);
+				graphics.fillGradient(RenderType.guiOverlay(), list.getX(), list.getBottom() - 4, list.getRight(), list.getBottom(), 0, -16777216, 0);
 			}
 
 			RenderingUtils.resetShaderColor(graphics);
@@ -562,7 +563,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		return true;
 	}
 
-	private static class ThreadCaller {
+	public static class ThreadCaller {
 		AtomicBoolean running = new AtomicBoolean(true);
 	}
 

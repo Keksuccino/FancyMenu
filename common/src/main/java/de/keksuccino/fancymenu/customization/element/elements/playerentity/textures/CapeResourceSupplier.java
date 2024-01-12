@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resource.resources.texture.SimpleTexture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,7 +23,7 @@ public class CapeResourceSupplier extends ResourceSupplier<ITexture> {
 
     private static final Logger LOGGER = LogManager.getLogger();
     public static final ResourceLocation DEFAULT_CAPE_LOCATION = new ResourceLocation("fancymenu", "textures/player_entity/default_cape_texture.png");
-    public static final SimpleTexture DEFAULT_CAPE = SimpleTexture.location(DEFAULT_CAPE_LOCATION);
+    public static final PngTexture DEFAULT_CAPE = PngTexture.location(DEFAULT_CAPE_LOCATION);
     protected static final Map<String, String> CACHED_PLAYER_NAME_CAPE_URLS = new HashMap<>();
 
     protected boolean sourceIsPlayerName;

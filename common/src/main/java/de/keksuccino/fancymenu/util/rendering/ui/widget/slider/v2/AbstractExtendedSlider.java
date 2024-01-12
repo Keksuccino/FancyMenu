@@ -23,7 +23,10 @@ import java.awt.*;
 @SuppressWarnings("unused")
 public abstract class AbstractExtendedSlider extends AbstractSliderButton implements IExtendedWidget {
 
-    protected static final ResourceLocation SLIDER_LOCATION = new ResourceLocation("textures/gui/slider.png");
+    public static final ResourceLocation SLIDER_SPRITE = new ResourceLocation("widget/slider");
+    public static final ResourceLocation HIGHLIGHTED_SPRITE = new ResourceLocation("widget/slider_highlighted");
+    public static final ResourceLocation SLIDER_HANDLE_SPRITE = new ResourceLocation("widget/slider_handle");
+    public static final ResourceLocation SLIDER_HANDLE_HIGHLIGHTED_SPRITE = new ResourceLocation("widget/slider_handle_highlighted");
 
     @Nullable
     protected DrawableColor sliderBackgroundColorNormal;
@@ -51,6 +54,14 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
 
     public AbstractExtendedSlider(int x, int y, int width, int height, Component label, double value) {
         super(x, y, width, height, label, value);
+    }
+
+    public ResourceLocation getSprite() {
+        return this.isFocused() && !((IMixinAbstractSliderButton)this).getCanChangeValueFancyMenu() ? HIGHLIGHTED_SPRITE : SLIDER_SPRITE;
+    }
+
+    public ResourceLocation getHandleSprite() {
+        return !this.isHovered && !((IMixinAbstractSliderButton)this).getCanChangeValueFancyMenu() ? SLIDER_HANDLE_SPRITE : SLIDER_HANDLE_HIGHLIGHTED_SPRITE;
     }
 
     @Override
@@ -100,12 +111,8 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();
-        graphics.blitNineSliced(SLIDER_LOCATION, this.getX(), this.getY(), this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getBackgroundTextureY());
-    }
-
-    protected int getBackgroundTextureY() {
-        int i = this.isFocused() && !this.getAccessor().getCanChangeValueFancyMenu() ? 1 : 0;
-        return i * 20;
+        graphics.blitSprite(this.getSprite(), this.getX(), this.getY(), this.getWidth(), this.getHeight());
+        RenderingUtils.resetShaderColor(graphics);
     }
 
     protected void renderHandle(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
@@ -147,12 +154,8 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();
-        graphics.blitNineSliced(SLIDER_LOCATION, this.getHandleX(), this.getY(), this.getHandleWidth(), 20, 20, 4, 200, 20, 0, this.getHandleTextureY());
-    }
-
-    protected int getHandleTextureY() {
-        int i = !this.isHovered && !this.getAccessor().getCanChangeValueFancyMenu() ? 2 : 3;
-        return i * 20;
+        graphics.blitSprite(this.getHandleSprite(), this.getHandleX(), this.getY(), this.getHandleWidth(), this.getHeight());
+        RenderingUtils.resetShaderColor(graphics);
     }
 
     protected void renderLabel(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {

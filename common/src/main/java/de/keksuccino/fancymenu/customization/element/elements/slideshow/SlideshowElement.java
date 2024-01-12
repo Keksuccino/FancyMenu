@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.slideshow;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.slideshow.ExternalTextureSlideshowRenderer;

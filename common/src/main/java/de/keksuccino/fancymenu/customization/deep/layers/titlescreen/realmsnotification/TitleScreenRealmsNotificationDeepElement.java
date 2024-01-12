@@ -4,17 +4,16 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import net.minecraft.Util;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
 public class TitleScreenRealmsNotificationDeepElement extends AbstractDeepElement {
 
-    private static final ResourceLocation INVITE_ICON_LOCATION = new ResourceLocation("realms", "textures/gui/realms/invite_icon.png");
-    private static final ResourceLocation TRIAL_ICON_LOCATION = new ResourceLocation("realms", "textures/gui/realms/trial_icon.png");
-    private static final ResourceLocation NEWS_ICON_LOCATION = new ResourceLocation("realms", "textures/gui/realms/news_notification_mainscreen.png");
-    private static final ResourceLocation UNSEEN_NOTIFICATION_ICON_LOCATION = new ResourceLocation("minecraft", "textures/gui/unseen_notification.png");
+    protected static final ResourceLocation UNSEEN_NOTIFICATION_SPRITE = new ResourceLocation("icon/unseen_notification");
+    protected static final ResourceLocation NEWS_SPRITE = new ResourceLocation("icon/news");
+    protected static final ResourceLocation INVITE_SPRITE = new ResourceLocation("icon/invite");
+    protected static final ResourceLocation TRIAL_AVAILABLE_SPRITE = new ResourceLocation("icon/trial_available");
 
     public TitleScreenRealmsNotificationDeepElement(DeepElementBuilder<?, ?, ?> builder) {
         super(builder);
@@ -35,37 +34,30 @@ public class TitleScreenRealmsNotificationDeepElement extends AbstractDeepElemen
         this.posOffsetY = realmsButtonY + 4;
 
         if (isEditor()) {
-            this.drawIcons(graphics, mouseX, mouseY);
+            this.drawIcons(graphics);
         }
 
         RenderingUtils.resetShaderColor(graphics);
 
     }
 
-    private void drawIcons(GuiGraphics graphics, int mouseX, int mouseY) {
+    private void drawIcons(GuiGraphics graphics) {
 
-        int $$5 = getScreenHeight() / 4 + 48;
-        int $$6 = getScreenWidth() / 2 + 80;
-        int $$7 = $$5 + 48 + 2;
-        int $$8 = -(14 + 14 + 16);
+        int k = getScreenHeight() / 4 + 48;
+        int l = getScreenWidth() / 2 + 100;
+        int m = k + 48 + 2;
+        int n = l - 3;
 
-        graphics.blit(UNSEEN_NOTIFICATION_ICON_LOCATION, $$6 - $$8 + 5, $$7 + 3, 0.0F, 0.0F, 10, 10, 10, 10);
-        $$8 += 14;
+        graphics.blitSprite(UNSEEN_NOTIFICATION_SPRITE, n - 12, m + 3, 10, 10);
+        n -= 16;
 
-        graphics.pose().pushPose();
-        graphics.pose().scale(0.4F, 0.4F, 0.4F);
-        graphics.blit(NEWS_ICON_LOCATION, (int)((double)($$6 + 2 - $$8) * 2.5D), (int)((double)$$7 * 2.5D), 0.0F, 0.0F, 40, 40, 40, 40);
-        graphics.pose().popPose();
-        $$8 += 14;
+        graphics.blitSprite(NEWS_SPRITE, n - 14, m + 1, 14, 14);
+        n -= 16;
 
-        graphics.blit(INVITE_ICON_LOCATION, $$6 - $$8, $$7, 0.0F, 0.0F, 18, 15, 18, 30);
-        $$8 += 16;
+        graphics.blitSprite(INVITE_SPRITE, n - 14, m + 1, 14, 14);
+        n -= 16;
 
-        int $$9 = 0;
-        if ((Util.getMillis() / 800L & 1L) == 1L) {
-            $$9 = 8;
-        }
-        graphics.blit(TRIAL_ICON_LOCATION, $$6 + 4 - $$8, $$7 + 4, 0.0F, (float)$$9, 8, 8, 8, 16);
+        graphics.blitSprite(TRIAL_AVAILABLE_SPRITE, n - 10, m + 4, 8, 8);
 
     }
 

@@ -19,7 +19,7 @@ dependencies {
     include(implementation 'com.github.Keksuccino:japng:0.5.3')
     modImplementation "maven.modrinth:modmenu:9.0.0"
     modImplementation "curse.maven:load-my-resources-fabric-534835:4766205"
-    modImplementation "curse.maven:konkrete-fabric-416797:5009473"
+    modImplementation "maven.modrinth:konkrete:1.7.1-1.20.4-fabric"
     modImplementation "curse.maven:melody-938643:4953732"
 }
 

@@ -10,11 +10,14 @@ import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class DisconnectAction extends Action {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final Component SAVING_LEVEL = Component.translatable("menu.savingLevel");
 
     public DisconnectAction() {
@@ -35,27 +38,27 @@ public class DisconnectAction extends Action {
                 if (current == null) current = new TitleScreen();
                 mc.getReportingContext().draftReportHandled(mc, current, () -> {
                     if ((mc.level != null) && (mc.player != null)) {
-                        Screen s;
+                        boolean isSinglePlayer = mc.isLocalServer();
+                        Screen openAfter;
                         if (CustomGuiHandler.guiExists(value)) {
-                            s = CustomGuiHandler.constructInstance(value, null, null);
+                            openAfter = CustomGuiHandler.constructInstance(value, null, null);
                         } else {
-                            s = ScreenInstanceFactory.tryConstruct(ScreenIdentifierHandler.tryFixInvalidIdentifierWithNonUniversal(value));
+                            openAfter = ScreenInstanceFactory.tryConstruct(ScreenIdentifierHandler.tryFixInvalidIdentifierWithNonUniversal(value));
                         }
-                        if (s == null) {
-                            s = new TitleScreen();
+                        if (openAfter == null) {
+                            openAfter = new TitleScreen();
                         }
-                        boolean singlePlayer = mc.isLocalServer();
                         mc.level.disconnect();
-                        if (singlePlayer) {
-                            mc.clearLevel(new GenericDirtMessageScreen(SAVING_LEVEL));
+                        if (isSinglePlayer) {
+                            mc.disconnect(new GenericDirtMessageScreen(SAVING_LEVEL));
                         } else {
-                            mc.clearLevel();
+                            mc.disconnect();
                         }
-                        mc.setScreen(s);
+                        mc.setScreen(openAfter);
                     }
                 }, true);
             } catch (Exception ex) {
-                ex.printStackTrace();
+                LOGGER.error("[FANCYMENU] Failed to execute Disconnect action!", ex);
             }
         }
     }

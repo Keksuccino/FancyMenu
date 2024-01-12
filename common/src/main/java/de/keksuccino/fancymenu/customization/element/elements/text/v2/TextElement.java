@@ -225,7 +225,7 @@ public class TextElement extends AbstractElement {
             List<String> linesRaw = new ArrayList<>();
 
             try {
-                if ((this.source != null) && !this.source.equals("")) {
+                if ((this.source != null) && !this.source.isEmpty()) {
                     if (this.sourceMode == SourceMode.DIRECT) {
                         String s = this.source.replace("%n%", "\n").replace("\r", "\n");
                         if (s.contains("\n")) {
@@ -256,7 +256,7 @@ public class TextElement extends AbstractElement {
 
             StringBuilder text = new StringBuilder();
             for (String s : linesRaw) {
-                if (text.length() > 0) {
+                if (!text.isEmpty()) {
                     text.append("\n");
                 }
                 text.append(s);

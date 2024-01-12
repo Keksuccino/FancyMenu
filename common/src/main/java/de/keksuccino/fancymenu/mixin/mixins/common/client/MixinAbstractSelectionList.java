@@ -13,14 +13,12 @@ import org.spongepowered.asm.mixin.injection.At.Shift;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import de.keksuccino.fancymenu.events.widget.RenderGuiListBackgroundEvent;
 
-@Mixin(value = AbstractSelectionList.class)
+@Mixin(AbstractSelectionList.class)
 public abstract class MixinAbstractSelectionList {
 
-	@Shadow private boolean renderTopAndBottom;
+	@Shadow private boolean renderBackground;
 
 	@Unique private boolean shouldFireRenderHeaderFooterEvents;
-
-	.....
 
 	@Inject(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSelectionList;isMouseOver(DD)Z", shift = Shift.AFTER))
 	private void beforeRenderListBackgroundFancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo ci) {
@@ -36,11 +34,11 @@ public abstract class MixinAbstractSelectionList {
 
 	@Inject(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;disableScissor()V", shift = Shift.AFTER))
 	private void beforeRenderListHeaderFooterFancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo ci) {
-		this.shouldFireRenderHeaderFooterEvents = this.renderTopAndBottom;
+		this.shouldFireRenderHeaderFooterEvents = this.renderBackground;
 		if (this.shouldFireRenderHeaderFooterEvents) {
 			RenderGuiListHeaderFooterEvent.Pre e = new RenderGuiListHeaderFooterEvent.Pre(graphics, (AbstractSelectionList) ((Object)this));
 			EventHandler.INSTANCE.postEvent(e);
-			if (e.isCanceled()) this.renderTopAndBottom = false;
+			if (e.isCanceled()) this.renderBackground = false;
 		}
 	}
 
@@ -49,7 +47,7 @@ public abstract class MixinAbstractSelectionList {
 		if (this.shouldFireRenderHeaderFooterEvents) {
 			RenderGuiListHeaderFooterEvent.Post e = new RenderGuiListHeaderFooterEvent.Post(graphics, (AbstractSelectionList) ((Object)this));
 			EventHandler.INSTANCE.postEvent(e);
-			this.renderTopAndBottom = true;
+			this.renderBackground = true;
 		}
 	}
 	

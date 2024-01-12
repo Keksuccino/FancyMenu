@@ -25,7 +25,10 @@ import java.util.function.Consumer;
 @Deprecated
 public abstract class ExtendedSliderButton extends AbstractSliderButton implements UniqueWidget, NavigatableWidget {
 
-    protected static final ResourceLocation SLIDER_LOCATION = new ResourceLocation("textures/gui/slider.png");
+    public static final ResourceLocation SLIDER_SPRITE = new ResourceLocation("widget/slider");
+    public static final ResourceLocation HIGHLIGHTED_SPRITE = new ResourceLocation("widget/slider_highlighted");
+    public static final ResourceLocation SLIDER_HANDLE_SPRITE = new ResourceLocation("widget/slider_handle");
+    public static final ResourceLocation SLIDER_HANDLE_HIGHLIGHTED_SPRITE = new ResourceLocation("widget/slider_handle_highlighted");
 
     protected static boolean leftDownGlobal = false;
 
@@ -64,6 +67,14 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
         this.applyValueCallback = applyValueCallback;
     }
 
+    public ResourceLocation getSprite() {
+        return this.isFocused() && !((IMixinAbstractSliderButton)this).getCanChangeValueFancyMenu() ? HIGHLIGHTED_SPRITE : SLIDER_SPRITE;
+    }
+
+    public ResourceLocation getHandleSprite() {
+        return !this.isHovered && !((IMixinAbstractSliderButton)this).getCanChangeValueFancyMenu() ? SLIDER_HANDLE_SPRITE : SLIDER_HANDLE_HIGHLIGHTED_SPRITE;
+    }
+
     @Override
     public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.renderBackground(graphics);
@@ -81,7 +92,7 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
         DrawableColor c = this.getHandleRenderColor();
         if (c == null) {
             graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
-            graphics.blitNineSliced(SLIDER_LOCATION, handleX, this.getY(), 8, 20, 20, 4, 200, 20, 0, this.getHandleTextureY());
+            graphics.blitSprite(this.getHandleSprite(), handleX, this.getY(), 8, this.getHeight());
         } else {
             graphics.fill(handleX, this.getY(), handleX + 8, this.getY() + this.getHeight(), RenderingUtils.replaceAlphaInColor(c.getColorInt(), this.alpha));
         }
@@ -100,7 +111,7 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
         RenderSystem.enableDepthTest();
         if (this.backgroundColor == null) {
             graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
-            graphics.blitNineSliced(SLIDER_LOCATION, this.getX(), this.getY(), this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureY());
+            graphics.blitSprite(this.getSprite(), this.getX(), this.getY(), this.getWidth(), this.getHeight());
         } else {
             int borderOffset = (this.borderColor != null) ? 1 : 0;
             graphics.fill(this.getX() + borderOffset, this.getY() + borderOffset, this.getX() + this.getWidth() - borderOffset, this.getY() + this.getHeight() - borderOffset, RenderingUtils.replaceAlphaInColor(this.backgroundColor.getColorInt(), this.alpha));
@@ -243,16 +254,6 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
 
     public IMixinAbstractSliderButton getAccessor() {
         return (IMixinAbstractSliderButton) this;
-    }
-
-    protected int getTextureY() {
-        int $$0 = this.isFocused() && !this.canChangeValue() ? 1 : 0;
-        return $$0 * 20;
-    }
-
-    protected int getHandleTextureY() {
-        int $$0 = !this.isHovered && !this.canChangeValue() ? 2 : 3;
-        return $$0 * 20;
     }
 
     @Override

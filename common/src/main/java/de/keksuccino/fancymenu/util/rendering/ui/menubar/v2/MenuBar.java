@@ -12,7 +12,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.ScreenUtils;
-import de.keksuccino.fancymenu.util.resource.resources.texture.SimpleTexture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -37,7 +37,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    protected static final SimpleTexture COLLAPSE_EXPAND_TEXTURE = SimpleTexture.location(new ResourceLocation("fancymenu", "textures/menubar/icons/collapse_expand.png"));
+    protected static final PngTexture COLLAPSE_EXPAND_TEXTURE = PngTexture.location(new ResourceLocation("fancymenu", "textures/menubar/icons/collapse_expand.png"));
     protected static final int ENTRY_LABEL_SPACE_LEFT_RIGHT = 6;
 
     protected final List<MenuBarEntry> leftEntries = new ArrayList<>();

@@ -11,7 +11,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resource.resources.texture.SimpleTexture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,7 +26,7 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
 
     private static final Logger LOGGER = LogManager.getLogger();
     public static final ResourceLocation DEFAULT_SKIN_LOCATION = new ResourceLocation("textures/entity/player/wide/zuri.png");
-    public static final SimpleTexture DEFAULT_SKIN = SimpleTexture.location(DEFAULT_SKIN_LOCATION);
+    public static final PngTexture DEFAULT_SKIN = PngTexture.location(DEFAULT_SKIN_LOCATION);
     protected static final Map<String, SkinMetadata> CACHED_SKIN_METADATA = new HashMap<>();
 
     protected boolean sourceIsPlayerName;
@@ -263,7 +263,7 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
             //Clone big arm part 4
             cloneSkinPart(newTex, 52, 20, 4, 12, xOffsetArm, yOffsetArm, true);
 
-            iTexture = SimpleTexture.of(newTex);
+            iTexture = PngTexture.of(newTex);
 
         } catch (Exception ex) {
             ex.printStackTrace();

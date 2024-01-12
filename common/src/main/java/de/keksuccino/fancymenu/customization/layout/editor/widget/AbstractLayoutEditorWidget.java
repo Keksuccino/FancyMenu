@@ -10,7 +10,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.UIComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resource.resources.texture.SimpleTexture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -68,11 +68,11 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
         this.children.clear();
         this.headerButtons.clear();
 
-        this.addHeaderButton(new HeaderButton(this, consumes -> SimpleTexture.location(HIDE_BUTTON_ICON_TEXTURE), button -> {
+        this.addHeaderButton(new HeaderButton(this, consumes -> PngTexture.location(HIDE_BUTTON_ICON_TEXTURE), button -> {
             this.setVisible(false);
         }));
 
-        this.addHeaderButton(new HeaderButton(this, consumes -> SimpleTexture.location(this.isExpanded() ? COLLAPSE_BUTTON_ICON_TEXTURE : EXPAND_BUTTON_ICON_TEXTURE), button -> {
+        this.addHeaderButton(new HeaderButton(this, consumes -> PngTexture.location(this.isExpanded() ? COLLAPSE_BUTTON_ICON_TEXTURE : EXPAND_BUTTON_ICON_TEXTURE), button -> {
             this.setExpanded(!this.isExpanded());
         }));
 

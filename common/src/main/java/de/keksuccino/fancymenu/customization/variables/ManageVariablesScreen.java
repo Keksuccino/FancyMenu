@@ -46,8 +46,6 @@ public class ManageVariablesScreen extends Screen {
     @Override
     protected void init() {
 
-        super.init();
-
         this.addVariableButton = new ExtendedButton(0, 0, 220, 20, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.add_variable"), (button) -> {
             TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.overlay.menu_bar.variables.manage.add_variable.input_name"), CharacterFilter.buildOnlyLowercaseFileNameFilter(), (call) -> {
                 if (call != null) {
@@ -175,6 +173,10 @@ public class ManageVariablesScreen extends Screen {
 
         super.render(graphics, mouseX, mouseY, partial);
 
+    }
+
+    @Override
+    public void renderBackground(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {
     }
 
     @Nullable

@@ -48,8 +48,7 @@ public class JoinServerAction extends Action {
                 }
             }
             if (d == null) {
-                boolean isLan = false;
-                d = new ServerData(value.replace(" ", ""), value.replace(" ", ""), isLan);
+                d = new ServerData(value.replace(" ", ""), value.replace(" ", ""), ServerData.Type.OTHER);
                 l.add(d, false);
                 l.save();
             }

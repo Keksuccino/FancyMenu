@@ -71,8 +71,6 @@ public class BuildRequirementGroupScreen extends Screen {
 		this.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
 		this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
 
-        super.init();
-
         this.groupModeButton = new ExtendedButton(0, 0, 150, 20, "", (button) -> {
             if (this.group.mode == LoadingRequirementGroup.GroupMode.AND) {
                 this.group.mode = LoadingRequirementGroup.GroupMode.OR;
@@ -265,6 +263,10 @@ public class BuildRequirementGroupScreen extends Screen {
 
         super.render(graphics, mouseX, mouseY, partial);
 
+    }
+
+    @Override
+    public void renderBackground(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {
     }
 
     @Nullable

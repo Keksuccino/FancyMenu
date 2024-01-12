@@ -160,6 +160,10 @@ public class BuildActionScreen extends Screen {
 
     }
 
+    @Override
+    public void renderBackground(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {
+    }
+
     protected void setDescription(@Nullable Action action) {
         this.actionDescriptionScrollArea.clearEntries();
         if ((action != null) && (action.getActionDescription() != null)) {

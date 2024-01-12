@@ -21,15 +21,14 @@ public class MixinMouseHandler {
     @Unique private final Minecraft mcFancyMenu = Minecraft.getInstance();
 
     @Inject(method = "onScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;mouseScrolled(DDDD)Z"), cancellable = true)
-    private void beforeMouseScrollScreenFancyMenu(long $$0, double $$1, double $$2, CallbackInfo info) {
-        double offset = $$2;
-        if (Minecraft.ON_OSX && $$2 == 0) {
-            offset = $$1;
-        }
-        double scrollDelta = (this.mcFancyMenu.options.discreteMouseScroll().get() ? Math.signum(offset) : offset) * this.mcFancyMenu.options.mouseWheelSensitivity().get();
+    private void beforeMouseScrollScreenFancyMenu(long $$0, double scrollX, double scrollY, CallbackInfo info) {
+        boolean isDiscrete = mcFancyMenu.options.discreteMouseScroll().get();
+        double wheelSensitivity = mcFancyMenu.options.mouseWheelSensitivity().get();
+        double scrollDeltaX = (isDiscrete ? Math.signum(scrollX) : scrollX) * wheelSensitivity;
+        double scrollDeltaY = (isDiscrete ? Math.signum(scrollY) : scrollY) * wheelSensitivity;
         double mX = this.xpos * (double)this.mcFancyMenu.getWindow().getGuiScaledWidth() / (double)this.mcFancyMenu.getWindow().getScreenWidth();
         double mY = this.ypos * (double)this.mcFancyMenu.getWindow().getGuiScaledHeight() / (double)this.mcFancyMenu.getWindow().getScreenHeight();
-        ScreenMouseScrollEvent.Pre e = new ScreenMouseScrollEvent.Pre(mcFancyMenu.screen, mX, mY, scrollDelta);
+        ScreenMouseScrollEvent.Pre e = new ScreenMouseScrollEvent.Pre(mcFancyMenu.screen, mX, mY, scrollDeltaX, scrollDeltaY);
         EventHandler.INSTANCE.postEvent(e);
         if (e.isCanceled()) {
             info.cancel();
@@ -37,15 +36,14 @@ public class MixinMouseHandler {
     }
 
     @Inject(method = "onScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;mouseScrolled(DDDD)Z", shift = At.Shift.AFTER))
-    private void afterMouseScrollScreenFancyMenu(long $$0, double $$1, double $$2, CallbackInfo info) {
-        double offset = $$2;
-        if (Minecraft.ON_OSX && $$2 == 0) {
-            offset = $$1;
-        }
-        double scrollDelta = (this.mcFancyMenu.options.discreteMouseScroll().get() ? Math.signum(offset) : offset) * this.mcFancyMenu.options.mouseWheelSensitivity().get();
+    private void afterMouseScrollScreenFancyMenu(long $$0, double scrollX, double scrollY, CallbackInfo info) {
+        boolean isDiscrete = mcFancyMenu.options.discreteMouseScroll().get();
+        double wheelSensitivity = mcFancyMenu.options.mouseWheelSensitivity().get();
+        double scrollDeltaX = (isDiscrete ? Math.signum(scrollX) : scrollX) * wheelSensitivity;
+        double scrollDeltaY = (isDiscrete ? Math.signum(scrollY) : scrollY) * wheelSensitivity;
         double mX = this.xpos * (double)this.mcFancyMenu.getWindow().getGuiScaledWidth() / (double)this.mcFancyMenu.getWindow().getScreenWidth();
         double mY = this.ypos * (double)this.mcFancyMenu.getWindow().getGuiScaledHeight() / (double)this.mcFancyMenu.getWindow().getScreenHeight();
-        ScreenMouseScrollEvent.Post e = new ScreenMouseScrollEvent.Post(mcFancyMenu.screen, mX, mY, scrollDelta);
+        ScreenMouseScrollEvent.Post e = new ScreenMouseScrollEvent.Post(mcFancyMenu.screen, mX, mY, scrollDeltaX, scrollDeltaY);
         EventHandler.INSTANCE.postEvent(e);
     }
 

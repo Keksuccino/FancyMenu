@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
+import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
@@ -73,7 +74,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             int highlightPos = access.getHighlightPosFancyMenu() - access.getDisplayPosFancyMenu();
             String text = this.font.plainSubstrByWidth(this.getValue().substring(access.getDisplayPosFancyMenu()), this.getInnerWidth());
             boolean isCursorInsideVisibleText = cursorPos >= 0 && cursorPos <= text.length();
-            boolean isCursorVisible = this.isFocused() && access.getFrameFancyMenu() / 6 % 2 == 0 && isCursorInsideVisibleText;
+            boolean isCursorVisible = this.isFocused() && (Util.getMillis() - ((IMixinEditBox)this).getFocusedTimeFancyMenu()) / 300L % 2L == 0L && isCursorInsideVisibleText;
             int textX = bordered ? this.getX() + 4 : this.getX();
             int textY = bordered ? this.getY() + (this.height - 8) / 2 : this.getY();
             int textXAfterCursor = textX;
@@ -372,9 +373,9 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         //If select all, only select parts that are not prefix or suffix
         if (Screen.isSelectAll(keycode) && ((this.inputPrefix != null) || (this.inputSuffix != null))) {
             if (this.inputSuffix != null) {
-                this.moveCursorTo(this.getValue().length() - this.inputSuffix.length());
+                this.moveCursorTo(this.getValue().length() - this.inputSuffix.length(), false);
             } else {
-                this.moveCursorToEnd();
+                this.moveCursorToEnd(false);
             }
             this.setHighlightPos((this.inputPrefix != null) ? this.inputPrefix.length() : 0);
             return true;

@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.action.actions.other;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -158,7 +157,7 @@ public class EditMinecraftOptionAction extends Action {
         }
 
         @Override
-        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             super.render(graphics, mouseX, mouseY, partial);
             this.optionNameSuggestions.render(graphics, mouseX, mouseY);
         }
@@ -170,9 +169,9 @@ public class EditMinecraftOptionAction extends Action {
         }
 
         @Override
-        public boolean mouseScrolled(double $$0, double $$1, double $$2) {
-            if (this.optionNameSuggestions.mouseScrolled($$2)) return true;
-            return super.mouseScrolled($$0, $$1, $$2);
+        public boolean mouseScrolled(double $$0, double $$1, double scrollDeltaX, double scrollDeltaY) {
+            if (this.optionNameSuggestions.mouseScrolled(scrollDeltaY)) return true;
+            return super.mouseScrolled($$0, $$1, scrollDeltaX, scrollDeltaY);
         }
 
         @Override

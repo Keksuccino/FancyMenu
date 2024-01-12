@@ -166,9 +166,9 @@ public class IsMenuTitleRequirement extends LoadingRequirement {
         }
 
         @Override
-        public boolean mouseScrolled(double $$0, double $$1, double $$2) {
-            if (this.localizationKeySuggestions.mouseScrolled($$2)) return true;
-            return super.mouseScrolled($$0, $$1, $$2);
+        public boolean mouseScrolled(double $$0, double $$1, double scrollDeltaX, double scrollDeltaY) {
+            if (this.localizationKeySuggestions.mouseScrolled(scrollDeltaY)) return true;
+            return super.mouseScrolled($$0, $$1, scrollDeltaX, scrollDeltaY);
         }
 
         @Override

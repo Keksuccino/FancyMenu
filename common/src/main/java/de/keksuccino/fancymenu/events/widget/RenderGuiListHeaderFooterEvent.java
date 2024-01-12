@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.events.widget;
 
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractSelectionList;
 import de.keksuccino.fancymenu.util.event.acara.EventBase;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSelectionList;
@@ -25,11 +24,6 @@ public class RenderGuiListHeaderFooterEvent extends EventBase {
     @NotNull
     public AbstractSelectionList<?> getList() {
         return this.list;
-    }
-
-    @NotNull
-    public IMixinAbstractSelectionList getAccessor() {
-        return (IMixinAbstractSelectionList) this.list;
     }
 
     @NotNull

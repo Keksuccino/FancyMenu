@@ -30,7 +30,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
-import de.keksuccino.fancymenu.util.resource.resources.texture.SimpleTexture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
@@ -47,7 +47,7 @@ import java.util.function.Consumer;
 
 public class LayoutEditorUI {
 
-	private static final SimpleTexture CLOSE_EDITOR_TEXTURE = SimpleTexture.location(new ResourceLocation("fancymenu", "textures/menubar/icons/close.png"));
+	private static final PngTexture CLOSE_EDITOR_TEXTURE = PngTexture.location(new ResourceLocation("fancymenu", "textures/menubar/icons/close.png"));
 
 	private static MenuBar grandfatheredMenuBar = null;
 

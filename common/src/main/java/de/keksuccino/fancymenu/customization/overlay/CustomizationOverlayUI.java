@@ -44,7 +44,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.preload.ManageResourcePreLoadScreen;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resource.resources.texture.SimpleTexture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -68,8 +68,8 @@ public class CustomizationOverlayUI {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final SimpleTexture FM_LOGO_ICON_TEXTURE = SimpleTexture.location(new ResourceLocation("fancymenu", "textures/menubar/icons/fancymenu_logo.png"));
-    private static final SimpleTexture LEAVE_CURRENT_SCREEN_TEXTURE = SimpleTexture.location(new ResourceLocation("fancymenu", "textures/menubar/icons/exit.png"));
+    private static final PngTexture FM_LOGO_ICON_TEXTURE = PngTexture.location(new ResourceLocation("fancymenu", "textures/menubar/icons/fancymenu_logo.png"));
+    private static final PngTexture LEAVE_CURRENT_SCREEN_TEXTURE = PngTexture.location(new ResourceLocation("fancymenu", "textures/menubar/icons/exit.png"));
 
     private static MenuBar grandfatheredMenuBar = null;
 

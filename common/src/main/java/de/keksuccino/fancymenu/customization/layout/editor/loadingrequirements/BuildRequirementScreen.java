@@ -206,6 +206,10 @@ public class BuildRequirementScreen extends Screen {
 
     }
 
+    @Override
+    public void renderBackground(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {
+    }
+
     protected void setDescription(@Nullable LoadingRequirement requirement) {
 
         this.requirementDescriptionScrollArea.clearEntries();

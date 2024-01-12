@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
-import de.keksuccino.fancymenu.util.resource.resources.texture.SimpleTexture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
 import net.minecraft.client.Minecraft;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -109,13 +109,13 @@ public class CursorHandler {
         public final int hotspotX;
         public final int hotspotY;
         @NotNull
-        public final SimpleTexture texture;
+        public final PngTexture texture;
         @NotNull
         public final String textureName;
 
         @SuppressWarnings("all")
         @Nullable
-        public static CustomCursor create(@NotNull SimpleTexture texture, int hotspotX, int hotspotY, @NotNull String textureName) {
+        public static CustomCursor create(@NotNull PngTexture texture, int hotspotX, int hotspotY, @NotNull String textureName) {
             CustomCursor customCursor = null;
             InputStream in = null;
             MemoryStack memStack = null;
@@ -173,7 +173,7 @@ public class CursorHandler {
             return customCursor;
         }
 
-        protected CustomCursor(long id_long, int hotspotX, int hotspotY, @NotNull SimpleTexture texture, @NotNull String textureName) {
+        protected CustomCursor(long id_long, int hotspotX, int hotspotY, @NotNull PngTexture texture, @NotNull String textureName) {
             this.id_long = id_long;
             this.hotspotX = hotspotX;
             this.hotspotY = hotspotY;

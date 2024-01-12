@@ -27,7 +27,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resource.resources.texture.SimpleTexture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -47,7 +47,7 @@ import java.util.function.Consumer;
 public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> extends CellScreen {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    protected static final SimpleTexture WARNING_TEXTURE = SimpleTexture.location(new ResourceLocation("fancymenu", "textures/warning_framed_24x24.png"));
+    protected static final PngTexture WARNING_TEXTURE = PngTexture.location(new ResourceLocation("fancymenu", "textures/warning_framed_24x24.png"));
 
     @Nullable
     protected FileTypeGroup<F> allowedFileTypes;

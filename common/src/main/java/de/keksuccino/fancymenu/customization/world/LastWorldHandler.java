@@ -4,7 +4,6 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
-
 import java.io.File;
 import java.util.List;
 

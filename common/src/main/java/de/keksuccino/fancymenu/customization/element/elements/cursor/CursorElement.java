@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resource.resources.texture.SimpleTexture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -76,7 +76,7 @@ public class CursorElement extends AbstractElement {
 
         if (this.textureSupplier != null) {
             ITexture t = this.textureSupplier.get();
-            if (t instanceof SimpleTexture s) {
+            if (t instanceof PngTexture s) {
                 ResourceLocation loc = t.getResourceLocation();
                 if ((loc != this.lastLocation) || (this.lastHotspotX != this.hotspotX) || (this.lastHotspotY != this.hotspotY)) {
                     if (loc != null) {

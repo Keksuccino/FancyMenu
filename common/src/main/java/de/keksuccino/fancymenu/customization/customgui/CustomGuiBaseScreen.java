@@ -35,13 +35,11 @@ public class CustomGuiBaseScreen extends Screen {
 	@Override
 	public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-		this.renderBackground(graphics);
+		super.render(graphics, mouseX, mouseY, partial);
 
 		String title = this.getTitleString();
 		Component titleComp = LocalizationUtils.isLocalizationKey(title) ? Component.translatable(title) : Component.literal(PlaceholderParser.replacePlaceholders(title));
 		graphics.drawCenteredString(this.font, titleComp, this.width / 2, 8, -1);
-
-		super.render(graphics, mouseX, mouseY, partial);
 
 	}
 

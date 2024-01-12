@@ -27,7 +27,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -119,15 +118,6 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     }
 
     @Override
-    public void tick() {
-        for (ScrollAreaEntry e : this.scrollArea.getEntries()) {
-            if (e instanceof LayerElementEntry l) {
-                l.editLayerNameBox.tick();
-            }
-        }
-    }
-
-    @Override
     protected @Nullable ResizingEdge updateHoveredResizingEdge() {
         if (this.scrollArea.isMouseInteractingWithGrabbers()) return null;
         return super.updateHoveredResizingEdge();
@@ -173,9 +163,9 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     }
 
     @Override
-    protected boolean mouseScrolledComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, double scrollDelta) {
-        if (super.mouseScrolledComponent(realMouseX, realMouseY, translatedMouseX, translatedMouseY, scrollDelta)) return true;
-        return this.scrollArea.mouseScrolled(realMouseX, realMouseY, scrollDelta);
+    protected boolean mouseScrolledComponent(double realMouseX, double realMouseY, double translatedMouseX, double translatedMouseY, double scrollDeltaX, double scrollDeltaY) {
+        if (super.mouseScrolledComponent(realMouseX, realMouseY, translatedMouseX, translatedMouseY, scrollDeltaX, scrollDeltaY)) return true;
+        return this.scrollArea.mouseScrolled(realMouseX, realMouseY, scrollDeltaX, scrollDeltaY);
     }
 
     @Override
@@ -275,7 +265,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             this.editLayerNameBox.setVisible(true);
             this.editLayerNameBox.setFocused(true);
             this.editLayerNameBox.setValue(this.getLayerName());
-            this.editLayerNameBox.moveCursorToEnd();
+            this.editLayerNameBox.moveCursorToEnd(false);
             this.displayEditLayerNameBox = true;
         }
 

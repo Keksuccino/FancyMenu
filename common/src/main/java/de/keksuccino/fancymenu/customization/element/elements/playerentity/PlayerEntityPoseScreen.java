@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.playerentity;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -20,7 +19,6 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -242,7 +240,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         super.render(graphics, mouseX, mouseY, partial);
 
@@ -374,10 +372,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
         s = PlaceholderParser.replacePlaceholders(s);
         s = s.replace(" ", "");
         try {
-            float f = Float.parseFloat(s);
-//            if (f > 180) f = 180;
-//            if (f < -180) f = -180;
-            return f;
+            return Float.parseFloat(s);
         } catch (Exception ignore) {}
         return 0.0F;
     }

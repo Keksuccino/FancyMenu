@@ -49,6 +49,7 @@ public class UIBase extends RenderingUtils {
 		return widget;
 	}
 
+	@SuppressWarnings("all")
 	private static ExtendedSliderButton applyDefaultSliderSkinTo(ExtendedSliderButton slider) {
 		slider.setBackgroundColor(UIBase.getUIColorTheme().element_background_color_normal);
 		slider.setBorderColor(UIBase.getUIColorTheme().element_border_color_normal);

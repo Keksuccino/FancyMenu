@@ -54,8 +54,6 @@ public class ChooseSlideshowScreen extends Screen {
     @Override
     protected void init() {
 
-        super.init();
-
         this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
             this.callback.accept(this.selectedSlideshowName);
         }) {
@@ -136,6 +134,10 @@ public class ChooseSlideshowScreen extends Screen {
 
         super.render(graphics, mouseX, mouseY, partial);
 
+    }
+
+    @Override
+    public void renderBackground(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {
     }
 
     protected void setSelectedSlideshow(@Nullable ChooseSlideshowScreen.SlideshowScrollEntry entry) {

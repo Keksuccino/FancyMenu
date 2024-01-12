@@ -78,11 +78,6 @@ public class InputFieldElement extends AbstractElement {
     }
 
     @Override
-    public void tick() {
-        this.editBox.tick();
-    }
-
-    @Override
     public @Nullable List<GuiEventListener> getWidgetsToRegister() {
         return ListUtils.of(this.editBox);
     }

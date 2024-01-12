@@ -53,8 +53,6 @@ public class ManageLayoutsScreen extends Screen {
     @Override
     protected void init() {
 
-        super.init();
-
         this.sortingButton = new ExtendedButton(0, 0, 150, this.font.lineHeight + 4, Component.literal(""), (button) -> {
             this.sortBy.next();
             this.updateLayoutScrollArea();
@@ -169,6 +167,10 @@ public class ManageLayoutsScreen extends Screen {
 
         super.render(graphics, mouseX, mouseY, partial);
 
+    }
+
+    @Override
+    public void renderBackground(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {
     }
 
     @Nullable

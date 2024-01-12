@@ -6,29 +6,34 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
-
 import java.util.List;
 
 public class ScreenMouseScrollEvent extends EventBase {
 
     private final Screen screen;
-    private final double scrollDelta;
+    private final double scrollDeltaX;
+    private final double scrollDeltaY;
     private final double mouseX;
     private final double mouseY;
 
-    protected ScreenMouseScrollEvent(Screen screen, double mouseX, double mouseY, double scrollDelta) {
+    protected ScreenMouseScrollEvent(Screen screen, double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
         this.screen = screen;
         this.mouseX = mouseX;
         this.mouseY = mouseY;
-        this.scrollDelta = scrollDelta;
+        this.scrollDeltaX = scrollDeltaX;
+        this.scrollDeltaY = scrollDeltaY;
     }
 
     public Screen getScreen() {
         return screen;
     }
 
-    public double getScrollDelta() {
-        return scrollDelta;
+    public double getScrollDeltaX() {
+        return scrollDeltaX;
+    }
+
+    public double getScrollDeltaY() {
+        return scrollDeltaY;
     }
 
     public double getMouseX() {
@@ -68,8 +73,8 @@ public class ScreenMouseScrollEvent extends EventBase {
 
     public static class Pre extends ScreenMouseScrollEvent {
 
-        public Pre(Screen screen, double mouseX, double mouseY, double scrollDelta) {
-            super(screen, mouseX, mouseY, scrollDelta);
+        public Pre(Screen screen, double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
+            super(screen, mouseX, mouseY, scrollDeltaX, scrollDeltaY);
         }
 
         @Override
@@ -81,8 +86,8 @@ public class ScreenMouseScrollEvent extends EventBase {
 
     public static class Post extends ScreenMouseScrollEvent {
 
-        public Post(Screen screen, double mouseX, double mouseY, double scrollDelta) {
-            super(screen, mouseX, mouseY, scrollDelta);
+        public Post(Screen screen, double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
+            super(screen, mouseX, mouseY, scrollDeltaX, scrollDeltaY);
         }
 
     }
