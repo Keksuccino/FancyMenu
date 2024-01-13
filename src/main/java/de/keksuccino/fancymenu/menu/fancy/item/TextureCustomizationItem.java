@@ -50,18 +50,6 @@ public class TextureCustomizationItem extends CustomizationItemBase {
 							}
 						}
 
-						//TODO experimental (trying to fix the log spam bug when advanced sizing/positioning is used)
-//						ratio = (double) w / (double) h;
-//
-//					    //Calculate missing width
-//					    if ((this.getWidth() < 0) && (this.getHeight() >= 0)) {
-//					    	this.setWidth((int)(this.getHeight() * ratio));
-//					    }
-//					    //Calculate missing height
-//					    if ((this.getHeight() < 0) && (this.getWidth() >= 0)) {
-//					    	this.setHeight((int)(this.getWidth() / ratio));
-//					    }
-						
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
