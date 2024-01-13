@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.events.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
-import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
+import de.keksuccino.fancymenu.mainwindow.WindowHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonMimeHandler;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
@@ -107,7 +107,7 @@ public class MenuCustomizationEvents {
 
 		//Stopping menu music when deactivated in config
 		if ((Minecraft.getInstance().level == null)) {
-			if (!FancyMenu.config.getOrDefault("playmenumusic", true)) {
+			if (!FancyMenu.getConfig().getOrDefault("playmenumusic", true)) {
 				Minecraft.getInstance().getMusicManager().stopPlaying();
 			}
 		}
@@ -137,7 +137,7 @@ public class MenuCustomizationEvents {
 			this.iconSetAfterFullscreen = false;
 		} else {
 			if (!this.iconSetAfterFullscreen) {
-				MainWindowHandler.updateWindowIcon();
+				WindowHandler.updateWindowIcon();
 				this.iconSetAfterFullscreen = true;
 			}
 		}
@@ -145,7 +145,7 @@ public class MenuCustomizationEvents {
 		if (!scaleChecked && (Minecraft.getInstance().options != null)) {
 			scaleChecked = true;
 			
-			int scale = FancyMenu.config.getOrDefault("defaultguiscale", -1);
+			int scale = FancyMenu.getConfig().getOrDefault("defaultguiscale", -1);
 			if ((scale != -1) && (scale != 0)) {
 				File f = FancyMenu.INSTANCE_DATA_DIR;
 				if (!f.exists()) {

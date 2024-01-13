@@ -77,7 +77,7 @@ public class BackgroundOptionsPopup extends FMPopup {
 		this.typeSwitcher.setValueBackgroundColor(UIBase.getButtonIdleColor());
 
 		this.animationSwitcher = new HorizontalSwitcher(120, true);
-		for (String s : AnimationHandler.getCustomAnimationNames()) {
+		for (String s : AnimationHandler.getExternalAnimationNames()) {
 			this.animationSwitcher.addValue(s);
 		}
 		this.animationSwitcher.setButtonColor(UIBase.getButtonIdleColor(), UIBase.getButtonHoverColor(), UIBase.getButtonBorderIdleColor(), UIBase.getButtonBorderHoverColor(), 1);

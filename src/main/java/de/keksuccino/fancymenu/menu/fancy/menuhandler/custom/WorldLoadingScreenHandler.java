@@ -55,12 +55,12 @@ public class WorldLoadingScreenHandler extends MenuHandlerBase {
 //				NarratorChatListener.INSTANCE.sayNow((Component.translatable("narrator.loading", s)).getString());
 			}
 			
-			if (FancyMenu.config.getOrDefault("showloadingscreenanimation", true)) {
+			if (FancyMenu.getConfig().getOrDefault("showloadingscreenanimation", true)) {
 				LevelLoadingScreen.renderChunks(graphics, getTracker(screen), j, k + 30, 2, 0);
 			}
 		}
 		
-		if (FancyMenu.config.getOrDefault("showloadingscreenpercent", true)) {
+		if (FancyMenu.getConfig().getOrDefault("showloadingscreenpercent", true)) {
 			graphics.drawCenteredString(font, s, j, k - 9 / 2 - 30, 16777215);
 		}
 		

@@ -27,7 +27,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.forgespi.language.IModInfo;
 import org.apache.commons.io.FileUtils;
-
 import java.awt.*;
 import java.io.File;
 import java.io.InputStream;
@@ -38,9 +37,9 @@ import java.util.function.Consumer;
 @SuppressWarnings("all")
 public class SetupSharingEngine {
 
-    public static final File MENU_IDENTIFIERS_DATABASE_FILE = new File(Minecraft.getInstance().gameDirectory, "config/fancymenu/menu_identifiers.db");
-    public static final File FM_SETUPS_DIR = new File(Minecraft.getInstance().gameDirectory, "fancymenu_setups/exported_setups");
-    public static final File SETUP_BACKUP_DIR = new File(Minecraft.getInstance().gameDirectory, "fancymenu_setups/.backups");
+    public static final File MENU_IDENTIFIERS_DATABASE_FILE = new File(FancyMenu.MOD_DIR, "/menu_identifiers.db");
+    public static final File FM_SETUPS_DIR = new File(FancyMenu.getGameDirectory(), "/fancymenu_setups/exported_setups");
+    public static final File SETUP_BACKUP_DIR = new File(FancyMenu.getGameDirectory(), "/fancymenu_setups/.backups");
 
     protected static MenuIdentifierDatabase menuIdentifierDatabase = null;
 
@@ -460,7 +459,7 @@ public class SetupSharingEngine {
 
             //Export custom splash text file from mod config
             try {
-                String splashPath = FancyMenu.config.getOrDefault("splashtextfile", "");
+                String splashPath = FancyMenu.getConfig().getOrDefault("splashtextfile", "");
                 if (splashPath.toLowerCase().endsWith(".txt")) {
                     File splashFile = new File(splashPath);
                     if (splashFile.isFile()) {
@@ -476,7 +475,7 @@ public class SetupSharingEngine {
                     }
                 }
             } catch (Exception e2) {
-                unableToExport.add("CONFIG: CUSTOM VANILLA SPLASH FILE: " + FancyMenu.config.getOrDefault("splashtextfile", ""));
+                unableToExport.add("CONFIG: CUSTOM VANILLA SPLASH FILE: " + FancyMenu.getConfig().getOrDefault("splashtextfile", ""));
                 e2.printStackTrace();
             }
 
@@ -651,7 +650,7 @@ public class SetupSharingEngine {
 
     protected static List<AdvancedAnimationMeta> getAnimationMetas() {
         List<AdvancedAnimationMeta> l = new ArrayList<>();
-        for (String s : AnimationHandler.getCustomAnimationNames()) {
+        for (String s : AnimationHandler.getExternalAnimationNames()) {
             AdvancedAnimationMeta meta = new AdvancedAnimationMeta();
             meta.name = s;
             if (AnimationHandler.animationExists(s)) {

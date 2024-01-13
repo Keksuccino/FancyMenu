@@ -77,7 +77,7 @@ public class ButtonBackgroundPopup extends FMPopup {
 
         List<String> aniList = new ArrayList<String>();
         aniList.add("-- " + Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.type.animation.none") + " --");
-        aniList.addAll(AnimationHandler.getCustomAnimationNames());
+        aniList.addAll(AnimationHandler.getExternalAnimationNames());
         String[] aniArray = aniList.toArray(new String[0]);
 
         this.normalBackgroundAnimationSwitcher = new HorizontalSwitcher(200, true, aniArray);

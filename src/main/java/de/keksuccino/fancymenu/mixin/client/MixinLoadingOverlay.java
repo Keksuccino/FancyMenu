@@ -9,7 +9,6 @@ import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.custom.MainMenuHandler;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.LoadingOverlay;
 import net.minecraft.server.packs.resources.ReloadInstance;
 import net.minecraftforge.client.event.ScreenEvent;
@@ -22,30 +21,25 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.function.Consumer;
 
-
 @Mixin(LoadingOverlay.class)
 public abstract class MixinLoadingOverlay {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	private static boolean animationsLoaded = false;
 	private static boolean firstScreenInit = true;
 	private MenuHandlerBase menuHandler = null;
 
 	@Inject(method = "<init>", at = @At(value = "RETURN"))
-	private void onConstructFancyMenu(Minecraft mc, ReloadInstance reloadInstance, Consumer consumer, boolean b, CallbackInfo info) {
-		if (!animationsLoaded) {
-			
-			FancyMenu.initConfig();
-			animationsLoaded = true;
-			LOGGER.info("[FANCYMENU] Pre-loading animations if enabled in config..");
-			AnimationHandler.preloadAnimations();
+	private void onConstructFancyMenu(Minecraft mc, ReloadInstance reloadInstance, Consumer<?> consumer, boolean b, CallbackInfo info) {
+		//Preload animation frames to avoid lagging when rendering them for the first time
+		if (FancyMenu.getConfig().getOrDefault("preloadanimations", true) && !AnimationHandler.preloadingCompleted()) {
+			AnimationHandler.preloadAnimations(false);
 		}
 	}
 
 	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
 	private void beforeRenderScreenFancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
-		if ((Minecraft.getInstance().screen != null) && (this.menuHandler != null) && MenuCustomization.isMenuCustomizable(Minecraft.getInstance().screen)) {
+		if ((this.menuHandler != null) && MenuCustomization.isMenuCustomizable(Minecraft.getInstance().screen)) {
 			//Manually call onRenderPre of the screen's menu handler, because it doesn't get called automatically in the loading screen
 			this.menuHandler.onRenderPre(new ScreenEvent.Render.Pre(Minecraft.getInstance().screen, graphics, mouseX, mouseY, partial));
 		}
@@ -53,7 +47,7 @@ public abstract class MixinLoadingOverlay {
 
 	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V", shift = At.Shift.AFTER))
 	private void afterRenderScreenFancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
-		if ((Minecraft.getInstance().screen != null) && (this.menuHandler != null) && MenuCustomization.isMenuCustomizable(Minecraft.getInstance().screen)) {
+		if ((this.menuHandler != null) && MenuCustomization.isMenuCustomizable(Minecraft.getInstance().screen)) {
 			//This is to correctly render the title menu
 			if (this.menuHandler instanceof MainMenuHandler) {
 				Minecraft.getInstance().screen.renderBackground(graphics);
@@ -66,9 +60,9 @@ public abstract class MixinLoadingOverlay {
 	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;init(Lnet/minecraft/client/Minecraft;II)V", shift = At.Shift.AFTER))
 	private void afterInitScreenFancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
 		if (Minecraft.getInstance().screen != null) {
-			//Enable animation engine and customization engine before screen init to not block the customization engine
-			AnimationHandler.setReady(true);
-			MenuCustomization.allowScreenCustomization = true;
+			//Update resource pack animation sizes after reloading textures and when starting the game
+			LOGGER.info("[FANCYMENU] Updating animation sizes..");
+			AnimationHandler.updateAnimationSizes();
 			//Cache the menu handler of the screen to be able to call some of its render events
 			this.menuHandler = MenuHandlerRegistry.getHandlerFor(Minecraft.getInstance().screen);
 			//If it's the first time a screen gets initialized, soft-reload the screen's handler, so first-time stuff works when fading to the Title menu
@@ -79,7 +73,16 @@ public abstract class MixinLoadingOverlay {
 			//Reset isNewMenu, so first-time stuff and on-load stuff works correctly, because the menu got initialized already (this is after screen init)
 			MenuCustomization.setIsNewMenu(true);
 			//Set the screen again to cover all customization init stages
-			Minecraft.getInstance().setScreen(Minecraft.getInstance().screen);
+			MenuCustomization.reInitCurrentScreen();
+		}
+	}
+
+	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;setOverlay(Lnet/minecraft/client/gui/screens/Overlay;)V"))
+	private void beforeClosingOverlayFancyMenu(GuiGraphics $$0, int $$1, int $$2, float $$3, CallbackInfo ci) {
+		if (Minecraft.getInstance().screen == null) {
+			//Update resource pack animation sizes after reloading textures if fading to no screen (while in-game)
+			LOGGER.info("[FANCYMENU] Updating animation sizes..");
+			AnimationHandler.updateAnimationSizes();
 		}
 	}
 

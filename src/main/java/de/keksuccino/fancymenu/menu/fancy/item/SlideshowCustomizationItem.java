@@ -21,7 +21,7 @@ public class SlideshowCustomizationItem extends CustomizationItemBase {
 			if ((this.value != null) && SlideshowHandler.slideshowExists(this.value)) {
 				this.renderer = SlideshowHandler.getSlideshow(this.value);
 			} else {
-				if (FancyMenu.config.getOrDefault("showdebugwarnings", true)) {
+				if (FancyMenu.getConfig().getOrDefault("showdebugwarnings", true)) {
 					System.out.println("###################### WARNING [FANCYMENU] ######################");
 					System.out.println("SLIDESHOW NOT FOUND: " + this.value);
 					System.out.println("#################################################################");

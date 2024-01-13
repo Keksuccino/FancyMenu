@@ -75,7 +75,7 @@ public class CustomizationHelper {
 		MenuCustomization.reload();
 		MenuHandlerRegistry.setActiveHandler(null);
 		CustomGuiLoader.loadCustomGuis();
-		if (!FancyMenu.config.getOrDefault("showcustomizationbuttons", true)) {
+		if (!FancyMenu.getConfig().getOrDefault("showcustomizationbuttons", true)) {
 			CustomizationHelperUI.showButtonInfo = false;
 			CustomizationHelperUI.showMenuInfo = false;
 		}
@@ -93,12 +93,12 @@ public class CustomizationHelper {
 	public static void clearKonkreteTextureCache() {
 		try {
 
-			Field texturesField = TextureHandler.class.getDeclaredField("textures");
+			Field texturesField = TextureHandler.class.getDeclaredField("TEXTURES");
 			texturesField.setAccessible(true);
 			Map<String, ITextureResourceLocation> textures = (Map<String, ITextureResourceLocation>) texturesField.get(TextureHandler.class);
 			textures.clear();
 
-			Field gifsField = TextureHandler.class.getDeclaredField("gifs");
+			Field gifsField = TextureHandler.class.getDeclaredField("GIFS");
 			gifsField.setAccessible(true);
 			Map<String, ExternalGifAnimationRenderer> gifs = (Map<String, ExternalGifAnimationRenderer>) gifsField.get(TextureHandler.class);
 			for (ExternalGifAnimationRenderer g : gifs.values()) {

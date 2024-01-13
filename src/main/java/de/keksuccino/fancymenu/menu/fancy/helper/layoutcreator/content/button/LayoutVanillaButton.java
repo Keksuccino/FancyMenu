@@ -520,7 +520,7 @@ public class LayoutVanillaButton extends LayoutElement {
 	}
 
 	public void displaySetOrientationNotification() {
-		if (FancyMenu.config.getOrDefault("showvanillamovewarning", true)) {
+		if (FancyMenu.getConfig().getOrDefault("showvanillamovewarning", true)) {
 			FMNotificationPopup p = new FMNotificationPopup(300, new Color(0,0,0,0), 240, null, StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.element.vanilla.orientation_needed"), "%n%"));
 			PopupHandler.displayPopup(p);
 		}
@@ -532,7 +532,7 @@ public class LayoutVanillaButton extends LayoutElement {
 
 	@Override
 	public void destroyObject() {
-		if (FancyMenu.config.getOrDefault("editordeleteconfirmation", true)) {
+		if (FancyMenu.getConfig().getOrDefault("editordeleteconfirmation", true)) {
 			FMNotificationPopup pop = new FMNotificationPopup(300, new Color(0,0,0,0), 240, null, StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.element.vanilla.delete.confirm"), "%n%"));
 			PopupHandler.displayPopup(pop);
 		}

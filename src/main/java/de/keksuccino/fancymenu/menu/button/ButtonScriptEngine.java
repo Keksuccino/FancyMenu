@@ -299,11 +299,11 @@ public class ButtonScriptEngine {
 			if (action.equalsIgnoreCase("mutebackgroundsounds")) {
 				if (value != null) {
 					if (value.equalsIgnoreCase("true")) {
-						FancyMenu.config.setValue("playbackgroundsounds", false);
+						FancyMenu.getConfig().setValue("playbackgroundsounds", false);
 						MenuCustomization.stopSounds();
 					}
 					if (value.equalsIgnoreCase("false")) {
-						FancyMenu.config.setValue("playbackgroundsounds", true);
+						FancyMenu.getConfig().setValue("playbackgroundsounds", true);
 						CustomizationHelper.reloadSystemAndMenu();
 					}
 				}

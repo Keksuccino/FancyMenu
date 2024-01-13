@@ -74,7 +74,7 @@ public class GameIntroScreen extends Screen {
 			
 			if (!this.renderer.isFinished()) {
 				this.renderer.render(graphics);
-				if (FancyMenu.config.getOrDefault("allowgameintroskip", true)) {
+				if (FancyMenu.getConfig().getOrDefault("allowgameintroskip", true)) {
 					this.skipable = true;
 				}
 			} else {
@@ -92,7 +92,7 @@ public class GameIntroScreen extends Screen {
 			graphics.pose().pushPose();
 			graphics.pose().scale(1.05F, 1.05F, 1.05F);
 			String text = Locals.localize("gameintro.skip");
-			String customtext = StringUtils.convertFormatCodes(FancyMenu.config.getOrDefault("customgameintroskiptext", ""), "&", "§");
+			String customtext = StringUtils.convertFormatCodes(FancyMenu.getConfig().getOrDefault("customgameintroskiptext", ""), "&", "§");
 			if ((customtext != null) && !customtext.equals("")) {
 				text = customtext;
 			}

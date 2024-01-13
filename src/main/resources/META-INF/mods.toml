@@ -1,15 +1,15 @@
 # The name of the mod loader type to load - for regular FML @Mod mods it should be javafml
 modLoader="javafml" #mandatory
 # A version range to match for said mod loader - for regular FML @Mod it will be the forge version
-loaderVersion="[46,)" #mandatory This is typically bumped every Minecraft version by Forge. See our download page for lists of versions.
+loaderVersion="[47,)" #mandatory This is typically bumped every Minecraft version by Forge. See our download page for lists of versions.
 # The mod license
-license="DSMSL (DON'T SNATCH MA STUFF LICENSE)"
+license="DSMSLv2 (DON'T SNATCH MA STUFF LICENSE v2)"
 # A list of mods - how many allowed here is determined by the individual mod loader
 [[mods]] #mandatory
 # The modid of the mod
 modId="fancymenu" #mandatory
 # The version number of the mod - there's a few well known ${} variables useable here or just hardcode it
-version="2.14.7" #mandatory
+version="2.14.13" #mandatory
  # A display name for the mod
 displayName="FancyMenu" #mandatory
 # A text field displayed in the mod UI
@@ -19,15 +19,15 @@ description='''Give your life a fancy touch. You deserve it.
 
 COPYRIGHT:
 
-> FancyMenu © Copyright 2020-2023 Keksuccino.
-  FancyMenu is licensed under DSMSL (DON'T SNATCH MA STUFF LICENSE).
+> FancyMenu © Copyright 2020-2024 Keksuccino.
+  FancyMenu is licensed under DSMSLv2 (DON'T SNATCH MA STUFF LICENSE v2).
   See https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md for more information about this license.'''
 
 [[dependencies.fancymenu]]
 modId="konkrete"
 mandatory=true
 ordering="NONE"
-versionRange="[1.6.0,)"
+versionRange="[1.8.0,1.9.0)"
 side="BOTH"
 
 [[dependencies.fancymenu]]
@@ -41,19 +41,19 @@ side="BOTH"
 modId="drippyloadingscreen"
 mandatory=false
 ordering="NONE"
-versionRange="[2.2.0,)"
+versionRange="[2.2.3,3.0.0)"
 side="BOTH"
 
 [[dependencies.fancymenu]]
 modId="forge"
 mandatory=true
-versionRange="[46.0.0,)"
+versionRange="[47.0.18,)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.fancymenu]]
 modId="minecraft"
 mandatory=true
-versionRange="[1.20,)"
+versionRange="[1.20.1,1.20.2)"
 ordering="NONE"
 side="BOTH"

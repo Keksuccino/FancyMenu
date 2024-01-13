@@ -9,7 +9,7 @@ import net.minecraft.client.gui.screens.Screen;
 public class FMConfigScreen extends ConfigScreen {
 
 	public FMConfigScreen(Screen parent) {
-		super(FancyMenu.config, Locals.localize("fancymenu.config"), parent);
+		super(FancyMenu.getConfig(), Locals.localize("fancymenu.config"), parent);
 	}
 	
 	@Override

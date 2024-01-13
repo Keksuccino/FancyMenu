@@ -14,7 +14,7 @@ public class AdvancedMusicTicker extends MusicManager {
 
 	@Override
 	public void startPlaying(Music type) {
-		if ((Minecraft.getInstance().level == null) && !FancyMenu.config.getOrDefault("playmenumusic", true)) {
+		if ((Minecraft.getInstance().level == null) && !FancyMenu.getConfig().getOrDefault("playmenumusic", true)) {
 			this.stopPlaying();
 			return;
 		}
