@@ -1131,6 +1131,7 @@ public class LayoutEditorScreen extends Screen {
 				sec.addEntry("action", "addtexture");
 				sec.addEntry("path", path);
 				sec.addEntry("height", "100");
+				sec.addEntry("width", "100");
 				sec.addEntry("y", "" + (int)(this.ui.bar.getHeight() * UIBase.getUIScale()));
 
 				TextureCustomizationItem i = new TextureCustomizationItem(sec);
