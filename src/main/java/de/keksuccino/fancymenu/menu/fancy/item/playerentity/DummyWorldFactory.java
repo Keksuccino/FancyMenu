@@ -46,7 +46,7 @@ public class DummyWorldFactory {
 		public DummyClientWorld() {
 			super(new ClientPacketListener(Minecraft.getInstance(), new TitleScreen(), new Connection(PacketFlow.CLIENTBOUND), new GameProfile(UUID.randomUUID(), "steve"), getTelemetryManager()), new ClientLevelData(Difficulty.EASY, false, false), null, getDummyDimensionTypeHolder(), 0, 0, null, null, false, 239239L);
 		}
-		//TODO übernehmen
+		
 		@Override
 		public ResourceKey<Level> dimension() {
 			return ResourceKey.create(ResourceKey.createRegistryKey(new ResourceLocation("")), new ResourceLocation(""));

@@ -17,7 +17,6 @@ public class TitleScreenButtonsIdentificationContext extends MenuButtonsIdentifi
         return TitleScreen.class;
     }
 
-    //TODO NEW IN 1.19
     @Nullable
     @Override
     protected String getRawCompatibilityIdentifierForButton(ButtonData data) {

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.mixin.client.IMixinScreen;
 import net.minecraft.client.Minecraft;
@@ -33,10 +34,10 @@ public class ButtonCache {
 	private static Map<String, AbstractWidget> customButtons = new HashMap<String, AbstractWidget>();
 	
 	@SubscribeEvent
-	public void updateCache(GuiScreenEvent.InitGuiEvent.Post e) {
+	public void updateCache(InitOrResizeScreenEvent.Post e) {
 		if (!caching) {
 			cached = false;
-			current = e.getGui();
+			current = e.getScreen();
 		}
 	}
 	

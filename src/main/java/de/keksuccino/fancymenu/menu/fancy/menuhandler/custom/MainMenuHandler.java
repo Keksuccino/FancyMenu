@@ -8,10 +8,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.compatibility.MinecraftCompatibilityUtils;
-import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
-import de.keksuccino.fancymenu.events.PlayWidgetClickSoundEvent;
-import de.keksuccino.fancymenu.events.RenderGuiListBackgroundEvent;
-import de.keksuccino.fancymenu.events.RenderWidgetBackgroundEvent;
+import de.keksuccino.fancymenu.events.*;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
@@ -82,11 +79,11 @@ public class MainMenuHandler extends MenuHandlerBase {
 
 	@SubscribeEvent
 	@Override
-	public void onInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {
-		if (this.shouldCustomize(e.getGui())) {
-			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
-				if (e.getGui() instanceof TitleScreen) {
-					setShowFadeInAnimation(false, (TitleScreen) e.getGui());
+	public void onInitPre(InitOrResizeScreenEvent.Pre e) {
+		if (this.shouldCustomize(e.getScreen())) {
+			if (MenuCustomization.isMenuCustomizable(e.getScreen())) {
+				if (e.getScreen() instanceof TitleScreen) {
+					setShowFadeInAnimation(false, (TitleScreen) e.getScreen());
 				}
 			}
 		}

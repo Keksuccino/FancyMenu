@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
@@ -225,7 +227,7 @@ public class SplashTextCustomizationItem extends CustomizationItemBase {
 	}
 	
 	@SubscribeEvent
-	public static void onInitScreenPre(GuiScreenEvent.InitGuiEvent.Pre e) {
+	public static void onInitScreenPre(InitOrResizeScreenEvent.Pre e) {
 		Screen s = Minecraft.getInstance().screen;
 		if (s != null) {
 			if ((lastScreen == null) || !lastScreen.getClass().getName().equals(s.getClass().getName())) {

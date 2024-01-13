@@ -37,11 +37,9 @@ import java.util.function.Consumer;
 
 public class SetupSharingEngine {
 
-    //TODO übernehmen 4
     public static final File MENU_IDENTIFIERS_DATABASE_FILE = new File(Minecraft.getInstance().gameDirectory, "config/fancymenu/menu_identifiers.db");
     public static final File FM_SETUPS_DIR = new File(Minecraft.getInstance().gameDirectory, "fancymenu_setups/exported_setups");
     public static final File SETUP_BACKUP_DIR = new File(Minecraft.getInstance().gameDirectory, "fancymenu_setups/.backups");
-    //---------------------
 
     protected static MenuIdentifierDatabase menuIdentifierDatabase = null;
 
@@ -686,7 +684,7 @@ public class SetupSharingEngine {
                         meta.resourcesPath = lmrAni.getPath();
                         return meta;
                     }
-                    //TODO übernehmen 2
+
                     File resPackDir = new File(Minecraft.getInstance().gameDirectory, "resourcepacks");
                     if (resPackDir.isDirectory()) {
                         for (File f : resPackDir.listFiles()) {
@@ -892,7 +890,7 @@ public class SetupSharingEngine {
                                             File targetDir = new File(targetRaw.getAbsolutePath().replace("\\", "/"));
                                             if (targetDir.isDirectory()) {
                                                 try {
-                                                    //TODO übernehmen 2
+
                                                     File fmFolder = FancyMenu.MOD_DIR;
                                                     File customizationFolder = new File(fmFolder.getPath() + "/customization");
                                                     File customizableMenusFile = new File(fmFolder.getPath() + "/customizablemenus.txt");
@@ -1093,7 +1091,7 @@ public class SetupSharingEngine {
                     return true;
                 }
                 if (!isCustomGuiName(identifier)) {
-                    Class.forName(identifier);
+                    Class.forName(identifier, false, SetupSharingEngine.class.getClassLoader());
                 }
                 return true;
             } catch (Exception e2) {}
@@ -1155,7 +1153,7 @@ public class SetupSharingEngine {
                         if (l.contains(invalidIdentifier)) {
                             for (String s : l) {
                                 try {
-                                    Class.forName(s);
+                                    Class.forName(s, false, SetupSharingEngine.class.getClassLoader());
                                     return s;
                                 } catch (Exception e2) {}
                             }

@@ -626,7 +626,7 @@ public class LayoutEditorUI extends UIBase {
 			editMenuTitleButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.edit_menu_title.desc"), "%n%"));
 			this.addContent(editMenuTitleButton);
 
-			//TODO übernehmen
+			
 			/** RESET MENU TITLE **/
 			AdvancedButton resetMenuTitleButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.edit_menu_title.reset"), true, (press) -> {
 				if (this.parent.customMenuTitle != null) {
@@ -637,7 +637,7 @@ public class LayoutEditorUI extends UIBase {
 			resetMenuTitleButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.edit_menu_title.reset.desc"), "%n%"));
 			this.addContent(resetMenuTitleButton);
 
-			//TODO übernehmen
+			
 			this.addSeparator();
 
 			/** RANDOM MODE **/
@@ -1120,7 +1120,7 @@ public class LayoutEditorUI extends UIBase {
 
 			/** WEB IMAGE **/
 			AdvancedButton webImageButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.webimage"), (press) -> {
-				//TODO übernehmenn
+				
 				TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.editor.elements.web_image.enter_url")), this.parent, null, this.parent::addWebTexture);
 				s.multilineMode = false;
 				Minecraft.getInstance().setScreen(s);
@@ -1134,7 +1134,7 @@ public class LayoutEditorUI extends UIBase {
 			this.addChild(splashMenu);
 
 			AdvancedButton singleSplashButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.add.splash.single"), true, (press) -> {
-				//TODO übernehmenn
+				
 				TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.editor.elements.splash.single.enter_text")), this.parent, null, this.parent::addSingleSplashText);
 				s.multilineMode = false;
 				Minecraft.getInstance().setScreen(s);
@@ -1169,7 +1169,7 @@ public class LayoutEditorUI extends UIBase {
 
 			/** BUTTON **/
 			AdvancedButton buttonButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.button"), (press) -> {
-				//TODO übernehmenn
+				
 				this.parent.addButton("New Button");
 				//------------------
 			});

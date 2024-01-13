@@ -1,4 +1,4 @@
-//TODO übernehmen
+
 
 //Copyright (c) 2022 Keksuccino.
 //This code is licensed under DSMSL.
@@ -31,7 +31,6 @@ public class PlaceholderParser {
             in = "";
         }
         updateLogHandler();
-        //TODO remove in a later release
         in = DynamicValueHelper.convertFromRaw(in);
         in = StringUtils.convertFormatCodes(in, "&", "§");
         String original = in;

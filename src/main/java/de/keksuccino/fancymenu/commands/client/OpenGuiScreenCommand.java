@@ -30,21 +30,21 @@ public class OpenGuiScreenCommand {
 
     private static int openGui(FabricClientCommandSource stack, String menuIdentifierOrCustomGuiName) {
         try {
-            //TODO übernehmen
+
             if (menuIdentifierOrCustomGuiName.equalsIgnoreCase(CreateWorldScreen.class.getName())) {
                 CreateWorldScreen.openFresh(Minecraft.getInstance(), Minecraft.getInstance().screen);
                 return 1;
             }
             //------------------
             if (CustomGuiLoader.guiExists(menuIdentifierOrCustomGuiName)) {
-                //TODO übernehmen (ClientExecutor)
+
                 ClientExecutor.execute(() -> {
                     Minecraft.getInstance().setScreen(CustomGuiLoader.getGui(menuIdentifierOrCustomGuiName, Minecraft.getInstance().screen, null));
                 });
             } else {
                 Screen s = GuiConstructor.tryToConstruct(MenuCustomization.getValidMenuIdentifierFor(menuIdentifierOrCustomGuiName));
                 if (s != null) {
-                    //TODO übernehmen (ClientExecutor)
+
                     ClientExecutor.execute(() -> {
                         Minecraft.getInstance().setScreen(s);
                     });

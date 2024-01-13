@@ -148,7 +148,7 @@ public class JsonPlaceholder extends PlaceholderTextContainer {
                 new Thread(() -> {
                     try {
                         if (WebUtils.isValidUrl(link)) {
-                            //TODO übernehmen
+                            
                             cachedPlaceholders.put(placeholder, JsonUtils.getJsonValueByPath(getJsonStringFromURL(link), jsonPath));
                         } else {
                             invalidWebPlaceholderLinks.add(link);
@@ -168,7 +168,7 @@ public class JsonPlaceholder extends PlaceholderTextContainer {
         }
     }
 
-    //TODO übernehmen
+    
     protected static String getJsonStringFromURL(String url) {
         BufferedReader in = null;
         StringBuilder contentBuilder = new StringBuilder();

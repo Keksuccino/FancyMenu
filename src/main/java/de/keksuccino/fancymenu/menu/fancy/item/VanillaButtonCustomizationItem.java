@@ -28,7 +28,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 	public String labelRaw;
 	protected boolean normalLabelCached = false;
 	public MenuHandlerBase handler;
-	//TODO übernehmenn
+	
 	public LoadingRequirementContainer loadingRequirements = null;
 
 	public VanillaButtonCustomizationItem(PropertiesSection item, ButtonData parent, MenuHandlerBase handler) {
@@ -107,10 +107,10 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 			this.updateValues();
 
 			if (action.equalsIgnoreCase("vanilla_button_visibility_requirements")) {
-				//TODO übernehmenn (if)
+				
 				if (this.loadingRequirements != null) {
 					if (!this.handler.isVanillaButtonHidden(this.parent.getButton())) {
-						//TODO übernehmenn
+						
 						this.loadingRequirementContainer = this.loadingRequirements;
 						this.parent.getButton().visible = this.loadingRequirementsMet();
 						//----------------
@@ -119,7 +119,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 			}
 
 			if (this.action.equals("addhoversound")) {
-				//TODO übernehmenn (if)
+				
 				if (this.parent.getButton().isHoveredOrFocused() && this.parent.getButton().active && !hovered && (this.value != null)) {
 					SoundHandler.resetSound(this.value);
 					SoundHandler.playSound(this.value);
@@ -133,7 +133,7 @@ public class VanillaButtonCustomizationItem extends CustomizationItemBase {
 			if (this.action.equals("sethoverlabel")) {
 				if (this.value != null) {
 					this.parent.hasHoverLabel = true;
-					//TODO übernehmenn (if)
+					
 					if (this.parent.getButton().isHoveredOrFocused() && this.parent.getButton().active) {
 						if (!this.normalLabelCached) {
 							this.normalLabelCached = true;

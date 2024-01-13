@@ -71,7 +71,7 @@ public abstract class LayoutElement extends GuiComponent {
 	protected boolean enableElementIdCopyButton = true;
 	protected boolean allowOrientationByElement = true;
 
-	protected List<LayoutElement> hoveredLayers = new ArrayList<LayoutElement>();
+	public List<LayoutElement> hoveredLayers = new ArrayList<LayoutElement>();
 
 	public FMContextMenu rightclickMenu;
 
@@ -313,7 +313,7 @@ public abstract class LayoutElement extends GuiComponent {
 		}
 
 		AdvancedButton advancedPosXButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posx"), true, (press) -> {
-			//TODO übernehmenn
+			
 			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posx")), this.handler, null, (call) -> {
 				if (call != null) {
 					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
@@ -337,7 +337,7 @@ public abstract class LayoutElement extends GuiComponent {
 		advancedPositioningMenu.addContent(advancedPosXButton);
 
 		AdvancedButton advancedPosYButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posy"), true, (press) -> {
-			//TODO übernehmenn
+			
 			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posy")), this.handler, null, (call) -> {
 				if (call != null) {
 					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
@@ -385,7 +385,7 @@ public abstract class LayoutElement extends GuiComponent {
 		}
 
 		AdvancedButton advancedWidthButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.width"), true, (press) -> {
-			//TODO übernehmenn
+			
 			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.width")), this.handler, null, (call) -> {
 				if (call != null) {
 					if (call.replace(" ", "").equals("")) {
@@ -418,7 +418,7 @@ public abstract class LayoutElement extends GuiComponent {
 		advancedSizingMenu.addContent(advancedWidthButton);
 
 		AdvancedButton advancedHeightButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.height"), true, (press) -> {
-			//TODO übernehmenn
+			
 			TextEditorScreen s = new TextEditorScreen(Component.literal(Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.height")), this.handler, null, (call) -> {
 				if (call != null) {
 					if (call.replace(" ", "").equals("")) {
@@ -560,7 +560,7 @@ public abstract class LayoutElement extends GuiComponent {
 			this.rightclickMenu.addContent(moveDownButton);
 		}
 
-		//TODO übernehmenn
+		
 		/** LOADING REQUIREMENTS **/
 		AdvancedButton loadingRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.editor.loading_requirement.elements.loading_requirements"), (press) -> {
 			ManageRequirementsScreen s = new ManageRequirementsScreen(this.handler, this.object.loadingRequirementContainer, (call) -> {});
@@ -1020,35 +1020,6 @@ public abstract class LayoutElement extends GuiComponent {
 			this.resizing = false;
 		}
 
-		//Handle rightclick context menu
-		if (this.rightclickMenu != null) {
-
-			if (this.isRightClicked() && this.handler.isFocused(this)) {
-				if (this.handler.getFocusedObjects().size() == 1) {
-					UIBase.openScaledContextMenuAtMouse(this.rightclickMenu);
-					this.hoveredLayers.clear();
-					for (LayoutElement o : this.handler.getContent()) {
-						if (o.isHoveredOrFocused()) {
-							this.hoveredLayers.add(o);
-						}
-					}
-				}
-			}
-
-			if ((MouseInput.isLeftMouseDown() && !this.rightclickMenu.isHovered())) {
-				this.rightclickMenu.closeMenu();
-			}
-			if (MouseInput.isRightMouseDown() && !this.isHoveredOrFocused() && !this.rightclickMenu.isHovered()) {
-				this.rightclickMenu.closeMenu();
-			}
-
-			if (this.rightclickMenu.isOpen()) {
-				this.handler.setFocusChangeBlocked(objectId, true);
-			} else {
-				this.handler.setFocusChangeBlocked(objectId, false);
-			}
-
-		}
 	}
 
 	protected void renderBorder(PoseStack matrix, int mouseX, int mouseY) {
@@ -1363,7 +1334,6 @@ public abstract class LayoutElement extends GuiComponent {
 		if (this.rightclickMenu != null) {
 			this.rightclickMenu.closeMenu();
 		}
-		this.handler.setFocusChangeBlocked(objectId, false);
 		this.handler.setObjectFocused(this, false, true);
 	}
 
@@ -1379,7 +1349,6 @@ public abstract class LayoutElement extends GuiComponent {
 
 	public abstract List<PropertiesSection> getProperties();
 
-	//TODO übernehmenn
 	public void addLoadingRequirementPropertiesTo(PropertiesSection sec) {
 		this.object.loadingRequirementContainer.serializeContainerToExistingPropertiesSection(sec);
 	}

@@ -596,7 +596,6 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 			}
 		}
 
-		//TODO NEW IN 1.19
 		public static UUID createPlayerUUID(String p_36284_) {
 			return UUID.nameUUIDFromBytes(("OfflinePlayer:" + p_36284_).getBytes(StandardCharsets.UTF_8));
 		}

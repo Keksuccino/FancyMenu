@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.menu.variables.VariableHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractButton;
@@ -666,7 +667,7 @@ public class CustomizationHelperUI extends UIBase {
 				if (expandButton instanceof AdvancedImageButton) {
 					if (!extended) {
 						((AdvancedImageButton)expandButton).setImage(MenuBar.EXPAND_BTN_TEXTURE);
-						expandButton.setDescription(Locals.localize("helper.menubar.expand"));
+						expandButton.setDescription(StringUtils.splitLines(Locals.localize("helper.menubar.expand"), "%n%"));
 					}
 				}
 			}
@@ -712,11 +713,11 @@ public class CustomizationHelperUI extends UIBase {
 
 	protected static void renderButtonInfo(PoseStack matrix, Screen screen) {
 		if (showButtonInfo) {
-			//TODO übernehmen
+
 			boolean isButtonHovered = false;
 			for (ButtonData d : buttons) {
 				if (d.getButton().isHoveredOrFocused()) {
-					//TODO übernehmen
+
 					isButtonHovered = true;
 					long id = d.getId();
 					String idString = Locals.localize("helper.buttoninfo.idnotfound");
@@ -734,14 +735,14 @@ public class CustomizationHelperUI extends UIBase {
 					List<String> info = new ArrayList<String>();
 					int width = Minecraft.getInstance().font.width(Locals.localize("helper.button.buttoninfo")) + 10;
 
-					//TODO übernehmen
+
 					long now = System.currentTimeMillis();
 
 					info.add("§f" + Locals.localize("helper.buttoninfo.id") + ": " + idString);
 					info.add("§f" + Locals.localize("general.width") + ": " + d.getButton().getWidth());
 					info.add("§f" + Locals.localize("general.height") + ": " + d.getButton().getHeight());
 					info.add("§f" + Locals.localize("helper.buttoninfo.labelwidth") + ": " + Minecraft.getInstance().font.width(d.getButton().getMessage().getString()));
-					//TODO übernehmen
+
 					info.add("");
 					if (lastButtonInfoRightClick + 2000 < now) {
 						info.add(Locals.localize("fancymenu.helper.button_info.copy_locator"));
@@ -750,7 +751,7 @@ public class CustomizationHelperUI extends UIBase {
 					}
 					//--------------------
 
-					//TODO übernehmen
+
 					if (MouseInput.isRightMouseDown()) {
 						Screen current = Minecraft.getInstance().screen;
 						String locator = current.getClass().getName() + ":" + idString;
@@ -781,16 +782,16 @@ public class CustomizationHelperUI extends UIBase {
 						y -= 90;
 					}
 
-					//TODO übernehmen
+
 					fill(matrix, x, y, x + width + 10, y + 100, new Color(102, 0, 102, 200).getRGB());
 
 					RenderSystem.enableBlend();
-					//TODO übernehmen
+
 					drawString(matrix, Minecraft.getInstance().font, "§f§l" + Locals.localize("helper.button.buttoninfo"), x + 10, y + 10, -1);
 
 					int i2 = 20;
 					for (String s : info) {
-						//TODO übernehmen
+
 						drawString(matrix, Minecraft.getInstance().font, s, x + 10, y + 10 + i2, -1);
 						i2 += 10;
 					}
@@ -804,7 +805,7 @@ public class CustomizationHelperUI extends UIBase {
 					break;
 				}
 			}
-			//TODO übernehmen
+
 			if (!isButtonHovered) {
 				lastButtonInfoRightClick = 0;
 			}
@@ -967,10 +968,10 @@ public class CustomizationHelperUI extends UIBase {
 	}
 	
 	@SubscribeEvent
-	public void onInitScreen(GuiScreenEvent.InitGuiEvent.Pre e) {
+	public void onInitScreen(InitOrResizeScreenEvent.Pre e) {
 		try {
 			
-			if (e.getGui() != null) {
+			if (e.getScreen() != null) {
 				if (FancyMenu.config.getOrDefault("showcustomizationbuttons", true)) {
 					
 					updateUI();

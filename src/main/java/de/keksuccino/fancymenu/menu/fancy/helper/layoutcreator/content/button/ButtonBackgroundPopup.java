@@ -125,7 +125,7 @@ public class ButtonBackgroundPopup extends FMPopup {
         this.chooseNormalBackgroundImageButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.type.image.chooseimage"), true, (press) -> {
             ChooseFilePopup cf = new ChooseFilePopup((call) -> {
                 if (call != null) {
-                    //TODO übernehmen
+
                     File home = Minecraft.getInstance().gameDirectory;
                     call = call.replace("\\", "/");
                     File f = new File(call);
@@ -173,7 +173,7 @@ public class ButtonBackgroundPopup extends FMPopup {
         this.chooseHoverBackgroundImageButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.type.image.chooseimage"), true, (press) -> {
             ChooseFilePopup cf = new ChooseFilePopup((call) -> {
                 if (call != null) {
-                    //TODO übernehmen
+
                     File home = Minecraft.getInstance().gameDirectory;
                     call = call.replace("\\", "/");
                     File f = new File(call);
@@ -322,7 +322,7 @@ public class ButtonBackgroundPopup extends FMPopup {
         if (this.normalBackgroundTypeSwitcher.getSelectedValue().equals(Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"))) {
             if ((this.normalBackgroundImageTextField.getValue() != null) && !this.normalBackgroundImageTextField.getValue().replace(" ", "").equals("")) {
                 File f = new File(this.normalBackgroundImageTextField.getValue());
-                //TODO übernehmen
+
                 if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
                     f = new File(Minecraft.getInstance().gameDirectory, this.normalBackgroundImageTextField.getValue());
                 }
@@ -344,7 +344,7 @@ public class ButtonBackgroundPopup extends FMPopup {
         if (this.hoverBackgroundTypeSwitcher.getSelectedValue().equals(Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.type.image"))) {
             if ((this.hoverBackgroundImageTextField.getValue() != null) && !this.hoverBackgroundImageTextField.getValue().replace(" ", "").equals("")) {
                 File f = new File(this.hoverBackgroundImageTextField.getValue());
-                //TODO übernehmen
+
                 if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
                     f = new File(Minecraft.getInstance().gameDirectory, this.hoverBackgroundImageTextField.getValue());
                 }

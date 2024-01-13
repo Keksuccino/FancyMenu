@@ -1,9 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.menuhandler.custom;
 
-import de.keksuccino.fancymenu.events.PlayWidgetClickSoundEvent;
-import de.keksuccino.fancymenu.events.RenderGuiListBackgroundEvent;
-import de.keksuccino.fancymenu.events.RenderWidgetBackgroundEvent;
-import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
+import de.keksuccino.fancymenu.events.*;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
@@ -35,13 +32,13 @@ public class PauseScreenHandler extends MenuHandlerBase {
 
     @SubscribeEvent
     @Override
-    public void onInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {
+    public void onInitPre(InitOrResizeScreenEvent.Pre e) {
         super.onInitPre(e);
     }
 
     @Override
-    protected void applyLayoutPre(PropertiesSection sec, GuiScreenEvent.InitGuiEvent.Pre e) {
-        if (this.customizePauseScreen(e.getGui())) {
+    protected void applyLayoutPre(PropertiesSection sec, InitOrResizeScreenEvent.Pre e) {
+        if (this.customizePauseScreen(e.getScreen())) {
             super.applyLayoutPre(sec, e);
         }
     }
