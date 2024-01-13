@@ -125,7 +125,7 @@ public class ButtonBackgroundPopup extends FMPopup {
         this.chooseNormalBackgroundImageButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.type.image.chooseimage"), true, (press) -> {
             ChooseFilePopup cf = new ChooseFilePopup((call) -> {
                 if (call != null) {
-                    //TODO übernehmen
+                    
                     File home = Minecraft.getInstance().gameDirectory;
                     call = call.replace("\\", "/");
                     File f = new File(call);
@@ -172,7 +172,7 @@ public class ButtonBackgroundPopup extends FMPopup {
         this.chooseHoverBackgroundImageButton = new AdvancedButton(0, 0, 100, 20, Locals.localize("fancymenu.helper.editor.items.buttons.buttonbackground.type.image.chooseimage"), true, (press) -> {
             ChooseFilePopup cf = new ChooseFilePopup((call) -> {
                 if (call != null) {
-                    //TODO übernehmen
+                    
                     File home = Minecraft.getInstance().gameDirectory;
                     call = call.replace("\\", "/");
                     File f = new File(call);

@@ -83,7 +83,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 				this.minimumMC = meta.getEntryValue("minimummcversion");
 				this.maximumMC = meta.getEntryValue("maximummcversion");
 
-				//TODO übernehmenn
+				
 				this.layoutWideLoadingRequirementContainer = LoadingRequirementContainer.deserializeRequirementContainer(meta);
 
 				this.customMenuTitle = meta.getEntryValue("custom_menu_title");
@@ -570,7 +570,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 					if (action.equalsIgnoreCase("addbutton")) {
 						ButtonCustomizationItem bc = new ButtonCustomizationItem(sec);
 
-						//TODO übernehmenn
+						
 //						String baction = sec.getEntryValue("buttonaction");
 //						String actionvalue = sec.getEntryValue("value");
 						String onlydisplayin = sec.getEntryValue("onlydisplayin");
@@ -596,7 +596,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 								this.object.delayAppearanceSec = bc.delayAppearanceSec;
 								this.object.fadeIn = bc.fadeIn;
 								this.object.fadeInSpeed = bc.fadeInSpeed;
-								//TODO übernehmenn
+								
 								this.object.loadingRequirementContainer = bc.loadingRequirementContainer;
 								//-------------------
 								this.object.setActionId(bc.getActionId());
@@ -617,7 +617,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 							lb.setStretchedX(true, false);
 						}
 
-						//TODO übernehmenn
+						
 						lb.actions = bc.actions;
 
 						String desc = sec.getEntryValue("description");
@@ -686,7 +686,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 						lb.object.posX = bc.posX;
 						lb.object.posY = bc.posY;
 
-						//TODO übernehmenn
+						
 						lb.object.advancedPosX = bc.advancedPosX;
 						lb.object.advancedPosY = bc.advancedPosY;
 						lb.object.advancedWidth = bc.advancedWidth;
@@ -792,7 +792,7 @@ public class PreloadedLayoutEditorScreen extends LayoutEditorScreen {
 								CustomizationItemBase cusItem = new CustomizationItemBase(sec) {
 									@Override public void render(PoseStack matrix, Screen menu) {}
 								};
-								//TODO übernehmenn
+								
 								van.object.loadingRequirementContainer = cusItem.loadingRequirementContainer;
 								van.customizationContainer.loadingRequirementContainer = cusItem.loadingRequirementContainer;
 								//-----------------

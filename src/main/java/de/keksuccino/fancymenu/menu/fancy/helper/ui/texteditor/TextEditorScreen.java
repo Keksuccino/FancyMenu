@@ -1,4 +1,4 @@
-//TODO übernehmenn
+
 package de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor;
 
 import com.mojang.blaze3d.platform.InputConstants;
@@ -40,14 +40,6 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 public class TextEditorScreen extends Screen {
-
-    //TODO Ganze Zeile markieren, wenn zwischen highlightStart und highlightEnd index
-
-    //TODO Bei highlight start und end Zeilen alles markieren, was innerhalb von markiertem bereich liegt, selbst wenn eigentlicher Text kürzer (also alles NACH cursor bei end und alles VOR cursor bei start)
-
-    //TODO Style.withFont() nutzen, um eventuell in editor mit eigener Font zu arbeiten
-
-    //TODO Auto-scrollen bei maus außerhalb von editor area während markieren verbessern (ist zu schnell bei langen Texten)
 
     private static final Logger LOGGER = LogManager.getLogger();
 

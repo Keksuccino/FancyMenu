@@ -598,7 +598,7 @@ public class LayoutEditorUI extends UIBase {
 			}
 			String defaultMenuTitle = defaultMenuTitleRaw;
 			AdvancedButton editMenuTitleButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.edit_menu_title"), true, (press) -> {
-				//TODO übernehmenn
+				
 				TextEditorScreen s = new TextEditorScreen(new TextComponent(Locals.localize("fancymenu.helper.editor.edit_menu_title")), this.parent, null, (call) -> {
 					if (call != null) {
 						if (!call.equals(defaultMenuTitle)) {
@@ -916,7 +916,7 @@ public class LayoutEditorUI extends UIBase {
 
 			this.addSeparator();
 
-			//TODO übernehmenn
+			
 			/** LOADING REQUIREMENTS [LAYOUT-WIDE] **/
 			AdvancedButton loadingRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.editor.loading_requirement.layouts.loading_requirements"), (press) -> {
 				ManageRequirementsScreen s = new ManageRequirementsScreen(this.parent, this.parent.layoutWideLoadingRequirementContainer, (call) -> {});
@@ -1120,7 +1120,7 @@ public class LayoutEditorUI extends UIBase {
 
 			/** WEB IMAGE **/
 			AdvancedButton webImageButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.webimage"), (press) -> {
-				//TODO übernehmenn
+				
 				TextEditorScreen s = new TextEditorScreen(new TextComponent(Locals.localize("fancymenu.editor.elements.web_image.enter_url")), this.parent, null, this.parent::addWebTexture);
 				s.multilineMode = false;
 				Minecraft.getInstance().setScreen(s);
@@ -1147,7 +1147,7 @@ public class LayoutEditorUI extends UIBase {
 			this.addChild(splashMenu);
 
 			AdvancedButton singleSplashButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.add.splash.single"), true, (press) -> {
-				//TODO übernehmenn
+				
 				TextEditorScreen s = new TextEditorScreen(new TextComponent(Locals.localize("fancymenu.editor.elements.splash.single.enter_text")), this.parent, null, this.parent::addSingleSplashText);
 				s.multilineMode = false;
 				Minecraft.getInstance().setScreen(s);
@@ -1182,7 +1182,7 @@ public class LayoutEditorUI extends UIBase {
 
 			/** BUTTON **/
 			AdvancedButton buttonButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.button"), (press) -> {
-				//TODO übernehmenn
+				
 				this.parent.addButton("New Button");
 				//------------------
 			});

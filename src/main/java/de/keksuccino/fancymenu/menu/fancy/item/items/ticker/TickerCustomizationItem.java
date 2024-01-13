@@ -18,10 +18,10 @@ import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
-//TODO übernehmenn (implements)
+
 public class TickerCustomizationItem extends CustomizationItem implements IActionExecutorItem {
 
-    //TODO übernehmenn (replace with new ButtonScriptEngine.ActionContainer class)
+    
     public volatile List<ActionContainer> actions = new ArrayList<>();
     public volatile long tickDelayMs = 0;
     public volatile boolean isAsync = false;
@@ -143,13 +143,13 @@ public class TickerCustomizationItem extends CustomizationItem implements IActio
 
     }
 
-    //TODO übernehmenn
+    
     @Override
     public List<ActionContainer> getActionList() {
         return this.actions;
     }
 
-    //TODO übernehmenn
+    
 //    public static class ActionContainer {
 //
 //        public volatile String action;

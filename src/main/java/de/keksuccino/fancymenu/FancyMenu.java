@@ -10,7 +10,7 @@ import de.keksuccino.fancymenu.commands.client.VariableCommand;
 import de.keksuccino.fancymenu.commands.server.ServerCloseGuiScreenCommand;
 import de.keksuccino.fancymenu.commands.server.ServerOpenGuiScreenCommand;
 import de.keksuccino.fancymenu.commands.server.ServerVariableCommand;
-import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
+import de.keksuccino.fancymenu.mainwindow.WindowHandler;
 import de.keksuccino.fancymenu.menu.button.buttonactions.ButtonActions;
 import de.keksuccino.fancymenu.menu.button.identification.ButtonIdentificator;
 import de.keksuccino.fancymenu.menu.loadingrequirement.v2.requirements.LoadingRequirements;
@@ -52,10 +52,11 @@ import net.minecraftforge.versions.mcp.MCPVersion;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+@SuppressWarnings("all")
 @Mod("fancymenu")
 public class FancyMenu {
 
-	public static final String VERSION = "2.14.0";
+	public static final String VERSION = "2.14.13";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -94,7 +95,7 @@ public class FancyMenu {
 	    		panoramaPath.mkdirs();
 	    		slideshowPath.mkdirs();
 
-	    		updateConfig();
+	    		initConfig();
 
 				ClientExecutor.init();
 
@@ -137,7 +138,7 @@ public class FancyMenu {
 
 	        	VanillaButtonDescriptionHandler.init();
 
-				MainWindowHandler.handleForceFullscreen();
+				WindowHandler.handleForceFullscreen();
 
 				MenuBackgroundTypeRegistry.init();
 
@@ -222,6 +223,12 @@ public class FancyMenu {
 		Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "ru_ru.local"), "ru_ru", f.getPath());
 		
 		Locals.getLocalsFromDir(f.getPath());
+	}
+
+	public static void initConfig() {
+		if (config == null) {
+			updateConfig();
+		}
 	}
 
 	public static void updateConfig() {
@@ -328,7 +335,7 @@ public class FancyMenu {
 
 	public static boolean isDrippyLoadingScreenLoaded() {
 		try {
-			Class.forName("de.keksuccino.drippyloadingscreen.DrippyLoadingScreen");
+			Class.forName("de.keksuccino.drippyloadingscreen.DrippyLoadingScreen", false, FancyMenu.class.getClassLoader());
 			return true;
 		} catch (Exception e) {}
 		return false;
@@ -336,7 +343,7 @@ public class FancyMenu {
 
 	public static boolean isKonkreteLoaded() {
 		try {
-			Class.forName("de.keksuccino.konkrete.Konkrete");
+			Class.forName("de.keksuccino.konkrete.Konkrete", false, FancyMenu.class.getClassLoader());
 			return true;
 		} catch (Exception e) {}
 		return false;
@@ -348,7 +355,7 @@ public class FancyMenu {
 
 	public static boolean isAudioExtensionLoaded() {
 		try {
-			Class.forName("de.keksuccino.fmaudio.FmAudio");
+			Class.forName("de.keksuccino.fmaudio.FmAudio", false, FancyMenu.class.getClassLoader());
 			return true;
 		} catch (Exception e) {}
 		return false;

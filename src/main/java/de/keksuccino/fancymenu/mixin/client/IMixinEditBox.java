@@ -1,4 +1,4 @@
-//TODO übernehmenn
+
 package de.keksuccino.fancymenu.mixin.client;
 
 import net.minecraft.client.gui.components.EditBox;

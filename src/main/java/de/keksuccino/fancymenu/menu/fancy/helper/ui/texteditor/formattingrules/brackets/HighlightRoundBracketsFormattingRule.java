@@ -1,4 +1,4 @@
-//TODO übernehmenn
+
 package de.keksuccino.fancymenu.menu.fancy.helper.ui.texteditor.formattingrules.brackets;
 
 import net.minecraft.network.chat.Style;

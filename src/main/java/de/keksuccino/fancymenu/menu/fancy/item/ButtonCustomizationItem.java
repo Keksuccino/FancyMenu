@@ -21,7 +21,7 @@ import de.keksuccino.konkrete.sound.SoundHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 
-//TODO übernehmenn (implements)
+
 public class ButtonCustomizationItem extends CustomizationItemBase implements IActionExecutorItem {
 
 	public AdvancedButton button;
@@ -35,7 +35,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase implements IA
 	public String hoverLabelRaw;
 	public String labelRaw;
 	public String tooltip;
-	//TODO übernehmenn
+	
 	public List<ButtonScriptEngine.ActionContainer> actions = new ArrayList<>();
 
 	public ButtonCustomizationItem(PropertiesSection item) {
@@ -50,7 +50,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase implements IA
 			String buttonaction = item.getEntryValue("buttonaction");
 			String actionvalue = item.getEntryValue("value");
 
-			//TODO übernehmenn
+			
 //			if (buttonaction == null) {
 //				return;
 //			}
@@ -84,7 +84,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase implements IA
 				}
 			}
 
-			//TODO übernehmenn
+			
 			if (buttonaction != null) {
 				if (buttonaction.contains("%btnaction_splitter_fm%")) {
 					for (String s : StringUtils.splitLines(buttonaction, "%btnaction_splitter_fm%")) {
@@ -104,7 +104,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase implements IA
 			}
 			//----------------------
 
-			//TODO übernehmenn
+			
 			this.button = new AdvancedButton(0, 0, this.getWidth(), this.getHeight(), "", true, (press) -> {
 				for (ButtonScriptEngine.ActionContainer c : this.actions) {
 					c.execute();
@@ -224,7 +224,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase implements IA
 		this.button.setX(x);
 		this.button.setY(y);
 
-		//TODO übernehmenn (if)
+		
 		if (this.button.isHoveredOrFocused() && this.button.active) {
 			if (this.hoverLabel != null) {
 				this.button.setMessage(this.hoverLabel);
@@ -278,7 +278,7 @@ public class ButtonCustomizationItem extends CustomizationItemBase implements IA
 		return this.button;
 	}
 
-	//TODO übernehmenn
+	
 	@Override
 	public List<ButtonScriptEngine.ActionContainer> getActionList() {
 		return this.actions;

@@ -10,7 +10,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.screens.Screen;
 
-//TODO übernehmenn (ganze klasse)
+
 public class UIBase extends GuiComponent {
 
 	public static final Color SCROLL_GRABBER_IDLE_COLOR = new Color(89, 91, 93, 100);
@@ -59,7 +59,6 @@ public class UIBase extends GuiComponent {
 
 	}
 
-	//TODO nichts geändert
 	public static void openScaledContextMenuAt(FMContextMenu menu, int x, int y) {
 		Screen s = Minecraft.getInstance().screen;
 		if (s != null) {
@@ -67,12 +66,10 @@ public class UIBase extends GuiComponent {
 		}
 	}
 
-	//TODO nichts geändert
 	public static void openScaledContextMenuAtMouse(FMContextMenu menu) {
 		openScaledContextMenuAt(menu, MouseInput.getMouseX(), MouseInput.getMouseY());
 	}
 
-	//TODO nichts geändert
 	public static void renderScaledContextMenu(PoseStack matrix, FMContextMenu menu) {
 		Screen s = Minecraft.getInstance().screen;
 		if ((s != null) && (menu != null)) {

@@ -71,7 +71,7 @@ public abstract class LayoutElement extends GuiComponent {
 	protected boolean enableElementIdCopyButton = true;
 	protected boolean allowOrientationByElement = true;
 
-	protected List<LayoutElement> hoveredLayers = new ArrayList<LayoutElement>();
+	public List<LayoutElement> hoveredLayers = new ArrayList<LayoutElement>();
 
 	public FMContextMenu rightclickMenu;
 
@@ -313,7 +313,7 @@ public abstract class LayoutElement extends GuiComponent {
 		}
 
 		AdvancedButton advancedPosXButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posx"), true, (press) -> {
-			//TODO übernehmenn
+			
 			TextEditorScreen s = new TextEditorScreen(new TextComponent(Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posx")), this.handler, null, (call) -> {
 				if (call != null) {
 					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
@@ -337,7 +337,7 @@ public abstract class LayoutElement extends GuiComponent {
 		advancedPositioningMenu.addContent(advancedPosXButton);
 
 		AdvancedButton advancedPosYButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posy"), true, (press) -> {
-			//TODO übernehmenn
+			
 			TextEditorScreen s = new TextEditorScreen(new TextComponent(Locals.localize("fancymenu.helper.editor.items.features.advanced_positioning.posy")), this.handler, null, (call) -> {
 				if (call != null) {
 					this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
@@ -385,7 +385,7 @@ public abstract class LayoutElement extends GuiComponent {
 		}
 
 		AdvancedButton advancedWidthButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.width"), true, (press) -> {
-			//TODO übernehmenn
+			
 			TextEditorScreen s = new TextEditorScreen(new TextComponent(Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.width")), this.handler, null, (call) -> {
 				if (call != null) {
 					if (call.replace(" ", "").equals("")) {
@@ -418,7 +418,7 @@ public abstract class LayoutElement extends GuiComponent {
 		advancedSizingMenu.addContent(advancedWidthButton);
 
 		AdvancedButton advancedHeightButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.height"), true, (press) -> {
-			//TODO übernehmenn
+			
 			TextEditorScreen s = new TextEditorScreen(new TextComponent(Locals.localize("fancymenu.helper.editor.items.features.advanced_sizing.height")), this.handler, null, (call) -> {
 				if (call != null) {
 					if (call.replace(" ", "").equals("")) {
@@ -560,7 +560,7 @@ public abstract class LayoutElement extends GuiComponent {
 			this.rightclickMenu.addContent(moveDownButton);
 		}
 
-		//TODO übernehmenn
+		
 		/** LOADING REQUIREMENTS **/
 		AdvancedButton loadingRequirementsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.editor.loading_requirement.elements.loading_requirements"), (press) -> {
 			ManageRequirementsScreen s = new ManageRequirementsScreen(this.handler, this.object.loadingRequirementContainer, (call) -> {});
@@ -1020,35 +1020,6 @@ public abstract class LayoutElement extends GuiComponent {
 			this.resizing = false;
 		}
 
-		//Handle rightclick context menu
-		if (this.rightclickMenu != null) {
-
-			if (this.isRightClicked() && this.handler.isFocused(this)) {
-				if (this.handler.getFocusedObjects().size() == 1) {
-					UIBase.openScaledContextMenuAtMouse(this.rightclickMenu);
-					this.hoveredLayers.clear();
-					for (LayoutElement o : this.handler.getContent()) {
-						if (o.isHoveredOrFocused()) {
-							this.hoveredLayers.add(o);
-						}
-					}
-				}
-			}
-
-			if ((MouseInput.isLeftMouseDown() && !this.rightclickMenu.isHoveredOrFocused())) {
-				this.rightclickMenu.closeMenu();
-			}
-			if (MouseInput.isRightMouseDown() && !this.isHoveredOrFocused() && !this.rightclickMenu.isHoveredOrFocused()) {
-				this.rightclickMenu.closeMenu();
-			}
-
-			if (this.rightclickMenu.isOpen()) {
-				this.handler.setFocusChangeBlocked(objectId, true);
-			} else {
-				this.handler.setFocusChangeBlocked(objectId, false);
-			}
-
-		}
 	}
 
 	protected void renderBorder(PoseStack matrix, int mouseX, int mouseY) {
@@ -1363,7 +1334,6 @@ public abstract class LayoutElement extends GuiComponent {
 		if (this.rightclickMenu != null) {
 			this.rightclickMenu.closeMenu();
 		}
-		this.handler.setFocusChangeBlocked(objectId, false);
 		this.handler.setObjectFocused(this, false, true);
 	}
 
@@ -1378,116 +1348,9 @@ public abstract class LayoutElement extends GuiComponent {
 	}
 
 	public abstract List<PropertiesSection> getProperties();
-
-	//TODO übernehmenn
+	
 	public void addLoadingRequirementPropertiesTo(PropertiesSection sec) {
 		this.object.loadingRequirementContainer.serializeContainerToExistingPropertiesSection(sec);
 	}
-
-	//TODO übernehmenn
-//	public void addVisibilityPropertiesTo(PropertiesSection sec) {
-//
-//		VisibilityRequirementContainer c = this.object.visibilityRequirementContainer;
-//
-//		if (c.vrCheckForSingleplayer) {
-//			sec.addEntry("vr:showif:singleplayer", "" + c.vrShowIfSingleplayer);
-//		}
-//		if (c.vrCheckForMultiplayer) {
-//			sec.addEntry("vr:showif:multiplayer", "" + c.vrShowIfMultiplayer);
-//		}
-//		if (c.vrCheckForWindowWidth) {
-//			sec.addEntry("vr:showif:windowwidth", "" + c.vrShowIfWindowWidth);
-//			sec.addEntry("vr:value:windowwidth", c.vrWindowWidth);
-//		}
-//		if (c.vrCheckForWindowHeight) {
-//			sec.addEntry("vr:showif:windowheight", "" + c.vrShowIfWindowHeight);
-//			sec.addEntry("vr:value:windowheight", c.vrWindowHeight);
-//		}
-//		if (c.vrCheckForWindowWidthBiggerThan) {
-//			sec.addEntry("vr:showif:windowwidthbiggerthan", "" + c.vrShowIfWindowWidthBiggerThan);
-//			sec.addEntry("vr:value:windowwidthbiggerthan", "" + c.vrWindowWidthBiggerThan);
-//		}
-//		if (c.vrCheckForWindowHeightBiggerThan) {
-//			sec.addEntry("vr:showif:windowheightbiggerthan", "" + c.vrShowIfWindowHeightBiggerThan);
-//			sec.addEntry("vr:value:windowheightbiggerthan", "" + c.vrWindowHeightBiggerThan);
-//		}
-//		if (c.vrCheckForButtonHovered && (c.vrButtonHovered != null)) {
-//			sec.addEntry("vr:showif:buttonhovered", "" + c.vrShowIfButtonHovered);
-//			sec.addEntry("vr:value:buttonhovered", "" + c.vrButtonHovered);
-//		}
-//		if (c.vrCheckForWorldLoaded) {
-//			sec.addEntry("vr:showif:worldloaded", "" + c.vrShowIfWorldLoaded);
-//		}
-//		if (c.vrCheckForLanguage && (c.vrLanguage != null)) {
-//			sec.addEntry("vr:showif:language", "" + c.vrShowIfLanguage);
-//			sec.addEntry("vr:value:language", "" + c.vrLanguage);
-//		}
-//		if (c.vrCheckForFullscreen) {
-//			sec.addEntry("vr:showif:fullscreen", "" + c.vrShowIfFullscreen);
-//		}
-//		if (c.vrCheckForOsWindows) {
-//			sec.addEntry("vr:showif:oswindows", "" + c.vrShowIfOsWindows);
-//		}
-//		if (c.vrCheckForOsMac) {
-//			sec.addEntry("vr:showif:osmac", "" + c.vrShowIfOsMac);
-//		}
-//		if (c.vrCheckForOsLinux) {
-//			sec.addEntry("vr:showif:oslinux", "" + c.vrShowIfOsLinux);
-//		}
-//		if (c.vrCheckForModLoaded) {
-//			String val = "";
-//			for (String s : c.vrModLoaded) {
-//				val += s + ",";
-//			}
-//			if (val.length() > 0) {
-//				val = val.substring(0, val.length() -1);
-//			}
-//			if (val.length() > 0) {
-//				sec.addEntry("vr:showif:modloaded", "" + c.vrShowIfModLoaded);
-//				sec.addEntry("vr:value:modloaded", val);
-//			}
-//		}
-//		if (c.vrCheckForServerOnline && (c.vrServerOnline != null)) {
-//			sec.addEntry("vr:showif:serveronline", "" + c.vrShowIfServerOnline);
-//			sec.addEntry("vr:value:serveronline", "" + c.vrServerOnline);
-//		}
-//		if (c.vrCheckForGuiScale) {
-//			String val = "";
-//			for (String condition : c.vrGuiScale) {
-//				if (condition.startsWith("double:")) {
-//					String value = condition.replace("double:", "");
-//					val += value + ",";
-//				} else if (condition.startsWith("biggerthan:")) {
-//					String value = condition.replace("biggerthan:", "");
-//					val += ">" + value + ",";
-//				} else if (condition.startsWith("smallerthan:")) {
-//					String value = condition.replace("smallerthan:", "");
-//					val += "<" + value + ",";
-//				}
-//			}
-//			if (val.length() > 0) {
-//				val = val.substring(0, val.length() -1);
-//			}
-//			if (val.length() > 0) {
-//				sec.addEntry("vr:showif:guiscale", "" + c.vrShowIfGuiScale);
-//				sec.addEntry("vr:value:guiscale", val);
-//			}
-//		}
-//
-//		//CUSTOM VISIBILITY REQUIREMENTS (API)
-//		for (VisibilityRequirementContainer.RequirementPackage p : c.customRequirements.values()) {
-//
-//			VisibilityRequirement v = p.requirement;
-//
-//			if (p.checkFor) {
-//				sec.addEntry("vr_custom:showif:" + v.getIdentifier(), "" + p.showIf);
-//				if (v.hasValue() && (p.value != null)) {
-//					sec.addEntry("vr_custom:value:" + v.getIdentifier(), "" + p.value);
-//				}
-//			}
-//
-//		}
-//
-//	}
 
 }

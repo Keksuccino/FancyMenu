@@ -6,7 +6,7 @@ import java.io.IOException;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.events.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
-import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
+import de.keksuccino.fancymenu.mainwindow.WindowHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonMimeHandler;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
@@ -119,7 +119,7 @@ public class MenuCustomizationEvents {
 			this.iconSetAfterFullscreen = false;
 		} else {
 			if (!this.iconSetAfterFullscreen) {
-				MainWindowHandler.updateWindowIcon();
+				WindowHandler.updateWindowIcon();
 				this.iconSetAfterFullscreen = true;
 			}
 		}

@@ -9,6 +9,7 @@ public abstract class MenuBackground {
 
     private final String backgroundIdentifier;
     private final MenuBackgroundType type;
+    public float opacity = 1.0F;
 
     /**
      * A menu background.<br><br>

@@ -36,7 +36,7 @@ public class TickerLayoutEditorElement extends LayoutEditorElement {
 
         TickerCustomizationItem i = ((TickerCustomizationItem)this.object);
 
-        //TODO übernehmenn
+        
 //        AdvancedButton addActionButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.customization.items.ticker.add_action"), (press) -> {
 //            ButtonActionScreen s = new ButtonActionScreen(this.handler, (call) -> {
 //                if (call != null) {
@@ -49,7 +49,7 @@ public class TickerLayoutEditorElement extends LayoutEditorElement {
 //        addActionButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.customization.items.ticker.add_action.desc"), "%n%"));
 //        this.rightclickMenu.addContent(addActionButton);
 
-        //TODO übernehmenn
+        
         AdvancedButton manageActionsButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.editor.action.screens.manage_screen.manage"), (press) -> {
             List<ManageActionsScreen.ActionInstance> l = new ArrayList<>();
             for (ButtonScriptEngine.ActionContainer c : i.actions) {
@@ -158,7 +158,7 @@ public class TickerLayoutEditorElement extends LayoutEditorElement {
         sec.addEntry("tick_delay", "" + i.tickDelayMs);
         sec.addEntry("tick_mode", "" + i.tickMode.name);
         int index = 0;
-        //TODO übernehmenn
+        
         for (ButtonScriptEngine.ActionContainer c : i.actions) {
             String v = c.value;
             if (v == null) {
