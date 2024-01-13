@@ -27,7 +27,7 @@ import de.keksuccino.fancymenu.events.PlayWidgetClickSoundEvent;
 import de.keksuccino.fancymenu.events.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.events.RenderWidgetBackgroundEvent;
 import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
-import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
+import de.keksuccino.fancymenu.mainwindow.WindowHandler;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
 import de.keksuccino.fancymenu.menu.animation.AnimationHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
@@ -52,20 +52,18 @@ import de.keksuccino.fancymenu.menu.fancy.item.TextureCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.VanillaButtonCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebStringCustomizationItem;
 import de.keksuccino.fancymenu.menu.fancy.item.WebTextureCustomizationItem;
-import de.keksuccino.fancymenu.menu.loadingrequirement.v1.VisibilityRequirementContainer;
 import de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal.LoadingRequirementContainer;
-import de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal.LoadingRequirementInstance;
 import de.keksuccino.fancymenu.menu.panorama.ExternalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.menu.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.menu.placeholder.v2.PlaceholderParser;
 import de.keksuccino.fancymenu.menu.slideshow.ExternalTextureSlideshowRenderer;
 import de.keksuccino.fancymenu.menu.slideshow.SlideshowHandler;
+import de.keksuccino.fancymenu.screen.ScreenTitleHandler;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSet;
-import de.keksuccino.konkrete.rendering.CurrentScreenHandler;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import de.keksuccino.konkrete.resources.ExternalTextureResourceLocation;
@@ -107,12 +105,14 @@ public class MenuHandlerBase extends GuiComponent {
 	protected boolean panoStop = false;
 	protected boolean keepBackgroundAspectRatio = false;
 	protected String customMenuTitle = null;
+	protected boolean forceDisableCustomMenuTitle = false;
 
 	protected ExternalTexturePanoramaRenderer panoramacube;
 
 	protected ExternalTextureSlideshowRenderer slideshow;
 
 	protected MenuBackground customMenuBackground = null;
+	public float backgroundOpacity = 1.0F;
 
 	protected List<ButtonData> hidden = new ArrayList<ButtonData>();
 	protected Map<AbstractWidget, ButtonCustomizationContainer> vanillaButtonCustomizations = new HashMap<AbstractWidget, ButtonCustomizationContainer>();
@@ -261,10 +261,12 @@ public class MenuHandlerBase extends GuiComponent {
 				continue;
 			}
 
-			String cusMenuTitle = metas.get(0).getEntryValue("custom_menu_title");
-			if (cusMenuTitle != null) {
-				this.customMenuTitle = cusMenuTitle;
-				e.getScreen().title = Component.literal(PlaceholderParser.replacePlaceholders(cusMenuTitle));
+			if (!this.forceDisableCustomMenuTitle) {
+				String cusMenuTitle = metas.get(0).getEntryValue("custom_menu_title");
+				if (cusMenuTitle != null) {
+					this.customMenuTitle = cusMenuTitle;
+					ScreenTitleHandler.setScreenTitle(e.getScreen(), Component.literal(PlaceholderParser.replacePlaceholders(cusMenuTitle)));
+				}
 			}
 
 			String biggerthanwidth = metas.get(0).getEntryValue("biggerthanwidth");
@@ -272,7 +274,7 @@ public class MenuHandlerBase extends GuiComponent {
 				biggerthanwidth = biggerthanwidth.replace(" ", "");
 				if (MathUtils.isInteger(biggerthanwidth)) {
 					int i = Integer.parseInt(biggerthanwidth);
-					if (MainWindowHandler.getWindowGuiWidth() < i) {
+					if (WindowHandler.getWindowGuiWidth() < i) {
 						continue;
 					}
 				}
@@ -282,7 +284,7 @@ public class MenuHandlerBase extends GuiComponent {
 				biggerthanheight = biggerthanheight.replace(" ", "");
 				if (MathUtils.isInteger(biggerthanheight)) {
 					int i = Integer.parseInt(biggerthanheight);
-					if (MainWindowHandler.getWindowGuiHeight() < i) {
+					if (WindowHandler.getWindowGuiHeight() < i) {
 						continue;
 					}
 				}
@@ -292,7 +294,7 @@ public class MenuHandlerBase extends GuiComponent {
 				smallerthanwidth = smallerthanwidth.replace(" ", "");
 				if (MathUtils.isInteger(smallerthanwidth)) {
 					int i = Integer.parseInt(smallerthanwidth);
-					if (MainWindowHandler.getWindowGuiWidth() > i) {
+					if (WindowHandler.getWindowGuiWidth() > i) {
 						continue;
 					}
 				}
@@ -302,7 +304,7 @@ public class MenuHandlerBase extends GuiComponent {
 				smallerthanheight = smallerthanheight.replace(" ", "");
 				if (MathUtils.isInteger(smallerthanheight)) {
 					int i = Integer.parseInt(smallerthanheight);
-					if (MainWindowHandler.getWindowGuiHeight() > i) {
+					if (WindowHandler.getWindowGuiHeight() > i) {
 						continue;
 					}
 				}
@@ -486,6 +488,7 @@ public class MenuHandlerBase extends GuiComponent {
 		this.panoramacube = null;
 		this.slideshow = null;
 		this.customMenuBackground = null;
+		this.backgroundOpacity = 1.0F;
 		this.backgroundAnimation = null;
 		this.backgroundAnimations.clear();
 		if ((this.backgroundAnimation != null) && (this.backgroundAnimation instanceof AdvancedAnimation)) {
@@ -1287,8 +1290,8 @@ public class MenuHandlerBase extends GuiComponent {
 			return;
 		}
 
-		if (this.customMenuTitle != null) {
-			e.getScreen().title = Component.literal(PlaceholderParser.replacePlaceholders(this.customMenuTitle));
+		if ((this.customMenuTitle != null) && !this.forceDisableCustomMenuTitle) {
+			ScreenTitleHandler.setScreenTitle(e.getScreen(), Component.literal(PlaceholderParser.replacePlaceholders(this.customMenuTitle)));
 		}
 
 		if (!this.backgroundDrawable) {
@@ -1352,19 +1355,24 @@ public class MenuHandlerBase extends GuiComponent {
 							this.backgroundAnimation.setPosY(0);
 						}
 					}
-					this.backgroundAnimation.render(CurrentScreenHandler.getPoseStack());
+					//TODO übernehmen
+					this.backgroundAnimation.setOpacity(this.backgroundOpacity);
+					this.backgroundAnimation.render(matrix);
 					this.backgroundAnimation.setWidth(wOri);
 					this.backgroundAnimation.setHeight(hOri);
 					this.backgroundAnimation.setPosX(xOri);
 					this.backgroundAnimation.setPosY(yOri);
 					this.backgroundAnimation.setStretchImageToScreensize(b);
+					//TODO übernehmen
+					this.backgroundAnimation.setOpacity(1.0F);
 				} else if (this.backgroundTexture != null) {
 					RenderSystem.enableBlend();
 					RenderUtils.bindTexture(this.backgroundTexture.getResourceLocation());
-
+					//TODO übernehmen
+					RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.backgroundOpacity);
 					if (!this.panoramaback) {
 						if (!this.keepBackgroundAspectRatio) {
-							GuiComponent.blit(CurrentScreenHandler.getPoseStack(), 0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
+							GuiComponent.blit(matrix, 0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
 						} else {
 							int w = this.backgroundTexture.getWidth();
 							int h = this.backgroundTexture.getHeight();
@@ -1372,9 +1380,9 @@ public class MenuHandlerBase extends GuiComponent {
 							int wfinal = (int)(s.height * ratio);
 							int screenCenterX = s.width / 2;
 							if (wfinal < s.width) {
-								GuiComponent.blit(CurrentScreenHandler.getPoseStack(), 0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
+								GuiComponent.blit(matrix, 0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
 							} else {
-								GuiComponent.blit(CurrentScreenHandler.getPoseStack(), screenCenterX - (wfinal / 2), 0, 1.0F, 1.0F, wfinal + 1, s.height + 1, wfinal + 1, s.height + 1);
+								GuiComponent.blit(matrix, screenCenterX - (wfinal / 2), 0, 1.0F, 1.0F, wfinal + 1, s.height + 1, wfinal + 1, s.height + 1);
 							}
 						}
 					} else {
@@ -1426,23 +1434,32 @@ public class MenuHandlerBase extends GuiComponent {
 							}
 						}
 						if (wfinal <= s.width) {
-							GuiComponent.blit(CurrentScreenHandler.getPoseStack(), 0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
+							GuiComponent.blit(matrix, 0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
 						} else {
 							RenderUtils.doubleBlit(panoPos, 0, 1.0F, 1.0F, wfinal, s.height + 1);
 						}
 					}
 
 					RenderSystem.disableBlend();
+					//TODO übernehmen
+					RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
 				} else if (this.panoramacube != null) {
 
+					//TODO übernehmen
+					float opacity = this.panoramacube.opacity;
+					this.panoramacube.opacity = this.backgroundOpacity;
 					this.panoramacube.render();
+					this.panoramacube.opacity = opacity;
+					//-----------------
 
 				} else if (this.slideshow != null) {
 					int sw = this.slideshow.width;
 					int sh = this.slideshow.height;
 					int sx = this.slideshow.x;
 					int sy = this.slideshow.y;
+					//TODO übernehmen
+					float opacity = this.slideshow.slideshowOpacity;
 
 					if (!this.keepBackgroundAspectRatio) {
 						this.slideshow.width = s.width + 1;
@@ -1463,6 +1480,8 @@ public class MenuHandlerBase extends GuiComponent {
 						}
 					}
 					this.slideshow.y = 0;
+					//TODO übernehmen
+					this.slideshow.slideshowOpacity = this.backgroundOpacity;
 
 					this.slideshow.render(matrix);
 
@@ -1470,9 +1489,15 @@ public class MenuHandlerBase extends GuiComponent {
 					this.slideshow.height = sh;
 					this.slideshow.x = sx;
 					this.slideshow.y = sy;
+					//TODO übernehmen
+					this.slideshow.slideshowOpacity = opacity;
 				} else if (this.customMenuBackground != null) {
 
+					//TODO übernehmen
+					this.customMenuBackground.opacity = this.backgroundOpacity;
 					this.customMenuBackground.render(matrix, s, this.keepBackgroundAspectRatio);
+					this.customMenuBackground.opacity = 1.0F;
+					//-------------------
 
 				}
 			}
@@ -1486,7 +1511,7 @@ public class MenuHandlerBase extends GuiComponent {
 			backItems.addAll(this.backgroundRenderItems);
 			for (CustomizationItemBase i : backItems) {
 				try {
-					i.render(CurrentScreenHandler.getPoseStack(), s);
+					i.render(matrix, s);
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				}

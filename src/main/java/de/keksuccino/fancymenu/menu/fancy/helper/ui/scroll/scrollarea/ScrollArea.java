@@ -37,6 +37,7 @@ public class ScrollArea extends UIBase {
     public int overriddenTotalScrollWidth = -1;
     public int overriddenTotalScrollHeight = -1;
     public boolean correctYOnAddingRemovingEntries = true;
+    public float customGuiScale = -1F;
 
     public ScrollArea(int x, int y, int width, int height) {
         this.setX(x, true);
@@ -83,7 +84,7 @@ public class ScrollArea extends UIBase {
     public void renderEntries(PoseStack matrix, int mouseX, int mouseY, float partial) {
 
         Window win = Minecraft.getInstance().getWindow();
-        double scale = win.getGuiScale();
+        double scale = (this.customGuiScale != -1F) ? this.customGuiScale : win.getGuiScale();
         int sciBottomY = this.getInnerY() + this.getInnerHeight();
         RenderSystem.enableScissor((int)(this.getInnerX() * scale), (int)(win.getHeight() - (sciBottomY * scale)), (int)(this.getInnerWidth() * scale), (int)(this.getInnerHeight() * scale));
 

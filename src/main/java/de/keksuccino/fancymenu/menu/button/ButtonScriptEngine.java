@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 
 import de.keksuccino.fancymenu.FancyMenu;
@@ -41,11 +42,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.packs.PackSelectionScreen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.ServerList;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.packs.repository.Pack;
 import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -190,8 +193,30 @@ public class ButtonScriptEngine {
 					Minecraft.getInstance().setScreen(CustomGuiLoader.getGui(value, Minecraft.getInstance().screen, null));
 				}
 			}
-			if (action.equalsIgnoreCase("opengui")) {
-				if (value.equals(CreateWorldScreen.class.getName())) {
+			if (action.equalsIgnoreCase("opengui") && (value != null)) {
+				if (MenuCustomization.getValidMenuIdentifierFor(value).equals(PackSelectionScreen.class.getName())) {
+					Screen parent = Minecraft.getInstance().screen;
+					PackSelectionScreen s = new PackSelectionScreen(parent, Minecraft.getInstance().getResourcePackRepository(), (repo) -> {
+						List<String> list = ImmutableList.copyOf(Minecraft.getInstance().options.resourcePacks);
+						Minecraft.getInstance().options.resourcePacks.clear();
+						Minecraft.getInstance().options.incompatibleResourcePacks.clear();
+						for(Pack pack : repo.getSelectedPacks()) {
+							if (!pack.isFixedPosition()) {
+								Minecraft.getInstance().options.resourcePacks.add(pack.getId());
+								if (!pack.getCompatibility().isCompatible()) {
+									Minecraft.getInstance().options.incompatibleResourcePacks.add(pack.getId());
+								}
+							}
+						}
+						Minecraft.getInstance().options.save();
+						List<String> list1 = ImmutableList.copyOf(Minecraft.getInstance().options.resourcePacks);
+						if (!list1.equals(list)) {
+							Minecraft.getInstance().reloadResourcePacks();
+						}
+					}, Minecraft.getInstance().getResourcePackDirectory(), Component.translatable("resourcePack.title"));
+					Minecraft.getInstance().setScreen(s);
+				}
+				else if (value.equals(CreateWorldScreen.class.getName())) {
 					CreateWorldScreen.openFresh(Minecraft.getInstance(), Minecraft.getInstance().screen);
 				} else {
 					try {

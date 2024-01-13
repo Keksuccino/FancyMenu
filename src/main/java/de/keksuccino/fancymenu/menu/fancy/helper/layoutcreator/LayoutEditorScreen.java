@@ -20,6 +20,7 @@ import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.Dee
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationLayerRegistry;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.deepcustomizationlayer.DeepCustomizationLayoutEditorElement;
 import de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal.LoadingRequirementContainer;
+import de.keksuccino.fancymenu.screen.ScreenTitleHandler;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.animation.AdvancedAnimation;
@@ -73,6 +74,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 public class LayoutEditorScreen extends Screen {
 
@@ -150,8 +152,7 @@ public class LayoutEditorScreen extends Screen {
 	protected boolean multiselectStretchedX = false;
 	protected boolean multiselectStretchedY = false;
 	protected List<ContextMenu> multiselectChilds = new ArrayList<ContextMenu>();
-	
-	protected Map<String, Boolean> focusChangeBlocker = new HashMap<String, Boolean>();
+
 	protected LayoutElement topObject;
 
 	protected List<String> universalLayoutWhitelist = new ArrayList<>();
@@ -159,14 +160,16 @@ public class LayoutEditorScreen extends Screen {
 
 	protected LoadingRequirementContainer layoutWideLoadingRequirementContainer = new LoadingRequirementContainer();
 
+	protected FMContextMenu activeElementContextMenu = null;
+
 	public LayoutEditorUI ui = new LayoutEditorUI(this);
-	
+
 	public LayoutEditorScreen(Screen screenToCustomize) {
 		super(Component.literal(""));
 		this.screen = screenToCustomize;
 		Component cachedOriTitle = MenuHandlerBase.cachedOriginalMenuTitles.get(this.screen.getClass());
 		if (cachedOriTitle != null) {
-			this.screen.title = cachedOriTitle;
+			ScreenTitleHandler.setScreenTitle(this.screen, cachedOriTitle);
 		}
 
 		if (!initDone) {
@@ -232,8 +235,8 @@ public class LayoutEditorScreen extends Screen {
 
 		this.focusedObjects.clear();
 		this.updateContent();
-		
-		this.focusChangeBlocker.clear();
+
+		this.resetActiveElementContextMenu();
 		
 	}
 
@@ -549,7 +552,7 @@ public class LayoutEditorScreen extends Screen {
 			}
 			this.updateContent();
 		}
-		this.focusChangeBlocker.clear();
+		this.resetActiveElementContextMenu();
 	}
 	
 	public List<LayoutElement> getContent() {
@@ -640,12 +643,6 @@ public class LayoutEditorScreen extends Screen {
 				this.multiselectRightclickMenu.closeMenu();
 			}
 
-			if (this.multiselectRightclickMenu.isOpen()) {
-				this.setFocusChangeBlocked("editor.context.multiselect", true);
-			} else {
-				this.setFocusChangeBlocked("editor.context.multiselect", false);
-			}
-
 		}
 
 		//Handle properties context menu
@@ -665,21 +662,11 @@ public class LayoutEditorScreen extends Screen {
 				this.propertiesRightclickMenu.closeMenu();
 			}
 
-			if (this.propertiesRightclickMenu.isOpen()) {
-				this.setFocusChangeBlocked("editor.context.properties", true);
-			} else {
-				this.setFocusChangeBlocked("editor.context.properties", false);
-			}
-
 		}
-				
-		//Render rightclick menus of all layout elements
-		for (LayoutElement e : this.content) {
-			if (e.rightclickMenu != null) {
-				if (!PopupHandler.isPopupActive()) {
-					UIBase.renderScaledContextMenu(matrix, e.rightclickMenu);
-				}
-			}
+
+		this.handleActiveElementContextMenu();
+		if (this.activeElementContextMenu != null) {
+			UIBase.renderScaledContextMenu(matrix, this.activeElementContextMenu);
 		}
 		
 		//Render the editor UI
@@ -1460,12 +1447,17 @@ public class LayoutEditorScreen extends Screen {
 		}
 	}
 
-	public void setFocusChangeBlocked(String id, Boolean b) {
-		this.focusChangeBlocker.put(id, b);
-	}
-
 	public boolean isFocusChangeBlocked() {
-		return this.focusChangeBlocker.containsValue(true);
+		if (this.activeElementContextMenu != null) {
+			return true;
+		}
+		if ((this.propertiesRightclickMenu != null) && this.propertiesRightclickMenu.isOpen()) {
+			return true;
+		}
+		if ((this.multiselectRightclickMenu != null) && this.multiselectRightclickMenu.isOpen()) {
+			return true;
+		}
+		return false;
 	}
 	
 	public LayoutElement getTopHoverObject() {
@@ -1612,6 +1604,50 @@ public class LayoutEditorScreen extends Screen {
 			return (((CustomGuiBase) this.screen).getIdentifier().equals("%fancymenu:universal_layout%"));
 		}
 		return false;
+	}
+
+	protected void handleActiveElementContextMenu() {
+
+		if (this.activeElementContextMenu != null) {
+			//Close active element menu when mouse is clicked while menu is not hovered
+			if ((MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown()) && !this.activeElementContextMenu.isHoveredOrFocused()) {
+				this.activeElementContextMenu.closeMenu();
+				this.activeElementContextMenu = null;
+			}
+			//Force-reset active element menu if it's closed
+			if ((this.activeElementContextMenu != null) && !this.activeElementContextMenu.isOpen()) {
+				this.activeElementContextMenu = null;
+			}
+		}
+
+		if ((this.activeElementContextMenu == null) && MouseInput.isRightMouseDown()) {
+			//Search for potential element menu to open
+			for (LayoutElement e : this.content) {
+				if ((e.rightclickMenu != null) && e.isRightClicked() && this.isFocused(e) && (this.getFocusedObjects().size() == 1)) {
+					this.activeElementContextMenu = e.rightclickMenu;
+					UIBase.openScaledContextMenuAtMouse(e.rightclickMenu);
+					e.hoveredLayers.clear();
+					for (LayoutElement o : this.content) {
+						if (o.isHoveredOrFocused()) {
+							e.hoveredLayers.add(o);
+						}
+					}
+				}
+			}
+		}
+
+	}
+
+	public void resetActiveElementContextMenu() {
+		if (this.activeElementContextMenu != null) {
+			this.activeElementContextMenu.closeMenu();
+			this.activeElementContextMenu = null;
+		}
+	}
+
+	@Nullable
+	public FMContextMenu getActiveElementContextMenu() {
+		return this.activeElementContextMenu;
 	}
 
 	protected static void onShortcutPressed(KeyboardData d) {

@@ -1,6 +1,7 @@
-//TODO übernehmenn (klasse aus item package löschen und abgeänderte klasse nach v1 package kopieren)
 package de.keksuccino.fancymenu.menu.loadingrequirement.v1;
 
+import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirement;
+import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirementRegistry;
 import de.keksuccino.fancymenu.menu.loadingrequirement.v2.LoadingRequirement;
 import de.keksuccino.fancymenu.menu.loadingrequirement.v2.LoadingRequirementRegistry;
 import de.keksuccino.konkrete.properties.PropertiesSection;
@@ -249,17 +250,19 @@ public class VisibilityRequirementContainer {
 
         //CUSTOM VISIBILITY REQUIREMENTS (API)
         this.customRequirements.clear();
-        for (LoadingRequirement r : LoadingRequirementRegistry.getRequirements()) {
-            String stringShowIf = properties.getEntryValue("vr_custom:showif:" + r.getIdentifier());
-            if (stringShowIf != null) {
-                RequirementPackage p = new RequirementPackage();
-                p.requirement = r;
-                if (stringShowIf.equalsIgnoreCase("true")) {
-                    p.showIf = true;
+        for (VisibilityRequirement r : VisibilityRequirementRegistry.getRequirements()) {
+            if ((r != null) && (r.getIdentifier() != null)) {
+                String stringShowIf = properties.getEntryValue("vr_custom:showif:" + r.getIdentifier());
+                if (stringShowIf != null) {
+                    RequirementPackage p = new RequirementPackage();
+                    p.requirement = r;
+                    if (stringShowIf.equalsIgnoreCase("true")) {
+                        p.showIf = true;
+                    }
+                    p.value = properties.getEntryValue("vr_custom:value:" + r.getIdentifier());
+                    p.checkFor = true;
+                    this.customRequirements.put(r.getIdentifier(), p);
                 }
-                p.value = properties.getEntryValue("vr_custom:value:" + r.getIdentifier());
-                p.checkFor = true;
-                this.customRequirements.put(r.getIdentifier(), p);
             }
         }
 
@@ -267,7 +270,7 @@ public class VisibilityRequirementContainer {
 
     public static class RequirementPackage {
 
-        public LoadingRequirement requirement;
+        public VisibilityRequirement requirement;
         public boolean showIf = false;
         public String value = null;
         public boolean checkFor = false;

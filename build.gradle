@@ -42,6 +42,15 @@ minecraft {
                 }
             }
         }
+        server {
+            workingDirectory project.file('server_run')
+            arg "-mixin.config=fancymenu.general.mixin.json"
+            mods {
+                fancymenu {
+                    source sourceSets.main
+                }
+            }
+        }
     }
 }
 

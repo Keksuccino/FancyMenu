@@ -379,8 +379,8 @@ helper.creator.items.shape.color.btndesc = Set the HEX color of the shape.%n%%n%
 helper.creator.object.movedown.desc.subtext.vanillabutton = %n%%n%§cYou can't move elements behind%n%§cvanilla buttons.%n%%n%Instead, you can set the layout%n%§lrendering order§r to '§lbackground§r'%n%to render all elements behind%n%default menu content like%n%vanilla buttons.%n%%n%§lRightclick §rthe editor background%n%to set the §lrendering order§r!
 
 
-helper.menubar.expand = Expand Menu Bar
-helper.menubar.shrink = Shrink Menu Bar
+helper.menubar.expand = Expand Menu Bar%n%%n%§cTo hide the bar, press §nCTRL + ALT + C§r§c.%n%§cIf that doesn't work, check your%n%§cMinecraft controls settings.
+helper.menubar.shrink = Shrink Menu Bar%n%%n%§cTo hide the bar, press §nCTRL + ALT + C§r§c.%n%§cIf that doesn't work, check your%n%§cMinecraft controls settings.
 helper.menubar.settings = FancyMenu Settings
 
 fancymenu.config = FancyMenu Settings
