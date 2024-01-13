@@ -5,7 +5,7 @@ DON'T SNATCH MA STUFF LICENSE V2.0 (DSMSLv2)
 Summary:
  
 I don't want to make this any more complicated than needed, so to keep it short:
-Please don't be a dick and reupload my work without permission or ship it with your projects (like other mods or modpacks).
+Please don't be a dick and reupload my work without permission or directly ship it (JAR or code) with your projects (like other mods or modpacks).
  
 You can use this mod in modpacks without asking me, as long as the modpack doesn't
 directly ship the mod JAR, but the end user downloads it from either CurseForge or Modrinth.
