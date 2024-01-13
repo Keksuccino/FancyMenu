@@ -33,7 +33,7 @@ dependencies {
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 	modImplementation "maven.modrinth:modmenu:7.2.2"
 	implementation fileTree('libs') { include '*.jar' }
-	include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.2.0")))
+	include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.3.2")))
 }
 
 loom {

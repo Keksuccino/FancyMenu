@@ -1,16 +1,16 @@
 {
   "schemaVersion": 1,
   "id": "fancymenu",
-  "version": "2.14.10",
+  "version": "2.14.13",
   "name": "FancyMenu",
-  "description": "Give your life a fancy touch. You deserve it. | FancyMenu © Copyright 2020-2023 Keksuccino. FancyMenu is licensed under DSMSL (DON'T SNATCH MA STUFF LICENSE). See https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md for more information about this license.",
+  "description": "Give your life a fancy touch. You deserve it. | FancyMenu © Copyright 2020-2024 Keksuccino. FancyMenu is licensed under DSMSLv2 (DON'T SNATCH MA STUFF LICENSE v2). See https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md for more information about this license.",
   "environment": "*",
   "authors": [
     "Keksuccino"
   ],
   "contributors": [],
   "contact": {},
-  "license": "DSMSL (DON'T SNATCH MA STUFF LICENSE)",
+  "license": "DSMSLv2 (DON'T SNATCH MA STUFF LICENSE v2)",
   "icon": "assets/fancymenu/icon.png",
   "entrypoints": {
     "main": [
@@ -23,14 +23,14 @@
     "fancymenu.general.mixin.json"
   ],
   "depends": {
-    "fabricloader": ">=0.13.3",
-    "fabric": ">=0.58.0",
-    "konkrete": ">=1.7.0",
+    "fabricloader": ">=0.15.3",
+    "fabric": ">=0.91.0",
+    "konkrete": "1.8.x",
 	"minecraft": "1.20.1",
     "java": ">=17"
   },
   "breaks": {
-    "drippyloadingscreen": "<2.2.5",
+    "drippyloadingscreen": ["<2.2.5", ">=3.0.0"],
     "fmextension_audio": "<1.1.2"
   },
   "accessWidener": "fancymenu.accessWidener"
