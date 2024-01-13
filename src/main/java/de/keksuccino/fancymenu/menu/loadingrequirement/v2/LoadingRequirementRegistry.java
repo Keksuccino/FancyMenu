@@ -1,4 +1,4 @@
-//TODO übernehmenn
+
 package de.keksuccino.fancymenu.menu.loadingrequirement.v2;
 
 import org.apache.logging.log4j.LogManager;
@@ -48,7 +48,11 @@ public class LoadingRequirementRegistry {
      */
     @NotNull
     public static List<LoadingRequirement> getRequirements() {
-        return new ArrayList<>(REQUIREMENTS.values());
+        List<LoadingRequirement> l = new ArrayList<>();
+        REQUIREMENTS.forEach((key, value) -> {
+            l.add(value);
+        });
+        return l;
     }
 
     /**

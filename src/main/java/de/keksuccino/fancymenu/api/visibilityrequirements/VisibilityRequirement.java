@@ -1,4 +1,4 @@
-//TODO übernehmenn
+
 package de.keksuccino.fancymenu.api.visibilityrequirements;
 
 import de.keksuccino.konkrete.input.CharacterFilter;

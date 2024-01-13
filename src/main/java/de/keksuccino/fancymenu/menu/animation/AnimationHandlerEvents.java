@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.menu.animation;
 
+import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.konkrete.events.SubscribeEvent;
@@ -25,10 +26,10 @@ public class AnimationHandlerEvents {
 //	}
 	
 	@SubscribeEvent
-	public void onInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {
+	public void onInitPre(InitOrResizeScreenEvent.Pre e) {
 		//Stopping audio and resetting to intro (if enabled) for all advanced animations when changing the screen
-		if (MenuCustomization.isValidScreen(e.getGui())) {
-			if (AnimationHandler.isReady() && (this.lastScreen != e.getGui()) && !LayoutEditorScreen.isActive) {
+		if (MenuCustomization.isValidScreen(e.getScreen())) {
+			if (AnimationHandler.isReady() && (this.lastScreen != e.getScreen()) && !LayoutEditorScreen.isActive) {
 				for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
 					if (r instanceof AdvancedAnimation) {
 						((AdvancedAnimation)r).stopAudio();
@@ -39,7 +40,7 @@ public class AnimationHandlerEvents {
 				}
 			}
 
-			this.lastScreen = e.getGui();
+			this.lastScreen = e.getScreen();
 		}
 		this.idle = false;
 	}

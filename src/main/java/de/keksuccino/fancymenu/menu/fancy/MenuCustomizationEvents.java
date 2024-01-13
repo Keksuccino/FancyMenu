@@ -3,13 +3,14 @@ package de.keksuccino.fancymenu.menu.fancy;
 import java.io.File;
 import java.io.IOException;
 
+import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import de.keksuccino.konkrete.file.FileUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.events.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
-import de.keksuccino.fancymenu.mainwindow.MainWindowHandler;
+import de.keksuccino.fancymenu.mainwindow.WindowHandler;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonMimeHandler;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
@@ -17,7 +18,6 @@ import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScree
 import de.keksuccino.konkrete.events.EventPriority;
 import de.keksuccino.konkrete.events.SubscribeEvent;
 import de.keksuccino.konkrete.events.client.ClientTickEvent;
-import de.keksuccino.konkrete.events.client.GuiScreenEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -33,9 +33,9 @@ public class MenuCustomizationEvents {
 	protected Screen lastScreen = null;
 	
 	@SubscribeEvent(priority = EventPriority.HIGH)
-	public void onInitPrePre(GuiScreenEvent.InitGuiEvent.Pre e) {
+	public void onInitPrePre(InitOrResizeScreenEvent.Pre e) {
 		if (!ButtonCache.isCaching()) {
-			if (MenuCustomization.isValidScreen(e.getGui())) {
+			if (MenuCustomization.isValidScreen(e.getScreen())) {
 				Screen current = Minecraft.getInstance().screen;
 				if (current != null) {
 					if (this.lastScreen != null) {
@@ -73,14 +73,14 @@ public class MenuCustomizationEvents {
 	}
 	
 	@SubscribeEvent
-	public void onInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {
+	public void onInitPre(InitOrResizeScreenEvent.Pre e) {
 		
 		MenuCustomization.isCurrentScrollable = false;
 		
-		if (MenuCustomization.isValidScreen(e.getGui()) && !LayoutEditorScreen.isActive) {
+		if (MenuCustomization.isValidScreen(e.getScreen()) && !LayoutEditorScreen.isActive) {
 			this.idle = false;
 		}
-		if (MenuCustomization.isValidScreen(e.getGui()) && !MenuCustomization.isMenuCustomizable(e.getGui()) && !(e.getGui() instanceof LayoutEditorScreen)) {
+		if (MenuCustomization.isValidScreen(e.getScreen()) && !MenuCustomization.isMenuCustomizable(e.getScreen()) && !(e.getScreen() instanceof LayoutEditorScreen)) {
 			MenuCustomization.stopSounds();
 			MenuCustomization.resetSounds();
 		}
@@ -116,7 +116,7 @@ public class MenuCustomizationEvents {
 			this.iconSetAfterFullscreen = false;
 		} else {
 			if (!this.iconSetAfterFullscreen) {
-				MainWindowHandler.updateWindowIcon();
+				WindowHandler.updateWindowIcon();
 				this.iconSetAfterFullscreen = true;
 			}
 		}

@@ -34,6 +34,7 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 	private double fov = 85.0D;
 	private float angle = 25.0F;
 	private Minecraft mc = Minecraft.getInstance();
+	public float opacity = 1.0F;
 
 	/**
 	 * Loads a panorama cube from a directory containing:<br>
@@ -124,7 +125,7 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 
 	public void render() {
 		try {
-			this.renderRaw(1.0F);
+			this.renderRaw(this.opacity);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -151,7 +152,7 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 			matrix.mulPose(Vector3f.XP.rotationDegrees(180.0F));
 			RenderSystem.applyModelViewMatrix();
 			RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+			RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, this.opacity);
 			RenderSystem.enableBlend();
 			RenderSystem.disableCull();
 			RenderSystem.depthMask(false);
@@ -239,13 +240,14 @@ public class ExternalTexturePanoramaRenderer extends GuiComponent {
 					this.overlay_texture.loadTexture();
 				}
 				RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+				RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, this.opacity);
 				RenderSystem.enableBlend();
 				RenderSystem.setShaderTexture(0, this.overlay_texture.getResourceLocation());
 				blit(CurrentScreenHandler.getMatrixStack(), 0, 0, 0.0F, 0.0F, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height);
 			}
 
 		}
+		RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0F);
 	}
 
 	public String getName() {

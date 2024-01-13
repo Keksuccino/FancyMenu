@@ -1,4 +1,4 @@
-//TODO übernehmen
+
 package de.keksuccino.fancymenu.menu.fancy.item.items.ticker;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -23,7 +23,7 @@ import java.util.*;
 
 public class TickerCustomizationItem extends CustomizationItem implements IActionExecutorItem {
 
-    //TODO übernehmenn (replace with new ButtonScriptEngine.ActionContainer class)
+    
     public volatile List<ButtonScriptEngine.ActionContainer> actions = new ArrayList<>();
     public volatile long tickDelayMs = 0;
     public volatile boolean isAsync = false;

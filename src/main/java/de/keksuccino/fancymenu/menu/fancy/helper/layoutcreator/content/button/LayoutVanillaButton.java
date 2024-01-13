@@ -39,9 +39,9 @@ public class LayoutVanillaButton extends LayoutElement {
 		this.button = button;
 		this.object.orientation = "original";
 		this.customizationContainer = customizationContainer;
-		//TODO übernehmenn
+
 		this.object.loadingRequirementContainer = this.customizationContainer.loadingRequirementContainer;
-		//------------------
+		
 		this.init();
 	}
 
@@ -115,7 +115,7 @@ public class LayoutVanillaButton extends LayoutElement {
 		this.rightclickMenu.addSeparator();
 
 		AdvancedButton b2 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.editlabel"), (press) -> {
-			//TODO übernehmenn
+
 			TextEditorScreen s = new TextEditorScreen(new TextComponent(Locals.localize("helper.creator.items.button.editlabel")), this.handler, null, (call) -> {
 				if (call != null) {
 					if ((this.customizationContainer.customButtonLabel == null) || !this.customizationContainer.customButtonLabel.equals(call)) {
@@ -127,7 +127,7 @@ public class LayoutVanillaButton extends LayoutElement {
 			s.multilineMode = false;
 			s.setText(StringUtils.convertFormatCodes(this.object.value, "§", "&"));
 			Minecraft.getInstance().setScreen(s);
-			//------------------
+			
 		});
 		this.rightclickMenu.addContent(b2);
 
@@ -143,7 +143,7 @@ public class LayoutVanillaButton extends LayoutElement {
 		this.rightclickMenu.addSeparator();
 
 		AdvancedButton b5 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.hoverlabel"), (press) -> {
-			//TODO übernehmenn
+
 			TextEditorScreen s = new TextEditorScreen(new TextComponent(Locals.localize("helper.creator.items.button.hoverlabel")), this.handler, null, (call) -> {
 				if (call != null) {
 					if ((this.customizationContainer.hoverLabel == null) || !this.customizationContainer.hoverLabel.equals(StringUtils.convertFormatCodes(call, "&", "§"))) {
@@ -157,7 +157,7 @@ public class LayoutVanillaButton extends LayoutElement {
 				s.setText(StringUtils.convertFormatCodes(this.customizationContainer.hoverLabel, "§", "&"));
 			}
 			Minecraft.getInstance().setScreen(s);
-			//------------------
+			
 		});
 		this.rightclickMenu.addContent(b5);
 
@@ -267,7 +267,7 @@ public class LayoutVanillaButton extends LayoutElement {
 		this.rightclickMenu.addContent(b9);
 
 		AdvancedButton b13 = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.items.button.btndescription"), (press) -> {
-			//TODO übernehmenn
+
 			TextEditorScreen s = new TextEditorScreen(new TextComponent(Locals.localize("helper.creator.items.button.btndescription")), this.handler, null, (call) -> {
 				if (call != null) {
 					call = call.replace("\n", "%n%");
@@ -288,7 +288,7 @@ public class LayoutVanillaButton extends LayoutElement {
 				s.setText(this.customizationContainer.buttonDescription.replace("%n%", "\n"));
 			}
 			Minecraft.getInstance().setScreen(s);
-			//--------------------
+			
 		});
 		List<String> l = new ArrayList<String>();
 		for (String s : StringUtils.splitLines(Locals.localize("helper.creator.items.button.btndescription.desc"), "%n%")) {
@@ -511,7 +511,7 @@ public class LayoutVanillaButton extends LayoutElement {
 		PropertiesSection visReqs = new PropertiesSection("customization");
 		visReqs.addEntry("action", "vanilla_button_visibility_requirements");
 		visReqs.addEntry("identifier", "%id=" + this.getButtonId() + "%");
-		//TODO übernehmenn
+
 		this.addLoadingRequirementPropertiesTo(visReqs);
 		if (visReqs.getEntries().size() > 2) {
 			l.add(visReqs);

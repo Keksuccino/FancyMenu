@@ -47,30 +47,26 @@ import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+@SuppressWarnings("all")
 public class FancyMenu implements ModInitializer {
 
-	//TODO übernehmen
-	public static final String VERSION = "2.14.0";
+	public static final String VERSION = "2.14.13";
 	public static final String MOD_LOADER = "fabric";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
 
 	public static Config config;
 
-	//TODO übernehmen
 	public static final File MOD_DIR = new File(getGameDirectory(), "/config/fancymenu");
 	public static final File INSTANCE_DATA_DIR = new File(getGameDirectory(), "/fancymenu_data");
 	public static final File INSTANCE_TEMP_DATA_DIR = new File(INSTANCE_DATA_DIR, "/temp");
-	//---------------------
 
-	//TODO übernehmen
 	private static File animationsPath = new File(MOD_DIR, "/animations");
 	private static File customizationPath = new File(MOD_DIR, "/customization");
 	private static File customGuiPath = new File(MOD_DIR, "/customguis");
 	private static File buttonscriptPath = new File(MOD_DIR, "/buttonscripts");
 	private static File panoramaPath = new File(MOD_DIR, "/panoramas");
 	private static File slideshowPath = new File(MOD_DIR, "/slideshows");
-	//---------------------------
 	
     @Override
     public void onInitialize() {
@@ -94,7 +90,7 @@ public class FancyMenu implements ModInitializer {
 	    		panoramaPath.mkdirs();
 	    		slideshowPath.mkdirs();
 
-	    		updateConfig();
+	    		initConfig();
 
 				DeepCustomizationLayers.registerAll();
 
@@ -230,6 +226,12 @@ public class FancyMenu implements ModInitializer {
 		Locals.getLocalsFromDir(f.getPath());
 	}
 
+	public static void initConfig() {
+		if (config == null) {
+			updateConfig();
+		}
+	}
+
     public static void updateConfig() {
     	try {
 
@@ -335,7 +337,7 @@ public class FancyMenu implements ModInitializer {
 
 	public static boolean isDrippyLoadingScreenLoaded() {
 		try {
-			Class.forName("de.keksuccino.drippyloadingscreen.DrippyLoadingScreen");
+			Class.forName("de.keksuccino.drippyloadingscreen.DrippyLoadingScreen", false, FancyMenu.class.getClassLoader());
 			return true;
 		} catch (Exception e) {}
 		return false;
@@ -343,7 +345,7 @@ public class FancyMenu implements ModInitializer {
 
 	public static boolean isKonkreteLoaded() {
 		try {
-			Class.forName("de.keksuccino.konkrete.Konkrete");
+			Class.forName("de.keksuccino.konkrete.Konkrete", false, FancyMenu.class.getClassLoader());
 			return true;
 		} catch (Exception e) {}
 		return false;
@@ -351,7 +353,7 @@ public class FancyMenu implements ModInitializer {
 
 	public static boolean isAudioExtensionLoaded() {
 		try {
-			Class.forName("de.keksuccino.fmaudio.FmAudio");
+			Class.forName("de.keksuccino.fmaudio.FmAudio", false, FancyMenu.class.getClassLoader());
 			return true;
 		} catch (Exception e) {}
 		return false;

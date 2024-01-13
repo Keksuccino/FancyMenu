@@ -249,7 +249,7 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 				RenderSystem.setShaderTexture(0, r);
 				blit(matrix, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
-			//--------------
+			
 		}
 	}
 

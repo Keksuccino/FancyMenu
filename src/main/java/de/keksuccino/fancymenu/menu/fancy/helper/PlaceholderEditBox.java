@@ -20,21 +20,21 @@ import org.apache.logging.log4j.Logger;
 import java.util.*;
 import java.util.List;
 
-//TODO übernehmen (change name of DynamicValueTextfield)
+
 public class PlaceholderEditBox extends AdvancedTextField {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
 	private AdvancedImageButton variableButton;
-	//TODO übernehmen (make public)
+
 	public FMContextMenu variableMenu;
 
-	//TODO übernehmen
+
 	public boolean renderContextMenu = true;
 
 	private static final ResourceLocation VARIABLES_BUTTON_RESOURCE = new ResourceLocation("keksuccino", "add_btn.png");
 
-	//TODO übernehmen (whole constructor)
+
 	public PlaceholderEditBox(Font font, int x, int y, int width, int height, boolean handleTextField, CharacterFilter filter) {
 		super(font, x, y, width, height, handleTextField, filter);
 
@@ -111,7 +111,7 @@ public class PlaceholderEditBox extends AdvancedTextField {
 			this.variableButton.setY(this.y);
 			this.variableButton.render(matrix, mouseX, mouseY, partialTicks);
 
-			//TODO übernehmen
+
 			if (this.renderContextMenu) {
 				this.renderContextMenu(matrix);
 			}
@@ -119,7 +119,7 @@ public class PlaceholderEditBox extends AdvancedTextField {
 		}
 	}
 
-	//TODO übernehmen (move from renderButton method to this one)
+
 	public void renderContextMenu(PoseStack matrix) {
 		float scale = UIBase.getUIScale();
 		MouseInput.setRenderScale(scale);

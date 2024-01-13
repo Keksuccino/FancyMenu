@@ -46,6 +46,7 @@ public abstract class CustomizationItemBase extends GuiComponent {
 	public volatile boolean fadeIn = false;
 	public volatile float fadeInSpeed = 1.0F;
 	public volatile float opacity = 1.0F;
+	public float customGuiScale = -1F;
 
 	public LoadingRequirementContainer loadingRequirementContainer;
 
@@ -175,7 +176,7 @@ public abstract class CustomizationItemBase extends GuiComponent {
 		if (orientation.equalsIgnoreCase("bottom-centered")) {
 			x += (w / 2);
 		}
-		//-----------------------------
+		
 		if (orientation.equalsIgnoreCase("top-right")) {
 			x += w;
 		}
@@ -215,14 +216,14 @@ public abstract class CustomizationItemBase extends GuiComponent {
 		if (orientation.equalsIgnoreCase("bottom-left")) {
 			y += h;
 		}
-		//----------------------------
+		
 		if (orientation.equalsIgnoreCase("mid-centered")) {
 			y += (h / 2);
 		}
 		if (orientation.equalsIgnoreCase("bottom-centered")) {
 			y += h;
 		}
-		//-----------------------------
+		
 		if (orientation.equalsIgnoreCase("top-right")) {
 		}
 		if (orientation.equalsIgnoreCase("mid-right")) {

@@ -451,9 +451,9 @@ public class LayoutEditorUI extends UIBase {
 				});
 				universalLayoutMenu.addContent(clearBlacklistButton);
 
-				//----------------------------------------------------------
+				
 				universalLayoutMenu.addSeparator();
-				//----------------------------------------------------------
+				
 
 				//Add to Whitelist -----------------
 				AdvancedButton addWhitelistButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.layoutoptions.universal_layout.options.add_whitelist"), true, (press) -> {
@@ -625,7 +625,7 @@ public class LayoutEditorUI extends UIBase {
 			editMenuTitleButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.edit_menu_title.desc"), "%n%"));
 			this.addContent(editMenuTitleButton);
 
-			//TODO übernehmen
+			
 			/** RESET MENU TITLE **/
 			AdvancedButton resetMenuTitleButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("fancymenu.helper.editor.edit_menu_title.reset"), true, (press) -> {
 				if (this.parent.customMenuTitle != null) {
@@ -636,7 +636,7 @@ public class LayoutEditorUI extends UIBase {
 			resetMenuTitleButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.helper.editor.edit_menu_title.reset.desc"), "%n%"));
 			this.addContent(resetMenuTitleButton);
 
-			//TODO übernehmen
+			
 			this.addSeparator();
 
 			/** RANDOM MODE **/
@@ -785,9 +785,9 @@ public class LayoutEditorUI extends UIBase {
 				}
 			};
 			this.addContent(autoScalingButton);
-			//--------------------------
+			
 
-			//TODO übernehmen
+			
 			/** FORCE GUI SCALE **/
 			AdvancedButton menuScaleButton = new AdvancedButton(0, 0, 0, 16, Locals.localize("helper.creator.rightclick.scale"), true, (press) -> {
 				FMTextInputPopup p = new FMTextInputPopup(new Color(0, 0, 0, 0), Locals.localize("helper.creator.rightclick.scale"), CharacterFilter.getIntegerCharacterFiler(), 240, (call) -> {
@@ -1121,11 +1121,11 @@ public class LayoutEditorUI extends UIBase {
 
 			/** WEB IMAGE **/
 			AdvancedButton webImageButton = new AdvancedButton(0, 0, 0, 20, Locals.localize("helper.creator.add.webimage"), (press) -> {
-				//TODO übernehmenn
+				
 				TextEditorScreen s = new TextEditorScreen(new TextComponent(Locals.localize("fancymenu.editor.elements.web_image.enter_url")), this.parent, null, this.parent::addWebTexture);
 				s.multilineMode = false;
 				Minecraft.getInstance().setScreen(s);
-				//----------------------
+				
 			});
 			this.addContent(webImageButton);
 
@@ -1135,11 +1135,11 @@ public class LayoutEditorUI extends UIBase {
 			this.addChild(splashMenu);
 
 			AdvancedButton singleSplashButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("helper.creator.add.splash.single"), true, (press) -> {
-				//TODO übernehmenn
+				
 				TextEditorScreen s = new TextEditorScreen(new TextComponent(Locals.localize("fancymenu.editor.elements.splash.single.enter_text")), this.parent, null, this.parent::addSingleSplashText);
 				s.multilineMode = false;
 				Minecraft.getInstance().setScreen(s);
-				//--------------------
+				
 			});
 			singleSplashButton.setDescription(StringUtils.splitLines(Locals.localize("helper.creator.add.splash.single.desc"), "%n%"));
 			splashMenu.addContent(singleSplashButton);

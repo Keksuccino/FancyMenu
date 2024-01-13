@@ -280,7 +280,7 @@ public class PlayerEntityCustomizationItem extends CustomizationItemBase {
 			Quaternion q2 = Vector3f.XP.rotationDegrees(item.bodyRotationY);
 			q.mul(q2);
 			matrixIntern.mulPose(q);
-			//-----------
+			
 
 			//horizontal rotation body
 			item.entity.yBodyRot = item.bodyRotationX;

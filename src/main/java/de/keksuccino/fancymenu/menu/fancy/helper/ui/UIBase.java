@@ -4,6 +4,7 @@ import java.awt.Color;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.mixin.client.IMixinMinecraft;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
@@ -106,6 +107,10 @@ public class UIBase extends GuiComponent {
 		if (renderBottom) {
 			fill(matrix, xMin, yMax - borderThickness, xMax, yMax, borderColor.getRGB());
 		}
+	}
+
+	public static float getPartialTick() {
+		return Minecraft.getInstance().isPaused() ? ((IMixinMinecraft)Minecraft.getInstance()).getPausePartialTickFancyMenu() : Minecraft.getInstance().getFrameTime();
 	}
 
 	@Deprecated
