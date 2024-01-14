@@ -9,6 +9,9 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import de.keksuccino.fancymenu.util.resource.ResourceSource;
+import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
+import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.ScreenUtils;
@@ -37,7 +40,6 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    protected static final PngTexture COLLAPSE_EXPAND_TEXTURE = PngTexture.location(new ResourceLocation("fancymenu", "textures/menubar/icons/collapse_expand.png"));
     protected static final int ENTRY_LABEL_SPACE_LEFT_RIGHT = 6;
 
     protected final List<MenuBarEntry> leftEntries = new ArrayList<>();
@@ -48,11 +50,12 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
     protected boolean forceUIScale = true;
     protected boolean expanded = true;
     protected ClickableMenuBarEntry collapseOrExpandEntry;
+    protected ResourceSupplier<ITexture> collapseExpandTextureSupplier = ResourceSupplier.image(ResourceSource.of("fancymenu:textures/menubar/icons/collapse_expand.png", ResourceSourceType.LOCATION).getSourceWithPrefix());
 
     public MenuBar() {
         this.collapseOrExpandEntry = this.addClickableEntry(Side.RIGHT, "collapse_or_expand", Component.empty(), (bar, entry) -> {
             this.setExpanded(!this.expanded);
-        }).setIconTextureSupplier((bar, entry) -> COLLAPSE_EXPAND_TEXTURE);
+        }).setIconTextureSupplier((bar, entry) -> this.collapseExpandTextureSupplier.get());
         this.addSpacerEntry(Side.RIGHT, "spacer_after_collapse_or_expand_entry").setWidth(10);
     }
 

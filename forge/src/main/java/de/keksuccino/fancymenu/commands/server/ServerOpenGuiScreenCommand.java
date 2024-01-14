@@ -40,13 +40,13 @@ public class ServerOpenGuiScreenCommand {
                 ExecuteCommandPacketMessage msg = new ExecuteCommandPacketMessage();
                 msg.direction = "client";
                 msg.command = "/openguiscreen " + menuIdentifierOrCustomGuiName;
-                PacketHandler.send(PacketDistributor.PLAYER.with(() -> sender), msg);
+                PacketHandler.send(PacketDistributor.PLAYER.with(sender), msg);
             } else {
                 for (ServerPlayer target : targets) {
                     ExecuteCommandPacketMessage msg = new ExecuteCommandPacketMessage();
                     msg.direction = "client";
                     msg.command = "/openguiscreen " + menuIdentifierOrCustomGuiName;
-                    PacketHandler.send(PacketDistributor.PLAYER.with(() -> target), msg);
+                    PacketHandler.send(PacketDistributor.PLAYER.with(target), msg);
                 }
             }
         } catch (Exception e) {

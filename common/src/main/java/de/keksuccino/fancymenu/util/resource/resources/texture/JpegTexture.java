@@ -24,7 +24,6 @@ import java.util.Optional;
 public class JpegTexture implements ITexture {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final JpegTexture FULLY_TRANSPARENT_JPEG_TEXTURE = JpegTexture.location(FULLY_TRANSPARENT_TEXTURE);
 
     @Nullable
     protected ResourceLocation resourceLocation;
@@ -203,10 +202,11 @@ public class JpegTexture implements ITexture {
     protected static void populateTexture(@NotNull JpegTexture texture, @NotNull InputStream in, @NotNull String textureName) {
         if (!texture.closed) {
             try {
-                texture.nativeImage = convertJpegToPng(in);
-                if (texture.nativeImage != null) {
-                    texture.width = texture.nativeImage.getWidth();
-                    texture.height = texture.nativeImage.getHeight();
+                SizedNativeImage image = convertJpegToPng(in);
+                if (image != null) {
+                    texture.nativeImage = image.image;
+                    texture.width = image.width;
+                    texture.height = image.height;
                     texture.aspectRatio = new AspectRatio(texture.width, texture.height);
                     texture.loadingCompleted = true;
                 } else {
@@ -226,11 +226,15 @@ public class JpegTexture implements ITexture {
      * Converts JPEG images to PNG, because Minecraft dropped support for JPEGs.
      */
     @Nullable
-    protected static NativeImage convertJpegToPng(@NotNull InputStream in) {
+    protected static SizedNativeImage convertJpegToPng(@NotNull InputStream in) {
+        int w = 1;
+        int h = 1;
         NativeImage nativeImage = null;
         ByteArrayOutputStream byteArrayOut = null;
         try {
             BufferedImage bufferedImage = ImageIO.read(in);
+            w = bufferedImage.getWidth();
+            h = bufferedImage.getHeight();
             byteArrayOut = new ByteArrayOutputStream();
             ImageIO.write(bufferedImage, "png", byteArrayOut);
             //ByteArrayInputStream is important, because using NativeImage#read(byte[]) causes OutOfMemoryExceptions
@@ -240,7 +244,7 @@ public class JpegTexture implements ITexture {
         }
         CloseableUtils.closeQuietly(in);
         CloseableUtils.closeQuietly(byteArrayOut);
-        return nativeImage;
+        return (nativeImage != null) ? new SizedNativeImage(nativeImage, w, h) : null;
     }
 
     @Nullable
@@ -324,6 +328,9 @@ public class JpegTexture implements ITexture {
         this.resourceLocation = null;
         this.decoded = false;
         this.loadedIntoMinecraft = true;
+    }
+
+    protected record SizedNativeImage(@NotNull NativeImage image, int width, int height) {
     }
 
 }

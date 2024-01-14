@@ -33,13 +33,13 @@ public class ServerCloseGuiScreenCommand {
                 ExecuteCommandPacketMessage msg = new ExecuteCommandPacketMessage();
                 msg.direction = "client";
                 msg.command = "/closeguiscreen";
-                PacketHandler.send(PacketDistributor.PLAYER.with(() -> sender), msg);
+                PacketHandler.send(PacketDistributor.PLAYER.with(sender), msg);
             } else {
                 for (ServerPlayer target : targets) {
                     ExecuteCommandPacketMessage msg = new ExecuteCommandPacketMessage();
                     msg.direction = "client";
                     msg.command = "/closeguiscreen";
-                    PacketHandler.send(PacketDistributor.PLAYER.with(() -> target), msg);
+                    PacketHandler.send(PacketDistributor.PLAYER.with(target), msg);
                 }
             }
         } catch (Exception e) {

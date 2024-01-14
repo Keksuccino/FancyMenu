@@ -21,7 +21,7 @@ dependencies {
     implementation group: 'org.ow2.asm', name: 'asm-tree', version: '9.3'
     implementation fileTree('libs') { include '*.jar' }
     implementation 'com.github.Keksuccino:japng:0.5.3'
-    implementation "curse.maven:load-my-resources-fabric-534835:4766205"
+//    implementation "curse.maven:load-my-resources-fabric-534835:4766205"
     implementation "curse.maven:melody-938643:4953732"
 }
 
