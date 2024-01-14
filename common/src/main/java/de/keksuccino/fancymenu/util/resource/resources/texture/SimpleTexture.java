@@ -9,6 +9,9 @@ import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resource.MinecraftResourceUtils;
+import de.keksuccino.fancymenu.util.resource.ResourceSource;
+import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
+import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
@@ -23,7 +26,8 @@ import org.jetbrains.annotations.Nullable;
 public class SimpleTexture implements ITexture {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final SimpleTexture FULLY_TRANSPARENT_SIMPLE_TEXTURE = SimpleTexture.location(FULLY_TRANSPARENT_TEXTURE);
+
+    public static final ResourceSupplier<ITexture> FULLY_TRANSPARENT_SIMPLE_TEXTURE_SUPPLIER = ResourceSupplier.image(ResourceSource.of(FULLY_TRANSPARENT_TEXTURE.toString(), ResourceSourceType.LOCATION).getSourceWithPrefix());
 
     @Nullable
     protected ResourceLocation resourceLocation;
@@ -68,6 +72,9 @@ public class SimpleTexture implements ITexture {
                 texture.height = image.getHeight();
                 texture.aspectRatio = new AspectRatio(texture.width, texture.height);
                 CloseableUtils.closeQuietly(image);
+            } else {
+                texture.loadingFailed = true;
+                LOGGER.error("[FANCYMENU] Failed to read texture from ResourceLocation! Resource not present: " + location, new IOException());
             }
         } catch (Exception ex) {
             texture.loadingFailed = true;
