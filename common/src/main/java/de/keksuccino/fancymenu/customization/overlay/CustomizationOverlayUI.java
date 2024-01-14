@@ -44,7 +44,6 @@ import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.preload.ManageResourcePreLoadScreen;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resource.resources.texture.SimpleTexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -56,7 +55,6 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -68,8 +66,8 @@ public class CustomizationOverlayUI {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final SimpleTexture FM_LOGO_ICON_TEXTURE = SimpleTexture.location(new ResourceLocation("fancymenu", "textures/menubar/icons/fancymenu_logo.png"));
-    private static final SimpleTexture LEAVE_CURRENT_SCREEN_TEXTURE = SimpleTexture.location(new ResourceLocation("fancymenu", "textures/menubar/icons/exit.png"));
+    private static final ResourceSupplier<ITexture> FM_LOGO_TEXTURE_SUPPLIER = ResourceSupplier.image(ResourceSource.of("fancymenu:textures/menubar/icons/fancymenu_logo.png", ResourceSourceType.LOCATION).getSourceWithPrefix());
+    private static final ResourceSupplier<ITexture> LEAVE_SCREEN_TEXTURE_SUPPLIER = ResourceSupplier.image(ResourceSource.of("fancymenu:textures/menubar/icons/exit.png", ResourceSourceType.LOCATION).getSourceWithPrefix());
 
     private static MenuBar grandfatheredMenuBar = null;
 
@@ -711,7 +709,7 @@ public class CustomizationOverlayUI {
         //LEAVE CURRENT SCREEN BUTTON
         menuBar.addClickableEntry(MenuBar.Side.RIGHT, "leave_current_screen", Component.empty(), (bar, entry) -> {
             Minecraft.getInstance().setScreen(null);
-        }).setIconTexture(LEAVE_CURRENT_SCREEN_TEXTURE)
+        }).setIconTextureSupplier((bar, entry) -> LEAVE_SCREEN_TEXTURE_SUPPLIER.get())
                 .setTooltipSupplier(consumes -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.leave_current_menu.desc")));
 
         return menuBar;
@@ -719,7 +717,7 @@ public class CustomizationOverlayUI {
     }
 
     public static MenuBar.ClickableMenuBarEntry buildFMIconTabAndAddTo(MenuBar menuBar) {
-        return menuBar.addClickableEntry(MenuBar.Side.LEFT, "fancymenu_icon", Component.empty(), (bar, entry) -> {}).setIconTexture(FM_LOGO_ICON_TEXTURE).setActive(false);
+        return menuBar.addClickableEntry(MenuBar.Side.LEFT, "fancymenu_icon", Component.empty(), (bar, entry) -> {}).setIconTextureSupplier((bar, entry) -> FM_LOGO_TEXTURE_SUPPLIER.get()).setActive(false);
     }
 
     public static ContextMenu buildHelpTabAndAddTo(MenuBar menuBar) {

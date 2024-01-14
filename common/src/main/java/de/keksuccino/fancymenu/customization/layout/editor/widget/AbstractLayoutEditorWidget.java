@@ -9,8 +9,10 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.UIComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
+import de.keksuccino.fancymenu.util.resource.ResourceSource;
+import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
+import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.resource.resources.texture.SimpleTexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -30,10 +32,6 @@ import java.util.function.Consumer;
 public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
     private static final Logger LOGGER = LogManager.getLogger();
-
-    protected static final ResourceLocation HIDE_BUTTON_ICON_TEXTURE = new ResourceLocation("fancymenu", "textures/layout_editor/widgets/hide_icon.png");
-    protected static final ResourceLocation EXPAND_BUTTON_ICON_TEXTURE = new ResourceLocation("fancymenu", "textures/layout_editor/widgets/expand_icon.png");
-    protected static final ResourceLocation COLLAPSE_BUTTON_ICON_TEXTURE = new ResourceLocation("fancymenu", "textures/layout_editor/widgets/collapse_icon.png");
 
     protected final AbstractLayoutEditorWidgetBuilder<?> builder;
     protected final LayoutEditorScreen editor;
@@ -56,6 +54,9 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     protected float leftMouseDownWidgetOffsetY = 0;
     protected float leftMouseDownInnerWidth = 0;
     protected float leftMouseDownInnerHeight = 0;
+    protected ResourceSupplier<ITexture> hideButtonIconTextureSupplier = ResourceSupplier.image(ResourceSource.of("fancymenu:textures/layout_editor/widgets/hide_icon.png", ResourceSourceType.LOCATION).getSourceWithPrefix());
+    protected ResourceSupplier<ITexture> expandButtonIconTextureSupplier = ResourceSupplier.image(ResourceSource.of("fancymenu:textures/layout_editor/widgets/expand_icon.png", ResourceSourceType.LOCATION).getSourceWithPrefix());
+    protected ResourceSupplier<ITexture> collapseButtonIconTextureSupplier = ResourceSupplier.image(ResourceSource.of("fancymenu:textures/layout_editor/widgets/collapse_icon.png", ResourceSourceType.LOCATION).getSourceWithPrefix());
 
     public AbstractLayoutEditorWidget(@NotNull LayoutEditorScreen editor, @NotNull AbstractLayoutEditorWidgetBuilder<?> builder) {
         this.editor = Objects.requireNonNull(editor);
@@ -68,11 +69,11 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
         this.children.clear();
         this.headerButtons.clear();
 
-        this.addHeaderButton(new HeaderButton(this, consumes -> SimpleTexture.location(HIDE_BUTTON_ICON_TEXTURE), button -> {
+        this.addHeaderButton(new HeaderButton(this, consumes -> hideButtonIconTextureSupplier.get(), button -> {
             this.setVisible(false);
         }));
 
-        this.addHeaderButton(new HeaderButton(this, consumes -> SimpleTexture.location(this.isExpanded() ? COLLAPSE_BUTTON_ICON_TEXTURE : EXPAND_BUTTON_ICON_TEXTURE), button -> {
+        this.addHeaderButton(new HeaderButton(this, consumes -> this.isExpanded() ? this.collapseButtonIconTextureSupplier.get() : this.expandButtonIconTextureSupplier.get(), button -> {
             this.setExpanded(!this.isExpanded());
         }));
 
@@ -497,11 +498,14 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
             this.renderHoverBackground(graphics);
 
             ITexture icon = this.iconSupplier.get(this);
-            if ((icon != null) && (icon.getResourceLocation() != null)) {
-                UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
-                RenderSystem.enableBlend();
-                blitF(graphics, icon.getResourceLocation(), this.x, this.y, 0.0F, 0.0F, (int) this.width, (int) this.parent.getHeaderHeight(), (int) this.width, (int) this.parent.getHeaderHeight());
-                RenderingUtils.resetShaderColor(graphics);
+            if (icon != null) {
+                ResourceLocation location = icon.getResourceLocation();
+                if (location != null) {
+                    UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
+                    RenderSystem.enableBlend();
+                    blitF(graphics, location, this.x, this.y, 0.0F, 0.0F, (int) this.width, (int) this.parent.getHeaderHeight(), (int) this.width, (int) this.parent.getHeaderHeight());
+                    RenderingUtils.resetShaderColor(graphics);
+                }
             }
 
         }
