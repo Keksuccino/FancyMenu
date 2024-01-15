@@ -5,7 +5,7 @@ plugins {
     id 'org.spongepowered.mixin' version '0.7-SNAPSHOT'
 }
 base {
-    archivesName = "${mod_name}"
+    archivesName = "${mod_id}"
 }
 mixin {
     add(sourceSets.main, "${mod_id}.refmap.json")
