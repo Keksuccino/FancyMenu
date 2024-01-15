@@ -42,7 +42,7 @@ public class ApngTexture implements ITexture, PlayableResource {
     protected volatile boolean decoded = false;
     protected volatile boolean allFramesDecoded = false;
     protected volatile int cycles = 0;
-    /** How many times the APNG should loop. Value <= 0 means infinite loops. **/
+    /** How many times the APNG should loop. Value smaller or equals 0 means infinite loops. **/
     protected volatile int numPlays = 0;
     protected ResourceLocation sourceLocation;
     protected File sourceFile;

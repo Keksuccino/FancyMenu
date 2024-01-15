@@ -1,12 +1,15 @@
+
 plugins {
     id 'java'
     id 'idea'
     id 'maven-publish'
-    id 'fabric-loom'
+    id 'fabric-loom' version '1.4-SNAPSHOT'
 }
+
 base {
-    archivesName = "${mod_id}"
+    archivesName = "${mod_name}"
 }
+
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
     mappings loom.officialMojangMappings()
@@ -14,13 +17,12 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
     implementation project(":common")
-    //implementation fileTree('libs') { include '*.jar' }
     include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.3.2")))
     include(implementation 'com.github.Keksuccino:japng:0.5.3')
-    modImplementation "maven.modrinth:modmenu:9.0.0"
-    modImplementation "maven.modrinth:konkrete:1.8.0-1.20.4-fabric"
     modImplementation "maven.modrinth:load-my-resources:1.0.4-1.20.2-fabric"
-    modImplementation "curse.maven:melody-938643:4953732"
+    modImplementation "maven.modrinth:melody:1.0.1-1.20.1-1.20.4-fabric"
+    modImplementation "maven.modrinth:konkrete:1.8.0-1.20.4-fabric"
+    modImplementation "maven.modrinth:modmenu:9.0.0"
 }
 
 loom {

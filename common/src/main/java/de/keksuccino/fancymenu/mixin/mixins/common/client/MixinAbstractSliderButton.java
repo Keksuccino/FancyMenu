@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
@@ -22,9 +21,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @SuppressWarnings("unused")
 @Mixin(AbstractSliderButton.class)
 public abstract class MixinAbstractSliderButton extends AbstractWidget implements CustomizableSlider {
-
-    @Unique
-    private static final ResourceLocation SLIDER_LOCATION_FANCYMENU = new ResourceLocation("textures/gui/slider.png");
 
     @Shadow private boolean canChangeValue;
     @Shadow protected double value;
@@ -58,8 +54,6 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
         } else {
             renderVanilla = this.renderSliderBackgroundFancyMenu(graphics, (AbstractSliderButton)((Object)this), this.canChangeValue);
         }
-        //Re-bind default texture after rendering custom
-        RenderSystem.setShaderTexture(0, SLIDER_LOCATION_FANCYMENU);
         graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
         return renderVanilla;
     }
