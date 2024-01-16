@@ -40,11 +40,11 @@ public class DummyCoreMainHandler extends MainMenuHandler {
 		super.onMenuReloaded(e);
 	}
 	
-	@SubscribeEvent
-	@Override
-	public void onRender(DrawScreenEvent.Pre e) {
-		super.onRender(e);
-	}
+//	@SubscribeEvent
+//	@Override
+//	public void onRender(DrawScreenEvent.Pre e) {
+//		super.onRender(e);
+//	}
 	
 	@SubscribeEvent
 	@Override

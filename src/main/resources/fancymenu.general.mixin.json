@@ -17,6 +17,7 @@
     "MixinConnectScreen",
     "MixinEntryListWidget",
     "MixinImageButton",
+    "MixinLevelLoadingScreen",
     "MixinLevelStorageAccess",
     "MixinLoadingOverlay",
     "MixinMinecraft",

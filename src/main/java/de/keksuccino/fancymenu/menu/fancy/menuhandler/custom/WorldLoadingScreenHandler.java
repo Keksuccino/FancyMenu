@@ -9,13 +9,11 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.progress.StoringChunkProgressListener;
 import net.minecraft.util.Mth;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
-import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerBase;
 import de.keksuccino.konkrete.events.SubscribeEvent;
@@ -31,23 +29,29 @@ public class WorldLoadingScreenHandler extends MenuHandlerBase {
 		super(LevelLoadingScreen.class.getName());
 	}
 	
-	@SubscribeEvent
-	public void onRender(GuiScreenEvent.DrawScreenEvent.Pre e) {
-		if (this.shouldCustomize(e.getGui())) {
-			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
-				e.setCanceled(true);
-				
-				e.getGui().renderBackground(e.getMatrixStack());
-				
-				this.renderMenu(e.getMatrixStack(), e.getGui());
-			}
-		}
-	}
+//	@SubscribeEvent
+//	public void onRender(GuiScreenEvent.DrawScreenEvent.Pre e) {
+//		if (this.shouldCustomize(e.getGui())) {
+//			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
+//				e.setCanceled(true);
+//
+//				e.getGui().renderBackground(e.getMatrixStack());
+//
+//				this.renderMenu(e.getMatrixStack(), e.getGui());
+//			}
+//		}
+//	}
 	
 	@SubscribeEvent
 	@Override
 	public void drawToBackground(BackgroundDrawnEvent e) {
+
 		super.drawToBackground(e);
+
+		if (this.shouldCustomize(e.getGui())) {
+			this.renderMenu(e.getMatrixStack(), e.getGui());
+		}
+
 	}
 	
 	@SubscribeEvent

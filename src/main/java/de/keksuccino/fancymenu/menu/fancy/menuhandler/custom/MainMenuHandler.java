@@ -43,7 +43,7 @@ import net.minecraft.client.renderer.PanoramaRenderer;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.resources.ResourceLocation;
 
-@SuppressWarnings("resource")
+@SuppressWarnings("all")
 public class MainMenuHandler extends MenuHandlerBase {
 	
 	private static final CubeMap PANORAMA_CUBE_MAP = new CubeMap(new ResourceLocation("textures/gui/title/background/panorama"));
@@ -166,15 +166,15 @@ public class MainMenuHandler extends MenuHandlerBase {
 		super.onRenderPost(e);
 	}
 	
-	@SubscribeEvent
-	public void onRender(GuiScreenEvent.DrawScreenEvent.Pre e) {
-		if (this.shouldCustomize(e.getGui())) {
-			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
-				e.setCanceled(true);
-				e.getGui().renderBackground(e.getMatrixStack());
-			}
-		}
-	}
+//	@SubscribeEvent
+//	public void onRender(GuiScreenEvent.DrawScreenEvent.Pre e) {
+//		if (this.shouldCustomize(e.getGui())) {
+//			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
+//				e.setCanceled(true);
+//				e.getGui().renderBackground(e.getMatrixStack());
+//			}
+//		}
+//	}
 	
 	/**
 	 * Mimic the original main menu to be able to customize it easier

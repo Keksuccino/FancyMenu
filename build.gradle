@@ -19,18 +19,14 @@ repositories {
 }
 
 dependencies {
-
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	
 	mappings loom.layered() {
         officialMojangMappings()
     }
-	
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-	
 	implementation fileTree('libs') { include '*.jar' }
+	include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.3.2")))
 }
 
 loom {
