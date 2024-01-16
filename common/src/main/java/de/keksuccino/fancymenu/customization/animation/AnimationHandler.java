@@ -85,6 +85,8 @@ public class AnimationHandler {
 			List<String> frameNamesMain = new ArrayList<>();
 			List<String> frameNamesIntro = new ArrayList<>();
 			String resourceNamespace;
+			boolean mainContainsJpegs = false;
+			boolean introContainsJpegs = false;
 			
 			if (a.isDirectory()) {
 
@@ -154,7 +156,12 @@ public class AnimationHandler {
 					return Integer.compare(i1, i2);
 				});
 				for (String s : mainFrameKeys) {
-					frameNamesMain.add("frames_main/" + mainFramesMap.get(s));
+					String frameName = "frames_main/" + mainFramesMap.get(s);
+					if (frameName.toLowerCase().endsWith(".jpg") || (frameName.toLowerCase().endsWith(".jpeg"))) {
+						mainContainsJpegs = true;
+						break;
+					}
+					frameNamesMain.add(frameName);
 				}
 
 				// INTRO FRAME NAMES
@@ -179,7 +186,12 @@ public class AnimationHandler {
 						return Integer.compare(i1, i2);
 					});
 					for (String s : introFrameKeys) {
-						frameNamesIntro.add("frames_intro/" + introFramesMap.get(s));
+						String frameName = "frames_intro/" + introFramesMap.get(s);
+						if (frameName.toLowerCase().endsWith(".jpg") || (frameName.toLowerCase().endsWith(".jpeg"))) {
+							introContainsJpegs = true;
+							break;
+						}
+						frameNamesIntro.add(frameName);
 					}
 				}
 
@@ -196,11 +208,15 @@ public class AnimationHandler {
 				IAnimationRenderer in = null;
 				IAnimationRenderer an = null;
 
-				if (!frameNamesIntro.isEmpty() && !frameNamesMain.isEmpty()) {
-					in = new ResourcePackAnimationRenderer(resourceNamespace, frameNamesIntro, fps, loop, 0, 0, 100, 100);
-					an = new ResourcePackAnimationRenderer(resourceNamespace, frameNamesMain, fps, loop, 0, 0, 100, 100);
-				} else if (!frameNamesMain.isEmpty()) {
-					an = new ResourcePackAnimationRenderer(resourceNamespace, frameNamesMain, fps, loop, 0, 0, 100, 100);
+				if (!mainContainsJpegs && !introContainsJpegs) {
+					if (!frameNamesIntro.isEmpty() && !frameNamesMain.isEmpty()) {
+						in = new ResourcePackAnimationRenderer(resourceNamespace, frameNamesIntro, fps, loop, 0, 0, 100, 100);
+						an = new ResourcePackAnimationRenderer(resourceNamespace, frameNamesMain, fps, loop, 0, 0, 100, 100);
+					} else if (!frameNamesMain.isEmpty()) {
+						an = new ResourcePackAnimationRenderer(resourceNamespace, frameNamesMain, fps, loop, 0, 0, 100, 100);
+					}
+				} else {
+					LOGGER.error("[FANCYMENU] Unable to load animation! Animation contains JPEG frames, which are not supported by Minecraft anymore: " + name);
 				}
 
 				try {
@@ -219,8 +235,8 @@ public class AnimationHandler {
 					} else {
 						LOGGER.error("[FANCYMENU] Failed to register animation: " + name);
 					}
-				} catch (AnimationNotFoundException e) {
-					e.printStackTrace();
+				} catch (AnimationNotFoundException ex) {
+					LOGGER.error("[FANCYMENU] An error happened while trying to register an animation: " + name, ex);
 				}
 			}
 		}
@@ -299,7 +315,7 @@ public class AnimationHandler {
 
 	public static void preloadAnimations(boolean ignoreAlreadyPreloaded) {
 
-		boolean errors = false;
+		Throwable error = null;
 
 		if (!preloadCompleted || ignoreAlreadyPreloaded) {
 
@@ -329,14 +345,13 @@ public class AnimationHandler {
 					}
 				}
 			} catch (Exception ex) {
-				ex.printStackTrace();
-				errors = true;
+				error = ex;
 			}
 
-			if (!errors) {
-				LOGGER.info("[FANCYMENU] Finished preloading animations!");
+			if (error == null) {
+				LOGGER.info("[FANCYMENU] Animation pre-loading completed!");
 			} else {
-				LOGGER.warn("[FANCYMENU] Finished preloading animations with errors! Check your animations!");
+				LOGGER.warn("[FANCYMENU] An error happened while trying to pre-load animations!", error);
 			}
 
 			preloadCompleted = true;

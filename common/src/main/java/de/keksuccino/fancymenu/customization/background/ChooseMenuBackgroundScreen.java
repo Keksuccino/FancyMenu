@@ -71,8 +71,6 @@ public class ChooseMenuBackgroundScreen extends Screen {
     @Override
     protected void init() {
 
-        super.init();
-
         this.configureButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.menu_background.choose.configure_background"), (button) -> {
             if (this.backgroundType != null) {
                 this.backgroundType.buildNewOrEditInstanceInternal(this, this.background, (back) -> {
@@ -171,6 +169,10 @@ public class ChooseMenuBackgroundScreen extends Screen {
 
         super.render(graphics, mouseX, mouseY, partial);
 
+    }
+
+    @Override
+    public void renderBackground(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {
     }
 
     protected void setDescription(@Nullable MenuBackgroundBuilder<?> builder) {
