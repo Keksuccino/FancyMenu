@@ -32,23 +32,29 @@ public class WorldLoadingScreenHandler extends MenuHandlerBase {
 		super(LevelLoadingScreen.class.getName());
 	}
 	
-	@SubscribeEvent
-	public void onRender(GuiScreenEvent.DrawScreenEvent.Pre e) {
-		if (this.shouldCustomize(e.getGui())) {
-			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
-				e.setCanceled(true);
-				
-				e.getGui().renderBackground(e.getMatrixStack());
-				
-				this.renderMenu(e.getMatrixStack(), e.getGui());
-			}
-		}
-	}
-	
+//	@SubscribeEvent
+//	public void onRender(GuiScreenEvent.DrawScreenEvent.Pre e) {
+//		if (this.shouldCustomize(e.getGui())) {
+//			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
+//				e.setCanceled(true);
+//
+//				e.getGui().renderBackground(e.getMatrixStack());
+//
+//				this.renderMenu(e.getMatrixStack(), e.getGui());
+//			}
+//		}
+//	}
+
 	@SubscribeEvent
 	@Override
 	public void drawToBackground(BackgroundDrawnEvent e) {
+
 		super.drawToBackground(e);
+
+		if (this.shouldCustomize(e.getGui())) {
+			this.renderMenu(e.getMatrixStack(), e.getGui());
+		}
+
 	}
 	
 	@SubscribeEvent

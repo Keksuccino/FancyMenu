@@ -166,15 +166,15 @@ public class MainMenuHandler extends MenuHandlerBase {
 		super.onRenderPost(e);
 	}
 	
-	@SubscribeEvent
-	public void onRender(GuiScreenEvent.DrawScreenEvent.Pre e) {
-		if (this.shouldCustomize(e.getGui())) {
-			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
-				e.setCanceled(true);
-				e.getGui().renderBackground(e.getMatrixStack());
-			}
-		}
-	}
+//	@SubscribeEvent
+//	public void onRender(GuiScreenEvent.DrawScreenEvent.Pre e) {
+//		if (this.shouldCustomize(e.getGui())) {
+//			if (MenuCustomization.isMenuCustomizable(e.getGui())) {
+//				e.setCanceled(true);
+//				e.getGui().renderBackground(e.getMatrixStack());
+//			}
+//		}
+//	}
 	
 	/**
 	 * Mimic the original main menu to be able to customize it easier
