@@ -310,15 +310,16 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	}
 
 	@Override
-	public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-
-		graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
+	public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
 		if (this.layout.menuBackground != null) {
 			this.layout.menuBackground.keepBackgroundAspectRatio = this.layout.preserveBackgroundAspectRatio;
 			this.layout.menuBackground.opacity = 1.0F;
 			this.layout.menuBackground.render(graphics, mouseX, mouseY, partial);
+		} else {
+			graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
 		}
+		RenderingUtils.resetShaderColor(graphics);
 
 		this.renderScrollListHeaderFooterPreview(graphics, mouseX, mouseY, partial);
 
