@@ -1,10 +1,7 @@
 package de.keksuccino.fancymenu.customization.panorama;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.events.ModReloadEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
@@ -12,14 +9,14 @@ import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class PanoramaHandler {
 
 	private static final Logger LOGGER = LogManager.getLogger();
-
-	public static final File PANORAMA_DIR = FileUtils.createDirectory(new File(FancyMenu.MOD_DIR, "/panoramas"));
-
-	private static final Map<String, ExternalTexturePanoramaRenderer> PANORAMAS = new HashMap<>();
+	private static final Map<String, LocalTexturePanoramaRenderer> PANORAMAS = new HashMap<>();
+	public static final File PANORAMA_DIR = FileUtils.createDirectory(new File(FancyMenu.MOD_DIR, "panoramas"));
 	
 	public static void init() {
 		updatePanoramas();
@@ -28,26 +25,25 @@ public class PanoramaHandler {
 	
 	public static void updatePanoramas() {
 		PANORAMAS.clear();
-		File[] files = PANORAMA_DIR.listFiles();
-		if (files == null) return;
+		File[] files = Objects.requireNonNullElse(PANORAMA_DIR.listFiles(), new File[0]);
 		for (File panorama : files) {
 			if (panorama.isDirectory()) {
-				File propertiesFile = new File(panorama.getPath() + "/properties.txt");
-				if (!propertiesFile.exists()) {
-					propertiesFile = new File(panorama.getPath() + "/properties.txt.txt");
+				File propertiesFile = new File(panorama, "properties.txt");
+				if (!propertiesFile.isFile()) {
+					propertiesFile = new File(panorama, "properties.txt.txt");
 				}
-				File imageDir = new File(panorama.getPath() + "/panorama");
-				if (propertiesFile.exists() && imageDir.exists()) {
-					ExternalTexturePanoramaRenderer render = new ExternalTexturePanoramaRenderer(panorama.getPath());
-					String name = render.getName();
-					if (name != null) {
-						render.preparePanorama();
-						PANORAMAS.put(name, render);
+				File imageDir = new File(panorama, "panorama");
+				File overlayImageFile = new File(panorama, "overlay.png");
+				if (!overlayImageFile.isFile()) overlayImageFile = null;
+				if (propertiesFile.isFile() && imageDir.isDirectory()) {
+					LocalTexturePanoramaRenderer renderer = LocalTexturePanoramaRenderer.build(propertiesFile, imageDir, overlayImageFile);
+					if (renderer != null) {
+						PANORAMAS.put(renderer.getName(), renderer);
 					} else {
-						LOGGER.error(buildErrorMessage(panorama, false, false, false) + " (name is empty/NULL)");
+						LOGGER.error(buildErrorMessage(panorama, false, false, false) + " (failed to build renderer - was NULL)");
 					}
 				} else {
-					LOGGER.error(buildErrorMessage(panorama, true, propertiesFile.exists(), imageDir.exists()));
+					LOGGER.error(buildErrorMessage(panorama, true, propertiesFile.isFile(), imageDir.isDirectory()));
 				}
 			} else {
 				LOGGER.error(buildErrorMessage(panorama, false, false, false) + " (not a directory)");
@@ -55,8 +51,8 @@ public class PanoramaHandler {
 		}
 	}
 
-	private static String buildErrorMessage(File f, boolean addDetails, boolean propertiesFileFound, boolean imageDirFound) {
-		String msg = "[FANCYMENU] Invalid panorama found: " + f.getName();
+	private static String buildErrorMessage(@NotNull File panoramaDir, boolean addDetails, boolean propertiesFileFound, boolean imageDirFound) {
+		String msg = "[FANCYMENU] Invalid panorama found: " + panoramaDir.getName();
 		if (addDetails) {
 			String details = "";
 			if (!propertiesFileFound) {
@@ -74,21 +70,24 @@ public class PanoramaHandler {
 		}
 		return msg;
 	}
-	
-	public static ExternalTexturePanoramaRenderer getPanorama(String name) {
-		return PANORAMAS.get(name);
+
+	@Nullable
+	public static LocalTexturePanoramaRenderer getPanorama(@NotNull String name) {
+		return PANORAMAS.get(Objects.requireNonNull(name));
 	}
-	
-	public static List<ExternalTexturePanoramaRenderer> getPanoramas() {
+
+	@NotNull
+	public static List<LocalTexturePanoramaRenderer> getPanoramas() {
 		return new ArrayList<>(PANORAMAS.values());
 	}
-	
+
+	@NotNull
 	public static List<String> getPanoramaNames() {
 		return new ArrayList<>(PANORAMAS.keySet());
 	}
 	
-	public static boolean panoramaExists(String name) {
-		return PANORAMAS.containsKey(name);
+	public static boolean panoramaExists(@NotNull String name) {
+		return PANORAMAS.containsKey(Objects.requireNonNull(name));
 	}
 	
 	@EventListener

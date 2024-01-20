@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.layout.editor;
 import java.util.*;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetEditorElement;
@@ -312,13 +311,14 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	protected void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-		graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
-
 		if (this.layout.menuBackground != null) {
 			this.layout.menuBackground.keepBackgroundAspectRatio = this.layout.preserveBackgroundAspectRatio;
 			this.layout.menuBackground.opacity = 1.0F;
 			this.layout.menuBackground.render(graphics, mouseX, mouseY, partial);
+		} else {
+			graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
 		}
+		RenderingUtils.resetShaderColor(graphics);
 
 		this.renderScrollListHeaderFooterPreview(graphics, mouseX, mouseY, partial);
 
@@ -594,7 +594,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	@Nullable
 	public AbstractEditorElement getTopHoveredElement() {
 		List<AbstractEditorElement> hoveredElements = this.getHoveredElements();
-		return (hoveredElements.size() > 0) ? hoveredElements.get(hoveredElements.size()-1) : null;
+		return !hoveredElements.isEmpty() ? hoveredElements.get(hoveredElements.size()-1) : null;
 	}
 
 	@NotNull
@@ -944,7 +944,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	protected void moveSelectedElementsByXYOffset(int offsetX, int offsetY) {
 		List<AbstractEditorElement> selected = this.getSelectedElements();
-		if ((selected.size() > 0) && this.allSelectedElementsMovable()) {
+		if (!selected.isEmpty() && this.allSelectedElementsMovable()) {
 			this.history.saveSnapshot();
 		}
 		boolean multiSelect = selected.size() > 1;
@@ -1069,7 +1069,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		}
 
 		List<AbstractEditorElement> hoveredElements = this.getHoveredElements();
-		AbstractEditorElement topHoverElement = (hoveredElements.size() > 0) ? hoveredElements.get(hoveredElements.size()-1) : null;
+		AbstractEditorElement topHoverElement = !hoveredElements.isEmpty() ? hoveredElements.get(hoveredElements.size()-1) : null;
 
 		//Deselect hovered element on left-click if CTRL pressed
 		if (!mouseWasInDraggingMode && !cachedMouseSelection && (button == 0) && (topHoverElement != null) && topHoverElement.isSelected() && !topHoverElement.recentlyMovedByDragging && !topHoverElement.recentlyLeftClickSelected && hasControlDown()) {

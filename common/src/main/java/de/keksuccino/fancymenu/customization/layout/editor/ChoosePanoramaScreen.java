@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
+import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
@@ -34,7 +34,7 @@ public class ChoosePanoramaScreen extends Screen {
         super(Component.translatable("fancymenu.panorama.choose"));
 
         this.callback = callback;
-        this.updateSlideshowScrollAreaContent();
+        this.updatePanoramaScrollAreaContent();
 
         if (preSelectedPanorama != null) {
             for (ScrollAreaEntry e : this.panoramaListScrollArea.getEntries()) {
@@ -121,9 +121,9 @@ public class ChoosePanoramaScreen extends Screen {
         this.selectedPanoramaName = entry.panorama;
     }
 
-    protected void updateSlideshowScrollAreaContent() {
+    protected void updatePanoramaScrollAreaContent() {
         this.panoramaListScrollArea.clearEntries();
-        for (String s : SlideshowHandler.getSlideshowNames()) {
+        for (String s : PanoramaHandler.getPanoramaNames()) {
             PanoramaScrollEntry e = new PanoramaScrollEntry(this.panoramaListScrollArea, s, (entry) -> {
                 this.setSelectedPanorama((PanoramaScrollEntry)entry);
             });
