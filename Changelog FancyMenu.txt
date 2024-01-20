@@ -1,4 +1,48 @@
 
+- Fixed: Error spam "Unable to cancel DrawScreenEvent"
+- Fixed: Title Screen not rendering correctly
+- Fixed: Level Loading Screen not rendering correctly
+ 
+%changelog:end%
+
+
+
+
+
+- Preparing for FancyMenu v3.0.0 and Drippy Loading Screen v3.0.0
+- Minimum required Konkrete version is now 1.8.0 and versions starting at 1.9.0+ are not allowed (to prevent future Konkrete updates breaking FancyMenu v2)
+- Changed FancyMenu's license to DSMSLv2
+ 
+%changelog:end%
+
+
+
+
+
+- Fixed: MC 1.20.2: Image elements get added with a width of 0, making it impossible to see or resize them
+ 
+%changelog:end%
+
+
+
+
+
+- Fixed: MC 1.20.4: Image elements get added with a width of 0, making it impossible to see or resize them
+ 
+%changelog:end%
+
+
+
+
+
+- Ported to MC 1.20.4
+
+%changelog:end%
+
+
+
+
+
 - Fixed a bug related to the Element Size and Position placeholders leading to " Failed to parse '"' " log spam in combination with the Calculator placeholder
 
 %changelog:end%
@@ -105,21 +149,25 @@ CHANGELOG | FANCYMENU v3.0.0 - The "Don't Panic, Your Layouts Still Work" Update
  
 IMPORTANT! PLEASE READ!
  
-tl;dr: BACKUP your LAYOUTS and Minecraft INSTANCE before updating!
- 
 The following changelog only contains SOME of the maaaany changes in FancyMenu v3.
 It's just too much stuff to mention every change in detail.
-It's also very likely that I forgot some of the bigger changes, because I worked on v3 for over 6 months.
-In these 6+ months I rewrote like 90% of the code (some parts multiple times), shared progress updates with
+It's also very likely that I forgot some of the bigger changes, because I worked on v3 for over 8 months.
+In these 8+ months I rewrote like 90% of the code (some parts multiple times), shared progress updates with
 you all and got a lot of feedback from you to polish as many of the new/rewritten stuff as possible!
-Thank you SO MUCH to all of the Alpha and Beta testers! This update wouldn't be possible without you! <3
  
-But well, since sooo much stuff got rewritten in this update, there's like no chance it will not contain bugs and some of them could harm your layouts!
-So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updating to this version!
+Thank you SO MUCH to all of the Alpha and Beta testers and people who made suggestions for v3!
+This update wouldn't be possible without you! <3
+ 
+But well, since sooo much stuff got rewritten in this update, there's like no chance it will not contain bugs and some of them
+could harm your layouts, so please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updating to this version!
+ 
+And now have fun reading that frickin book, uhm I mean changelog!
+ 
+tl;dr: BACKUP your LAYOUTS and Minecraft INSTANCE before updating!
  
 ------------------------------
  
-- Dropped support for all existing MC versions except 1.18.2, 1.19.2 and 1.20.1 (FM will obviously still get ported to future MC versions, so don't worry)
+- FancyMenu v3 is available for 1.18.2, 1.19.2, 1.20.1, 1.20.4 and future Minecraft versions (all other versions not listed here get dropped with v3)
  
 - Button tooltips (custom and vanilla buttons) now look like Vanilla ones
 - Button tooltips will not jump to the complete opposite site of the mouse cursor anymore when hitting the edge of the screen
@@ -293,6 +341,7 @@ So please make sure to BACKUP YOUR LAYOUTS AND MINECRAFT INSTANCE before updatin
 - Fixed: "&" formatting codes in "Send Message" action get replaced with "§" formatting codes
 - Fixed: Crash when pressing DELETE on an empty line in the text editor
 - Fixed: It is possible to remove/reset the Forced GUI Scale of a layout without disabling Auto-Scaling first, which can lead to the layout scaling the menu to infinity
+- Fixed: Panoramas sometimes not loading properly (not showing up in panorama menu)
  
 %changelog:end%
 
