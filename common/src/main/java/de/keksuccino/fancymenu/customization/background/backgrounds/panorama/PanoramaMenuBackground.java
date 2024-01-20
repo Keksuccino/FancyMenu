@@ -4,20 +4,24 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
-import de.keksuccino.fancymenu.customization.panorama.ExternalTexturePanoramaRenderer;
+import de.keksuccino.fancymenu.customization.panorama.LocalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
-import de.keksuccino.konkrete.rendering.RenderUtils;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class PanoramaMenuBackground extends MenuBackground {
 
-    private static final ResourceLocation MISSING = new ResourceLocation("missing_texture");
+    private static final Logger LOGGER = LogManager.getLogger();
+    private static final ResourceLocation MISSING = TextureManager.INTENTIONAL_MISSING_TEXTURE;
 
     public String panoramaName;
-
     protected String lastPanoramaName;
-    protected ExternalTexturePanoramaRenderer panorama;
+    protected LocalTexturePanoramaRenderer panorama;
 
     public PanoramaMenuBackground(MenuBackgroundBuilder<PanoramaMenuBackground> builder) {
         super(builder);
@@ -36,19 +40,16 @@ public class PanoramaMenuBackground extends MenuBackground {
         }
 
         if (this.panorama != null) {
-            if (!this.panorama.isReady()) {
-                this.panorama.preparePanorama();
-            }
             this.panorama.opacity = this.opacity;
-            this.panorama.render(pose);
+            this.panorama.render(pose, mouseX, mouseY, partial);
             this.panorama.opacity = 1.0F;
         } else {
             RenderSystem.enableBlend();
-            RenderUtils.bindTexture(MISSING);
-            blit(pose, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
+            RenderingUtils.bindTexture(MISSING);
+            GuiComponent.blit(pose, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
         }
 
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderingUtils.resetShaderColor();
 
     }
 
