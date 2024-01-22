@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.ObjectHolder;
 import de.keksuccino.fancymenu.util.WebUtils;
@@ -23,6 +24,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 public class GifTexture implements ITexture, PlayableResource {
@@ -38,15 +40,17 @@ public class GifTexture implements ITexture, PlayableResource {
     protected volatile int width = 10;
     protected volatile int height = 10;
     protected volatile long lastResourceLocationCall = -1;
-    protected volatile boolean tickerThreadRunning = false;
-    protected volatile boolean decoded = false;
+    protected final AtomicBoolean tickerThreadRunning = new AtomicBoolean(false);
+    protected final AtomicBoolean decoded = new AtomicBoolean(false);
     protected volatile boolean allFramesDecoded = false;
     protected ResourceLocation sourceLocation;
     protected File sourceFile;
     protected String sourceURL;
-    protected volatile boolean loadingCompleted = false;
-    protected volatile boolean loadingFailed = false;
-    protected volatile boolean closed = false;
+    protected final AtomicBoolean loadingCompleted = new AtomicBoolean(false);
+    protected final AtomicBoolean loadingFailed = new AtomicBoolean(false);
+    protected final String uniqueId = ScreenCustomization.generateUniqueIdentifier();
+    protected int frameRegistrationCounter = 0;
+    protected final AtomicBoolean closed = new AtomicBoolean(false);
 
     @NotNull
     public static GifTexture location(@NotNull ResourceLocation location) {
@@ -64,7 +68,7 @@ public class GifTexture implements ITexture, PlayableResource {
         try {
             of(MinecraftResourceUtils.open(location), location.toString(), texture);
         } catch (Exception ex) {
-            texture.loadingFailed = true;
+            texture.loadingFailed.set(true);
             LOGGER.error("[FANCYMENU] Failed to read GIF image from ResourceLocation: " + location, ex);
         }
 
@@ -86,7 +90,7 @@ public class GifTexture implements ITexture, PlayableResource {
         texture.sourceFile = gif;
 
         if (!gif.isFile()) {
-            texture.loadingFailed = true;
+            texture.loadingFailed.set(true);
             LOGGER.error("[FANCYMENU] Failed to read GIF image from file! File not found: " + gif.getPath());
             return texture;
         }
@@ -97,7 +101,7 @@ public class GifTexture implements ITexture, PlayableResource {
                 InputStream in = new FileInputStream(gif);
                 of(in, gif.getPath(), texture);
             } catch (Exception ex) {
-                texture.loadingFailed = true;
+                texture.loadingFailed.set(true);
                 LOGGER.error("[FANCYMENU] Failed to read GIF image from file: " + gif.getPath(), ex);
             }
         }).start();
@@ -120,7 +124,7 @@ public class GifTexture implements ITexture, PlayableResource {
         texture.sourceURL = gifUrl;
 
         if (!TextValidators.BASIC_URL_TEXT_VALIDATOR.get(Objects.requireNonNull(gifUrl))) {
-            texture.loadingFailed = true;
+            texture.loadingFailed.set(true);
             LOGGER.error("[FANCYMENU] Failed to read GIF image from URL! Invalid URL: " + gifUrl);
             return texture;
         }
@@ -135,7 +139,7 @@ public class GifTexture implements ITexture, PlayableResource {
                 //The extract method seems to struggle with a direct web input stream, so read all bytes of it and wrap them into a ByteArrayInputStream
                 byteIn = new ByteArrayInputStream(in.readAllBytes());
             } catch (Exception ex) {
-                texture.loadingFailed = true;
+                texture.loadingFailed.set(true);
                 LOGGER.error("[FANCYMENU] Failed to read GIF image from URL: " + gifUrl, ex);
             }
             if (byteIn != null) {
@@ -171,7 +175,7 @@ public class GifTexture implements ITexture, PlayableResource {
         new Thread(() -> {
             String name = (gifTextureName != null) ? gifTextureName : "[Generic InputStream Source]";
             populateTexture(texture, in, name);
-            if (texture.closed) MainThreadTaskExecutor.executeInMainThread(texture::close, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
+            if (texture.closed.get()) MainThreadTaskExecutor.executeInMainThread(texture::close, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
         }).start();
 
         return texture;
@@ -179,7 +183,7 @@ public class GifTexture implements ITexture, PlayableResource {
     }
 
     protected static void populateTexture(@NotNull GifTexture texture, @NotNull InputStream in, @NotNull String gifTextureName) {
-        if (!texture.closed) {
+        if (!texture.closed.get()) {
             try {
                 DecodedGifImage decodedImage = decodeGif(in);
                 ObjectHolder<Boolean> sizeSet = ObjectHolder.of(false);
@@ -192,7 +196,7 @@ public class GifTexture implements ITexture, PlayableResource {
                                 texture.width = frame.nativeImage.getWidth();
                                 texture.height = frame.nativeImage.getHeight();
                                 texture.aspectRatio = new AspectRatio(frame.nativeImage.getWidth(), frame.nativeImage.getHeight());
-                                texture.decoded = true;
+                                texture.decoded.set(true);
                                 sizeSet.set(true);
                             }
                         } catch (Exception ex) {
@@ -202,14 +206,14 @@ public class GifTexture implements ITexture, PlayableResource {
                         CloseableUtils.closeQuietly(frame.frameInputStream);
                     }
                 });
-                texture.loadingCompleted = true;
+                texture.loadingCompleted.set(true);
                 texture.allFramesDecoded = true;
             } catch (Exception ex) {
-                texture.loadingFailed = true;
+                texture.loadingFailed.set(true);
                 LOGGER.error("[FANCYMENU] Failed to decode GIF image: " + gifTextureName, ex);
             }
         }
-        texture.decoded = true;
+        texture.decoded.set(true);
         CloseableUtils.closeQuietly(in);
     }
 
@@ -218,18 +222,19 @@ public class GifTexture implements ITexture, PlayableResource {
 
     @SuppressWarnings("all")
     protected void startTickerIfNeeded() {
-        if (!this.tickerThreadRunning && !this.frames.isEmpty() && !this.closed) {
+        if (!this.tickerThreadRunning.get() && !this.frames.isEmpty() && !this.closed.get()) {
 
-            this.tickerThreadRunning = true;
+            this.tickerThreadRunning.set(true);
             this.lastResourceLocationCall = System.currentTimeMillis();
 
             new Thread(() -> {
 
                 //Automatically stop thread if GIF was inactive for 10 seconds
                 while ((this.lastResourceLocationCall + 10000) > System.currentTimeMillis()) {
-                    if (this.frames.isEmpty() || this.closed) break;
+                    if (this.frames.isEmpty() || this.closed.get()) break;
                     boolean sleep = false;
                     try {
+                        boolean cachedAllDecoded = this.allFramesDecoded;
                         //Cache frames to avoid possible concurrent modification exceptions
                         List<GifFrame> cachedFrames = new ArrayList<>(this.frames);
                         if (!cachedFrames.isEmpty()) {
@@ -245,8 +250,8 @@ public class GifTexture implements ITexture, PlayableResource {
                                 GifFrame newCurrent = null;
                                 if ((cachedCurrent.index + 1) < cachedFrames.size()) {
                                     newCurrent = cachedFrames.get(cachedCurrent.index + 1);
-                                } else {
-                                    if (this.allFramesDecoded) newCurrent = cachedFrames.get(0);
+                                } else if (cachedAllDecoded) {
+                                    newCurrent = cachedFrames.get(0);
                                 }
                                 if (newCurrent != null) this.current = newCurrent;
                                 Thread.sleep(Math.max(20, (newCurrent != null) ? (newCurrent.delay * 10L) : 100));
@@ -269,7 +274,7 @@ public class GifTexture implements ITexture, PlayableResource {
                     }
                 }
 
-                this.tickerThreadRunning = false;
+                this.tickerThreadRunning.set(false);
 
             }).start();
 
@@ -279,17 +284,18 @@ public class GifTexture implements ITexture, PlayableResource {
     @Nullable
     @Override
     public ResourceLocation getResourceLocation() {
-        if (this.closed) return FULLY_TRANSPARENT_TEXTURE;
+        if (this.closed.get()) return FULLY_TRANSPARENT_TEXTURE;
         this.lastResourceLocationCall = System.currentTimeMillis();
         this.startTickerIfNeeded();
         GifFrame frame = this.current;
         if (frame != null) {
             if ((frame.resourceLocation == null) && !frame.loaded && (frame.nativeImage != null)) {
                 try {
+                    this.frameRegistrationCounter++;
                     frame.dynamicTexture = new DynamicTexture(frame.nativeImage);
-                    frame.resourceLocation = Minecraft.getInstance().getTextureManager().register("fancymenu_gif_texture_frame", frame.dynamicTexture);
+                    frame.resourceLocation = Minecraft.getInstance().getTextureManager().register("fancymenu_gif_frame_" + this.uniqueId + "_" + this.frameRegistrationCounter, frame.dynamicTexture);
                 } catch (Exception ex) {
-                    ex.printStackTrace();
+                    LOGGER.error("[FANCYMENU] Failed to register GIF frame to Minecraft's TextureManager!", ex);
                 }
                 frame.loaded = true;
             }
@@ -324,17 +330,17 @@ public class GifTexture implements ITexture, PlayableResource {
     @Override
     public boolean isReady() {
         //Everything important (like size) is set at this point, so it is considered ready
-        return this.decoded;
+        return this.decoded.get();
     }
 
     @Override
     public boolean isLoadingCompleted() {
-        return !this.closed && !this.loadingFailed && this.loadingCompleted;
+        return !this.closed.get() && !this.loadingFailed.get() && this.loadingCompleted.get();
     }
 
     @Override
     public boolean isLoadingFailed() {
-        return this.loadingFailed;
+        return this.loadingFailed.get();
     }
 
     public void reset() {
@@ -370,23 +376,23 @@ public class GifTexture implements ITexture, PlayableResource {
 
     @Override
     public boolean isClosed() {
-        return this.closed;
+        return this.closed.get();
     }
 
     @Override
     public void close() {
-        this.closed = true;
+        this.closed.set(true);
         this.sourceLocation = null;
         for (GifFrame frame : new ArrayList<>(this.frames)) {
             try {
                 if (frame.dynamicTexture != null) frame.dynamicTexture.close();
             } catch (Exception ex) {
-                ex.printStackTrace();
+                LOGGER.error("[FANCYMENU] Failed to close DynamicTexture of GIF frame!", ex);
             }
             try {
                 if (frame.nativeImage != null) frame.nativeImage.close();
             } catch (Exception ex) {
-                ex.printStackTrace();
+                LOGGER.error("[FANCYMENU] Failed to close NativeImage of GIF frame!", ex);
             }
             frame.dynamicTexture = null;
             frame.nativeImage = null;
