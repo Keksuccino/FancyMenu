@@ -225,31 +225,31 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		//Stack active layouts
 		this.layoutBase = LayoutBase.stackLayoutBases(activeLayouts.toArray(new LayoutBase[]{}));
 
+		Window window = Minecraft.getInstance().getWindow();
+
 		//Handle forced GUI scale
 		if (this.layoutBase.forcedScale != 0) {
 			float newscale = this.layoutBase.forcedScale;
 			if (newscale <= 0) {
 				newscale = 1;
 			}
-			Window m = Minecraft.getInstance().getWindow();
-			m.setGuiScale(newscale);
-			e.getScreen().width = m.getGuiScaledWidth();
-			e.getScreen().height = m.getGuiScaledHeight();
+			window.setGuiScale(newscale);
+			e.getScreen().width = window.getGuiScaledWidth();
+			e.getScreen().height = window.getGuiScaledHeight();
 		}
 
 		//Handle auto-scaling
 		if ((this.layoutBase.autoScalingWidth != 0) && (this.layoutBase.autoScalingHeight != 0) && (this.layoutBase.forcedScale != 0)) {
-			Window m = Minecraft.getInstance().getWindow();
-			double guiWidth = e.getScreen().width * m.getGuiScale();
-			double guiHeight = e.getScreen().height * m.getGuiScale();
+			double guiWidth = e.getScreen().width * window.getGuiScale();
+			double guiHeight = e.getScreen().height * window.getGuiScale();
 			double percentX = (guiWidth / (double)this.layoutBase.autoScalingWidth) * 100.0D;
 			double percentY = (guiHeight / (double)this.layoutBase.autoScalingHeight) * 100.0D;
-			double newScaleX = (percentX / 100.0D) * m.getGuiScale();
-			double newScaleY = (percentY / 100.0D) * m.getGuiScale();
+			double newScaleX = (percentX / 100.0D) * window.getGuiScale();
+			double newScaleY = (percentY / 100.0D) * window.getGuiScale();
 			double newScale = Math.min(newScaleX, newScaleY);
-			m.setGuiScale(newScale);
-			e.getScreen().width = m.getGuiScaledWidth();
-			e.getScreen().height = m.getGuiScaledHeight();
+			window.setGuiScale(newScale);
+			e.getScreen().width = window.getGuiScaledWidth();
+			e.getScreen().height = window.getGuiScaledHeight();
 		}
 
 	}

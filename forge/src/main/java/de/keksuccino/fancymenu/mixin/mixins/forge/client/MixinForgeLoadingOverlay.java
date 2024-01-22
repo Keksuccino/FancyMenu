@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.forge.client;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.keksuccino.fancymenu.customization.gameintro.GameIntroHandler;
 import de.keksuccino.fancymenu.customization.gameintro.GameIntroOverlay;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
@@ -12,6 +14,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraftforge.client.loading.ForgeLoadingOverlay;
 import org.spongepowered.asm.mixin.Mixin;
@@ -39,34 +42,30 @@ public class MixinForgeLoadingOverlay {
         }
     }
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;init(Lnet/minecraft/client/Minecraft;II)V"))
-    private void beforeInitScreenFancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
-
-        boolean isPlayingIntro = false;
+    @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;init(Lnet/minecraft/client/Minecraft;II)V"))
+    private void wrapInitScreenFancyMenu(Screen instance, Minecraft mc, int width, int height, Operation<Void> original) {
 
         if (!GameIntroHandler.introPlayed && GameIntroHandler.shouldPlayIntro()) {
             GameIntroHandler.introPlayed = true;
             PlayableResource intro = GameIntroHandler.getIntro();
             if (intro != null) {
-                isPlayingIntro = true;
-                Minecraft.getInstance().setOverlay(new GameIntroOverlay((Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen : new TitleScreen(), intro));
+                Minecraft.getInstance().setOverlay(new GameIntroOverlay(instance, intro));
+                return;
             }
         }
 
         //Fire Pre Screen Init events, because they normally don't get fired in the loading overlay
-        if (!isPlayingIntro) {
-            RenderingUtils.resetGuiScale();
-            EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(Objects.requireNonNull(Minecraft.getInstance().screen), InitOrResizeScreenEvent.InitializationPhase.INIT));
-            EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(Objects.requireNonNull(Minecraft.getInstance().screen), InitOrResizeScreenEvent.InitializationPhase.INIT));
-        }
+        RenderingUtils.resetGuiScale();
+        EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(Objects.requireNonNull(instance), InitOrResizeScreenEvent.InitializationPhase.INIT));
+        EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(Objects.requireNonNull(instance), InitOrResizeScreenEvent.InitializationPhase.INIT));
 
-    }
+        //Use window.getGuiScaledWidth/Height here to respect GUI scale modifications made in Init.Pre events
+        original.call(instance, mc, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;init(Lnet/minecraft/client/Minecraft;II)V", shift = At.Shift.AFTER))
-    private void afterInitScreenFancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
         //Fire Post Screen Init events, because they normally don't get fired in the loading overlay
-        EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(Objects.requireNonNull(Minecraft.getInstance().screen), InitOrResizeScreenEvent.InitializationPhase.INIT));
-        EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(Objects.requireNonNull(Minecraft.getInstance().screen), InitOrResizeScreenEvent.InitializationPhase.INIT));
+        EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(Objects.requireNonNull(instance), InitOrResizeScreenEvent.InitializationPhase.INIT));
+        EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(Objects.requireNonNull(instance), InitOrResizeScreenEvent.InitializationPhase.INIT));
+
     }
 
 }
