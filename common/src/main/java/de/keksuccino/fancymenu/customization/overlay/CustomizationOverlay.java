@@ -11,9 +11,13 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import net.minecraft.client.gui.screens.Screen;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 public class CustomizationOverlay {
+
+	private static final Logger LOGGER = LogManager.getLogger();
 
 	private static MenuBar overlayMenuBar;
 	private static DebugOverlay debugOverlay;
