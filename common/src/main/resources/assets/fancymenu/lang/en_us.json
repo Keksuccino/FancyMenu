@@ -1077,6 +1077,8 @@
   "fancymenu.elements.text.v2.source_mode.desc": "§lDirect: §rInput text content via text editor.\n§lResource: §rSet a source file to get the text content from.",
   "fancymenu.elements.text.v2.source.choose": "Text Source",
   "fancymenu.elements.text.v2.source.input": "Text Content",
+  "fancymenu.elements.text.v2.interactable": "Interactable: %s",
+  "fancymenu.elements.text.v2.interactable.desc": "If this element should be interactable.\nDisable this if you experience problems with\nclicking elements above or under this text element.",
   "fancymenu.elements.player_entity.skin_texture": "Skin Texture",
   "fancymenu.elements.player_entity.cape_texture": "Cape Texture",
   "fancymenu.markdown.error.text_too_long": "§c§lERROR: §rText too long! 45,000 characters at max!",
@@ -1202,7 +1204,7 @@
   "fancymenu.placeholders.opengl_version.desc": "The OpenGL version.",
   "fancymenu.placeholders.os": "Operating System Name",
   "fancymenu.placeholders.os.desc": "The name of the Operating System.",
-  "fancymenu.placeholders.jvm_name": "Java Virtual Machine Name",
+  "fancymenu.placeholders.jvm_name": "Java Virtual Machine",
   "fancymenu.placeholders.jvm_name.desc": "The name of the Java Virtual Machine.",
   "fancymenu.placeholders.fps": "FPS (Frames Per Second)",
   "fancymenu.placeholders.fps.desc": "The current FPS."
