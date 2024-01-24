@@ -150,7 +150,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		this.isMouseSelection = false;
 		this.preDragElementSnapshot = null;
 
-		this.closeActiveElementMenu();
+		this.closeActiveElementMenu(true);
 
 		this.serializeElementInstancesToLayoutInstance();
 
@@ -767,6 +767,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		if (!COPIED_ELEMENTS_CLIPBOARD.isEmpty()) {
 			this.deselectAllElements();
 			for (Map.Entry<SerializedElement, ElementBuilder<?,?>> m : COPIED_ELEMENTS_CLIPBOARD.entrySet()) {
+				m.getKey().putProperty("instance_identifier", ScreenCustomization.generateUniqueIdentifier());
 				AbstractElement deserialized = m.getValue().deserializeElementInternal(m.getKey());
 				if (deserialized != null) {
 					AbstractEditorElement deserializedEditorElement = m.getValue().wrapIntoEditorElementInternal(deserialized, this);
@@ -883,13 +884,17 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		}
 	}
 
-	public void closeActiveElementMenu() {
+	public void closeActiveElementMenu(boolean forceClose) {
 		if (this.activeElementContextMenu != null) {
-			if (this.activeElementContextMenu.isUserNavigatingInMenu()) return;
+			if (!forceClose && this.activeElementContextMenu.isUserNavigatingInMenu()) return;
 			this.activeElementContextMenu.closeMenu();
 			this.removeWidget(this.activeElementContextMenu);
 		}
 		this.activeElementContextMenu = null;
+	}
+
+	public void closeActiveElementMenu() {
+		this.closeActiveElementMenu(false);
 	}
 
 	public boolean isUserNavigatingInRightClickMenu() {
