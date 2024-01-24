@@ -17,7 +17,10 @@ mixin {
 jarJar.enable()
 
 minecraft {
+
     mappings channel: 'official', version: minecraft_version
+
+    //copyIdeResources = true //Calls processResources when in dev
 
     // Automatically enable forge AccessTransformers if the file exists
     // This location is hardcoded in Forge and can not be changed.
@@ -63,7 +66,9 @@ sourceSets.main.resources.srcDir 'src/generated/resources'
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     compileOnly project(":common")
-    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.2"))
+    //Needs to be "implementation" when building and "compileOnly" in-dev for some frickin reason
+    implementation(annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.2"))
+//    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.2"))
     implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.3.2")) {
         jarJar.ranged(it, "[0.3.2,)")
     }
@@ -94,6 +99,7 @@ tasks.named("sourcesJar", Jar) {
 //}
 
 tasks.named('processResources', ProcessResources).configure {
+    from project(":common").sourceSets.main.resources
     var replaceProperties = [
             minecraft_version: minecraft_version,
             mod_id: mod_id,

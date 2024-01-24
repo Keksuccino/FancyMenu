@@ -299,6 +299,14 @@ public class TextEditorElement extends AbstractEditorElement {
                         true, null, TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .setStackable(true);
 
+        this.rightClickMenu.addSeparatorEntry("separator_after_hover_grabber_color");
+
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "interactable", TextEditorElement.class,
+                        consumes -> consumes.getElement().interactable,
+                        (textEditorElement, aBoolean) -> textEditorElement.getElement().interactable = aBoolean,
+                        "fancymenu.elements.text.v2.interactable")
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.v2.interactable.desc")));
+
     }
 
     @Override
