@@ -43,6 +43,7 @@ public class TextElement extends AbstractElement {
     public String scrollGrabberColorHexNormal;
     public String scrollGrabberColorHexHover;
     public boolean enableScrolling = true;
+    public boolean interactable = true;
     @NotNull
     public volatile MarkdownRenderer markdownRenderer = new MarkdownRenderer();
     @NotNull
@@ -134,7 +135,7 @@ public class TextElement extends AbstractElement {
 
     @Override
     public @Nullable List<GuiEventListener> getWidgetsToRegister() {
-        return ListUtils.of(this.markdownRenderer, this.scrollArea);
+        return this.interactable ? ListUtils.of(this.markdownRenderer, this.scrollArea) : null;
     }
 
     protected void renderTick() {

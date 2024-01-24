@@ -36,6 +36,8 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
         element.baseWidth = 200;
         element.baseHeight = 40;
 
+        element.interactable = deserializeBoolean(element.interactable, serialized.getValue("interactable"));
+
         element.source = serialized.getValue("source");
         if (element.source != null) element.source = element.source.replace("%n%", "\n");
 
@@ -178,6 +180,8 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
 
     @Override
     protected SerializedElement serializeElement(@NotNull TextElement element, @NotNull SerializedElement serializeTo) {
+
+        serializeTo.putProperty("interactable", "" + element.interactable);
 
         if (element.source != null) {
             serializeTo.putProperty("source", element.source.replace("\n", "%n%"));
