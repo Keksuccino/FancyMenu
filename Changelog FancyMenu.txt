@@ -1,7 +1,29 @@
 
+- Improved mixins related to tab/arrow focus behavior of screen widgets
+--> This fixes an incompatibility with YACL (Yet Another Config Lib)
+ 
+CHANGELOG v3.0.0: https://gist.github.com/Keksuccino/5b16971040cc06d1e1d4d901da2a53b6
+
+%changelog:end%
+
+
+
+
+
+CHANGELOG: https://gist.github.com/Keksuccino/5b16971040cc06d1e1d4d901da2a53b6
+
+%changelog:end%
+
+
+
+
+
 CHANGELOG | FANCYMENU v3.0.0 - The "Don't Panic, Your Layouts Still Work" Update
  
 IMPORTANT! PLEASE READ!
+ 
+Most layouts should still work fine, but some very deprecated stuff (and the Audio element of the extension)
+got removed, so there will be some special cases where you need to fix some parts.
  
 The following changelog only contains SOME of the maaaany changes in FancyMenu v3.
 It's just too much stuff to mention every change in detail.
@@ -21,9 +43,14 @@ tl;dr: BACKUP your LAYOUTS and Minecraft INSTANCE before updating!
  
 ------------------------------
  
+- The new wiki for v3: docs.keksuccino.net
+ 
 - FancyMenu v3 is available for 1.18.2, 1.19.2, 1.20.1, 1.20.4 and future Minecraft versions (all other versions not listed here get dropped with v3)
  
 - Old Audio elements from the Audio extension don't work anymore, you need to add the new Audio element of the base mod (sorry)
+ 
+- Old v2 layouts, variables, custom GUIs and other things get CONVERTED to v3, so there's no going back to v2 after loading your setuo in v3!
+--> Make sure to backup your setup before loading it in v3!
  
 - Button tooltips (custom and Vanilla buttons) now look like Vanilla ones
 - Button tooltips will not jump to the complete opposite site of the mouse cursor anymore when hitting the edge of the screen
@@ -83,6 +110,8 @@ tl;dr: BACKUP your LAYOUTS and Minecraft INSTANCE before updating!
 - You can now undo/redo steps in the text editor
 - Backported Vanilla 1.19.4+ widget background rendering (9-slicing) to 1.18.2 and 1.19.2
 - Backported Vanilla 1.19.4+ widget label rendering (sliding left to right) to 1.18.2 and 1.19.2
+- Panoramas should now load when its properties file name is "properties.txt.txt" (you know why)
+- Slideshows should now load when its properties file name is "properties.txt.txt" (you know why)
  
 - Animations are now deprecated!
 --> APNGs exist now (and maybe videos soon), so there's no real need for animations anymore
