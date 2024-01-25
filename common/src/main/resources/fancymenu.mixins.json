@@ -26,7 +26,6 @@
     "client.MixinAbstractSliderButton",
     "client.MixinAbstractWidget",
     "client.MixinConnectScreen",
-    "client.MixinContainerEventHandler",
     "client.MixinGenericDirtMessageScreen",
     "client.MixinImageButton",
     "client.MixinLevelLoadingScreen",
