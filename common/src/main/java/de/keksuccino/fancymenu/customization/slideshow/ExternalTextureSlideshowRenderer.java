@@ -43,6 +43,7 @@ public class ExternalTextureSlideshowRenderer {
 	public ExternalTextureSlideshowRenderer(String slideshowDir) {
 		this.dir = slideshowDir;
 		File props = new File(this.dir + "/properties.txt");
+		if (!props.isFile()) props = new File(this.dir + "/properties.txt.txt");
 		
 		if (props.exists()) {
 			
