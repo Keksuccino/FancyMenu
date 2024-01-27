@@ -12,7 +12,6 @@
     "IMixinTextFieldWidget",
     "IMixinWidget",
     "IMixinWorldLoadProgressScreen",
-    "MixinAbstractGui",
     "MixinAbstractList",
     "MixinConnectingScreen",
     "MixinConnectScreen",
@@ -22,6 +21,7 @@
     "MixinOnlineServerEntry",
     "MixinResourceLoadProgressGui",
     "MixinScreen",
+    "MixinTitleScreen",
     "MixinWidget",
     "MixinWorldListEntry"
   ],

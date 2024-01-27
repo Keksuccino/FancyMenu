@@ -26,9 +26,10 @@ public class FMContextMenu extends ContextMenu {
 	@Override
 	public void addContent(AdvancedButton button) {
 		super.addContent(button);
-		
 		Color c = new Color(0, 0, 0, 0);
 		button.setBackgroundColor(UIBase.getButtonIdleColor(), UIBase.getButtonHoverColor(), c, c, 0);
+		button.ignoreBlockedInput = true;
+		button.ignoreLeftMouseDownClickBlock = true;
 	}
 	
 	public void addSeparator() {

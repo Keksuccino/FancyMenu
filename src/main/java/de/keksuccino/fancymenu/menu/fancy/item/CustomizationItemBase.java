@@ -48,6 +48,7 @@ public abstract class CustomizationItemBase extends AbstractGui {
 	public volatile boolean fadeIn = false;
 	public volatile float fadeInSpeed = 1.0F;
 	public volatile float opacity = 1.0F;
+	public float customGuiScale = -1F;
 
 	public LoadingRequirementContainer loadingRequirementContainer;
 

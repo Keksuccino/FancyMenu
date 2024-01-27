@@ -75,7 +75,7 @@ public abstract class LayoutElement extends AbstractGui {
 	protected boolean enableElementIdCopyButton = true;
 	protected boolean allowOrientationByElement = true;
 
-	protected List<LayoutElement> hoveredLayers = new ArrayList<LayoutElement>();
+	public List<LayoutElement> hoveredLayers = new ArrayList<LayoutElement>();
 
 	public FMContextMenu rightclickMenu;
 
@@ -1026,35 +1026,6 @@ public abstract class LayoutElement extends AbstractGui {
 			this.resizing = false;
 		}
 
-		//Handle rightclick context menu
-		if (this.rightclickMenu != null) {
-
-			if (this.isRightClicked() && this.handler.isFocused(this)) {
-				if (this.handler.getFocusedObjects().size() == 1) {
-					UIBase.openScaledContextMenuAtMouse(this.rightclickMenu);
-					this.hoveredLayers.clear();
-					for (LayoutElement o : this.handler.getContent()) {
-						if (o.isHovered()) {
-							this.hoveredLayers.add(o);
-						}
-					}
-				}
-			}
-
-			if ((MouseInput.isLeftMouseDown() && !this.rightclickMenu.isHovered())) {
-				this.rightclickMenu.closeMenu();
-			}
-			if (MouseInput.isRightMouseDown() && !this.isHovered() && !this.rightclickMenu.isHovered()) {
-				this.rightclickMenu.closeMenu();
-			}
-
-			if (this.rightclickMenu.isOpen()) {
-				this.handler.setFocusChangeBlocked(objectId, true);
-			} else {
-				this.handler.setFocusChangeBlocked(objectId, false);
-			}
-
-		}
 	}
 
 	protected void renderBorder(MatrixStack matrix, int mouseX, int mouseY) {
@@ -1382,7 +1353,6 @@ public abstract class LayoutElement extends AbstractGui {
 		if (this.rightclickMenu != null) {
 			this.rightclickMenu.closeMenu();
 		}
-		this.handler.setFocusChangeBlocked(objectId, false);
 		this.handler.setObjectFocused(this, false, true);
 	}
 

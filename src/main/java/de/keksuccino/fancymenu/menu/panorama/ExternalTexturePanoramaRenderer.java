@@ -31,6 +31,7 @@ public class ExternalTexturePanoramaRenderer extends AbstractGui {
 	private float speed = 1.0F;
 	private double fov = 85.0D;
 	private float angle = 25.0F;
+	public float opacity = 1.0F;
 	
 	/**
 	 * Loads a panorama cube from a directory containing:<br>
@@ -120,7 +121,7 @@ public class ExternalTexturePanoramaRenderer extends AbstractGui {
 
 	public void render() {
 		try {
-			this.renderRaw(1.0F);
+			this.renderRaw(this.opacity);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -143,7 +144,7 @@ public class ExternalTexturePanoramaRenderer extends AbstractGui {
 			RenderSystem.matrixMode(5888);
 			RenderSystem.pushMatrix();
 			RenderSystem.loadIdentity();
-			RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+			RenderSystem.color4f(1.0f, 1.0f, 1.0f, this.opacity);
 			RenderSystem.rotatef(180.0F, 1.0F, 0.0F, 0.0F);
 			RenderSystem.enableBlend();
 			RenderSystem.disableAlphaTest();
@@ -232,9 +233,11 @@ public class ExternalTexturePanoramaRenderer extends AbstractGui {
 					this.overlay_texture.loadTexture();
 				}
 				Minecraft.getInstance().getTextureManager().bind(this.overlay_texture.getResourceLocation());
+				RenderSystem.color4f(1.0F, 1.0F, 1.0F, this.opacity);
 				blit(CurrentScreenHandler.getMatrixStack(), 0, 0, 0.0F, 0.0F, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height, Minecraft.getInstance().screen.width, Minecraft.getInstance().screen.height);
 			}
 		}
+		RenderSystem.color4f(1.0f, 1.0f, 1.0f, 1.0F);
 	}
 	
 	public String getName() {

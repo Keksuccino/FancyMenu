@@ -4,7 +4,6 @@ package de.keksuccino.fancymenu.menu.fancy.helper.ui.scroll.scrollbar;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.konkrete.input.MouseInput;
-import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.util.ResourceLocation;

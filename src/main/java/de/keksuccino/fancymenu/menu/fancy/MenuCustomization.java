@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import com.google.common.io.Files;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.events.DrawWidgetBackgroundEvent;
 import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
@@ -40,13 +41,13 @@ public class MenuCustomization {
 	protected static boolean isNewMenu = true;
 	protected static MenuCustomizationEvents eventsInstance = new MenuCustomizationEvents();
 
-	public static boolean isLoadingScreen = true;
+	public static boolean allowScreenCustomization = false;
 	
 	public static void init() {
 		if (!initDone) {
 			//Registering (base) events for the MenuCustomization system
 			MinecraftForge.EVENT_BUS.register(eventsInstance);
-			
+
 			//Registering all custom menu handlers
 			MenuHandlerRegistry.registerHandler(new MainMenuHandler());
 			MenuHandlerRegistry.registerHandler(new MoreRefinedStorageMainHandler());
@@ -93,7 +94,7 @@ public class MenuCustomization {
 					if (sec.getSectionType().equals("net.mehvahdjukaar.supplementaries.compat.configured.CustomConfigScreen")) {
 						identifier = sec.getSectionType();
 					} else if ((sec.getSectionType() != null) && (sec.getSectionType().length() > 5)) {
-						Class.forName(sec.getSectionType());
+						Class.forName(sec.getSectionType(), false, MenuCustomization.class.getClassLoader());
 						identifier = sec.getSectionType();
 					}
 				} catch (Exception e) {}
@@ -147,6 +148,9 @@ public class MenuCustomization {
 	}
 
 	public static boolean isMenuCustomizable(Screen menu) {
+		if (!allowScreenCustomization) {
+			return false;
+		}
 		if (menu != null) {
 			if (menu instanceof CustomGuiBase) {
 				return true;
@@ -169,7 +173,7 @@ public class MenuCustomization {
 		}
 		SetupSharingEngine.MenuIdentifierDatabase db = SetupSharingEngine.getIdentifierDatabase();
 		try {
-			Class.forName(identifier);
+			Class.forName(identifier, false, MenuCustomization.class.getClassLoader());
 			return identifier;
 		} catch (Exception e) {}
 		if (db != null) {
@@ -328,6 +332,12 @@ public class MenuCustomization {
 			return true;
 		}
 		if (menuIdentifierOrPartOfIdentifier.startsWith("de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.actions.")) {
+			return true;
+		}
+		if (menuIdentifierOrPartOfIdentifier.startsWith("io.github.lgatodu47.screenshot_viewer.")) {
+			return true;
+		}
+		if (menuIdentifierOrPartOfIdentifier.startsWith("twilightforest.")) {
 			return true;
 		}
 		return false;
