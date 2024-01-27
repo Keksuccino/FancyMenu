@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.compat.RenderSystem;
 import org.lwjgl.util.glu.Project;
 
 import de.keksuccino.konkrete.math.MathUtils;
@@ -30,6 +31,7 @@ public class ExternalTexturePanoramaRenderer extends Gui {
 	private float speed = 1.0F;
 	private float fov = 85.0F;
 	private float angle = 25.0F;
+	public float opacity = 1.0F;
 	
 	/**
 	 * Loads a panorama cube from a directory containing:<br>
@@ -120,7 +122,7 @@ public class ExternalTexturePanoramaRenderer extends Gui {
 	
 	public void render() {
 		try {
-			this.renderRaw(1.0F);
+			this.renderRaw(this.opacity);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -139,13 +141,11 @@ public class ExternalTexturePanoramaRenderer extends Gui {
 			GlStateManager.matrixMode(5889);
 			GlStateManager.pushMatrix();
 			GlStateManager.loadIdentity();
-//			GlStateManager.multMatrix(Matrix4f.perspective(85.0D, (float)mc.getMainWindow().getFramebufferWidth() / (float)mc.getMainWindow().getFramebufferHeight(), 0.05F, 10.0F));
-//			Project.gluPerspective(120.0F, 1.0F, 0.05F, 10.0F);
 			Project.gluPerspective(this.fov, (float)mc.getFramebuffer().framebufferWidth / (float)mc.getFramebuffer().framebufferHeight, 0.05F, 10.0F);
 			GlStateManager.matrixMode(5888);
 			GlStateManager.pushMatrix();
 			GlStateManager.loadIdentity();
-			GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+			GlStateManager.color(1.0f, 1.0f, 1.0f, this.opacity);
 			GlStateManager.rotate(180.0F, 1.0F, 0.0F, 0.0F);
 			GlStateManager.enableBlend();
 			GlStateManager.disableAlpha();
@@ -234,10 +234,12 @@ public class ExternalTexturePanoramaRenderer extends Gui {
 					this.overlay_texture.loadTexture();
 				}
 				Minecraft.getMinecraft().getTextureManager().bindTexture(this.overlay_texture.getResourceLocation());
+				RenderSystem.color4f(1.0f, 1.0f, 1.0f, this.opacity);
 				drawModalRectWithCustomSizedTexture(0, 0, 0.0F, 0.0F, Minecraft.getMinecraft().currentScreen.width, Minecraft.getMinecraft().currentScreen.height, Minecraft.getMinecraft().currentScreen.width, Minecraft.getMinecraft().currentScreen.height);
 			}
 			
 		}
+		RenderSystem.color4f(1.0f, 1.0f, 1.0f, 1.0F);
 	}
 	
 	public String getName() {

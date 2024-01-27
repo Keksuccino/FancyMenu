@@ -19,6 +19,7 @@ import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiLoader;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.PreloadedLayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.menuhandler.MenuHandlerRegistry;
+import de.keksuccino.fancymenu.thread.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSerializer;
 import de.keksuccino.konkrete.properties.PropertiesSet;
@@ -34,8 +35,6 @@ import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class CustomizationHelper {
-
-	public static List<Runnable> mainThreadTasks = new ArrayList<>();
 	
 	public static void init() {
 		
@@ -47,17 +46,6 @@ public class CustomizationHelper {
 
 	@SubscribeEvent(priority = EventPriority.LOW)
 	public void onRenderPost(GuiScreenEvent.DrawScreenEvent.Post e) {
-
-		List<Runnable> runs = new ArrayList<>();
-		runs.addAll(CustomizationHelper.mainThreadTasks);
-		for (Runnable r : runs) {
-			try {
-				r.run();
-				CustomizationHelper.mainThreadTasks.remove(r);
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
-		}
 
 		if (!MenuCustomization.isBlacklistedMenu(e.getGui().getClass().getName())) {
 			if (!e.getGui().getClass().getName().startsWith("de.keksuccino.spiffyhud.")) {
@@ -238,8 +226,10 @@ public class CustomizationHelper {
 		return false;
 	}
 
+	@Deprecated
+	/** Use {@link MainThreadTaskExecutor#executeInMainThread(Runnable, MainThreadTaskExecutor.ExecuteTiming)} instead! **/
 	public static void runTaskInMainThread(Runnable task) {
-		mainThreadTasks.add(task);
+		MainThreadTaskExecutor.executeInMainThread(task, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
 	}
 
 }

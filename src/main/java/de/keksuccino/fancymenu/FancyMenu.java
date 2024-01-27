@@ -48,13 +48,14 @@ import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+@SuppressWarnings("all")
 @Mod(modid = "fancymenu", acceptedMinecraftVersions="[1.12,1.12.2]", dependencies = "after:randompatches;after:findme;required-after:konkrete@[1.6.0,];required:forge@[14.23.5.2855,]", clientSideOnly = false)
 public class FancyMenu {
 
 	//TODO CHANGE BEFORE PUBLISHING!!!!
 	public static final boolean IS_DEV_ENVIRONMENT = false;
 
-	public static final String VERSION = "2.14.0";
+	public static final String VERSION = "2.14.9";
 	public static final String MOD_LOADER = "forge";
 
 	public static final Logger LOGGER = LogManager.getLogger("fancymenu/FancyMenu");
@@ -92,7 +93,7 @@ public class FancyMenu {
 	    		panoramaPath.mkdirs();
 	    		slideshowPath.mkdirs();
 	    		
-	    		updateConfig();
+	    		initConfig();
 
 				ClientExecutor.init();
 
@@ -227,10 +228,17 @@ public class FancyMenu {
 			Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "uk_ua.local"), "uk_ua", f.getPath());
 			Locals.copyLocalsFileToDir(new ResourceLocation("keksuccino", baseresdir + "ru_ru.local"), "ru_ru", f.getPath());
 		} else {
-			Locals.getLocalsFromFile(new File("../src/main/resources/assets/keksuccino/fmlocals/en_us.local"));
+//			Locals.getLocalsFromFile(new File("../src/main/resources/assets/keksuccino/fmlocals/en_us.local"));
+			Locals.getLocalsFromDir("../src/main/resources/assets/keksuccino/fmlocals");
 		}
 		
 		Locals.getLocalsFromDir(f.getPath());
+	}
+
+	public static void initConfig() {
+		if (config == null) {
+			updateConfig();
+		}
 	}
 	
 	public static void updateConfig() {
@@ -339,7 +347,7 @@ public class FancyMenu {
 
 	public static boolean isDrippyLoadingScreenLoaded() {
 		try {
-			Class.forName("de.keksuccino.drippyloadingscreen.DrippyLoadingScreen");
+			Class.forName("de.keksuccino.drippyloadingscreen.DrippyLoadingScreen", false, FancyMenu.class.getClassLoader());
 			return true;
 		} catch (Exception e) {}
 		return false;
@@ -347,7 +355,7 @@ public class FancyMenu {
 
 	public static boolean isKonkreteLoaded() {
 		try {
-			Class.forName("de.keksuccino.konkrete.Konkrete");
+			Class.forName("de.keksuccino.konkrete.Konkrete", false, FancyMenu.class.getClassLoader());
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();

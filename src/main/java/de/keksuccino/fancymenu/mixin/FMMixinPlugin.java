@@ -11,11 +11,10 @@ import java.util.Set;
 
 public class FMMixinPlugin implements IMixinConfigPlugin {
 
-    private static final Logger LOGGER = LogManager.getLogger("fancymenu/FMMixinPlugin");
+    private static final Logger LOGGER = LogManager.getLogger();
 
     @Override
     public void onLoad(String mixinPackage) {
-
     }
 
     @Override
@@ -26,7 +25,7 @@ public class FMMixinPlugin implements IMixinConfigPlugin {
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
         if (isKonkreteLoaded()) {
-            LOGGER.info("APPLYING MIXIN: " + mixinClassName + " | TO TARGET: " + targetClassName);
+            LOGGER.info("[FANCYMENU] APPLYING MIXIN: " + mixinClassName + " | TO TARGET: " + targetClassName);
             return true;
         }
         return false;
@@ -34,7 +33,6 @@ public class FMMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public void acceptTargets(Set<String> myTargets, Set<String> otherTargets) {
-
     }
 
     @Override
@@ -52,7 +50,7 @@ public class FMMixinPlugin implements IMixinConfigPlugin {
 
     private static boolean isKonkreteLoaded() {
         try {
-            Class.forName("de.keksuccino.konkrete.Konkrete");
+            Class.forName("de.keksuccino.konkrete.Konkrete", false, FMMixinPlugin.class.getClassLoader());
             return true;
         } catch (Exception e) {}
         return false;

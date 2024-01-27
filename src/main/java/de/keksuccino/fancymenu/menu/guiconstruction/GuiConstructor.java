@@ -55,7 +55,7 @@ public class GuiConstructor {
 				parameters.put(ClientAdvancementManager.class, Minecraft.getMinecraft().player.connection.getAdvancementManager());
 			}
 
-			Class<?> gui = Class.forName(identifier);
+			Class<?> gui = Class.forName(identifier, false, GuiConstructor.class.getClassLoader());
 			if ((gui != null) && GuiScreen.class.isAssignableFrom(gui)) {
 				Constructor<?>[] constructors = gui.getConstructors();
 				if ((constructors != null) && (constructors.length > 0)) {

@@ -1095,7 +1095,7 @@ public class SetupSharingEngine {
                     return true;
                 }
                 if (!isCustomGuiName(identifier)) {
-                    Class.forName(identifier);
+                    Class.forName(identifier, false, SetupSharingEngine.class.getClassLoader());
                 }
                 return true;
             } catch (Exception e2) {}
@@ -1157,7 +1157,7 @@ public class SetupSharingEngine {
                         if (l.contains(invalidIdentifier)) {
                             for (String s : l) {
                                 try {
-                                    Class.forName(s);
+                                    Class.forName(s, false, SetupSharingEngine.class.getClassLoader());
                                     return s;
                                 } catch (Exception e2) {}
                             }

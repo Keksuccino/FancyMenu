@@ -28,6 +28,8 @@ import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonData;
 import de.keksuccino.fancymenu.menu.button.VanillaButtonDescriptionHandler;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.compat.AbstractGui;
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.compat.RenderSystem;
 import de.keksuccino.fancymenu.menu.loadingrequirement.v2.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.menu.placeholder.v1.DynamicValueHelper;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
@@ -113,6 +115,7 @@ public class MenuHandlerBase {
 	protected ExternalTextureSlideshowRenderer slideshow;
 
 	protected MenuBackground customMenuBackground = null;
+	public float backgroundOpacity = 1.0F;
 
 	protected List<ButtonData> hidden = new ArrayList<ButtonData>();
 	protected Map<GuiButton, ButtonCustomizationContainer> vanillaButtonCustomizations = new HashMap<GuiButton, ButtonCustomizationContainer>();
@@ -483,6 +486,7 @@ public class MenuHandlerBase {
 		this.panoramacube = null;
 		this.slideshow = null;
 		this.customMenuBackground = null;
+		this.backgroundOpacity = 1.0F;
 		this.backgroundAnimation = null;
 		this.backgroundAnimations.clear();
 		if ((this.backgroundAnimation != null) && (this.backgroundAnimation instanceof AdvancedAnimation)) {
@@ -1360,16 +1364,18 @@ public class MenuHandlerBase {
 							this.backgroundAnimation.setPosY(0);
 						}
 					}
+					this.backgroundAnimation.setOpacity(this.backgroundOpacity);
 					this.backgroundAnimation.render();
 					this.backgroundAnimation.setWidth(wOri);
 					this.backgroundAnimation.setHeight(hOri);
 					this.backgroundAnimation.setPosX(xOri);
 					this.backgroundAnimation.setPosY(yOri);
 					this.backgroundAnimation.setStretchImageToScreensize(b);
+					this.backgroundAnimation.setOpacity(1.0F);
 				} else if (this.backgroundTexture != null) {
 					GlStateManager.enableBlend();
 					Minecraft.getMinecraft().getTextureManager().bindTexture(this.backgroundTexture.getResourceLocation());
-
+					RenderSystem.color4f(1.0F, 1.0F, 1.0F, this.backgroundOpacity);
 					if (!this.panoramaback) {
 						if (!this.keepBackgroundAspectRatio) {
 							Gui.drawModalRectWithCustomSizedTexture(0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
@@ -1434,17 +1440,21 @@ public class MenuHandlerBase {
 							}
 						}
 						if (wfinal <= s.width) {
-							Gui.drawModalRectWithCustomSizedTexture(0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
+							AbstractGui.blit(0, 0, 1.0F, 1.0F, s.width + 1, s.height + 1, s.width + 1, s.height + 1);
 						} else {
 							RenderUtils.doubleBlit(panoPos, 0, 1.0F, 1.0F, wfinal, s.height + 1);
 						}
 					}
 
 					GlStateManager.disableBlend();
+					RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 
 				} else if (this.panoramacube != null) {
-					
+
+					float opacity = this.panoramacube.opacity;
+					this.panoramacube.opacity = this.backgroundOpacity;
 					this.panoramacube.render();
+					this.panoramacube.opacity = opacity;
 
 				} else if (this.slideshow != null) {
 
@@ -1452,6 +1462,7 @@ public class MenuHandlerBase {
 					int sh = this.slideshow.height;
 					int sx = this.slideshow.x;
 					int sy = this.slideshow.y;
+					float opacity = this.slideshow.slideshowOpacity;
 
 					if (!this.keepBackgroundAspectRatio) {
 						this.slideshow.width = s.width + 1;
@@ -1472,6 +1483,7 @@ public class MenuHandlerBase {
 						}
 					}
 					this.slideshow.y = 0;
+					this.slideshow.slideshowOpacity = this.backgroundOpacity;
 
 					this.slideshow.render();
 
@@ -1479,10 +1491,12 @@ public class MenuHandlerBase {
 					this.slideshow.height = sh;
 					this.slideshow.x = sx;
 					this.slideshow.y = sy;
-
+					this.slideshow.slideshowOpacity = opacity;
 				} else if (this.customMenuBackground != null) {
 
+					this.customMenuBackground.opacity = this.backgroundOpacity;
 					this.customMenuBackground.render(s, this.keepBackgroundAspectRatio);
+					this.customMenuBackground.opacity = 1.0F;
 
 				}
 

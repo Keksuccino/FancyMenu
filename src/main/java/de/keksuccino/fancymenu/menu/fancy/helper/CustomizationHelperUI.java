@@ -611,7 +611,7 @@ public class CustomizationHelperUI extends UIBase {
 				if (expandButton instanceof AdvancedImageButton) {
 					if (!extended) {
 						((AdvancedImageButton)expandButton).setImage(MenuBar.EXPAND_BTN_TEXTURE);
-						expandButton.setDescription(Locals.localize("helper.menubar.expand"));
+						expandButton.setDescription(StringUtils.splitLines(Locals.localize("helper.menubar.expand"), "%n%"));
 					}
 				}
 			}

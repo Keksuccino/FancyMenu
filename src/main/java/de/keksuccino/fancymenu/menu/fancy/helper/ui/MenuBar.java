@@ -61,10 +61,10 @@ public class MenuBar extends UIBase {
 			this.toggleExpanded();
 			if (this.expanded) {
 				((AdvancedImageButton)press).setImage(SHRINK_BTN_TEXTURE);
-				((AdvancedButton)press).setDescription(Locals.localize("helper.menubar.shrink"));
+				((AdvancedButton)press).setDescription(StringUtils.splitLines(Locals.localize("helper.menubar.shrink"), "%n%"));
 			} else {
 				((AdvancedImageButton)press).setImage(EXPAND_BTN_TEXTURE);
-				((AdvancedButton)press).setDescription(Locals.localize("helper.menubar.expand"));
+				((AdvancedButton)press).setDescription(StringUtils.splitLines(Locals.localize("helper.menubar.expand"), "%n%"));
 			}
 		}) {
 			@Override
@@ -73,7 +73,7 @@ public class MenuBar extends UIBase {
 				super.drawButton(mc, mouseX, mouseY, partialTicks);
 			}
 		};
-		expandBtn.setDescription(Locals.localize("helper.menubar.shrink"));
+		expandBtn.setDescription(StringUtils.splitLines(Locals.localize("helper.menubar.shrink"), "%n%"));
 		this.addElement(expandBtn, "menubar.default.extendbtn", ElementAlignment.RIGHT, true);
 		
 	}

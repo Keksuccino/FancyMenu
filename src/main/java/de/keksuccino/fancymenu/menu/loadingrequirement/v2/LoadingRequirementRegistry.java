@@ -36,7 +36,6 @@ public class LoadingRequirementRegistry {
      * @param requirementIdentifier The identifier of the requirement that should get unregistered.
      * @return The requirement that got unregistered or NULL if no requirement with the given identifier was found.
      */
-    
     public static LoadingRequirement unregisterRequirement(String requirementIdentifier) {
         return REQUIREMENTS.remove(requirementIdentifier);
     }
@@ -44,16 +43,18 @@ public class LoadingRequirementRegistry {
     /**
      * @return A new list with all registered requirements. Adding/Removing requirements to/from this list will not register/unregister them.
      */
-    
     public static List<LoadingRequirement> getRequirements() {
-        return new ArrayList<>(REQUIREMENTS.values());
+        List<LoadingRequirement> l = new ArrayList<>();
+        REQUIREMENTS.forEach((key, value) -> {
+            l.add(value);
+        });
+        return l;
     }
 
     /**
      * @param requirementIdentifier The identifier of the reuqirement.
      * @return The requirement with the given identifier or NULL if no requirement was found.
      */
-    
     public static LoadingRequirement getRequirement(String requirementIdentifier) {
         return REQUIREMENTS.get(requirementIdentifier);
     }

@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.mixin.client;
 
 import de.keksuccino.fancymenu.menu.world.LastWorldHandler;
+import de.keksuccino.fancymenu.thread.MainThreadTaskExecutor;
 import net.minecraft.world.WorldSettings;
 import org.lwjgl.opengl.Display;
 import org.spongepowered.asm.mixin.Mixin;
@@ -16,6 +17,28 @@ import net.minecraft.client.Minecraft;
 public class MixinMinecraft {
 
 	private static boolean customWindowInit = false;
+
+	@Inject(method = "runTick", at = @At("HEAD"))
+	private void onClientTickPre(CallbackInfo info) {
+		for (Runnable r : MainThreadTaskExecutor.getAndClearQueue(MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK)) {
+			try {
+				r.run();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	@Inject(method = "runTick", at = @At("RETURN"))
+	private void onClientTickPost(CallbackInfo info) {
+		for (Runnable r : MainThreadTaskExecutor.getAndClearQueue(MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK)) {
+			try {
+				r.run();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
 
 	@Inject(at = @At("HEAD"), method = "setInitialDisplayMode", cancellable = true)
 	private void onSetInitialDisplayMode(CallbackInfo info) {

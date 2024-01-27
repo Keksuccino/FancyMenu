@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.menu.fancy.helper.ui.scroll.scrollarea.entry;
 
+import de.keksuccino.fancymenu.menu.fancy.helper.ui.compat.AbstractGui;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.scroll.scrollarea.ScrollArea;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -14,6 +15,7 @@ public class TextScrollAreaEntry extends ScrollAreaEntry {
     private static final Logger LOGGER = LogManager.getLogger();
 
     protected ITextComponent text;
+    public boolean shadow = false;
     protected int textWidth;
     public FontRenderer font = Minecraft.getMinecraft().fontRenderer;
     protected Consumer<TextScrollAreaEntry> onClickCallback;
@@ -31,7 +33,7 @@ public class TextScrollAreaEntry extends ScrollAreaEntry {
 
         int centerY = this.getY() + (this.getHeight() / 2);
 
-        this.font.drawString(this.text.getFormattedText(), (this.getX() + 5), (centerY - (this.font.FONT_HEIGHT / 2)), -1);
+        AbstractGui.drawFormattedString(this.font, this.text, (this.getX() + 5), (centerY - (this.font.FONT_HEIGHT / 2)), -1, shadow);
 
     }
 
