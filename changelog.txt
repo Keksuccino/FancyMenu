@@ -1,7 +1,9 @@
 
 CHANGELOG | FANCYMENU v3.0.2
  
-- Fixed: Game sometimes crashing when using converted v2 layoutss (Arithmetic Exception (Divided by zero))
+- Improved the success rate of v2 -> v3 layout conversions
+ 
+- Fixed: Game sometimes crashing when using converted v2 layouts (Arithmetic Exception (Divided by zero))
 
 %changelog:end%
 
