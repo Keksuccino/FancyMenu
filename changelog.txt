@@ -1,4 +1,13 @@
 
+CHANGELOG | FANCYMENU v3.0.2
+ 
+- Fixed: Game sometimes crashing when using converted v2 layoutss (Arithmetic Exception (Divided by zero))
+
+%changelog:end%
+
+
+
+
 - Improved mixins related to tab/arrow focus behavior of screen widgets
 --> This fixes an incompatibility with YACL (Yet Another Config Lib)
  
