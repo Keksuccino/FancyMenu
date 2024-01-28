@@ -5,12 +5,8 @@ CHANGELOG | FANCYMENU v3.0.2
 - I tried to reproduce the problems people have with "Mod Menu", but customizing the MM screen and button worked fine in MC 1.20.1, so maybe I fixed something by accident
 - Improved StringDecomposer mixin (related to text formatting codes)
 --> This could fix some crashes caused by mods that add custom chat colors and similar text-formatting-related stuff
- 
 - Fixed game sometimes crashing when using converted v2 layouts (Arithmetic Exception (Divided by zero))
- 
-KNOWN ISSUES:
- 
-- Incompatibility with "Chat Heads" mod (game will crash when trying to open action config screens, etc.)
+- There was a conflict with the "Chat Heads" mod which is now fixed on their end in Chat Heads v0.10.31
 
 %changelog:end%
 
