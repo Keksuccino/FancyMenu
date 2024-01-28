@@ -9,6 +9,7 @@ CHANGELOG | FANCYMENU v3.0.2
 - There was a conflict with the "Chat Heads" mod which is now fixed on their end in Chat Heads v0.10.31
 - The v2 Audio extension is now listed as incompatible in the mod's meta files
 - The v2 Video extension is now listed as incompatible in the mod's meta files
+- The update indicator (green emerald) of Forge's Mods button now gets hidden with the button
 
 %changelog:end%
 
