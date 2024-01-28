@@ -7,6 +7,8 @@ CHANGELOG | FANCYMENU v3.0.2
 --> This could fix some crashes caused by mods that add custom chat colors and similar text-formatting-related stuff
 - Fixed game sometimes crashing when using converted v2 layouts (Arithmetic Exception (Divided by zero))
 - There was a conflict with the "Chat Heads" mod which is now fixed on their end in Chat Heads v0.10.31
+- The v2 Audio extension is now listed as incompatible in the mod's meta files
+- The v2 Video extension is now listed as incompatible in the mod's meta files
 
 %changelog:end%
 
