@@ -23,13 +23,6 @@ CHANGELOG v3.0.0: https://gist.github.com/Keksuccino/5b16971040cc06d1e1d4d901da2
 
 
 
-CHANGELOG: https://gist.github.com/Keksuccino/5b16971040cc06d1e1d4d901da2a53b6
-
-%changelog:end%
-
-
-
-
 CHANGELOG | FANCYMENU v3.0.0 - The "Don't Panic, Your Layouts Still Work" Update
  
 IMPORTANT! PLEASE READ!
