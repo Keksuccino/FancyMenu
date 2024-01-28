@@ -11,6 +11,8 @@ CHANGELOG | FANCYMENU v3.0.2
 
 
 
+CHANGELOG | FANCYMENU v3.0.1
+ 
 - Improved mixins related to tab/arrow focus behavior of screen widgets
 --> This fixes an incompatibility with YACL (Yet Another Config Lib)
  
@@ -21,11 +23,9 @@ CHANGELOG v3.0.0: https://gist.github.com/Keksuccino/5b16971040cc06d1e1d4d901da2
 
 
 
-
 CHANGELOG: https://gist.github.com/Keksuccino/5b16971040cc06d1e1d4d901da2a53b6
 
 %changelog:end%
-
 
 
 
