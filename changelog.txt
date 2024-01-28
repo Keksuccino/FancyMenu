@@ -2,7 +2,7 @@
 CHANGELOG | FANCYMENU v3.0.2
  
 - Improved the success rate of v2 -> v3 layout conversions
-- I tried to reproduce the problems people have with ModMenu, but customizing the MM screen and button worked fine in MC 1.20.1, so maybe I fixed something by accident
+- I tried to reproduce the problems people have with "Mod Menu", but customizing the MM screen and button worked fine in MC 1.20.1, so maybe I fixed something by accident
 - Improved StringDecomposer mixin (related to text formatting codes)
 --> This could fix some crashes caused by mods that add custom chat colors and similar text-formatting-related stuff
  
