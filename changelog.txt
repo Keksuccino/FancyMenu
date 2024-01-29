@@ -4,6 +4,7 @@ CHANGELOG | FANCYMENU v3.0.3 [ W I P ]
 - Fixed incompatibility with MidnightLib (this caused the "Mod Menu" menu to freeze and spam errors to the log)
 - Fixed background of GenericDirtMessageScreen not customizable
 - Fixed menu bar not clickable in some screens (Singleplayer Screen, Create World Screen, etc.)
+- Fixed audio elements continue playing when going from a screen to no screen (in a world with no screen open)
 
 %changelog:end%
 
