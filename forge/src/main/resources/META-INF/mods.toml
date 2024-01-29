@@ -59,3 +59,17 @@ mandatory=true
 versionRange="[${minecraft_version},)"
 ordering="NONE"
 side="BOTH"
+
+[[dependencies.${mod_id}]]
+modId="fmextension_audio"
+mandatory=false
+versionRange="[9999.9.9,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.${mod_id}]]
+modId="fmextension_video"
+mandatory=false
+versionRange="[9999.9.9,)"
+ordering="NONE"
+side="BOTH"
