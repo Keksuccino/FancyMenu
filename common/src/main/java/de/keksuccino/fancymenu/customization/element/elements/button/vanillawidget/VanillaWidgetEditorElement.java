@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.HideableElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;

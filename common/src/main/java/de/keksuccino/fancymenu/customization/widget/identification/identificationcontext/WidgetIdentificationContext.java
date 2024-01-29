@@ -8,7 +8,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 
+//TODO übernehmen (description + deprecated)
 /**
  * {@link WidgetIdentificationContext}s can help FancyMenu to better handle screens if their default widget layout changes,
  * like when a mod is adding a new widget, moves default widgets, or changes their size.<br>
@@ -17,7 +19,11 @@ import java.util.Objects;
  *
  * Keep in mind that this does not add support for widgets that are added to screens in a non-vanilla way,
  * which means they are not registered to the screen's {@code renderables} list.
+ *
+ * @deprecated This mainly exists for backwards compatibility and shouldn't be used anymore.
+ * Instead, use {@link UniqueWidget#setWidgetIdentifierFancyMenu(String)} in a Mixin to add identifiers to Vanilla buttons.
  */
+@Deprecated
 public abstract class WidgetIdentificationContext {
 
     protected final List<ConsumingSupplier<WidgetMeta, String>> identifierProviders = new ArrayList<>();

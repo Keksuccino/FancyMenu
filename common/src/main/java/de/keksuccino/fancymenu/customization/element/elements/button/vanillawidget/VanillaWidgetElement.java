@@ -155,17 +155,24 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
         ((CustomizableWidget)this.getWidget()).setHoverLabelFancyMenu((this.hoverLabel != null) ? buildComponent(this.hoverLabel) : null);
     }
 
+    //TODO übernehmen (experimental)
     @Override
     public @NotNull String getInstanceIdentifier() {
         if (this.widgetMeta != null) {
-            return "vanillabtn:" + this.widgetMeta.getIdentifier();
+//            return "vanillabtn:" + this.widgetMeta.getIdentifier();
+            return this.widgetMeta.getIdentifier().replace("vanillabtn:", "").replace("button_compatibility_id:", "");
         }
-        return super.getInstanceIdentifier();
+//        return super.getInstanceIdentifier();
+        return super.getInstanceIdentifier().replace("vanillabtn:", "").replace("button_compatibility_id:", "");
     }
 
     public void setVanillaWidget(WidgetMeta data, boolean mirrorWidgetSizeAndPos) {
         this.widgetMeta = data;
         this.setWidget(data.getWidget());
+        //TODO übernehmen
+        if (this.baseWidth <= 0) this.baseWidth = data.width;
+        if (this.baseHeight <= 0) this.baseHeight = data.height;
+        //--------------
         if (mirrorWidgetSizeAndPos) this.mirrorVanillaWidgetSizeAndPosition();
     }
 

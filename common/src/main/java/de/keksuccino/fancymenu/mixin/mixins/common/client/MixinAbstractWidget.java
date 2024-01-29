@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
@@ -96,11 +95,11 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		//Manually update isHovered before AbstractWidget, to correctly notify hover listeners
 		this.isHovered = mouseX >= this.getX() && mouseY >= this.getY() && mouseX < this.getX() + this.width && mouseY < this.getY() + this.height;
 
-		if (this.customWidthFancyMenu != null) {
+		if ((this.customWidthFancyMenu != null) && (this.customWidthFancyMenu > 0)) {
 			if (this.cachedOriginalWidthFancyMenu == null) this.cachedOriginalWidthFancyMenu = this.width;
 			this.width = this.customWidthFancyMenu;
 		}
-		if (this.customHeightFancyMenu != null) {
+		if ((this.customHeightFancyMenu != null) && (this.customHeightFancyMenu > 0)) {
 			if (this.cachedOriginalHeightFancyMenu == null) this.cachedOriginalHeightFancyMenu = this.height;
 			this.height = this.customHeightFancyMenu;
 		}

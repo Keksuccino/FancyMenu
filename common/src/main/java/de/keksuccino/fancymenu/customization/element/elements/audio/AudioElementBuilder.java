@@ -9,12 +9,15 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandl
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.events.ModReloadEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
+import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
+import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.Trio;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
@@ -28,9 +31,30 @@ public class AudioElementBuilder extends ElementBuilder<AudioElement, AudioEdito
     private static final Logger LOGGER = LogManager.getLogger();
     protected static final Map<String, Trio<ResourceSupplier<IAudio>, IAudio, Integer>> CURRENT_AUDIO_CACHE = new HashMap<>();
 
+    protected static boolean screenIsNull = false;
+
     public AudioElementBuilder() {
         super("audio_v2");
         EventHandler.INSTANCE.registerListenersOf(this);
+    }
+
+    //TODO übernehmen
+    @EventListener
+    public void onClientTickPre(ClientTickEvent.Pre e) {
+        //Stop all audios if screen is null
+        if ((Minecraft.getInstance().screen == null) && !screenIsNull) {
+            screenIsNull = true;
+            CURRENT_AUDIO_CACHE.forEach((s, resourceSupplierIAudioPair) -> {
+                if (resourceSupplierIAudioPair.getSecond().isReady()) resourceSupplierIAudioPair.getSecond().stop();
+            });
+            CURRENT_AUDIO_CACHE.clear();
+        }
+    }
+
+    //TODO übernehmen
+    @EventListener
+    public void onInitOrResizeStarting(InitOrResizeScreenStartingEvent e) {
+        screenIsNull = false;
     }
 
     @EventListener

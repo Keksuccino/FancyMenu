@@ -5,7 +5,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.events.widget.RenderGuiListHeaderFooterEvent;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractSelectionList;
@@ -317,6 +316,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 	@SuppressWarnings("all")
 	protected void handleAppearanceDelayFor(AbstractElement element) {
+		//TODO remove debug
+		LOGGER.info("HANDLE APPEARANCE DELAY FOR SCREEN: " + this.getScreenIdentifier() + " | ELEMENT: " + element.getInstanceIdentifier(), new Throwable());
 		if ((element.appearanceDelay != null) && (element.appearanceDelay != AbstractElement.AppearanceDelay.NO_DELAY)) {
 			if ((element.appearanceDelay == AbstractElement.AppearanceDelay.FIRST_TIME) && delayAppearanceFirstTime.contains(element.getInstanceIdentifier())) {
 				return;
@@ -545,6 +546,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 	@Nullable
 	public AbstractElement getElementByInstanceIdentifier(String instanceIdentifier) {
+		//TODO übernehmen (experimental)
+		instanceIdentifier = instanceIdentifier.replace("vanillabtn:", "").replace("button_compatibility_id:", "");
 		for (AbstractElement element : this.allElements) {
 			if (element.getInstanceIdentifier().equals(instanceIdentifier)) {
 				return element;
@@ -562,7 +565,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		return true;
 	}
 
-	private static class ThreadCaller {
+	public static class ThreadCaller {
 		AtomicBoolean running = new AtomicBoolean(true);
 	}
 

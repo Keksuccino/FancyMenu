@@ -12,6 +12,8 @@ public class WidgetIdentifierHandler {
 
     public static boolean isIdentifierOfWidget(@NotNull String widgetIdentifier, @NotNull WidgetMeta meta) {
         widgetIdentifier = widgetIdentifier.replace("button_compatibility_id:", "");
+        //TODO übernehmen (experimental)
+        widgetIdentifier = widgetIdentifier.replace("vanillabtn:", "");
         if ((meta.getWidget() instanceof UniqueWidget u) && widgetIdentifier.equals(u.getWidgetIdentifierFancyMenu())) return true;
         if (MathUtils.isLong(widgetIdentifier)) {
             return widgetIdentifier.equals("" + meta.getLongIdentifier());

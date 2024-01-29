@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.action.actions.other;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -64,6 +63,7 @@ public class EditMinecraftOptionAction extends Action {
     protected static List<String> getSupportedOptionNames() {
         List<String> names = new ArrayList<>();
         MinecraftOptions.getOptions().values().forEach(optionInstance -> names.add(optionInstance.getName()));
+        if (names.isEmpty()) names.add("[ERROR: UNABLE TO GET OPTION NAMES!]");
         return names;
     }
 

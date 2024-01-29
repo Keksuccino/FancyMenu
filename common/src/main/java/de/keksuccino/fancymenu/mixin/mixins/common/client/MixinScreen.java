@@ -29,7 +29,7 @@ import java.util.List;
 public abstract class MixinScreen implements CustomizableScreen {
 
 	@Unique
-	private static final Logger LOGGER = LogManager.getLogger();
+	private static final Logger LOGGER_FANCYMENU = LogManager.getLogger();
 
 	@Unique
 	private final List<GuiEventListener> removeOnInitChildrenFancyMenu = new ArrayList<>();
@@ -47,7 +47,7 @@ public abstract class MixinScreen implements CustomizableScreen {
 	private void afterInitFancyMenu(Minecraft $$0, int $$1, int $$2, CallbackInfo info) {
 		Overlay overlay = Minecraft.getInstance().getOverlay();
 		if (Compat.isRRLSLoaded() && (overlay != null) && Compat.isRRLSOverlay(overlay)) {
-			LOGGER.info("[FANCYMENU] Re-initializing screen after init in overlay to fix incompatibility with RemoveReloadingScreen..");
+			LOGGER_FANCYMENU.info("[FANCYMENU] Re-initializing screen after init in overlay to fix incompatibility with RemoveReloadingScreen..");
 			ScreenCustomization.reInitCurrentScreen();
 		}
 	}
@@ -69,7 +69,8 @@ public abstract class MixinScreen implements CustomizableScreen {
 
 	@Inject(method = "setInitialFocus", at = @At("RETURN"))
 	private void afterSetInitialFocusFancyMenu(GuiEventListener $$0, CallbackInfo info) {
-		this.nextFocusPath_called_FancyMenu = true;
+		//TODO übernehmen (= false)
+		this.nextFocusPath_called_FancyMenu = false;
 	}
 
 	@Inject(method = "children", at = @At("RETURN"), cancellable = true)
