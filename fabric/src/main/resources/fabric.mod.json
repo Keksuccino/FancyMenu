@@ -33,7 +33,9 @@
     "java": ">=17"
   },
   "breaks": {
-    "drippyloadingscreen": "<3.0.0"
+    "drippyloadingscreen": "<3.0.0",
+    "fmextension_audio": "*",
+    "fmextension_video": "*"
   },
   "accessWidener": "fancymenu.accesswidener"
 }

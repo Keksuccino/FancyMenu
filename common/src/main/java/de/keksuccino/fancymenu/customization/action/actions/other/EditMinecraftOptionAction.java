@@ -64,6 +64,7 @@ public class EditMinecraftOptionAction extends Action {
     protected static List<String> getSupportedOptionNames() {
         List<String> names = new ArrayList<>();
         MinecraftOptions.getOptions().values().forEach(optionInstance -> names.add(optionInstance.getName()));
+        if (names.isEmpty()) names.add("[ERROR: UNABLE TO GET OPTION NAMES!]");
         return names;
     }
 
