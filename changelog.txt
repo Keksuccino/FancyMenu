@@ -7,6 +7,7 @@ CHANGELOG | FANCYMENU v3.0.3 [ W I P ]
 - Fixed audio elements continue playing when going from a screen to no screen (in a world with no screen open)
 - Fixed broken "Other Element" anchor points of converted v2 layouts (this should greatly improve the conversion success rate)
 - Fixed converted Vanilla buttons sometimes having a size of 0x0, which will make them unclickable in the editor
+- Fixed first time appearance delay in Title screen not working in Forge versions with Early Loading Screen
 
 %changelog:end%
 
