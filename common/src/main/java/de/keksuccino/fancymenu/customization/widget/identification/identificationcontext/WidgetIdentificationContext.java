@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.widget.identification.identificati
 
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -17,7 +18,11 @@ import java.util.Objects;
  *
  * Keep in mind that this does not add support for widgets that are added to screens in a non-vanilla way,
  * which means they are not registered to the screen's {@code renderables} list.
+ *
+ * @deprecated This mainly exists for backwards compatibility and shouldn't be used anymore.
+ * Instead, use {@link UniqueWidget#setWidgetIdentifierFancyMenu(String)} in a Mixin to add identifiers to Vanilla buttons.
  */
+@Deprecated
 public abstract class WidgetIdentificationContext {
 
     protected final List<ConsumingSupplier<WidgetMeta, String>> identifierProviders = new ArrayList<>();
