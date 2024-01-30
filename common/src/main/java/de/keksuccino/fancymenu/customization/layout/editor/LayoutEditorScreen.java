@@ -630,6 +630,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	@Nullable
 	public AbstractEditorElement getElementByInstanceIdentifier(@NotNull String instanceIdentifier) {
+		instanceIdentifier = instanceIdentifier.replace("vanillabtn:", "").replace("button_compatibility_id:", "");
 		for (AbstractEditorElement e : this.getAllElements()) {
 			if (e.element.getInstanceIdentifier().equals(instanceIdentifier)) {
 				return e;

@@ -549,6 +549,7 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 
 	@Nullable
 	public AbstractElement getElementByInstanceIdentifier(String instanceIdentifier) {
+		instanceIdentifier = instanceIdentifier.replace("vanillabtn:", "").replace("button_compatibility_id:", "");
 		for (AbstractElement element : this.allElements) {
 			if (element.getInstanceIdentifier().equals(instanceIdentifier)) {
 				return element;
