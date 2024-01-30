@@ -378,6 +378,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	@SuppressWarnings("all")
 	@Nullable
 	public static AbstractElement getElementByInstanceIdentifier(String identifier) {
+		identifier = identifier.replace("vanillabtn:", "").replace("button_compatibility_id:", "");
 		if (isEditor()) {
 			AbstractEditorElement editorElement = ((LayoutEditorScreen)getScreen()).getElementByInstanceIdentifier(identifier);
 			if (editorElement != null) return editorElement.element;

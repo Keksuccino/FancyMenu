@@ -494,7 +494,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 						int[] footerSize = footerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(list.getWidth(), footerOriginalHeight);
 						int footerWidth = footerSize[0];
 						int footerHeight = footerSize[1];
-						int footerX = list.getY() + (list.getWidth() / 2) - (footerWidth / 2);
+						int footerX = list.getX() + (list.getWidth() / 2) - (footerWidth / 2);
 						int footerY = list.getBottom() + (footerOriginalHeight / 2) - (footerHeight / 2);
 						graphics.enableScissor(list.getX(), list.getBottom(), list.getRight(), list.getBottom() + footerOriginalHeight);
 						graphics.blit(loc, footerX, footerY, 0.0F, 0.0F, footerWidth, footerHeight, footerWidth, footerHeight);
@@ -546,6 +546,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 	@Nullable
 	public AbstractElement getElementByInstanceIdentifier(String instanceIdentifier) {
+		instanceIdentifier = instanceIdentifier.replace("vanillabtn:", "").replace("button_compatibility_id:", "");
 		for (AbstractElement element : this.allElements) {
 			if (element.getInstanceIdentifier().equals(instanceIdentifier)) {
 				return element;
