@@ -316,8 +316,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 	@SuppressWarnings("all")
 	protected void handleAppearanceDelayFor(AbstractElement element) {
-		//TODO remove debug
-		LOGGER.info("HANDLE APPEARANCE DELAY FOR SCREEN: " + this.getScreenIdentifier() + " | ELEMENT: " + element.getInstanceIdentifier(), new Throwable());
 		if ((element.appearanceDelay != null) && (element.appearanceDelay != AbstractElement.AppearanceDelay.NO_DELAY)) {
 			if ((element.appearanceDelay == AbstractElement.AppearanceDelay.FIRST_TIME) && delayAppearanceFirstTime.contains(element.getInstanceIdentifier())) {
 				return;

@@ -3,6 +3,8 @@ package de.keksuccino.fancymenu.customization.gameintro;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.events.screen.*;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
@@ -153,6 +155,10 @@ public class GameIntroOverlay extends Overlay {
     protected void initFadeToScreen() {
 
         ScreenCustomization.setIsNewMenu(true);
+
+        //TODO übernehmen
+        ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(this.fadeTo);
+        if (layer != null) layer.resetLayer();
 
         EventHandler.INSTANCE.postEvent(new OpenScreenEvent(this.fadeTo));
         EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(this.fadeTo, InitOrResizeScreenEvent.InitializationPhase.INIT));
