@@ -156,7 +156,6 @@ public class GameIntroOverlay extends Overlay {
 
         ScreenCustomization.setIsNewMenu(true);
 
-        //TODO übernehmen
         ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(this.fadeTo);
         if (layer != null) layer.resetLayer();
 

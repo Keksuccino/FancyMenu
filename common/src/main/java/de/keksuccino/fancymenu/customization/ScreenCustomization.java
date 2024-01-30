@@ -321,7 +321,6 @@ public class ScreenCustomization {
 		addScreenBlacklistRule((screen) -> screen.startsWith("net.mehvahdjukaar.supplementaries."));
 		addScreenBlacklistRule((screen) -> screen.startsWith("net.optifine"));
 		addScreenBlacklistRule((screen) -> screen.startsWith("slimeknights."));
-		//TODO übernehmen
 		addScreenBlacklistRule((screen) -> screen.startsWith("eu.midnightdust."));
 		addScreenBlacklistRule((screen) -> screen.equals(VideoSettingsScreen.class.getName()) && Compat.isOptiFineLoaded());
 		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.fancymenu.") && !screen.equals(CustomGuiBaseScreen.class.getName()));

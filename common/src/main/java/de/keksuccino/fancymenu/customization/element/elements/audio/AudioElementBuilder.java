@@ -38,7 +38,6 @@ public class AudioElementBuilder extends ElementBuilder<AudioElement, AudioEdito
         EventHandler.INSTANCE.registerListenersOf(this);
     }
 
-    //TODO übernehmen
     @EventListener
     public void onClientTickPre(ClientTickEvent.Pre e) {
         //Stop all audios if screen is null
@@ -51,7 +50,6 @@ public class AudioElementBuilder extends ElementBuilder<AudioElement, AudioEdito
         }
     }
 
-    //TODO übernehmen
     @EventListener
     public void onInitOrResizeStarting(InitOrResizeScreenStartingEvent e) {
         screenIsNull = false;

@@ -69,7 +69,6 @@ public abstract class MixinScreen implements CustomizableScreen {
 
 	@Inject(method = "setInitialFocus", at = @At("RETURN"))
 	private void afterSetInitialFocusFancyMenu(GuiEventListener $$0, CallbackInfo info) {
-		//TODO übernehmen (= false)
 		this.nextFocusPath_called_FancyMenu = false;
 	}
 

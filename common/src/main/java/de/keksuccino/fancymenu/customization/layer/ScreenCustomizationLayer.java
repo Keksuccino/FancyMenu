@@ -544,7 +544,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 	@Nullable
 	public AbstractElement getElementByInstanceIdentifier(String instanceIdentifier) {
-		//TODO übernehmen (experimental)
 		instanceIdentifier = instanceIdentifier.replace("vanillabtn:", "").replace("button_compatibility_id:", "");
 		for (AbstractElement element : this.allElements) {
 			if (element.getInstanceIdentifier().equals(instanceIdentifier)) {

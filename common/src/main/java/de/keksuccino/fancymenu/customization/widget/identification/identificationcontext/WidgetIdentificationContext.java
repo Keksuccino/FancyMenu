@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Objects;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 
-//TODO übernehmen (description + deprecated)
 /**
  * {@link WidgetIdentificationContext}s can help FancyMenu to better handle screens if their default widget layout changes,
  * like when a mod is adding a new widget, moves default widgets, or changes their size.<br>
