@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -61,6 +60,11 @@ public class ManageCustomGuisScreen extends CellScreen {
         this.addRightSideButton(20, Components.translatable("fancymenu.custom_guis.manage.open"), var1 -> {
             CustomGui selected = this.selected;
             if (selected != null) {
+                CustomGuiHandler.CUSTOM_GUI_SCREENS.clear();
+                for (CustomGui g : this.guis) {
+                    if (!g.identifier.replace(" ", "").isEmpty()) CustomGuiHandler.CUSTOM_GUI_SCREENS.put(g.identifier, g);
+                }
+                CustomGuiHandler.saveChanges();
                 Minecraft.getInstance().setScreen(CustomGuiHandler.constructInstance(selected, Minecraft.getInstance().screen, null));
             }
         }).setIsActiveSupplier(consumes -> this.selected != null);
