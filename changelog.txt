@@ -1,5 +1,5 @@
 
-CHANGELOG | FANCYMENU v3.0.3 [ W I P ]
+CHANGELOG | FANCYMENU v3.0.3
  
 - Fixed incompatibility with MidnightLib (this caused the "Mod Menu" menu to freeze and spam errors to the log)
 - Fixed background of GenericDirtMessageScreen not customizable
