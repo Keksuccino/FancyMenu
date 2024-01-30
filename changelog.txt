@@ -8,6 +8,7 @@ CHANGELOG | FANCYMENU v3.0.3 [ W I P ]
 - Fixed broken "Other Element" anchor points of converted v2 layouts (this should greatly improve the conversion success rate)
 - Fixed converted Vanilla buttons sometimes having a size of 0x0, which will make them unclickable in the editor
 - Fixed first time appearance delay in Title screen not working in Forge versions with Early Loading Screen
+- Fixed broken custom scroll list footer texture in MC 1.20.4
 
 %changelog:end%
 
