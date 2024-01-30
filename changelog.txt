@@ -1,4 +1,13 @@
 
+CHANGELOG | FANCYMENU v3.0.4
+ 
+- Fixed pressing "Open GUI" in the "Manage Custom GUIs" menu directly after creating a new GUI results in deletion of said GUI
+
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.0.3
  
 - Fixed incompatibility with MidnightLib (this caused the "Mod Menu" menu to freeze and spam errors to the log)
