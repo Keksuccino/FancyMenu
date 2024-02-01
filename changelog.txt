@@ -1,4 +1,13 @@
 
+CHANGELOG | FANCYMENU v3.0.5
+  
+- Fixed IF, ELSE and ELSE-IF statements in action scripts break when two or more use the exact same loading requirements
+ 
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.0.4
  
 - Fixed pressing "Open GUI" in the "Manage Custom GUIs" menu directly after creating a new GUI results in deletion of said GUI
