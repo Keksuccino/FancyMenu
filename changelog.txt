@@ -1,5 +1,5 @@
 
-CHANGELOG | FANCYMENU v3.0.5 [ W I P ]
+CHANGELOG | FANCYMENU v3.0.5 [ W I P - NOT PUBLIC YET ]
  
 - Fixed IF, ELSE and ELSE-IF statements in action scripts clear itself when two or more use the exact same loading requirements
 - Fixed unable to delete appended action statements
