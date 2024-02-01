@@ -1,7 +1,7 @@
 
 CHANGELOG | FANCYMENU v3.0.5
   
-- Fixed IF, ELSE and ELSE-IF statements in action scripts break when two or more use the exact same loading requirements
+- Fixed IF, ELSE and ELSE-IF statements in action scripts clear itself when two or more use the exact same loading requirements
  
 %changelog:end%
 
