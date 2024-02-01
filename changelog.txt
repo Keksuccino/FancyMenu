@@ -4,6 +4,7 @@ CHANGELOG | FANCYMENU v3.0.5
 - Fixed IF, ELSE and ELSE-IF statements in action scripts clear itself when two or more use the exact same loading requirements
 - Fixed unable to delete appended action statements
 - Fixed "Image" menu background not respecting "Preserve Background Aspect Ratio" when "Slide Wide Images from Left to Right" is enabled
+- Fixed custom buttons stay focused after click (they now only stay focused when clicking with ENTER)
  
 %changelog:end%
 
