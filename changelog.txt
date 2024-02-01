@@ -5,6 +5,8 @@ CHANGELOG | FANCYMENU v3.0.5
 - Fixed unable to delete appended action statements
 - Fixed "Image" menu background not respecting "Preserve Background Aspect Ratio" when "Slide Wide Images from Left to Right" is enabled
 - Fixed custom buttons stay focused after click (they now only stay focused when clicking with ENTER)
+- Fixed player entity auto skin option not correctly setting slim skin
+- Fixed player entity cape showing missing cape texture in some situations (like if auto cape is enabled and player has no cape)
  
 %changelog:end%
 
