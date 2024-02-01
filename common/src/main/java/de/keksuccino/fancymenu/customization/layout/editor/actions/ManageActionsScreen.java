@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.layout.editor.actions;
 
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.action.Executable;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
@@ -236,6 +235,11 @@ public class ManageActionsScreen extends Screen {
             if (selected != null) {
                 Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call) -> {
                     if (call) {
+                        //TODO übernehmen
+                        if (selected.appendParent != null) {
+                            selected.appendParent.setAppendedBlock(null);
+                        }
+                        //----------------
                         selected.getParentBlock().getExecutables().remove(selected.executable);
                         this.updateActionInstanceScrollArea(true);
                     }
@@ -794,6 +798,7 @@ public class ManageActionsScreen extends Screen {
         private final MutableComponent displayNameComponent;
         private final MutableComponent valueComponent;
 
+        @SuppressWarnings("all")
         public ExecutableEntry(@NotNull ScrollArea parentScrollArea, @NotNull Executable executable, int lineHeight, int indentLevel) {
 
             super(parentScrollArea, 100, 30);

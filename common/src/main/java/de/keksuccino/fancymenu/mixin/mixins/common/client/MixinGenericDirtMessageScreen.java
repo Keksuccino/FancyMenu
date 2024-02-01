@@ -2,8 +2,6 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
-import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.WidgetifiedScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.TextWidget;
 import net.minecraft.client.gui.Font;
@@ -13,8 +11,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @WidgetifiedScreen
 @Mixin(GenericDirtMessageScreen.class)
@@ -39,10 +35,11 @@ public class MixinGenericDirtMessageScreen extends Screen {
         return !ScreenCustomization.isCustomizationEnabledForScreen(this);
     }
 
-    //Fixes BackgroundRenderedEvent not triggering in GenericDirtMessageScreen
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/GenericDirtMessageScreen;renderDirtBackground(Lnet/minecraft/client/gui/GuiGraphics;)V"))
-    private void beforeRenderDirtBackgroundFancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo info) {
-        EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, graphics));
-    }
+    //TODO übernehmen
+//    //Fixes BackgroundRenderedEvent not triggering in GenericDirtMessageScreen
+//    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/GenericDirtMessageScreen;renderDirtBackground(Lnet/minecraft/client/gui/GuiGraphics;)V"))
+//    private void beforeRenderDirtBackgroundFancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo info) {
+//        EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, graphics));
+//    }
 
 }

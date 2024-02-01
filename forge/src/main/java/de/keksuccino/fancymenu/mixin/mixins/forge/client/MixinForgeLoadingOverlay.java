@@ -56,10 +56,8 @@ public class MixinForgeLoadingOverlay {
             }
         }
 
-        //TODO übernehmen
         ScreenCustomization.setIsNewMenu(true);
 
-        //TODO übernehmen
         ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(instance);
         if (layer != null) layer.resetLayer();
 

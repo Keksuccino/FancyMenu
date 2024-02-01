@@ -6,6 +6,8 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequireme
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirementRegistry;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.*;
@@ -13,6 +15,8 @@ import java.util.function.Supplier;
 
 @SuppressWarnings("all")
 public class LoadingRequirementInstance implements ValuePlaceholderHolder {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public LoadingRequirementContainer parent;
     public LoadingRequirement requirement;
@@ -79,6 +83,8 @@ public class LoadingRequirementInstance implements ValuePlaceholderHolder {
         if (o == null) return false;
         if (this == o) return true;
         if (o instanceof LoadingRequirementInstance other) {
+            //TODO übernehmen
+            if (!Objects.equals(this.instanceIdentifier, other.instanceIdentifier)) return false;
             if (this.requirement != other.requirement) return false;
             if (!Objects.equals(this.value, other.value)) return false;
             if (this.mode != other.mode) return false;

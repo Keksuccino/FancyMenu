@@ -101,21 +101,19 @@ public class ImageMenuBackground extends MenuBackground {
                     }
                 }
                 if (w <= getScreenWidth()) {
-                    graphics.blit(resourceLocation, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
+                    //TODO übernehmen
+                    if (this.keepBackgroundAspectRatio) {
+                        this.renderKeepAspectRatio(graphics, ratio, resourceLocation);
+                    } else {
+                        graphics.blit(resourceLocation, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
+                    }
+                    //-------------------
                 } else {
                     RenderingUtils.blitF(graphics, resourceLocation, (float)slidePos, 0.0F, 0.0F, 0.0F, w, getScreenHeight(), w, getScreenHeight());
                 }
             } else if (this.keepBackgroundAspectRatio) {
-                int[] size = ratio.getAspectRatioSizeByMinimumSize(getScreenWidth(), getScreenHeight());
-                int x = 0;
-                if (size[0] > getScreenWidth()) {
-                    x = -((size[0] - getScreenWidth()) / 2);
-                }
-                int y = 0;
-                if (size[1] > getScreenHeight()) {
-                    y = -((size[1] - getScreenHeight()) / 2);
-                }
-                graphics.blit(resourceLocation, x, y, 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
+                //TODO übernehmen
+                this.renderKeepAspectRatio(graphics, ratio, resourceLocation);
             } else {
                 graphics.blit(resourceLocation, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
             }
@@ -124,6 +122,20 @@ public class ImageMenuBackground extends MenuBackground {
 
         RenderingUtils.resetShaderColor(graphics);
 
+    }
+
+    //TODO übernehmen
+    protected void renderKeepAspectRatio(@NotNull GuiGraphics graphics, @NotNull AspectRatio ratio, @NotNull ResourceLocation resourceLocation) {
+        int[] size = ratio.getAspectRatioSizeByMinimumSize(getScreenWidth(), getScreenHeight());
+        int x = 0;
+        if (size[0] > getScreenWidth()) {
+            x = -((size[0] - getScreenWidth()) / 2);
+        }
+        int y = 0;
+        if (size[1] > getScreenHeight()) {
+            y = -((size[1] - getScreenHeight()) / 2);
+        }
+        graphics.blit(resourceLocation, x, y, 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
     }
 
 }

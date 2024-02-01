@@ -12,6 +12,8 @@ import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
+import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -31,7 +33,13 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         element.label = "New Button";
         element.setWidget(new ExtendedButton(0, 0, 0, 0, Component.empty(), (press) -> {
             if ((CustomizationOverlay.getCurrentMenuBarInstance() == null) || !CustomizationOverlay.getCurrentMenuBarInstance().isUserNavigatingInMenuBar()) {
+                //TODO übernehmen
+                boolean isMousePressed = MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown();
                 element.getExecutableBlock().execute();
+                MainThreadTaskExecutor.executeInMainThread(() -> {
+                    if (isMousePressed) press.setFocused(false);
+                }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+                //-----------------
             }
         }));
         return element;
@@ -63,9 +71,10 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
 
         element.tooltip = serialized.getValue("description");
 
-        element.setWidget(new ExtendedButton(0, 0, 0, 0, Component.literal(""), (press) -> {
-            element.getExecutableBlock().execute();
-        }));
+        //TODO übernehmen
+//        element.setWidget(new ExtendedButton(0, 0, 0, 0, Component.literal(""), (press) -> {
+//            element.getExecutableBlock().execute();
+//        }));
 
         element.clickSound = deserializeAudioResourceSupplier(serialized.getValue("clicksound"));
 
