@@ -236,6 +236,9 @@ public class ManageActionsScreen extends Screen {
             if (selected != null) {
                 Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings((call) -> {
                     if (call) {
+                        if (selected.appendParent != null) {
+                            selected.appendParent.setAppendedBlock(null);
+                        }
                         selected.getParentBlock().getExecutables().remove(selected.executable);
                         this.updateActionInstanceScrollArea(true);
                     }

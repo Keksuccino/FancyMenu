@@ -3,9 +3,12 @@ package de.keksuccino.fancymenu.customization.element.elements.playerentity.text
 import com.mojang.blaze3d.platform.NativeImage;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.CloseableUtils;
-import de.keksuccino.fancymenu.util.PlayerSkinUtils;
 import de.keksuccino.fancymenu.util.file.type.FileMediaType;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
+import de.keksuccino.fancymenu.util.minecraftuser.MinecraftUserMetadata;
+import de.keksuccino.fancymenu.util.minecraftuser.MinecraftUsers;
+import de.keksuccino.fancymenu.util.minecraftuser.PlayerTexturesMetadata;
+import de.keksuccino.fancymenu.util.minecraftuser.SkinTextureMetadata;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
@@ -17,6 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -173,13 +177,20 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
         Objects.requireNonNull(getterPlayerName);
         this.startedDownloadingMetadata = true;
         new Thread(() -> {
-            String skinUrl = PlayerSkinUtils.getSkinURL(getterPlayerName);
+            String skinUrl = null;
+            boolean isSlim = false;
+            MinecraftUserMetadata userMeta = MinecraftUsers.getUserMetadata(getterPlayerName);
+            PlayerTexturesMetadata texMeta = userMeta.getTexturesMetadata();
+            if (texMeta != null) {
+                isSlim = texMeta.isSlim();
+                SkinTextureMetadata skinMeta = texMeta.getSkin();
+                if (skinMeta != null) skinUrl = skinMeta.getUrl();
+            }
             if (skinUrl != null) {
                 skinUrl = ResourceSourceType.WEB.getSourcePrefix() + skinUrl;
-            } else {
-                LOGGER.error("[FANCYMENU] SkinResourceSupplier failed to get URL of player skin: " + getterPlayerName);
+            } else if (texMeta == null) {
+                LOGGER.error("[FANCYMENU] SkinResourceSupplier failed to get URL of player skin: " + getterPlayerName, new IOException());
             }
-            boolean isSlim = PlayerSkinUtils.hasSlimSkin(getterPlayerName);
             if (!this.startedDownloadingMetadata) return;
             this.playerNameSkinMeta = new SkinMetadata(getterPlayerName, skinUrl, isSlim);
         }).start();

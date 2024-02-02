@@ -103,22 +103,20 @@ public class ImageMenuBackground extends MenuBackground {
                     }
                 }
                 if (w <= getScreenWidth()) {
-                    blit(pose, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
+                    if (this.keepBackgroundAspectRatio) {
+                        this.renderKeepAspectRatio(pose, ratio, resourceLocation);
+                    } else {
+                        RenderingUtils.bindTexture(resourceLocation);
+                        blit(pose, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
+                    }
                 } else {
-                    RenderUtils.doubleBlit(slidePos, 0, 0.0F, 0.0F, w,getScreenHeight());
+                    RenderingUtils.bindTexture(resourceLocation);
+                    RenderingUtils.blitF(pose, (float)slidePos, 0.0F, 0.0F, 0.0F, w, getScreenHeight(), w, getScreenHeight());
                 }
             } else if (this.keepBackgroundAspectRatio) {
-                int[] size = ratio.getAspectRatioSizeByMinimumSize(getScreenWidth(), getScreenHeight());
-                int x = 0;
-                if (size[0] > getScreenWidth()) {
-                    x = -((size[0] - getScreenWidth()) / 2);
-                }
-                int y = 0;
-                if (size[1] > getScreenHeight()) {
-                    y = -((size[1] - getScreenHeight()) / 2);
-                }
-                blit(pose, x, y, 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
+                this.renderKeepAspectRatio(pose, ratio, resourceLocation);
             } else {
+                RenderingUtils.bindTexture(resourceLocation);
                 blit(pose, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
             }
 
@@ -126,6 +124,20 @@ public class ImageMenuBackground extends MenuBackground {
 
         RenderingUtils.resetShaderColor();
 
+    }
+
+    protected void renderKeepAspectRatio(@NotNull PoseStack graphics, @NotNull AspectRatio ratio, @NotNull ResourceLocation resourceLocation) {
+        int[] size = ratio.getAspectRatioSizeByMinimumSize(getScreenWidth(), getScreenHeight());
+        int x = 0;
+        if (size[0] > getScreenWidth()) {
+            x = -((size[0] - getScreenWidth()) / 2);
+        }
+        int y = 0;
+        if (size[1] > getScreenHeight()) {
+            y = -((size[1] - getScreenHeight()) / 2);
+        }
+        RenderingUtils.bindTexture(resourceLocation);
+        blit(graphics, x, y, 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
     }
 
 }

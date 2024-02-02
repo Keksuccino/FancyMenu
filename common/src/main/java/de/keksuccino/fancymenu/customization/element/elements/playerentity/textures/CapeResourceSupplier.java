@@ -1,9 +1,12 @@
 package de.keksuccino.fancymenu.customization.element.elements.playerentity.textures;
 
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
-import de.keksuccino.fancymenu.util.PlayerSkinUtils;
 import de.keksuccino.fancymenu.util.file.type.FileMediaType;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
+import de.keksuccino.fancymenu.util.minecraftuser.CapeTextureMetadata;
+import de.keksuccino.fancymenu.util.minecraftuser.MinecraftUserMetadata;
+import de.keksuccino.fancymenu.util.minecraftuser.MinecraftUsers;
+import de.keksuccino.fancymenu.util.minecraftuser.PlayerTexturesMetadata;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
@@ -15,6 +18,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -32,6 +36,7 @@ public class CapeResourceSupplier extends ResourceSupplier<ITexture> {
     protected volatile boolean startedFindingPlayerNameCapeUrl = false;
     @Nullable
     protected String lastGetterPlayerName;
+    protected volatile boolean hasNoCape = false;
 
     public CapeResourceSupplier(@NotNull String source, boolean sourceIsPlayerName) {
         super(ITexture.class, FileMediaType.IMAGE, source);
@@ -104,13 +109,27 @@ public class CapeResourceSupplier extends ResourceSupplier<ITexture> {
         return (loc != null) ? loc : DEFAULT_CAPE_LOCATION;
     }
 
+    public boolean hasNoCape() {
+        return this.hasNoCape;
+    }
+
     protected void findPlayerNameCapeUrl(@NotNull String getterPlayerName) {
         Objects.requireNonNull(getterPlayerName);
         this.startedFindingPlayerNameCapeUrl = true;
         new Thread(() -> {
-            String capeUrl = PlayerSkinUtils.getCapeURL(getterPlayerName);
-            if (capeUrl == null) {
-                LOGGER.error("[FANCYMENU] CapeResourceSupplier failed to get URL of player cape: " + getterPlayerName);
+            String capeUrl = null;
+            MinecraftUserMetadata userMeta = MinecraftUsers.getUserMetadata(getterPlayerName);
+            PlayerTexturesMetadata texMeta = userMeta.getTexturesMetadata();
+            if (texMeta != null) {
+                CapeTextureMetadata capeMeta = texMeta.getCape();
+                if (capeMeta != null) {
+                    capeUrl = capeMeta.getUrl();
+                } else {
+                    this.hasNoCape = true;
+                }
+            }
+            if ((capeUrl == null) && !this.hasNoCape) {
+                LOGGER.error("[FANCYMENU] CapeResourceSupplier failed to get URL of player cape: " + getterPlayerName, new IOException());
             }
             if (!this.startedFindingPlayerNameCapeUrl) return;
             this.playerNameCapeUrl = capeUrl;
