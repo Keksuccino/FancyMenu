@@ -22,8 +22,6 @@ public class FancyMenu {
 
 	//TODO Markdown: Add more bullet list levels (make better handling for infinite levels)
 
-	//TODO ALLE UNGENUTZTEN FileTypes entfernen (ungenutzte video types)
-
 	//TODO Layout Listener System
 	// - Auf Layout Ebene (rechtsklick editor back -> Listeners)
 	// - Jeder Listener hat eine ExecutableBlock instanz, die er ausführen kann
@@ -42,15 +40,9 @@ public class FancyMenu {
 	//TODO Button: Nine-Slice Background Mode (toggle on/off)
 	// - Option, um Randbreite zu definieren, wenn möglich
 
-	//TODO add widget label scale option (per CustomizableWidget adden)
-
 	//TODO Add Edit GUI to more Action values, if needed
 
-	//TODO "Split Text" placeholder (regex support) (könnte performance killen)
-
 	//TODO Markdown support for tooltips
-
-	//TODO FIXEN: Splash Elemente werden bei resize reloaded (isNewMenu in builder fixen??)
 
 	//TODO "Key Pressed" Loading Requirement
 	// - Modes: ONCE_PER_KEY_PRESS (nur einen tick pro key press auf true), CONTINUOUS (hält bei key press dauerhaft auf true)
@@ -58,14 +50,12 @@ public class FancyMenu {
 
 	//TODO Item Element, das per item meta (wie in give command) customized werden kann
 
-	//TODO Möglichkeit adden, Custom GUIs zu kopieren (bei kopieren öffnet sich input screen, um neuen identifier einzugeben)
-
 
 
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	public static final String VERSION = "3.0.4";
+	public static final String VERSION = "3.0.5";
 	public static final String MOD_LOADER = Services.PLATFORM.getPlatformName();
 	public static final String MOD_ID = "fancymenu";
 
