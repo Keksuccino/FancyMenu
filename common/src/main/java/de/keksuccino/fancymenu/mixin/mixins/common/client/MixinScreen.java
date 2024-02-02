@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.Compat;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.mixin.MixinCacheCommon;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
@@ -29,9 +30,16 @@ public class MixinScreen implements CustomizableScreen {
 	@Unique
 	private final List<GuiEventListener> removeOnInitChildrenFancyMenu = new ArrayList<>();
 
-	@Inject(method = "renderBackground(Lcom/mojang/blaze3d/vertex/PoseStack;I)V", at = @At(value = "RETURN"))
-	private void afterRenderScreenBackgroundFancyMenu(PoseStack matrix, int i, CallbackInfo info) {
-		EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent((Screen)((Object)this), matrix));
+	@Inject(method = "renderBackground(Lcom/mojang/blaze3d/vertex/PoseStack;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;fillGradient(Lcom/mojang/blaze3d/vertex/PoseStack;IIIIII)V", shift = At.Shift.AFTER))
+	private void afterFillGradientInRenderScreenBackgroundFancyMenu(PoseStack pose, int i, CallbackInfo info) {
+		EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent((Screen)((Object)this), pose));
+	}
+
+	@Inject(method = "renderDirtBackground", at = @At(value = "RETURN"))
+	private void afterRenderDirtBackgroundFancyMenu(int i, CallbackInfo info) {
+		if (MixinCacheCommon.current_screen_render_pose_stack != null) {
+			EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent((Screen) ((Object) this), MixinCacheCommon.current_screen_render_pose_stack));
+		}
 	}
 
 	@Inject(method = "init(Lnet/minecraft/client/Minecraft;II)V", at = @At("RETURN"))

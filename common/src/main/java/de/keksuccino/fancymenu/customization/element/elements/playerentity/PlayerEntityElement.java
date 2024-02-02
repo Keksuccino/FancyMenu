@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -302,10 +303,18 @@ public class PlayerEntityElement extends AbstractElement {
         if (this.copyClientPlayer || this.autoSkin) {
             this.slim = (this.skinTextureSupplier == null) || this.skinTextureSupplier.isSlimPlayerNameSkin();
         }
+        if ((this.capeTextureSupplier != null) && this.capeTextureSupplier.hasNoCape()) {
+            this.capeTextureSupplier = null;
+        }
         this.normalRenderer.properties.setSkinTextureLocation((this.skinTextureSupplier != null) ? this.skinTextureSupplier.getSkinLocation() : SkinResourceSupplier.DEFAULT_SKIN_LOCATION);
         this.slimRenderer.properties.setSkinTextureLocation((this.skinTextureSupplier != null) ? this.skinTextureSupplier.getSkinLocation() : SkinResourceSupplier.DEFAULT_SKIN_LOCATION);
-        this.normalRenderer.properties.setCapeTextureLocation((this.capeTextureSupplier != null) ? this.capeTextureSupplier.getCapeLocation() : null);
-        this.slimRenderer.properties.setCapeTextureLocation((this.capeTextureSupplier != null) ? this.capeTextureSupplier.getCapeLocation() : null);
+        ResourceLocation capeLoc = null;
+        if ((this.capeTextureSupplier != null) && !this.capeTextureSupplier.hasNoCape()) {
+            capeLoc = this.capeTextureSupplier.getCapeLocation();
+            if (capeLoc == CapeResourceSupplier.DEFAULT_CAPE_LOCATION) capeLoc = null;
+        }
+        this.normalRenderer.properties.setCapeTextureLocation(capeLoc);
+        this.slimRenderer.properties.setCapeTextureLocation(capeLoc);
     }
 
     protected void updatePlayerDisplayName() {
