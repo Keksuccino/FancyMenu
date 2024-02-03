@@ -35,11 +35,4 @@ public class MixinGenericDirtMessageScreen extends Screen {
         return !ScreenCustomization.isCustomizationEnabledForScreen(this);
     }
 
-    //TODO übernehmen
-//    //Fixes BackgroundRenderedEvent not triggering in GenericDirtMessageScreen
-//    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/GenericDirtMessageScreen;renderDirtBackground(Lnet/minecraft/client/gui/GuiGraphics;)V"))
-//    private void beforeRenderDirtBackgroundFancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo info) {
-//        EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, graphics));
-//    }
-
 }

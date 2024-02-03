@@ -38,13 +38,11 @@ public abstract class MixinScreen implements CustomizableScreen {
 
 	@Shadow @Final private List<GuiEventListener> children;
 
-	//TODO übernehmen
 	@Inject(method = "renderBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;fillGradient(IIIIII)V", shift = At.Shift.AFTER))
 	private void afterFillGradientInRenderScreenBackgroundFancyMenu(GuiGraphics graphics, CallbackInfo info) {
 		EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent((Screen)((Object)this), graphics));
 	}
 
-	//TODO übernehmen
 	@Inject(method = "renderDirtBackground", at = @At(value = "RETURN"))
 	private void afterRenderDirtBackgroundFancyMenu(GuiGraphics graphics, CallbackInfo info) {
 		EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent((Screen)((Object)this), graphics));

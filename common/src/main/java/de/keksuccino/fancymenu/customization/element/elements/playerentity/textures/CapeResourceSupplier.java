@@ -34,7 +34,6 @@ public class CapeResourceSupplier extends ResourceSupplier<ITexture> {
     protected volatile boolean startedFindingPlayerNameCapeUrl = false;
     @Nullable
     protected String lastGetterPlayerName;
-    //TODO übernehmen
     protected volatile boolean hasNoCape = false;
 
     public CapeResourceSupplier(@NotNull String source, boolean sourceIsPlayerName) {
@@ -108,12 +107,10 @@ public class CapeResourceSupplier extends ResourceSupplier<ITexture> {
         return (loc != null) ? loc : DEFAULT_CAPE_LOCATION;
     }
 
-    //TODO übernehmen
     public boolean hasNoCape() {
         return this.hasNoCape;
     }
 
-    //TODO übernehmen
     protected void findPlayerNameCapeUrl(@NotNull String getterPlayerName) {
         Objects.requireNonNull(getterPlayerName);
         this.startedFindingPlayerNameCapeUrl = true;

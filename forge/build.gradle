@@ -91,25 +91,8 @@ tasks.named("sourcesJar", Jar) {
     from(project(":common").sourceSets.main.allSource)
 }
 
-//processResources {
-//    from project(":common").sourceSets.main.resources
-//}
-
-tasks.named('processResources', ProcessResources).configure {
+processResources {
     from project(":common").sourceSets.main.resources
-    var replaceProperties = [
-            minecraft_version: minecraft_version,
-            mod_id: mod_id,
-            mod_name: mod_name,
-            mod_license: mod_license,
-            mod_version: mod_version,
-            mod_authors: mod_authors,
-            mod_description: mod_description
-    ]
-    inputs.properties replaceProperties
-    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
-        expand replaceProperties + [project: project]
-    }
 }
 
 jar.finalizedBy('reobfJar')

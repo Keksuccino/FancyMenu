@@ -12,13 +12,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(TabManager.class)
 public class MixinTabManager {
 
-    @Inject(method = "setCurrentTab", at = @At("RETURN"))
-    private void onSetCurrentTabFancyMenu(Tab tab, boolean playPressSound, CallbackInfo info) {
-        if (Minecraft.getInstance().screen != null) {
-            if (ScreenCustomization.isCustomizationEnabledForScreen(Minecraft.getInstance().screen)) {
-                ScreenCustomization.reInitCurrentScreen();
-            }
-        }
-    }
+    //TODO übernehmen
+//    @Inject(method = "setCurrentTab", at = @At("RETURN"))
+//    private void onSetCurrentTabFancyMenu(Tab tab, boolean playPressSound, CallbackInfo info) {
+//        if (Minecraft.getInstance().screen != null) {
+//            if (ScreenCustomization.isCustomizationEnabledForScreen(Minecraft.getInstance().screen)) {
+//                ScreenCustomization.reInitCurrentScreen();
+//            }
+//        }
+//    }
 
 }

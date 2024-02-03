@@ -33,13 +33,11 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         element.label = "New Button";
         element.setWidget(new ExtendedButton(0, 0, 0, 0, Component.empty(), (press) -> {
             if ((CustomizationOverlay.getCurrentMenuBarInstance() == null) || !CustomizationOverlay.getCurrentMenuBarInstance().isUserNavigatingInMenuBar()) {
-                //TODO übernehmen
                 boolean isMousePressed = MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown();
                 element.getExecutableBlock().execute();
                 MainThreadTaskExecutor.executeInMainThread(() -> {
                     if (isMousePressed) press.setFocused(false);
                 }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
-                //-----------------
             }
         }));
         return element;
@@ -70,11 +68,6 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         element.hoverLabel = serialized.getValue("hoverlabel");
 
         element.tooltip = serialized.getValue("description");
-
-        //TODO übernehmen
-//        element.setWidget(new ExtendedButton(0, 0, 0, 0, Component.literal(""), (press) -> {
-//            element.getExecutableBlock().execute();
-//        }));
 
         element.clickSound = deserializeAudioResourceSupplier(serialized.getValue("clicksound"));
 

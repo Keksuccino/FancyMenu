@@ -10,7 +10,6 @@ import org.jetbrains.annotations.NotNull;
 import java.io.InputStream;
 import java.util.*;
 
-//TODO übernehmen
 public class MinecraftUsers {
 
     private static final Logger LOGGER = LogManager.getLogger();

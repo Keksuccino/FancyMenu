@@ -168,7 +168,6 @@ public class LoadingRequirementContainer implements ValuePlaceholderHolder {
         if (o == null) return false;
         if (this == o) return true;
         if (o instanceof LoadingRequirementContainer other) {
-            //TODO übernehmen
             if (!Objects.equals(this.identifier, other.identifier)) return false;
             if (!ListUtils.contentEqualIgnoreOrder(this.groups, other.groups)) return false;
             if (!ListUtils.contentEqualIgnoreOrder(this.instances, other.instances)) return false;

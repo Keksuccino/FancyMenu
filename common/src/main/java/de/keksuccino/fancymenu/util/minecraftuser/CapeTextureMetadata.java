@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.util.minecraftuser;
 
 import org.jetbrains.annotations.Nullable;
 
-//TODO übernehmen
 public class CapeTextureMetadata {
 
     protected String url;

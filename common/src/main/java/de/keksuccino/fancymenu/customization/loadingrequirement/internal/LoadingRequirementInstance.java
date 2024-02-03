@@ -83,7 +83,6 @@ public class LoadingRequirementInstance implements ValuePlaceholderHolder {
         if (o == null) return false;
         if (this == o) return true;
         if (o instanceof LoadingRequirementInstance other) {
-            //TODO übernehmen
             if (!Objects.equals(this.instanceIdentifier, other.instanceIdentifier)) return false;
             if (this.requirement != other.requirement) return false;
             if (!Objects.equals(this.value, other.value)) return false;

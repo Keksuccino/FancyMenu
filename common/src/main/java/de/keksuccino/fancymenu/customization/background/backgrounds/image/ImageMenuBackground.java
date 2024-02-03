@@ -101,18 +101,15 @@ public class ImageMenuBackground extends MenuBackground {
                     }
                 }
                 if (w <= getScreenWidth()) {
-                    //TODO übernehmen
                     if (this.keepBackgroundAspectRatio) {
                         this.renderKeepAspectRatio(graphics, ratio, resourceLocation);
                     } else {
                         graphics.blit(resourceLocation, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
                     }
-                    //-------------------
                 } else {
                     RenderingUtils.blitF(graphics, resourceLocation, (float)slidePos, 0.0F, 0.0F, 0.0F, w, getScreenHeight(), w, getScreenHeight());
                 }
             } else if (this.keepBackgroundAspectRatio) {
-                //TODO übernehmen
                 this.renderKeepAspectRatio(graphics, ratio, resourceLocation);
             } else {
                 graphics.blit(resourceLocation, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
@@ -124,7 +121,6 @@ public class ImageMenuBackground extends MenuBackground {
 
     }
 
-    //TODO übernehmen
     protected void renderKeepAspectRatio(@NotNull GuiGraphics graphics, @NotNull AspectRatio ratio, @NotNull ResourceLocation resourceLocation) {
         int[] size = ratio.getAspectRatioSizeByMinimumSize(getScreenWidth(), getScreenHeight());
         int x = 0;

@@ -297,7 +297,6 @@ public class PlayerEntityElement extends AbstractElement {
         this.capeTextureSupplier = new CapeResourceSupplier(resourceSource, false);
     }
 
-    //TODO übernehmen
     protected void updateSkinAndCape() {
         if ((this.normalRenderer == null) || (this.slimRenderer == null)) return;
         if (this.copyClientPlayer || this.autoSkin) {

@@ -174,7 +174,6 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
         return (skin != null) && skin.slim();
     }
 
-    //TODO übernehmen
     protected void downloadPlayerNameSkinMetadata(@NotNull String getterPlayerName) {
         Objects.requireNonNull(getterPlayerName);
         this.startedDownloadingMetadata = true;
