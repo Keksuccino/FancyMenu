@@ -1,4 +1,13 @@
 
+CHANGELOG | FANCYMENU v3.0.6 [ W I P - NOT PUBLIC YET! ]
+ 
+- Fixed wrong mod version for Fabric builds (was stuck at 3.0.3; gradle script should now set correct version)
+ 
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.0.5
  
 - Fixed IF, ELSE and ELSE-IF statements in action scripts clear itself when two or more use the exact same loading requirements
