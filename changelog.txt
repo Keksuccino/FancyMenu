@@ -2,6 +2,7 @@
 CHANGELOG | FANCYMENU v3.0.6 [ W I P - NOT PUBLIC YET! ]
  
 - Fixed wrong mod version for Fabric builds (was stuck at 3.0.3; gradle script should now set correct version)
+- Fixed background of CreateWorldScreen not customizable in some MC versions
  
 %changelog:end%
 
@@ -16,6 +17,7 @@ CHANGELOG | FANCYMENU v3.0.5
 - Fixed custom buttons stay focused after click (they now only stay focused when clicking with ENTER)
 - Fixed player entity auto skin option not correctly setting slim skin
 - Fixed player entity cape showing missing cape texture in some situations (like if auto cape is enabled and player has no cape)
+- Fixed background not customizable in some screens
  
 %changelog:end%
 
