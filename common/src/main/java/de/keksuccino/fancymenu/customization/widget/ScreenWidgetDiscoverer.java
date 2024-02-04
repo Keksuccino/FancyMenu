@@ -7,6 +7,7 @@ import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.tabs.TabNavigationBar;
 import net.minecraft.client.gui.screens.Screen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -53,7 +54,8 @@ public class ScreenWidgetDiscoverer {
 				}
 			}
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			//TODO übernehmen
+			LOGGER.error("[FANCYMENU] Failed to get widgets of screen!", ex);
 		}
 		return new ArrayList<>(widgetMetas.values());
 	}
@@ -71,22 +73,27 @@ public class ScreenWidgetDiscoverer {
 				screen.resize(Minecraft.getInstance(), screenWidth, screenHeight);
 			}
 
-			for (Renderable r : ((IMixinScreen)screen).getRenderablesFancyMenu()) {
-				if (r instanceof AbstractWidget w) {
-					String idRaw = w.getX() + "" + w.getY();
-					long id = 0;
-					if (MathUtils.isLong(idRaw)) {
-						id = getAvailableIdFromBaseId(Long.parseLong(idRaw), ids);
-					}
-					ids.add(id);
-					widgetMetaList.add(new WidgetMeta(w, id, screen));
-				}
-			}
+			//TODO übernehmen
+			((IMixinScreen)screen).getRenderablesFancyMenu().forEach(renderable -> visitWidget(renderable, ids, widgetMetaList, screen));
 
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			//TODO übernehmen
+			LOGGER.error("[FANCYMENU] Failed to get widgets of screen!", ex);
 		}
 		return widgetMetaList;
+	}
+
+	//TODO übernehmen
+	private static void visitWidget(@NotNull Object widget, @NotNull List<Long> ids, @NotNull List<WidgetMeta> widgetMetaList, @NotNull Screen screen) {
+		if (widget instanceof AbstractWidget w) {
+			String idRaw = w.getX() + "" + w.getY();
+			long id = 0;
+			if (MathUtils.isLong(idRaw)) {
+				id = getAvailableIdFromBaseId(Long.parseLong(idRaw), ids);
+			}
+			ids.add(id);
+			widgetMetaList.add(new WidgetMeta(w, id, screen));
+		}
 	}
 
 	private static Long getAvailableIdFromBaseId(long baseId, List<Long> ids) {
