@@ -3,7 +3,7 @@ CHANGELOG | FANCYMENU v3.0.6 [ W I P - NOT PUBLIC YET! ]
  
 - Fixed wrong mod version for Fabric builds (was stuck at 3.0.3; gradle script should now set correct version)
 - Fixed background of CreateWorldScreen not customizable in some MC versions
-- Fixed some inconsistencies in the locals with how screens are called (they were still called "menus" in some cases, but FancyMenu v3 should use "screen" everywhere)
+- Fixed some inconsistencies and other issues in the en_us locals
 - The CreateWorldScreen with all its tabs should be almost fully customizable now in 1.20+
   - To make full use of the new customization compatibility layer, you need to remake your layouts for this screen
   - You need to make SEPARATE LAYOUTS for every tab (Game, World, More) (cross-tab layouts loose all customizations that can't be applied to every tab)
