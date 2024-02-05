@@ -8,6 +8,8 @@ CHANGELOG | FANCYMENU v3.0.6
   - To make full use of the new customization compatibility layer, you need to remake your layouts for this screen
   - You need to make SEPARATE LAYOUTS for every tab (Game, World, More) (cross-tab layouts loose all customizations that can't be applied to every tab)
   - The header an footer can be customized in the "Header/Footer Customizations" menu when right-clicking the editor background (this was the "Scroll List Customizations" menu before)
+- Fixed some mod incompatibilities related to how FancyMenu handles screens with tab navigation bars
+  - This should fix the incompatibility with MidnightLib that caused ModMenu to freeze/crash in some situations
 - Added option to toggle if Custom GUIs should pause the game while in a world
 - Added option to toggle if Custom GUIs should render their transparent Vanilla-like in-game world background
 - Added option to toggle if Custom GUIs should render the dark translucent overlay over their world background
