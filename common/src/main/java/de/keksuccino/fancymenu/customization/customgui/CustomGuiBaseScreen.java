@@ -2,7 +2,9 @@ package de.keksuccino.fancymenu.customization.customgui;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -32,11 +34,20 @@ public class CustomGuiBaseScreen extends Screen {
 	public boolean shouldCloseOnEsc() {
 		return this.gui.allowEsc;
 	}
+
+	@Override
+	public boolean isPauseScreen() {
+		return this.gui.pauseGame;
+	}
 	
 	@Override
 	public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
-		this.renderBackground(pose);
+		if (this.gui.worldBackground) {
+			this.renderBackground(pose);
+		} else {
+			this.renderDirtBackground(0);
+		}
 
 		String title = this.getTitleString();
 		Component titleComp = LocalizationUtils.isLocalizationKey(title) ? Components.translatable(title) : Components.literal(PlaceholderParser.replacePlaceholders(title));
@@ -44,6 +55,18 @@ public class CustomGuiBaseScreen extends Screen {
 
 		super.render(pose, mouseX, mouseY, partial);
 
+	}
+
+	@Override
+	public void renderBackground(@NotNull PoseStack pose) {
+		if (Minecraft.getInstance().level != null) {
+			if (this.gui.worldBackgroundOverlay) {
+				this.fillGradient(pose, 0, 0, this.width, this.height, -1072689136, -804253680);
+			}
+			EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, pose));
+		} else {
+			this.renderDirtBackground(0);
+		}
 	}
 
 	@NotNull
