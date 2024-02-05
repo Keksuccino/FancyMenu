@@ -1,5 +1,5 @@
 
-CHANGELOG | FANCYMENU v3.0.6 [ W I P - NOT PUBLIC YET! ]
+CHANGELOG | FANCYMENU v3.0.6
  
 - Fixed wrong mod version for Fabric builds (was stuck at 3.0.3; gradle script should now set correct version)
 - Fixed background of CreateWorldScreen not customizable in some MC versions
