@@ -56,6 +56,18 @@ public class BuildCustomGuiScreen extends CellScreen {
             this.guiTemp.allowEsc = value.getAsBoolean();
         }), true);
 
+        this.addWidgetCell(new CycleButton<>(0, 0, 20, 20, CommonCycles.cycleEnabledDisabled("fancymenu.custom_guis.build.pause_game", this.guiTemp.pauseGame), (value, button) -> {
+            this.guiTemp.pauseGame = value.getAsBoolean();
+        }), true);
+
+        this.addWidgetCell(new CycleButton<>(0, 0, 20, 20, CommonCycles.cycleEnabledDisabled("fancymenu.custom_guis.build.world_background", this.guiTemp.worldBackground), (value, button) -> {
+            this.guiTemp.worldBackground = value.getAsBoolean();
+        }), true);
+
+        this.addWidgetCell(new CycleButton<>(0, 0, 20, 20, CommonCycles.cycleEnabledDisabled("fancymenu.custom_guis.build.world_background_overlay", this.guiTemp.worldBackgroundOverlay), (value, button) -> {
+            this.guiTemp.worldBackgroundOverlay = value.getAsBoolean();
+        }), true);
+
         this.addSpacerCell(10);
 
         this.settingsFeedbackCell = this.addLabelCell(Component.empty());

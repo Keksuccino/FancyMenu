@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidg
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutBase;
 import de.keksuccino.fancymenu.customization.widget.ScreenWidgetDiscoverer;
+import de.keksuccino.fancymenu.events.widget.RenderTabNavigationBarHeaderBackgroundEvent;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventPriority;
@@ -517,6 +518,40 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			}
 
 			RenderingUtils.resetShaderColor(graphics);
+
+		}
+
+	}
+
+	@EventListener
+	public void onRenderTabNavigationBarHeaderBackgroundPre(RenderTabNavigationBarHeaderBackgroundEvent.Pre e) {
+
+		GuiGraphics graphics = e.getGraphics();
+
+		if (this.shouldCustomize(Minecraft.getInstance().screen)) {
+
+			ITexture headerTexture = (this.layoutBase.scrollListHeaderTexture != null) ? this.layoutBase.scrollListHeaderTexture.get() : null;
+
+			if (headerTexture != null) {
+				ResourceLocation loc = headerTexture.getResourceLocation();
+				if (loc != null) {
+					e.setCanceled(true);
+					RenderingUtils.resetShaderColor(graphics);
+					if (this.layoutBase.preserveScrollListHeaderFooterAspectRatio) {
+						int[] headerSize = headerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(e.getHeaderWidth(), e.getHeaderHeight());
+						int headerWidth = headerSize[0];
+						int headerHeight = headerSize[1];
+						int headerX = (e.getHeaderWidth() / 2) - (headerWidth / 2);
+						int headerY = (e.getHeaderHeight() / 2) - (headerHeight / 2);
+						graphics.enableScissor(0, 0, e.getHeaderWidth(), e.getHeaderHeight());
+						graphics.blit(loc, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
+						graphics.disableScissor();
+					} else {
+						graphics.blit(loc, 0, 0, 0.0F, 0.0F, e.getHeaderWidth(), e.getHeaderHeight(), e.getHeaderWidth(), e.getHeaderHeight());
+					}
+					RenderingUtils.resetShaderColor(graphics);
+				}
+			}
 
 		}
 

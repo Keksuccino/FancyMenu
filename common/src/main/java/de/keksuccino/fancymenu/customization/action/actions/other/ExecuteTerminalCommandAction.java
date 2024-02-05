@@ -79,23 +79,23 @@ public class ExecuteTerminalCommandAction extends Action {
         return null;
     }
 
-    protected static void executeTerminalCommand(@NotNull String command) {
+    private static void executeTerminalCommand(@NotNull String command) {
         new Thread(() -> {
             BufferedReader reader = null;
+            Logger logger = LogManager.getLogger();
             try {
-                Logger logger = LogManager.getLogger();
                 Process process = Runtime.getRuntime().exec(command);
                 if (process != null) {
                     logger.info("[FANCYMENU] Executing Terminal/CMD command via action: " + command);
                     reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
                     String output;
                     while ((output = reader.readLine()) != null) {
-                        logger.info("TERMINAL OUT: " + output);
+                        logger.info("[FANCYMENU] TERMINAL OUT: " + output);
                     }
                     logger.info("[FANCYMENU] Finished executing Terminal/CMD command.");
                 }
             } catch (Exception ex) {
-                ex.printStackTrace();
+                logger.error("[FANCYMENU] Failed to execute terminal command!", ex);
             }
             CloseableUtils.closeQuietly(reader);
         }).start();

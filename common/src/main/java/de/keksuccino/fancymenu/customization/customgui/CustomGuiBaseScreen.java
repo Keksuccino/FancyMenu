@@ -31,6 +31,11 @@ public class CustomGuiBaseScreen extends Screen {
 	public boolean shouldCloseOnEsc() {
 		return this.gui.allowEsc;
 	}
+
+	@Override
+	public boolean isPauseScreen() {
+		return this.gui.pauseGame;
+	}
 	
 	@Override
 	public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
@@ -41,6 +46,21 @@ public class CustomGuiBaseScreen extends Screen {
 		Component titleComp = LocalizationUtils.isLocalizationKey(title) ? Component.translatable(title) : Component.literal(PlaceholderParser.replacePlaceholders(title));
 		graphics.drawCenteredString(this.font, titleComp, this.width / 2, 8, -1);
 
+	}
+
+	@Override
+	public void renderBackground(@NotNull GuiGraphics graphics, int $$1, int $$2, float $$3) {
+		if (this.gui.worldBackground) {
+			if (Minecraft.getInstance().level != null) {
+				if (this.gui.worldBackgroundOverlay) {
+					this.renderTransparentBackground(graphics);
+				}
+			} else {
+				this.renderDirtBackground(graphics);
+			}
+		} else {
+			this.renderDirtBackground(graphics);
+		}
 	}
 
 	@NotNull
