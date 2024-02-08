@@ -79,7 +79,6 @@ public class ExecuteTerminalCommandAction extends Action {
         return null;
     }
 
-    //TODO übernehmen
     private static void executeTerminalCommand(@NotNull String command) {
         new Thread(() -> {
             BufferedReader reader = null;

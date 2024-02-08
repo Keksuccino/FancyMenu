@@ -6,7 +6,6 @@ import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.screens.worldselection.SwitchGrid.SwitchBuilder;
 import net.minecraft.client.gui.components.StringWidget;
 
-//TODO übernehmen
 /**
  * Gets applied to {@link CycleButton}s via Mixin.<br>
  * It is used to make {@link CycleButton}s built in {@link SwitchBuilder}s unique, so we can identify them later for customizations.

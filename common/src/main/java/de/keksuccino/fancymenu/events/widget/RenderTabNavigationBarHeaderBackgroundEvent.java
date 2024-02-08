@@ -6,7 +6,6 @@ import net.minecraft.client.gui.components.tabs.TabNavigationBar;
 import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 
-//TODO übernehmen
 public class RenderTabNavigationBarHeaderBackgroundEvent extends EventBase {
 
     private final TabNavigationBar tabNavigationBar;

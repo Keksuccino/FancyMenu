@@ -291,14 +291,12 @@ public class LayoutEditorUI {
 			displayUnsavedWarning(call -> {
 				if (call) {
 					editor.saveWidgetSettings();
-					//TODO übernehmen
 					if (editor.layoutTargetScreen instanceof CreateWorldScreen) {
 						//This fixes broken CreateWorldScreens after leaving the editor (footer buttons not clickable)
 						CreateWorldScreen.openFresh(Minecraft.getInstance(), new TitleScreen());
 					} else {
 						Minecraft.getInstance().setScreen(editor.layoutTargetScreen);
 					}
-					//-------------------
 				} else {
 					Minecraft.getInstance().setScreen(editor);
 				}
@@ -458,7 +456,6 @@ public class LayoutEditorUI {
 
 		}
 
-		//TODO übernehmen
 		menu.addSubMenuEntry("scroll_list_customizations", Component.translatable("fancymenu.customization.scroll_lists"), buildScrollListCustomizationsContextMenu(editor))
 				.setIcon(ContextMenu.IconFactory.getIcon("scroll_edit"))
 				.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.scroll_lists.desc")));

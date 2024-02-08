@@ -16,11 +16,9 @@ public class CustomGui {
     @NotNull
     public String title = "";
     public boolean allowEsc = true;
-    //TODO übernehmen
     public boolean worldBackground = true;
     public boolean worldBackgroundOverlay = true;
     public boolean pauseGame = true;
-    //-------------
 
     @NotNull
     public CustomGui copy() {
@@ -36,11 +34,9 @@ public class CustomGui {
         container.putProperty("identifier", this.identifier);
         container.putProperty("title", this.title);
         container.putProperty("allow_esc", "" + this.allowEsc);
-        //TODO übernehmen
         container.putProperty("transparent_world_background", "" + this.worldBackground);
         container.putProperty("transparent_world_background_overlay", "" + this.worldBackgroundOverlay);
         container.putProperty("pause_game", "" + this.pauseGame);
-        //-----------------------
         return container;
     }
 
@@ -63,11 +59,9 @@ public class CustomGui {
             if (allowEsc.equals("false")) gui.allowEsc = false;
         }
 
-        //TODO übernehmen
         gui.worldBackground = SerializationUtils.deserializeBoolean(gui.worldBackground, serialized.getValue("transparent_world_background"));
         gui.worldBackgroundOverlay = SerializationUtils.deserializeBoolean(gui.worldBackgroundOverlay, serialized.getValue("transparent_world_background_overlay"));
         gui.pauseGame = SerializationUtils.deserializeBoolean(gui.pauseGame, serialized.getValue("pause_game"));
-        //-----------------------
 
         return gui;
 

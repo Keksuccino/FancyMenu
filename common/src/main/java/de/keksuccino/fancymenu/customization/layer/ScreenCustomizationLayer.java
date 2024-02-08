@@ -521,7 +521,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 	}
 
-	//TODO übernehmen
 	@EventListener
 	public void onRenderTabNavigationBarHeaderBackgroundPre(RenderTabNavigationBarHeaderBackgroundEvent.Pre e) {
 

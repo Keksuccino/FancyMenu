@@ -11,7 +11,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
-//TODO übernehmen
 @Mixin(SwitchGrid.SwitchBuilder.class)
 public class MixinSwitchGrid_SwitchBuilder {
 

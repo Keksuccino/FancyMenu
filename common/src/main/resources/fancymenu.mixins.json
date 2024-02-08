@@ -50,7 +50,6 @@
     "client.MixinSoundEngine",
     "client.MixinStringDecomposer",
     "client.MixinSwitchGrid_SwitchBuilder",
-    "client.MixinTabManager",
     "client.MixinTabNavigationBar",
     "client.MixinTitleScreen",
     "client.MixinWorldListEntry"

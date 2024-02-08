@@ -13,7 +13,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
-//TODO übernehmen
 @Mixin(CreateWorldScreen.MoreTab.class)
 public class MixinCreateWorldScreen_MoreTab {
 

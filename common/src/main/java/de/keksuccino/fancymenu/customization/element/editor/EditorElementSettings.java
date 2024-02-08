@@ -23,7 +23,6 @@ public class EditorElementSettings {
     private boolean enableLoadingRequirements = true;
     private boolean identifierCopyable = true;
 
-    //TODO übernehmen
     private boolean skipReInit = false;
 
     public boolean isDestroyable() {
@@ -188,7 +187,6 @@ public class EditorElementSettings {
         this.settingsChanged();
     }
 
-    //TODO übernehmen
     /**
      * This skips the re-init of the element after changing settings.
      */
@@ -196,7 +194,6 @@ public class EditorElementSettings {
         this.skipReInit = skip;
     }
 
-    //TODO übernehmen
     public void settingsChanged() {
         if ((this.editorElement != null) && !this.skipReInit) {
             this.editorElement.onSettingsChanged();
