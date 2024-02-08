@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.playerentity.textures;
 
+import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.file.type.FileMediaType;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
@@ -116,15 +117,13 @@ public class CapeResourceSupplier extends ResourceSupplier<ITexture> {
         this.startedFindingPlayerNameCapeUrl = true;
         new Thread(() -> {
             String capeUrl = null;
-            MinecraftUserMetadata userMeta = MinecraftUsers.getUserMetadata(getterPlayerName);
-            PlayerTexturesMetadata texMeta = userMeta.getTexturesMetadata();
-            if (texMeta != null) {
-                CapeTextureMetadata capeMeta = texMeta.getCape();
-                if (capeMeta != null) {
-                    capeUrl = capeMeta.getUrl();
-                } else {
-                    this.hasNoCape = true;
-                }
+            Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> userTextures = MinecraftUsers.getUserTextures(getterPlayerName);
+            boolean hasCape = userTextures.containsKey(MinecraftProfileTexture.Type.CAPE);
+            if (hasCape) {
+                MinecraftProfileTexture cape = userTextures.get(MinecraftProfileTexture.Type.CAPE);
+                capeUrl = cape.getUrl();
+            } else {
+                this.hasNoCape = true;
             }
             if ((capeUrl == null) && !this.hasNoCape) {
                 LOGGER.error("[FANCYMENU] CapeResourceSupplier failed to get URL of player cape: " + getterPlayerName, new IOException());

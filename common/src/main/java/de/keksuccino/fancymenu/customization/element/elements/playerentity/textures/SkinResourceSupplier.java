@@ -1,14 +1,12 @@
 package de.keksuccino.fancymenu.customization.element.elements.playerentity.textures;
 
+import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.blaze3d.platform.NativeImage;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.file.type.FileMediaType;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
-import de.keksuccino.fancymenu.util.minecraftuser.MinecraftUserMetadata;
 import de.keksuccino.fancymenu.util.minecraftuser.MinecraftUsers;
-import de.keksuccino.fancymenu.util.minecraftuser.PlayerTexturesMetadata;
-import de.keksuccino.fancymenu.util.minecraftuser.SkinTextureMetadata;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
@@ -180,16 +178,16 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
         new Thread(() -> {
             String skinUrl = null;
             boolean isSlim = false;
-            MinecraftUserMetadata userMeta = MinecraftUsers.getUserMetadata(getterPlayerName);
-            PlayerTexturesMetadata texMeta = userMeta.getTexturesMetadata();
-            if (texMeta != null) {
-                isSlim = texMeta.isSlim();
-                SkinTextureMetadata skinMeta = texMeta.getSkin();
-                if (skinMeta != null) skinUrl = skinMeta.getUrl();
+            Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> userTextures = MinecraftUsers.getUserTextures(getterPlayerName);
+            boolean hasSkin = userTextures.containsKey(MinecraftProfileTexture.Type.SKIN);
+            if (hasSkin) {
+                MinecraftProfileTexture skin = userTextures.get(MinecraftProfileTexture.Type.SKIN);
+                isSlim = Objects.equals(skin.getMetadata("model"), "slim");
+                skinUrl = skin.getUrl();
             }
             if (skinUrl != null) {
                 skinUrl = ResourceSourceType.WEB.getSourcePrefix() + skinUrl;
-            } else if (texMeta == null) {
+            } else if (!hasSkin) {
                 LOGGER.error("[FANCYMENU] SkinResourceSupplier failed to get URL of player skin: " + getterPlayerName, new IOException());
             }
             if (!this.startedDownloadingMetadata) return;
