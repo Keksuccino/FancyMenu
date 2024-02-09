@@ -2,7 +2,7 @@
 CHANGELOG | FANCYMENU v3.0.7 [ W I P - NOT PUBLIC YET! ]
  
 - Fixed Custom GUIs showing their identifier as title if no title was set
-- Fixed Custom GUIs not correctly applying some of the settings made in the Build/Edit Custom GUI screen
+- Fixed Custom GUIs not correctly applying some of the settings configured in the Build/Edit Custom GUI screen
  
 %changelog:end%
 
