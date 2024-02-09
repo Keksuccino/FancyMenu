@@ -6,6 +6,7 @@ CHANGELOG | FANCYMENU v3.0.7 [ W I P - NOT PUBLIC YET! ]
 - Fixed Custom GUIs not correctly applying some of the settings configured in the Build/Edit Custom GUI screen
 - The "Custom Screen Title" entry in the editor is now disabled for Custom GUIs, since it doesn't work for them anyways
 - The "Header/Footer Customizations" entry in the editor is now disabled for Custom GUIs, since Custom GUIs don't have headers/footers
+- Reduced amount of sub-menus to set a button/slider background/handle texture
  
 %changelog:end%
 
