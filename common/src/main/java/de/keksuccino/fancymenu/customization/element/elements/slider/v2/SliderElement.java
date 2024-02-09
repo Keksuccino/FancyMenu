@@ -170,7 +170,8 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     }
 
     public void updateWidgetTooltip() {
-        if ((this.tooltip != null) && (this.slider != null) && this.slider.isHovered() && !isEditor()) {
+        //TODO übernehmen (is visible & shouldRender)
+        if ((this.tooltip != null) && (this.slider != null) && this.slider.isHovered() && this.slider.visible && this.shouldRender() && !isEditor()) {
             String tooltip = this.tooltip.replace("%n%", "\n");
             TooltipHandler.INSTANCE.addWidgetTooltip(this.slider, Tooltip.of(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(tooltip), "\n")), false, true);
         }

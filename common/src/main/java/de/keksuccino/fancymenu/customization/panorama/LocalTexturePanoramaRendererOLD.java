@@ -1,22 +1,18 @@
 package de.keksuccino.fancymenu.customization.panorama;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.util.ScreenUtils;
+import de.keksuccino.fancymenu.util.properties.PropertiesParser;
+import de.keksuccino.fancymenu.util.properties.PropertyContainer;
+import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.fancymenu.util.properties.PropertyContainer;
-import de.keksuccino.fancymenu.util.properties.PropertiesParser;
-import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
@@ -28,8 +24,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
 @SuppressWarnings("unused")
-public class LocalTexturePanoramaRenderer implements Renderable {
+public class LocalTexturePanoramaRendererOLD implements Renderable {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -47,15 +48,11 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 	protected double fov = 85.0D;
 	protected float angle = 25.0F;
 	public float opacity = 1.0F;
-	//TODO übernehmen
-	protected volatile boolean tickerThreadRunning = false;
-	protected volatile float currentRotation = 0.0F; //0 - 360
-	protected volatile long lastRenderCall = -1L;
-	//-------------------
+	protected float spin;
 
 	@Nullable
-	public static LocalTexturePanoramaRenderer build(@NotNull File propertiesFile, @NotNull File panoramaImageDir, @Nullable File overlayImageFile) {
-		LocalTexturePanoramaRenderer renderer = new LocalTexturePanoramaRenderer(propertiesFile, panoramaImageDir, overlayImageFile);
+	public static LocalTexturePanoramaRendererOLD build(@NotNull File propertiesFile, @NotNull File panoramaImageDir, @Nullable File overlayImageFile) {
+		LocalTexturePanoramaRendererOLD renderer = new LocalTexturePanoramaRendererOLD(propertiesFile, panoramaImageDir, overlayImageFile);
 		try {
 			if (renderer.propertiesFile.isFile() && renderer.panoramaImageDir.isDirectory()) {
 				PropertyContainerSet panoProperties = PropertiesParser.deserializeSetFromFile(renderer.propertiesFile.getAbsolutePath());
@@ -94,7 +91,7 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 		return null;
 	}
 
-	protected LocalTexturePanoramaRenderer(@NotNull File propertiesFile, @NotNull File panoramaImageDir, @Nullable File overlayImageFile) {
+	protected LocalTexturePanoramaRendererOLD(@NotNull File propertiesFile, @NotNull File panoramaImageDir, @Nullable File overlayImageFile) {
 		this.propertiesFile = Objects.requireNonNull(propertiesFile);
 		this.panoramaImageDir = Objects.requireNonNull(panoramaImageDir);
 		this.overlayImageFile = overlayImageFile;
@@ -121,48 +118,8 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 
 	}
 
-	//TODO übernehmen
-	@SuppressWarnings("all")
-	protected void startTickerThreadIfNeeded() {
-
-
-		//TODO ADD CUSTOMIZABLE START ROTATION !!!!!!!!!!!!!!!!!!!!
-		//TODO ADD CUSTOMIZABLE START ROTATION !!!!!!!!!!!!!!!!!!!!
-		//TODO ADD CUSTOMIZABLE START ROTATION !!!!!!!!!!!!!!!!!!!!
-		//TODO ADD CUSTOMIZABLE START ROTATION !!!!!!!!!!!!!!!!!!!!
-
-		if (this.tickerThreadRunning) return;
-
-		this.lastRenderCall = System.currentTimeMillis();
-		this.tickerThreadRunning = true;
-
-		new Thread(() -> {
-			while ((this.lastRenderCall + 5000L) > System.currentTimeMillis()) {
-				try {
-					this.currentRotation += 0.03F;
-					if (this.currentRotation >= 360) {
-						this.currentRotation = 0;
-					}
-				} catch (Exception ex) {
-					LOGGER.error("[FANCYMENU] Error while ticking panorama!", ex);
-				}
-				try {
-					Thread.sleep(Math.max(2, (int)(20 / this.speed)));
-				} catch (Exception ex) {
-					LOGGER.error("[FANCYMENU] Error while ticking panorama!", ex);
-				}
-			}
-			this.tickerThreadRunning = false;
-		}, "FancyMenu Panorama Ticker Thread").start();
-
-	}
-
 	@Override
 	public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-		//TODO übernehmen
-		this.lastRenderCall = System.currentTimeMillis();
-		this.startTickerThreadIfNeeded();
-		//--------------------
 		if (this.panoramaImageSuppliers.size() < 6) {
 			RenderSystem.enableBlend();
 			RenderingUtils.resetShaderColor(graphics);
@@ -177,11 +134,14 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 
 		Minecraft mc = Minecraft.getInstance();
 
+		float speedTime = (float)((double)partial * this.speed);
+		this.spin = wrap(this.spin + speedTime * 0.1F, 360.0F);
+
 		int screenW = ScreenUtils.getScreenWidth();
 		int screenH = ScreenUtils.getScreenHeight();
 
 		float pitch = this.angle;
-		float yaw = -this.currentRotation;
+		float yaw = -this.spin;
 		float fovF = ((float)this.fov * ((float)Math.PI / 180));
 
 		graphics.pose().pushPose();
@@ -292,6 +252,10 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 
 		RenderingUtils.resetShaderColor(graphics);
 
+	}
+
+	private static float wrap(float $$0, float $$1) {
+		return $$0 > $$1 ? $$0 - $$1 : $$0;
 	}
 
 	public String getName() {
