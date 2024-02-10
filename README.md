@@ -1,7 +1,7 @@
 
 # About
 
-This is the dev repo for FancyMenu v3, which is currently in development.
+This is the repository for FancyMenu v3.
 
 # Copyright
 
