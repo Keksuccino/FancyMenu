@@ -79,6 +79,15 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 						if ((an != null) && MathUtils.isFloat(an)) {
 							renderer.angle = Float.parseFloat(an);
 						}
+						//TODO übernehmen
+						String rot = panoMeta.getValue("start_rotation");
+						if ((rot != null) && MathUtils.isFloat(rot)) {
+							renderer.currentRotation = Float.parseFloat(rot);
+							if ((renderer.currentRotation > 360.0F) || (renderer.currentRotation < 0.0F)) {
+								renderer.currentRotation = 0;
+							}
+						}
+						//-------------------
 						renderer.prepare();
 						return renderer;
 					} else {
@@ -124,12 +133,6 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 	//TODO übernehmen
 	@SuppressWarnings("all")
 	protected void startTickerThreadIfNeeded() {
-
-
-		//TODO ADD CUSTOMIZABLE START ROTATION !!!!!!!!!!!!!!!!!!!!
-		//TODO ADD CUSTOMIZABLE START ROTATION !!!!!!!!!!!!!!!!!!!!
-		//TODO ADD CUSTOMIZABLE START ROTATION !!!!!!!!!!!!!!!!!!!!
-		//TODO ADD CUSTOMIZABLE START ROTATION !!!!!!!!!!!!!!!!!!!!
 
 		if (this.tickerThreadRunning) return;
 

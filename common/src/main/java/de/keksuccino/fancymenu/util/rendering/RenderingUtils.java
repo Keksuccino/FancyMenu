@@ -12,8 +12,71 @@ import net.minecraft.util.FastColor;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import java.awt.*;
+import java.util.Objects;
 
 public class RenderingUtils {
+
+    //TODO übernehmen
+    public static void blitRepeat(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, int x, int y, int renderWidth, int renderHeight, int textureWidth, int textureHeight, int texOffsetX, int texOffsetY, int texPartWidth, int texPartHeight) {
+
+        Objects.requireNonNull(graphics);
+        Objects.requireNonNull(location);
+        if ((renderWidth <= 0) || (renderHeight <= 0) || (textureWidth <= 0) || (textureHeight <= 0) || (texPartWidth <= 0) || (texPartHeight <= 0)) return;
+
+        int repeatsHorizontal = Math.max(1, (renderWidth / textureWidth));
+        if ((textureWidth * repeatsHorizontal) < renderWidth) repeatsHorizontal++;
+        int repeatsVertical = Math.max(1, (renderHeight / textureHeight));
+        if ((textureHeight * repeatsVertical) < renderHeight) repeatsVertical++;
+
+        graphics.enableScissor(x, y, x + renderWidth, y + renderHeight);
+
+        for (int horizontal = 0; horizontal < repeatsHorizontal; horizontal++) {
+            for (int vertical = 0; vertical < repeatsVertical; vertical++) {
+                int renderX = x + (textureWidth * horizontal);
+                int renderY = y + (textureHeight * vertical);
+                graphics.blit(location, renderX, renderY, texOffsetX, texOffsetY, texPartWidth, texPartHeight, textureWidth, textureHeight);
+            }
+        }
+
+        graphics.disableScissor();
+
+    }
+
+    //TODO übernehmen
+    public static void blitRepeat(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, int x, int y, int renderWidth, int renderHeight, int textureWidth, int textureHeight) {
+        blitRepeat(graphics, location, x, y, renderWidth, renderHeight, textureWidth, textureHeight, 0, 0, textureWidth, textureHeight);
+    }
+
+    //TODO übernehmen
+    public static void blitNineSliced(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, int x, int y, int renderWidth, int renderHeight, int textureWidth, int textureHeight, int borderThickness, int edgeWidth, int edgeHeight) {
+
+        Objects.requireNonNull(graphics);
+        Objects.requireNonNull(location);
+        if ((renderWidth <= 0) || (renderHeight <= 0) || (textureWidth <= 0) || (textureHeight <= 0) || (borderThickness <= 0) || (edgeWidth <= 0) || (edgeHeight <= 0)) return;
+
+        //Top-left edge
+        graphics.blit(location, x, y, 0.0F, 0.0F, edgeWidth, edgeHeight, textureWidth, textureHeight);
+        //Bottom-left edge
+        graphics.blit(location, x, y + renderHeight - edgeHeight, 0.0F, (float)(textureHeight - edgeHeight), edgeWidth, edgeHeight, textureWidth, textureHeight);
+        //Top-right edge
+        graphics.blit(location, x + renderWidth - edgeWidth, y, (float)(textureWidth - edgeWidth), 0.0F, edgeWidth, edgeHeight, textureWidth, textureHeight);
+        //Bottom-right edge
+        graphics.blit(location, x + renderWidth - edgeWidth, y + renderHeight - edgeHeight, (float)(textureWidth - edgeWidth), (float)(textureHeight - edgeHeight), edgeWidth, edgeHeight, textureWidth, textureHeight);
+
+        //Top border
+        blitRepeat(graphics, location, x + edgeWidth, y, textureWidth - (edgeWidth * 2), borderThickness, textureWidth, textureHeight, edgeWidth, 0, textureWidth - (edgeWidth * 2), borderThickness);
+        //graphics.blit(location, x + edgeWidth, y, (float)edgeWidth, 0.0F, textureWidth - (edgeWidth * 2), borderThickness, textureWidth, textureHeight);
+
+        //Left border
+        blitRepeat(graphics, location, x, y + edgeHeight, borderThickness, textureHeight - (edgeHeight * 2), textureWidth, textureHeight, 0, edgeHeight, borderThickness, textureHeight - (edgeHeight * 2));
+        //graphics.blit(location, x, y + edgeHeight, 0.0F, (float)edgeHeight, borderThickness, textureHeight - (edgeHeight * 2), textureWidth, textureHeight);
+
+        //Bottom border
+        graphics.blit(location, x + edgeWidth, y + renderHeight - borderThickness, (float)edgeWidth, (float)(textureHeight - borderThickness), textureWidth - (edgeWidth * 2), borderThickness, textureWidth, textureHeight);
+        //Right border
+        graphics.blit(location, x + renderWidth - borderThickness, y + edgeHeight, (float)(textureWidth - borderThickness), (float)edgeHeight, borderThickness, textureHeight - (edgeHeight * 2), textureWidth, textureHeight);
+
+    }
 
     public static float getPartialTick() {
         return Minecraft.getInstance().isPaused() ? ((IMixinMinecraft)Minecraft.getInstance()).getPausePartialTickFancyMenu() : Minecraft.getInstance().getFrameTime();
