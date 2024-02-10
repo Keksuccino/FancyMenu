@@ -8,6 +8,8 @@ CHANGELOG | FANCYMENU v3.0.7 [ W I P - NOT PUBLIC YET! ]
 - The "Custom Screen Title" entry in the editor is now disabled for Custom GUIs, since it doesn't work for them anyways
 - The "Header/Footer Customizations" entry in the editor is now disabled for Custom GUIs, since Custom GUIs don't have headers/footers
 - Reduced amount of sub-menus to set a button/slider background/handle texture
+- Improved the rotation logic of cubic panoramas (they should now not randomly speed up anymore, but you maybe need to adjust your panorama's speed if it is too slow/fast now)
+- Added "start_rotation" property to cubic panoramas to set the rotation angle they should start at (value between 0 and 360)
  
 %changelog:end%
 
