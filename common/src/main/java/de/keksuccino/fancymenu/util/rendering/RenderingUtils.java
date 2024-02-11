@@ -17,24 +17,40 @@ import java.util.Objects;
 public class RenderingUtils {
 
     //TODO übernehmen
-    public static void blitRepeat(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, int x, int y, int renderWidth, int renderHeight, int textureWidth, int textureHeight, int texOffsetX, int texOffsetY, int texPartWidth, int texPartHeight) {
+    /**
+     * Repeatedly renders a texture inside an area. Fills the area with the texture.
+     *
+     * @param graphics The {@link Graphics} instance.
+     * @param location The texture {@link ResourceLocation}.
+     * @param x The render start X coordinate.
+     * @param y The render start Y coordinate.
+     * @param fullRenderWidth The full width of the repeating texture area. This is the full size and will get filled with the texture that gets repeatedly rendered inside.
+     * @param fullRenderHeight The full height of the repeating texture area. This is the full size and will get filled with the texture that gets repeatedly rendered inside.
+     * @param texRenderWidth The texture's width. This is the render size of the SINGLE texture. The texture will get repeatedly rendered inside the full render size.
+     * @param texRenderHeight The texture's height. This is the render size of the SINGLE texture. The texture will get repeatedly rendered inside the full render size.
+     * @param texOffsetX The X offset of what the first X pixel of the texture should be. (Default 0)
+     * @param texOffsetY The Y offset of what the first Y pixel of the texture should be. (Default 0)
+     * @param texPartWidth The part of the texture that should get rendered. Starts at the first X pixel and ends at first X pixel + part width.
+     * @param texPartHeight The part of the texture that should get rendered. Starts at the first Y pixel and ends at first Y pixel + part height.
+     */
+    public static void blitRepeat(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, int x, int y, int fullRenderWidth, int fullRenderHeight, int texRenderWidth, int texRenderHeight, int texOffsetX, int texOffsetY, int texPartWidth, int texPartHeight) {
 
         Objects.requireNonNull(graphics);
         Objects.requireNonNull(location);
-        if ((renderWidth <= 0) || (renderHeight <= 0) || (textureWidth <= 0) || (textureHeight <= 0) || (texPartWidth <= 0) || (texPartHeight <= 0)) return;
+        if ((fullRenderWidth <= 0) || (fullRenderHeight <= 0) || (texRenderWidth <= 0) || (texRenderHeight <= 0) || (texPartWidth <= 0) || (texPartHeight <= 0)) return;
 
-        int repeatsHorizontal = Math.max(1, (renderWidth / textureWidth));
-        if ((textureWidth * repeatsHorizontal) < renderWidth) repeatsHorizontal++;
-        int repeatsVertical = Math.max(1, (renderHeight / textureHeight));
-        if ((textureHeight * repeatsVertical) < renderHeight) repeatsVertical++;
+        int repeatsHorizontal = Math.max(1, (fullRenderWidth / texPartWidth));
+        if ((texPartWidth * repeatsHorizontal) < fullRenderWidth) repeatsHorizontal++;
+        int repeatsVertical = Math.max(1, (fullRenderHeight / texPartHeight));
+        if ((texPartHeight * repeatsVertical) < fullRenderHeight) repeatsVertical++;
 
-        graphics.enableScissor(x, y, x + renderWidth, y + renderHeight);
+        graphics.enableScissor(x, y, x + fullRenderWidth, y + fullRenderHeight);
 
         for (int horizontal = 0; horizontal < repeatsHorizontal; horizontal++) {
             for (int vertical = 0; vertical < repeatsVertical; vertical++) {
-                int renderX = x + (textureWidth * horizontal);
-                int renderY = y + (textureHeight * vertical);
-                graphics.blit(location, renderX, renderY, texOffsetX, texOffsetY, texPartWidth, texPartHeight, textureWidth, textureHeight);
+                int renderX = x + (texPartWidth * horizontal);
+                int renderY = y + (texPartHeight * vertical);
+                graphics.blit(location, renderX, renderY, texOffsetX, texOffsetY, texPartWidth, texPartHeight, texRenderWidth, texRenderHeight);
             }
         }
 
@@ -43,38 +59,52 @@ public class RenderingUtils {
     }
 
     //TODO übernehmen
-    public static void blitRepeat(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, int x, int y, int renderWidth, int renderHeight, int textureWidth, int textureHeight) {
-        blitRepeat(graphics, location, x, y, renderWidth, renderHeight, textureWidth, textureHeight, 0, 0, textureWidth, textureHeight);
+    /**
+     * Repeatedly renders a texture inside an area. Fills the area with the texture.
+     *
+     * @param graphics The {@link Graphics} instance.
+     * @param location The texture {@link ResourceLocation}.
+     * @param x The render start X coordinate.
+     * @param y The render start Y coordinate.
+     * @param fullRenderWidth The full width of the repeating texture area. This is the full size and will get filled with the texture that gets repeatedly rendered inside.
+     * @param fullRenderHeight The full height of the repeating texture area. This is the full size and will get filled with the texture that gets repeatedly rendered inside.
+     * @param texRenderWidth The texture's width. This is the render size of the SINGLE texture. The texture will get repeatedly rendered inside the full render size.
+     * @param texRenderHeight The texture's height. This is the render size of the SINGLE texture. The texture will get repeatedly rendered inside the full render size.
+     */
+    public static void blitRepeat(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, int x, int y, int fullRenderWidth, int fullRenderHeight, int texRenderWidth, int texRenderHeight) {
+        blitRepeat(graphics, location, x, y, fullRenderWidth, fullRenderHeight, texRenderWidth, texRenderHeight, 0, 0, texRenderWidth, texRenderHeight);
     }
 
     //TODO übernehmen
-    public static void blitNineSliced(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, int x, int y, int renderWidth, int renderHeight, int textureWidth, int textureHeight, int borderThickness, int edgeWidth, int edgeHeight) {
+    public static void blitNineSliced(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, int x, int y, int renderWidth, int renderHeight, int borderThickness, int edgeWidth, int edgeHeight) {
+
+        //TODO muss baseTexture size haben und render size. render size wird bestimmt durch mittleren teil (blitRepeat). Rand und Ecken werden mit base size berechnet, damit sie immer gleich sind, egal wie die Textur size geändert wird.
 
         Objects.requireNonNull(graphics);
         Objects.requireNonNull(location);
-        if ((renderWidth <= 0) || (renderHeight <= 0) || (textureWidth <= 0) || (textureHeight <= 0) || (borderThickness <= 0) || (edgeWidth <= 0) || (edgeHeight <= 0)) return;
+        if ((renderWidth <= 0) || (renderHeight <= 0) || (borderThickness <= 0) || (edgeWidth <= 0) || (edgeHeight <= 0)) return;
 
         //Top-left edge
-        graphics.blit(location, x, y, 0.0F, 0.0F, edgeWidth, edgeHeight, textureWidth, textureHeight);
+        graphics.blit(location, x, y, 0.0F, 0.0F, edgeWidth, edgeHeight, renderWidth, renderHeight);
         //Bottom-left edge
-        graphics.blit(location, x, y + renderHeight - edgeHeight, 0.0F, (float)(textureHeight - edgeHeight), edgeWidth, edgeHeight, textureWidth, textureHeight);
+        graphics.blit(location, x, y + renderHeight - edgeHeight, 0.0F, (float)(renderHeight - edgeHeight), edgeWidth, edgeHeight, renderWidth, renderHeight);
         //Top-right edge
-        graphics.blit(location, x + renderWidth - edgeWidth, y, (float)(textureWidth - edgeWidth), 0.0F, edgeWidth, edgeHeight, textureWidth, textureHeight);
+        graphics.blit(location, x + renderWidth - edgeWidth, y, (float)(renderWidth - edgeWidth), 0.0F, edgeWidth, edgeHeight, renderWidth, renderHeight);
         //Bottom-right edge
-        graphics.blit(location, x + renderWidth - edgeWidth, y + renderHeight - edgeHeight, (float)(textureWidth - edgeWidth), (float)(textureHeight - edgeHeight), edgeWidth, edgeHeight, textureWidth, textureHeight);
+        graphics.blit(location, x + renderWidth - edgeWidth, y + renderHeight - edgeHeight, (float)(renderWidth - edgeWidth), (float)(renderHeight - edgeHeight), edgeWidth, edgeHeight, renderWidth, renderHeight);
 
         //Top border
-        blitRepeat(graphics, location, x + edgeWidth, y, textureWidth - (edgeWidth * 2), borderThickness, textureWidth, textureHeight, edgeWidth, 0, textureWidth - (edgeWidth * 2), borderThickness);
+        blitRepeat(graphics, location, x + edgeWidth, y, renderWidth - (edgeWidth * 2), borderThickness, renderWidth, renderHeight, edgeWidth, 0, renderWidth - (edgeWidth * 2), borderThickness);
         //graphics.blit(location, x + edgeWidth, y, (float)edgeWidth, 0.0F, textureWidth - (edgeWidth * 2), borderThickness, textureWidth, textureHeight);
 
         //Left border
-        blitRepeat(graphics, location, x, y + edgeHeight, borderThickness, textureHeight - (edgeHeight * 2), textureWidth, textureHeight, 0, edgeHeight, borderThickness, textureHeight - (edgeHeight * 2));
+        blitRepeat(graphics, location, x, y + edgeHeight, borderThickness, renderHeight - (edgeHeight * 2), renderWidth, renderHeight, 0, edgeHeight, borderThickness, renderHeight - (edgeHeight * 2));
         //graphics.blit(location, x, y + edgeHeight, 0.0F, (float)edgeHeight, borderThickness, textureHeight - (edgeHeight * 2), textureWidth, textureHeight);
 
         //Bottom border
-        graphics.blit(location, x + edgeWidth, y + renderHeight - borderThickness, (float)edgeWidth, (float)(textureHeight - borderThickness), textureWidth - (edgeWidth * 2), borderThickness, textureWidth, textureHeight);
+        graphics.blit(location, x + edgeWidth, y + renderHeight - borderThickness, (float)edgeWidth, (float)(renderHeight - borderThickness), renderWidth - (edgeWidth * 2), borderThickness, renderWidth, renderHeight);
         //Right border
-        graphics.blit(location, x + renderWidth - borderThickness, y + edgeHeight, (float)(textureWidth - borderThickness), (float)edgeHeight, borderThickness, textureHeight - (edgeHeight * 2), textureWidth, textureHeight);
+        graphics.blit(location, x + renderWidth - borderThickness, y + edgeHeight, (float)(renderWidth - borderThickness), (float)edgeHeight, borderThickness, renderHeight - (edgeHeight * 2), renderWidth, renderHeight);
 
     }
 

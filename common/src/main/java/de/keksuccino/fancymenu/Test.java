@@ -24,7 +24,7 @@ public class Test {
 
 //                RenderingUtils.blitRepeat(e.getGraphics(), loc, 40, 40, 320, 320, 50, 50);
 
-                RenderingUtils.blitNineSliced(e.getGraphics(), loc, 50, 50, 300, 300, tex.getWidth(), tex.getHeight(), 10, 10, 10);
+//                RenderingUtils.blitNineSliced(e.getGraphics(), loc, 50, 50, 300, 300, 10, 10, 10);
 
             }
         }

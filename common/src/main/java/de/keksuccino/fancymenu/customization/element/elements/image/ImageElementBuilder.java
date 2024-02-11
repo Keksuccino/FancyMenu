@@ -33,6 +33,8 @@ public class ImageElementBuilder extends ElementBuilder<ImageElement, ImageEdito
         ImageElement element = this.buildDefaultInstance();
 
         element.textureSupplier = deserializeImageResourceSupplier(serialized.getValue("source"));
+        //TODO übernehmen
+        element.repeat = deserializeBoolean(element.repeat, serialized.getValue("repeat_texture"));
 
         return element;
 
@@ -44,6 +46,8 @@ public class ImageElementBuilder extends ElementBuilder<ImageElement, ImageEdito
         if (element.textureSupplier != null) {
             serializeTo.putProperty("source", element.textureSupplier.getSourceWithPrefix());
         }
+        //TODO übernehmen
+        serializeTo.putProperty("repeat_texture", "" + element.repeat);
 
         return serializeTo;
         

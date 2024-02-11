@@ -22,6 +22,8 @@ public class ImageElement extends AbstractElement {
 
     @Nullable
     public ResourceSupplier<ITexture> textureSupplier;
+    //TODO übernehmen
+    public boolean repeat = false;
 
     public ImageElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -42,7 +44,13 @@ public class ImageElement extends AbstractElement {
             if ((t != null) && t.isReady()) {
                 ResourceLocation loc = t.getResourceLocation();
                 if (loc != null) {
-                    graphics.blit(loc, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+                    //TODO übernehmen
+                    if (this.repeat) {
+                        RenderingUtils.blitRepeat(graphics, loc, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight());
+                    } else {
+                        graphics.blit(loc, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+                    }
+                    //----------------------
                 }
             } else if (isEditor()) {
                 graphics.blit(MISSING, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());

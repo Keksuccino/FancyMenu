@@ -33,6 +33,13 @@ public class ImageEditorElement extends AbstractEditorElement {
             }).setSource((this.getElement().textureSupplier != null) ? this.getElement().textureSupplier.getSourceWithPrefix() : null, false));
         }).setIcon(ContextMenu.IconFactory.getIcon("image"));
 
+        //TODO übernehmen
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "repeat_texture",
+                ImageEditorElement.class,
+                consumes -> consumes.getElement().repeat,
+                (imageEditorElement, aBoolean) -> imageEditorElement.getElement().repeat = aBoolean,
+                "fancymenu.elements.image.repeat");
+
         this.rightClickMenu.addSeparatorEntry("image_separator_1");
 
         this.rightClickMenu.addClickableEntry("restore_aspect_ratio", Component.translatable("fancymenu.elements.image.restore_aspect_ratio"), (menu, entry) -> {
