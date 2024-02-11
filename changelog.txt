@@ -10,7 +10,7 @@ CHANGELOG | FANCYMENU v3.0.7 [ W I P - NOT PUBLIC YET! ]
 - Reduced amount of sub-menus to set a button/slider background/handle texture
 - Improved the rotation logic of cubic panoramas (they should now not randomly speed up anymore, but you maybe need to adjust your panorama's speed if it is too slow/fast now)
 - Added "start_rotation" property to cubic panoramas to set the rotation angle they should start at (value between 0 and 360)
-- Added "Repeat Texture" mode to Image elements that lets you render the image as seemless/repeating texture (like the default Minecraft dirt menu background)
+- Added "Repeat Texture" mode to Image element that lets you render the image as seemless/repeating texture (like the default Minecraft dirt menu background)
 - Added "Repeat Texture" mode to Image menu background that lets you render the image as seemless/repeating texture (like the default Minecraft dirt menu background)
  
 %changelog:end%
