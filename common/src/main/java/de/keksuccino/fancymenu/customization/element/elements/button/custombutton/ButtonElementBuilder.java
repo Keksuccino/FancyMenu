@@ -87,6 +87,12 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
             element.restartBackgroundAnimationsOnHover = false;
         }
 
+        //TODO übernehmen
+        element.nineSliceCustomBackground = deserializeBoolean(element.nineSliceCustomBackground, serialized.getValue("nine_slice_custom_background"));
+        element.nineSliceBorderX = deserializeNumber(Integer.class, element.nineSliceBorderX, serialized.getValue("nine_slice_border_x"));
+        element.nineSliceBorderY = deserializeNumber(Integer.class, element.nineSliceBorderY, serialized.getValue("nine_slice_border_y"));
+        //-----------------------
+
         element.backgroundAnimationNormal = serialized.getValue("backgroundanimationnormal");
 
         element.backgroundAnimationHover = serialized.getValue("backgroundanimationhovered");
@@ -123,6 +129,11 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         }
         serializeTo.putProperty("restartbackgroundanimations", "" + element.restartBackgroundAnimationsOnHover);
         serializeTo.putProperty("loopbackgroundanimations", "" + element.loopBackgroundAnimations);
+        //TODO übernehmen
+        serializeTo.putProperty("nine_slice_custom_background", "" + element.nineSliceCustomBackground);
+        serializeTo.putProperty("nine_slice_border_x", "" + element.nineSliceBorderX);
+        serializeTo.putProperty("nine_slice_border_y", "" + element.nineSliceBorderY);
+        //-----------------------
         if (element.hoverSound != null) {
             serializeTo.putProperty("hoversound", element.hoverSound.getSourceWithPrefix());
         }

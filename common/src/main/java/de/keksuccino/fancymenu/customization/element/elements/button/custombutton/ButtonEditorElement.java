@@ -101,6 +101,27 @@ public class ButtonEditorElement extends AbstractEditorElement {
                         "fancymenu.helper.editor.items.buttons.textures.restart_animated_on_hover")
                 .setStackable(true);
 
+        buttonBackgroundMenu.addSeparatorEntry("separator_after_restart_animation_on_hover");
+
+        //TODO übernehmen
+
+        this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_background", ButtonEditorElement.class,
+                consumes -> consumes.getElement().nineSliceCustomBackground,
+                (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().nineSliceCustomBackground = aBoolean,
+                "fancymenu.helper.editor.items.buttons.textures.nine_slice");
+
+        this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_border_x", ButtonEditorElement.class,
+                consumes -> consumes.getElement().nineSliceBorderX,
+                (buttonEditorElement, integer) -> buttonEditorElement.getElement().nineSliceBorderX = integer,
+                Component.translatable("fancymenu.helper.editor.items.buttons.textures.nine_slice.border_x"), true, 5, null, null);
+
+        this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_border_y", ButtonEditorElement.class,
+                consumes -> consumes.getElement().nineSliceBorderY,
+                (buttonEditorElement, integer) -> buttonEditorElement.getElement().nineSliceBorderY = integer,
+                Component.translatable("fancymenu.helper.editor.items.buttons.textures.nine_slice.border_y"), true, 5, null, null);
+
+        //-------------------------
+
         this.rightClickMenu.addSeparatorEntry("button_separator_2").setStackable(true);
 
         if (!isSlider) {

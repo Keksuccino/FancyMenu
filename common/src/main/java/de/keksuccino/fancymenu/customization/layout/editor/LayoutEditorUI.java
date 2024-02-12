@@ -637,12 +637,7 @@ public class LayoutEditorUI {
 
 		ContextMenu menu = new ContextMenu();
 
-		menu.addValueCycleEntry("preserve_header_footer_aspect_ratio", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.preserve_header_footer_aspect_ratio", editor.layout.preserveScrollListHeaderFooterAspectRatio).addCycleListener(cycle -> {
-			editor.history.saveSnapshot();
-			editor.layout.preserveScrollListHeaderFooterAspectRatio = cycle.getAsBoolean();
-		})).setIcon(ContextMenu.IconFactory.getIcon("aspect_ratio"));
-
-		menu.addSeparatorEntry("separator_after_preserve_aspect_ratio");
+		//TODO übernehmen (von weiter unten nach oben verschieben)
 
 		NonStackableOverlayUI.addImageResourceChooserContextMenuEntryTo(menu, "header_texture",
 						null,
@@ -667,6 +662,33 @@ public class LayoutEditorUI {
 				.setIcon(ContextMenu.IconFactory.getIcon("image"));
 
 		menu.addSeparatorEntry("separator_after_footer_texture");
+
+		//------------------------------------
+
+		//TODO übernehmen
+
+		menu.addValueCycleEntry("repeat_header_texture", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.repeat_header", editor.layout.repeatScrollListHeaderTexture).addCycleListener(cycleEnabledDisabled -> {
+			editor.history.saveSnapshot();
+			editor.layout.repeatScrollListHeaderTexture = cycleEnabledDisabled.getAsBoolean();
+		})).setIsActiveSupplier((menu1, entry) -> !editor.layout.preserveScrollListHeaderFooterAspectRatio);
+
+		menu.addValueCycleEntry("repeat_footer_texture", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.repeat_footer", editor.layout.repeatScrollListFooterTexture).addCycleListener(cycleEnabledDisabled -> {
+			editor.history.saveSnapshot();
+			editor.layout.repeatScrollListFooterTexture = cycleEnabledDisabled.getAsBoolean();
+		})).setIsActiveSupplier((menu1, entry) -> !editor.layout.preserveScrollListHeaderFooterAspectRatio);
+
+		menu.addSeparatorEntry("separator_after_header_footer_repeat_texture");
+
+		//---------------------------------------
+
+		menu.addValueCycleEntry("preserve_header_footer_aspect_ratio", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.preserve_header_footer_aspect_ratio", editor.layout.preserveScrollListHeaderFooterAspectRatio).addCycleListener(cycle -> {
+			editor.history.saveSnapshot();
+			editor.layout.preserveScrollListHeaderFooterAspectRatio = cycle.getAsBoolean();
+		})).setIcon(ContextMenu.IconFactory.getIcon("aspect_ratio"))
+				//TODO übernehmen
+				.setIsActiveSupplier((menu1, entry) -> (!editor.layout.repeatScrollListHeaderTexture && !editor.layout.repeatScrollListFooterTexture));
+
+		menu.addSeparatorEntry("separator_after_preserve_aspect_ratio");
 
 		menu.addValueCycleEntry("header_shadow", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.render_header_shadow", editor.layout.renderScrollListHeaderShadow).addCycleListener(cycle -> {
 			editor.history.saveSnapshot();

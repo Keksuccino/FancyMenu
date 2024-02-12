@@ -52,6 +52,11 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public String backgroundAnimationInactive;
     public boolean loopBackgroundAnimations = true;
     public boolean restartBackgroundAnimationsOnHover = true;
+    //TODO übernehmen
+    public boolean nineSliceCustomBackground = false;
+    public int nineSliceBorderX = 5;
+    public int nineSliceBorderY = 5;
+    //-----------------------
     @NotNull
     public GenericExecutableBlock actionExecutor = new GenericExecutableBlock();
 
@@ -215,6 +220,11 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         }
 
         if (this.getWidget() instanceof CustomizableWidget w) {
+            //TODO übernehmen
+            w.setNineSliceCustomBackgroundTexture_FancyMenu(this.nineSliceCustomBackground);
+            w.setNineSliceCustomBackgroundBorderX_FancyMenu(this.nineSliceBorderX);
+            w.setNineSliceCustomBackgroundBorderY_FancyMenu(this.nineSliceBorderY);
+            //--------------------------
             w.setCustomBackgroundNormalFancyMenu(backNormal);
             w.setCustomBackgroundHoverFancyMenu(backHover);
             w.setCustomBackgroundInactiveFancyMenu(backInactive);

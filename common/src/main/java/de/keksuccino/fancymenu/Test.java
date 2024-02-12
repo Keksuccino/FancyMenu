@@ -11,24 +11,22 @@ import net.minecraft.resources.ResourceLocation;
 
 public class Test {
 
-    private static final ResourceSupplier<ITexture> IMAGE = ResourceSupplier.image(ResourceSource.of("https://www.alleycat.org/wp-content/uploads/2019/03/FELV-cat.jpg", ResourceSourceType.WEB).getSourceWithPrefix());
-
-    //TODO remove debug
-    @EventListener
-    public void onRenderScreenPost(RenderScreenEvent.Post e) {
-
-        ITexture tex = IMAGE.get();
-        if (tex != null) {
-            ResourceLocation loc = tex.getResourceLocation();
-            if (loc != null) {
-
-//                RenderingUtils.blitRepeat(e.getGraphics(), loc, 40, 40, 320, 320, 50, 50);
-
-//                RenderingUtils.blitNineSliced(e.getGraphics(), loc, 50, 50, 300, 300, 10, 10, 10);
-
-            }
-        }
-
-    }
+//    private static final ResourceSupplier<ITexture> IMAGE = ResourceSupplier.image(ResourceSource.of("https://www.alleycat.org/wp-content/uploads/2019/03/FELV-cat.jpg", ResourceSourceType.WEB).getSourceWithPrefix());
+//
+//    //TODO remove debug
+//    @EventListener
+//    public void onRenderScreenPost(RenderScreenEvent.Post e) {
+//
+//        ITexture tex = IMAGE.get();
+//        if (tex != null) {
+//            ResourceLocation loc = tex.getResourceLocation();
+//            if (loc != null) {
+//
+//
+//
+//            }
+//        }
+//
+//    }
 
 }

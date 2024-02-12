@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;

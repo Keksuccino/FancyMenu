@@ -9,6 +9,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import java.awt.*;
@@ -76,36 +77,16 @@ public class RenderingUtils {
     }
 
     //TODO übernehmen
-    public static void blitNineSliced(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, int x, int y, int renderWidth, int renderHeight, int borderThickness, int edgeWidth, int edgeHeight) {
+    public static void blitNineSliced(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, int x, int y, int renderWidth, int renderHeight, int borderX, int borderY, int texPartWidth, int texPartHeight, int texOffsetX, int texOffsetY) {
+        if ((renderWidth <= 0) || (renderHeight <= 0) || (texPartWidth <= 0) || (texPartHeight <= 0)) return;
+        //TODO remove debug
+        LogManager.getLogger().info("################## NINE-SLICED: texPartWidth: " + texPartWidth + " | textPartHeight: " + texPartHeight + " | texOffX: " + texOffsetX + " | texOffY: " + texOffsetY + " | renderWidth: " + renderWidth + " | renderHeight: " + renderHeight + " | borderX: " + borderX + " | borderY: " + borderY);
+        graphics.blitNineSliced(location, x, y, renderWidth, renderHeight, borderX, borderY, texPartWidth, texPartHeight, texOffsetX, texOffsetY);
+    }
 
-        //TODO muss baseTexture size haben und render size. render size wird bestimmt durch mittleren teil (blitRepeat). Rand und Ecken werden mit base size berechnet, damit sie immer gleich sind, egal wie die Textur size geändert wird.
-
-        Objects.requireNonNull(graphics);
-        Objects.requireNonNull(location);
-        if ((renderWidth <= 0) || (renderHeight <= 0) || (borderThickness <= 0) || (edgeWidth <= 0) || (edgeHeight <= 0)) return;
-
-        //Top-left edge
-        graphics.blit(location, x, y, 0.0F, 0.0F, edgeWidth, edgeHeight, renderWidth, renderHeight);
-        //Bottom-left edge
-        graphics.blit(location, x, y + renderHeight - edgeHeight, 0.0F, (float)(renderHeight - edgeHeight), edgeWidth, edgeHeight, renderWidth, renderHeight);
-        //Top-right edge
-        graphics.blit(location, x + renderWidth - edgeWidth, y, (float)(renderWidth - edgeWidth), 0.0F, edgeWidth, edgeHeight, renderWidth, renderHeight);
-        //Bottom-right edge
-        graphics.blit(location, x + renderWidth - edgeWidth, y + renderHeight - edgeHeight, (float)(renderWidth - edgeWidth), (float)(renderHeight - edgeHeight), edgeWidth, edgeHeight, renderWidth, renderHeight);
-
-        //Top border
-        blitRepeat(graphics, location, x + edgeWidth, y, renderWidth - (edgeWidth * 2), borderThickness, renderWidth, renderHeight, edgeWidth, 0, renderWidth - (edgeWidth * 2), borderThickness);
-        //graphics.blit(location, x + edgeWidth, y, (float)edgeWidth, 0.0F, textureWidth - (edgeWidth * 2), borderThickness, textureWidth, textureHeight);
-
-        //Left border
-        blitRepeat(graphics, location, x, y + edgeHeight, borderThickness, renderHeight - (edgeHeight * 2), renderWidth, renderHeight, 0, edgeHeight, borderThickness, renderHeight - (edgeHeight * 2));
-        //graphics.blit(location, x, y + edgeHeight, 0.0F, (float)edgeHeight, borderThickness, textureHeight - (edgeHeight * 2), textureWidth, textureHeight);
-
-        //Bottom border
-        graphics.blit(location, x + edgeWidth, y + renderHeight - borderThickness, (float)edgeWidth, (float)(renderHeight - borderThickness), renderWidth - (edgeWidth * 2), borderThickness, renderWidth, renderHeight);
-        //Right border
-        graphics.blit(location, x + renderWidth - borderThickness, y + edgeHeight, (float)(renderWidth - borderThickness), (float)edgeHeight, borderThickness, renderHeight - (edgeHeight * 2), renderWidth, renderHeight);
-
+    //TODO übernehmen
+    public static void blitNineSliced(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, int x, int y, int renderWidth, int renderHeight, int borderX, int borderY, int texWidth, int texHeight) {
+        blitNineSliced(graphics, location, x, y, renderWidth, renderHeight, borderX, borderY, texWidth, texHeight, 0, 0);
     }
 
     public static float getPartialTick() {

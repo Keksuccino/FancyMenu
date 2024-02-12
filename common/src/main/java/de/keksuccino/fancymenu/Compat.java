@@ -34,13 +34,14 @@ public class Compat {
         return false;
     }
 
-    public static boolean isAudioExtensionLoaded() {
-        try {
-            Class.forName("de.keksuccino.fmaudio.FmAudio", false, FancyMenu.class.getClassLoader());
-            return true;
-        } catch (Exception ignored) {}
-        return false;
-    }
+    //TODO übernehmen
+//    public static boolean isAudioExtensionLoaded() {
+//        try {
+//            Class.forName("de.keksuccino.fmaudio.FmAudio", false, FancyMenu.class.getClassLoader());
+//            return true;
+//        } catch (Exception ignored) {}
+//        return false;
+//    }
 
     public static void printInfoLog() {
         if (isOptiFineLoaded()) LOGGER.info("[FANCYMENU] OptiFine found! Will try to fix incompatibilities!");
