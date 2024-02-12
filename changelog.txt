@@ -6,6 +6,9 @@ CHANGELOG | FANCYMENU v3.0.7 [ W I P - NOT PUBLIC YET! ]
 - Fixed Custom GUIs not correctly applying some of the settings configured in the Build/Edit Custom GUI screen
 - Fixed tooltips of buttons and sliders sometimes stay visible after the button/slider vanished
 - Fixed "Server MOTD" placeholder not working for MOTDs with only one line
+- Fixed unable to hide Customization Overlay in some mod screens
+  - This fixes the incompatibility with the Pixelmon mod
+  - This could also fix the "bug" that makes it look like FancyMenu's shortcuts aren't working (they work, but nothing happens, because the overlay stays visible)
 - The "Custom Screen Title" entry in the editor is now disabled for Custom GUIs, since it doesn't work for them anyways
 - The "Header/Footer Customizations" entry in the editor is now disabled for Custom GUIs, since Custom GUIs don't have headers/footers
 - Reduced amount of sub-menus to set a button/slider background/handle texture
