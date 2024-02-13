@@ -10,12 +10,15 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import java.awt.*;
 import java.util.Objects;
 
 public class RenderingUtils {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     //TODO übernehmen
     /**
@@ -77,17 +80,41 @@ public class RenderingUtils {
     }
 
     //TODO übernehmen
-    public static void blitNineSliced(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, int x, int y, int renderWidth, int renderHeight, int borderX, int borderY, int texPartWidth, int texPartHeight, int texOffsetX, int texOffsetY) {
-        if ((renderWidth <= 0) || (renderHeight <= 0) || (texPartWidth <= 0) || (texPartHeight <= 0)) return;
-        //TODO remove debug
-        LogManager.getLogger().info("################## NINE-SLICED: texPartWidth: " + texPartWidth + " | textPartHeight: " + texPartHeight + " | texOffX: " + texOffsetX + " | texOffY: " + texOffsetY + " | renderWidth: " + renderWidth + " | renderHeight: " + renderHeight + " | borderX: " + borderX + " | borderY: " + borderY);
-        graphics.blitNineSliced(location, x, y, renderWidth, renderHeight, borderX, borderY, texPartWidth, texPartHeight, texOffsetX, texOffsetY);
+    public static void blitNineSlicedCustom(@NotNull GuiGraphics graphics, ResourceLocation location, int x, int y, int renderWidth, int renderHeight, int borderLeft, int borderTop, int borderRight, int borderBottom, int texPartWidth, int texPartHeight, int texOffsetX, int texOffsetY, int texWidth, int texHeight) {
+
+        //TODO alle hier und in blitRepeat auf längere (richtige) blit methode umstellen (wie in top-left corner)
+        //TODO alle hier und in blitRepeat auf längere (richtige) blit methode umstellen (wie in top-left corner)
+        //TODO alle hier und in blitRepeat auf längere (richtige) blit methode umstellen (wie in top-left corner)
+        //TODO alle hier und in blitRepeat auf längere (richtige) blit methode umstellen (wie in top-left corner)
+
+        //Top-left corner
+//        graphics.blit(location, x, y, texOffsetX, texOffsetY, borderLeft, borderTop, borderLeft, borderTop);
+        graphics.blit(location, x, y, borderLeft, borderTop, (float)texOffsetX, (float)texOffsetY, borderLeft, borderTop, texWidth, texHeight);
+        //Top-right corner
+        graphics.blit(location, x + renderWidth - borderRight, y, texOffsetX + texPartWidth - borderRight, texOffsetY, borderRight, borderTop, borderRight, borderTop);
+        //Bottom-left corner
+        graphics.blit(location, x, y + renderHeight - borderBottom, texOffsetX, texOffsetY + texPartHeight - borderBottom, borderLeft, borderBottom, borderLeft, borderBottom);
+        //Bottom-right corner
+        graphics.blit(location, x + renderWidth - borderRight, y + renderHeight - borderBottom, texOffsetX + texPartWidth - borderRight, texOffsetY + texPartHeight - borderBottom, borderRight, borderBottom, borderRight, borderBottom);
+
+        //Top edge
+//        blitRepeat(graphics, location, (x + borderLeft), y, (renderWidth - borderLeft - borderRight), borderTop, (texPartWidth - borderLeft - borderRight), borderTop, (texOffsetX + borderLeft), texOffsetY, (texPartWidth - borderLeft - borderRight), borderTop);
+//        //Bottom edge
+//        blitRepeat(graphics, location, (x + borderLeft), (y + renderHeight - borderBottom), (renderWidth - borderLeft - borderRight), borderBottom, (texPartWidth - borderLeft - borderRight), borderBottom, (texOffsetX + borderLeft), (texOffsetY + texPartHeight - borderBottom), (texPartWidth - borderLeft - borderRight), borderBottom);
+//        //Left edge
+//        blitRepeat(graphics, location, x, (y + borderTop), borderLeft, (renderHeight - borderTop - borderBottom), borderLeft, (texPartHeight - borderTop - borderBottom), texOffsetX, (texOffsetY + borderTop), borderLeft, (texPartHeight - borderTop - borderBottom));
+//        //Right edge
+//        blitRepeat(graphics, location, (x + renderWidth - borderRight), (y + borderTop), borderRight, (renderHeight - borderTop - borderBottom), borderRight, (texPartHeight - borderTop - borderBottom), (texOffsetX + texPartWidth - borderRight), (texOffsetY + borderTop), borderRight, (texPartHeight - borderTop - borderBottom));
+
+        //Middle part
+        blitRepeat(graphics, location, (x + borderLeft), (y + borderTop), (renderWidth - borderLeft - borderRight), (renderHeight - borderTop - borderBottom), (texPartWidth - borderLeft - borderRight), (texPartHeight - borderTop - borderBottom), (texOffsetX + borderLeft), (texOffsetY + borderTop), (texPartWidth - borderLeft - borderRight), (texPartHeight - borderTop - borderBottom));
+
     }
 
-    //TODO übernehmen
-    public static void blitNineSliced(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, int x, int y, int renderWidth, int renderHeight, int borderX, int borderY, int texWidth, int texHeight) {
-        blitNineSliced(graphics, location, x, y, renderWidth, renderHeight, borderX, borderY, texWidth, texHeight, 0, 0);
-    }
+
+
+
+
 
     public static float getPartialTick() {
         return Minecraft.getInstance().isPaused() ? ((IMixinMinecraft)Minecraft.getInstance()).getPausePartialTickFancyMenu() : Minecraft.getInstance().getFrameTime();

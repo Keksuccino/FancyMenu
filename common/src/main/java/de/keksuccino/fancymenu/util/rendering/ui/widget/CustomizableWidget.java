@@ -68,7 +68,7 @@ public interface CustomizableWidget {
                 RenderSystem.enableBlend();
                 //TODO übernehmen
                 if (this.isNineSliceCustomBackgroundTexture_FancyMenu()) {
-                    RenderingUtils.blitNineSliced(graphics, location, x, y, width, height, this.getNineSliceCustomBackgroundBorderX_FancyMenu(), this.getNineSliceCustomBackgroundBorderY_FancyMenu(), customBackground.getWidth(), customBackground.getHeight(), 0, 0);
+                    RenderingUtils.blitNineSlicedCustom(graphics, location, x, y, width, height, getNineSliceCustomBackgroundBorderX_FancyMenu(), getNineSliceCustomBackgroundBorderY_FancyMenu(), getNineSliceCustomBackgroundBorderX_FancyMenu(), getNineSliceCustomBackgroundBorderY_FancyMenu(), customBackground.getWidth(), customBackground.getHeight(), 0, 0, customBackground.getWidth(), customBackground.getHeight());
                 } else {
                     graphics.blit(location, x, y, 0.0F, 0.0F, width, height, width, height);
                 }
