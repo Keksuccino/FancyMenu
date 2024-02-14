@@ -17,6 +17,34 @@ import org.jetbrains.annotations.Nullable;
 @ClassExtender(AbstractSliderButton.class)
 public interface CustomizableSlider {
 
+    //TODO übernehmen
+
+    void setNineSliceCustomSliderBackground_FancyMenu(boolean nineSlice);
+
+    boolean isNineSliceCustomSliderBackground_FancyMenu();
+
+    void setNineSliceSliderBackgroundBorderX_FancyMenu(int borderX);
+
+    int getNineSliceSliderBackgroundBorderX_FancyMenu();
+
+    void setNineSliceSliderBackgroundBorderY_FancyMenu(int borderY);
+
+    int getNineSliceSliderBackgroundBorderY_FancyMenu();
+
+    void setNineSliceCustomSliderHandle_FancyMenu(boolean nineSlice);
+
+    boolean isNineSliceCustomSliderHandle_FancyMenu();
+
+    void setNineSliceSliderHandleBorderX_FancyMenu(int borderX);
+
+    int getNineSliceSliderHandleBorderX_FancyMenu();
+
+    void setNineSliceSliderHandleBorderY_FancyMenu(int borderY);
+
+    int getNineSliceSliderHandleBorderY_FancyMenu();
+
+    //-----------------------------
+
     void setCustomSliderBackgroundNormalFancyMenu(@Nullable RenderableResource background);
 
     @Nullable
@@ -32,23 +60,35 @@ public interface CustomizableSlider {
      */
     default boolean renderSliderBackgroundFancyMenu(GuiGraphics graphics, AbstractSliderButton widget, boolean canChangeValue) {
         ResourceLocation location = null;
+        //TODO übernehmen
+        RenderableResource texture = null;
         if (widget.isFocused() && !canChangeValue) {
             if (this.getCustomSliderBackgroundNormalFancyMenu() instanceof PlayableResource p) p.pause();
             if (this.getCustomSliderBackgroundHighlightedFancyMenu() != null) {
                 if (this.getCustomSliderBackgroundHighlightedFancyMenu() instanceof PlayableResource p) p.play();
+                //TODO übernehmen
+                texture = this.getCustomSliderBackgroundHighlightedFancyMenu();
                 location = this.getCustomSliderBackgroundHighlightedFancyMenu().getResourceLocation();
             }
         } else {
             if (this.getCustomSliderBackgroundHighlightedFancyMenu() instanceof PlayableResource p) p.pause();
             if (this.getCustomSliderBackgroundNormalFancyMenu() != null) {
                 if (this.getCustomSliderBackgroundNormalFancyMenu() instanceof PlayableResource p) p.play();
+                //TODO übernehmen
+                texture = this.getCustomSliderBackgroundNormalFancyMenu();
                 location = this.getCustomSliderBackgroundNormalFancyMenu().getResourceLocation();
             }
         }
         if (location != null) {
             graphics.setColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)this).getAlphaFancyMenu());
             RenderSystem.enableBlend();
-            graphics.blit(location, widget.getX(), widget.getY(), 0.0F, 0.0F, widget.getWidth(), widget.getHeight(), widget.getWidth(), widget.getHeight());
+            //TODO übernehmen
+            if (this.isNineSliceCustomSliderBackground_FancyMenu()) {
+                RenderingUtils.blitNineSliced(graphics, location, widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight(), this.getNineSliceSliderBackgroundBorderX_FancyMenu(), this.getNineSliceSliderBackgroundBorderY_FancyMenu(), this.getNineSliceSliderBackgroundBorderX_FancyMenu(), this.getNineSliceSliderBackgroundBorderY_FancyMenu(), texture.getWidth(), texture.getHeight(), 0, 0, texture.getWidth(), texture.getHeight());
+            } else {
+                graphics.blit(location, widget.getX(), widget.getY(), 0.0F, 0.0F, widget.getWidth(), widget.getHeight(), widget.getWidth(), widget.getHeight());
+            }
+            //----------------------
             RenderingUtils.resetShaderColor(graphics);
             return false;
         }

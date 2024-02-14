@@ -34,11 +34,44 @@ public class ImageEditorElement extends AbstractEditorElement {
         }).setIcon(ContextMenu.IconFactory.getIcon("image"));
 
         //TODO übernehmen
+
+        this.rightClickMenu.addSeparatorEntry("separator_before_repeat_texture");
+
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "repeat_texture",
-                ImageEditorElement.class,
-                consumes -> consumes.getElement().repeat,
-                (imageEditorElement, aBoolean) -> imageEditorElement.getElement().repeat = aBoolean,
-                "fancymenu.elements.image.repeat");
+                        ImageEditorElement.class,
+                        consumes -> consumes.getElement().repeat,
+                        (imageEditorElement, aBoolean) -> imageEditorElement.getElement().repeat = aBoolean,
+                        "fancymenu.elements.image.repeat")
+                .setIsActiveSupplier((menu, entry) -> !this.getElement().nineSlice)
+                .setStackable(false);
+
+        this.rightClickMenu.addSeparatorEntry("separator_before_nine_slice_settings");
+
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "nine_slice_texture",
+                        ImageEditorElement.class,
+                        consumes -> consumes.getElement().nineSlice,
+                        (imageEditorElement, aBoolean) -> imageEditorElement.getElement().nineSlice = aBoolean,
+                        "fancymenu.elements.image.nine_slice")
+                .setIsActiveSupplier((menu, entry) -> !this.getElement().repeat)
+                .setStackable(false);
+
+        this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "nine_slice_border_x",
+                        ImageEditorElement.class,
+                        consumes -> consumes.getElement().nineSliceBorderX,
+                        (imageEditorElement, integer) -> imageEditorElement.getElement().nineSliceBorderX = integer,
+                        Component.translatable("fancymenu.elements.image.nine_slice.border_x"), true, 5, null, null)
+                .setStackable(false)
+                .setIsActiveSupplier((menu, entry) -> !this.getElement().repeat);
+
+        this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "nine_slice_border_y",
+                        ImageEditorElement.class,
+                        consumes -> consumes.getElement().nineSliceBorderY,
+                        (imageEditorElement, integer) -> imageEditorElement.getElement().nineSliceBorderY = integer,
+                        Component.translatable("fancymenu.elements.image.nine_slice.border_y"), true, 5, null, null)
+                .setStackable(false)
+                .setIsActiveSupplier((menu, entry) -> !this.getElement().repeat);
+
+        //--------------------------------------
 
         this.rightClickMenu.addSeparatorEntry("image_separator_1");
 

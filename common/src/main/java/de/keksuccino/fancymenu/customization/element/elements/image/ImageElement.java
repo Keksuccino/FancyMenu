@@ -8,7 +8,6 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,12 +17,15 @@ import org.jetbrains.annotations.Nullable;
 public class ImageElement extends AbstractElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ResourceLocation MISSING = TextureManager.INTENTIONAL_MISSING_TEXTURE;
 
     @Nullable
     public ResourceSupplier<ITexture> textureSupplier;
     //TODO übernehmen
     public boolean repeat = false;
+    public boolean nineSlice = false;
+    public int nineSliceBorderX = 5;
+    public int nineSliceBorderY = 5;
+    //------------------------
 
     public ImageElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -46,14 +48,17 @@ public class ImageElement extends AbstractElement {
                 if (loc != null) {
                     //TODO übernehmen
                     if (this.repeat) {
-                        RenderingUtils.blitRepeat(graphics, loc, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight());
+                        RenderingUtils.blitRepeat(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight());
+                    } else if (this.nineSlice) {
+                        RenderingUtils.blitNineSliced(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.nineSliceBorderX, this.nineSliceBorderY, this.nineSliceBorderX, this.nineSliceBorderY, t.getWidth(), t.getHeight(), 0, 0, t.getWidth(), t.getHeight());
                     } else {
                         graphics.blit(loc, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
                     }
                     //----------------------
                 }
             } else if (isEditor()) {
-                graphics.blit(MISSING, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+                //TODO übernehmen
+                RenderingUtils.renderMissing(graphics, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
             }
 
             RenderingUtils.resetShaderColor(graphics);

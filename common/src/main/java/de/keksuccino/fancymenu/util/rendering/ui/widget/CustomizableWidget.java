@@ -67,8 +67,10 @@ public interface CustomizableWidget {
                 graphics.setColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)widget).getAlphaFancyMenu());
                 RenderSystem.enableBlend();
                 //TODO übernehmen
-                if (this.isNineSliceCustomBackgroundTexture_FancyMenu()) {
-                    RenderingUtils.blitNineSlicedCustom(graphics, location, x, y, width, height, getNineSliceCustomBackgroundBorderX_FancyMenu(), getNineSliceCustomBackgroundBorderY_FancyMenu(), getNineSliceCustomBackgroundBorderX_FancyMenu(), getNineSliceCustomBackgroundBorderY_FancyMenu(), customBackground.getWidth(), customBackground.getHeight(), 0, 0, customBackground.getWidth(), customBackground.getHeight());
+                if ((widget instanceof CustomizableSlider s) && s.isNineSliceCustomSliderHandle_FancyMenu()) {
+                    RenderingUtils.blitNineSliced(graphics, location, x, y, width, height, s.getNineSliceSliderHandleBorderX_FancyMenu(), s.getNineSliceSliderHandleBorderY_FancyMenu(), s.getNineSliceSliderHandleBorderX_FancyMenu(), s.getNineSliceSliderHandleBorderY_FancyMenu(), customBackground.getWidth(), customBackground.getHeight(), 0, 0, customBackground.getWidth(), customBackground.getHeight());
+                } else if (!(widget instanceof CustomizableSlider) && this.isNineSliceCustomBackgroundTexture_FancyMenu()) {
+                    RenderingUtils.blitNineSliced(graphics, location, x, y, width, height, getNineSliceCustomBackgroundBorderX_FancyMenu(), getNineSliceCustomBackgroundBorderY_FancyMenu(), getNineSliceCustomBackgroundBorderX_FancyMenu(), getNineSliceCustomBackgroundBorderY_FancyMenu(), customBackground.getWidth(), customBackground.getHeight(), 0, 0, customBackground.getWidth(), customBackground.getHeight());
                 } else {
                     graphics.blit(location, x, y, 0.0F, 0.0F, width, height, width, height);
                 }
@@ -183,15 +185,15 @@ public interface CustomizableWidget {
 
     //TODO übernehmen
 
-    void setNineSliceCustomBackgroundTexture_FancyMenu(boolean repeat);
+    void setNineSliceCustomBackground_FancyMenu(boolean repeat);
 
     boolean isNineSliceCustomBackgroundTexture_FancyMenu();
 
-    void setNineSliceCustomBackgroundBorderX_FancyMenu(int borderX);
+    void setNineSliceBorderX_FancyMenu(int borderX);
 
     int getNineSliceCustomBackgroundBorderX_FancyMenu();
 
-    void setNineSliceCustomBackgroundBorderY_FancyMenu(int borderY);
+    void setNineSliceBorderY_FancyMenu(int borderY);
 
     int getNineSliceCustomBackgroundBorderY_FancyMenu();
 

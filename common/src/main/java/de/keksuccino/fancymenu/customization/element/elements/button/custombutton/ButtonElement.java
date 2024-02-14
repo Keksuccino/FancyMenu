@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinButton;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -221,9 +222,15 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
         if (this.getWidget() instanceof CustomizableWidget w) {
             //TODO übernehmen
-            w.setNineSliceCustomBackgroundTexture_FancyMenu(this.nineSliceCustomBackground);
-            w.setNineSliceCustomBackgroundBorderX_FancyMenu(this.nineSliceBorderX);
-            w.setNineSliceCustomBackgroundBorderY_FancyMenu(this.nineSliceBorderY);
+            if (this.getWidget() instanceof CustomizableSlider s) {
+                s.setNineSliceCustomSliderBackground_FancyMenu(this.nineSliceCustomBackground);
+                s.setNineSliceSliderBackgroundBorderX_FancyMenu(this.nineSliceBorderX);
+                s.setNineSliceSliderBackgroundBorderY_FancyMenu(this.nineSliceBorderY);
+            } else {
+                w.setNineSliceCustomBackground_FancyMenu(this.nineSliceCustomBackground);
+                w.setNineSliceBorderX_FancyMenu(this.nineSliceBorderX);
+                w.setNineSliceBorderY_FancyMenu(this.nineSliceBorderY);
+            }
             //--------------------------
             w.setCustomBackgroundNormalFancyMenu(backNormal);
             w.setCustomBackgroundHoverFancyMenu(backHover);

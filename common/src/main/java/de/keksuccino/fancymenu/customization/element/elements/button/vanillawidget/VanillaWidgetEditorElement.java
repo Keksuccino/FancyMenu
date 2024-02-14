@@ -90,6 +90,28 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements H
                     //----------------------------------
 
                 }
+
+                //TODO übernehmen
+
+                buttonBackgroundMenu.addSeparatorEntry("separator_before_nine_slider_slider_handle_settings");
+
+                this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_slider_handle", VanillaWidgetEditorElement.class,
+                        consumes -> consumes.getElement().nineSliceSliderHandle,
+                        (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().nineSliceSliderHandle = aBoolean,
+                        "fancymenu.elements.slider.v2.handle.textures.nine_slice");
+
+                this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_slider_handle_border_x", VanillaWidgetEditorElement.class,
+                        consumes -> consumes.getElement().nineSliceSliderHandleBorderX,
+                        (buttonEditorElement, integer) -> buttonEditorElement.getElement().nineSliceSliderHandleBorderX = integer,
+                        Component.translatable("fancymenu.elements.slider.v2.handle.textures.nine_slice.border_x"), true, 5, null, null);
+
+                this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_slider_handle_border_y", VanillaWidgetEditorElement.class,
+                        consumes -> consumes.getElement().nineSliceSliderHandleBorderY,
+                        (buttonEditorElement, integer) -> buttonEditorElement.getElement().nineSliceSliderHandleBorderY = integer,
+                        Component.translatable("fancymenu.elements.slider.v2.handle.textures.nine_slice.border_y"), true, 5, null, null);
+
+                //-----------------------------------
+
             }
 
         }

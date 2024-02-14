@@ -33,6 +33,11 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
     public ResourceSupplier<ITexture> sliderBackgroundTextureHighlighted;
     public String sliderBackgroundAnimationNormal;
     public String sliderBackgroundAnimationHighlighted;
+    //TODO übernehmen
+    public boolean nineSliceSliderHandle = false;
+    public int nineSliceSliderHandleBorderX = 5;
+    public int nineSliceSliderHandleBorderY = 5;
+    //---------------------
     protected boolean automatedButtonClicksDone = false;
 
     public VanillaWidgetElement(ElementBuilder<ButtonElement, ButtonEditorElement> builder) {
@@ -104,6 +109,11 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
         }
 
         if (this.getWidget() instanceof CustomizableSlider w) {
+            //TODO übernehmen
+            w.setNineSliceCustomSliderHandle_FancyMenu(this.nineSliceSliderHandle);
+            w.setNineSliceSliderHandleBorderX_FancyMenu(this.nineSliceSliderHandleBorderX);
+            w.setNineSliceSliderHandleBorderY_FancyMenu(this.nineSliceSliderHandleBorderY);
+            //------------------
             w.setCustomSliderBackgroundNormalFancyMenu(sliderBackNormal);
             w.setCustomSliderBackgroundHighlightedFancyMenu(sliderBackHighlighted);
         }

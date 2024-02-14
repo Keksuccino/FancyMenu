@@ -101,9 +101,9 @@ public class ButtonEditorElement extends AbstractEditorElement {
                         "fancymenu.helper.editor.items.buttons.textures.restart_animated_on_hover")
                 .setStackable(true);
 
-        buttonBackgroundMenu.addSeparatorEntry("separator_after_restart_animation_on_hover");
-
         //TODO übernehmen
+
+        buttonBackgroundMenu.addSeparatorEntry("separator_after_restart_animation_on_hover");
 
         this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_background", ButtonEditorElement.class,
                 consumes -> consumes.getElement().nineSliceCustomBackground,

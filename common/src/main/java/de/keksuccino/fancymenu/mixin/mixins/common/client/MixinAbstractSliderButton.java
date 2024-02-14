@@ -35,6 +35,20 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
     private RenderableResource customSliderBackgroundHighlightedFancyMenu;
     @Unique
     private boolean sliderInitializedFancyMenu = false;
+    //TODO übernehmen
+    @Unique
+    private boolean nineSliceSliderBackground_FancyMenu = false;
+    @Unique
+    private int nineSliceSliderBackgroundBorderX_FancyMenu = 5;
+    @Unique
+    private int nineSliceSliderBackgroundBorderY_FancyMenu = 5;
+    @Unique
+    private boolean nineSliceSliderHandle_FancyMenu = false;
+    @Unique
+    private int nineSliceSliderHandleBorderX_FancyMenu = 5;
+    @Unique
+    private int nineSliceSliderHandleBorderY_FancyMenu = 5;
+    //---------------------
 
     public MixinAbstractSliderButton(int $$0, int $$1, int $$2, int $$3, Component $$4) {
         super($$0, $$1, $$2, $$3, $$4);
@@ -89,6 +103,82 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
         });
 
     }
+
+    //TODO übernehmen
+
+    @Unique
+    @Override
+    public void setNineSliceCustomSliderBackground_FancyMenu(boolean nineSlice) {
+        this.nineSliceSliderBackground_FancyMenu = nineSlice;
+    }
+
+    @Unique
+    @Override
+    public boolean isNineSliceCustomSliderBackground_FancyMenu() {
+        return this.nineSliceSliderBackground_FancyMenu;
+    }
+
+    @Unique
+    @Override
+    public void setNineSliceSliderBackgroundBorderX_FancyMenu(int nineSliceSliderBorderX_FancyMenu) {
+        this.nineSliceSliderBackgroundBorderX_FancyMenu = nineSliceSliderBorderX_FancyMenu;
+    }
+
+    @Unique
+    @Override
+    public int getNineSliceSliderBackgroundBorderX_FancyMenu() {
+        return nineSliceSliderBackgroundBorderX_FancyMenu;
+    }
+
+    @Unique
+    @Override
+    public void setNineSliceSliderBackgroundBorderY_FancyMenu(int nineSliceSliderBorderY_FancyMenu) {
+        this.nineSliceSliderBackgroundBorderY_FancyMenu = nineSliceSliderBorderY_FancyMenu;
+    }
+
+    @Unique
+    @Override
+    public int getNineSliceSliderBackgroundBorderY_FancyMenu() {
+        return nineSliceSliderBackgroundBorderY_FancyMenu;
+    }
+
+    @Unique
+    @Override
+    public void setNineSliceCustomSliderHandle_FancyMenu(boolean nineSlice) {
+        this.nineSliceSliderHandle_FancyMenu = nineSlice;
+    }
+
+    @Unique
+    @Override
+    public boolean isNineSliceCustomSliderHandle_FancyMenu() {
+        return this.nineSliceSliderHandle_FancyMenu;
+    }
+
+    @Unique
+    @Override
+    public void setNineSliceSliderHandleBorderX_FancyMenu(int nineSliceSliderHandleBorderX_FancyMenu) {
+        this.nineSliceSliderHandleBorderX_FancyMenu = nineSliceSliderHandleBorderX_FancyMenu;
+    }
+
+    @Unique
+    @Override
+    public int getNineSliceSliderHandleBorderX_FancyMenu() {
+        return nineSliceSliderHandleBorderX_FancyMenu;
+    }
+
+    @Unique
+    @Override
+    public void setNineSliceSliderHandleBorderY_FancyMenu(int nineSliceSliderHandleBorderY_FancyMenu) {
+        this.nineSliceSliderHandleBorderY_FancyMenu = nineSliceSliderHandleBorderY_FancyMenu;
+    }
+
+    @Unique
+    @Override
+    public int getNineSliceSliderHandleBorderY_FancyMenu() {
+        return nineSliceSliderHandleBorderY_FancyMenu;
+    }
+
+    //-------------------------------
 
     @Unique
     @Override

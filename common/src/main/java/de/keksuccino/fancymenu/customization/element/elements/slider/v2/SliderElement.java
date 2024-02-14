@@ -60,6 +60,14 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     public String sliderBackgroundAnimationHighlighted;
     public boolean loopBackgroundAnimations = true;
     public boolean restartBackgroundAnimationsOnHover = true;
+    //TODO übernehmen
+    public boolean nineSliceCustomBackground = false;
+    public int nineSliceBorderX = 5;
+    public int nineSliceBorderY = 5;
+    public boolean nineSliceSliderHandle = false;
+    public int nineSliceSliderHandleBorderX = 5;
+    public int nineSliceSliderHandleBorderY = 5;
+    //-----------------------
     @NotNull
     public GenericExecutableBlock executableBlock = new GenericExecutableBlock();
 
@@ -249,6 +257,16 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         }
 
         if (this.slider instanceof CustomizableWidget w) {
+            //TODO übernehmen
+            if (this.slider instanceof CustomizableSlider s) {
+                s.setNineSliceCustomSliderBackground_FancyMenu(this.nineSliceCustomBackground);
+                s.setNineSliceSliderBackgroundBorderX_FancyMenu(this.nineSliceBorderX);
+                s.setNineSliceSliderBackgroundBorderY_FancyMenu(this.nineSliceBorderY);
+                s.setNineSliceCustomSliderHandle_FancyMenu(this.nineSliceSliderHandle);
+                s.setNineSliceSliderHandleBorderX_FancyMenu(this.nineSliceSliderHandleBorderX);
+                s.setNineSliceSliderHandleBorderY_FancyMenu(this.nineSliceSliderHandleBorderY);
+            }
+            //--------------------------
             w.setCustomBackgroundNormalFancyMenu(handleTextureNormal);
             w.setCustomBackgroundHoverFancyMenu(handleTextureHover);
             w.setCustomBackgroundInactiveFancyMenu(handleTextureInactive);

@@ -479,7 +479,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 
 	@Unique
 	@Override
-	public void setNineSliceCustomBackgroundTexture_FancyMenu(boolean repeat) {
+	public void setNineSliceCustomBackground_FancyMenu(boolean repeat) {
 		this.nineSliceCustomBackgroundTexture_FancyMenu = repeat;
 	}
 
@@ -491,7 +491,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 
 	@Unique
 	@Override
-	public void setNineSliceCustomBackgroundBorderX_FancyMenu(int borderX) {
+	public void setNineSliceBorderX_FancyMenu(int borderX) {
 		this.nineSliceCustomBackgroundBorderX_FancyMenu = borderX;
 	}
 
@@ -503,7 +503,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 
 	@Unique
 	@Override
-	public void setNineSliceCustomBackgroundBorderY_FancyMenu(int borderY) {
+	public void setNineSliceBorderY_FancyMenu(int borderY) {
 		this.nineSliceCustomBackgroundBorderY_FancyMenu = borderY;
 	}
 
