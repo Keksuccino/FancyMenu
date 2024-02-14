@@ -17,6 +17,8 @@ CHANGELOG | FANCYMENU v3.0.7 [ W I P - NOT PUBLIC YET! ]
 - Added "Repeat Texture" mode to Image element that lets you render the image as seemless/repeating texture (like the default Minecraft dirt menu background)
 - Added "Repeat Texture" mode to Image menu background that lets you render the image as seemless/repeating texture (like the default Minecraft dirt menu background)
 - Added "Repeat Texture" mode to header/footer textures that lets you render the header/footer as seemless/repeating texture (like the default Minecraft dirt menu background)
+- Added "Nine-Slicing" mode to Image element
+- Added "Nine-Slicing" mode to Vanilla Button/Slider, Custom Button and Custom Slider elements
 - Excluded "Skin Swapper" mod screens from customization
  
 %changelog:end%
