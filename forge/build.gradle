@@ -78,7 +78,7 @@ dependencies {
     minecraftLibrary(jarJar("com.github.Keksuccino:japng:0.5.3")) {
         jarJar.ranged(it, "[0.5.3,)")
     }
-    implementation fg.deobf("maven.modrinth:melody:1.0.0-1.20.1-1.20.4-forge")
+    implementation fg.deobf("maven.modrinth:melody:1.0.3-1.20.1-1.20.4-forge")
 //    implementation fg.deobf("curse.maven:pixelmon-389487:4782028")
 }
 
