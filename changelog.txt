@@ -1,6 +1,7 @@
 
 CHANGELOG | FANCYMENU v3.0.7 [ W I P - NOT PUBLIC YET! ]
 
+- Lowered minimum required MC 1.20.1 Forge version to 47.1.47
 - Fixed Choose Resource screen adding "/config/fancymenu/assets/" to non-local sources when editing them in the text editor
 - Fixed Custom GUIs showing their identifier as title if no title was set
 - Fixed Custom GUIs not correctly applying some of the settings configured in the Build/Edit Custom GUI screen
