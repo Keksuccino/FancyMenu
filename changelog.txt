@@ -20,6 +20,10 @@ CHANGELOG | FANCYMENU v3.0.7 [ W I P - NOT PUBLIC YET! ]
 - Added "Nine-Slicing" mode to Image element
 - Added "Nine-Slicing" mode to Vanilla Button/Slider, Custom Button and Custom Slider elements
 - Excluded "Skin Swapper" mod screens from customization
+
+Known Issues:
+
+- "ukulib" is currently partly incompatible with FancyMenu in MC 1.20.4 and since I can't fix this on my end, I opened an issue in ukulib's GitHub repo
  
 %changelog:end%
 
