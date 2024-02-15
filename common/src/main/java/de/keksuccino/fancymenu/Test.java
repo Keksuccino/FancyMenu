@@ -13,7 +13,6 @@ public class Test {
 
 //    private static final ResourceSupplier<ITexture> IMAGE = ResourceSupplier.image(ResourceSource.of("https://www.alleycat.org/wp-content/uploads/2019/03/FELV-cat.jpg", ResourceSourceType.WEB).getSourceWithPrefix());
 //
-//    //TODO remove debug
 //    @EventListener
 //    public void onRenderScreenPost(RenderScreenEvent.Post e) {
 //

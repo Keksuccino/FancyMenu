@@ -26,6 +26,12 @@ dependencies {
     modImplementation "maven.modrinth:yacl:3.2.1+1.20-fabric"
     modImplementation "maven.modrinth:chat-heads:68f3pu0P"
     modImplementation "maven.modrinth:midnightlib:1.4.1-fabric"
+    modImplementation "curse.maven:modernfix-790626:5077297"
+    modImplementation "maven.modrinth:ukulib:0.7.0+1.20"
+    modImplementation "maven.modrinth:sodium:mc1.20.1-0.5.8"
+    modImplementation "maven.modrinth:lithium:mc1.20.1-0.11.2"
+    modImplementation "maven.modrinth:ferrite-core:unerR5MN"
+//    modImplementation "maven.modrinth:iris:1.6.17+1.20.1"
 }
 
 loom {
