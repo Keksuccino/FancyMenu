@@ -3,7 +3,7 @@ plugins {
     id 'java'
     id 'idea'
     id 'maven-publish'
-    id 'fabric-loom' version '1.4-SNAPSHOT'
+    id 'fabric-loom' version '1.5-SNAPSHOT'
 }
 
 base {
@@ -23,6 +23,11 @@ dependencies {
     modImplementation "maven.modrinth:melody:1.0.1-1.20.1-1.20.4-fabric"
     modImplementation "maven.modrinth:konkrete:1.8.0-1.20.4-fabric"
     modImplementation "maven.modrinth:modmenu:9.0.0"
+//    modImplementation "maven.modrinth:modernfix:T8GvLNSz"
+//    modImplementation "maven.modrinth:ukulib:1.1.1+1.20.3"
+//    modImplementation "maven.modrinth:sodium:mc1.20.4-0.5.8"
+//    modImplementation "maven.modrinth:lithium:mc1.20.4-0.12.1"
+//    modImplementation "maven.modrinth:ferrite-core:pguEMpy9"
 }
 
 loom {
