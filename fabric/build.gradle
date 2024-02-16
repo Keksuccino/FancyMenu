@@ -22,6 +22,12 @@ dependencies {
     modImplementation "curse.maven:melody-938643:4970117"
     //This is only to fix the missing dependency error in-dev
     implementation group: 'ca.weblite', name: 'java-objc-bridge', version: '1.1'
+//    modImplementation "curse.maven:applied-energistics-2-wireless-terminals-459929:4854629"
+//    modImplementation "curse.maven:applied-energistics-2-223794:5014666"
+//    modImplementation "curse.maven:cloth-config-348521:4973443"
+//    include modApi('teamreborn:energy:2.3.0') {
+//        transitive = false
+//    }
 }
 
 loom {

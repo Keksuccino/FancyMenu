@@ -141,63 +141,65 @@ public class RenderingUtils extends GuiComponent {
         BufferUploader.drawWithShader($$10.end());
     }
 
-    public static void blitNineSliced(PoseStack $$0, int $$1, int $$2, int $$3, int $$4, int $$5, int $$6, int $$7, int $$8, int $$9) {
-        blitNineSliced($$0, $$1, $$2, $$3, $$4, $$5, $$5, $$5, $$5, $$6, $$7, $$8, $$9);
+    public static void blitNineSliced(PoseStack pose, int x, int y, int width, int height, int sliceSize, int uOffset, int vOffset, int textureWidth, int textureHeight) {
+        blitNineSliced(pose, x, y, width, height, sliceSize, sliceSize, sliceSize, sliceSize, uOffset, vOffset, textureWidth, textureHeight);
     }
 
-    public static void blitNineSliced(PoseStack $$0, int $$1, int $$2, int $$3, int $$4, int $$5, int $$6, int $$7, int $$8, int $$9, int $$10) {
-        blitNineSliced($$0, $$1, $$2, $$3, $$4, $$5, $$6, $$5, $$6, $$7, $$8, $$9, $$10);
+    public static void blitNineSliced(PoseStack pose, int x, int y, int width, int height, int sliceWidth, int sliceHeight, int uWidth, int vHeight, int textureX, int textureY) {
+        blitNineSliced(pose, x, y, width, height, sliceWidth, sliceHeight, sliceWidth, sliceHeight, uWidth, vHeight, textureX, textureY);
     }
 
-    public static void blitNineSliced(PoseStack $$0, int $$1, int $$2, int $$3, int $$4, int $$5, int $$6, int $$7, int $$8, int $$9, int $$10, int $$11, int $$12) {
-        $$5 = Math.min($$5, $$3 / 2);
-        $$7 = Math.min($$7, $$3 / 2);
-        $$6 = Math.min($$6, $$4 / 2);
-        $$8 = Math.min($$8, $$4 / 2);
-        if ($$3 == $$9 && $$4 == $$10) {
-            INSTANCE.blit($$0, $$1, $$2, $$11, $$12, $$3, $$4);
-        } else if ($$4 == $$10) {
-            INSTANCE.blit($$0, $$1, $$2, $$11, $$12, $$5, $$4);
-            blitRepeating($$0, $$1 + $$5, $$2, $$3 - $$7 - $$5, $$4, $$11 + $$5, $$12, $$9 - $$7 - $$5, $$10);
-            INSTANCE.blit($$0, $$1 + $$3 - $$7, $$2, $$11 + $$9 - $$7, $$12, $$7, $$4);
-        } else if ($$3 == $$9) {
-            INSTANCE.blit($$0, $$1, $$2, $$11, $$12, $$3, $$6);
-            blitRepeating($$0, $$1, $$2 + $$6, $$3, $$4 - $$8 - $$6, $$11, $$12 + $$6, $$9, $$10 - $$8 - $$6);
-            INSTANCE.blit($$0, $$1, $$2 + $$4 - $$8, $$11, $$12 + $$10 - $$8, $$3, $$8);
+    public static void blitNineSliced(PoseStack pose, int x, int y, int width, int height, int leftBorder, int topBorder, int rightBorder, int bottomBorder, int uWidth, int vHeight, int textureX, int textureY) {
+        //TODO übernehmen
+        if ((width <= 0) || (height <= 0) || (uWidth <= 0) || (vHeight <= 0)) return;
+        leftBorder = Math.min(leftBorder, width / 2);
+        rightBorder = Math.min(rightBorder, width / 2);
+        topBorder = Math.min(topBorder, height / 2);
+        bottomBorder = Math.min(bottomBorder, height / 2);
+        if (width == uWidth && height == vHeight) {
+            INSTANCE.blit(pose, x, y, textureX, textureY, width, height);
+        } else if (height == vHeight) {
+            INSTANCE.blit(pose, x, y, textureX, textureY, leftBorder, height);
+            blitRepeating(pose, x + leftBorder, y, width - rightBorder - leftBorder, height, textureX + leftBorder, textureY, uWidth - rightBorder - leftBorder, vHeight);
+            INSTANCE.blit(pose, x + width - rightBorder, y, textureX + uWidth - rightBorder, textureY, rightBorder, height);
+        } else if (width == uWidth) {
+            INSTANCE.blit(pose, x, y, textureX, textureY, width, topBorder);
+            blitRepeating(pose, x, y + topBorder, width, height - bottomBorder - topBorder, textureX, textureY + topBorder, uWidth, vHeight - bottomBorder - topBorder);
+            INSTANCE.blit(pose, x, y + height - bottomBorder, textureX, textureY + vHeight - bottomBorder, width, bottomBorder);
         } else {
-            INSTANCE.blit($$0, $$1, $$2, $$11, $$12, $$5, $$6);
-            blitRepeating($$0, $$1 + $$5, $$2, $$3 - $$7 - $$5, $$6, $$11 + $$5, $$12, $$9 - $$7 - $$5, $$6);
-            INSTANCE.blit($$0, $$1 + $$3 - $$7, $$2, $$11 + $$9 - $$7, $$12, $$7, $$6);
-            INSTANCE.blit($$0, $$1, $$2 + $$4 - $$8, $$11, $$12 + $$10 - $$8, $$5, $$8);
-            blitRepeating($$0, $$1 + $$5, $$2 + $$4 - $$8, $$3 - $$7 - $$5, $$8, $$11 + $$5, $$12 + $$10 - $$8, $$9 - $$7 - $$5, $$8);
-            INSTANCE.blit($$0, $$1 + $$3 - $$7, $$2 + $$4 - $$8, $$11 + $$9 - $$7, $$12 + $$10 - $$8, $$7, $$8);
-            blitRepeating($$0, $$1, $$2 + $$6, $$5, $$4 - $$8 - $$6, $$11, $$12 + $$6, $$5, $$10 - $$8 - $$6);
-            blitRepeating($$0, $$1 + $$5, $$2 + $$6, $$3 - $$7 - $$5, $$4 - $$8 - $$6, $$11 + $$5, $$12 + $$6, $$9 - $$7 - $$5, $$10 - $$8 - $$6);
-            blitRepeating($$0, $$1 + $$3 - $$7, $$2 + $$6, $$5, $$4 - $$8 - $$6, $$11 + $$9 - $$7, $$12 + $$6, $$7, $$10 - $$8 - $$6);
+            INSTANCE.blit(pose, x, y, textureX, textureY, leftBorder, topBorder);
+            blitRepeating(pose, x + leftBorder, y, width - rightBorder - leftBorder, topBorder, textureX + leftBorder, textureY, uWidth - rightBorder - leftBorder, topBorder);
+            INSTANCE.blit(pose, x + width - rightBorder, y, textureX + uWidth - rightBorder, textureY, rightBorder, topBorder);
+            INSTANCE.blit(pose, x, y + height - bottomBorder, textureX, textureY + vHeight - bottomBorder, leftBorder, bottomBorder);
+            blitRepeating(pose, x + leftBorder, y + height - bottomBorder, width - rightBorder - leftBorder, bottomBorder, textureX + leftBorder, textureY + vHeight - bottomBorder, uWidth - rightBorder - leftBorder, bottomBorder);
+            INSTANCE.blit(pose, x + width - rightBorder, y + height - bottomBorder, textureX + uWidth - rightBorder, textureY + vHeight - bottomBorder, rightBorder, bottomBorder);
+            blitRepeating(pose, x, y + topBorder, leftBorder, height - bottomBorder - topBorder, textureX, textureY + topBorder, leftBorder, vHeight - bottomBorder - topBorder);
+            blitRepeating(pose, x + leftBorder, y + topBorder, width - rightBorder - leftBorder, height - bottomBorder - topBorder, textureX + leftBorder, textureY + topBorder, uWidth - rightBorder - leftBorder, vHeight - bottomBorder - topBorder);
+            blitRepeating(pose, x + width - rightBorder, y + topBorder, leftBorder, height - bottomBorder - topBorder, textureX + uWidth - rightBorder, textureY + topBorder, rightBorder, vHeight - bottomBorder - topBorder);
         }
     }
 
-    public static void blitRepeating(PoseStack $$0, int $$1, int $$2, int $$3, int $$4, int $$5, int $$6, int $$7, int $$8) {
-        int $$9 = $$1;
-
-        int $$11;
-        for(IntIterator $$10 = slices($$3, $$7); $$10.hasNext(); $$9 += $$11) {
-            $$11 = $$10.nextInt();
-            int $$12 = ($$7 - $$11) / 2;
-            int $$13 = $$2;
-
+    public static void blitRepeating(PoseStack pose, int x, int y, int width, int height, int uOffset, int vOffset, int sourceWidth, int sourceHeight) {
+        //TODO übernehmen
+        if ((width <= 0) || (height <= 0) || (sourceWidth <= 0) || (sourceHeight <= 0)) return;
+        int i1 = x;
+        int i2;
+        for(IntIterator iterator = slices(width, sourceWidth); iterator.hasNext(); i1 += i2) {
+            i2 = iterator.nextInt();
+            int $$12 = (sourceWidth - i2) / 2;
+            int $$13 = y;
             int $$15;
-            for(IntIterator $$14 = slices($$4, $$8); $$14.hasNext(); $$13 += $$15) {
+            for(IntIterator $$14 = slices(height, sourceHeight); $$14.hasNext(); $$13 += $$15) {
                 $$15 = $$14.nextInt();
-                int $$16 = ($$8 - $$15) / 2;
-                INSTANCE.blit($$0, $$9, $$13, $$5 + $$12, $$6 + $$16, $$11, $$15);
+                int $$16 = (sourceHeight - $$15) / 2;
+                INSTANCE.blit(pose, i1, $$13, uOffset + $$12, vOffset + $$16, i2, $$15);
             }
         }
     }
 
-    private static IntIterator slices(int $$0, int $$1) {
-        int $$2 = Mth.positiveCeilDiv($$0, $$1);
-        return new Divisor($$0, $$2);
+    private static IntIterator slices(int target, int total) {
+        int i = Mth.positiveCeilDiv(target, total);
+        return new Divisor(target, i);
     }
 
     public static void enableScissor(int xStart, int yStart, int xEnd, int yEnd) {
