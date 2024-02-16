@@ -1,7 +1,22 @@
 
-CHANGELOG | FANCYMENU v3.0.7 [ W I P - NOT PUBLIC YET! ]
+CHANGELOG | FANCYMENU v3.1.0 [ W I P - NOT PUBLIC YET! ]
 
+- This update marks the end of FancyMenu v3's Public Beta phase! FMv3 is now considered STABLE!
+ 
 - Lowered minimum required MC 1.20.1 Forge version to 47.1.47
+- The "Custom Screen Title" entry in the editor is now disabled for Custom GUIs, since it doesn't work for them anyways
+- The "Header/Footer Customizations" entry in the editor is now disabled for Custom GUIs, since Custom GUIs don't have headers/footers
+- Reduced amount of sub-menus to set a button/slider background/handle texture
+- Improved the rotation logic of cubic panoramas (they should not randomly speed up anymore, but you maybe need to adjust your panorama's speed if it is too slow/fast now)
+- It is now possible to pre-load cubic panoramas and slideshows via the resource pre-loader (Customization -> Pre-Load Resources)
+- Local sources in the Manage Resource Pre-Load screen now show as short paths (not absolute paths anymore)
+- Added "start_rotation" property to cubic panoramas to set the rotation angle they should start at (value between 0 and 360)
+- Added "Repeat Texture" mode to Image element that lets you render tileable (seamless) images as repeating texture (like the default Minecraft dirt menu background)
+- Added "Repeat Texture" mode to Image menu background that lets you render tileable (seamless) images as repeating texture (like the default Minecraft dirt menu background)
+- Added "Repeat Texture" mode to menu header/footer that lets you render tileable (seamless) header/footer textures as repeating texture (like the default Minecraft dirt menu background)
+- Added "Nine-Slicing" mode to Image element
+- Added "Nine-Slicing" mode to Vanilla Button/Slider, Custom Button and Custom Slider elements
+- Excluded "Skin Swapper" mod screens from customization
 - Fixed Choose Resource screen adding "/config/fancymenu/assets/" to non-local sources when editing them in the text editor
 - Fixed Custom GUIs showing their identifier as title if no title was set
 - Fixed Custom GUIs not correctly applying some of the settings configured in the Build/Edit Custom GUI screen
@@ -10,19 +25,6 @@ CHANGELOG | FANCYMENU v3.0.7 [ W I P - NOT PUBLIC YET! ]
 - Fixed unable to hide Customization Overlay in some mod screens
   - This fixes the incompatibility with the Pixelmon mod
   - This could also fix the "bug" that makes it look like FancyMenu's shortcuts aren't working (they work, but nothing happens, because the overlay stays visible)
-- The "Custom Screen Title" entry in the editor is now disabled for Custom GUIs, since it doesn't work for them anyways
-- The "Header/Footer Customizations" entry in the editor is now disabled for Custom GUIs, since Custom GUIs don't have headers/footers
-- Reduced amount of sub-menus to set a button/slider background/handle texture
-- Improved the rotation logic of cubic panoramas (they should not randomly speed up anymore, but you maybe need to adjust your panorama's speed if it is too slow/fast now)
-- Added "start_rotation" property to cubic panoramas to set the rotation angle they should start at (value between 0 and 360)
-- Added "Repeat Texture" mode to Image element that lets you render tileable (seamless) images as repeating texture (like the default Minecraft dirt menu background)
-- Added "Repeat Texture" mode to Image menu background that lets you render tileable (seamless) images as repeating texture (like the default Minecraft dirt menu background)
-- Added "Repeat Texture" mode to menu header/footer that lets you render tileable (seamless) header/footer textures as repeating texture (like the default Minecraft dirt menu background)
-- Added "Nine-Slicing" mode to Image element
-- Added "Nine-Slicing" mode to Vanilla Button/Slider, Custom Button and Custom Slider elements
-- It is now possible to pre-load cubic panoramas and slideshows via the resource pre-loader (Customization -> Pre-Load Resources)
-- Local sources in the Manage Resource Pre-Load screen now show as short paths (not absolute paths anymore)
-- Excluded "Skin Swapper" mod screens from customization
 - Fixed conflict with "ukulib" (Fixed on ukulib's side in ukulib v1.1.2)
 - Fixed conflict with "Applied Energistics 2 Wireless Terminals" (and maybe base mod as well)
  
