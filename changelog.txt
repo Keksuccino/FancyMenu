@@ -22,6 +22,7 @@ CHANGELOG | FANCYMENU v3.0.7 [ W I P - NOT PUBLIC YET! ]
 - Added "Nine-Slicing" mode to Vanilla Button/Slider, Custom Button and Custom Slider elements
 - Excluded "Skin Swapper" mod screens from customization
 - Fixed conflict with "ukulib" (Fixed on ukulib's side in ukulib v1.1.2)
+- Fixed conflict with "Applied Energistics 2 Wireless Terminals" (and maybe base mod as well)
  
 %changelog:end%
 
