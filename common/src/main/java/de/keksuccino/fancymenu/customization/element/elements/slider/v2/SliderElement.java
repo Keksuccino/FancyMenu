@@ -67,6 +67,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     public boolean nineSliceSliderHandle = false;
     public int nineSliceSliderHandleBorderX = 5;
     public int nineSliceSliderHandleBorderY = 5;
+    public boolean navigatable = true;
     //-----------------------
     @NotNull
     public GenericExecutableBlock executableBlock = new GenericExecutableBlock();
@@ -153,6 +154,9 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (this.slider == null) return;
+
+        //TODO übernehmen
+        this.slider.setNavigatable(this.navigatable);
 
         this.slider.visible = this.shouldRender();
         this.slider.setAlpha(this.opacity);

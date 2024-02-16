@@ -77,6 +77,12 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
         return null;
     }
 
+    //TODO übernehmen
+    @Override
+    public void updateWidgetNavigatable() {
+        //do nothing
+    }
+
     @Override
     public void updateWidgetTexture() {
 

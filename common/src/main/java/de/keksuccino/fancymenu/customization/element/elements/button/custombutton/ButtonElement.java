@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinButton;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
@@ -57,6 +58,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public boolean nineSliceCustomBackground = false;
     public int nineSliceBorderX = 5;
     public int nineSliceBorderY = 5;
+    public boolean navigatable = true;
     //-----------------------
     @NotNull
     public GenericExecutableBlock actionExecutor = new GenericExecutableBlock();
@@ -123,6 +125,15 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         this.updateWidgetTexture();
         this.updateWidgetSize();
         this.updateWidgetPosition();
+        //TODO übernehmen
+        this.updateWidgetNavigatable();
+    }
+
+    //TODO übernehmen
+    public void updateWidgetNavigatable() {
+        if (this.getWidget() instanceof NavigatableWidget w) {
+            w.setNavigatable(this.navigatable);
+        }
     }
 
     public void updateWidgetVisibility() {

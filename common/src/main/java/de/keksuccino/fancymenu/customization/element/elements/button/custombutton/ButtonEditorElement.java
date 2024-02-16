@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.element.elements.button.custombutt
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
 import de.keksuccino.fancymenu.util.input.TextValidators;
@@ -184,6 +185,20 @@ public class ButtonEditorElement extends AbstractEditorElement {
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.button.btndescription.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("talk"));
+
+        //TODO übernehmen
+        if (!(this instanceof VanillaWidgetEditorElement)) {
+
+            this.rightClickMenu.addSeparatorEntry("separator_before_navigatable");
+
+            this.addToggleContextMenuEntryTo(this.rightClickMenu, "toggle_navigatable", ButtonEditorElement.class,
+                            consumes -> consumes.getElement().navigatable,
+                            (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().navigatable = aBoolean,
+                            "fancymenu.elements.widgets.generic.navigatable")
+                    .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.generic.navigatable.desc")));
+
+        }
+        //--------------------------
 
     }
 

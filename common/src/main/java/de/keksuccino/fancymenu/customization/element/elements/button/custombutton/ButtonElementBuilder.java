@@ -99,6 +99,9 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
 
         element.backgroundAnimationInactive = serialized.getValue("background_animation_inactive");
 
+        //TODO übernehmen
+        element.navigatable = deserializeBoolean(element.navigatable, serialized.getValue("navigatable"));
+
         return element;
 
     }
@@ -149,6 +152,8 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         if (element.label != null) {
             serializeTo.putProperty("label", element.label);
         }
+        //TODO übernehmen
+        serializeTo.putProperty("navigatable", "" + element.navigatable);
 
         return serializeTo;
 

@@ -276,6 +276,18 @@ public class SliderEditorElement extends AbstractEditorElement {
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.button.btndescription.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("talk"));
 
+        //TODO übernehmen
+
+        this.rightClickMenu.addSeparatorEntry("separator_before_navigatable");
+
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "toggle_navigatable", SliderEditorElement.class,
+                        consumes -> consumes.getElement().navigatable,
+                        (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().navigatable = aBoolean,
+                        "fancymenu.elements.widgets.generic.navigatable")
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.generic.navigatable.desc")));
+
+        //-------------------------------
+
     }
 
     public SliderElement getElement() {

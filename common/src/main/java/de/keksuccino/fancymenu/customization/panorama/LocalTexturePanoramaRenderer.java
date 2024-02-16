@@ -40,9 +40,11 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 	@Nullable
 	public File overlayImageFile;
 	protected String name = null;
-	protected final List<ResourceSupplier<ITexture>> panoramaImageSuppliers = new ArrayList<>();
+	//TODO übernehmen (public)
+	public final List<ResourceSupplier<ITexture>> panoramaImageSuppliers = new ArrayList<>();
 	@Nullable
-	protected ResourceSupplier<ITexture> overlayTextureSupplier;
+	public ResourceSupplier<ITexture> overlayTextureSupplier;
+	//-------------------------
 	protected float speed = 1.0F;
 	protected double fov = 85.0D;
 	protected float angle = 25.0F;

@@ -1199,7 +1199,9 @@
   "fancymenu.resources.pre_loading": "Pre-Load Resources",
   "fancymenu.resources.pre_loading.desc": "Set resources to pre-load on game start,\nso they are ready to use once the game\nloading process is completed.",
   "fancymenu.resources.pre_loading.manage": "Manage Resources for Pre-Loading",
-  "fancymenu.resources.pre_loading.manage.add": "Add",
+  "fancymenu.resources.pre_loading.manage.add": "Add Resource",
+  "fancymenu.resources.pre_loading.manage.add.panorama": "Add Cubic Panorama",
+  "fancymenu.resources.pre_loading.manage.add.slideshow": "Add Slideshow",
   "fancymenu.resources.pre_loading.manage.remove": "Remove Selected",
   "fancymenu.resources.pre_loading.manage.remove.confirm": "Remove Resource?\n\nDo you really want to remove the selected resource?",
   "fancymenu.placeholders.jvm_cpu_usage": "CPU Usage (JVM)",
@@ -1223,5 +1225,7 @@
   "fancymenu.placeholders.jvm_name": "Java Virtual Machine",
   "fancymenu.placeholders.jvm_name.desc": "The name of the Java Virtual Machine.",
   "fancymenu.placeholders.fps": "FPS (Frames Per Second)",
-  "fancymenu.placeholders.fps.desc": "The current FPS."
+  "fancymenu.placeholders.fps.desc": "The current FPS.",
+  "fancymenu.elements.widgets.generic.navigatable": "Navigable: %s",
+  "fancymenu.elements.widgets.generic.navigatable.desc": "If the user should be able to focus this\nwidget by using the Tab/Arrow key navigation."
 }

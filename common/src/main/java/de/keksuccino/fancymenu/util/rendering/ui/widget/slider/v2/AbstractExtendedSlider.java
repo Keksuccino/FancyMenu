@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.IExtendedWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -21,7 +22,8 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 
 @SuppressWarnings("unused")
-public abstract class AbstractExtendedSlider extends AbstractSliderButton implements IExtendedWidget {
+//TODO übernehmen (implements NavigatableWidget)
+public abstract class AbstractExtendedSlider extends AbstractSliderButton implements IExtendedWidget, NavigatableWidget {
 
     protected static final ResourceLocation SLIDER_LOCATION = new ResourceLocation("textures/gui/slider.png");
 
@@ -48,6 +50,10 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     protected SliderValueUpdateListener sliderValueUpdateListener;
     @NotNull
     protected ConsumingSupplier<AbstractExtendedSlider, Component> labelSupplier = slider -> Component.literal(slider.getValueDisplayText());
+    //TODO übernehmen
+    protected boolean focusable = true;
+    protected boolean navigatable = true;
+    //-------------------------
 
     public AbstractExtendedSlider(int x, int y, int width, int height, Component label, double value) {
         super(x, y, width, height, label, value);
@@ -374,6 +380,30 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     public CustomizableWidget getAsCustomizableWidget() {
         return (CustomizableWidget) this;
     }
+
+    //TODO übernehmen
+
+    @Override
+    public boolean isFocusable() {
+        return focusable;
+    }
+
+    @Override
+    public void setFocusable(boolean focusable) {
+        this.focusable = focusable;
+    }
+
+    @Override
+    public boolean isNavigatable() {
+        return navigatable;
+    }
+
+    @Override
+    public void setNavigatable(boolean navigatable) {
+        this.navigatable = navigatable;
+    }
+
+    //------------------------
 
     @FunctionalInterface
     public interface SliderValueUpdateListener {

@@ -109,6 +109,9 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
         element.nineSliceSliderHandleBorderY = deserializeNumber(Integer.class, element.nineSliceSliderHandleBorderY, serialized.getValue("nine_slice_slider_handle_border_y"));
         //-----------------------
 
+        //TODO übernehmen
+        element.navigatable = deserializeBoolean(element.navigatable, serialized.getValue("navigatable"));
+
         element.buildSlider();
         element.prepareExecutableBlock();
 
@@ -183,6 +186,9 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
         serializeTo.putProperty("nine_slice_slider_handle_border_x", "" + element.nineSliceSliderHandleBorderX);
         serializeTo.putProperty("nine_slice_slider_handle_border_y", "" + element.nineSliceSliderHandleBorderY);
         //-----------------------
+
+        //TODO übernehmen
+        serializeTo.putProperty("navigatable", "" + element.navigatable);
 
         return serializeTo;
         

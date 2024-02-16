@@ -65,22 +65,25 @@ public class InputFieldElementBuilder extends ElementBuilder<InputFieldElement, 
             }
         }
 
+        //TODO übernehmen
+        element.navigatable = deserializeBoolean(element.navigatable, serialized.getValue("navigatable"));
+
         return element;
 
     }
 
+    //TODO übernehmen
     @Override
     protected SerializedElement serializeElement(@NotNull InputFieldElement element, @NotNull SerializedElement serializeTo) {
 
-        SerializedElement serialized = new SerializedElement();
-
         if (element.linkedVariable != null) {
-            serialized.putProperty("linked_variable", element.linkedVariable);
+            serializeTo.putProperty("linked_variable", element.linkedVariable);
         }
-        serialized.putProperty("input_field_type", element.type.getName());
-        serialized.putProperty("max_text_length", "" + element.maxTextLength);
+        serializeTo.putProperty("input_field_type", element.type.getName());
+        serializeTo.putProperty("max_text_length", "" + element.maxTextLength);
+        serializeTo.putProperty("navigatable", "" + element.navigatable);
 
-        return serialized;
+        return serializeTo;
 
     }
 
