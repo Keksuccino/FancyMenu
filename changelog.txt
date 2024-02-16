@@ -25,6 +25,7 @@ CHANGELOG | FANCYMENU v3.1.0 [ W I P - NOT PUBLIC YET! ]
 - Fixed unable to hide Customization Overlay in some mod screens
   - This fixes the incompatibility with the Pixelmon mod
   - This could also fix the "bug" that makes it look like FancyMenu's shortcuts aren't working (they work, but nothing happens, because the overlay stays visible)
+- Fixed Input Field element not correctly saving some settings
 - Fixed conflict with "ukulib" (Fixed on ukulib's side in ukulib v1.1.2)
 - Fixed conflict with "Applied Energistics 2 Wireless Terminals" (and maybe base mod as well)
  
