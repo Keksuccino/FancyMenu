@@ -10,6 +10,7 @@ CHANGELOG | FANCYMENU v3.1.0 [ W I P - NOT PUBLIC YET! ]
 - Improved the rotation logic of cubic panoramas (they should not randomly speed up anymore, but you maybe need to adjust your panorama's speed if it is too slow/fast now)
 - It is now possible to pre-load cubic panoramas and slideshows via the resource pre-loader (Customization -> Pre-Load Resources)
 - Local sources in the Manage Resource Pre-Load screen now show as short paths (not absolute paths anymore)
+- You can now disable the focusability/navigability of custom buttons, custom sliders and custom input fields (navigable = gets focused when using the Tab/Arrow key navigation in screens)
 - Added "start_rotation" property to cubic panoramas to set the rotation angle they should start at (value between 0 and 360)
 - Added "Repeat Texture" mode to Image element that lets you render tileable (seamless) images as repeating texture (like the default Minecraft dirt menu background)
 - Added "Repeat Texture" mode to Image menu background that lets you render tileable (seamless) images as repeating texture (like the default Minecraft dirt menu background)
