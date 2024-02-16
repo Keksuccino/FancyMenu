@@ -20,7 +20,7 @@ CHANGELOG | FANCYMENU v3.0.7 [ W I P - NOT PUBLIC YET! ]
 - Added "Repeat Texture" mode to menu header/footer that lets you render tileable (seamless) header/footer textures as repeating texture (like the default Minecraft dirt menu background)
 - Added "Nine-Slicing" mode to Image element
 - Added "Nine-Slicing" mode to Vanilla Button/Slider, Custom Button and Custom Slider elements
-- It is now possible to pre-load cubic panoramas and slideshows via the resource pre-loader (Customization -> Pre-Load Resource)
+- It is now possible to pre-load cubic panoramas and slideshows via the resource pre-loader (Customization -> Pre-Load Resources)
 - Local sources in the Manage Resource Pre-Load screen now show as short paths (not absolute paths anymore)
 - Excluded "Skin Swapper" mod screens from customization
 - Fixed conflict with "ukulib" (Fixed on ukulib's side in ukulib v1.1.2)
