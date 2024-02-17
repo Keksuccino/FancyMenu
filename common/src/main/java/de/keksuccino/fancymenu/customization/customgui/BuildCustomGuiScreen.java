@@ -109,8 +109,11 @@ public class BuildCustomGuiScreen extends CellScreen {
         if (this.allSettingsValid) {
             if (this.gui != this.guiTemp) {
                 this.gui.identifier = this.guiTemp.identifier;
-                this.gui.title = this.guiTemp.identifier;
+                this.gui.title = this.guiTemp.title;
                 this.gui.allowEsc = this.guiTemp.allowEsc;
+                this.gui.pauseGame = this.guiTemp.pauseGame;
+                this.gui.worldBackground = this.guiTemp.worldBackground;
+                this.gui.worldBackgroundOverlay = this.guiTemp.worldBackgroundOverlay;
             }
             this.callback.accept(this.gui);
         }

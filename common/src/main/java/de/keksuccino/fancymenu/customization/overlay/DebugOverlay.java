@@ -58,9 +58,12 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
     @Nullable
     protected ContextMenu rightClickMenu = null;
     protected final List<GuiEventListener> children = new ArrayList<>();
+    public boolean allowRender = false;
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+        if (!this.allowRender) return;
 
         if (Minecraft.getInstance().screen == null) return;
 

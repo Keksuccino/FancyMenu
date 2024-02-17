@@ -10,7 +10,9 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinButton;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
@@ -52,6 +54,10 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public String backgroundAnimationInactive;
     public boolean loopBackgroundAnimations = true;
     public boolean restartBackgroundAnimationsOnHover = true;
+    public boolean nineSliceCustomBackground = false;
+    public int nineSliceBorderX = 5;
+    public int nineSliceBorderY = 5;
+    public boolean navigatable = true;
     @NotNull
     public GenericExecutableBlock actionExecutor = new GenericExecutableBlock();
 
@@ -117,6 +123,13 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         this.updateWidgetTexture();
         this.updateWidgetSize();
         this.updateWidgetPosition();
+        this.updateWidgetNavigatable();
+    }
+
+    public void updateWidgetNavigatable() {
+        if (this.getWidget() instanceof NavigatableWidget w) {
+            w.setNavigatable(this.navigatable);
+        }
     }
 
     public void updateWidgetVisibility() {
@@ -143,7 +156,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     }
 
     public void updateWidgetTooltip() {
-        if ((this.tooltip != null) && (this.getWidget() != null) && this.getWidget().isHovered() && !isEditor()) {
+        if ((this.tooltip != null) && (this.getWidget() != null) && this.getWidget().isHovered() && this.getWidget().visible && this.shouldRender() && !isEditor()) {
             String tooltip = this.tooltip.replace("%n%", "\n");
             TooltipHandler.INSTANCE.addWidgetTooltip(this.getWidget(), Tooltip.of(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(tooltip), "\n")), false, true);
         }
@@ -214,6 +227,15 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         }
 
         if (this.getWidget() instanceof CustomizableWidget w) {
+            if (this.getWidget() instanceof CustomizableSlider s) {
+                s.setNineSliceCustomSliderBackground_FancyMenu(this.nineSliceCustomBackground);
+                s.setNineSliceSliderBackgroundBorderX_FancyMenu(this.nineSliceBorderX);
+                s.setNineSliceSliderBackgroundBorderY_FancyMenu(this.nineSliceBorderY);
+            } else {
+                w.setNineSliceCustomBackground_FancyMenu(this.nineSliceCustomBackground);
+                w.setNineSliceBorderX_FancyMenu(this.nineSliceBorderX);
+                w.setNineSliceBorderY_FancyMenu(this.nineSliceBorderY);
+            }
             w.setCustomBackgroundNormalFancyMenu(backNormal);
             w.setCustomBackgroundHoverFancyMenu(backHover);
             w.setCustomBackgroundInactiveFancyMenu(backInactive);

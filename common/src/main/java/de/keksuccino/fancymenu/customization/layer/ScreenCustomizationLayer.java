@@ -479,6 +479,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 						graphics.enableScissor(list.getX(), 0, list.getRight(), list.getY());
 						graphics.blit(loc, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
 						graphics.disableScissor();
+					} else if (this.layoutBase.repeatScrollListHeaderTexture) {
+						RenderingUtils.blitRepeat(graphics, loc, list.getX(), 0, list.getWidth(), list.getY(), headerTexture.getWidth(), headerTexture.getHeight());
 					} else {
 						graphics.blit(loc, list.getX(), 0, 0.0F, 0.0F, list.getWidth(), list.getY(), list.getWidth(), list.getY());
 					}
@@ -500,6 +502,10 @@ public class ScreenCustomizationLayer implements ElementFactory {
 						graphics.enableScissor(list.getX(), list.getBottom(), list.getRight(), list.getBottom() + footerOriginalHeight);
 						graphics.blit(loc, footerX, footerY, 0.0F, 0.0F, footerWidth, footerHeight, footerWidth, footerHeight);
 						graphics.disableScissor();
+					} else if (this.layoutBase.repeatScrollListFooterTexture) {
+						int footerHeight = ScreenUtils.getScreenHeight() - list.getBottom();
+						if (footerHeight <= 0) footerHeight = 1;
+						RenderingUtils.blitRepeat(graphics, loc, list.getX(), list.getBottom(), list.getWidth(), footerHeight, footerTexture.getWidth(), footerTexture.getHeight());
 					} else {
 						int footerHeight = ScreenUtils.getScreenHeight() - list.getBottom();
 						if (footerHeight <= 0) footerHeight = 1;
@@ -546,6 +552,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 						graphics.enableScissor(0, 0, e.getHeaderWidth(), e.getHeaderHeight());
 						graphics.blit(loc, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
 						graphics.disableScissor();
+					} else if (this.layoutBase.repeatScrollListHeaderTexture) {
+						RenderingUtils.blitRepeat(graphics, loc, 0, 0, e.getHeaderWidth(), e.getHeaderHeight(), headerTexture.getWidth(), headerTexture.getHeight());
 					} else {
 						graphics.blit(loc, 0, 0, 0.0F, 0.0F, e.getHeaderWidth(), e.getHeaderHeight(), e.getHeaderWidth(), e.getHeaderHeight());
 					}

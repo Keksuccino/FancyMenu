@@ -51,15 +51,11 @@ public class TooltipHandler {
         }
     }
 
-    public HandledTooltip addWidgetTooltip(@NotNull AbstractWidget widget, @NotNull Tooltip tooltip) {
-        return this.addWidgetTooltip(widget, tooltip, true, false);
-    }
-
     public HandledTooltip addWidgetTooltip(@NotNull AbstractWidget widget, @NotNull Tooltip tooltip, boolean removeOnScreenInitOrResize, boolean removeAfterScreenRender) {
         if (this.widgetTooltips.containsKey(widget)) {
             this.removeTooltip(this.widgetTooltips.get(widget));
         }
-        HandledTooltip t = this.addTooltip(tooltip, widget::isHovered, removeOnScreenInitOrResize, removeAfterScreenRender);
+        HandledTooltip t = this.addTooltip(tooltip, () -> widget.isHovered() && widget.visible, removeOnScreenInitOrResize, removeAfterScreenRender);
         t.widget = widget;
         this.widgetTooltips.put(widget, t);
         return t;

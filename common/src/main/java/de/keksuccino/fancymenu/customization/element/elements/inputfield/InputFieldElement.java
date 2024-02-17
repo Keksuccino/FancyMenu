@@ -23,6 +23,7 @@ public class InputFieldElement extends AbstractElement {
     public int maxTextLength = 10000;
     public ExtendedEditBox editBox;
     public String lastValue = "";
+    public boolean navigatable = true;
 
     public InputFieldElement(ElementBuilder<InputFieldElement, InputFieldEditorElement> builder) {
         super(builder);
@@ -46,6 +47,8 @@ public class InputFieldElement extends AbstractElement {
                     }
                 }
             }
+
+            this.editBox.setNavigatable(this.navigatable);
 
             this.editBox.setX(this.getAbsoluteX());
             this.editBox.setY(this.getAbsoluteY());

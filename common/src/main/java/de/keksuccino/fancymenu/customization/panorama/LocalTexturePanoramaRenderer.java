@@ -40,14 +40,16 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 	@Nullable
 	public File overlayImageFile;
 	protected String name = null;
-	protected final List<ResourceSupplier<ITexture>> panoramaImageSuppliers = new ArrayList<>();
+	public final List<ResourceSupplier<ITexture>> panoramaImageSuppliers = new ArrayList<>();
 	@Nullable
-	protected ResourceSupplier<ITexture> overlayTextureSupplier;
+	public ResourceSupplier<ITexture> overlayTextureSupplier;
 	protected float speed = 1.0F;
 	protected double fov = 85.0D;
 	protected float angle = 25.0F;
 	public float opacity = 1.0F;
-	protected float spin;
+	protected volatile boolean tickerThreadRunning = false;
+	protected volatile float currentRotation = 0.0F; //0 - 360
+	protected volatile long lastRenderCall = -1L;
 
 	@Nullable
 	public static LocalTexturePanoramaRenderer build(@NotNull File propertiesFile, @NotNull File panoramaImageDir, @Nullable File overlayImageFile) {
@@ -74,6 +76,13 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 						String an = panoMeta.getValue("angle");
 						if ((an != null) && MathUtils.isFloat(an)) {
 							renderer.angle = Float.parseFloat(an);
+						}
+						String rot = panoMeta.getValue("start_rotation");
+						if ((rot != null) && MathUtils.isFloat(rot)) {
+							renderer.currentRotation = Float.parseFloat(rot);
+							if ((renderer.currentRotation > 360.0F) || (renderer.currentRotation < 0.0F)) {
+								renderer.currentRotation = 0;
+							}
 						}
 						renderer.prepare();
 						return renderer;
@@ -117,8 +126,39 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 
 	}
 
+	@SuppressWarnings("all")
+	protected void startTickerThreadIfNeeded() {
+
+		if (this.tickerThreadRunning) return;
+
+		this.lastRenderCall = System.currentTimeMillis();
+		this.tickerThreadRunning = true;
+
+		new Thread(() -> {
+			while ((this.lastRenderCall + 5000L) > System.currentTimeMillis()) {
+				try {
+					this.currentRotation += 0.03F;
+					if (this.currentRotation >= 360) {
+						this.currentRotation = 0;
+					}
+				} catch (Exception ex) {
+					LOGGER.error("[FANCYMENU] Error while ticking panorama!", ex);
+				}
+				try {
+					Thread.sleep(Math.max(2, (int)(20 / this.speed)));
+				} catch (Exception ex) {
+					LOGGER.error("[FANCYMENU] Error while ticking panorama!", ex);
+				}
+			}
+			this.tickerThreadRunning = false;
+		}, "FancyMenu Panorama Ticker Thread").start();
+
+	}
+
 	@Override
 	public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+		this.lastRenderCall = System.currentTimeMillis();
+		this.startTickerThreadIfNeeded();
 		if (this.panoramaImageSuppliers.size() < 6) {
 			RenderSystem.enableBlend();
 			RenderingUtils.resetShaderColor(graphics);
@@ -133,35 +173,39 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 
 		Minecraft mc = Minecraft.getInstance();
 
-		float speedPartial = (float)((double)partial * (double)this.speed);
-		this.spin = wrap(this.spin + speedPartial * 0.1F, 360.0F);
+		int screenW = ScreenUtils.getScreenWidth();
+		int screenH = ScreenUtils.getScreenHeight();
 
+		float pitch = this.angle;
+		float yaw = -this.currentRotation;
 		float fovF = ((float)this.fov * ((float)Math.PI / 180));
+
+		graphics.pose().pushPose();
+		RenderingUtils.resetShaderColor(graphics);
 
 		Tesselator tesselator = Tesselator.getInstance();
 		BufferBuilder bufferBuilder = tesselator.getBuilder();
 		Matrix4f matrix4f = new Matrix4f().setPerspective(fovF, (float)mc.getWindow().getWidth() / (float)mc.getWindow().getHeight(), 0.05F, 10.0F);
 		RenderSystem.backupProjectionMatrix();
 		RenderSystem.setProjectionMatrix(matrix4f, VertexSorting.DISTANCE_TO_ORIGIN);
-		PoseStack poseStack = RenderSystem.getModelViewStack();
-		poseStack.pushPose();
-		poseStack.setIdentity();
-		poseStack.mulPose(Axis.XP.rotationDegrees(180.0f));
+		PoseStack modelViewStack = RenderSystem.getModelViewStack();
+		modelViewStack.pushPose();
+		modelViewStack.setIdentity();
+		modelViewStack.mulPose(Axis.XP.rotationDegrees(180.0f));
 		RenderSystem.applyModelViewMatrix();
 		RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
 		graphics.setColor(1.0f, 1.0f, 1.0f, this.opacity);
 		RenderSystem.enableBlend();
 		RenderSystem.disableCull();
 		RenderSystem.depthMask(false);
-		RenderSystem.defaultBlendFunc();
 
 		for(int j = 0; j < 4; ++j) {
-			poseStack.pushPose();
+			modelViewStack.pushPose();
 			float k = ((float)(j % 2) / 2.0f - 0.5f) / 256.0f;
 			float l = ((float)(j / 2) / 2.0f - 0.5f) / 256.0f;
-			poseStack.translate(k, l, 0.0f);
-			poseStack.mulPose(Axis.XP.rotationDegrees(this.angle));
-			poseStack.mulPose(Axis.YP.rotationDegrees(-this.spin));
+			modelViewStack.translate(k, l, 0.0f);
+			modelViewStack.mulPose(Axis.XP.rotationDegrees(pitch));
+			modelViewStack.mulPose(Axis.YP.rotationDegrees(yaw));
 			RenderSystem.applyModelViewMatrix();
 			for (int n = 0; n < 6; ++n) {
 				ResourceLocation location = null;
@@ -214,18 +258,21 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 				}
 				tesselator.end();
 			}
-			poseStack.popPose();
+			modelViewStack.popPose();
 			RenderSystem.applyModelViewMatrix();
 			RenderSystem.colorMask(true, true, true, false);
 		}
 
 		RenderSystem.colorMask(true, true, true, true);
 		RenderSystem.restoreProjectionMatrix();
-		poseStack.popPose();
+		modelViewStack.popPose();
 		RenderSystem.applyModelViewMatrix();
 		RenderSystem.depthMask(true);
 		RenderSystem.enableCull();
 		RenderSystem.enableDepthTest();
+
+		graphics.pose().popPose();
+		RenderSystem.defaultBlendFunc();
 
 		if (this.overlayTextureSupplier != null) {
 			ITexture texture = this.overlayTextureSupplier.get();
@@ -234,8 +281,6 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 				if (location != null) {
 					graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
 					RenderSystem.enableBlend();
-					int screenW = ScreenUtils.getScreenWidth();
-					int screenH = ScreenUtils.getScreenHeight();
 					graphics.blit(location, 0, 0, 0.0F, 0.0F, screenW, screenH, screenW, screenH);
 				}
 			}
@@ -243,10 +288,6 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 
 		RenderingUtils.resetShaderColor(graphics);
 
-	}
-
-	private static float wrap(float $$0, float $$1) {
-		return $$0 > $$1 ? $$0 - $$1 : $$0;
 	}
 
 	public String getName() {

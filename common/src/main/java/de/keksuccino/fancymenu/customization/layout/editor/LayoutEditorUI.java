@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.layout.editor;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.background.ChooseMenuBackgroundScreen;
+import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
@@ -93,9 +94,9 @@ public class LayoutEditorUI {
 		layoutMenu.addSeparatorEntry("separator_after_open_layout");
 
 		layoutMenu.addClickableEntry("save_layout", Component.translatable("fancymenu.editor.layout.save"), (menu, entry) -> {
-			menu.closeMenu();
-			editor.saveLayout();
-		}).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.save"))
+					menu.closeMenu();
+					editor.saveLayout();
+				}).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.save"))
 				.setIcon(ContextMenu.IconFactory.getIcon("save"));
 
 		layoutMenu.addClickableEntry("save_layout_as", Component.translatable("fancymenu.editor.layout.saveas"), (menu, entry) -> {
@@ -133,35 +134,35 @@ public class LayoutEditorUI {
 		menuBar.addContextMenuEntry("edit_tab", Component.translatable("fancymenu.editor.edit"), editMenu);
 
 		editMenu.addClickableEntry("undo_action", Component.translatable("fancymenu.editor.edit.undo"), (menu, entry) -> {
-			editor.history.stepBack();
-		}).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.undo"))
+					editor.history.stepBack();
+				}).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.undo"))
 				.setIcon(ContextMenu.IconFactory.getIcon("undo"));
 
 		editMenu.addClickableEntry("redo_action", Component.translatable("fancymenu.editor.edit.redo"), (menu, entry) -> {
-			editor.history.stepForward();
-		}).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.redo"))
+					editor.history.stepForward();
+				}).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.redo"))
 				.setIcon(ContextMenu.IconFactory.getIcon("redo"));
 
 		editMenu.addSeparatorEntry("separator_after_redo");
 
 		editMenu.addClickableEntry("copy_selected_elements", Component.translatable("fancymenu.editor.edit.copy"), (menu, entry) -> {
-			editor.copyElementsToClipboard(editor.getSelectedElements().toArray(new AbstractEditorElement[0]));
-		}).setIsActiveSupplier((menu, entry) -> !editor.getSelectedElements().isEmpty())
+					editor.copyElementsToClipboard(editor.getSelectedElements().toArray(new AbstractEditorElement[0]));
+				}).setIsActiveSupplier((menu, entry) -> !editor.getSelectedElements().isEmpty())
 				.setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.copy"))
 				.setIcon(ContextMenu.IconFactory.getIcon("copy"));
 
 		editMenu.addClickableEntry("paste_copied_elements", Component.translatable("fancymenu.editor.edit.paste"), (menu, entry) -> {
-			editor.history.saveSnapshot();
-			editor.pasteElementsFromClipboard();
-		}).setIsActiveSupplier((menu, entry) -> !LayoutEditorScreen.COPIED_ELEMENTS_CLIPBOARD.isEmpty())
+					editor.history.saveSnapshot();
+					editor.pasteElementsFromClipboard();
+				}).setIsActiveSupplier((menu, entry) -> !LayoutEditorScreen.COPIED_ELEMENTS_CLIPBOARD.isEmpty())
 				.setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.paste"))
 				.setIcon(ContextMenu.IconFactory.getIcon("paste"));
 
 		editMenu.addSeparatorEntry("separator_after_paste_copied");
 
 		editMenu.addClickableEntry("select_all_elements", Component.translatable("fancymenu.editor.menu_bar.edit.select_all"), (menu, entry) -> {
-			editor.selectAllElements();
-		}).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.select_all"))
+					editor.selectAllElements();
+				}).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.select_all"))
 				.setIcon(ContextMenu.IconFactory.getIcon("select"));
 
 		//ELEMENT
@@ -200,9 +201,9 @@ public class LayoutEditorUI {
 			preSelectedGridSize = 10;
 		}
 		windowMenu.addValueCycleEntry("grid_size", CommonCycles.cycle("fancymenu.editor.menu_bar.window.grid_size", ListUtils.of(10,20,30,40), preSelectedGridSize)
-				.addCycleListener(integer -> {
-					FancyMenu.getOptions().layoutEditorGridSize.setValue(integer);
-				}))
+						.addCycleListener(integer -> {
+							FancyMenu.getOptions().layoutEditorGridSize.setValue(integer);
+						}))
 				.setIcon(ContextMenu.IconFactory.getIcon("measure"));
 
 		windowMenu.addSeparatorEntry("separator_after_grid_size");
@@ -288,20 +289,20 @@ public class LayoutEditorUI {
 
 		//CLOSE EDITOR BUTTON
 		menuBar.addClickableEntry(MenuBar.Side.RIGHT, "close_editor", Component.empty(), (bar, entry) -> {
-			displayUnsavedWarning(call -> {
-				if (call) {
-					editor.saveWidgetSettings();
-					if (editor.layoutTargetScreen instanceof CreateWorldScreen) {
-						//This fixes broken CreateWorldScreens after leaving the editor (footer buttons not clickable)
-						CreateWorldScreen.openFresh(Minecraft.getInstance(), new TitleScreen());
-					} else {
-						Minecraft.getInstance().setScreen(editor.layoutTargetScreen);
-					}
-				} else {
-					Minecraft.getInstance().setScreen(editor);
-				}
-			});
-		}).setIconTexture(CLOSE_EDITOR_TEXTURE)
+					displayUnsavedWarning(call -> {
+						if (call) {
+							editor.saveWidgetSettings();
+							if (editor.layoutTargetScreen instanceof CreateWorldScreen) {
+								//This fixes broken CreateWorldScreens after leaving the editor (footer buttons not clickable)
+								CreateWorldScreen.openFresh(Minecraft.getInstance(), new TitleScreen());
+							} else {
+								Minecraft.getInstance().setScreen(editor.layoutTargetScreen);
+							}
+						} else {
+							Minecraft.getInstance().setScreen(editor);
+						}
+					});
+				}).setIconTexture(CLOSE_EDITOR_TEXTURE)
 				.setIconTextureColor(() -> UIBase.getUIColorTheme().layout_editor_close_icon_color);
 
 		return menuBar;
@@ -420,15 +421,15 @@ public class LayoutEditorUI {
 		menu.addSeparatorEntry("separator_after_universal_layout_menu");
 
 		menu.addClickableEntry("menu_background_settings", Component.translatable("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground"), (menu1, entry) -> {
-			ChooseMenuBackgroundScreen s = new ChooseMenuBackgroundScreen(editor.layout.menuBackground, true, (call) -> {
-				if (call != null) {
-					editor.history.saveSnapshot();
-					editor.layout.menuBackground = (call != ChooseMenuBackgroundScreen.NO_BACKGROUND) ? call : null;
-				}
-				Minecraft.getInstance().setScreen(editor);
-			});
-			Minecraft.getInstance().setScreen(s);
-		}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground.btn.desc")))
+					ChooseMenuBackgroundScreen s = new ChooseMenuBackgroundScreen(editor.layout.menuBackground, true, (call) -> {
+						if (call != null) {
+							editor.history.saveSnapshot();
+							editor.layout.menuBackground = (call != ChooseMenuBackgroundScreen.NO_BACKGROUND) ? call : null;
+						}
+						Minecraft.getInstance().setScreen(editor);
+					});
+					Minecraft.getInstance().setScreen(s);
+				}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground.btn.desc")))
 				.setIcon(ContextMenu.IconFactory.getIcon("image"));
 
 		menu.addValueCycleEntry("keep_background_aspect_ratio", CommonCycles.cycleEnabledDisabled("fancymenu.helper.editor.layoutoptions.backgroundoptions.keepaspect", editor.layout.preserveBackgroundAspectRatio).addCycleListener(cycle -> {
@@ -449,8 +450,9 @@ public class LayoutEditorUI {
 							true, null, null, false, true,
 							consumes -> !consumes.isEmpty(),
 							consumes -> consumes.isEmpty() ? Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.edit_menu_title.reset.invalid_title")) : null)
-					.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.edit_menu_title.desc")))
-					.setIcon(ContextMenu.IconFactory.getIcon("text"));
+					.setTooltipSupplier((menu1, entry) -> !(editor.layoutTargetScreen instanceof CustomGuiBaseScreen) ? Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.edit_menu_title.desc")) : Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.edit_menu_title.custom_gui.desc")))
+					.setIcon(ContextMenu.IconFactory.getIcon("text"))
+					.setIsActiveSupplier((menu1, entry) -> !(editor.layoutTargetScreen instanceof CustomGuiBaseScreen));
 
 			menu.addSeparatorEntry("separator_after_edit_menu_title");
 
@@ -458,51 +460,52 @@ public class LayoutEditorUI {
 
 		menu.addSubMenuEntry("scroll_list_customizations", Component.translatable("fancymenu.customization.scroll_lists"), buildScrollListCustomizationsContextMenu(editor))
 				.setIcon(ContextMenu.IconFactory.getIcon("scroll_edit"))
-				.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.scroll_lists.desc")));
+				.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.scroll_lists.desc")))
+				.setIsActiveSupplier((menu1, entry) -> !(editor.layoutTargetScreen instanceof CustomGuiBaseScreen));
 
 		menu.addSeparatorEntry("separator_after_scroll_list_customizations");
 
 		menu.addClickableEntry("layout_index", Component.translatable("fancymenu.editor.layout.index"), (menu1, entry) -> {
-			TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.editor.layout.index"), CharacterFilter.buildIntegerFiler(), s1 -> {
-				if ((s1 != null) && MathUtils.isInteger(s1)) {
-					editor.history.saveSnapshot();
-					editor.layout.layoutIndex = Integer.parseInt(s1);
-				}
-				Minecraft.getInstance().setScreen(editor);
-			});
-			s.setTextValidator(consumes -> TextValidators.INTEGER_TEXT_VALIDATOR.get(consumes.getText()));
-			s.setText("" + editor.layout.layoutIndex);
-			Minecraft.getInstance().setScreen(s);
-		}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.layout.index.desc")))
+					TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.editor.layout.index"), CharacterFilter.buildIntegerFiler(), s1 -> {
+						if ((s1 != null) && MathUtils.isInteger(s1)) {
+							editor.history.saveSnapshot();
+							editor.layout.layoutIndex = Integer.parseInt(s1);
+						}
+						Minecraft.getInstance().setScreen(editor);
+					});
+					s.setTextValidator(consumes -> TextValidators.INTEGER_TEXT_VALIDATOR.get(consumes.getText()));
+					s.setText("" + editor.layout.layoutIndex);
+					Minecraft.getInstance().setScreen(s);
+				}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.layout.index.desc")))
 				.setIcon(ContextMenu.IconFactory.getIcon("stack"));
 
 		menu.addSeparatorEntry("separator_after_layout_index");
 
 		menu.addValueCycleEntry("random_mode", CommonCycles.cycleEnabledDisabled("fancymenu.fancymenu.editor.layoutoptions.randommode", editor.layout.randomMode).addCycleListener(cycle -> {
-			editor.history.saveSnapshot();
-			editor.layout.randomMode = cycle.getAsBoolean();
-		})).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.btn.desc")))
+					editor.history.saveSnapshot();
+					editor.layout.randomMode = cycle.getAsBoolean();
+				})).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.btn.desc")))
 				.setIcon(ContextMenu.IconFactory.getIcon("random"));
 
 		menu.addClickableEntry("random_mode_group", Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"), (menu1, entry) -> {
-			Minecraft.getInstance().setScreen(TextInputScreen.build(Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"), CharacterFilter.buildIntegerFiler(), call -> {
-				if (call != null) {
-					if (!MathUtils.isInteger(call)) {
-						call = "1";
-					}
-					editor.history.saveSnapshot();
-					editor.layout.randomGroup = call;
-				}
-				Minecraft.getInstance().setScreen(editor);
-			}).setText(editor.layout.randomGroup));
-		}).setIsActiveSupplier((menu1, entry) -> editor.layout.randomMode)
+					Minecraft.getInstance().setScreen(TextInputScreen.build(Component.translatable("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup"), CharacterFilter.buildIntegerFiler(), call -> {
+						if (call != null) {
+							if (!MathUtils.isInteger(call)) {
+								call = "1";
+							}
+							editor.history.saveSnapshot();
+							editor.layout.randomGroup = call;
+						}
+						Minecraft.getInstance().setScreen(editor);
+					}).setText(editor.layout.randomGroup));
+				}).setIsActiveSupplier((menu1, entry) -> editor.layout.randomMode)
 				.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.setgroup.btn.desc")))
 				.setIcon(ContextMenu.IconFactory.getIcon("group"));
 
 		menu.addValueCycleEntry("random_mode_first_time", CommonCycles.cycleEnabledDisabled("fancymenu.fancymenu.editor.layoutoptions.randommode.onlyfirsttime", editor.layout.randomOnlyFirstTime).addCycleListener(cycle -> {
-			editor.history.saveSnapshot();
-			editor.layout.randomOnlyFirstTime = cycle.getAsBoolean();
-		})).setIsActiveSupplier((menu1, entry) -> editor.layout.randomMode)
+					editor.history.saveSnapshot();
+					editor.layout.randomOnlyFirstTime = cycle.getAsBoolean();
+				})).setIsActiveSupplier((menu1, entry) -> editor.layout.randomMode)
 				.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.fancymenu.editor.layoutoptions.randommode.onlyfirsttime.btn.desc")))
 				.setIcon(ContextMenu.IconFactory.getIcon("random_once"));
 
@@ -601,21 +604,21 @@ public class LayoutEditorUI {
 		menu.addSeparatorEntry("separator_after_close_audio");
 
 		menu.addClickableEntry("layout_wide_requirements", Component.translatable("fancymenu.editor.loading_requirement.layouts.loading_requirements"), (menu1, entry) -> {
-			Minecraft.getInstance().setScreen(new ManageRequirementsScreen(editor.layout.layoutWideLoadingRequirementContainer.copy(false), (call) -> {
-				if (call != null) {
-					editor.layout.layoutWideLoadingRequirementContainer = call;
-				}
-				Minecraft.getInstance().setScreen(editor);
-			}));
-		}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.loading_requirement.layouts.loading_requirements.desc")))
+					Minecraft.getInstance().setScreen(new ManageRequirementsScreen(editor.layout.layoutWideLoadingRequirementContainer.copy(false), (call) -> {
+						if (call != null) {
+							editor.layout.layoutWideLoadingRequirementContainer = call;
+						}
+						Minecraft.getInstance().setScreen(editor);
+					}));
+				}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.loading_requirement.layouts.loading_requirements.desc")))
 				.setIcon(ContextMenu.IconFactory.getIcon("check_list"));
 
 		menu.addSeparatorEntry("separator_after_layout_wide_requirements");
 
 		menu.addClickableEntry("paste_elements", Component.translatable("fancymenu.editor.edit.paste"), (menu1, entry) -> {
-			editor.history.saveSnapshot();
-			editor.pasteElementsFromClipboard();
-		}).setIsActiveSupplier((menu1, entry) -> !LayoutEditorScreen.COPIED_ELEMENTS_CLIPBOARD.isEmpty())
+					editor.history.saveSnapshot();
+					editor.pasteElementsFromClipboard();
+				}).setIsActiveSupplier((menu1, entry) -> !LayoutEditorScreen.COPIED_ELEMENTS_CLIPBOARD.isEmpty())
 				.setIcon(ContextMenu.IconFactory.getIcon("paste"));
 
 		menu.addSeparatorEntry("separator_after_paste_elements");
@@ -631,13 +634,6 @@ public class LayoutEditorUI {
 	public static ContextMenu buildScrollListCustomizationsContextMenu(@NotNull LayoutEditorScreen editor) {
 
 		ContextMenu menu = new ContextMenu();
-
-		menu.addValueCycleEntry("preserve_header_footer_aspect_ratio", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.preserve_header_footer_aspect_ratio", editor.layout.preserveScrollListHeaderFooterAspectRatio).addCycleListener(cycle -> {
-			editor.history.saveSnapshot();
-			editor.layout.preserveScrollListHeaderFooterAspectRatio = cycle.getAsBoolean();
-		})).setIcon(ContextMenu.IconFactory.getIcon("aspect_ratio"));
-
-		menu.addSeparatorEntry("separator_after_preserve_aspect_ratio");
 
 		NonStackableOverlayUI.addImageResourceChooserContextMenuEntryTo(menu, "header_texture",
 						null,
@@ -662,6 +658,26 @@ public class LayoutEditorUI {
 				.setIcon(ContextMenu.IconFactory.getIcon("image"));
 
 		menu.addSeparatorEntry("separator_after_footer_texture");
+
+		menu.addValueCycleEntry("repeat_header_texture", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.repeat_header", editor.layout.repeatScrollListHeaderTexture).addCycleListener(cycleEnabledDisabled -> {
+			editor.history.saveSnapshot();
+			editor.layout.repeatScrollListHeaderTexture = cycleEnabledDisabled.getAsBoolean();
+		})).setIsActiveSupplier((menu1, entry) -> !editor.layout.preserveScrollListHeaderFooterAspectRatio);
+
+		menu.addValueCycleEntry("repeat_footer_texture", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.repeat_footer", editor.layout.repeatScrollListFooterTexture).addCycleListener(cycleEnabledDisabled -> {
+			editor.history.saveSnapshot();
+			editor.layout.repeatScrollListFooterTexture = cycleEnabledDisabled.getAsBoolean();
+		})).setIsActiveSupplier((menu1, entry) -> !editor.layout.preserveScrollListHeaderFooterAspectRatio);
+
+		menu.addSeparatorEntry("separator_after_header_footer_repeat_texture");
+
+		menu.addValueCycleEntry("preserve_header_footer_aspect_ratio", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.preserve_header_footer_aspect_ratio", editor.layout.preserveScrollListHeaderFooterAspectRatio).addCycleListener(cycle -> {
+					editor.history.saveSnapshot();
+					editor.layout.preserveScrollListHeaderFooterAspectRatio = cycle.getAsBoolean();
+				})).setIcon(ContextMenu.IconFactory.getIcon("aspect_ratio"))
+				.setIsActiveSupplier((menu1, entry) -> (!editor.layout.repeatScrollListHeaderTexture && !editor.layout.repeatScrollListFooterTexture));
+
+		menu.addSeparatorEntry("separator_after_preserve_aspect_ratio");
 
 		menu.addValueCycleEntry("header_shadow", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.render_header_shadow", editor.layout.renderScrollListHeaderShadow).addCycleListener(cycle -> {
 			editor.history.saveSnapshot();

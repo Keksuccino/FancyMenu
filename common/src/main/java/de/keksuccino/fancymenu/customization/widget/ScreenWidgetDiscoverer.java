@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.widget.identification.WidgetIdentif
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import org.apache.logging.log4j.LogManager;
@@ -80,6 +81,8 @@ public class ScreenWidgetDiscoverer {
 
 	private static void visitWidget(@NotNull Object widget, @NotNull List<Long> ids, @NotNull List<WidgetMeta> widgetMetaList, @NotNull Screen screen) {
 		if (widget instanceof AbstractWidget w) {
+			//Skip AbstractSelectionLists so they don't appear as customizable widget
+			if (widget instanceof AbstractSelectionList<?>) return;
 			String idRaw = w.getX() + "" + w.getY();
 			long id = 0;
 			if (MathUtils.isLong(idRaw)) {
