@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooser
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.apache.logging.log4j.LogManager;
@@ -42,9 +43,9 @@ public class ManageResourcePreLoadScreen extends CellScreen {
 
             String sourceString;
             if (source instanceof ResourcePreLoader.CubicPanoramaSource) {
-                sourceString = "[Cubic Panorama] " + source.getSourceWithoutPrefix();
+                sourceString = "[" + I18n.get("fancymenu.background.panorama") + "] " + source.getSourceWithoutPrefix();
             } else if (source instanceof ResourcePreLoader.SlideshowSource) {
-                sourceString = "[Slideshow] " + source.getSourceWithoutPrefix();
+                sourceString = "[" + I18n.get("fancymenu.background.slideshow") + "] " + source.getSourceWithoutPrefix();
             } else {
                 sourceString = ResourceSourceType.getWithoutSourcePrefix(source.getSerializationSource());
             }

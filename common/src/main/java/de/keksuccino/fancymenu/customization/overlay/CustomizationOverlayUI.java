@@ -105,6 +105,7 @@ public class CustomizationOverlayUI {
             return grand;
         }
 
+        //TODO übernehmen
         CustomizationOverlayMenuBar menuBar = new CustomizationOverlayMenuBar();
         menuBar.setExpanded(expanded);
         Screen screen = Minecraft.getInstance().screen;

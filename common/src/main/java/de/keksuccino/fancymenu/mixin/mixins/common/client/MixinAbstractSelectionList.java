@@ -18,7 +18,7 @@ public abstract class MixinAbstractSelectionList {
 
 	@Shadow private boolean renderTopAndBottom;
 
-	@Unique private boolean shouldFireRenderHeaderFooterEvents;
+	@Unique private boolean shouldFireRenderHeaderFooterEvents_FancyMenu;
 
 	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSelectionList;isMouseOver(DD)Z", shift = Shift.AFTER))
 	private void beforeRenderListBackgroundFancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo ci) {
@@ -34,8 +34,8 @@ public abstract class MixinAbstractSelectionList {
 
 	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;disableScissor()V", shift = Shift.AFTER))
 	private void beforeRenderListHeaderFooterFancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo ci) {
-		this.shouldFireRenderHeaderFooterEvents = this.renderTopAndBottom;
-		if (this.shouldFireRenderHeaderFooterEvents) {
+		this.shouldFireRenderHeaderFooterEvents_FancyMenu = this.renderTopAndBottom;
+		if (this.shouldFireRenderHeaderFooterEvents_FancyMenu) {
 			RenderGuiListHeaderFooterEvent.Pre e = new RenderGuiListHeaderFooterEvent.Pre(graphics, (AbstractSelectionList) ((Object)this));
 			EventHandler.INSTANCE.postEvent(e);
 			if (e.isCanceled()) this.renderTopAndBottom = false;
@@ -44,7 +44,7 @@ public abstract class MixinAbstractSelectionList {
 
 	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractSelectionList;getMaxScroll()I"))
 	private void afterRenderListHeaderFooterFancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo ci) {
-		if (this.shouldFireRenderHeaderFooterEvents) {
+		if (this.shouldFireRenderHeaderFooterEvents_FancyMenu) {
 			RenderGuiListHeaderFooterEvent.Post e = new RenderGuiListHeaderFooterEvent.Post(graphics, (AbstractSelectionList) ((Object)this));
 			EventHandler.INSTANCE.postEvent(e);
 			this.renderTopAndBottom = true;
