@@ -18,6 +18,7 @@ CHANGELOG | FANCYMENU v3.1.0 [ W I P - NOT PUBLIC YET! ]
 - Added "Nine-Slicing" mode to Image element
 - Added "Nine-Slicing" mode to Vanilla Button/Slider, Custom Button and Custom Slider elements
 - Excluded "Skin Swapper" mod screens from customization
+- Fixed [<=1.19.2] layer editor widget looks broken (layers list gets rendered out of widget window when list is long enough to scroll)
 - Fixed Choose Resource screen adding "/config/fancymenu/assets/" to non-local sources when editing them in the text editor
 - Fixed Custom GUIs showing their identifier as title if no title was set
 - Fixed Custom GUIs not correctly applying some of the settings configured in the Build/Edit Custom GUI screen
