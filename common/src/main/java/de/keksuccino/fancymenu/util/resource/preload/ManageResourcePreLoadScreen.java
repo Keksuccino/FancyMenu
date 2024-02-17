@@ -1,15 +1,18 @@
 package de.keksuccino.fancymenu.util.resource.preload;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.layout.editor.ChoosePanoramaScreen;
+import de.keksuccino.fancymenu.customization.layout.editor.ChooseSlideshowScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
+import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.apache.logging.log4j.LogManager;
@@ -26,7 +29,7 @@ public class ManageResourcePreLoadScreen extends CellScreen {
     protected Consumer<Boolean> callback;
 
     public ManageResourcePreLoadScreen(@NotNull Consumer<Boolean> callback) {
-        super(Components.translatable("fancymenu.resources.pre_loading.manage"));
+        super(Component.translatable("fancymenu.resources.pre_loading.manage"));
         this.callback = callback;
     }
 
@@ -37,7 +40,16 @@ public class ManageResourcePreLoadScreen extends CellScreen {
 
         for (ResourceSource source : ResourcePreLoader.getRegisteredResourceSources(this.cachedSerialized)) {
 
-            this.addLabelCell(Components.literal(source.getSourceWithoutPrefix()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt())))
+            String sourceString;
+            if (source instanceof ResourcePreLoader.CubicPanoramaSource) {
+                sourceString = "[" + I18n.get("fancymenu.background.panorama") + "] " + source.getSourceWithoutPrefix();
+            } else if (source instanceof ResourcePreLoader.SlideshowSource) {
+                sourceString = "[" + I18n.get("fancymenu.background.slideshow") + "] " + source.getSourceWithoutPrefix();
+            } else {
+                sourceString = ResourceSourceType.getWithoutSourcePrefix(source.getSerializationSource());
+            }
+
+            this.addLabelCell(Component.literal(sourceString).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt())))
                     .putMemoryValue("source", source.getSerializationSource())
                     .setSelectable(true);
 
@@ -50,10 +62,30 @@ public class ManageResourcePreLoadScreen extends CellScreen {
     @Override
     protected void initRightSideWidgets() {
 
-        this.addRightSideButton(20, Components.translatable("fancymenu.resources.pre_loading.manage.add"), extendedButton -> {
+        this.addRightSideButton(20, Component.translatable("fancymenu.resources.pre_loading.manage.add"), extendedButton -> {
             ResourceChooserScreen<?,?> s = ResourceChooserScreen.generic(FileTypeGroup.allSupported(), null, source -> {
                 if (source != null) {
-                    this.cachedSerialized = ResourcePreLoader.addResourceSource(ResourceSource.of(source), this.cachedSerialized, false);
+                    this.cachedSerialized = ResourcePreLoader.addResourceSource(ResourcePreLoader.buildSourceFromString(source), this.cachedSerialized, false);
+                }
+                Minecraft.getInstance().setScreen(this);
+            });
+            Minecraft.getInstance().setScreen(s);
+        });
+
+        this.addRightSideButton(20, Component.translatable("fancymenu.resources.pre_loading.manage.add.panorama"), extendedButton -> {
+            ChoosePanoramaScreen s = new ChoosePanoramaScreen(null, panoramaName -> {
+                if (panoramaName != null) {
+                    this.cachedSerialized = ResourcePreLoader.addResourceSource(ResourcePreLoader.buildSourceFromString(ResourcePreLoader.CUBIC_PANORAMA_SOURCE_PREFIX + panoramaName), this.cachedSerialized, false);
+                }
+                Minecraft.getInstance().setScreen(this);
+            });
+            Minecraft.getInstance().setScreen(s);
+        });
+
+        this.addRightSideButton(20, Component.translatable("fancymenu.resources.pre_loading.manage.add.slideshow"), extendedButton -> {
+            ChooseSlideshowScreen s = new ChooseSlideshowScreen(null, slideshowName -> {
+                if (slideshowName != null) {
+                    this.cachedSerialized = ResourcePreLoader.addResourceSource(ResourcePreLoader.buildSourceFromString(ResourcePreLoader.SLIDESHOW_SOURCE_PREFIX + slideshowName), this.cachedSerialized, false);
                 }
                 Minecraft.getInstance().setScreen(this);
             });
@@ -62,12 +94,12 @@ public class ManageResourcePreLoadScreen extends CellScreen {
 
         this.addRightSideDefaultSpacer();
 
-        this.addRightSideButton(20, Components.translatable("fancymenu.resources.pre_loading.manage.remove"), extendedButton -> {
+        this.addRightSideButton(20, Component.translatable("fancymenu.resources.pre_loading.manage.remove"), extendedButton -> {
             String source = this.getSelectedSource();
             if (source != null) {
                 ConfirmationScreen s = ConfirmationScreen.warning(aBoolean -> {
                     if (aBoolean) {
-                        this.cachedSerialized = ResourcePreLoader.removeResourceSource(ResourceSource.of(source), this.cachedSerialized, false);
+                        this.cachedSerialized = ResourcePreLoader.removeResourceSource(ResourcePreLoader.buildSourceFromString(source), this.cachedSerialized, false);
                     }
                     Minecraft.getInstance().setScreen(this);
                 }, LocalizationUtils.splitLocalizedLines("fancymenu.resources.pre_loading.manage.remove.confirm"));

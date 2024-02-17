@@ -10,7 +10,6 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
@@ -32,7 +31,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         element.baseWidth = 100;
         element.baseHeight = 20;
         element.label = "New Button";
-        element.setWidget(new ExtendedButton(0, 0, 0, 0, Components.empty(), (press) -> {
+        element.setWidget(new ExtendedButton(0, 0, 0, 0, Component.empty(), (press) -> {
             if ((CustomizationOverlay.getCurrentMenuBarInstance() == null) || !CustomizationOverlay.getCurrentMenuBarInstance().isUserNavigatingInMenuBar()) {
                 boolean isMousePressed = MouseInput.isLeftMouseDown() || MouseInput.isRightMouseDown();
                 element.getExecutableBlock().execute();
@@ -88,11 +87,17 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
             element.restartBackgroundAnimationsOnHover = false;
         }
 
+        element.nineSliceCustomBackground = deserializeBoolean(element.nineSliceCustomBackground, serialized.getValue("nine_slice_custom_background"));
+        element.nineSliceBorderX = deserializeNumber(Integer.class, element.nineSliceBorderX, serialized.getValue("nine_slice_border_x"));
+        element.nineSliceBorderY = deserializeNumber(Integer.class, element.nineSliceBorderY, serialized.getValue("nine_slice_border_y"));
+
         element.backgroundAnimationNormal = serialized.getValue("backgroundanimationnormal");
 
         element.backgroundAnimationHover = serialized.getValue("backgroundanimationhovered");
 
         element.backgroundAnimationInactive = serialized.getValue("background_animation_inactive");
+
+        element.navigatable = deserializeBoolean(element.navigatable, serialized.getValue("navigatable"));
 
         return element;
 
@@ -124,6 +129,9 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         }
         serializeTo.putProperty("restartbackgroundanimations", "" + element.restartBackgroundAnimationsOnHover);
         serializeTo.putProperty("loopbackgroundanimations", "" + element.loopBackgroundAnimations);
+        serializeTo.putProperty("nine_slice_custom_background", "" + element.nineSliceCustomBackground);
+        serializeTo.putProperty("nine_slice_border_x", "" + element.nineSliceBorderX);
+        serializeTo.putProperty("nine_slice_border_y", "" + element.nineSliceBorderY);
         if (element.hoverSound != null) {
             serializeTo.putProperty("hoversound", element.hoverSound.getSourceWithPrefix());
         }
@@ -139,6 +147,7 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
         if (element.label != null) {
             serializeTo.putProperty("label", element.label);
         }
+        serializeTo.putProperty("navigatable", "" + element.navigatable);
 
         return serializeTo;
 
@@ -155,11 +164,11 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
             return b.getWidget().getMessage();
         }
         if (element instanceof VanillaWidgetElement b) {
-            if (b.getWidget() instanceof AbstractButton) return Components.translatable("fancymenu.editor.elements.vanilla_widget.button");
-            if (b.getWidget() instanceof CustomizableSlider) return Components.translatable("fancymenu.editor.elements.vanilla_widget.slider");
-            return Components.translatable("fancymenu.editor.elements.vanilla_widget.generic");
+            if (b.getWidget() instanceof AbstractButton) return Component.translatable("fancymenu.editor.elements.vanilla_widget.button");
+            if (b.getWidget() instanceof CustomizableSlider) return Component.translatable("fancymenu.editor.elements.vanilla_widget.slider");
+            return Component.translatable("fancymenu.editor.elements.vanilla_widget.generic");
         }
-        return Components.translatable("fancymenu.editor.add.button");
+        return Component.translatable("fancymenu.editor.add.button");
     }
 
     @Override

@@ -106,7 +106,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
                 RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
                 RenderSystem.enableBlend();
                 RenderSystem.enableDepthTest();
-                RenderingUtils.blitNineSliced(pose, this.x, this.y, this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureY());
+                RenderingUtils.blitNineSliced_Vanilla(pose, this.x, this.y, this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureY());
                 RenderingUtils.resetShaderColor();
             }
             RenderingUtils.resetShaderColor();

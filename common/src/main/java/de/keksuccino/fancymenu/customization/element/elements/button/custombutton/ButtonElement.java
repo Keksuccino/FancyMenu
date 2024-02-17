@@ -11,8 +11,9 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinButton;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
@@ -53,6 +54,10 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public String backgroundAnimationInactive;
     public boolean loopBackgroundAnimations = true;
     public boolean restartBackgroundAnimationsOnHover = true;
+    public boolean nineSliceCustomBackground = false;
+    public int nineSliceBorderX = 5;
+    public int nineSliceBorderY = 5;
+    public boolean navigatable = true;
     @NotNull
     public GenericExecutableBlock actionExecutor = new GenericExecutableBlock();
 
@@ -71,7 +76,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {
 
         if (this.getWidget() == null) return;
 
@@ -89,15 +94,15 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
             this.getWidget().active = true;
         }
 
-        this.renderElementWidget(pose, mouseX, mouseY, partial);
+        this.renderElementWidget(graphics, mouseX, mouseY, partial);
 
         RenderingUtils.resetShaderColor();
 
     }
 
-    protected void renderElementWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    protected void renderElementWidget(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {
         if (this.getWidget() != null) {
-            this.getWidget().render(pose, mouseX, mouseY, partial);
+            this.getWidget().render(graphics, mouseX, mouseY, partial);
         }
     }
 
@@ -117,6 +122,13 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         this.updateWidgetTexture();
         this.updateWidgetSize();
         this.updateWidgetPosition();
+        this.updateWidgetNavigatable();
+    }
+
+    public void updateWidgetNavigatable() {
+        if (this.getWidget() instanceof NavigatableWidget w) {
+            w.setNavigatable(this.navigatable);
+        }
     }
 
     public void updateWidgetVisibility() {
@@ -143,7 +155,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     }
 
     public void updateWidgetTooltip() {
-        if ((this.tooltip != null) && (this.getWidget() != null) && ((IMixinAbstractWidget)this.getWidget()).getIsHoveredFancyMenu() && !isEditor()) {
+        if ((this.tooltip != null) && (this.getWidget() != null) && ((IMixinAbstractWidget)this.getWidget()).getIsHoveredFancyMenu() && this.getWidget().visible && this.shouldRender() && !isEditor()) {
             String tooltip = this.tooltip.replace("%n%", "\n");
             TooltipHandler.INSTANCE.addWidgetTooltip(this.getWidget(), Tooltip.of(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(tooltip), "\n")), false, true);
         }
@@ -154,7 +166,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         if (this.label != null) {
             this.getWidget().setMessage(buildComponent(this.label));
         } else {
-            this.getWidget().setMessage(Components.empty());
+            this.getWidget().setMessage(Component.empty());
         }
         if ((this.hoverLabel != null) && this.getWidget().isHoveredOrFocused() && this.getWidget().active) {
             this.getWidget().setMessage(buildComponent(this.hoverLabel));
@@ -214,6 +226,15 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         }
 
         if (this.getWidget() instanceof CustomizableWidget w) {
+            if (this.getWidget() instanceof CustomizableSlider s) {
+                s.setNineSliceCustomSliderBackground_FancyMenu(this.nineSliceCustomBackground);
+                s.setNineSliceSliderBackgroundBorderX_FancyMenu(this.nineSliceBorderX);
+                s.setNineSliceSliderBackgroundBorderY_FancyMenu(this.nineSliceBorderY);
+            } else {
+                w.setNineSliceCustomBackground_FancyMenu(this.nineSliceCustomBackground);
+                w.setNineSliceBorderX_FancyMenu(this.nineSliceBorderX);
+                w.setNineSliceBorderY_FancyMenu(this.nineSliceBorderY);
+            }
             w.setCustomBackgroundNormalFancyMenu(backNormal);
             w.setCustomBackgroundHoverFancyMenu(backHover);
             w.setCustomBackgroundInactiveFancyMenu(backInactive);

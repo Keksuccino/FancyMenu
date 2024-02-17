@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.IExtendedWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractSliderButton;
@@ -21,7 +22,7 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 
 @SuppressWarnings("unused")
-public abstract class AbstractExtendedSlider extends AbstractSliderButton implements IExtendedWidget {
+public abstract class AbstractExtendedSlider extends AbstractSliderButton implements IExtendedWidget, NavigatableWidget {
 
     protected static final ResourceLocation SLIDER_LOCATION = new ResourceLocation("textures/gui/widgets.png");
 
@@ -48,6 +49,8 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     protected SliderValueUpdateListener sliderValueUpdateListener;
     @NotNull
     protected ConsumingSupplier<AbstractExtendedSlider, Component> labelSupplier = slider -> Components.literal(slider.getValueDisplayText());
+    protected boolean focusable = true;
+    protected boolean navigatable = true;
 
     public AbstractExtendedSlider(int x, int y, int width, int height, Component label, double value) {
         super(x, y, width, height, label, value);
@@ -94,7 +97,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
         RenderSystem.enableBlend();
         RenderSystem.enableDepthTest();
-        RenderingUtils.blitNineSliced(pose, this.x, this.y, this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getBackgroundTextureY());
+        RenderingUtils.blitNineSliced_Vanilla(pose, this.x, this.y, this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getBackgroundTextureY());
         RenderingUtils.resetShaderColor();
     }
 
@@ -141,7 +144,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
         RenderSystem.enableBlend();
         RenderSystem.enableDepthTest();
-        RenderingUtils.blitNineSliced(pose, this.getSliderHandleX(), this.y, this.getHandleWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getHandleTextureY());
+        RenderingUtils.blitNineSliced_Vanilla(pose, this.getSliderHandleX(), this.y, this.getHandleWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getHandleTextureY());
         RenderingUtils.resetShaderColor();
     }
 
@@ -371,6 +374,26 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
 
     public CustomizableWidget getAsCustomizableWidget() {
         return (CustomizableWidget) this;
+    }
+
+    @Override
+    public boolean isFocusable() {
+        return focusable;
+    }
+
+    @Override
+    public void setFocusable(boolean focusable) {
+        this.focusable = focusable;
+    }
+
+    @Override
+    public boolean isNavigatable() {
+        return navigatable;
+    }
+
+    @Override
+    public void setNavigatable(boolean navigatable) {
+        this.navigatable = navigatable;
     }
 
     @FunctionalInterface

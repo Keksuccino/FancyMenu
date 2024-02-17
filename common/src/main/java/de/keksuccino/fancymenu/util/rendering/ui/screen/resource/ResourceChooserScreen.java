@@ -187,7 +187,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
         this.editBox.setEditable(!isLegacyLocal);
         this.editBox.setResponder(s -> this.resourceSource = s);
         sourceInputCell.setEditorCallback((s, textInputCell) -> {
-            if (!s.startsWith("/config/fancymenu/assets/")) {
+            if (isLocal && !isLegacyLocal && !s.startsWith("/config/fancymenu/assets/")) {
                 s = "/config/fancymenu/assets/" + s;
             }
             this.resourceSource = s;

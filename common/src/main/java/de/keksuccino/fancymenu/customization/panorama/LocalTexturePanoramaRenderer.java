@@ -41,14 +41,16 @@ public class LocalTexturePanoramaRenderer implements Widget {
 	@Nullable
 	public File overlayImageFile;
 	protected String name = null;
-	protected final List<ResourceSupplier<ITexture>> panoramaImageSuppliers = new ArrayList<>();
+	public final List<ResourceSupplier<ITexture>> panoramaImageSuppliers = new ArrayList<>();
 	@Nullable
-	protected ResourceSupplier<ITexture> overlayTextureSupplier;
+	public ResourceSupplier<ITexture> overlayTextureSupplier;
 	protected float speed = 1.0F;
 	protected double fov = 85.0D;
 	protected float angle = 25.0F;
 	public float opacity = 1.0F;
-	protected float frameTime;
+	protected volatile boolean tickerThreadRunning = false;
+	protected volatile float currentRotation = 0.0F; //0 - 360
+	protected volatile long lastRenderCall = -1L;
 
 	@Nullable
 	public static LocalTexturePanoramaRenderer build(@NotNull File propertiesFile, @NotNull File panoramaImageDir, @Nullable File overlayImageFile) {
@@ -75,6 +77,13 @@ public class LocalTexturePanoramaRenderer implements Widget {
 						String an = panoMeta.getValue("angle");
 						if ((an != null) && MathUtils.isFloat(an)) {
 							renderer.angle = Float.parseFloat(an);
+						}
+						String rot = panoMeta.getValue("start_rotation");
+						if ((rot != null) && MathUtils.isFloat(rot)) {
+							renderer.currentRotation = Float.parseFloat(rot);
+							if ((renderer.currentRotation > 360.0F) || (renderer.currentRotation < 0.0F)) {
+								renderer.currentRotation = 0;
+							}
 						}
 						renderer.prepare();
 						return renderer;
@@ -118,8 +127,39 @@ public class LocalTexturePanoramaRenderer implements Widget {
 
 	}
 
+	@SuppressWarnings("all")
+	protected void startTickerThreadIfNeeded() {
+
+		if (this.tickerThreadRunning) return;
+
+		this.lastRenderCall = System.currentTimeMillis();
+		this.tickerThreadRunning = true;
+
+		new Thread(() -> {
+			while ((this.lastRenderCall + 5000L) > System.currentTimeMillis()) {
+				try {
+					this.currentRotation += 0.03F;
+					if (this.currentRotation >= 360) {
+						this.currentRotation = 0;
+					}
+				} catch (Exception ex) {
+					LOGGER.error("[FANCYMENU] Error while ticking panorama!", ex);
+				}
+				try {
+					Thread.sleep(Math.max(2, (int)(20 / this.speed)));
+				} catch (Exception ex) {
+					LOGGER.error("[FANCYMENU] Error while ticking panorama!", ex);
+				}
+			}
+			this.tickerThreadRunning = false;
+		}, "FancyMenu Panorama Ticker Thread").start();
+
+	}
+
 	@Override
 	public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+		this.lastRenderCall = System.currentTimeMillis();
+		this.startTickerThreadIfNeeded();
 		if (this.panoramaImageSuppliers.size() < 6) {
 			RenderSystem.enableBlend();
 			RenderingUtils.resetShaderColor();
@@ -135,13 +175,11 @@ public class LocalTexturePanoramaRenderer implements Widget {
 
 		Minecraft mc = Minecraft.getInstance();
 
-		this.frameTime += Minecraft.getInstance().getDeltaFrameTime() * this.speed;
-
 		int screenW = ScreenUtils.getScreenWidth();
 		int screenH = ScreenUtils.getScreenHeight();
 
-		float pitch = Mth.sin(this.frameTime * 0.001F) * 5.0F + this.angle;
-		float yaw = -this.frameTime * 0.1F;
+		float pitch = this.angle;
+		float yaw = -this.currentRotation;
 
 		Tesselator tesselator = Tesselator.getInstance();
 		BufferBuilder bufferBuilder = tesselator.getBuilder();

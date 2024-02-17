@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,6 +33,10 @@ public class ImageElementBuilder extends ElementBuilder<ImageElement, ImageEdito
         ImageElement element = this.buildDefaultInstance();
 
         element.textureSupplier = deserializeImageResourceSupplier(serialized.getValue("source"));
+        element.repeat = deserializeBoolean(element.repeat, serialized.getValue("repeat_texture"));
+        element.nineSlice = deserializeBoolean(element.nineSlice, serialized.getValue("nine_slice_texture"));
+        element.nineSliceBorderX = deserializeNumber(Integer.class, element.nineSliceBorderX, serialized.getValue("nine_slice_texture_border_x"));
+        element.nineSliceBorderY = deserializeNumber(Integer.class, element.nineSliceBorderY, serialized.getValue("nine_slice_texture_border_y"));
 
         return element;
 
@@ -45,9 +48,13 @@ public class ImageElementBuilder extends ElementBuilder<ImageElement, ImageEdito
         if (element.textureSupplier != null) {
             serializeTo.putProperty("source", element.textureSupplier.getSourceWithPrefix());
         }
+        serializeTo.putProperty("repeat_texture", "" + element.repeat);
+        serializeTo.putProperty("nine_slice_texture", "" + element.nineSlice);
+        serializeTo.putProperty("nine_slice_texture_border_x", "" + element.nineSliceBorderX);
+        serializeTo.putProperty("nine_slice_texture_border_y", "" + element.nineSliceBorderY);
 
         return serializeTo;
-        
+
     }
 
     @Override
@@ -57,7 +64,7 @@ public class ImageElementBuilder extends ElementBuilder<ImageElement, ImageEdito
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Components.translatable("fancymenu.editor.add.image");
+        return Component.translatable("fancymenu.editor.add.image");
     }
 
     @Override

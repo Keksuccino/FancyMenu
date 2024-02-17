@@ -8,7 +8,6 @@ import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import net.minecraft.client.gui.screens.Screen;
 import org.apache.logging.log4j.LogManager;
@@ -19,9 +18,9 @@ public class CustomizationOverlay {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	private static MenuBar overlayMenuBar;
+	private static CustomizationOverlayMenuBar overlayMenuBar;
 	private static DebugOverlay debugOverlay;
-	
+
 	public static void init() {
 		EventHandler.INSTANCE.registerListenersOf(new CustomizationOverlay());
 	}
@@ -37,7 +36,7 @@ public class CustomizationOverlay {
 	}
 
 	@Nullable
-	public static MenuBar getCurrentMenuBarInstance() {
+	public static CustomizationOverlayMenuBar getCurrentMenuBarInstance() {
 		return overlayMenuBar;
 	}
 
@@ -48,21 +47,35 @@ public class CustomizationOverlay {
 
 	@EventListener(priority = -1000)
 	public void onInitScreenPost(InitOrResizeScreenCompletedEvent e) {
-		rebuildOverlay();
-		e.getWidgets().add(0, overlayMenuBar);
-		if (e.getScreen() instanceof CustomizableScreen c) c.removeOnInitChildrenFancyMenu().add(overlayMenuBar);
-		e.getWidgets().add(1, debugOverlay);
-		if (e.getScreen() instanceof CustomizableScreen c) c.removeOnInitChildrenFancyMenu().add(debugOverlay);
+		if (!ScreenCustomization.isScreenBlacklisted(e.getScreen().getClass().getName())) {
+			rebuildOverlay();
+			if ((overlayMenuBar != null) && (debugOverlay != null)) {
+				if (FancyMenu.getOptions().showCustomizationOverlay.getValue()) {
+					e.getWidgets().add(0, overlayMenuBar);
+					if (e.getScreen() instanceof CustomizableScreen c) c.removeOnInitChildrenFancyMenu().add(overlayMenuBar);
+				}
+				if (FancyMenu.getOptions().showDebugOverlay.getValue()) {
+					e.getWidgets().add(1, debugOverlay);
+					if (e.getScreen() instanceof CustomizableScreen c) c.removeOnInitChildrenFancyMenu().add(debugOverlay);
+				}
+			} else {
+				LOGGER.error("[FANCYMENU] Failed to rebuild overlay!", new NullPointerException("Debug or Customization overlay was NULL!"));
+			}
+		}
 	}
 
 	@EventListener(priority = EventPriority.LOW)
 	public void onRenderPost(RenderScreenEvent.Post e) {
 		if (!ScreenCustomization.isScreenBlacklisted(e.getScreen().getClass().getName()) && (overlayMenuBar != null) && (debugOverlay != null)) {
 			if (FancyMenu.getOptions().showDebugOverlay.getValue()) {
+				debugOverlay.allowRender = true;
 				debugOverlay.render(e.getPoseStack(), e.getMouseX(), e.getMouseY(), e.getPartial());
+				debugOverlay.allowRender = false;
 			}
 			if (FancyMenu.getOptions().showCustomizationOverlay.getValue()) {
+				overlayMenuBar.allowRender = true;
 				overlayMenuBar.render(e.getPoseStack(), e.getMouseX(), e.getMouseY(), e.getPartial());
+				overlayMenuBar.allowRender = false;
 			}
 		}
 	}

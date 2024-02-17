@@ -8,7 +8,6 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.network.chat.Component;
 import org.apache.commons.lang3.tuple.Pair;
@@ -101,6 +100,15 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
         element.loopBackgroundAnimations = deserializeBoolean(element.loopBackgroundAnimations, serialized.getValue("loop_background_animations"));
         element.restartBackgroundAnimationsOnHover = deserializeBoolean(element.restartBackgroundAnimationsOnHover, serialized.getValue("restart_background_animations"));
 
+        element.nineSliceCustomBackground = deserializeBoolean(element.nineSliceCustomBackground, serialized.getValue("nine_slice_custom_background"));
+        element.nineSliceBorderX = deserializeNumber(Integer.class, element.nineSliceBorderX, serialized.getValue("nine_slice_border_x"));
+        element.nineSliceBorderY = deserializeNumber(Integer.class, element.nineSliceBorderY, serialized.getValue("nine_slice_border_y"));
+        element.nineSliceSliderHandle = deserializeBoolean(element.nineSliceSliderHandle, serialized.getValue("nine_slice_slider_handle"));
+        element.nineSliceSliderHandleBorderX = deserializeNumber(Integer.class, element.nineSliceSliderHandleBorderX, serialized.getValue("nine_slice_slider_handle_border_x"));
+        element.nineSliceSliderHandleBorderY = deserializeNumber(Integer.class, element.nineSliceSliderHandleBorderY, serialized.getValue("nine_slice_slider_handle_border_y"));
+
+        element.navigatable = deserializeBoolean(element.navigatable, serialized.getValue("navigatable"));
+
         element.buildSlider();
         element.prepareExecutableBlock();
 
@@ -167,8 +175,17 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
         serializeTo.putProperty("slider_background_animation_normal", element.sliderBackgroundAnimationNormal);
         serializeTo.putProperty("slider_background_animation_highlighted", element.sliderBackgroundAnimationHighlighted);
 
+        serializeTo.putProperty("nine_slice_custom_background", "" + element.nineSliceCustomBackground);
+        serializeTo.putProperty("nine_slice_border_x", "" + element.nineSliceBorderX);
+        serializeTo.putProperty("nine_slice_border_y", "" + element.nineSliceBorderY);
+        serializeTo.putProperty("nine_slice_slider_handle", "" + element.nineSliceSliderHandle);
+        serializeTo.putProperty("nine_slice_slider_handle_border_x", "" + element.nineSliceSliderHandleBorderX);
+        serializeTo.putProperty("nine_slice_slider_handle_border_y", "" + element.nineSliceSliderHandleBorderY);
+
+        serializeTo.putProperty("navigatable", "" + element.navigatable);
+
         return serializeTo;
-        
+
     }
 
     @Override
@@ -178,7 +195,7 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Components.translatable("fancymenu.elements.slider.v2");
+        return Component.translatable("fancymenu.elements.slider.v2");
     }
 
     @Override

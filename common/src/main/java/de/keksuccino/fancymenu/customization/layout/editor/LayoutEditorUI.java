@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.layout.editor;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.background.ChooseMenuBackgroundScreen;
+import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
@@ -441,7 +442,7 @@ public class LayoutEditorUI {
 
 		if ((editor.layoutTargetScreen != null) && !editor.layout.isUniversalLayout()) {
 
-			NonStackableOverlayUI.addInputContextMenuEntryTo(menu, "edit_menu_title", Components.translatable("fancymenu.helper.editor.edit_menu_title"),
+			NonStackableOverlayUI.addInputContextMenuEntryTo(menu, "edit_menu_title", Component.translatable("fancymenu.helper.editor.edit_menu_title"),
 							() -> editor.layout.customMenuTitle,
 							s -> {
 								editor.history.saveSnapshot();
@@ -450,8 +451,9 @@ public class LayoutEditorUI {
 							true, null, null, false, true,
 							consumes -> !consumes.isEmpty(),
 							consumes -> consumes.isEmpty() ? Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.edit_menu_title.reset.invalid_title")) : null)
-					.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.edit_menu_title.desc")))
-					.setIcon(ContextMenu.IconFactory.getIcon("text"));
+					.setTooltipSupplier((menu1, entry) -> !(editor.layoutTargetScreen instanceof CustomGuiBaseScreen) ? Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.edit_menu_title.desc")) : Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.edit_menu_title.custom_gui.desc")))
+					.setIcon(ContextMenu.IconFactory.getIcon("text"))
+					.setIsActiveSupplier((menu1, entry) -> !(editor.layoutTargetScreen instanceof CustomGuiBaseScreen));
 
 			menu.addSeparatorEntry("separator_after_edit_menu_title");
 
@@ -459,7 +461,8 @@ public class LayoutEditorUI {
 
 		menu.addSubMenuEntry("scroll_list_customizations", Component.translatable("fancymenu.customization.scroll_lists"), buildScrollListCustomizationsContextMenu(editor))
 				.setIcon(ContextMenu.IconFactory.getIcon("scroll_edit"))
-				.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.scroll_lists.desc")));
+				.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.scroll_lists.desc")))
+				.setIsActiveSupplier((menu1, entry) -> !(editor.layoutTargetScreen instanceof CustomGuiBaseScreen));
 
 		menu.addSeparatorEntry("separator_after_scroll_list_customizations");
 
@@ -633,13 +636,6 @@ public class LayoutEditorUI {
 
 		ContextMenu menu = new ContextMenu();
 
-		menu.addValueCycleEntry("preserve_header_footer_aspect_ratio", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.preserve_header_footer_aspect_ratio", editor.layout.preserveScrollListHeaderFooterAspectRatio).addCycleListener(cycle -> {
-			editor.history.saveSnapshot();
-			editor.layout.preserveScrollListHeaderFooterAspectRatio = cycle.getAsBoolean();
-		})).setIcon(ContextMenu.IconFactory.getIcon("aspect_ratio"));
-
-		menu.addSeparatorEntry("separator_after_preserve_aspect_ratio");
-
 		NonStackableOverlayUI.addImageResourceChooserContextMenuEntryTo(menu, "header_texture",
 						null,
 						() -> editor.layout.scrollListHeaderTexture,
@@ -647,7 +643,7 @@ public class LayoutEditorUI {
 							editor.history.saveSnapshot();
 							editor.layout.scrollListHeaderTexture = iTextureResourceSupplier;
 						},
-						Components.translatable("fancymenu.customization.scroll_lists.header_texture"),
+						Component.translatable("fancymenu.customization.scroll_lists.header_texture"),
 						true, null, true, true, true)
 				.setIcon(ContextMenu.IconFactory.getIcon("image"));
 
@@ -658,11 +654,31 @@ public class LayoutEditorUI {
 							editor.history.saveSnapshot();
 							editor.layout.scrollListFooterTexture = iTextureResourceSupplier;
 						},
-						Components.translatable("fancymenu.customization.scroll_lists.footer_texture"),
+						Component.translatable("fancymenu.customization.scroll_lists.footer_texture"),
 						true, null, true, true, true)
 				.setIcon(ContextMenu.IconFactory.getIcon("image"));
 
 		menu.addSeparatorEntry("separator_after_footer_texture");
+
+		menu.addValueCycleEntry("repeat_header_texture", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.repeat_header", editor.layout.repeatScrollListHeaderTexture).addCycleListener(cycleEnabledDisabled -> {
+			editor.history.saveSnapshot();
+			editor.layout.repeatScrollListHeaderTexture = cycleEnabledDisabled.getAsBoolean();
+		})).setIsActiveSupplier((menu1, entry) -> !editor.layout.preserveScrollListHeaderFooterAspectRatio);
+
+		menu.addValueCycleEntry("repeat_footer_texture", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.repeat_footer", editor.layout.repeatScrollListFooterTexture).addCycleListener(cycleEnabledDisabled -> {
+			editor.history.saveSnapshot();
+			editor.layout.repeatScrollListFooterTexture = cycleEnabledDisabled.getAsBoolean();
+		})).setIsActiveSupplier((menu1, entry) -> !editor.layout.preserveScrollListHeaderFooterAspectRatio);
+
+		menu.addSeparatorEntry("separator_after_header_footer_repeat_texture");
+
+		menu.addValueCycleEntry("preserve_header_footer_aspect_ratio", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.preserve_header_footer_aspect_ratio", editor.layout.preserveScrollListHeaderFooterAspectRatio).addCycleListener(cycle -> {
+					editor.history.saveSnapshot();
+					editor.layout.preserveScrollListHeaderFooterAspectRatio = cycle.getAsBoolean();
+				})).setIcon(ContextMenu.IconFactory.getIcon("aspect_ratio"))
+				.setIsActiveSupplier((menu1, entry) -> (!editor.layout.repeatScrollListHeaderTexture && !editor.layout.repeatScrollListFooterTexture));
+
+		menu.addSeparatorEntry("separator_after_preserve_aspect_ratio");
 
 		menu.addValueCycleEntry("header_shadow", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.render_header_shadow", editor.layout.renderScrollListHeaderShadow).addCycleListener(cycle -> {
 			editor.history.saveSnapshot();
