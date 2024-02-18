@@ -10,7 +10,6 @@ import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.resources.ResourceLocation;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -18,6 +17,30 @@ import org.jetbrains.annotations.Nullable;
  */
 @ClassExtender(AbstractSliderButton.class)
 public interface CustomizableSlider {
+
+    void setNineSliceCustomSliderBackground_FancyMenu(boolean nineSlice);
+
+    boolean isNineSliceCustomSliderBackground_FancyMenu();
+
+    void setNineSliceSliderBackgroundBorderX_FancyMenu(int borderX);
+
+    int getNineSliceSliderBackgroundBorderX_FancyMenu();
+
+    void setNineSliceSliderBackgroundBorderY_FancyMenu(int borderY);
+
+    int getNineSliceSliderBackgroundBorderY_FancyMenu();
+
+    void setNineSliceCustomSliderHandle_FancyMenu(boolean nineSlice);
+
+    boolean isNineSliceCustomSliderHandle_FancyMenu();
+
+    void setNineSliceSliderHandleBorderX_FancyMenu(int borderX);
+
+    int getNineSliceSliderHandleBorderX_FancyMenu();
+
+    void setNineSliceSliderHandleBorderY_FancyMenu(int borderY);
+
+    int getNineSliceSliderHandleBorderY_FancyMenu();
 
     void setCustomSliderBackgroundNormalFancyMenu(@Nullable RenderableResource background);
 
@@ -34,16 +57,22 @@ public interface CustomizableSlider {
      */
     default boolean renderSliderBackgroundFancyMenu(PoseStack pose, AbstractSliderButton widget, boolean canChangeValue) {
         ResourceLocation location = null;
+        RenderableResource texture = null;
         if (this.getCustomSliderBackgroundHighlightedFancyMenu() instanceof PlayableResource p) p.pause();
         if (this.getCustomSliderBackgroundNormalFancyMenu() != null) {
             if (this.getCustomSliderBackgroundNormalFancyMenu() instanceof PlayableResource p) p.play();
+            texture = this.getCustomSliderBackgroundNormalFancyMenu();
             location = this.getCustomSliderBackgroundNormalFancyMenu().getResourceLocation();
         }
         if (location != null) {
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)this).getAlphaFancyMenu());
             RenderSystem.enableBlend();
             RenderingUtils.bindTexture(location);
-            GuiComponent.blit(pose, widget.x, widget.y, 0.0F, 0.0F, widget.getWidth(), widget.getHeight(), widget.getWidth(), widget.getHeight());
+            if (this.isNineSliceCustomSliderBackground_FancyMenu()) {
+                RenderingUtils.blitNineSliced(pose, widget.x, widget.y, widget.getWidth(), widget.getHeight(), this.getNineSliceSliderBackgroundBorderX_FancyMenu(), this.getNineSliceSliderBackgroundBorderY_FancyMenu(), this.getNineSliceSliderBackgroundBorderX_FancyMenu(), this.getNineSliceSliderBackgroundBorderY_FancyMenu(), texture.getWidth(), texture.getHeight(), 0, 0, texture.getWidth(), texture.getHeight());
+            } else {
+                GuiComponent.blit(pose, widget.x, widget.y, 0.0F, 0.0F, widget.getWidth(), widget.getHeight(), widget.getWidth(), widget.getHeight());
+            }
             RenderingUtils.resetShaderColor();
             return false;
         }

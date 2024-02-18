@@ -16,12 +16,14 @@ import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
 public class ExternalTextureSlideshowRenderer extends GuiComponent {
-	
-	protected List<ResourceSupplier<ITexture>> images = new ArrayList<>();
-	protected ResourceSupplier<ITexture> overlayTexture;
+
+	public List<ResourceSupplier<ITexture>> images = new ArrayList<>();
+	@Nullable
+	public ResourceSupplier<ITexture> overlayTexture;
 	protected String name = null;
 	public String dir;
 	protected boolean prepared = false;

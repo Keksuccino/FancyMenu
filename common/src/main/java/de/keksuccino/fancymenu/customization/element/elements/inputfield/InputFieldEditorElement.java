@@ -53,7 +53,6 @@ public class InputFieldEditorElement extends AbstractEditorElement {
                         })
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.input_field.editor.set_type.desc")));
 
-
         this.addGenericIntegerInputContextMenuEntryTo(this.rightClickMenu, "set_max_length",
                         consumes -> (consumes instanceof InputFieldEditorElement),
                         consumes -> ((InputFieldElement)consumes.element).maxTextLength,
@@ -62,6 +61,18 @@ public class InputFieldEditorElement extends AbstractEditorElement {
                         true, 10000, null, null)
                 .setStackable(true);
 
+        this.rightClickMenu.addSeparatorEntry("separator_before_navigatable");
+
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "toggle_navigatable", InputFieldEditorElement.class,
+                        consumes -> consumes.getElement().navigatable,
+                        (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().navigatable = aBoolean,
+                        "fancymenu.elements.widgets.generic.navigatable")
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.generic.navigatable.desc")));
+
+    }
+
+    public InputFieldElement getElement() {
+        return (InputFieldElement) this.element;
     }
 
 }

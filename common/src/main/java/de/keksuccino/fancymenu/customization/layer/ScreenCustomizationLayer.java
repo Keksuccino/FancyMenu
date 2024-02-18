@@ -474,6 +474,8 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 						RenderingUtils.enableScissor(access.getX0FancyMenu(), 0, access.getX0FancyMenu() + access.getWidthFancyMenu(), access.getY0FancyMenu());
 						blit(e.getPoseStack(), headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
 						RenderingUtils.disableScissor();
+					} else if (this.layoutBase.repeatScrollListHeaderTexture) {
+						RenderingUtils.blitRepeat(e.getPoseStack(), access.getX0FancyMenu(), 0, access.getWidthFancyMenu(), access.getY0FancyMenu(), headerTexture.getWidth(), headerTexture.getHeight());
 					} else {
 						blit(e.getPoseStack(), access.getX0FancyMenu(), 0, 0.0F, 0.0F, access.getWidthFancyMenu(), access.getY0FancyMenu(), access.getWidthFancyMenu(), access.getY0FancyMenu());
 					}
@@ -499,6 +501,9 @@ public class ScreenCustomizationLayer extends GuiComponent implements ElementFac
 						RenderingUtils.enableScissor(access.getX0FancyMenu(), access.getY1FancyMenu(), access.getX0FancyMenu() + access.getWidthFancyMenu(), access.getY1FancyMenu() + footerOriginalHeight);
 						blit(e.getPoseStack(), footerX, footerY, 0.0F, 0.0F, footerWidth, footerHeight, footerWidth, footerHeight);
 						RenderingUtils.disableScissor();
+					} else if (this.layoutBase.repeatScrollListFooterTexture) {
+						int footerHeight = access.getHeightFancyMenu() - access.getY1FancyMenu();
+						RenderingUtils.blitRepeat(e.getPoseStack(), access.getX0FancyMenu(), access.getY1FancyMenu(), access.getWidthFancyMenu(), footerHeight, footerTexture.getWidth(), footerTexture.getHeight());
 					} else {
 						int footerHeight = access.getHeightFancyMenu() - access.getY1FancyMenu();
 						blit(e.getPoseStack(), access.getX0FancyMenu(), access.getY1FancyMenu(), 0.0F, 0.0F, access.getWidthFancyMenu(), footerHeight, access.getWidthFancyMenu(), footerHeight);

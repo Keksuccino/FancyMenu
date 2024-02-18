@@ -54,6 +54,10 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
                 serializeTo.putProperty("slider_background_animation_normal", element.sliderBackgroundAnimationNormal);
                 serializeTo.putProperty("slider_background_animation_highlighted", element.sliderBackgroundAnimationHighlighted);
 
+                serializeTo.putProperty("nine_slice_slider_handle", "" + element.nineSliceSliderHandle);
+                serializeTo.putProperty("nine_slice_slider_handle_border_x", "" + element.nineSliceSliderHandleBorderX);
+                serializeTo.putProperty("nine_slice_slider_handle_border_y", "" + element.nineSliceSliderHandleBorderY);
+
                 return serializeTo;
 
             }
@@ -85,6 +89,10 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
         element.sliderBackgroundTextureHighlighted = deserializeImageResourceSupplier(serialized.getValue("slider_background_texture_highlighted"));
         element.sliderBackgroundAnimationNormal = serialized.getValue("slider_background_animation_normal");
         element.sliderBackgroundAnimationHighlighted = serialized.getValue("slider_background_animation_highlighted");
+
+        element.nineSliceSliderHandle = deserializeBoolean(element.nineSliceSliderHandle, serialized.getValue("nine_slice_slider_handle"));
+        element.nineSliceSliderHandleBorderX = deserializeNumber(Integer.class, element.nineSliceSliderHandleBorderX, serialized.getValue("nine_slice_slider_handle_border_x"));
+        element.nineSliceSliderHandleBorderY = deserializeNumber(Integer.class, element.nineSliceSliderHandleBorderY, serialized.getValue("nine_slice_slider_handle_border_y"));
 
         return element;
 
@@ -156,6 +164,24 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
         }
         if (!e.restartBackgroundAnimationsOnHover) {
             stack.restartBackgroundAnimationsOnHover = false;
+        }
+        if (e.nineSliceCustomBackground) {
+            stack.nineSliceCustomBackground = true;
+        }
+        if (e.nineSliceBorderX != 5) {
+            stack.nineSliceBorderX = e.nineSliceBorderX;
+        }
+        if (e.nineSliceBorderY != 5) {
+            stack.nineSliceBorderY = e.nineSliceBorderY;
+        }
+        if (e.nineSliceSliderHandle) {
+            stack.nineSliceSliderHandle = true;
+        }
+        if (e.nineSliceSliderHandleBorderX != 5) {
+            stack.nineSliceSliderHandleBorderX = e.nineSliceSliderHandleBorderX;
+        }
+        if (e.nineSliceSliderHandleBorderY != 5) {
+            stack.nineSliceSliderHandleBorderY = e.nineSliceSliderHandleBorderY;
         }
         if (e.sliderBackgroundTextureNormal != null) {
             stack.sliderBackgroundTextureNormal = e.sliderBackgroundTextureNormal;

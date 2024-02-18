@@ -60,6 +60,7 @@ public class ServerMotdPlaceholder extends Placeholder {
                 l.addAll(Arrays.asList(motd.split("\n")));
             } else {
                 l.add(motd);
+                l.add("");
             }
         } catch (Exception e) {
             e.printStackTrace();

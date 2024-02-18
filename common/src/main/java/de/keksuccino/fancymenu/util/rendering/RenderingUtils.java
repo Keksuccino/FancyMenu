@@ -15,11 +15,155 @@ import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 public class RenderingUtils extends GuiComponent {
 
     public static final RenderingUtils INSTANCE = new RenderingUtils();
+    public static final DrawableColor MISSING_TEXTURE_COLOR_MAGENTA = DrawableColor.of(Color.MAGENTA);
+    public static final DrawableColor MISSING_TEXTURE_COLOR_BLACK = DrawableColor.BLACK;
+    private static final List<ScissorLayer> SCISSOR_STACK = new ArrayList<>();
+
+    public static void renderMissing(@NotNull PoseStack pose, int x, int y, int width, int height) {
+        int partW = width / 2;
+        int partH = height / 2;
+        //Top-left
+        fill(pose, x, y, x + partW, y + partH, MISSING_TEXTURE_COLOR_MAGENTA.getColorInt());
+        //Top-right
+        fill(pose, x + partW, y, x + width, y + partH, MISSING_TEXTURE_COLOR_BLACK.getColorInt());
+        //Bottom-left
+        fill(pose, x, y + partH, x + partW, y + height, MISSING_TEXTURE_COLOR_BLACK.getColorInt());
+        //Bottom-right
+        fill(pose, x + partW, y + partH, x + width, y + height, MISSING_TEXTURE_COLOR_MAGENTA.getColorInt());
+    }
+
+    /**
+     * Repeatedly renders a tileable (seamless) texture inside an area. Fills the area with the texture.
+     *
+     * @param pose The {@link PoseStack} instance.
+     * @param x The X position the area should get rendered at.
+     * @param y The Y position the area should get rendered at.
+     * @param areaRenderWidth The width of the area.
+     * @param areaRenderHeight The height of the area.
+     * @param texWidth The full width (in pixels) of the texture.
+     * @param texHeight The full height (in pixels) of the texture.
+     */
+    public static void blitRepeat(@NotNull PoseStack pose, int x, int y, int areaRenderWidth, int areaRenderHeight, int texWidth, int texHeight) {
+        blitRepeat(pose, x, y, areaRenderWidth, areaRenderHeight, texWidth, texHeight, 0, 0, texWidth, texHeight, texWidth, texHeight);
+    }
+
+    /**
+     * Repeatedly renders a tileable (seamless) portion of a texture inside an area. Fills the area with the texture.
+     *
+     * @param pose The {@link PoseStack} instance.
+     * @param x The X position the area should get rendered at.
+     * @param y The Y position the area should get rendered at.
+     * @param areaRenderWidth The width (in pixels) of the area.
+     * @param areaRenderHeight The height (in pixels) of the area.
+     * @param texRenderWidth The width (in pixels) each repeated texture should render rendered with.
+     * @param texRenderHeight The height (in pixels) each repeated texture should render rendered with.
+     * @param texOffsetX The top-left X start coordinate (in pixels) of the part of the full texture that should get rendered.
+     * @param texOffsetY The top-left Y start coordinate (in pixels) of the part of the full texture that should get rendered.
+     * @param texPartWidth The width (in pixels) of the part of the texture that should get rendered.
+     * @param texPartHeight The height (in pixels) of the part of the texture that should get rendered.
+     * @param texWidth The FULL width (in pixels) of the texture. NOT the width of the part that should get rendered, but the FULL width!
+     * @param texHeight The FULL height (in pixels) of the texture. NOT the height of the part that should get rendered, but the FULL height!
+     */
+    public static void blitRepeat(@NotNull PoseStack pose, int x, int y, int areaRenderWidth, int areaRenderHeight, int texRenderWidth, int texRenderHeight, int texOffsetX, int texOffsetY, int texPartWidth, int texPartHeight, int texWidth, int texHeight) {
+
+        Objects.requireNonNull(pose);
+        if ((areaRenderWidth <= 0) || (areaRenderHeight <= 0) || (texRenderWidth <= 0) || (texRenderHeight <= 0) || (texPartWidth <= 0) || (texPartHeight <= 0)) return;
+
+        int repeatsHorizontal = Math.max(1, (areaRenderWidth / texPartWidth));
+        if ((texPartWidth * repeatsHorizontal) < areaRenderWidth) repeatsHorizontal++;
+        int repeatsVertical = Math.max(1, (areaRenderHeight / texPartHeight));
+        if ((texPartHeight * repeatsVertical) < areaRenderHeight) repeatsVertical++;
+
+        enableScissor(x, y, x + areaRenderWidth, y + areaRenderHeight);
+
+        for (int horizontal = 0; horizontal < repeatsHorizontal; horizontal++) {
+            for (int vertical = 0; vertical < repeatsVertical; vertical++) {
+                int renderX = x + (texPartWidth * horizontal);
+                int renderY = y + (texPartHeight * vertical);
+                blit(pose, renderX, renderY, texRenderWidth, texRenderHeight, (float)texOffsetX, (float)texOffsetY, texPartWidth, texPartHeight, texWidth, texHeight);
+            }
+        }
+
+        disableScissor();
+
+    }
+
+    /**
+     * Renders a nine-sliced portion of a texture.<br><br>
+     *
+     * Nine-slicing cuts a texture into 9 slices (4 corners, 4 edges and a middle part).<br>
+     * This is useful when a texture should keep its proportions no matter what size it gets rendered with.<br><br>
+     *
+     * Only works with textures that have a tileable (seamless) middle part and tileable edges that can get tiled horizontally and/or vertically without looking bad.
+     *
+     * @param pose The {@link PoseStack} instance.
+     * @param x The X position the texture should get rendered at.
+     * @param y The Y position the texture should get rendered at.
+     * @param renderWidth The width (in pixels) the texture should get rendered with.
+     * @param renderHeight The height (in pixels) the texture should get rendered with.
+     * @param borderLeft The size (in pixels) of the left border of the texture.
+     * @param borderTop The size (in pixels) of the top border of the texture.
+     * @param borderRight The size (in pixels) of the right border of the texture.
+     * @param borderBottom The size (in pixels) of the bottom border of the texture.
+     * @param texPartWidth The width (in pixels) of the part of the texture that should get rendered.
+     * @param texPartHeight The height (in pixels) of the part of the texture that should get rendered.
+     * @param texOffsetX The top-left X start coordinate (in pixels) of the part of the full texture that should get rendered.
+     * @param texOffsetY The top-left Y start coordinate (in pixels) of the part of the full texture that should get rendered.
+     * @param texWidth The FULL width (in pixels) of the texture. NOT the width of the part that should get rendered, but the FULL width!
+     * @param texHeight The FULL height (in pixels) of the texture. NOT the height of the part that should get rendered, but the FULL height!
+     */
+    public static void blitNineSliced(@NotNull PoseStack pose, int x, int y, int renderWidth, int renderHeight, int borderLeft, int borderTop, int borderRight, int borderBottom, int texPartWidth, int texPartHeight, int texOffsetX, int texOffsetY, int texWidth, int texHeight) {
+
+        Objects.requireNonNull(pose);
+        if ((renderWidth <= 0) || (renderHeight <= 0) || (texPartWidth <= 0) || (texPartHeight <= 0) || (texWidth <= 0) || (texHeight <= 0)) return;
+
+        if ((renderWidth == texWidth) && (renderHeight == texHeight) && (texOffsetX == 0) && (texOffsetY == 0)) {
+            blit(pose, x, y, 0.0F, 0.0F, renderWidth, renderHeight, renderWidth, renderHeight);
+            return;
+        }
+
+        enableScissor(x, y, x + renderWidth, y + renderHeight);
+
+        //Top-left corner
+        if ((borderLeft > 0) && (borderTop > 0)) {
+            blit(pose, x, y, borderLeft, borderTop, (float)texOffsetX, (float)texOffsetY, borderLeft, borderTop, texWidth, texHeight);
+        }
+        //Top-right corner
+        if ((borderRight > 0) && (borderTop > 0)) {
+            blit(pose, (x + renderWidth - borderRight), y, borderRight, borderTop, (float)(texOffsetX + texPartWidth - borderRight), (float)texOffsetY, borderRight, borderTop, texWidth, texHeight);
+        }
+        //Bottom-left corner
+        if ((borderLeft > 0) && (borderBottom > 0)) {
+            blit(pose, x, (y + renderHeight - borderBottom), borderLeft, borderBottom, (float)texOffsetX, (float)(texOffsetY + texPartHeight - borderBottom), borderLeft, borderBottom, texWidth, texHeight);
+        }
+        //Bottom-right corner
+        if ((borderRight > 0) && (borderBottom > 0)) {
+            blit(pose, (x + renderWidth - borderRight), (y + renderHeight - borderBottom), borderRight, borderBottom, (float)(texOffsetX + texPartWidth - borderRight), (float)(texOffsetY + texPartHeight - borderBottom), borderRight, borderBottom, texWidth, texHeight);
+        }
+
+        disableScissor();
+
+        //Top edge
+        if (borderTop > 0) blitRepeat(pose, (x + borderLeft), y, (renderWidth - borderLeft - borderRight), borderTop, (texPartWidth - borderLeft - borderRight), borderTop, (texOffsetX + borderLeft), texOffsetY, (texPartWidth - borderLeft - borderRight), borderTop, texWidth, texHeight);
+        //Bottom edge
+        if (borderBottom > 0) blitRepeat(pose, (x + borderLeft), (y + renderHeight - borderBottom), (renderWidth - borderLeft - borderRight), borderBottom, (texPartWidth - borderLeft - borderRight), borderBottom, (texOffsetX + borderLeft), (texOffsetY + texPartHeight - borderBottom), (texPartWidth - borderLeft - borderRight), borderBottom, texWidth, texHeight);
+        //Left edge
+        if (borderLeft > 0) blitRepeat(pose, x, (y + borderTop), borderLeft, (renderHeight - borderTop - borderBottom), borderLeft, (texPartHeight - borderTop - borderBottom), texOffsetX, (texOffsetY + borderTop), borderLeft, (texPartHeight - borderTop - borderBottom), texWidth, texHeight);
+        //Right edge
+        if (borderRight > 0) blitRepeat(pose, (x + renderWidth - borderRight), (y + borderTop), borderRight, (renderHeight - borderTop - borderBottom), borderRight, (texPartHeight - borderTop - borderBottom), (texOffsetX + texPartWidth - borderRight), (texOffsetY + borderTop), borderRight, (texPartHeight - borderTop - borderBottom), texWidth, texHeight);;
+
+        //Middle part
+        blitRepeat(pose, (x + borderLeft), (y + borderTop), (renderWidth - borderLeft - borderRight), (renderHeight - borderTop - borderBottom), (texPartWidth - borderLeft - borderRight), (texPartHeight - borderTop - borderBottom), (texOffsetX + borderLeft), (texOffsetY + borderTop), (texPartWidth - borderLeft - borderRight), (texPartHeight - borderTop - borderBottom), texWidth, texHeight);
+
+    }
 
     public static float getPartialTick() {
         return Minecraft.getInstance().isPaused() ? ((IMixinMinecraft)Minecraft.getInstance()).getPausePartialTickFancyMenu() : Minecraft.getInstance().getFrameTime();
@@ -143,75 +287,82 @@ public class RenderingUtils extends GuiComponent {
         BufferUploader.end(builder);
     }
 
-    public static void blitNineSliced(PoseStack $$0, int $$1, int $$2, int $$3, int $$4, int $$5, int $$6, int $$7, int $$8, int $$9) {
-        blitNineSliced($$0, $$1, $$2, $$3, $$4, $$5, $$5, $$5, $$5, $$6, $$7, $$8, $$9);
+    public static void blitNineSliced_Vanilla(PoseStack pose, int x, int y, int width, int height, int sliceSize, int uOffset, int vOffset, int textureWidth, int textureHeight) {
+        blitNineSliced_Vanilla(pose, x, y, width, height, sliceSize, sliceSize, sliceSize, sliceSize, uOffset, vOffset, textureWidth, textureHeight);
     }
 
-    public static void blitNineSliced(PoseStack $$0, int $$1, int $$2, int $$3, int $$4, int $$5, int $$6, int $$7, int $$8, int $$9, int $$10) {
-        blitNineSliced($$0, $$1, $$2, $$3, $$4, $$5, $$6, $$5, $$6, $$7, $$8, $$9, $$10);
+    public static void blitNineSliced_Vanilla(PoseStack pose, int x, int y, int width, int height, int sliceWidth, int sliceHeight, int uWidth, int vHeight, int textureX, int textureY) {
+        blitNineSliced_Vanilla(pose, x, y, width, height, sliceWidth, sliceHeight, sliceWidth, sliceHeight, uWidth, vHeight, textureX, textureY);
     }
 
-    public static void blitNineSliced(PoseStack $$0, int $$1, int $$2, int $$3, int $$4, int $$5, int $$6, int $$7, int $$8, int $$9, int $$10, int $$11, int $$12) {
-        $$5 = Math.min($$5, $$3 / 2);
-        $$7 = Math.min($$7, $$3 / 2);
-        $$6 = Math.min($$6, $$4 / 2);
-        $$8 = Math.min($$8, $$4 / 2);
-        if ($$3 == $$9 && $$4 == $$10) {
-            INSTANCE.blit($$0, $$1, $$2, $$11, $$12, $$3, $$4);
-        } else if ($$4 == $$10) {
-            INSTANCE.blit($$0, $$1, $$2, $$11, $$12, $$5, $$4);
-            blitRepeating($$0, $$1 + $$5, $$2, $$3 - $$7 - $$5, $$4, $$11 + $$5, $$12, $$9 - $$7 - $$5, $$10);
-            INSTANCE.blit($$0, $$1 + $$3 - $$7, $$2, $$11 + $$9 - $$7, $$12, $$7, $$4);
-        } else if ($$3 == $$9) {
-            INSTANCE.blit($$0, $$1, $$2, $$11, $$12, $$3, $$6);
-            blitRepeating($$0, $$1, $$2 + $$6, $$3, $$4 - $$8 - $$6, $$11, $$12 + $$6, $$9, $$10 - $$8 - $$6);
-            INSTANCE.blit($$0, $$1, $$2 + $$4 - $$8, $$11, $$12 + $$10 - $$8, $$3, $$8);
+    public static void blitNineSliced_Vanilla(PoseStack pose, int x, int y, int width, int height, int leftBorder, int topBorder, int rightBorder, int bottomBorder, int uWidth, int vHeight, int textureX, int textureY) {
+        if ((width <= 0) || (height <= 0) || (uWidth <= 0) || (vHeight <= 0)) return;
+        leftBorder = Math.min(leftBorder, width / 2);
+        rightBorder = Math.min(rightBorder, width / 2);
+        topBorder = Math.min(topBorder, height / 2);
+        bottomBorder = Math.min(bottomBorder, height / 2);
+        if (width == uWidth && height == vHeight) {
+            INSTANCE.blit(pose, x, y, textureX, textureY, width, height);
+        } else if (height == vHeight) {
+            INSTANCE.blit(pose, x, y, textureX, textureY, leftBorder, height);
+            blitRepeating_Vanilla(pose, x + leftBorder, y, width - rightBorder - leftBorder, height, textureX + leftBorder, textureY, uWidth - rightBorder - leftBorder, vHeight);
+            INSTANCE.blit(pose, x + width - rightBorder, y, textureX + uWidth - rightBorder, textureY, rightBorder, height);
+        } else if (width == uWidth) {
+            INSTANCE.blit(pose, x, y, textureX, textureY, width, topBorder);
+            blitRepeating_Vanilla(pose, x, y + topBorder, width, height - bottomBorder - topBorder, textureX, textureY + topBorder, uWidth, vHeight - bottomBorder - topBorder);
+            INSTANCE.blit(pose, x, y + height - bottomBorder, textureX, textureY + vHeight - bottomBorder, width, bottomBorder);
         } else {
-            INSTANCE.blit($$0, $$1, $$2, $$11, $$12, $$5, $$6);
-            blitRepeating($$0, $$1 + $$5, $$2, $$3 - $$7 - $$5, $$6, $$11 + $$5, $$12, $$9 - $$7 - $$5, $$6);
-            INSTANCE.blit($$0, $$1 + $$3 - $$7, $$2, $$11 + $$9 - $$7, $$12, $$7, $$6);
-            INSTANCE.blit($$0, $$1, $$2 + $$4 - $$8, $$11, $$12 + $$10 - $$8, $$5, $$8);
-            blitRepeating($$0, $$1 + $$5, $$2 + $$4 - $$8, $$3 - $$7 - $$5, $$8, $$11 + $$5, $$12 + $$10 - $$8, $$9 - $$7 - $$5, $$8);
-            INSTANCE.blit($$0, $$1 + $$3 - $$7, $$2 + $$4 - $$8, $$11 + $$9 - $$7, $$12 + $$10 - $$8, $$7, $$8);
-            blitRepeating($$0, $$1, $$2 + $$6, $$5, $$4 - $$8 - $$6, $$11, $$12 + $$6, $$5, $$10 - $$8 - $$6);
-            blitRepeating($$0, $$1 + $$5, $$2 + $$6, $$3 - $$7 - $$5, $$4 - $$8 - $$6, $$11 + $$5, $$12 + $$6, $$9 - $$7 - $$5, $$10 - $$8 - $$6);
-            blitRepeating($$0, $$1 + $$3 - $$7, $$2 + $$6, $$5, $$4 - $$8 - $$6, $$11 + $$9 - $$7, $$12 + $$6, $$7, $$10 - $$8 - $$6);
+            INSTANCE.blit(pose, x, y, textureX, textureY, leftBorder, topBorder);
+            blitRepeating_Vanilla(pose, x + leftBorder, y, width - rightBorder - leftBorder, topBorder, textureX + leftBorder, textureY, uWidth - rightBorder - leftBorder, topBorder);
+            INSTANCE.blit(pose, x + width - rightBorder, y, textureX + uWidth - rightBorder, textureY, rightBorder, topBorder);
+            INSTANCE.blit(pose, x, y + height - bottomBorder, textureX, textureY + vHeight - bottomBorder, leftBorder, bottomBorder);
+            blitRepeating_Vanilla(pose, x + leftBorder, y + height - bottomBorder, width - rightBorder - leftBorder, bottomBorder, textureX + leftBorder, textureY + vHeight - bottomBorder, uWidth - rightBorder - leftBorder, bottomBorder);
+            INSTANCE.blit(pose, x + width - rightBorder, y + height - bottomBorder, textureX + uWidth - rightBorder, textureY + vHeight - bottomBorder, rightBorder, bottomBorder);
+            blitRepeating_Vanilla(pose, x, y + topBorder, leftBorder, height - bottomBorder - topBorder, textureX, textureY + topBorder, leftBorder, vHeight - bottomBorder - topBorder);
+            blitRepeating_Vanilla(pose, x + leftBorder, y + topBorder, width - rightBorder - leftBorder, height - bottomBorder - topBorder, textureX + leftBorder, textureY + topBorder, uWidth - rightBorder - leftBorder, vHeight - bottomBorder - topBorder);
+            blitRepeating_Vanilla(pose, x + width - rightBorder, y + topBorder, leftBorder, height - bottomBorder - topBorder, textureX + uWidth - rightBorder, textureY + topBorder, rightBorder, vHeight - bottomBorder - topBorder);
         }
     }
 
-    public static void blitRepeating(PoseStack $$0, int $$1, int $$2, int $$3, int $$4, int $$5, int $$6, int $$7, int $$8) {
-        int $$9 = $$1;
-
-        int $$11;
-        for(IntIterator $$10 = slices($$3, $$7); $$10.hasNext(); $$9 += $$11) {
-            $$11 = $$10.nextInt();
-            int $$12 = ($$7 - $$11) / 2;
-            int $$13 = $$2;
-
+    public static void blitRepeating_Vanilla(PoseStack pose, int x, int y, int width, int height, int uOffset, int vOffset, int sourceWidth, int sourceHeight) {
+        if ((width <= 0) || (height <= 0) || (sourceWidth <= 0) || (sourceHeight <= 0)) return;
+        int i1 = x;
+        int i2;
+        for(IntIterator iterator = slices_Vanilla(width, sourceWidth); iterator.hasNext(); i1 += i2) {
+            i2 = iterator.nextInt();
+            int $$12 = (sourceWidth - i2) / 2;
+            int $$13 = y;
             int $$15;
-            for(IntIterator $$14 = slices($$4, $$8); $$14.hasNext(); $$13 += $$15) {
+            for(IntIterator $$14 = slices_Vanilla(height, sourceHeight); $$14.hasNext(); $$13 += $$15) {
                 $$15 = $$14.nextInt();
-                int $$16 = ($$8 - $$15) / 2;
-                INSTANCE.blit($$0, $$9, $$13, $$5 + $$12, $$6 + $$16, $$11, $$15);
+                int $$16 = (sourceHeight - $$15) / 2;
+                INSTANCE.blit(pose, i1, $$13, uOffset + $$12, vOffset + $$16, i2, $$15);
             }
         }
     }
 
-    private static IntIterator slices(int $$0, int $$1) {
-        int $$2 = Mth.positiveCeilDiv($$0, $$1);
-        return new Divisor($$0, $$2);
+    private static IntIterator slices_Vanilla(int target, int total) {
+        int i = Mth.positiveCeilDiv(target, total);
+        return new Divisor(target, i);
     }
 
     public static void enableScissor(int xStart, int yStart, int xEnd, int yEnd) {
-        applyScissor(new ScreenRectangle(xStart, yStart, xEnd - xStart, yEnd - yStart));
+        applyScissor(new ScreenRectangle(xStart, yStart, xEnd - xStart, yEnd - yStart), true);
     }
 
     public static void disableScissor() {
-        applyScissor(null);
+        applyScissor(null, true);
     }
 
-    private static void applyScissor(@Nullable ScreenRectangle rectangle) {
+    private static void applyScissor(@Nullable ScreenRectangle rectangle, boolean pushStack) {
         if (rectangle != null) {
+            //push layer
+            if (pushStack) {
+                if (!SCISSOR_STACK.isEmpty()) {
+                    rectangle = Objects.requireNonNullElse(rectangle.intersection(SCISSOR_STACK.get(SCISSOR_STACK.size()-1).rectangle()), ScreenRectangle.empty());
+                }
+                SCISSOR_STACK.add(new ScissorLayer(rectangle));
+            }
             Window window = Minecraft.getInstance().getWindow();
             int windowHeight = window.getHeight();
             double windowScale = window.getGuiScale();
@@ -221,7 +372,16 @@ public class RenderingUtils extends GuiComponent {
             double $$7 = (double)rectangle.height() * windowScale;
             RenderSystem.enableScissor((int)$$4, (int)$$5, Math.max(0, (int)$$6), Math.max(0, (int)$$7));
         } else {
-            RenderSystem.disableScissor();
+            //pop layer
+            if (!SCISSOR_STACK.isEmpty()) {
+                SCISSOR_STACK.remove(SCISSOR_STACK.size()-1);
+            }
+            //apply new top scissor layer OR disable scissor if stack is empty
+            if (!SCISSOR_STACK.isEmpty()) {
+                applyScissor(SCISSOR_STACK.get(SCISSOR_STACK.size()-1).rectangle(), false);
+            } else {
+                RenderSystem.disableScissor();
+            }
         }
     }
 
@@ -235,6 +395,15 @@ public class RenderingUtils extends GuiComponent {
 
         public static ScreenRectangle empty() {
             return EMPTY;
+        }
+
+        @Nullable
+        public ScreenRectangle intersection(ScreenRectangle rectangle) {
+            int $$1 = Math.max(this.left(), rectangle.left());
+            int $$2 = Math.max(this.top(), rectangle.top());
+            int $$3 = Math.min(this.right(), rectangle.right());
+            int $$4 = Math.min(this.bottom(), rectangle.bottom());
+            return $$1 < $$3 && $$2 < $$4 ? new ScreenRectangle($$1, $$2, $$3 - $$1, $$4 - $$2) : null;
         }
 
         public int top() {
@@ -299,6 +468,9 @@ public class RenderingUtils extends GuiComponent {
             }
         }
 
+    }
+
+    private record ScissorLayer(@NotNull ScreenRectangle rectangle) {
     }
 
 }

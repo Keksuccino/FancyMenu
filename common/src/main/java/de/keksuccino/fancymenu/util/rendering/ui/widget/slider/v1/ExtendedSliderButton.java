@@ -82,7 +82,7 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
         if (c == null) {
             RenderSystem.setShaderTexture(0, SLIDER_LOCATION);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
-            RenderingUtils.blitNineSliced(pose, handleX, this.y, 8, 20, 20, 4, 200, 20, 0, this.getHandleTextureY());
+            RenderingUtils.blitNineSliced_Vanilla(pose, handleX, this.y, 8, 20, 20, 4, 200, 20, 0, this.getHandleTextureY());
         } else {
             fill(pose, handleX, this.y, handleX + 8, this.y + this.getHeight(), RenderingUtils.replaceAlphaInColor(c.getColorInt(), this.alpha));
         }
@@ -102,7 +102,7 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
         if (this.backgroundColor == null) {
             RenderSystem.setShaderTexture(0, SLIDER_LOCATION);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
-            RenderingUtils.blitNineSliced(pose, this.x, this.y, this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureY());
+            RenderingUtils.blitNineSliced_Vanilla(pose, this.x, this.y, this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureY());
         } else {
             int borderOffset = (this.borderColor != null) ? 1 : 0;
             fill(pose, this.x + borderOffset, this.y + borderOffset, this.x + this.getWidth() - borderOffset, this.y + this.getHeight() - borderOffset, RenderingUtils.replaceAlphaInColor(this.backgroundColor.getColorInt(), this.alpha));

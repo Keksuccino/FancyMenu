@@ -60,9 +60,12 @@ public class DebugOverlay extends GuiComponent implements Widget, NarratableEntr
     @Nullable
     protected ContextMenu rightClickMenu = null;
     protected final List<GuiEventListener> children = new ArrayList<>();
+    public boolean allowRender = false;
 
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+
+        if (!this.allowRender) return;
 
         if (Minecraft.getInstance().screen == null) return;
 

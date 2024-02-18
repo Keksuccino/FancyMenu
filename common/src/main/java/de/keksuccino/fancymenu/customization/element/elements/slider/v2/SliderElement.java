@@ -61,6 +61,13 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     public String sliderBackgroundAnimationHighlighted;
     public boolean loopBackgroundAnimations = true;
     public boolean restartBackgroundAnimationsOnHover = true;
+    public boolean nineSliceCustomBackground = false;
+    public int nineSliceBorderX = 5;
+    public int nineSliceBorderY = 5;
+    public boolean nineSliceSliderHandle = false;
+    public int nineSliceSliderHandleBorderX = 5;
+    public int nineSliceSliderHandleBorderY = 5;
+    public boolean navigatable = true;
     @NotNull
     public GenericExecutableBlock executableBlock = new GenericExecutableBlock();
 
@@ -143,9 +150,11 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {
 
         if (this.slider == null) return;
+
+        this.slider.setNavigatable(this.navigatable);
 
         this.slider.visible = this.shouldRender();
         this.slider.setAlpha(this.opacity);
@@ -159,7 +168,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
 
         this.updateWidget();
 
-        this.slider.render(pose, mouseX, mouseY, partial);
+        this.slider.render(graphics, mouseX, mouseY, partial);
 
     }
 
@@ -171,7 +180,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     }
 
     public void updateWidgetTooltip() {
-        if ((this.tooltip != null) && (this.slider != null) && ((IMixinAbstractWidget)this.slider).getIsHoveredFancyMenu() && !isEditor()) {
+        if ((this.tooltip != null) && (this.slider != null) && ((IMixinAbstractWidget)this.slider).getIsHoveredFancyMenu() && this.slider.visible && this.shouldRender() && !isEditor()) {
             String tooltip = this.tooltip.replace("%n%", "\n");
             TooltipHandler.INSTANCE.addWidgetTooltip(this.slider, Tooltip.of(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(tooltip), "\n")), false, true);
         }
@@ -249,6 +258,14 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         }
 
         if (this.slider instanceof CustomizableWidget w) {
+            if (this.slider instanceof CustomizableSlider s) {
+                s.setNineSliceCustomSliderBackground_FancyMenu(this.nineSliceCustomBackground);
+                s.setNineSliceSliderBackgroundBorderX_FancyMenu(this.nineSliceBorderX);
+                s.setNineSliceSliderBackgroundBorderY_FancyMenu(this.nineSliceBorderY);
+                s.setNineSliceCustomSliderHandle_FancyMenu(this.nineSliceSliderHandle);
+                s.setNineSliceSliderHandleBorderX_FancyMenu(this.nineSliceSliderHandleBorderX);
+                s.setNineSliceSliderHandleBorderY_FancyMenu(this.nineSliceSliderHandleBorderY);
+            }
             w.setCustomBackgroundNormalFancyMenu(handleTextureNormal);
             w.setCustomBackgroundHoverFancyMenu(handleTextureHover);
             w.setCustomBackgroundInactiveFancyMenu(handleTextureInactive);

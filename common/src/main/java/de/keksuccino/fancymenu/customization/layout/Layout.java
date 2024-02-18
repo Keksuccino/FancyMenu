@@ -197,6 +197,8 @@ public class Layout extends LayoutBase {
         scrollListContainer.putProperty("render_scroll_list_header_shadow", "" + this.renderScrollListHeaderShadow);
         scrollListContainer.putProperty("render_scroll_list_footer_shadow", "" + this.renderScrollListFooterShadow);
         scrollListContainer.putProperty("show_scroll_list_header_footer_preview_in_editor", "" + this.showScrollListHeaderFooterPreviewInEditor);
+        scrollListContainer.putProperty("repeat_scroll_list_header_texture", "" + this.repeatScrollListHeaderTexture);
+        scrollListContainer.putProperty("repeat_scroll_list_footer_texture", "" + this.repeatScrollListFooterTexture);
         set.putContainer(scrollListContainer);
 
         this.layoutWideLoadingRequirementContainer.serializeToExistingPropertyContainer(meta);
@@ -418,6 +420,8 @@ public class Layout extends LayoutBase {
                     if (showListHeaderFooter.equals("true")) layout.showScrollListHeaderFooterPreviewInEditor = true;
                     if (showListHeaderFooter.equals("false")) layout.showScrollListHeaderFooterPreviewInEditor = false;
                 }
+                layout.repeatScrollListHeaderTexture = SerializationUtils.deserializeBoolean(layout.repeatScrollListHeaderTexture, scrollListCustomizations.getValue("repeat_scroll_list_header_texture"));
+                layout.repeatScrollListFooterTexture = SerializationUtils.deserializeBoolean(layout.repeatScrollListFooterTexture, scrollListCustomizations.getValue("repeat_scroll_list_footer_texture"));
             }
 
             //Handle everything else

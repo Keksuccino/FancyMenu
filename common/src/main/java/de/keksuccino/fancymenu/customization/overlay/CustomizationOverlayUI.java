@@ -70,7 +70,7 @@ public class CustomizationOverlayUI {
     private static final ResourceSupplier<ITexture> FM_LOGO_TEXTURE_SUPPLIER = ResourceSupplier.image(ResourceSource.of("fancymenu:textures/menubar/icons/fancymenu_logo.png", ResourceSourceType.LOCATION).getSourceWithPrefix());
     private static final ResourceSupplier<ITexture> LEAVE_SCREEN_TEXTURE_SUPPLIER = ResourceSupplier.image(ResourceSource.of("fancymenu:textures/menubar/icons/exit.png", ResourceSourceType.LOCATION).getSourceWithPrefix());
 
-    private static MenuBar grandfatheredMenuBar = null;
+    private static CustomizationOverlayMenuBar grandfatheredMenuBar = null;
 
     @NotNull
     public static DebugOverlay buildDebugOverlay(@NotNull MenuBar menuBar) {
@@ -95,15 +95,15 @@ public class CustomizationOverlayUI {
     }
 
     @NotNull
-    protected static MenuBar buildMenuBar(boolean expanded) {
+    protected static CustomizationOverlayMenuBar buildMenuBar(boolean expanded) {
 
-        MenuBar grand = grandfatheredMenuBar;
+        CustomizationOverlayMenuBar grand = grandfatheredMenuBar;
         if (grand != null) {
             grandfatheredMenuBar = null;
             return grand;
         }
 
-        MenuBar menuBar = new MenuBar();
+        CustomizationOverlayMenuBar menuBar = new CustomizationOverlayMenuBar();
         menuBar.setExpanded(expanded);
         Screen screen = Minecraft.getInstance().screen;
         String identifier = (screen != null) ? ScreenIdentifierHandler.getIdentifierOfScreen(screen) : null;
