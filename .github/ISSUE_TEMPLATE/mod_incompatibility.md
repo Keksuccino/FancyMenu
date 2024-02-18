@@ -2,7 +2,7 @@
 name: Mod Incompatibility
 about: Some mod is conflicting with FancyMenu? Tell me about it!
 title: ''
-labels: mod incompatibility
+labels: mod conflict
 assignees: ''
 
 ---
