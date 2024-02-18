@@ -22,6 +22,10 @@ public class FancyMenu {
 
 	//TODO übernehmen (locals)
 
+	//TODO übernehmen (french locals)
+
+	//TODO übernehmen (credits)
+
 	private static final Logger LOGGER = LogManager.getLogger();
 
 	//TODO übernehmen

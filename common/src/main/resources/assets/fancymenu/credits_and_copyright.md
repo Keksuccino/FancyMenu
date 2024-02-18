@@ -24,6 +24,9 @@ Kreezxil
 ### ENGLISH (US)
 Keksuccino
  
+### FRENCH
+Mozork01
+ 
  
 ## ALPHA & BETA TESTERS
 ankiolyne (rainyatrium)
@@ -56,7 +59,7 @@ You are what keeps me motivated to do this. Thank you!
  
  
 ## COPYRIGHT
-FancyMenu © Copyright 2020-2023 Keksuccino.
+FancyMenu © Copyright 2020-2024 Keksuccino.
 FancyMenu is licensed under DSMSLv2 (DON'T SNATCH MA STUFF LICENSE v2).
 See [LICENSE.md](https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md) for more information about this license.
  
