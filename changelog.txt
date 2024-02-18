@@ -1,5 +1,5 @@
 
-CHANGELOG | FANCYMENU v3.1.0 [ W I P - NOT PUBLIC YET! ]
+CHANGELOG | FANCYMENU v3.1.0
 
 - This update marks the end of FancyMenu v3's Public Beta phase! FMv3 is now considered STABLE!
  
