@@ -151,7 +151,7 @@ tl;dr: BACKUP your LAYOUTS and Minecraft INSTANCE before updating!
  
 ------------------------------
  
-- The new wiki for v3: docs.keksuccino.net
+- The new wiki for v3: docs.fancymenu.net
  
 - FancyMenu v3 is available for 1.18.2, 1.19.2, 1.20.1, 1.20.4 and future Minecraft versions (all other versions not listed here get dropped with v3)
  
