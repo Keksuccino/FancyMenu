@@ -1,5 +1,5 @@
 
-CHANGELOG | FANCYMENU v3.1.1 [ W I P - Not public yet! ]
+CHANGELOG | FANCYMENU v3.1.1
 
 - Lowered required Fabric API version of the Fabric 1.20.1 version to v0.88.1
 - The Forge version now soft-crashes on load when the video or audio extension is loaded and shows an error dialog that tells the user to remove the extension(s)
