@@ -1,4 +1,14 @@
 
+CHANGELOG | FANCYMENU v3.1.1 [ W I P - Not public yet! ]
+
+- Lowered required Fabric API version of the Fabric 1.20.1 version to v0.88.1
+- 
+ 
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.1.0
 
 - This update marks the end of FancyMenu v3's Public Beta phase! FMv3 is now considered STABLE!
