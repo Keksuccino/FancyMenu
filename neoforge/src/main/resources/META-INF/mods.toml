@@ -1,7 +1,7 @@
 # The name of the mod loader type to load - for regular FML @Mod mods it should be javafml
 modLoader="javafml" #mandatory
 # A version range to match for said mod loader - for regular FML @Mod it will be the forge version
-loaderVersion="[${forge_loader_version},)" #mandatory This is typically bumped every Minecraft version by Forge. See our download page for lists of versions.
+loaderVersion="[${neoforge_loader_version},)" #mandatory This is typically bumped every Minecraft version by Forge. See our download page for lists of versions.
 # The mod license
 license="${mod_license}"
 # A list of mods - how many allowed here is determined by the individual mod loader
@@ -18,44 +18,52 @@ logoFile="fancymenu_logo_128x128.png"
 # The description text for the mod (multi line!) (#mandatory)
 description='''${mod_description}'''
 
+[[mixins]]
+config = "${mod_id}.mixins.json"
+[[mixins]]
+config = "${mod_id}.neoforge.mixins.json"
+
+[[accessTransformers]]
+file="META-INF/accesstransformer.cfg"
+
 [[dependencies.${mod_id}]]
 modId="konkrete"
-mandatory=true
+type="required"
 ordering="NONE"
-versionRange="[1.8.0,)"
+versionRange="[1.9.0,)"
 side="BOTH"
 
 [[dependencies.${mod_id}]]
 modId="melody"
-mandatory=true
+type="required"
 ordering="NONE"
 versionRange="[1.0.0,)"
 side="CLIENT"
 
 [[dependencies.${mod_id}]]
 modId="findme"
-mandatory=false
+type="optional"
 ordering="AFTER"
 versionRange="[1.0.0,)"
 side="BOTH"
 
 [[dependencies.${mod_id}]]
 modId="drippyloadingscreen"
-mandatory=false
+type="optional"
 ordering="NONE"
 versionRange="[3.0.0,)"
 side="BOTH"
 
 [[dependencies.${mod_id}]]
-modId="forge"
-mandatory=true
-versionRange="[${forge_version},)"
+modId="neoforge"
+type="required"
+versionRange="[${neoforge_version},)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.${mod_id}]]
 modId="minecraft"
-mandatory=true
+type="required"
 versionRange="[${minecraft_version},)"
 ordering="NONE"
 side="BOTH"

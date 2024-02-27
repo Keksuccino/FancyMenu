@@ -2,12 +2,12 @@ package de.keksuccino.fancymenu;
 
 import de.keksuccino.fancymenu.networking.Packets;
 import de.keksuccino.fancymenu.platform.Services;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.fml.common.Mod;
 
 @Mod(FancyMenu.MOD_ID)
-public class FancyMenuForge {
+public class FancyMenuNeoForge {
     
-    public FancyMenuForge() {
+    public FancyMenuNeoForge() {
 
         if (Compat.isAudioExtensionLoaded() || Services.PLATFORM.isModLoaded("fmextension_audio")) {
             throw new RuntimeException("FancyMenu v2's Audio Extension is not supported by FancyMenu v3. Please remove the audio extension. The Audio element is now part of the base mod.");
@@ -21,10 +21,10 @@ public class FancyMenuForge {
         Packets.registerAll();
 
         if (Services.PLATFORM.isOnClient()) {
-            FancyMenuForgeClientEvents.registerAll();
+            FancyMenuNeoForgeClientEvents.registerAll();
         }
 
-        FancyMenuForgeServerEvents.registerAll();
+        FancyMenuNeoForgeServerEvents.registerAll();
         
     }
 

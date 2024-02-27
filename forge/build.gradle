@@ -60,20 +60,25 @@ minecraft {
 
 sourceSets.main.resources.srcDir 'src/generated/resources'
 
+repositories {
+    flatDir { dirs 'libs' }
+}
+
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     compileOnly project(":common")
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
     //Needs to be "implementation" when building and "compileOnly" in-dev for some frickin reason
-    implementation(annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.2"))
-//    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.2"))
+    //implementation(annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.2"))
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.2"))
     implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.3.2")) {
         jarJar.ranged(it, "[0.3.2,)")
     }
     minecraftLibrary(jarJar("com.github.Keksuccino:japng:0.5.3")) {
         jarJar.ranged(it, "[0.5.3,)")
     }
-    implementation fg.deobf("maven.modrinth:konkrete:1.8.0-1.20.4-forge")
+    //implementation fg.deobf("maven.modrinth:konkrete:1.8.0-1.20.4-forge")
+    implementation fg.deobf("flatdir:konkrete:1.0.0")
     implementation fg.deobf("maven.modrinth:load-my-resources:1.0.4-1.20.2-forge")
     implementation fg.deobf("maven.modrinth:melody:1.0.0-1.20.1-1.20.4-forge")
 }
