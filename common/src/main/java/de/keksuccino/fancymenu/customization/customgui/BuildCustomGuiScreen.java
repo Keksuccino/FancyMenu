@@ -107,7 +107,6 @@ public class BuildCustomGuiScreen extends CellScreen {
     @Override
     protected void onDone() {
         if (this.allSettingsValid) {
-            //TODO übernehmen
             if (this.gui != this.guiTemp) {
                 this.gui.identifier = this.guiTemp.identifier;
                 this.gui.title = this.guiTemp.title;
@@ -116,7 +115,6 @@ public class BuildCustomGuiScreen extends CellScreen {
                 this.gui.worldBackground = this.guiTemp.worldBackground;
                 this.gui.worldBackgroundOverlay = this.guiTemp.worldBackgroundOverlay;
             }
-            //------------------
             this.callback.accept(this.gui);
         }
     }

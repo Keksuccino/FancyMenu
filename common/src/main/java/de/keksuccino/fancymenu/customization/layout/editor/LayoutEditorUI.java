@@ -441,7 +441,6 @@ public class LayoutEditorUI {
 
 		if ((editor.layoutTargetScreen != null) && !editor.layout.isUniversalLayout()) {
 
-			//TODO übernehmen
 			NonStackableOverlayUI.addInputContextMenuEntryTo(menu, "edit_menu_title", Component.translatable("fancymenu.helper.editor.edit_menu_title"),
 							() -> editor.layout.customMenuTitle,
 							s -> {
@@ -462,7 +461,6 @@ public class LayoutEditorUI {
 		menu.addSubMenuEntry("scroll_list_customizations", Component.translatable("fancymenu.customization.scroll_lists"), buildScrollListCustomizationsContextMenu(editor))
 				.setIcon(ContextMenu.IconFactory.getIcon("scroll_edit"))
 				.setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.scroll_lists.desc")))
-				//TODO übernehmen
 				.setIsActiveSupplier((menu1, entry) -> !(editor.layoutTargetScreen instanceof CustomGuiBaseScreen));
 
 		menu.addSeparatorEntry("separator_after_scroll_list_customizations");
@@ -637,8 +635,6 @@ public class LayoutEditorUI {
 
 		ContextMenu menu = new ContextMenu();
 
-		//TODO übernehmen (von weiter unten nach oben verschieben)
-
 		NonStackableOverlayUI.addImageResourceChooserContextMenuEntryTo(menu, "header_texture",
 						null,
 						() -> editor.layout.scrollListHeaderTexture,
@@ -663,10 +659,6 @@ public class LayoutEditorUI {
 
 		menu.addSeparatorEntry("separator_after_footer_texture");
 
-		//------------------------------------
-
-		//TODO übernehmen
-
 		menu.addValueCycleEntry("repeat_header_texture", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.repeat_header", editor.layout.repeatScrollListHeaderTexture).addCycleListener(cycleEnabledDisabled -> {
 			editor.history.saveSnapshot();
 			editor.layout.repeatScrollListHeaderTexture = cycleEnabledDisabled.getAsBoolean();
@@ -679,13 +671,10 @@ public class LayoutEditorUI {
 
 		menu.addSeparatorEntry("separator_after_header_footer_repeat_texture");
 
-		//---------------------------------------
-
 		menu.addValueCycleEntry("preserve_header_footer_aspect_ratio", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.preserve_header_footer_aspect_ratio", editor.layout.preserveScrollListHeaderFooterAspectRatio).addCycleListener(cycle -> {
 			editor.history.saveSnapshot();
 			editor.layout.preserveScrollListHeaderFooterAspectRatio = cycle.getAsBoolean();
 		})).setIcon(ContextMenu.IconFactory.getIcon("aspect_ratio"))
-				//TODO übernehmen
 				.setIsActiveSupplier((menu1, entry) -> (!editor.layout.repeatScrollListHeaderTexture && !editor.layout.repeatScrollListFooterTexture));
 
 		menu.addSeparatorEntry("separator_after_preserve_aspect_ratio");

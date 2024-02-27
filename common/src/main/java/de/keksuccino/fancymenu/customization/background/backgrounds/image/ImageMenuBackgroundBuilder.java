@@ -51,7 +51,6 @@ public class ImageMenuBackgroundBuilder extends MenuBackgroundBuilder<ImageMenuB
             b.fallbackTextureSupplier = SerializationUtils.deserializeImageResourceSupplier(serializedMenuBackground.getValue("web_image_fallback_path"));
         }
 
-        //TODO übernehmen
         b.repeat = SerializationUtils.deserializeBoolean(b.repeat, serializedMenuBackground.getValue("repeat_texture"));
 
         return b;
@@ -69,7 +68,6 @@ public class ImageMenuBackgroundBuilder extends MenuBackgroundBuilder<ImageMenuB
 
         serialized.putProperty("slide", "" + background.slideLeftRight);
 
-        //TODO übernehmen
         serialized.putProperty("repeat_texture", "" + background.repeat);
 
         if (background.fallbackTextureSupplier != null) {

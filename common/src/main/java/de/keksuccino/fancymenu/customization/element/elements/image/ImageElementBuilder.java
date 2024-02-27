@@ -33,12 +33,10 @@ public class ImageElementBuilder extends ElementBuilder<ImageElement, ImageEdito
         ImageElement element = this.buildDefaultInstance();
 
         element.textureSupplier = deserializeImageResourceSupplier(serialized.getValue("source"));
-        //TODO übernehmen
         element.repeat = deserializeBoolean(element.repeat, serialized.getValue("repeat_texture"));
         element.nineSlice = deserializeBoolean(element.nineSlice, serialized.getValue("nine_slice_texture"));
         element.nineSliceBorderX = deserializeNumber(Integer.class, element.nineSliceBorderX, serialized.getValue("nine_slice_texture_border_x"));
         element.nineSliceBorderY = deserializeNumber(Integer.class, element.nineSliceBorderY, serialized.getValue("nine_slice_texture_border_y"));
-        //----------------------
 
         return element;
 
@@ -50,12 +48,10 @@ public class ImageElementBuilder extends ElementBuilder<ImageElement, ImageEdito
         if (element.textureSupplier != null) {
             serializeTo.putProperty("source", element.textureSupplier.getSourceWithPrefix());
         }
-        //TODO übernehmen
         serializeTo.putProperty("repeat_texture", "" + element.repeat);
         serializeTo.putProperty("nine_slice_texture", "" + element.nineSlice);
         serializeTo.putProperty("nine_slice_texture_border_x", "" + element.nineSliceBorderX);
         serializeTo.putProperty("nine_slice_texture_border_y", "" + element.nineSliceBorderY);
-        //----------------------
 
         return serializeTo;
         

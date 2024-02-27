@@ -17,8 +17,6 @@ import org.jetbrains.annotations.Nullable;
 @ClassExtender(AbstractSliderButton.class)
 public interface CustomizableSlider {
 
-    //TODO übernehmen
-
     void setNineSliceCustomSliderBackground_FancyMenu(boolean nineSlice);
 
     boolean isNineSliceCustomSliderBackground_FancyMenu();
@@ -43,8 +41,6 @@ public interface CustomizableSlider {
 
     int getNineSliceSliderHandleBorderY_FancyMenu();
 
-    //-----------------------------
-
     void setCustomSliderBackgroundNormalFancyMenu(@Nullable RenderableResource background);
 
     @Nullable
@@ -60,13 +56,11 @@ public interface CustomizableSlider {
      */
     default boolean renderSliderBackgroundFancyMenu(GuiGraphics graphics, AbstractSliderButton widget, boolean canChangeValue) {
         ResourceLocation location = null;
-        //TODO übernehmen
         RenderableResource texture = null;
         if (widget.isFocused() && !canChangeValue) {
             if (this.getCustomSliderBackgroundNormalFancyMenu() instanceof PlayableResource p) p.pause();
             if (this.getCustomSliderBackgroundHighlightedFancyMenu() != null) {
                 if (this.getCustomSliderBackgroundHighlightedFancyMenu() instanceof PlayableResource p) p.play();
-                //TODO übernehmen
                 texture = this.getCustomSliderBackgroundHighlightedFancyMenu();
                 location = this.getCustomSliderBackgroundHighlightedFancyMenu().getResourceLocation();
             }
@@ -74,7 +68,6 @@ public interface CustomizableSlider {
             if (this.getCustomSliderBackgroundHighlightedFancyMenu() instanceof PlayableResource p) p.pause();
             if (this.getCustomSliderBackgroundNormalFancyMenu() != null) {
                 if (this.getCustomSliderBackgroundNormalFancyMenu() instanceof PlayableResource p) p.play();
-                //TODO übernehmen
                 texture = this.getCustomSliderBackgroundNormalFancyMenu();
                 location = this.getCustomSliderBackgroundNormalFancyMenu().getResourceLocation();
             }
@@ -82,13 +75,11 @@ public interface CustomizableSlider {
         if (location != null) {
             graphics.setColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)this).getAlphaFancyMenu());
             RenderSystem.enableBlend();
-            //TODO übernehmen
             if (this.isNineSliceCustomSliderBackground_FancyMenu()) {
                 RenderingUtils.blitNineSliced(graphics, location, widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight(), this.getNineSliceSliderBackgroundBorderX_FancyMenu(), this.getNineSliceSliderBackgroundBorderY_FancyMenu(), this.getNineSliceSliderBackgroundBorderX_FancyMenu(), this.getNineSliceSliderBackgroundBorderY_FancyMenu(), texture.getWidth(), texture.getHeight(), 0, 0, texture.getWidth(), texture.getHeight());
             } else {
                 graphics.blit(location, widget.getX(), widget.getY(), 0.0F, 0.0F, widget.getWidth(), widget.getHeight(), widget.getWidth(), widget.getHeight());
             }
-            //----------------------
             RenderingUtils.resetShaderColor(graphics);
             return false;
         }

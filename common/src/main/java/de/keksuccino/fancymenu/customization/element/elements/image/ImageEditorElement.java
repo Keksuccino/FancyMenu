@@ -33,8 +33,6 @@ public class ImageEditorElement extends AbstractEditorElement {
             }).setSource((this.getElement().textureSupplier != null) ? this.getElement().textureSupplier.getSourceWithPrefix() : null, false));
         }).setIcon(ContextMenu.IconFactory.getIcon("image"));
 
-        //TODO übernehmen
-
         this.rightClickMenu.addSeparatorEntry("separator_before_repeat_texture");
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "repeat_texture",
@@ -70,8 +68,6 @@ public class ImageEditorElement extends AbstractEditorElement {
                         Component.translatable("fancymenu.elements.image.nine_slice.border_y"), true, 5, null, null)
                 .setStackable(false)
                 .setIsActiveSupplier((menu, entry) -> !this.getElement().repeat);
-
-        //--------------------------------------
 
         this.rightClickMenu.addSeparatorEntry("image_separator_1");
 

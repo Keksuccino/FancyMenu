@@ -65,14 +65,12 @@ public class InputFieldElementBuilder extends ElementBuilder<InputFieldElement, 
             }
         }
 
-        //TODO übernehmen
         element.navigatable = deserializeBoolean(element.navigatable, serialized.getValue("navigatable"));
 
         return element;
 
     }
 
-    //TODO übernehmen
     @Override
     protected SerializedElement serializeElement(@NotNull InputFieldElement element, @NotNull SerializedElement serializeTo) {
 

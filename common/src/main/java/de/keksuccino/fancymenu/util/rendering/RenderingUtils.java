@@ -19,12 +19,9 @@ import java.util.Objects;
 public class RenderingUtils {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    //TODO übernehmen
     public static final DrawableColor MISSING_TEXTURE_COLOR_MAGENTA = DrawableColor.of(Color.MAGENTA);
     public static final DrawableColor MISSING_TEXTURE_COLOR_BLACK = DrawableColor.BLACK;
-    //------------------------
 
-    //TODO übernehmen
     public static void renderMissing(@NotNull GuiGraphics graphics, int x, int y, int width, int height) {
         int partW = width / 2;
         int partH = height / 2;
@@ -38,7 +35,6 @@ public class RenderingUtils {
         graphics.fill(x + partW, y + partH, x + width, y + height, MISSING_TEXTURE_COLOR_MAGENTA.getColorInt());
     }
 
-    //TODO übernehmen
     /**
      * Repeatedly renders a tileable (seamless) texture inside an area. Fills the area with the texture.
      *
@@ -55,7 +51,6 @@ public class RenderingUtils {
         blitRepeat(graphics, location, x, y, areaRenderWidth, areaRenderHeight, texWidth, texHeight, 0, 0, texWidth, texHeight, texWidth, texHeight);
     }
 
-    //TODO übernehmen
     /**
      * Repeatedly renders a tileable (seamless) portion of a texture inside an area. Fills the area with the texture.
      *
@@ -99,7 +94,6 @@ public class RenderingUtils {
 
     }
 
-    //TODO übernehmen
     /**
      * Renders a nine-sliced portion of a texture.<br><br>
      *

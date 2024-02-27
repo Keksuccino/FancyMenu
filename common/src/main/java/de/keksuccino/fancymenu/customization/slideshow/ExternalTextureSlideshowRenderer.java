@@ -19,12 +19,9 @@ import org.jetbrains.annotations.Nullable;
 @SuppressWarnings("unused")
 public class ExternalTextureSlideshowRenderer {
 
-
-	//TODO übernehmen (public)
 	public List<ResourceSupplier<ITexture>> images = new ArrayList<>();
 	@Nullable
 	public ResourceSupplier<ITexture> overlayTexture;
-	//---------------------------
 	protected String name = null;
 	public String dir;
 	protected boolean prepared = false;

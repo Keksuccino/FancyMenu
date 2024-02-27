@@ -60,7 +60,6 @@ public class ServerMotdPlaceholder extends Placeholder {
                 l.addAll(Arrays.asList(motd.split("\n")));
             } else {
                 l.add(motd);
-                //TODO übernehmen
                 l.add("");
             }
         } catch (Exception e) {

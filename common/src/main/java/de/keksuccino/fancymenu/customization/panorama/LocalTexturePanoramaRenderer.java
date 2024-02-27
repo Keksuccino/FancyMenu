@@ -40,20 +40,16 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 	@Nullable
 	public File overlayImageFile;
 	protected String name = null;
-	//TODO übernehmen (public)
 	public final List<ResourceSupplier<ITexture>> panoramaImageSuppliers = new ArrayList<>();
 	@Nullable
 	public ResourceSupplier<ITexture> overlayTextureSupplier;
-	//-------------------------
 	protected float speed = 1.0F;
 	protected double fov = 85.0D;
 	protected float angle = 25.0F;
 	public float opacity = 1.0F;
-	//TODO übernehmen
 	protected volatile boolean tickerThreadRunning = false;
 	protected volatile float currentRotation = 0.0F; //0 - 360
 	protected volatile long lastRenderCall = -1L;
-	//-------------------
 
 	@Nullable
 	public static LocalTexturePanoramaRenderer build(@NotNull File propertiesFile, @NotNull File panoramaImageDir, @Nullable File overlayImageFile) {
@@ -81,7 +77,6 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 						if ((an != null) && MathUtils.isFloat(an)) {
 							renderer.angle = Float.parseFloat(an);
 						}
-						//TODO übernehmen
 						String rot = panoMeta.getValue("start_rotation");
 						if ((rot != null) && MathUtils.isFloat(rot)) {
 							renderer.currentRotation = Float.parseFloat(rot);
@@ -89,7 +84,6 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 								renderer.currentRotation = 0;
 							}
 						}
-						//-------------------
 						renderer.prepare();
 						return renderer;
 					} else {
@@ -132,7 +126,6 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 
 	}
 
-	//TODO übernehmen
 	@SuppressWarnings("all")
 	protected void startTickerThreadIfNeeded() {
 
@@ -164,10 +157,8 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 
 	@Override
 	public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-		//TODO übernehmen
 		this.lastRenderCall = System.currentTimeMillis();
 		this.startTickerThreadIfNeeded();
-		//--------------------
 		if (this.panoramaImageSuppliers.size() < 6) {
 			RenderSystem.enableBlend();
 			RenderingUtils.resetShaderColor(graphics);

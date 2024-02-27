@@ -66,8 +66,6 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements H
 
                     setBackMenu.addSeparatorEntry("separator_before_slider_background_entries");
 
-                    //TODO übernehmen (bis markiertes ende)
-
                     this.addImageResourceChooserContextMenuEntryTo(setBackMenu, "normal_slider_background_texture",
                             VanillaWidgetEditorElement.class,
                             null,
@@ -87,11 +85,7 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements H
                                     }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.slider.highlighted"), true, null, true, true, true)
                             .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.buttons.buttonbackground.slider.highlighted.desc")));
 
-                    //----------------------------------
-
                 }
-
-                //TODO übernehmen
 
                 buttonBackgroundMenu.addSeparatorEntry("separator_before_nine_slider_slider_handle_settings");
 
@@ -109,8 +103,6 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements H
                         consumes -> consumes.getElement().nineSliceSliderHandleBorderY,
                         (buttonEditorElement, integer) -> buttonEditorElement.getElement().nineSliceSliderHandleBorderY = integer,
                         Component.translatable("fancymenu.elements.slider.v2.handle.textures.nine_slice.border_y"), true, 5, null, null);
-
-                //-----------------------------------
 
             }
 

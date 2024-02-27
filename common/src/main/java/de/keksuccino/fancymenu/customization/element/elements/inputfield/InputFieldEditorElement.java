@@ -62,8 +62,6 @@ public class InputFieldEditorElement extends AbstractEditorElement {
                         true, 10000, null, null)
                 .setStackable(true);
 
-        //TODO übernehmen
-
         this.rightClickMenu.addSeparatorEntry("separator_before_navigatable");
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "toggle_navigatable", InputFieldEditorElement.class,
@@ -72,11 +70,8 @@ public class InputFieldEditorElement extends AbstractEditorElement {
                         "fancymenu.elements.widgets.generic.navigatable")
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.generic.navigatable.desc")));
 
-        //---------------------------
-
     }
 
-    //TODO übernehmen
     public InputFieldElement getElement() {
         return (InputFieldElement) this.element;
     }

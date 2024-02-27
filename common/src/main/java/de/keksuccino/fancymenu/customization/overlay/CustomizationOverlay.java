@@ -18,7 +18,6 @@ public class CustomizationOverlay {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	//TODO übernehmen
 	private static CustomizationOverlayMenuBar overlayMenuBar;
 	private static DebugOverlay debugOverlay;
 	
@@ -36,7 +35,6 @@ public class CustomizationOverlay {
 		debugOverlay = CustomizationOverlayUI.buildDebugOverlay(overlayMenuBar);
 	}
 
-	//TODO übernehmen
 	@Nullable
 	public static CustomizationOverlayMenuBar getCurrentMenuBarInstance() {
 		return overlayMenuBar;
@@ -47,7 +45,6 @@ public class CustomizationOverlay {
 		return debugOverlay;
 	}
 
-	//TODO übernehmen
 	@EventListener(priority = -1000)
 	public void onInitScreenPost(InitOrResizeScreenCompletedEvent e) {
 		if (!ScreenCustomization.isScreenBlacklisted(e.getScreen().getClass().getName())) {
@@ -67,7 +64,6 @@ public class CustomizationOverlay {
 		}
 	}
 
-	//TODO übernehmen
 	@EventListener(priority = EventPriority.LOW)
 	public void onRenderPost(RenderScreenEvent.Post e) {
 		if (!ScreenCustomization.isScreenBlacklisted(e.getScreen().getClass().getName()) && (overlayMenuBar != null) && (debugOverlay != null)) {

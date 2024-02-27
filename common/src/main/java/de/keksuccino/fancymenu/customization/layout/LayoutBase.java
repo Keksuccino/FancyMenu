@@ -24,10 +24,8 @@ public class LayoutBase {
     public int autoScalingHeight = 0;
     public String customMenuTitle;
     public boolean preserveScrollListHeaderFooterAspectRatio = true;
-    //TODO übernehmen
     public boolean repeatScrollListHeaderTexture = false;
     public boolean repeatScrollListFooterTexture = false;
-    //-------------------------
     public ResourceSupplier<ITexture> scrollListHeaderTexture;
     public ResourceSupplier<ITexture> scrollListFooterTexture;
     public boolean renderScrollListHeaderShadow = true;
@@ -79,14 +77,12 @@ public class LayoutBase {
                 if (!l.preserveScrollListHeaderFooterAspectRatio) {
                     layout.preserveScrollListHeaderFooterAspectRatio = false;
                 }
-                //TODO übernehmen
                 if (l.repeatScrollListHeaderTexture) {
                     layout.repeatScrollListHeaderTexture = true;
                 }
                 if (l.repeatScrollListFooterTexture) {
                     layout.repeatScrollListFooterTexture = true;
                 }
-                //---------------------------
                 if (l.showScrollListHeaderFooterPreviewInEditor) {
                     layout.showScrollListHeaderFooterPreviewInEditor = true;
                 }

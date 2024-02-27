@@ -20,12 +20,10 @@ public class ImageElement extends AbstractElement {
 
     @Nullable
     public ResourceSupplier<ITexture> textureSupplier;
-    //TODO übernehmen
     public boolean repeat = false;
     public boolean nineSlice = false;
     public int nineSliceBorderX = 5;
     public int nineSliceBorderY = 5;
-    //------------------------
 
     public ImageElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -46,7 +44,6 @@ public class ImageElement extends AbstractElement {
             if ((t != null) && t.isReady()) {
                 ResourceLocation loc = t.getResourceLocation();
                 if (loc != null) {
-                    //TODO übernehmen
                     if (this.repeat) {
                         RenderingUtils.blitRepeat(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight());
                     } else if (this.nineSlice) {
@@ -54,10 +51,8 @@ public class ImageElement extends AbstractElement {
                     } else {
                         graphics.blit(loc, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
                     }
-                    //----------------------
                 }
             } else if (isEditor()) {
-                //TODO übernehmen
                 RenderingUtils.renderMissing(graphics, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
             }
 

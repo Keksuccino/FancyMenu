@@ -130,8 +130,6 @@ public class SliderEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("separator_after_actions");
 
-        //TODO übernehmen (bis markiertes ende)
-
         ContextMenu buttonBackgroundMenu = new ContextMenu();
         this.rightClickMenu.addSubMenuEntry("button_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.alternate.slider"), buttonBackgroundMenu)
                 .setIcon(ContextMenu.IconFactory.getIcon("image"))
@@ -191,8 +189,6 @@ public class SliderEditorElement extends AbstractEditorElement {
 
         buttonBackgroundMenu.addSeparatorEntry("separator_after_set_texture").setStackable(true);
 
-        //----------------------------------
-
         this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "loop_animated",
                         SliderEditorElement.class,
                         consumes -> consumes.getElement().loopBackgroundAnimations,
@@ -206,8 +202,6 @@ public class SliderEditorElement extends AbstractEditorElement {
                         (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().restartBackgroundAnimationsOnHover = aBoolean,
                         "fancymenu.helper.editor.items.buttons.textures.restart_animated_on_hover")
                 .setStackable(true);
-
-        //TODO übernehmen
 
         buttonBackgroundMenu.addSeparatorEntry("separator_after_restart_animation_on_hover");
 
@@ -243,8 +237,6 @@ public class SliderEditorElement extends AbstractEditorElement {
                 (buttonEditorElement, integer) -> buttonEditorElement.getElement().nineSliceSliderHandleBorderY = integer,
                 Component.translatable("fancymenu.elements.slider.v2.handle.textures.nine_slice.border_y"), true, 5, null, null);
 
-        //-------------------------
-
         this.rightClickMenu.addSeparatorEntry("separator_after_texture_settings").setStackable(true);
 
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_label",
@@ -276,8 +268,6 @@ public class SliderEditorElement extends AbstractEditorElement {
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.button.btndescription.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("talk"));
 
-        //TODO übernehmen
-
         this.rightClickMenu.addSeparatorEntry("separator_before_navigatable");
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "toggle_navigatable", SliderEditorElement.class,
@@ -285,8 +275,6 @@ public class SliderEditorElement extends AbstractEditorElement {
                         (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().navigatable = aBoolean,
                         "fancymenu.elements.widgets.generic.navigatable")
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.generic.navigatable.desc")));
-
-        //-------------------------------
 
     }
 

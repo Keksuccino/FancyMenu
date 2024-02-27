@@ -38,7 +38,6 @@ public class ManageResourcePreLoadScreen extends CellScreen {
 
         this.addSpacerCell(10);
 
-        //TODO übernehmen
         for (ResourceSource source : ResourcePreLoader.getRegisteredResourceSources(this.cachedSerialized)) {
 
             String sourceString;
@@ -55,7 +54,6 @@ public class ManageResourcePreLoadScreen extends CellScreen {
                     .setSelectable(true);
 
         }
-        //----------------------------
 
         this.addStartEndSpacerCell();
 
@@ -67,7 +65,6 @@ public class ManageResourcePreLoadScreen extends CellScreen {
         this.addRightSideButton(20, Component.translatable("fancymenu.resources.pre_loading.manage.add"), extendedButton -> {
             ResourceChooserScreen<?,?> s = ResourceChooserScreen.generic(FileTypeGroup.allSupported(), null, source -> {
                 if (source != null) {
-                    //TODO übernehmen
                     this.cachedSerialized = ResourcePreLoader.addResourceSource(ResourcePreLoader.buildSourceFromString(source), this.cachedSerialized, false);
                 }
                 Minecraft.getInstance().setScreen(this);
@@ -75,7 +72,6 @@ public class ManageResourcePreLoadScreen extends CellScreen {
             Minecraft.getInstance().setScreen(s);
         });
 
-        //TODO übernehmen
         this.addRightSideButton(20, Component.translatable("fancymenu.resources.pre_loading.manage.add.panorama"), extendedButton -> {
             ChoosePanoramaScreen s = new ChoosePanoramaScreen(null, panoramaName -> {
                 if (panoramaName != null) {
@@ -86,7 +82,6 @@ public class ManageResourcePreLoadScreen extends CellScreen {
             Minecraft.getInstance().setScreen(s);
         });
 
-        //TODO übernehmen
         this.addRightSideButton(20, Component.translatable("fancymenu.resources.pre_loading.manage.add.slideshow"), extendedButton -> {
             ChooseSlideshowScreen s = new ChooseSlideshowScreen(null, slideshowName -> {
                 if (slideshowName != null) {
@@ -104,7 +99,6 @@ public class ManageResourcePreLoadScreen extends CellScreen {
             if (source != null) {
                 ConfirmationScreen s = ConfirmationScreen.warning(aBoolean -> {
                     if (aBoolean) {
-                        //TODO übernehmen
                         this.cachedSerialized = ResourcePreLoader.removeResourceSource(ResourcePreLoader.buildSourceFromString(source), this.cachedSerialized, false);
                     }
                     Minecraft.getInstance().setScreen(this);

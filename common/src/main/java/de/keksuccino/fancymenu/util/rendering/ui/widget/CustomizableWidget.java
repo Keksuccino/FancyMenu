@@ -66,7 +66,6 @@ public interface CustomizableWidget {
                 renderVanilla = false;
                 graphics.setColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)widget).getAlphaFancyMenu());
                 RenderSystem.enableBlend();
-                //TODO übernehmen
                 if ((widget instanceof CustomizableSlider s) && s.isNineSliceCustomSliderHandle_FancyMenu()) {
                     RenderingUtils.blitNineSliced(graphics, location, x, y, width, height, s.getNineSliceSliderHandleBorderX_FancyMenu(), s.getNineSliceSliderHandleBorderY_FancyMenu(), s.getNineSliceSliderHandleBorderX_FancyMenu(), s.getNineSliceSliderHandleBorderY_FancyMenu(), customBackground.getWidth(), customBackground.getHeight(), 0, 0, customBackground.getWidth(), customBackground.getHeight());
                 } else if (!(widget instanceof CustomizableSlider) && this.isNineSliceCustomBackgroundTexture_FancyMenu()) {
@@ -74,7 +73,6 @@ public interface CustomizableWidget {
                 } else {
                     graphics.blit(location, x, y, 0.0F, 0.0F, width, height, width, height);
                 }
-                //---------------------------
                 RenderingUtils.resetShaderColor(graphics);
             }
         }
@@ -183,8 +181,6 @@ public interface CustomizableWidget {
     @Nullable
     RenderableResource getCustomBackgroundInactiveFancyMenu();
 
-    //TODO übernehmen
-
     void setNineSliceCustomBackground_FancyMenu(boolean repeat);
 
     boolean isNineSliceCustomBackgroundTexture_FancyMenu();
@@ -196,8 +192,6 @@ public interface CustomizableWidget {
     void setNineSliceBorderY_FancyMenu(int borderY);
 
     int getNineSliceCustomBackgroundBorderY_FancyMenu();
-
-    //------------------------
 
     void setCustomBackgroundResetBehaviorFancyMenu(@NotNull CustomBackgroundResetBehavior resetBehavior);
 

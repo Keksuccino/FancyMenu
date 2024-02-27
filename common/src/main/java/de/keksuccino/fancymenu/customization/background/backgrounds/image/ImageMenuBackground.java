@@ -19,7 +19,6 @@ public class ImageMenuBackground extends MenuBackground {
     public ResourceSupplier<ITexture> textureSupplier;
     public ResourceSupplier<ITexture> fallbackTextureSupplier;
     public boolean slideLeftRight = false;
-    //TODO übernehmen
     public boolean repeat = false;
     protected double slidePos = 0.0D;
     protected boolean slideMoveBack = false;
@@ -39,13 +38,11 @@ public class ImageMenuBackground extends MenuBackground {
         RenderingUtils.resetShaderColor(graphics);
 
         ResourceLocation resourceLocation = null;
-        //TODO übernehmen
         ITexture tex = null;
         AspectRatio ratio = new AspectRatio(10, 10);
         if (this.textureSupplier != null) {
             ITexture background = this.textureSupplier.get();
             if (background != null) {
-                //TODO übernehmen
                 tex = background;
                 ratio = background.getAspectRatio();
                 resourceLocation = background.getResourceLocation();
@@ -54,7 +51,6 @@ public class ImageMenuBackground extends MenuBackground {
         if ((resourceLocation == null) && (this.fallbackTextureSupplier != null)) {
             ITexture fallback = this.fallbackTextureSupplier.get();
             if (fallback != null) {
-                //TODO übernehmen
                 tex = fallback;
                 ratio = fallback.getAspectRatio();
                 resourceLocation = fallback.getResourceLocation();
@@ -66,7 +62,6 @@ public class ImageMenuBackground extends MenuBackground {
             RenderSystem.enableBlend();
             graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
 
-            //TODO übernehmen (repeat)
             if (this.repeat) {
                 RenderingUtils.blitRepeat(graphics, resourceLocation, 0, 0, getScreenWidth(), getScreenHeight(), tex.getWidth(), tex.getHeight());
             } else if (this.slideLeftRight) {

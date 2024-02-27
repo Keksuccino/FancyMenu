@@ -57,14 +57,12 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	private RenderableResource customBackgroundInactiveFancyMenu;
 	@Unique @NotNull
 	private CustomBackgroundResetBehavior customBackgroundResetBehaviorFancyMenu = CustomBackgroundResetBehavior.RESET_NEVER;
-	//TODO übernehmen
 	@Unique
 	private boolean nineSliceCustomBackgroundTexture_FancyMenu = false;
 	@Unique
 	private int nineSliceCustomBackgroundBorderX_FancyMenu = 5;
 	@Unique
 	private int nineSliceCustomBackgroundBorderY_FancyMenu = 5;
-	//----------------------
 	@Unique @Nullable
 	private Integer customWidthFancyMenu;
 	@Unique @Nullable
@@ -475,8 +473,6 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		return this.customBackgroundHoverFancyMenu;
 	}
 
-	//TODO übernehmen (bis markiertes ende)
-
 	@Unique
 	@Override
 	public void setNineSliceCustomBackground_FancyMenu(boolean repeat) {
@@ -512,8 +508,6 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	public int getNineSliceCustomBackgroundBorderY_FancyMenu() {
 		return nineSliceCustomBackgroundBorderY_FancyMenu;
 	}
-
-	//--------------------
 
 	@Unique
 	@Override

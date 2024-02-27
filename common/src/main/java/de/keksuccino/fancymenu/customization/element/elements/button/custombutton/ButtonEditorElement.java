@@ -51,8 +51,6 @@ public class ButtonEditorElement extends AbstractEditorElement {
                     .setStackable(true);
         }
 
-        //TODO übernehmen (bis markiertes ende)
-
         ContextMenu setBackMenu = new ContextMenu();
         buttonBackgroundMenu.addSubMenuEntry("set_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.set"), setBackMenu)
                 .setStackable(true);
@@ -86,8 +84,6 @@ public class ButtonEditorElement extends AbstractEditorElement {
 
         buttonBackgroundMenu.addSeparatorEntry("separator_after_set_background").setStackable(true);
 
-        //-----------------------------------------
-
         this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "loop_animated",
                         ButtonEditorElement.class,
                         consumes -> consumes.getElement().loopBackgroundAnimations,
@@ -101,8 +97,6 @@ public class ButtonEditorElement extends AbstractEditorElement {
                         (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().restartBackgroundAnimationsOnHover = aBoolean,
                         "fancymenu.helper.editor.items.buttons.textures.restart_animated_on_hover")
                 .setStackable(true);
-
-        //TODO übernehmen
 
         buttonBackgroundMenu.addSeparatorEntry("separator_after_restart_animation_on_hover");
 
@@ -120,8 +114,6 @@ public class ButtonEditorElement extends AbstractEditorElement {
                 consumes -> consumes.getElement().nineSliceBorderY,
                 (buttonEditorElement, integer) -> buttonEditorElement.getElement().nineSliceBorderY = integer,
                 Component.translatable("fancymenu.helper.editor.items.buttons.textures.nine_slice.border_y"), true, 5, null, null);
-
-        //-------------------------
 
         this.rightClickMenu.addSeparatorEntry("button_separator_2").setStackable(true);
 
@@ -186,7 +178,6 @@ public class ButtonEditorElement extends AbstractEditorElement {
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.button.btndescription.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("talk"));
 
-        //TODO übernehmen
         if (!(this instanceof VanillaWidgetEditorElement)) {
 
             this.rightClickMenu.addSeparatorEntry("separator_before_navigatable");
@@ -198,7 +189,6 @@ public class ButtonEditorElement extends AbstractEditorElement {
                     .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.generic.navigatable.desc")));
 
         }
-        //--------------------------
 
     }
 

@@ -4,7 +4,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import net.minecraft.client.gui.GuiGraphics;
 import org.jetbrains.annotations.NotNull;
 
-//TODO übernehmen
 public class CustomizationOverlayMenuBar extends MenuBar {
 
     public boolean allowRender = false;

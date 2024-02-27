@@ -35,7 +35,6 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
     private RenderableResource customSliderBackgroundHighlightedFancyMenu;
     @Unique
     private boolean sliderInitializedFancyMenu = false;
-    //TODO übernehmen
     @Unique
     private boolean nineSliceSliderBackground_FancyMenu = false;
     @Unique
@@ -48,7 +47,6 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
     private int nineSliceSliderHandleBorderX_FancyMenu = 5;
     @Unique
     private int nineSliceSliderHandleBorderY_FancyMenu = 5;
-    //---------------------
 
     public MixinAbstractSliderButton(int $$0, int $$1, int $$2, int $$3, Component $$4) {
         super($$0, $$1, $$2, $$3, $$4);
@@ -103,8 +101,6 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
         });
 
     }
-
-    //TODO übernehmen
 
     @Unique
     @Override

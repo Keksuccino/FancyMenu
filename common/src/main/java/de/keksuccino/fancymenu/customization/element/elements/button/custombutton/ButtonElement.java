@@ -54,12 +54,10 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public String backgroundAnimationInactive;
     public boolean loopBackgroundAnimations = true;
     public boolean restartBackgroundAnimationsOnHover = true;
-    //TODO übernehmen
     public boolean nineSliceCustomBackground = false;
     public int nineSliceBorderX = 5;
     public int nineSliceBorderY = 5;
     public boolean navigatable = true;
-    //-----------------------
     @NotNull
     public GenericExecutableBlock actionExecutor = new GenericExecutableBlock();
 
@@ -125,11 +123,9 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         this.updateWidgetTexture();
         this.updateWidgetSize();
         this.updateWidgetPosition();
-        //TODO übernehmen
         this.updateWidgetNavigatable();
     }
 
-    //TODO übernehmen
     public void updateWidgetNavigatable() {
         if (this.getWidget() instanceof NavigatableWidget w) {
             w.setNavigatable(this.navigatable);
@@ -160,7 +156,6 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     }
 
     public void updateWidgetTooltip() {
-        //TODO übernehmen (is visible & shouldRender)
         if ((this.tooltip != null) && (this.getWidget() != null) && this.getWidget().isHovered() && this.getWidget().visible && this.shouldRender() && !isEditor()) {
             String tooltip = this.tooltip.replace("%n%", "\n");
             TooltipHandler.INSTANCE.addWidgetTooltip(this.getWidget(), Tooltip.of(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(tooltip), "\n")), false, true);
@@ -232,7 +227,6 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         }
 
         if (this.getWidget() instanceof CustomizableWidget w) {
-            //TODO übernehmen
             if (this.getWidget() instanceof CustomizableSlider s) {
                 s.setNineSliceCustomSliderBackground_FancyMenu(this.nineSliceCustomBackground);
                 s.setNineSliceSliderBackgroundBorderX_FancyMenu(this.nineSliceBorderX);
@@ -242,7 +236,6 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
                 w.setNineSliceBorderX_FancyMenu(this.nineSliceBorderX);
                 w.setNineSliceBorderY_FancyMenu(this.nineSliceBorderY);
             }
-            //--------------------------
             w.setCustomBackgroundNormalFancyMenu(backNormal);
             w.setCustomBackgroundHoverFancyMenu(backHover);
             w.setCustomBackgroundInactiveFancyMenu(backInactive);

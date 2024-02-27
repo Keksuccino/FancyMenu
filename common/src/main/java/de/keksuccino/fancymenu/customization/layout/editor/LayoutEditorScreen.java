@@ -354,7 +354,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 						graphics.blit(loc, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
 						graphics.disableScissor();
 					} else if (this.layout.repeatScrollListHeaderTexture) {
-						//TODO übernehmen (repeat header)
 						RenderingUtils.blitRepeat(graphics, loc, x0, 0, this.width, y0, headerTexture.getWidth(), headerTexture.getHeight());
 					} else {
 						graphics.blit(loc, x0, 0, 0.0F, 0.0F, this.width, y0, this.width, y0);
@@ -380,7 +379,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 						graphics.blit(loc, footerX, footerY, 0.0F, 0.0F, footerWidth, footerHeight, footerWidth, footerHeight);
 						graphics.disableScissor();
 					} else if (this.layout.repeatScrollListFooterTexture) {
-						//TODO übernehmen (repeat footer)
 						int footerHeight = this.height - y1;
 						RenderingUtils.blitRepeat(graphics, loc, x0, y1, this.width, footerHeight, footerTexture.getWidth(), footerTexture.getHeight());
 					} else {

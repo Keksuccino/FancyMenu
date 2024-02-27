@@ -60,7 +60,6 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     public String sliderBackgroundAnimationHighlighted;
     public boolean loopBackgroundAnimations = true;
     public boolean restartBackgroundAnimationsOnHover = true;
-    //TODO übernehmen
     public boolean nineSliceCustomBackground = false;
     public int nineSliceBorderX = 5;
     public int nineSliceBorderY = 5;
@@ -68,7 +67,6 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     public int nineSliceSliderHandleBorderX = 5;
     public int nineSliceSliderHandleBorderY = 5;
     public boolean navigatable = true;
-    //-----------------------
     @NotNull
     public GenericExecutableBlock executableBlock = new GenericExecutableBlock();
 
@@ -155,7 +153,6 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
 
         if (this.slider == null) return;
 
-        //TODO übernehmen
         this.slider.setNavigatable(this.navigatable);
 
         this.slider.visible = this.shouldRender();
@@ -182,7 +179,6 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     }
 
     public void updateWidgetTooltip() {
-        //TODO übernehmen (is visible & shouldRender)
         if ((this.tooltip != null) && (this.slider != null) && this.slider.isHovered() && this.slider.visible && this.shouldRender() && !isEditor()) {
             String tooltip = this.tooltip.replace("%n%", "\n");
             TooltipHandler.INSTANCE.addWidgetTooltip(this.slider, Tooltip.of(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(tooltip), "\n")), false, true);
@@ -261,7 +257,6 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         }
 
         if (this.slider instanceof CustomizableWidget w) {
-            //TODO übernehmen
             if (this.slider instanceof CustomizableSlider s) {
                 s.setNineSliceCustomSliderBackground_FancyMenu(this.nineSliceCustomBackground);
                 s.setNineSliceSliderBackgroundBorderX_FancyMenu(this.nineSliceBorderX);
@@ -270,7 +265,6 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
                 s.setNineSliceSliderHandleBorderX_FancyMenu(this.nineSliceSliderHandleBorderX);
                 s.setNineSliceSliderHandleBorderY_FancyMenu(this.nineSliceSliderHandleBorderY);
             }
-            //--------------------------
             w.setCustomBackgroundNormalFancyMenu(handleTextureNormal);
             w.setCustomBackgroundHoverFancyMenu(handleTextureHover);
             w.setCustomBackgroundInactiveFancyMenu(handleTextureInactive);

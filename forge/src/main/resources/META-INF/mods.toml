@@ -59,17 +59,3 @@ mandatory=true
 versionRange="[1.20.1,)"
 ordering="NONE"
 side="BOTH"
-
-[[dependencies.${mod_id}]]
-modId="fmextension_audio"
-mandatory=false
-versionRange="[9999.9.9,)"
-ordering="NONE"
-side="BOTH"
-
-[[dependencies.${mod_id}]]
-modId="fmextension_video"
-mandatory=false
-versionRange="[9999.9.9,)"
-ordering="NONE"
-side="BOTH"
