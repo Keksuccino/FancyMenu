@@ -3,15 +3,15 @@ package de.keksuccino.fancymenu;
 import de.keksuccino.fancymenu.commands.server.ServerCloseGuiScreenCommand;
 import de.keksuccino.fancymenu.commands.server.ServerOpenGuiScreenCommand;
 import de.keksuccino.fancymenu.commands.server.ServerVariableCommand;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 public class FancyMenuNeoForgeServerEvents {
 
     public static void registerAll() {
 
-        MinecraftForge.EVENT_BUS.register(new FancyMenuNeoForgeServerEvents());
+        NeoForge.EVENT_BUS.register(new FancyMenuNeoForgeServerEvents());
 
     }
 

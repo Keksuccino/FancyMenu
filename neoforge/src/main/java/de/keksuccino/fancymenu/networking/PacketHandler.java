@@ -3,8 +3,7 @@ package de.keksuccino.fancymenu.networking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.event.network.CustomPayloadEvent;
-import net.minecraftforge.network.*;
+import net.neoforged.neoforge.network.PacketDistributor;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
