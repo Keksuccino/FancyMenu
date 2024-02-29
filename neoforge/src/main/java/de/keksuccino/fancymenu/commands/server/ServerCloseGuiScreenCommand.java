@@ -1,16 +1,14 @@
 package de.keksuccino.fancymenu.commands.server;
 
 import com.mojang.brigadier.CommandDispatcher;
-import de.keksuccino.fancymenu.networking.PacketHandler;
-import de.keksuccino.fancymenu.networking.packets.command.execute.ExecuteCommandPacketMessage;
+import de.keksuccino.fancymenu.networking.neoforge.PacketSender;
+import de.keksuccino.fancymenu.networking.neoforge.packets.execute.ClientboundExecutePacketPayload;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.Collection;
 
 public class ServerCloseGuiScreenCommand {
@@ -30,16 +28,10 @@ public class ServerCloseGuiScreenCommand {
             if (targets == null) {
                 //Send packet to client, so it knows it needs to execute the real client-side /closeguiscreen command
                 ServerPlayer sender = stack.getPlayerOrException();
-                ExecuteCommandPacketMessage msg = new ExecuteCommandPacketMessage();
-                msg.direction = "client";
-                msg.command = "/closeguiscreen";
-                PacketHandler.send(PacketDistributor.PLAYER.with(sender), msg);
+                PacketSender.sendToClient(new ClientboundExecutePacketPayload("/closeguiscreen"), sender);
             } else {
                 for (ServerPlayer target : targets) {
-                    ExecuteCommandPacketMessage msg = new ExecuteCommandPacketMessage();
-                    msg.direction = "client";
-                    msg.command = "/closeguiscreen";
-                    PacketHandler.send(PacketDistributor.PLAYER.with(target), msg);
+                    PacketSender.sendToClient(new ClientboundExecutePacketPayload("/closeguiscreen"), target);
                 }
             }
         } catch (Exception e) {

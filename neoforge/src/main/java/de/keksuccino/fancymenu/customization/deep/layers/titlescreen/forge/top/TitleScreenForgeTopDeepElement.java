@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.deep.layers.titlescreen.forge.top;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -11,7 +10,7 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.client.ForgeHooksClient;
+import net.neoforged.neoforge.client.ClientHooks;
 import org.jetbrains.annotations.NotNull;
 
 public class TitleScreenForgeTopDeepElement extends AbstractDeepElement {
@@ -41,7 +40,7 @@ public class TitleScreenForgeTopDeepElement extends AbstractDeepElement {
             this.posOffsetX = (getScreenWidth() / 2) - (this.getAbsoluteWidth() / 2);
             this.posOffsetY = 4;
         } else {
-            ForgeHooksClient.renderMainMenu((TitleScreen) getScreen(), graphics, font, getScreenWidth(), getScreenHeight(), (int) (this.opacity * 255.0F));
+            ClientHooks.renderMainMenu((TitleScreen) getScreen(), graphics, font, getScreenWidth(), getScreenHeight(), (int) (this.opacity * 255.0F));
         }
 
         graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);

@@ -3,14 +3,13 @@ package de.keksuccino.fancymenu.commands.server;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import de.keksuccino.fancymenu.commands.client.CommandUtils;
-import de.keksuccino.fancymenu.networking.PacketHandler;
-import de.keksuccino.fancymenu.networking.packets.command.execute.ExecuteCommandPacketMessage;
+import de.keksuccino.fancymenu.networking.neoforge.PacketSender;
+import de.keksuccino.fancymenu.networking.neoforge.packets.execute.ClientboundExecutePacketPayload;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
 
@@ -37,16 +36,10 @@ public class ServerOpenGuiScreenCommand {
             if (targets == null) {
                 //Send packet to sender, so the client can execute the real client-side command
                 ServerPlayer sender = stack.getPlayerOrException();
-                ExecuteCommandPacketMessage msg = new ExecuteCommandPacketMessage();
-                msg.direction = "client";
-                msg.command = "/openguiscreen " + menuIdentifierOrCustomGuiName;
-                PacketHandler.send(PacketDistributor.PLAYER.with(sender), msg);
+                PacketSender.sendToClient(new ClientboundExecutePacketPayload("/openguiscreen " + menuIdentifierOrCustomGuiName), sender);
             } else {
                 for (ServerPlayer target : targets) {
-                    ExecuteCommandPacketMessage msg = new ExecuteCommandPacketMessage();
-                    msg.direction = "client";
-                    msg.command = "/openguiscreen " + menuIdentifierOrCustomGuiName;
-                    PacketHandler.send(PacketDistributor.PLAYER.with(target), msg);
+                    PacketSender.sendToClient(new ClientboundExecutePacketPayload("/openguiscreen " + menuIdentifierOrCustomGuiName), target);
                 }
             }
         } catch (Exception e) {

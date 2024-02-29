@@ -3,12 +3,12 @@ package de.keksuccino.fancymenu.commands.client;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import de.keksuccino.fancymenu.networking.neoforge.PacketSender;
+import de.keksuccino.fancymenu.networking.neoforge.packets.variablesuggestions.ServerboundVariableSuggestionsPacketPayload;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
-import de.keksuccino.fancymenu.networking.PacketHandler;
-import de.keksuccino.fancymenu.networking.packets.command.commands.variable.VariableCommandSuggestionsPacketMessage;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
@@ -107,10 +107,7 @@ public class VariableCommand {
 
         Screen s = Minecraft.getInstance().screen;
         if ((s instanceof ChatScreen) && ((lastScreen == null) || (lastScreen != s))) {
-            VariableCommandSuggestionsPacketMessage msg = new VariableCommandSuggestionsPacketMessage();
-            msg.direction = "server";
-            msg.variableNameSuggestions.addAll(Arrays.asList(getVariableNameSuggestions()));
-            PacketHandler.sendToServer(msg);
+            PacketSender.sendToServer(new ServerboundVariableSuggestionsPacketPayload(Arrays.asList(getVariableNameSuggestions())));
         }
         lastScreen = s;
 

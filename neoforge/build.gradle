@@ -5,7 +5,7 @@ plugins {
     id 'java-library'
 }
 base {
-    archivesName = "${mod_name}-neoforge-${minecraft_version}"
+    archivesName = "${mod_id}"
 }
 
 // Automatically enable neoforge AccessTransformers if the file exists
@@ -19,19 +19,16 @@ runs {
         modSource project.sourceSets.main
     }
     client {
+        workingDirectory project.file('../run_client')
         systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        dependencies {
+            runtime 'com.github.Keksuccino:japng:0.5.3'
+        }
     }
     server {
+        workingDirectory project.file('../run_server')
         systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         programArgument '--nogui'
-    }
-
-    gameTestServer {
-        systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-    }
-
-    data {
-        programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
     }
 }
 
@@ -41,11 +38,17 @@ repositories {
     flatDir { dirs 'libs' }
 }
 
+jarJar.enable()
+
 dependencies {
     implementation "net.neoforged:neoforge:${neoforge_version}"
     compileOnly project(":common")
     implementation "flatdir:konkrete:1.0.0"
 	implementation "flatdir:melody:1.0.0"
+    //Also needs to get added to the client run configuration (runs -> client -> dependencies) since it's a non-Minecraft library
+    implementation(jarJar("com.github.Keksuccino:japng:0.5.3")) {
+        jarJar.ranged(it, "[0.5.3,)")
+    }
 }
 
 // NeoGradle compiles the game, but we don't want to add our common code to the game's code

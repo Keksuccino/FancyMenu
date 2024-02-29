@@ -4,13 +4,12 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import de.keksuccino.fancymenu.commands.client.CommandUtils;
-import de.keksuccino.fancymenu.networking.PacketHandler;
-import de.keksuccino.fancymenu.networking.packets.command.execute.ExecuteCommandPacketMessage;
+import de.keksuccino.fancymenu.networking.neoforge.PacketSender;
+import de.keksuccino.fancymenu.networking.neoforge.packets.execute.ClientboundExecutePacketPayload;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.PacketDistributor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -65,10 +64,7 @@ public class ServerVariableCommand {
         try {
             if (variableName != null) {
                 ServerPlayer sender = stack.getPlayerOrException();
-                ExecuteCommandPacketMessage msg = new ExecuteCommandPacketMessage();
-                msg.direction = "client";
-                msg.command = "/fmvariable get " + variableName;
-                PacketHandler.send(PacketDistributor.PLAYER.with(sender), msg);
+                PacketSender.sendToClient(new ClientboundExecutePacketPayload("/fmvariable get " + variableName), sender);
             }
         } catch (Exception e) {
             stack.sendFailure(Component.literal("Error while executing command!"));
@@ -81,10 +77,7 @@ public class ServerVariableCommand {
         try {
             if ((variableName != null) && (setToValue != null)) {
                 ServerPlayer sender = stack.getPlayerOrException();
-                ExecuteCommandPacketMessage msg = new ExecuteCommandPacketMessage();
-                msg.direction = "client";
-                msg.command = "/fmvariable set " + variableName + " " + setToValue + " " + sendFeedback;
-                PacketHandler.send(PacketDistributor.PLAYER.with(sender), msg);
+                PacketSender.sendToClient(new ClientboundExecutePacketPayload("/fmvariable set " + variableName + " " + setToValue + " " + sendFeedback), sender);
             }
         } catch (Exception e) {
             stack.sendFailure(Component.literal("Error while executing command!"));

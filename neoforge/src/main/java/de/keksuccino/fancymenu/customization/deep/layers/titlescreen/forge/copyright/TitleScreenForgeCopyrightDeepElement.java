@@ -1,13 +1,12 @@
 package de.keksuccino.fancymenu.customization.deep.layers.titlescreen.forge.copyright;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraftforge.internal.BrandingControl;
+import net.neoforged.neoforge.internal.BrandingControl;
 import org.jetbrains.annotations.NotNull;
 
 public class TitleScreenForgeCopyrightDeepElement extends AbstractDeepElement {

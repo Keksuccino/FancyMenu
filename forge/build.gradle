@@ -64,6 +64,8 @@ repositories {
     flatDir { dirs 'libs' }
 }
 
+jarJar.enable()
+
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     compileOnly project(":common")
