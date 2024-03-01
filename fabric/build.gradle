@@ -26,7 +26,7 @@ dependencies {
     modImplementation "maven.modrinth:load-my-resources:1.0.4-1.20.2-fabric"
     modImplementation "maven.modrinth:melody:1.0.1-1.20.1-1.20.4-fabric"
     //modImplementation "maven.modrinth:konkrete:1.8.0-1.20.4-fabric"
-    modImplementation "flatdir:konkrete:1.0.0"
+    modImplementation "flatdir:konkrete:1.9.1"
     modImplementation "maven.modrinth:modmenu:9.0.0"
 //    modImplementation "maven.modrinth:modernfix:T8GvLNSz"
 //    modImplementation "maven.modrinth:ukulib:1.1.1+1.20.3"

@@ -36,7 +36,6 @@ public class ScrollArea extends UIBase {
     public int overriddenTotalScrollWidth = -1;
     public int overriddenTotalScrollHeight = -1;
     public boolean correctYOnAddingRemovingEntries = true;
-    
     public float customGuiScale = -1F;
 
     public ScrollArea(int x, int y, int width, int height) {
