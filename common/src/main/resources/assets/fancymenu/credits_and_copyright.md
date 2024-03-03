@@ -27,6 +27,11 @@ Keksuccino
 ### FRENCH
 Mozork01
  
+### CHINESE (SIMPLIFIED)
+BredyAK
+ddaodan
+nageih
+ 
  
 ## ALPHA & BETA TESTERS
 ankiolyne (rainyatrium)

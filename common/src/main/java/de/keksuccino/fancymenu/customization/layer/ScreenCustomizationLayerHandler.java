@@ -117,13 +117,19 @@ public class ScreenCustomizationLayerHandler {
 		return null;
 	}
 
+	//TODO übernehmen
 	@Nullable
 	public static ScreenCustomizationLayer getLayerOfScreen(@NotNull Screen screen) {
+		if (screen instanceof CustomGuiBaseScreen custom) {
+			return getLayer(custom.getIdentifier());
+		}
 		return getLayerOfScreen(screen.getClass());
 	}
 
+	//TODO übernehmen
 	@Nullable
 	public static ScreenCustomizationLayer getLayerOfScreen(@NotNull Class<? extends Screen> screenClass) {
+		if (screenClass == CustomGuiBaseScreen.class) throw new IllegalArgumentException("Tried to get ScreenCustomizationLayer of CustomGuiBaseScreen class! This is not possible!");
 		return getLayer(screenClass.getName());
 	}
 
