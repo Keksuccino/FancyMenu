@@ -1,10 +1,17 @@
 
+CHANGELOG | FANCYMENU v3.1.2 [ W I P - Not public yet! ]
+ 
+- Fixed "Other Element" anchor point, placeholders and loading requirements related to other element's position/size/hover state not working in Custom GUIs
+ 
+%changelog:end%
+
+
+
 CHANGELOG | FANCYMENU v3.1.1 NeoForge
 
 - Ported to NeoForge 1.20.4
  
 %changelog:end%
-
 
 
 
@@ -14,7 +21,6 @@ CHANGELOG | FANCYMENU v3.1.1
 - The Forge version now soft-crashes on load when the video or audio extension is loaded and shows an error dialog that tells the user to remove the extension(s)
  
 %changelog:end%
-
 
 
 
