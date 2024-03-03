@@ -1,6 +1,7 @@
 
 CHANGELOG | FANCYMENU v3.1.2 [ W I P - Not public yet! ]
  
+- Added Chinese (Simplified) translation by BredyAK, ddaodan, nageih
 - Fixed "Other Element" anchor point, placeholders and loading requirements related to other element's position/size/hover state not working in Custom GUIs
  
 %changelog:end%
