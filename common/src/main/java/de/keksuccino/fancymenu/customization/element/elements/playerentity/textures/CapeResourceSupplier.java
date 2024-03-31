@@ -1,9 +1,10 @@
 package de.keksuccino.fancymenu.customization.element.elements.playerentity.textures;
 
+import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.file.type.FileMediaType;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
-import de.keksuccino.fancymenu.util.minecraftuser.*;
+import de.keksuccino.fancymenu.util.minecraftuser.v2.MinecraftUsers;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
@@ -15,7 +16,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -111,23 +111,18 @@ public class CapeResourceSupplier extends ResourceSupplier<ITexture> {
         return this.hasNoCape;
     }
 
+    //TODO übernehmen
     protected void findPlayerNameCapeUrl(@NotNull String getterPlayerName) {
         Objects.requireNonNull(getterPlayerName);
         this.startedFindingPlayerNameCapeUrl = true;
         new Thread(() -> {
             String capeUrl = null;
-            MinecraftUserMetadata userMeta = MinecraftUsers.getUserMetadata(getterPlayerName);
-            PlayerTexturesMetadata texMeta = userMeta.getTexturesMetadata();
-            if (texMeta != null) {
-                CapeTextureMetadata capeMeta = texMeta.getCape();
-                if (capeMeta != null) {
-                    capeUrl = capeMeta.getUrl();
-                } else {
-                    this.hasNoCape = true;
-                }
-            }
-            if ((capeUrl == null) && !this.hasNoCape) {
-                LOGGER.error("[FANCYMENU] CapeResourceSupplier failed to get URL of player cape: " + getterPlayerName, new IOException());
+            MinecraftProfileTexture texture = MinecraftUsers.getProfileTexture(getterPlayerName, MinecraftProfileTexture.Type.CAPE);
+            if ((texture != null) && (texture != MinecraftUsers.MISSING_CAPE_TEXTURE)) {
+                capeUrl = texture.getUrl();
+                if (capeUrl == null) LOGGER.error("[FANCYMENU] CapeResourceSupplier failed to get URL of player cape: " + getterPlayerName, new IOException());
+            } else {
+                this.hasNoCape = true;
             }
             if (!this.startedFindingPlayerNameCapeUrl) return;
             this.playerNameCapeUrl = capeUrl;
