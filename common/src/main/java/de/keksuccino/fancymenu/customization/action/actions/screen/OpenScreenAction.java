@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screen.ScreenInstanceFactory;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
@@ -42,7 +43,13 @@ public class OpenScreenAction extends Action {
                     if (s != null) {
                         Minecraft.getInstance().setScreen(s);
                     } else {
-                        LOGGER.error("[FANCYMENU] Unable to construct screen instance for '" + value + "'!");
+                        //TODO übernehmen
+                        LOGGER.error("[FANCYMENU] Unable to construct screen instance for '" + value + "'!", new Exception());
+                        Screen current = Minecraft.getInstance().screen;
+                        Minecraft.getInstance().setScreen(NotificationScreen.error(aBoolean -> {
+                            Minecraft.getInstance().setScreen(current);
+                        }, LocalizationUtils.splitLocalizedLines("fancymenu.actions.open_screen.error")));
+                        //-------------------------
                     }
                 }
             }

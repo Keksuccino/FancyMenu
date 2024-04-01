@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -14,10 +15,15 @@ import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
 public class ExternalTextureSlideshowRenderer {
+
+	//TODO übernehmen
+	private static final Logger LOGGER = LogManager.getLogger();
 
 	public List<ResourceSupplier<ITexture>> images = new ArrayList<>();
 	@Nullable
@@ -29,12 +35,14 @@ public class ExternalTextureSlideshowRenderer {
 	protected float fadeSpeed = 1.0F;
 	protected int originalWidth = 10;
 	protected int originalHeight = 10;
+	//TODO übernehmen
+	protected boolean randomize = false;
 	public int width = 50;
 	public int height = 50;
 	public int x = 0;
 	public int y = 0;
 	protected float opacity = 1.0F;
-	protected int imageTick = -1;
+	protected int frameCounter = -1;
 	protected long opacityTick = -1;
 	protected long lastChange = -1;
 	protected boolean firstLoop = true;
@@ -43,6 +51,7 @@ public class ExternalTextureSlideshowRenderer {
 	protected ResourceSupplier<ITexture> current;
 
 	public ExternalTextureSlideshowRenderer(String slideshowDir) {
+
 		this.dir = slideshowDir;
 		File props = new File(this.dir + "/properties.txt");
 		if (!props.isFile()) props = new File(this.dir + "/properties.txt.txt");
@@ -89,6 +98,9 @@ public class ExternalTextureSlideshowRenderer {
 					if ((sh != null) && MathUtils.isInteger(sh)) {
 						this.height = Integer.parseInt(sh);
 					}
+
+					//TODO übernehmen
+					this.randomize = SerializationUtils.deserializeBoolean(this.randomize, l.get(0).getValue("randomize"));
 					
 				}
 			}
@@ -97,6 +109,7 @@ public class ExternalTextureSlideshowRenderer {
 	}
 	
 	public void prepareSlideshow() {
+
 		if (!this.prepared && (this.name != null)) {
 			
 			File imagesDir = new File(GameDirectoryUtils.getAbsoluteGameDirectoryPath(this.dir + "/images"));
@@ -137,6 +150,7 @@ public class ExternalTextureSlideshowRenderer {
 			}
 			
 		}
+
 	}
 
 	public void render(GuiGraphics graphics) {
@@ -147,8 +161,9 @@ public class ExternalTextureSlideshowRenderer {
 				this.renderPrevious(graphics);
 				this.renderOverlay(graphics);
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
+		} catch (Exception ex) {
+			//TODO übernehmen
+			LOGGER.error("[FANCYMENU] Failed to render slideshow!", ex);
 		}
 	}
 	
@@ -160,21 +175,35 @@ public class ExternalTextureSlideshowRenderer {
 			long duration = (long) (1000 * this.imageDuration);
 			long opacityTickSpeed = 25;
 			
-			if (firstLoop) {
+			if (this.firstLoop) {
 				duration = duration / 2;
 			}
-			
-			//switch to next image
+
+			//TODO übernehmen
+			//switch to next frame
 			if ((this.previous == null) && ((this.lastChange + duration) < time)) {
-				this.imageTick++;
-				if (this.imageTick > this.images.size()-1) {
-					this.imageTick = 0;
+				if (!this.randomize) {
+					this.frameCounter++;
+				} else {
+					//pick next random frame that is NOT the previous frame (except slideshow has only one frame)
+					if (this.images.size() > 1) {
+						int i = this.frameCounter;
+						while (i == this.frameCounter) {
+							this.frameCounter = de.keksuccino.fancymenu.util.MathUtils.getRandomNumberInRange(0, this.images.size()-1);
+						}
+					} else {
+						this.frameCounter = 0;
+					}
+				}
+				if (this.frameCounter > this.images.size()-1) {
+					this.frameCounter = 0;
 				}
 				this.lastChange = time;
 				this.opacity = 1.0F;
 				this.previous = this.current;
-				this.current = this.images.get(this.imageTick);
+				this.current = this.images.get(this.frameCounter);
 			}
+			//------------------------
 			
 			//lower opacity when prev image is set to fade it out
 			if ((this.previous != null) && (this.opacity > 0.0F)) {

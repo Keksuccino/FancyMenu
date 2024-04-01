@@ -84,12 +84,13 @@ public class ButtonEditorElement extends AbstractEditorElement {
 
         buttonBackgroundMenu.addSeparatorEntry("separator_after_set_background").setStackable(true);
 
-        this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "loop_animated",
-                        ButtonEditorElement.class,
-                        consumes -> consumes.getElement().loopBackgroundAnimations,
-                        (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().loopBackgroundAnimations = aBoolean,
-                        "fancymenu.helper.editor.items.buttons.textures.loop_animated")
-                .setStackable(true);
+        //TODO übernehmen
+//        this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "loop_animated",
+//                        ButtonEditorElement.class,
+//                        consumes -> consumes.getElement().loopBackgroundAnimations,
+//                        (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().loopBackgroundAnimations = aBoolean,
+//                        "fancymenu.helper.editor.items.buttons.textures.loop_animated")
+//                .setStackable(true);
 
         this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "restart_animated_on_hover",
                         ButtonEditorElement.class,

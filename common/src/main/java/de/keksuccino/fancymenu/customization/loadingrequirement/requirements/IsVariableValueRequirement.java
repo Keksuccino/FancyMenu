@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.loadingrequirement.requirements;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;

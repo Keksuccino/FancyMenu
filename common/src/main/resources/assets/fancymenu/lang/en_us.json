@@ -1227,5 +1227,7 @@
   "fancymenu.placeholders.fps": "FPS (Frames Per Second)",
   "fancymenu.placeholders.fps.desc": "The current FPS.",
   "fancymenu.elements.widgets.generic.navigatable": "Navigable: %s",
-  "fancymenu.elements.widgets.generic.navigatable.desc": "If the user should be able to focus this\nwidget by using the Tab/Arrow key navigation."
+  "fancymenu.elements.widgets.generic.navigatable.desc": "If the user should be able to focus this\nwidget by using the Tab/Arrow key navigation.",
+  "fancymenu.actions.open_screen.error": "Failed to open screen!\n\nFancyMenu failed to open the given screen via the 'Open Screen' action!\nIn most cases this means the screen is not supported by FancyMenu,\nbecause it's a non-Vanilla screen from another mod.\n\nIf the screen is a Vanilla screen, please report this bug via GitHub.",
+  "fancymenu.actions.mimic_button.error": "Failed to mimic button!\n\nFancyMenu failed to mimic the click action of a button.\nIn most cases this means FancyMenu failed to open the original screen\nthis button is part of, because the screen is not supported.\nMost unsupported screens are non-Vanilla screens from other mods.\n\nIf the screen is a Vanilla screen, please report this bug via GitHub."
 }

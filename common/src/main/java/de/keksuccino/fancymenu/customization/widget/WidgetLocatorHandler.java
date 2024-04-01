@@ -104,7 +104,8 @@ public class WidgetLocatorHandler {
             w.onClick(w.getX() + 1, w.getY() + 1);
             return true;
         } catch (Exception ex) {
-            ex.printStackTrace();
+            //TODO übernehmen
+            LOGGER.error("[FANCYMENU] Failed to invoke widget's onClick() method!", ex);
         }
         LOGGER.error("[FANCYMENU] WidgetLocatorHandler failed to invoke widget onClick!");
         return false;
