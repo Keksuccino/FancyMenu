@@ -3,6 +3,9 @@ CHANGELOG | FANCYMENU v3.1.3 [ W I P - Not public yet! ]
  
 - The mod should now respect the loop count of GIF images (like it already did with APNGs)
 - It is now possible to randomize slideshows
+- Removed "Loop Animated Textures" option for Button and Slider element background textures
+  - This feature was a forgotten v2-relic that did not work anymore in v3
+  - The mod now respects loop counts of both APNG and GIF textures, so you can simply make a non-looping animated GIF/APNG to achieve that effect
 - Fixed skin and cape textures of Player Entity elements not updating correctly (showing old, outdated textures) (thanks adamk33n3r!)
 - Fixed missing feedback when the mod failed to open a screen via the "Open Screen" action
 - Fixed missing feedback when the mod failed to mimic a button via the "Mimic Button" action
