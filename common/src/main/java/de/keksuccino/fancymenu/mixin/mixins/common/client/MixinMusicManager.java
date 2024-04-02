@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.element.elements.musiccontroller.MusicControllerHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.sounds.MusicManager;
 import net.minecraft.sounds.Music;
@@ -13,7 +14,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(MusicManager.class)
 public abstract class MixinMusicManager {
 
-    @Shadow public abstract void stopPlaying();
+    //TODO übernehmen
+    @Inject(method = "tick", at = @At("HEAD"), cancellable = true)
+    private void cancelTickIfMusicDisabledViaController_FancyMenu(CallbackInfo info) {
+        if (Minecraft.getInstance().level == null) {
+            if (!MusicControllerHandler.shouldPlayMenuMusic()) info.cancel();
+        } else {
+            if (!MusicControllerHandler.shouldPlayWorldMusic()) info.cancel();
+        }
+    }
 
     @Inject(method = "startPlaying", at = @At("HEAD"), cancellable = true)
     private void stopMusicIfDisabledInConfigFancyMenu(Music $$0, CallbackInfo info) {
@@ -22,5 +31,7 @@ public abstract class MixinMusicManager {
             info.cancel();
         }
     }
+
+    @Shadow public abstract void stopPlaying();
 
 }

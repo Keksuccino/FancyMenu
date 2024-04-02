@@ -17,7 +17,8 @@ public class MusicControllerElementBuilder extends ElementBuilder<MusicControlle
     private static final Logger LOGGER = LogManager.getLogger();
 
     public MusicControllerElementBuilder() {
-        super("image");
+        super("music_controller");
+        MusicControllerHandler.init();
     }
 
     @Override
@@ -33,11 +34,8 @@ public class MusicControllerElementBuilder extends ElementBuilder<MusicControlle
 
         MusicControllerElement element = this.buildDefaultInstance();
 
-        element.textureSupplier = deserializeImageResourceSupplier(serialized.getValue("source"));
-        element.repeat = deserializeBoolean(element.repeat, serialized.getValue("repeat_texture"));
-        element.nineSlice = deserializeBoolean(element.nineSlice, serialized.getValue("nine_slice_texture"));
-        element.nineSliceBorderX = deserializeNumber(Integer.class, element.nineSliceBorderX, serialized.getValue("nine_slice_texture_border_x"));
-        element.nineSliceBorderY = deserializeNumber(Integer.class, element.nineSliceBorderY, serialized.getValue("nine_slice_texture_border_y"));
+        element.playMenuMusic = deserializeBoolean(element.playMenuMusic, serialized.getValue("play_menu_music"));
+        element.playWorldMusic = deserializeBoolean(element.playWorldMusic, serialized.getValue("play_world_music"));
 
         return element;
 
@@ -46,13 +44,8 @@ public class MusicControllerElementBuilder extends ElementBuilder<MusicControlle
     @Override
     protected SerializedElement serializeElement(@NotNull MusicControllerElement element, @NotNull SerializedElement serializeTo) {
 
-        if (element.textureSupplier != null) {
-            serializeTo.putProperty("source", element.textureSupplier.getSourceWithPrefix());
-        }
-        serializeTo.putProperty("repeat_texture", "" + element.repeat);
-        serializeTo.putProperty("nine_slice_texture", "" + element.nineSlice);
-        serializeTo.putProperty("nine_slice_texture_border_x", "" + element.nineSliceBorderX);
-        serializeTo.putProperty("nine_slice_texture_border_y", "" + element.nineSliceBorderY);
+        serializeTo.putProperty("play_menu_music", "" + element.playMenuMusic);
+        serializeTo.putProperty("play_world_music", "" + element.playWorldMusic);
 
         return serializeTo;
         
@@ -65,12 +58,12 @@ public class MusicControllerElementBuilder extends ElementBuilder<MusicControlle
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Component.translatable("fancymenu.editor.add.image");
+        return Component.translatable("fancymenu.elements.music_controller");
     }
 
     @Override
     public @Nullable Component[] getDescription(@Nullable AbstractElement element) {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.editor.add.image.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.elements.music_controller.desc");
     }
 
 }

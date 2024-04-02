@@ -1229,5 +1229,11 @@
   "fancymenu.elements.widgets.generic.navigatable": "Navigable: %s",
   "fancymenu.elements.widgets.generic.navigatable.desc": "If the user should be able to focus this\nwidget by using the Tab/Arrow key navigation.",
   "fancymenu.actions.open_screen.error": "Failed to open screen!\n\nFancyMenu failed to open the given screen via the 'Open Screen' action!\nIn most cases this means the screen is not supported by FancyMenu,\nbecause it's a non-Vanilla screen from another mod.\n\nIf the screen is a Vanilla screen, please report this bug via GitHub.",
-  "fancymenu.actions.mimic_button.error": "Failed to mimic button!\n\nFancyMenu failed to mimic the click action of a button.\nIn most cases this means FancyMenu failed to open the original screen\nthis button is part of, because the screen is not supported.\nMost unsupported screens are non-Vanilla screens from other mods.\n\nIf the screen is a Vanilla screen, please report this bug via GitHub."
+  "fancymenu.actions.mimic_button.error": "Failed to mimic button!\n\nFancyMenu failed to mimic the click action of a button.\nIn most cases this means FancyMenu failed to open the original screen\nthis button is part of, because the screen is not supported.\nMost unsupported screens are non-Vanilla screens from other mods.\n\nIf the screen is a Vanilla screen, please report this bug via GitHub.",
+  "fancymenu.elements.music_controller": "Music Controller",
+  "fancymenu.elements.music_controller.desc": "Element to control Vanilla music that plays in menus.\n\nThis element can't control music that plays\nin worlds while no screen is open.\nIt is only to control music while a screen is open.",
+  "fancymenu.elements.music_controller.play_menu_music": "Play Menu Music: %s",
+  "fancymenu.elements.music_controller.play_menu_music.desc": "This type of music plays in menus when NO world is loaded,\nlike in the Title screen for example.",
+  "fancymenu.elements.music_controller.play_world_music": "Play World Music: %s",
+  "fancymenu.elements.music_controller.play_world_music.desc": "This type of music plays in menus when a world is loaded.\nIt's basically the normal world music that\nkeeps playing in menus that don't pause the game,\nlike the inventory in SP and every menu in MP."
 }

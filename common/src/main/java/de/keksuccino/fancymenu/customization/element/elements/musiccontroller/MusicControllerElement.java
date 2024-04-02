@@ -3,77 +3,57 @@ package de.keksuccino.fancymenu.customization.element.elements.musiccontroller;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
-import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import java.awt.*;
 
 //TODO übernehmen
 public class MusicControllerElement extends AbstractElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final DrawableColor BACKGROUND_COLOR = DrawableColor.of(new Color(124, 217, 2));
 
-    @Nullable
-    public ResourceSupplier<ITexture> textureSupplier;
-    public boolean repeat = false;
-    public boolean nineSlice = false;
-    public int nineSliceBorderX = 5;
-    public int nineSliceBorderY = 5;
+    public boolean playMenuMusic = true;
+    public boolean playWorldMusic = true;
 
     public MusicControllerElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
     }
 
     @Override
+    public void tick() {
+
+        super.tick();
+
+        if (!this.shouldRender()) return;
+
+        if (!isEditor()) MusicControllerHandler.notify(this);
+
+    }
+
+    @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        if (this.shouldRender()) {
+        if (!this.shouldRender()) return;
 
+        if (isEditor()) {
             int x = this.getAbsoluteX();
             int y = this.getAbsoluteY();
-
+            int w = this.getAbsoluteWidth();
+            int h = this.getAbsoluteHeight();
             RenderSystem.enableBlend();
-            graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
-
-            ITexture t = this.getTextureResource();
-            if ((t != null) && t.isReady()) {
-                ResourceLocation loc = t.getResourceLocation();
-                if (loc != null) {
-                    if (this.repeat) {
-                        RenderingUtils.blitRepeat(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight());
-                    } else if (this.nineSlice) {
-                        RenderingUtils.blitNineSliced(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.nineSliceBorderX, this.nineSliceBorderY, this.nineSliceBorderX, this.nineSliceBorderY, t.getWidth(), t.getHeight(), 0, 0, t.getWidth(), t.getHeight());
-                    } else {
-                        graphics.blit(loc, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
-                    }
-                }
-            } else if (isEditor()) {
-                RenderingUtils.renderMissing(graphics, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
-            }
-
+            graphics.fill(x, y, x + w, y + h, BACKGROUND_COLOR.getColorInt());
+            graphics.enableScissor(x, y, x + w, y + h);
+            graphics.drawCenteredString(Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
+            graphics.disableScissor();
             RenderingUtils.resetShaderColor(graphics);
-            RenderSystem.disableBlend();
-
         }
 
-    }
-
-    @Nullable
-    public ITexture getTextureResource() {
-        if (this.textureSupplier != null) return this.textureSupplier.get();
-        return null;
-    }
-
-    public void restoreAspectRatio() {
-        ITexture t = this.getTextureResource();
-        AspectRatio ratio = (t != null) ? t.getAspectRatio() : new AspectRatio(10, 10);
-        this.baseWidth = ratio.getAspectRatioWidth(this.getAbsoluteHeight());
     }
 
 }

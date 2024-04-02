@@ -6,7 +6,6 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
-
 import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
@@ -24,9 +23,7 @@ public class IsWorldLoadedRequirement extends LoadingRequirement {
 
     @Override
     public boolean isRequirementMet(@Nullable String value) {
-
         return Minecraft.getInstance().level != null;
-
     }
 
     @Override
