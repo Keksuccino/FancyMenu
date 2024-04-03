@@ -23,7 +23,6 @@ dependencies {
     include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.3.2")))
     include(implementation 'com.github.Keksuccino:japng:0.5.3')
     modImplementation "maven.modrinth:melody:1.0.4-1.20.1-1.20.4-fabric"
-//    modImplementation "maven.modrinth:yacl:3.2.1+1.20-fabric"
 //    modImplementation "maven.modrinth:chat-heads:68f3pu0P"
 //    modImplementation "maven.modrinth:midnightlib:1.4.1-fabric"
     modImplementation "curse.maven:modernfix-790626:5077297"
@@ -32,6 +31,10 @@ dependencies {
     modImplementation "maven.modrinth:lithium:mc1.20.1-0.11.2"
 //    modImplementation "maven.modrinth:ferrite-core:unerR5MN"
 //    modImplementation "maven.modrinth:iris:1.6.17+1.20.1"
+//    modImplementation "curse.maven:rrls-833233:4734076"
+//    modImplementation "curse.maven:cloth-config-348521:4973440"
+//    modImplementation "curse.maven:seamless-loading-screen-429926:4755306"
+//    modImplementation "maven.modrinth:yacl:3.2.1+1.20-fabric"
 }
 
 loom {

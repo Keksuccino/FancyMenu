@@ -125,7 +125,6 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
         this.resourceSourceCallback = resourceSourceCallback;
     }
 
-
     @Override
     protected void initCells() {
 
