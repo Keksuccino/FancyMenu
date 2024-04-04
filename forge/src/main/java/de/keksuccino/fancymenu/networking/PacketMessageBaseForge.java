@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.networking;
 
-public class PacketMessageBase {
+public class PacketMessageBaseForge {
 
     /**
      * direction TO: server OR client

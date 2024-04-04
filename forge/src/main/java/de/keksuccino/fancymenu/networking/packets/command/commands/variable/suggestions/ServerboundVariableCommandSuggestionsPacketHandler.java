@@ -1,5 +1,4 @@
-
-package de.keksuccino.fancymenu.networking.packets.command.commands.variable;
+package de.keksuccino.fancymenu.networking.packets.command.commands.variable.suggestions;
 
 import de.keksuccino.fancymenu.commands.server.ServerVariableCommand;
 import net.minecraft.server.level.ServerPlayer;

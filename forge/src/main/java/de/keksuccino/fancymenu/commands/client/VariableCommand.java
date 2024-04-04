@@ -7,8 +7,8 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
-import de.keksuccino.fancymenu.networking.PacketHandler;
-import de.keksuccino.fancymenu.networking.packets.command.commands.variable.VariableCommandSuggestionsPacketMessage;
+import de.keksuccino.fancymenu.networking.PacketHandlerForge;
+import de.keksuccino.fancymenu.networking.packets.command.commands.variable.suggestions.VariableCommandSuggestionsPacketMessage;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
@@ -110,7 +110,7 @@ public class VariableCommand {
             VariableCommandSuggestionsPacketMessage msg = new VariableCommandSuggestionsPacketMessage();
             msg.direction = "server";
             msg.variableNameSuggestions.addAll(Arrays.asList(getVariableNameSuggestions()));
-            PacketHandler.sendToServer(msg);
+            PacketHandlerForge.sendToServer(msg);
         }
         lastScreen = s;
 

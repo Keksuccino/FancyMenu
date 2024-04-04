@@ -4,7 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import de.keksuccino.fancymenu.commands.client.CommandUtils;
-import de.keksuccino.fancymenu.networking.PacketHandler;
+import de.keksuccino.fancymenu.networking.PacketHandlerForge;
 import de.keksuccino.fancymenu.networking.packets.command.execute.ExecuteCommandPacketMessage;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -68,7 +68,7 @@ public class ServerVariableCommand {
                 ExecuteCommandPacketMessage msg = new ExecuteCommandPacketMessage();
                 msg.direction = "client";
                 msg.command = "/fmvariable get " + variableName;
-                PacketHandler.send(PacketDistributor.PLAYER.with(() -> sender), msg);
+                PacketHandlerForge.send(PacketDistributor.PLAYER.with(() -> sender), msg);
             }
         } catch (Exception e) {
             stack.sendFailure(Component.literal("Error while executing command!"));
@@ -84,7 +84,7 @@ public class ServerVariableCommand {
                 ExecuteCommandPacketMessage msg = new ExecuteCommandPacketMessage();
                 msg.direction = "client";
                 msg.command = "/fmvariable set " + variableName + " " + setToValue + " " + sendFeedback;
-                PacketHandler.send(PacketDistributor.PLAYER.with(() -> sender), msg);
+                PacketHandlerForge.send(PacketDistributor.PLAYER.with(() -> sender), msg);
             }
         } catch (Exception e) {
             stack.sendFailure(Component.literal("Error while executing command!"));

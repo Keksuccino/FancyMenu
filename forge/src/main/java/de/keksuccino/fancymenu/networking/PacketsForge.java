@@ -1,19 +1,29 @@
 
 package de.keksuccino.fancymenu.networking;
 
-import de.keksuccino.fancymenu.networking.packets.command.commands.variable.ServerboundVariableCommandSuggestionsPacketHandler;
-import de.keksuccino.fancymenu.networking.packets.command.commands.variable.VariableCommandSuggestionsPacketMessage;
+import de.keksuccino.fancymenu.networking.packets.Packets;
+import de.keksuccino.fancymenu.networking.packets.command.commands.variable.suggestions.ServerboundVariableCommandSuggestionsPacketHandler;
+import de.keksuccino.fancymenu.networking.packets.command.commands.variable.suggestions.VariableCommandSuggestionsPacketMessage;
 import de.keksuccino.fancymenu.networking.packets.command.execute.ClientboundExecuteCommandPacketHandler;
 import de.keksuccino.fancymenu.networking.packets.command.execute.ExecuteCommandPacketMessage;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 
-public class Packets {
+//TODO übernehmen
+public class PacketsForge {
+
+    public static void init() {
+
+        Packets.registerAll();
+
+
+
+    }
 
     public static void registerAll() {
 
         //EXECUTE COMMAND
-        PacketHandler.registerMessage(ExecuteCommandPacketMessage.class, (msg, buf) -> {
+        PacketHandlerForge.registerMessage(ExecuteCommandPacketMessage.class, (msg, buf) -> {
 
             //Write data from message to byte buf
             buf.writeUtf(msg.direction);
@@ -52,7 +62,7 @@ public class Packets {
         });
 
         //VARIABLE COMMAND SUGGESTIONS HANDLING
-        PacketHandler.registerMessage(VariableCommandSuggestionsPacketMessage.class, (msg, buf) -> {
+        PacketHandlerForge.registerMessage(VariableCommandSuggestionsPacketMessage.class, (msg, buf) -> {
 
             //Write data from message to byte buf
             buf.writeUtf(msg.direction);

@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu;
 
-import de.keksuccino.fancymenu.networking.Packets;
+import de.keksuccino.fancymenu.networking.PacketsForge;
 import de.keksuccino.fancymenu.platform.Services;
 import net.minecraftforge.fml.common.Mod;
 
@@ -18,7 +18,7 @@ public class FancyMenuForge {
 
         FancyMenu.init();
 
-        Packets.registerAll();
+        PacketsForge.registerAll();
 
         if (Services.PLATFORM.isOnClient()) {
             FancyMenuForgeClientEvents.registerAll();
