@@ -18,7 +18,8 @@ public class FancyMenuForge {
 
         FancyMenu.init();
 
-        PacketsForge.registerAll();
+        //TODO übernehmen
+        PacketsForge.init();
 
         if (Services.PLATFORM.isOnClient()) {
             FancyMenuForgeClientEvents.registerAll();

@@ -1,24 +1,20 @@
-package de.keksuccino.fancymenu.commands.server;
+package de.keksuccino.fancymenu.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import de.keksuccino.fancymenu.commands.client.CommandUtils;
-import de.keksuccino.fancymenu.networking.PacketHandlerForge;
-import de.keksuccino.fancymenu.networking.packets.command.execute.ExecuteCommandPacketMessage;
+import de.keksuccino.fancymenu.networking.PacketHandler;
+import de.keksuccino.fancymenu.networking.packets.commands.variable.command.VariableCommandPacket;
+import de.keksuccino.konkrete.command.CommandUtils;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.PacketDistributor;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-public class ServerVariableCommand {
+public class VariableCommand {
 
-    public static volatile Map<String, List<String>> cachedVariableArguments = new HashMap<>();
+    public static final Map<String, List<String>> CACHED_VARIABLE_SUGGESTIONS = Collections.synchronizedMap(new HashMap<>());
 
     public static void register(CommandDispatcher<CommandSourceStack> d) {
         d.register(Commands.literal("fmvariable")
@@ -53,8 +49,7 @@ public class ServerVariableCommand {
     }
 
     private static String[] getVariableNameSuggestions(ServerPlayer sender) {
-        List<String> l = cachedVariableArguments.get(sender.getUUID().toString());
-        if (l == null) l = new ArrayList<>();
+        List<String> l = new ArrayList<>(Objects.requireNonNullElse(CACHED_VARIABLE_SUGGESTIONS.get(sender.getUUID().toString()), new ArrayList<>()));
         if (l.isEmpty()) {
             l.add("<no_variables_found>");
         }
@@ -65,14 +60,14 @@ public class ServerVariableCommand {
         try {
             if (variableName != null) {
                 ServerPlayer sender = stack.getPlayerOrException();
-                ExecuteCommandPacketMessage msg = new ExecuteCommandPacketMessage();
-                msg.direction = "client";
-                msg.command = "/fmvariable get " + variableName;
-                PacketHandlerForge.send(PacketDistributor.PLAYER.with(() -> sender), msg);
+                VariableCommandPacket packet = new VariableCommandPacket();
+                packet.set = false;
+                packet.variable_name = variableName;
+                PacketHandler.sendToClient(sender, packet);
             }
-        } catch (Exception e) {
+        } catch (Exception ex) {
             stack.sendFailure(Component.literal("Error while executing command!"));
-            e.printStackTrace();
+            ex.printStackTrace();
         }
         return 1;
     }
@@ -81,14 +76,16 @@ public class ServerVariableCommand {
         try {
             if ((variableName != null) && (setToValue != null)) {
                 ServerPlayer sender = stack.getPlayerOrException();
-                ExecuteCommandPacketMessage msg = new ExecuteCommandPacketMessage();
-                msg.direction = "client";
-                msg.command = "/fmvariable set " + variableName + " " + setToValue + " " + sendFeedback;
-                PacketHandlerForge.send(PacketDistributor.PLAYER.with(() -> sender), msg);
+                VariableCommandPacket packet = new VariableCommandPacket();
+                packet.set = true;
+                packet.variable_name = variableName;
+                packet.set_to_value = setToValue;
+                packet.feedback = sendFeedback;
+                PacketHandler.sendToClient(sender, packet);
             }
-        } catch (Exception e) {
+        } catch (Exception ex) {
             stack.sendFailure(Component.literal("Error while executing command!"));
-            e.printStackTrace();
+            ex.printStackTrace();
         }
         return 1;
     }

@@ -1,40 +1,52 @@
-
 package de.keksuccino.fancymenu.networking;
 
 import de.keksuccino.fancymenu.networking.packets.Packets;
-import de.keksuccino.fancymenu.networking.packets.command.commands.variable.suggestions.ServerboundVariableCommandSuggestionsPacketHandler;
-import de.keksuccino.fancymenu.networking.packets.command.commands.variable.suggestions.VariableCommandSuggestionsPacketMessage;
-import de.keksuccino.fancymenu.networking.packets.command.execute.ClientboundExecuteCommandPacketHandler;
-import de.keksuccino.fancymenu.networking.packets.command.execute.ExecuteCommandPacketMessage;
+import de.keksuccino.fancymenu.networking.bridge.BridgePacketHandlerForge;
+import de.keksuccino.fancymenu.networking.bridge.BridgePacketMessageForge;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.network.PacketDistributor;
 
-//TODO übernehmen
+//TODO übernehmen (alle in networking)
+
 public class PacketsForge {
 
     public static void init() {
 
         Packets.registerAll();
 
+        registerForgeBridgePacket();
 
+        PacketHandler.setSendToClientLogic((player, s) -> {
+            BridgePacketMessageForge msg = new BridgePacketMessageForge();
+            msg.direction = "client";
+            msg.dataWithIdentifier = s;
+            PacketHandlerForge.send(PacketDistributor.PLAYER.with(() -> player), msg);
+        });
+
+        PacketHandler.setSendToServerLogic(s -> {
+            BridgePacketMessageForge msg = new BridgePacketMessageForge();
+            msg.direction = "server";
+            msg.dataWithIdentifier = s;
+            PacketHandlerForge.sendToServer(msg);
+        });
 
     }
 
-    public static void registerAll() {
+    private static void registerForgeBridgePacket() {
 
-        //EXECUTE COMMAND
-        PacketHandlerForge.registerMessage(ExecuteCommandPacketMessage.class, (msg, buf) -> {
+        PacketHandlerForge.registerMessage(BridgePacketMessageForge.class, (msg, buf) -> {
 
             //Write data from message to byte buf
             buf.writeUtf(msg.direction);
-            buf.writeUtf(msg.command);
+            buf.writeUtf(msg.dataWithIdentifier);
 
         }, (buf) -> {
 
             //Write data from byte buf to msg
-            ExecuteCommandPacketMessage msg = new ExecuteCommandPacketMessage();
+            BridgePacketMessageForge msg = new BridgePacketMessageForge();
             msg.direction = buf.readUtf();
-            msg.command = buf.readUtf();
+            msg.dataWithIdentifier = buf.readUtf();
             return msg;
 
         }, (msg, context) -> {
@@ -44,66 +56,16 @@ public class PacketsForge {
                 //Handle on client
                 DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
                     //Handle both sides on client, because integrated server needs handling too
-                    if (msg.direction.equals("server")) { //Will never happen for this packet
-//                        ServerboundPacketHandler.handle(msg, context.get().getSender());
+                    if (msg.direction.equals("server")) {
+                        BridgePacketHandlerForge.handle(context.get().getSender(), msg, PacketHandler.PacketDirection.TO_SERVER);
                     } else if (msg.direction.equals("client")) {
-                        ClientboundExecuteCommandPacketHandler.handle(msg);
-                    }
-                });
-                //Handle on server (Will never happen for this packet)
-                DistExecutor.unsafeRunWhenOn(Dist.DEDICATED_SERVER, () -> () -> {
-                    if (msg.direction.equals("server")) {
-//                        ServerboundPacketHandler.handle(msg, context.get().getSender());
-                    }
-                });
-            });
-            context.get().setPacketHandled(true);
-
-        });
-
-        //VARIABLE COMMAND SUGGESTIONS HANDLING
-        PacketHandlerForge.registerMessage(VariableCommandSuggestionsPacketMessage.class, (msg, buf) -> {
-
-            //Write data from message to byte buf
-            buf.writeUtf(msg.direction);
-            String suggestionsRaw = "";
-            for (String s : msg.variableNameSuggestions) {
-                suggestionsRaw += s + ";";
-            }
-            buf.writeUtf(suggestionsRaw);
-
-        }, (buf) -> {
-
-            //Write data from byte buf to msg
-            VariableCommandSuggestionsPacketMessage msg = new VariableCommandSuggestionsPacketMessage();
-            msg.direction = buf.readUtf();
-            String suggestionsRaw = buf.readUtf();
-            if (suggestionsRaw.contains(";")) {
-                for (String s : suggestionsRaw.split("[;]")) {
-                    if (s.length() > 0) {
-                        msg.variableNameSuggestions.add(s);
-                    }
-                }
-            }
-            return msg;
-
-        }, (msg, context) -> {
-
-            //Handle packet
-            context.get().enqueueWork(() -> {
-                //Handle on client
-                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-                    //Handle both sides on client, because integrated server needs handling too
-                    if (msg.direction.equals("server")) {
-                        ServerboundVariableCommandSuggestionsPacketHandler.handle(msg, context.get().getSender());
-                    } else if (msg.direction.equals("client")) { //Will never happen for this packet
-//                        ClientboundPacketHandler.handle(msg);
+                        BridgePacketHandlerForge.handle(null, msg, PacketHandler.PacketDirection.TO_CLIENT);
                     }
                 });
                 //Handle on server
                 DistExecutor.unsafeRunWhenOn(Dist.DEDICATED_SERVER, () -> () -> {
                     if (msg.direction.equals("server")) {
-                        ServerboundVariableCommandSuggestionsPacketHandler.handle(msg, context.get().getSender());
+                        BridgePacketHandlerForge.handle(context.get().getSender(), msg, PacketHandler.PacketDirection.TO_SERVER);
                     }
                 });
             });

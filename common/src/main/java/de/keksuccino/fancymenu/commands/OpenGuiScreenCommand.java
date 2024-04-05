@@ -1,20 +1,19 @@
-package de.keksuccino.fancymenu.commands.server;
+package de.keksuccino.fancymenu.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import de.keksuccino.fancymenu.commands.client.CommandUtils;
-import de.keksuccino.fancymenu.networking.PacketHandlerForge;
-import de.keksuccino.fancymenu.networking.packets.command.execute.ExecuteCommandPacketMessage;
+import de.keksuccino.fancymenu.networking.PacketHandler;
+import de.keksuccino.fancymenu.networking.packets.commands.opengui.OpenGuiCommandPacket;
+import de.keksuccino.konkrete.command.CommandUtils;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
 
-public class ServerOpenGuiScreenCommand {
+public class OpenGuiScreenCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> d) {
         d.register(Commands.literal("openguiscreen").then(Commands.argument("screen_identifier", StringArgumentType.string())
@@ -35,23 +34,20 @@ public class ServerOpenGuiScreenCommand {
     private static int openGui(CommandSourceStack stack, String menuIdentifierOrCustomGuiName, @Nullable Collection<ServerPlayer> targets) {
         try {
             if (targets == null) {
-                //Send packet to sender, so the client can execute the real client-side command
                 ServerPlayer sender = stack.getPlayerOrException();
-                ExecuteCommandPacketMessage msg = new ExecuteCommandPacketMessage();
-                msg.direction = "client";
-                msg.command = "/openguiscreen " + menuIdentifierOrCustomGuiName;
-                PacketHandlerForge.send(PacketDistributor.PLAYER.with(() -> sender), msg);
+                OpenGuiCommandPacket packet = new OpenGuiCommandPacket();
+                packet.screen_identifier = menuIdentifierOrCustomGuiName;
+                PacketHandler.sendToClient(sender, packet);
             } else {
                 for (ServerPlayer target : targets) {
-                    ExecuteCommandPacketMessage msg = new ExecuteCommandPacketMessage();
-                    msg.direction = "client";
-                    msg.command = "/openguiscreen " + menuIdentifierOrCustomGuiName;
-                    PacketHandlerForge.send(PacketDistributor.PLAYER.with(() -> target), msg);
+                    OpenGuiCommandPacket packet = new OpenGuiCommandPacket();
+                    packet.screen_identifier = menuIdentifierOrCustomGuiName;
+                    PacketHandler.sendToClient(target, packet);
                 }
             }
-        } catch (Exception e) {
-            stack.sendFailure(Component.literal("Error while trying to execute command!"));
-            e.printStackTrace();
+        } catch (Exception ex) {
+            stack.sendFailure(Component.literal("Error while executing command!"));
+            ex.printStackTrace();
         }
         return 1;
     }
