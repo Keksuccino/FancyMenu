@@ -80,6 +80,9 @@ dependencies {
     }
     implementation fg.deobf("maven.modrinth:melody:1.0.3-1.20.1-1.20.4-forge")
 //    implementation fg.deobf("curse.maven:pixelmon-389487:4782028")
+//    implementation fg.deobf("curse.maven:rrls-833233:4734074")
+//    implementation fg.deobf("curse.maven:cloth-config-348521:4973441")
+
 }
 
 tasks.withType(JavaCompile).configureEach {

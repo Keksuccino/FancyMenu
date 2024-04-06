@@ -376,6 +376,8 @@ public class MarkdownParser {
                     }
                 }
 
+                //TODO übernehmen
+
                 //Handle Quote
                 if (isStartOfLine && (c == GREATER_THAN_CHAR) && (builder.quoteContext == null) && (builder.codeBlockContext == null)) {
                     if (StringUtils.startsWith(subText, FORMATTING_CODE_QUOTE_PREFIX)) {
@@ -384,12 +386,16 @@ public class MarkdownParser {
                         continue;
                     }
                 }
-                if (isStartOfLine && (builder.quoteContext != null) && StringUtils.replace(currentLine, SPACE, EMPTY_STRING).isEmpty()) {
-                    builder.quoteContext = null; //it's important to disable quote BEFORE building the fragment
-                    lastBuiltFragment = addFragment(fragments, builder.build(true, true));
-                    queueNewLine = true;
-                    continue;
+                if (isStartOfLine && (builder.quoteContext != null)) {
+                    if (StringUtils.trim(currentLine).isEmpty()) {
+                        builder.quoteContext = null; //it's important to disable quote BEFORE building the fragment
+                        lastBuiltFragment = addFragment(fragments, builder.build(true, true));
+                        queueNewLine = true;
+                        continue;
+                    }
                 }
+
+                //-------------------------------
 
                 //Handle Bullet List Level 1
                 if (isStartOfLine && (c == MINUS_CHAR) && StringUtils.startsWith(subLine, FORMATTING_CODE_BULLET_LIST_LEVEL_1_PREFIX) && !removeFromString(subLine, MINUS, SPACE, NEWLINE).isEmpty() && (builder.codeBlockContext == null)) {
@@ -543,11 +549,16 @@ public class MarkdownParser {
         builder.imageSupplier = ResourceSupplier.image(imageSource);
     }
 
+    //TODO übernehmen
     @NotNull
     protected static String getLine(@NotNull String text) {
         try {
+            if (!StringUtils.contains(text, NEWLINE)) return text;
+            if (StringUtils.startsWith(text, NEWLINE)) return EMPTY_STRING;
             return StringUtils.split(text, NEWLINE, 2)[0];
-        } catch (Exception ignored) {}
+        } catch (Exception ex) {
+            LOGGER.info("[FANCYMENU] Failed to get line of Markdown text!", ex);
+        }
         return text;
     }
 

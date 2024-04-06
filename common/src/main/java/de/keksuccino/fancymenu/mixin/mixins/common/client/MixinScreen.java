@@ -1,15 +1,11 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
-import de.keksuccino.fancymenu.Compat;
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -48,14 +44,16 @@ public abstract class MixinScreen implements CustomizableScreen {
 		EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent((Screen)((Object)this), graphics));
 	}
 
-	@Inject(method = "init(Lnet/minecraft/client/Minecraft;II)V", at = @At("RETURN"))
-	private void afterInitFancyMenu(Minecraft $$0, int $$1, int $$2, CallbackInfo info) {
-		Overlay overlay = Minecraft.getInstance().getOverlay();
-		if (Compat.isRRLSLoaded() && (overlay != null) && Compat.isRRLSOverlay(overlay)) {
-			LOGGER_FANCYMENU.info("[FANCYMENU] Re-initializing screen after init in overlay to fix incompatibility with RemoveReloadingScreen..");
-			ScreenCustomization.reInitCurrentScreen();
-		}
-	}
+	//TODO übernehmen
+//	@Inject(method = "init(Lnet/minecraft/client/Minecraft;II)V", at = @At("RETURN"))
+//	private void afterInitFancyMenu(Minecraft $$0, int $$1, int $$2, CallbackInfo info) {
+//		Overlay overlay = Minecraft.getInstance().getOverlay();
+//		if (Compat.isRRLSLoaded() && !Compat.rrls_reinit_in_screen && (overlay != null)) {
+//			Compat.rrls_reinit_in_screen = true;
+//			LOGGER_FANCYMENU.error("[FANCYMENU] Re-initializing screen after init in overlay to fix incompatibility with Remove Reloading Screen..");
+//			ScreenCustomization.reInitCurrentScreen();
+//		}
+//	}
 
 	@Inject(method = "keyPressed", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/events/AbstractContainerEventHandler;nextFocusPath(Lnet/minecraft/client/gui/navigation/FocusNavigationEvent;)Lnet/minecraft/client/gui/ComponentPath;"))
 	private void beforeNextFocusPathInKeyPressedFancyMenu(int $$0, int $$1, int $$2, CallbackInfoReturnable<Boolean> info) {

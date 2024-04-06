@@ -59,6 +59,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.io.File;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -453,7 +455,13 @@ public class CustomizationOverlayUI {
                 .setLabelSupplier((menu, entry) -> {
                     MutableComponent notFound = Component.literal("✖").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
                     MutableComponent found = Component.literal("✔").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
-                    return Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_16", (WindowHandler.getCustomWindowIcon16() != null) ? found : notFound);
+                    //TODO übernehmen
+                    File icon = WindowHandler.getCustomWindowIcon16();
+                    if ((icon != null) && icon.isFile()) {
+                        return Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_16", found);
+                    }
+                    return Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_16", notFound);
+                    //------------------
                 });
 
         NonStackableOverlayUI.addFileChooserContextMenuEntryTo(windowIconMenu, "icon_32",
@@ -493,7 +501,13 @@ public class CustomizationOverlayUI {
                 .setLabelSupplier((menu, entry) -> {
                     MutableComponent notFound = Component.literal("✖").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
                     MutableComponent found = Component.literal("✔").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
-                    return Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_32", (WindowHandler.getCustomWindowIcon32() != null) ? found : notFound);
+                    //TODO übernehmen
+                    File icon = WindowHandler.getCustomWindowIcon32();
+                    if ((icon != null) && icon.isFile()) {
+                        return Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_32", found);
+                    }
+                    return Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_32", notFound);
+                    //------------------------------
                 });
 
         FileTypeGroup<?> macOsIconTypeGroup = FileTypeGroup.of(new ImageFileType(FileCodec.empty(ITexture.class), null, "icns"));
@@ -516,7 +530,13 @@ public class CustomizationOverlayUI {
                 .setLabelSupplier((menu, entry) -> {
                     MutableComponent notFound = Component.literal("✖").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()));
                     MutableComponent found = Component.literal("✔").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().success_text_color.getColorInt()));
-                    return Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_macos", (WindowHandler.getCustomWindowIconMacOS() != null) ? found : notFound);
+                    //TODO übernehmen
+                    File icon = WindowHandler.getCustomWindowIconMacOS();
+                    if ((icon != null) && icon.isFile()) {
+                        return Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_macos", found);
+                    }
+                    return Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.choose_macos", notFound);
+                    //---------------------------
                 });
 
         windowIconMenu.addSeparatorEntry("separator_after_macos_icon");
