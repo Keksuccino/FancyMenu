@@ -557,7 +557,7 @@ public class MarkdownParser {
             if (StringUtils.startsWith(text, NEWLINE)) return EMPTY_STRING;
             return StringUtils.split(text, NEWLINE, 2)[0];
         } catch (Exception ex) {
-            LOGGER.info("[FANCYMENU] Failed to get line of Markdown text!", ex);
+            LOGGER.error("[FANCYMENU] Failed to get line of Markdown text!", ex);
         }
         return text;
     }
