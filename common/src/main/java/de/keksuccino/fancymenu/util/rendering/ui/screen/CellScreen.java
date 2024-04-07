@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
 import com.google.common.collect.Lists;
+import com.mojang.blaze3d.platform.Window;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
@@ -46,6 +47,8 @@ public abstract class CellScreen extends Screen {
     protected ExtendedButton doneButton;
     @Nullable
     protected ExtendedButton cancelButton;
+    protected int lastWidth = 0;
+    protected int lastHeight = 0;
 
     protected CellScreen(@NotNull Component title) {
         super(title);
@@ -110,6 +113,7 @@ public abstract class CellScreen extends Screen {
         int widgetWidth = this.getRightSideWidgetWidth();
         int widgetX = this.width - 20 - widgetWidth;
         int widgetY = this.height - 20;
+        AbstractWidget topRightSideWidget = null;
         for (AbstractWidget w : Lists.reverse(this.rightSideWidgets)) {
             if (!(w instanceof RightSideSpacer)) {
                 UIBase.applyDefaultWidgetSkinTo(w);
@@ -117,8 +121,27 @@ public abstract class CellScreen extends Screen {
                 w.setY(widgetY - w.getHeight());
                 w.setWidth(widgetWidth);
                 this.addRenderableWidget(w);
+                //TODO übernehmen
+                topRightSideWidget = w;
             }
             widgetY -= w.getHeight() + this.getRightSideDefaultSpaceBetweenWidgets();
+        }
+
+        Window window = Minecraft.getInstance().getWindow();
+        boolean resized = (window.getScreenWidth() != this.lastWidth) || (window.getScreenHeight() != this.lastHeight);
+        this.lastWidth = window.getScreenWidth();
+        this.lastHeight = window.getScreenHeight();
+
+        //Adjust GUI scale to make all right-side buttons fit in the screen
+        if ((topRightSideWidget.getY() < 20) && (window.getGuiScale() > 1)) {
+            double newScale = window.getGuiScale();
+            newScale--;
+            if (newScale < 1) newScale = 1;
+            window.setGuiScale(newScale);
+            this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
+        } else if ((topRightSideWidget.getY() >= 20) && resized) {
+            RenderingUtils.resetGuiScale();
+            this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
         }
 
     }

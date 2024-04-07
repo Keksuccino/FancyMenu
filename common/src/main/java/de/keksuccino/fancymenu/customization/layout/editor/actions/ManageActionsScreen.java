@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.layout.editor.actions;
 
 import com.google.common.collect.Lists;
+import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
@@ -14,6 +15,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.M
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementGroup;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
@@ -24,6 +26,7 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -31,18 +34,20 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-@SuppressWarnings("unused")
 public class ManageActionsScreen extends Screen {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     protected GenericExecutableBlock executableBlock;
     protected Consumer<GenericExecutableBlock> callback;
-
     protected ScrollArea actionsScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ExtendedButton addActionButton;
     protected ExtendedButton moveUpButton;
@@ -54,14 +59,14 @@ public class ManageActionsScreen extends Screen {
     protected ExtendedButton addIfButton;
     protected ExtendedButton appendElseIfButton;
     protected ExtendedButton appendElseButton;
-
     @Nullable
     protected ExecutableEntry renderTickDragHoveredEntry = null;
     @Nullable
     protected ExecutableEntry renderTickDraggedEntry = null;
-
     private final ExecutableEntry BEFORE_FIRST = new ExecutableEntry(this.actionsScrollArea, new GenericExecutableBlock(), 1, 0);
     private final ExecutableEntry AFTER_LAST = new ExecutableEntry(this.actionsScrollArea, new GenericExecutableBlock(), 1, 0);
+    protected int lastWidth = 0;
+    protected int lastHeight = 0;
 
     public ManageActionsScreen(@NotNull GenericExecutableBlock executableBlock, @NotNull Consumer<GenericExecutableBlock> callback) {
 
@@ -274,6 +279,45 @@ public class ManageActionsScreen extends Screen {
         this.addWidget(this.cancelButton);
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
+        this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
+        this.doneButton.setY(this.height - 20 - 20);
+        this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
+        this.cancelButton.setY(this.doneButton.getY() - 5 - 20);
+        this.removeButton.setX(this.width - 20 - this.removeButton.getWidth());
+        this.removeButton.setY(this.cancelButton.getY() - 15 - 20);
+        this.editButton.setX(this.width - 20 - this.editButton.getWidth());
+        this.editButton.setY(this.removeButton.getY() - 5 - 20);
+        this.moveDownButton.setX(this.width - 20 - this.moveDownButton.getWidth());
+        this.moveDownButton.setY(this.editButton.getY() - 5 - 20);
+        this.moveUpButton.setX(this.width - 20 - this.moveUpButton.getWidth());
+        this.moveUpButton.setY(this.moveDownButton.getY() - 5 - 20);
+        this.appendElseButton.setX(this.width - 20 - this.appendElseButton.getWidth());
+        this.appendElseButton.setY(this.moveUpButton.getY() - 15 - 20);
+        this.appendElseIfButton.setX(this.width - 20 - this.appendElseIfButton.getWidth());
+        this.appendElseIfButton.setY(this.appendElseButton.getY() - 5 - 20);
+        this.addIfButton.setX(this.width - 20 - this.addIfButton.getWidth());
+        this.addIfButton.setY(this.appendElseIfButton.getY() - 5 - 20);
+        this.addActionButton.setX(this.width - 20 - this.addActionButton.getWidth());
+        this.addActionButton.setY(this.addIfButton.getY() - 5 - 20);
+
+        AbstractWidget topRightSideWidget = this.addActionButton;
+        Window window = Minecraft.getInstance().getWindow();
+        boolean resized = (window.getScreenWidth() != this.lastWidth) || (window.getScreenHeight() != this.lastHeight);
+        this.lastWidth = window.getScreenWidth();
+        this.lastHeight = window.getScreenHeight();
+
+        //Adjust GUI scale to make all right-side buttons fit in the screen
+        if ((topRightSideWidget.getY() < 20) && (window.getGuiScale() > 1)) {
+            double newScale = window.getGuiScale();
+            newScale--;
+            if (newScale < 1) newScale = 1;
+            window.setGuiScale(newScale);
+            this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
+        } else if ((topRightSideWidget.getY() >= 20) && resized) {
+            RenderingUtils.resetGuiScale();
+            this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
+        }
+
     }
 
     @Override
@@ -326,44 +370,15 @@ public class ManageActionsScreen extends Screen {
             graphics.fill(this.actionsScrollArea.getInnerX(), dY + dH - 1, this.actionsScrollArea.getInnerX() + this.actionsScrollArea.getInnerWidth(), dY + dH, UIBase.getUIColorTheme().description_area_text_color.getColorInt());
         }
 
-        this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
-        this.doneButton.setY(this.height - 20 - 20);
         this.doneButton.render(graphics, mouseX, mouseY, partial);
-
-        this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
-        this.cancelButton.setY(this.doneButton.getY() - 5 - 20);
         this.cancelButton.render(graphics, mouseX, mouseY, partial);
-
-        this.removeButton.setX(this.width - 20 - this.removeButton.getWidth());
-        this.removeButton.setY(this.cancelButton.getY() - 15 - 20);
         this.removeButton.render(graphics, mouseX, mouseY, partial);
-
-        this.editButton.setX(this.width - 20 - this.editButton.getWidth());
-        this.editButton.setY(this.removeButton.getY() - 5 - 20);
         this.editButton.render(graphics, mouseX, mouseY, partial);
-
-        this.moveDownButton.setX(this.width - 20 - this.moveDownButton.getWidth());
-        this.moveDownButton.setY(this.editButton.getY() - 5 - 20);
         this.moveDownButton.render(graphics, mouseX, mouseY, partial);
-
-        this.moveUpButton.setX(this.width - 20 - this.moveUpButton.getWidth());
-        this.moveUpButton.setY(this.moveDownButton.getY() - 5 - 20);
         this.moveUpButton.render(graphics, mouseX, mouseY, partial);
-
-        this.appendElseButton.setX(this.width - 20 - this.appendElseButton.getWidth());
-        this.appendElseButton.setY(this.moveUpButton.getY() - 15 - 20);
         this.appendElseButton.render(graphics, mouseX, mouseY, partial);
-
-        this.appendElseIfButton.setX(this.width - 20 - this.appendElseIfButton.getWidth());
-        this.appendElseIfButton.setY(this.appendElseButton.getY() - 5 - 20);
         this.appendElseIfButton.render(graphics, mouseX, mouseY, partial);
-
-        this.addIfButton.setX(this.width - 20 - this.addIfButton.getWidth());
-        this.addIfButton.setY(this.appendElseIfButton.getY() - 5 - 20);
         this.addIfButton.render(graphics, mouseX, mouseY, partial);
-
-        this.addActionButton.setX(this.width - 20 - this.addActionButton.getWidth());
-        this.addActionButton.setY(this.addIfButton.getY() - 5 - 20);
         this.addActionButton.render(graphics, mouseX, mouseY, partial);
 
         super.render(graphics, mouseX, mouseY, partial);
