@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu;
 
-import de.keksuccino.fancymenu.networking.Packets;
+import de.keksuccino.fancymenu.networking.PacketsFabric;
 import de.keksuccino.fancymenu.platform.Services;
 import net.fabricmc.api.ModInitializer;
 
@@ -11,7 +11,7 @@ public class FancyMenuFabric implements ModInitializer {
 
         FancyMenu.init();
 
-        Packets.registerAll();
+        PacketsFabric.init();
 
         if (Services.PLATFORM.isOnClient()) {
             FancyMenuFabricClientEvents.registerAll();

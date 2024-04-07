@@ -40,6 +40,13 @@ versionRange="[1.0.0,)"
 side="BOTH"
 
 [[dependencies.${mod_id}]]
+modId="rrls"
+mandatory=false
+ordering="AFTER"
+versionRange="[0,)"
+side="BOTH"
+
+[[dependencies.${mod_id}]]
 modId="drippyloadingscreen"
 mandatory=false
 ordering="NONE"

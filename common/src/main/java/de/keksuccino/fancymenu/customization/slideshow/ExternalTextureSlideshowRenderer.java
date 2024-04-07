@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -16,10 +17,14 @@ import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.resources.ResourceLocation;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
 public class ExternalTextureSlideshowRenderer extends GuiComponent {
+
+	private static final Logger LOGGER = LogManager.getLogger();
 
 	public List<ResourceSupplier<ITexture>> images = new ArrayList<>();
 	@Nullable
@@ -31,12 +36,13 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 	protected float fadeSpeed = 1.0F;
 	protected int originalWidth = 10;
 	protected int originalHeight = 10;
+	protected boolean randomize = false;
 	public int width = 50;
 	public int height = 50;
 	public int x = 0;
 	public int y = 0;
 	protected float opacity = 1.0F;
-	protected int imageTick = -1;
+	protected int frameCounter = -1;
 	protected long opacityTick = -1;
 	protected long lastChange = -1;
 	protected boolean firstLoop = true;
@@ -91,6 +97,8 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 					if ((sh != null) && MathUtils.isInteger(sh)) {
 						this.height = Integer.parseInt(sh);
 					}
+
+					this.randomize = SerializationUtils.deserializeBoolean(this.randomize, l.get(0).getValue("randomize"));
 					
 				}
 			}
@@ -141,26 +149,17 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 		}
 	}
 
-	public void render(PoseStack matrix) {
-
+	public void render(PoseStack pose) {
 		try {
-			
 			if (!this.images.isEmpty()) {
-				
 				this.tick();
-				
-				this.renderCurrent(matrix);
-				
-				this.renderPrevious(matrix);
-				
-				this.renderOverlay(matrix);
-				
+				this.renderCurrent(pose);
+				this.renderPrevious(pose);
+				this.renderOverlay(pose);
 			}
-			
-		} catch (Exception e) {
-			e.printStackTrace();
+		} catch (Exception ex) {
+			LOGGER.error("[FANCYMENU] Failed to render slideshow!", ex);
 		}
-		
 	}
 	
 	protected void tick() {
@@ -174,17 +173,29 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 			if (firstLoop) {
 				duration = duration / 2;
 			}
-			
-			//switch to next image
+
+			//switch to next frame
 			if ((this.previous == null) && ((this.lastChange + duration) < time)) {
-				this.imageTick++;
-				if (this.imageTick > this.images.size()-1) {
-					this.imageTick = 0;
+				if (!this.randomize) {
+					this.frameCounter++;
+				} else {
+					//pick next random frame that is NOT the previous frame (except slideshow has only one frame)
+					if (this.images.size() > 1) {
+						int i = this.frameCounter;
+						while (i == this.frameCounter) {
+							this.frameCounter = de.keksuccino.fancymenu.util.MathUtils.getRandomNumberInRange(0, this.images.size()-1);
+						}
+					} else {
+						this.frameCounter = 0;
+					}
+				}
+				if (this.frameCounter > this.images.size()-1) {
+					this.frameCounter = 0;
 				}
 				this.lastChange = time;
 				this.opacity = 1.0F;
 				this.previous = this.current;
-				this.current = this.images.get(this.imageTick);
+				this.current = this.images.get(this.frameCounter);
 			}
 			
 			//lower opacity when prev image is set to fade it out
