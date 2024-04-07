@@ -11,6 +11,7 @@ public class FancyMenuFabricServerEvents {
 
     }
 
+    //TODO übernehmen
     private static void registerServerCommands() {
         CommandRegistrationCallback.EVENT.register((dispatcher, context, environment) -> Commands.registerAll(dispatcher));
     }

@@ -20,11 +20,11 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO In 1.20.4+: RRLS compat entfernen (mods funktionieren zusammen in 1.20.4+)
+	//TODO übernehmen : In 1.20.4+: RRLS compat entfernen (mods funktionieren zusammen in 1.20.4+)
 
-	//TODO In <1.20.4: RRLS als incompatible in mod meta listen
+	//TODO übernehmen : In <1.20.4: RRLS als incompatible in mod meta listen
 
-	//TODO EN_US locals updaten
+	//TODO übernehmen : EN_US locals updaten
 
 	private static final Logger LOGGER = LogManager.getLogger();
 

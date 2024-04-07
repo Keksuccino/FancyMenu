@@ -13,6 +13,7 @@ public class FancyMenuForgeServerEvents {
 
     }
 
+    //TODO übernehmen
     @SubscribeEvent
     public void onRegisterServerCommands(RegisterCommandsEvent e) {
         Commands.registerAll(e.getDispatcher());
