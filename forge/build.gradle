@@ -78,6 +78,9 @@ dependencies {
     minecraftLibrary(jarJar("com.github.Keksuccino:japng:0.5.3")) {
         jarJar.ranged(it, "[0.5.3,)")
     }
+    minecraftLibrary(jarJar("com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7")) {
+        jarJar.ranged(it, "[1.7,)")
+    }
     implementation fg.deobf("curse.maven:melody-938643:4970119")
     //This is only to fix the missing dependency error in-dev
     implementation group: 'ca.weblite', name: 'java-objc-bridge', version: '1.1'
