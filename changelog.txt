@@ -25,6 +25,7 @@ CHANGELOG | FANCYMENU v3.1.3 [ W I P - Not public yet! ]
 - Fixed "/fmvariable" command not working when executed via "/execute as" Vanilla command
 - Fixed Markdown quote text formatting never ends quote
 - Fixed unable to connect to servers without FancyMenu installed on NeoForge
+- Fixed "/openguiscreen" command gets sent to chat instead of executing it as command in MC 1.18.2
  
 %changelog:end%
 
