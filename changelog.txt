@@ -1,5 +1,5 @@
 
-CHANGELOG | FANCYMENU v3.1.3 [ W I P - Not public yet! ]
+CHANGELOG | FANCYMENU v3.1.3
  
 - Added "Music Controller" element to control Vanilla music that plays in menus
   - Because it's an element, it works per-screen, not only globally like before
