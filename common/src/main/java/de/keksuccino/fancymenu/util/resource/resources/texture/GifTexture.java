@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture;
 
+import com.madgag.gif.fmsware.GifDecoder;
 import com.mojang.blaze3d.platform.NativeImage;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.CloseableUtils;
@@ -9,7 +10,6 @@ import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resource.MinecraftResourceUtils;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
-import de.keksuccino.konkrete.rendering.GifDecoder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceLocation;
@@ -189,7 +189,7 @@ public class GifTexture implements ITexture, PlayableResource {
         if (!texture.closed.get()) {
             DecodedGifImage decodedImage = decodeGif(in, gifTextureName);
             if (decodedImage == null) {
-                LOGGER.error("[FANCYMENU] Failed to read GIF image, because DecodedApngImage was NULL: " + gifTextureName);
+                LOGGER.error("[FANCYMENU] Failed to read GIF image, because DecodedGifImage was NULL: " + gifTextureName);
                 texture.decoded.set(true);
                 texture.loadingFailed.set(true);
                 return;
@@ -200,7 +200,7 @@ public class GifTexture implements ITexture, PlayableResource {
             texture.numPlays.set(decodedImage.numPlays);
             texture.decoded.set(true);
             try {
-                deliverGifFrames(decodedImage.sequence(), gifTextureName, frame -> {
+                deliverGifFrames(decodedImage.decoder(), gifTextureName, frame -> {
                     if (frame != null) {
                         try {
                             frame.nativeImage = NativeImage.read(frame.frameInputStream);
@@ -429,26 +429,24 @@ public class GifTexture implements ITexture, PlayableResource {
     @Nullable
     public static DecodedGifImage decodeGif(@NotNull InputStream in, @NotNull String gifName) {
         try {
-            GifDecoder.GifImage gif = GifDecoder.read(in);
-            return new DecodedGifImage(gif, gif.getWidth(), gif.getHeight(), gif.repetitions); //repetitions = 0 = infinite loops | repetitions = >0 = number of loops
+            GifDecoder decoder = new GifDecoder();
+            decoder.read(in);
+            BufferedImage firstFrame = decoder.getImage();
+            return new DecodedGifImage(decoder, firstFrame.getWidth(), firstFrame.getHeight(), decoder.getLoopCount()); //loopCount == 0 == infinite loops | loopCount > 0 == number of loops
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to decode GIF image: " + gifName, ex);
         }
         return null;
     }
 
-    public static void deliverGifFrames(@NotNull GifDecoder.GifImage gif, @NotNull String gifName, @NotNull Consumer<GifFrame> frameDelivery) {
-        int gifFrameCount = gif.getFrameCount();
+    public static void deliverGifFrames(@NotNull GifDecoder decoder, @NotNull String gifName, @NotNull Consumer<GifFrame> frameDelivery) {
+        int gifFrameCount = decoder.getFrameCount();
         int i = 0;
         int index = 0;
         while (i < gifFrameCount) {
             try {
-                double delay = gif.getDelay(i); //getDelay() returns delay in hundredths (1/100) of a second
-                if (delay > 0) {
-                    delay = delay / 100.0D; //convert to seconds
-                    delay = delay * 1000.0D; // convert to millis
-                }
-                BufferedImage image = gif.getFrame(i);
+                double delay = decoder.getDelay(i);
+                BufferedImage image = decoder.getFrame(i);
                 ByteArrayOutputStream os = new ByteArrayOutputStream();
                 ImageIO.write(image, "PNG", os);
                 ByteArrayInputStream bis = new ByteArrayInputStream(os.toByteArray());
@@ -481,7 +479,7 @@ public class GifTexture implements ITexture, PlayableResource {
 
     }
 
-    public record DecodedGifImage(@NotNull GifDecoder.GifImage sequence, int imageWidth, int imageHeight, int numPlays) {
+    public record DecodedGifImage(@NotNull GifDecoder decoder, int imageWidth, int imageHeight, int numPlays) {
     }
 
 }
