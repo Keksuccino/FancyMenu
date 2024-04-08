@@ -22,7 +22,6 @@ import org.jetbrains.annotations.Nullable;
 @SuppressWarnings("unused")
 public class ExternalTextureSlideshowRenderer {
 
-	//TODO übernehmen
 	private static final Logger LOGGER = LogManager.getLogger();
 
 	public List<ResourceSupplier<ITexture>> images = new ArrayList<>();
@@ -35,7 +34,6 @@ public class ExternalTextureSlideshowRenderer {
 	protected float fadeSpeed = 1.0F;
 	protected int originalWidth = 10;
 	protected int originalHeight = 10;
-	//TODO übernehmen
 	protected boolean randomize = false;
 	public int width = 50;
 	public int height = 50;
@@ -99,7 +97,6 @@ public class ExternalTextureSlideshowRenderer {
 						this.height = Integer.parseInt(sh);
 					}
 
-					//TODO übernehmen
 					this.randomize = SerializationUtils.deserializeBoolean(this.randomize, l.get(0).getValue("randomize"));
 					
 				}
@@ -162,7 +159,6 @@ public class ExternalTextureSlideshowRenderer {
 				this.renderOverlay(graphics);
 			}
 		} catch (Exception ex) {
-			//TODO übernehmen
 			LOGGER.error("[FANCYMENU] Failed to render slideshow!", ex);
 		}
 	}
@@ -179,7 +175,6 @@ public class ExternalTextureSlideshowRenderer {
 				duration = duration / 2;
 			}
 
-			//TODO übernehmen
 			//switch to next frame
 			if ((this.previous == null) && ((this.lastChange + duration) < time)) {
 				if (!this.randomize) {

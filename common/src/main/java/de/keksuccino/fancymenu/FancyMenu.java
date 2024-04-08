@@ -20,16 +20,14 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO übernehmen : In 1.20.4+: RRLS compat entfernen (mods funktionieren zusammen in 1.20.4+)
+	//TODO übernehmen : GIF lib jarJar
 
-	//TODO übernehmen : In <1.20.4: RRLS als incompatible in mod meta listen
-
-	//TODO übernehmen : EN_US locals updaten
+	//TODO übernehmen : credits updaten
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
 	//TODO übernehmen
-	public static final String VERSION = "3.1.3";
+	public static final String VERSION = "3.1.4";
 	public static final String MOD_LOADER = Services.PLATFORM.getPlatformName();
 	public static final String MOD_ID = "fancymenu";
 

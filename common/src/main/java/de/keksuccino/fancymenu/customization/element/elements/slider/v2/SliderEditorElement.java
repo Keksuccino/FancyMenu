@@ -189,14 +189,6 @@ public class SliderEditorElement extends AbstractEditorElement {
 
         buttonBackgroundMenu.addSeparatorEntry("separator_after_set_texture").setStackable(true);
 
-        //TODO übernehmen
-//        this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "loop_animated",
-//                        SliderEditorElement.class,
-//                        consumes -> consumes.getElement().loopBackgroundAnimations,
-//                        (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().loopBackgroundAnimations = aBoolean,
-//                        "fancymenu.helper.editor.items.buttons.textures.loop_animated")
-//                .setStackable(true);
-
         this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "restart_animated_on_hover",
                         SliderEditorElement.class,
                         consumes -> consumes.getElement().restartBackgroundAnimationsOnHover,

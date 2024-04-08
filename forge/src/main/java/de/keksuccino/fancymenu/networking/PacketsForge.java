@@ -7,8 +7,6 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.PacketDistributor;
 
-//TODO übernehmen (alle in networking)
-
 public class PacketsForge {
 
     public static void init() {

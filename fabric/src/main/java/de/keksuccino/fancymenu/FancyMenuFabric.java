@@ -11,7 +11,6 @@ public class FancyMenuFabric implements ModInitializer {
 
         FancyMenu.init();
 
-        //TODO übernehmen
         PacketsFabric.init();
 
         if (Services.PLATFORM.isOnClient()) {

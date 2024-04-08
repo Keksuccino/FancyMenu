@@ -11,17 +11,8 @@ public class FancyMenuForge {
     
     public FancyMenuForge() {
 
-        //TODO übernehmen
-//        if (Compat.isAudioExtensionLoaded() || Services.PLATFORM.isModLoaded("fmextension_audio")) {
-//            throw new RuntimeException("FancyMenu v2's Audio Extension is not supported by FancyMenu v3. Please remove the audio extension. The Audio element is now part of the base mod.");
-//        }
-//        if (Compat.isVideoExtensionLoaded() || Services.PLATFORM.isModLoaded("fmextension_video")) {
-//            throw new RuntimeException("FancyMenu v2's Video Extension is not supported by FancyMenu v3. Please remove the video extension.");
-//        }
-
         FancyMenu.init();
 
-        //TODO übernehmen
         PacketsForge.init();
 
         if (Services.PLATFORM.isOnClient()) {
@@ -30,12 +21,10 @@ public class FancyMenuForge {
 
         FancyMenuForgeServerEvents.registerAll();
 
-        //TODO übernehmen
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onSetup);
         
     }
 
-    //TODO übernehmen
     public void onSetup(FMLCommonSetupEvent e) {
 
         if (Compat.isAudioExtensionLoaded() || Services.PLATFORM.isModLoaded("fmextension_audio")) {

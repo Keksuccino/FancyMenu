@@ -65,10 +65,8 @@ public class ManageActionsScreen extends Screen {
     protected ExecutableEntry renderTickDraggedEntry = null;
     private final ExecutableEntry BEFORE_FIRST = new ExecutableEntry(this.actionsScrollArea, new GenericExecutableBlock(), 1, 0);
     private final ExecutableEntry AFTER_LAST = new ExecutableEntry(this.actionsScrollArea, new GenericExecutableBlock(), 1, 0);
-    //TODO übernehmen
     protected int lastWidth = 0;
     protected int lastHeight = 0;
-    //--------------------
 
     public ManageActionsScreen(@NotNull GenericExecutableBlock executableBlock, @NotNull Consumer<GenericExecutableBlock> callback) {
 
@@ -281,8 +279,6 @@ public class ManageActionsScreen extends Screen {
         this.addWidget(this.cancelButton);
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
-        //TODO übernehmen
-
         this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
         this.doneButton.setY(this.height - 20 - 20);
         this.cancelButton.setX(this.width - 20 - this.cancelButton.getWidth());
@@ -304,10 +300,6 @@ public class ManageActionsScreen extends Screen {
         this.addActionButton.setX(this.width - 20 - this.addActionButton.getWidth());
         this.addActionButton.setY(this.addIfButton.getY() - 5 - 20);
 
-        //-----------------------
-
-        //TODO übernehmen
-
         AbstractWidget topRightSideWidget = this.addActionButton;
         Window window = Minecraft.getInstance().getWindow();
         boolean resized = (window.getScreenWidth() != this.lastWidth) || (window.getScreenHeight() != this.lastHeight);
@@ -325,8 +317,6 @@ public class ManageActionsScreen extends Screen {
             RenderingUtils.resetGuiScale();
             this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
         }
-
-        //------------------------
 
     }
 
@@ -380,7 +370,6 @@ public class ManageActionsScreen extends Screen {
             graphics.fill(this.actionsScrollArea.getInnerX(), dY + dH - 1, this.actionsScrollArea.getInnerX() + this.actionsScrollArea.getInnerWidth(), dY + dH, UIBase.getUIColorTheme().description_area_text_color.getColorInt());
         }
 
-        //TODO übernehmen
         this.doneButton.render(graphics, mouseX, mouseY, partial);
         this.cancelButton.render(graphics, mouseX, mouseY, partial);
         this.removeButton.render(graphics, mouseX, mouseY, partial);
@@ -391,7 +380,6 @@ public class ManageActionsScreen extends Screen {
         this.appendElseIfButton.render(graphics, mouseX, mouseY, partial);
         this.addIfButton.render(graphics, mouseX, mouseY, partial);
         this.addActionButton.render(graphics, mouseX, mouseY, partial);
-        //--------------------------
 
         super.render(graphics, mouseX, mouseY, partial);
 

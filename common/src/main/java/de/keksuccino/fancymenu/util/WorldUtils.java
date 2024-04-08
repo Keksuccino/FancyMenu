@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.util;
 
 import net.minecraft.client.Minecraft;
 
-//TODO übernehmen
 public class WorldUtils {
 
     public static boolean isSingleplayer() {

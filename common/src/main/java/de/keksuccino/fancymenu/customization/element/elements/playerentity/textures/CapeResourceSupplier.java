@@ -111,7 +111,6 @@ public class CapeResourceSupplier extends ResourceSupplier<ITexture> {
         return this.hasNoCape;
     }
 
-    //TODO übernehmen
     protected void findPlayerNameCapeUrl(@NotNull String getterPlayerName) {
         Objects.requireNonNull(getterPlayerName);
         this.startedFindingPlayerNameCapeUrl = true;

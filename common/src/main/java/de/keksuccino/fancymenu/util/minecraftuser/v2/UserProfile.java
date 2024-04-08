@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.util.minecraftuser.v2;
 import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 
-//TODO übernehmen
 public class UserProfile {
 
     protected String id;

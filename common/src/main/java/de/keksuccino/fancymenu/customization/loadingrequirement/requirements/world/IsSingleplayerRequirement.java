@@ -21,7 +21,6 @@ public class IsSingleplayerRequirement extends LoadingRequirement {
         return false;
     }
 
-    //TODO übernehmen
     @Override
     public boolean isRequirementMet(@Nullable String value) {
         return WorldUtils.isSingleplayer();

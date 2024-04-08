@@ -43,13 +43,11 @@ public class OpenScreenAction extends Action {
                     if (s != null) {
                         Minecraft.getInstance().setScreen(s);
                     } else {
-                        //TODO übernehmen
                         LOGGER.error("[FANCYMENU] Unable to construct screen instance for '" + value + "'!", new Exception());
                         Screen current = Minecraft.getInstance().screen;
                         Minecraft.getInstance().setScreen(NotificationScreen.error(aBoolean -> {
                             Minecraft.getInstance().setScreen(current);
                         }, LocalizationUtils.splitLocalizedLines("fancymenu.actions.open_screen.error")));
-                        //-------------------------
                     }
                 }
             }

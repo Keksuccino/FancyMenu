@@ -376,8 +376,6 @@ public class MarkdownParser {
                     }
                 }
 
-                //TODO übernehmen
-
                 //Handle Quote
                 if (isStartOfLine && (c == GREATER_THAN_CHAR) && (builder.quoteContext == null) && (builder.codeBlockContext == null)) {
                     if (StringUtils.startsWith(subText, FORMATTING_CODE_QUOTE_PREFIX)) {
@@ -394,8 +392,6 @@ public class MarkdownParser {
                         continue;
                     }
                 }
-
-                //-------------------------------
 
                 //Handle Bullet List Level 1
                 if (isStartOfLine && (c == MINUS_CHAR) && StringUtils.startsWith(subLine, FORMATTING_CODE_BULLET_LIST_LEVEL_1_PREFIX) && !removeFromString(subLine, MINUS, SPACE, NEWLINE).isEmpty() && (builder.codeBlockContext == null)) {
@@ -549,7 +545,6 @@ public class MarkdownParser {
         builder.imageSupplier = ResourceSupplier.image(imageSource);
     }
 
-    //TODO übernehmen
     @NotNull
     protected static String getLine(@NotNull String text) {
         try {

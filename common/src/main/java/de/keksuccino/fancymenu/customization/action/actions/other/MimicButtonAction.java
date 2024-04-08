@@ -25,7 +25,6 @@ public class MimicButtonAction extends Action {
         return true;
     }
 
-    //TODO übernehmen
     @Override
     public void execute(@Nullable String value) {
         if (value != null) {

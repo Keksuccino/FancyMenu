@@ -52,10 +52,8 @@ public abstract class CellScreen extends Screen {
     protected ExtendedButton doneButton;
     @Nullable
     protected ExtendedButton cancelButton;
-    //TODO übernehmen
     protected int lastWidth = 0;
     protected int lastHeight = 0;
-    //--------------------
 
     protected CellScreen(@NotNull Component title) {
         super(title);
@@ -120,7 +118,6 @@ public abstract class CellScreen extends Screen {
         int widgetWidth = this.getRightSideWidgetWidth();
         int widgetX = this.width - 20 - widgetWidth;
         int widgetY = this.height - 20;
-        //TODO übernehmen
         AbstractWidget topRightSideWidget = null;
         for (AbstractWidget w : Lists.reverse(this.rightSideWidgets)) {
             if (!(w instanceof RightSideSpacer)) {
@@ -129,13 +126,10 @@ public abstract class CellScreen extends Screen {
                 w.setY(widgetY - w.getHeight());
                 w.setWidth(widgetWidth);
                 this.addRenderableWidget(w);
-                //TODO übernehmen
                 topRightSideWidget = w;
             }
             widgetY -= w.getHeight() + this.getRightSideDefaultSpaceBetweenWidgets();
         }
-
-        //TODO übernehmen
 
         Window window = Minecraft.getInstance().getWindow();
         boolean resized = (window.getScreenWidth() != this.lastWidth) || (window.getScreenHeight() != this.lastHeight);
@@ -153,8 +147,6 @@ public abstract class CellScreen extends Screen {
             RenderingUtils.resetGuiScale();
             this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
         }
-
-        //------------------------
 
     }
 

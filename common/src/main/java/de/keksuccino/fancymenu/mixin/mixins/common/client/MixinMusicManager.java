@@ -14,7 +14,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(MusicManager.class)
 public abstract class MixinMusicManager {
 
-    //TODO übernehmen
     @Inject(method = "tick", at = @At("HEAD"), cancellable = true)
     private void cancelTickIfMusicDisabledViaController_FancyMenu(CallbackInfo info) {
         if (Minecraft.getInstance().level == null) {

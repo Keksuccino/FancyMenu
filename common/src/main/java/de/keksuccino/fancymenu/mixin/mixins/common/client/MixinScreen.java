@@ -44,17 +44,6 @@ public abstract class MixinScreen implements CustomizableScreen {
 		EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent((Screen)((Object)this), graphics));
 	}
 
-	//TODO übernehmen
-//	@Inject(method = "init(Lnet/minecraft/client/Minecraft;II)V", at = @At("RETURN"))
-//	private void afterInitFancyMenu(Minecraft $$0, int $$1, int $$2, CallbackInfo info) {
-//		Overlay overlay = Minecraft.getInstance().getOverlay();
-//		if (Compat.isRRLSLoaded() && !Compat.rrls_reinit_in_screen && (overlay != null)) {
-//			Compat.rrls_reinit_in_screen = true;
-//			LOGGER_FANCYMENU.error("[FANCYMENU] Re-initializing screen after init in overlay to fix incompatibility with Remove Reloading Screen..");
-//			ScreenCustomization.reInitCurrentScreen();
-//		}
-//	}
-
 	@Inject(method = "keyPressed", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/events/AbstractContainerEventHandler;nextFocusPath(Lnet/minecraft/client/gui/navigation/FocusNavigationEvent;)Lnet/minecraft/client/gui/ComponentPath;"))
 	private void beforeNextFocusPathInKeyPressedFancyMenu(int $$0, int $$1, int $$2, CallbackInfoReturnable<Boolean> info) {
 		this.nextFocusPath_called_FancyMenu = true;
