@@ -2,7 +2,7 @@
 
 CHANGELOG | FANCYMENU v3.1.4
  
-- Fixed GIF images still ignoring its loop count (please work, I beg you)
+- Fixed GIF images still ignoring their loop count (please work, I beg you)
  
 %changelog:end%
 
