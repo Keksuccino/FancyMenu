@@ -22,6 +22,7 @@ dependencies {
     compileOnly "curse.maven:melody-938643:4953732"
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
     implementation group: 'org.ow2.asm', name: 'asm-tree', version: '9.3'
+    implementation 'com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7'
 }
 
 publishing {

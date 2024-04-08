@@ -23,6 +23,7 @@ runs {
         systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         dependencies {
             runtime 'com.github.Keksuccino:japng:0.5.3'
+            runtime 'com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7'
         }
     }
     server {
@@ -48,6 +49,9 @@ dependencies {
     //Also needs to get added to the client run configuration (runs -> client -> dependencies) since it's a non-Minecraft library
     implementation(jarJar("com.github.Keksuccino:japng:0.5.3")) {
         jarJar.ranged(it, "[0.5.3,)")
+    }
+    implementation(jarJar("com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7")) {
+        jarJar.ranged(it, "[1.7,)")
     }
 }
 
