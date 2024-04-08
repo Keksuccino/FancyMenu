@@ -10,3 +10,7 @@ See `LICENSE.md` for more information.
 
 Japng © Copyright A. Ellerton.<br>
 Japng is licensed under Apache-2.0.
+
+[Animated GIF library for Java](https://github.com/rtyley/animated-gif-lib-for-java) © Copyright Roberto Tyley, Kevin Weiner.
+Original code by Kevin Weiner on [fmsware.com](http://www.fmsware.com/stuff/gif.html).
+Re-packaged and improved by Roberto Tyley. Improvements licensed under the Apache-2.0 license.
