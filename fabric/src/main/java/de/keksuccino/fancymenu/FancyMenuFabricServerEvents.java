@@ -1,8 +1,6 @@
 package de.keksuccino.fancymenu;
 
-import de.keksuccino.fancymenu.commands.server.ServerCloseGuiScreenCommand;
-import de.keksuccino.fancymenu.commands.server.ServerOpenGuiScreenCommand;
-import de.keksuccino.fancymenu.commands.server.ServerVariableCommand;
+import de.keksuccino.fancymenu.commands.Commands;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 
 public class FancyMenuFabricServerEvents {
@@ -14,15 +12,7 @@ public class FancyMenuFabricServerEvents {
     }
 
     private static void registerServerCommands() {
-
-        CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
-
-            ServerOpenGuiScreenCommand.register(dispatcher);
-            ServerCloseGuiScreenCommand.register(dispatcher);
-            ServerVariableCommand.register(dispatcher);
-
-        });
-
+        CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> Commands.registerAll(dispatcher));
     }
 
 }

@@ -384,11 +384,13 @@ public class MarkdownParser {
                         continue;
                     }
                 }
-                if (isStartOfLine && (builder.quoteContext != null) && StringUtils.replace(currentLine, SPACE, EMPTY_STRING).isEmpty()) {
-                    builder.quoteContext = null; //it's important to disable quote BEFORE building the fragment
-                    lastBuiltFragment = addFragment(fragments, builder.build(true, true));
-                    queueNewLine = true;
-                    continue;
+                if (isStartOfLine && (builder.quoteContext != null)) {
+                    if (StringUtils.trim(currentLine).isEmpty()) {
+                        builder.quoteContext = null; //it's important to disable quote BEFORE building the fragment
+                        lastBuiltFragment = addFragment(fragments, builder.build(true, true));
+                        queueNewLine = true;
+                        continue;
+                    }
                 }
 
                 //Handle Bullet List Level 1
@@ -547,8 +549,12 @@ public class MarkdownParser {
     @NotNull
     protected static String getLine(@NotNull String text) {
         try {
+            if (!StringUtils.contains(text, NEWLINE)) return text;
+            if (StringUtils.startsWith(text, NEWLINE)) return EMPTY_STRING;
             return StringUtils.split(text, NEWLINE, 2)[0];
-        } catch (Exception ignored) {}
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to get line of Markdown text!", ex);
+        }
         return text;
     }
 

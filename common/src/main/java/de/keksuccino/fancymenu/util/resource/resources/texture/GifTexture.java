@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.util.resource.resources.texture;
 import com.mojang.blaze3d.platform.NativeImage;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.CloseableUtils;
-import de.keksuccino.fancymenu.util.ObjectHolder;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
@@ -25,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 public class GifTexture implements ITexture, PlayableResource {
@@ -34,7 +34,7 @@ public class GifTexture implements ITexture, PlayableResource {
     @NotNull
     protected volatile List<GifFrame> frames = new ArrayList<>();
     @Nullable
-    protected volatile GifFrame current = null;
+    protected volatile GifTexture.GifFrame current = null;
     @NotNull
     protected volatile AspectRatio aspectRatio = new AspectRatio(10, 10);
     protected volatile int width = 10;
@@ -43,6 +43,9 @@ public class GifTexture implements ITexture, PlayableResource {
     protected final AtomicBoolean tickerThreadRunning = new AtomicBoolean(false);
     protected final AtomicBoolean decoded = new AtomicBoolean(false);
     protected volatile boolean allFramesDecoded = false;
+    protected final AtomicInteger cycles = new AtomicInteger(0);
+    /** How many times the GIF should loop. Value <= 0 means infinite loops. **/
+    protected final AtomicInteger numPlays = new AtomicInteger(0);
     protected ResourceLocation sourceLocation;
     protected File sourceFile;
     protected String sourceURL;
@@ -50,6 +53,7 @@ public class GifTexture implements ITexture, PlayableResource {
     protected final AtomicBoolean loadingFailed = new AtomicBoolean(false);
     protected final String uniqueId = ScreenCustomization.generateUniqueIdentifier();
     protected int frameRegistrationCounter = 0;
+    protected volatile boolean maxLoopsReached = false;
     protected final AtomicBoolean closed = new AtomicBoolean(false);
 
     @NotNull
@@ -77,32 +81,32 @@ public class GifTexture implements ITexture, PlayableResource {
     }
 
     @NotNull
-    public static GifTexture local(@NotNull File gif) {
-        return local(gif, null);
+    public static GifTexture local(@NotNull File apngFile) {
+        return local(apngFile, null);
     }
 
     @NotNull
-    public static GifTexture local(@NotNull File gif, @Nullable GifTexture writeTo) {
+    public static GifTexture local(@NotNull File gifFile, @Nullable GifTexture writeTo) {
 
-        Objects.requireNonNull(gif);
+        Objects.requireNonNull(gifFile);
         GifTexture texture = (writeTo != null) ? writeTo : new GifTexture();
 
-        texture.sourceFile = gif;
+        texture.sourceFile = gifFile;
 
-        if (!gif.isFile()) {
+        if (!gifFile.isFile()) {
             texture.loadingFailed.set(true);
-            LOGGER.error("[FANCYMENU] Failed to read GIF image from file! File not found: " + gif.getPath());
+            LOGGER.error("[FANCYMENU] Failed to read GIF image from file! File not found: " + gifFile.getPath());
             return texture;
         }
 
-        //Decode APNG image
+        //Decode GIF image
         new Thread(() -> {
             try {
-                InputStream in = new FileInputStream(gif);
-                of(in, gif.getPath(), texture);
+                InputStream in = new FileInputStream(gifFile);
+                of(in, gifFile.getPath(), texture);
             } catch (Exception ex) {
                 texture.loadingFailed.set(true);
-                LOGGER.error("[FANCYMENU] Failed to read GIF image from file: " + gif.getPath(), ex);
+                LOGGER.error("[FANCYMENU] Failed to read GIF image from file: " + gifFile.getPath(), ex);
             }
         }).start();
 
@@ -111,8 +115,8 @@ public class GifTexture implements ITexture, PlayableResource {
     }
 
     @NotNull
-    public static GifTexture web(@NotNull String gifUrl) {
-        return web(gifUrl, null);
+    public static GifTexture web(@NotNull String apngUrl) {
+        return web(apngUrl, null);
     }
 
     @NotNull
@@ -157,14 +161,6 @@ public class GifTexture implements ITexture, PlayableResource {
      * Closes the passed {@link InputStream}!
      */
     @NotNull
-    public static GifTexture of(@NotNull InputStream in) {
-        return of(in, null, null);
-    }
-
-    /**
-     * Closes the passed {@link InputStream}!
-     */
-    @NotNull
     public static GifTexture of(@NotNull InputStream in, @Nullable String gifTextureName, @Nullable GifTexture writeTo) {
 
         Objects.requireNonNull(in);
@@ -173,8 +169,7 @@ public class GifTexture implements ITexture, PlayableResource {
 
         //Decode GIF image
         new Thread(() -> {
-            String name = (gifTextureName != null) ? gifTextureName : "[Generic InputStream Source]";
-            populateTexture(texture, in, name);
+            populateTexture(texture, in, (gifTextureName != null) ? gifTextureName : "[Generic InputStream Source]");
             if (texture.closed.get()) MainThreadTaskExecutor.executeInMainThread(texture::close, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
         }).start();
 
@@ -182,36 +177,47 @@ public class GifTexture implements ITexture, PlayableResource {
 
     }
 
+    /**
+     * Closes the passed {@link InputStream}!
+     */
+    @NotNull
+    public static GifTexture of(@NotNull InputStream in) {
+        return of(in, null, null);
+    }
+
     protected static void populateTexture(@NotNull GifTexture texture, @NotNull InputStream in, @NotNull String gifTextureName) {
         if (!texture.closed.get()) {
+            DecodedGifImage decodedImage = decodeGif(in, gifTextureName);
+            if (decodedImage == null) {
+                LOGGER.error("[FANCYMENU] Failed to read GIF image, because DecodedApngImage was NULL: " + gifTextureName);
+                texture.decoded.set(true);
+                texture.loadingFailed.set(true);
+                return;
+            }
+            texture.width = decodedImage.imageWidth;
+            texture.height = decodedImage.imageHeight;
+            texture.aspectRatio = new AspectRatio(decodedImage.imageWidth, decodedImage.imageHeight);
+            texture.numPlays.set(decodedImage.numPlays);
+            texture.decoded.set(true);
             try {
-                DecodedGifImage decodedImage = decodeGif(in);
-                ObjectHolder<Boolean> sizeSet = ObjectHolder.of(false);
-                deliverFrames(decodedImage.image, gifTextureName, frame -> {
+                deliverGifFrames(decodedImage.sequence(), gifTextureName, frame -> {
                     if (frame != null) {
                         try {
                             frame.nativeImage = NativeImage.read(frame.frameInputStream);
-                            texture.frames.add(frame);
-                            if (!sizeSet.get()) {
-                                texture.width = frame.nativeImage.getWidth();
-                                texture.height = frame.nativeImage.getHeight();
-                                texture.aspectRatio = new AspectRatio(frame.nativeImage.getWidth(), frame.nativeImage.getHeight());
-                                texture.decoded.set(true);
-                                sizeSet.set(true);
-                            }
                         } catch (Exception ex) {
                             LOGGER.error("[FANCYMENU] Failed to read frame of GIF image into NativeImage: " + gifTextureName, ex);
                         }
                         CloseableUtils.closeQuietly(frame.closeAfterLoading);
                         CloseableUtils.closeQuietly(frame.frameInputStream);
+                        texture.frames.add(frame);
                     }
                 });
                 texture.loadingCompleted.set(true);
-                texture.allFramesDecoded = true;
             } catch (Exception ex) {
                 texture.loadingFailed.set(true);
-                LOGGER.error("[FANCYMENU] Failed to decode GIF image: " + gifTextureName, ex);
+                LOGGER.error("[FANCYMENU] Failed to read frames of GIF image: " + gifTextureName, ex);
             }
+            texture.allFramesDecoded = true;
         }
         texture.decoded.set(true);
         CloseableUtils.closeQuietly(in);
@@ -222,16 +228,18 @@ public class GifTexture implements ITexture, PlayableResource {
 
     @SuppressWarnings("all")
     protected void startTickerIfNeeded() {
-        if (!this.tickerThreadRunning.get() && !this.frames.isEmpty() && !this.closed.get()) {
+        if (!this.tickerThreadRunning.get() && !this.frames.isEmpty() && !this.maxLoopsReached && !this.closed.get()) {
 
             this.tickerThreadRunning.set(true);
             this.lastResourceLocationCall = System.currentTimeMillis();
 
             new Thread(() -> {
 
-                //Automatically stop thread if GIF was inactive for 10 seconds
+                //Automatically stop thread if APNG was inactive for >=10 seconds
                 while ((this.lastResourceLocationCall + 10000) > System.currentTimeMillis()) {
                     if (this.frames.isEmpty() || this.closed.get()) break;
+                    //Don't tick frame if max loops reached
+                    if (this.maxLoopsReached) break;
                     boolean sleep = false;
                     try {
                         boolean cachedAllDecoded = this.allFramesDecoded;
@@ -241,20 +249,36 @@ public class GifTexture implements ITexture, PlayableResource {
                             //Set initial (first) frame if current is NULL
                             if (this.current == null) {
                                 this.current = cachedFrames.get(0);
-                                Thread.sleep(Math.max(20, cachedFrames.get(0).delay * 10L));
+                                Thread.sleep(Math.max(20, cachedFrames.get(0).delayMs));
                             }
                             //Cache current frame to make sure it stays the same instance while working with it
                             GifFrame cachedCurrent = this.current;
                             if (cachedCurrent != null) {
-                                //Go to the next frame if current frame display time is over
                                 GifFrame newCurrent = null;
-                                if ((cachedCurrent.index + 1) < cachedFrames.size()) {
-                                    newCurrent = cachedFrames.get(cachedCurrent.index + 1);
+                                int currentIndexIncrement = cachedCurrent.index + 1;
+                                //Check if there's a frame after the current one and if so, go to the next frame
+                                if (currentIndexIncrement < cachedFrames.size()) {
+                                    newCurrent = cachedFrames.get(currentIndexIncrement);
                                 } else if (cachedAllDecoded) {
-                                    newCurrent = cachedFrames.get(0);
+                                    int cachedNumPlays = this.numPlays.get();
+                                    //Count cycles up if APNG should not loop infinitely (numPlays > 0 = finite loops)
+                                    if (cachedNumPlays > 0) {
+                                        int newCycles = this.cycles.incrementAndGet();
+                                        if (newCycles >= cachedNumPlays) {
+                                            this.maxLoopsReached = true;
+                                            break; //end the while loop of the frame ticker
+                                        } else {
+                                            //If APNG has a finite number of loops but did not reach its max loops yet, reset to first frame, because end reached
+                                            newCurrent = cachedFrames.get(0);
+                                        }
+                                    } else {
+                                        //If APNG loops infinitely, reset to first frame, because end reached
+                                        newCurrent = cachedFrames.get(0);
+                                    }
                                 }
                                 if (newCurrent != null) this.current = newCurrent;
-                                Thread.sleep(Math.max(20, (newCurrent != null) ? (newCurrent.delay * 10L) : 100));
+                                //Sleep for the new current frame's delay or sleep for 100ms if there's no new frame
+                                Thread.sleep(Math.max(20, (newCurrent != null) ? newCurrent.delayMs : 100));
                             } else {
                                 sleep = true;
                             }
@@ -263,13 +287,13 @@ public class GifTexture implements ITexture, PlayableResource {
                         }
                     } catch (Exception ex) {
                         sleep = true;
-                        ex.printStackTrace();
+                        LOGGER.error("[FANCYMENU] An error happened in the frame ticker thread on an GIF!", ex);
                     }
                     if (sleep) {
                         try {
                             Thread.sleep(100);
-                        } catch (Exception ex2) {
-                            ex2.printStackTrace();
+                        } catch (Exception ex) {
+                            LOGGER.error("[FANCYMENU] An error happened in the frame ticker thread on an GIF!", ex);
                         }
                     }
                 }
@@ -348,11 +372,17 @@ public class GifTexture implements ITexture, PlayableResource {
         List<GifFrame> l = new ArrayList<>(this.frames);
         if (!l.isEmpty()) {
             this.current = l.get(0);
+            this.cycles.set(0);
         }
     }
 
     @Override
     public void play() {
+    }
+
+    @Override
+    public boolean isPlaying() {
+        return !this.maxLoopsReached;
     }
 
     @Override
@@ -367,11 +397,6 @@ public class GifTexture implements ITexture, PlayableResource {
     @Override
     public void stop() {
         this.reset();
-    }
-
-    @Override
-    public boolean isPlaying() {
-        return true;
     }
 
     @Override
@@ -401,24 +426,33 @@ public class GifTexture implements ITexture, PlayableResource {
         this.current = null;
     }
 
-    @NotNull
-    public static GifTexture.DecodedGifImage decodeGif(@NotNull InputStream in) throws IOException {
-        GifDecoder.GifImage gif = GifDecoder.read(in);
-        return new DecodedGifImage(gif);
+    @Nullable
+    public static DecodedGifImage decodeGif(@NotNull InputStream in, @NotNull String gifName) {
+        try {
+            GifDecoder.GifImage gif = GifDecoder.read(in);
+            return new DecodedGifImage(gif, gif.getWidth(), gif.getHeight(), gif.repetitions); //repetitions = 0 = infinite loops | repetitions = >0 = number of loops
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to decode GIF image: " + gifName, ex);
+        }
+        return null;
     }
 
-    public static void deliverFrames(@NotNull GifDecoder.GifImage gif, @NotNull String gifName, @NotNull Consumer<GifFrame> frameDelivery) {
+    public static void deliverGifFrames(@NotNull GifDecoder.GifImage gif, @NotNull String gifName, @NotNull Consumer<GifFrame> frameDelivery) {
         int gifFrameCount = gif.getFrameCount();
         int i = 0;
         int index = 0;
         while (i < gifFrameCount) {
             try {
-                int delay = gif.getDelay(i);
+                double delay = gif.getDelay(i); //getDelay() returns delay in hundredths (1/100) of a second
+                if (delay > 0) {
+                    delay = delay / 100.0D; //convert to seconds
+                    delay = delay * 1000.0D; // convert to millis
+                }
                 BufferedImage image = gif.getFrame(i);
                 ByteArrayOutputStream os = new ByteArrayOutputStream();
                 ImageIO.write(image, "PNG", os);
                 ByteArrayInputStream bis = new ByteArrayInputStream(os.toByteArray());
-                frameDelivery.accept(new GifFrame(index, bis, delay, os));
+                frameDelivery.accept(new GifFrame(index, bis, (long)delay, os));
                 index++;
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to get frame '" + i + "' of GIF image '" + gifName + "!", ex);
@@ -431,23 +465,23 @@ public class GifTexture implements ITexture, PlayableResource {
 
         protected final int index;
         protected final ByteArrayInputStream frameInputStream;
-        protected final int delay;
+        protected final long delayMs;
         protected final ByteArrayOutputStream closeAfterLoading;
-        protected volatile NativeImage nativeImage;
         protected DynamicTexture dynamicTexture;
+        protected volatile NativeImage nativeImage;
         protected ResourceLocation resourceLocation;
         protected boolean loaded = false;
 
-        protected GifFrame(int index, ByteArrayInputStream frameInputStream, int delay, ByteArrayOutputStream closeAfterLoading) {
+        protected GifFrame(int index, ByteArrayInputStream frameInputStream, long delayMs, ByteArrayOutputStream closeAfterLoading) {
             this.index = index;
             this.frameInputStream = frameInputStream;
-            this.delay = delay;
+            this.delayMs = delayMs;
             this.closeAfterLoading = closeAfterLoading;
         }
 
     }
 
-    public record DecodedGifImage(@NotNull GifDecoder.GifImage image) {
+    public record DecodedGifImage(@NotNull GifDecoder.GifImage sequence, int imageWidth, int imageHeight, int numPlays) {
     }
 
 }
