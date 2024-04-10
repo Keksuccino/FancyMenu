@@ -21,7 +21,7 @@ public class DummyScreens {
     });
     public static final DummyScreenBuilder CONNECT_SCREEN_DUMMY = new DummyScreenBuilder(ConnectScreen.class.getName(), Component.translatable("fancymenu.overlay.menu_bar.tools.connect_screen"), () -> IMixinConnectScreen.invokeConstructFancyMenu(new TitleScreen(), Component.empty()));
     public static final DummyScreenBuilder RECEIVING_LEVEL_SCREEN_DUMMY = new DummyScreenBuilder(ReceivingLevelScreen.class.getName(), Component.translatable("fancymenu.overlay.menu_bar.tools.dummy_screen_instances.receiving_level_screen"), () -> {
-        ReceivingLevelScreen s = new ReceivingLevelScreen(() -> false);
+        ReceivingLevelScreen s = new ReceivingLevelScreen();
         ((IMixinReceivingLevelScreen)s).setCreatedAtFancyMenu(System.currentTimeMillis() + 10000000000000L);
         return s;
     }).setScreenDescriptionSupplier(() -> ListUtils.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.tools.dummy_screen_instances.receiving_level_screen.desc")));

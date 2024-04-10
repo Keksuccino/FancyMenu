@@ -22,7 +22,7 @@ description='''${mod_description}'''
 modId="konkrete"
 mandatory=true
 ordering="NONE"
-versionRange="[1.8.0,)"
+versionRange="[1.9.2,)"
 side="BOTH"
 
 [[dependencies.${mod_id}]]
@@ -37,6 +37,13 @@ modId="findme"
 mandatory=false
 ordering="AFTER"
 versionRange="[1.0.0,)"
+side="BOTH"
+
+[[dependencies.${mod_id}]]
+modId="rrls"
+mandatory=false
+ordering="AFTER"
+versionRange="[0,)"
 side="BOTH"
 
 [[dependencies.${mod_id}]]

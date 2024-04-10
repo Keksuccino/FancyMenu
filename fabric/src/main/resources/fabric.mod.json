@@ -27,7 +27,7 @@
   "depends": {
     "fabricloader": ">=${fabric_loader_version}",
     "fabric": ">=${fabric_short_version}",
-    "konkrete": ">=1.8.0",
+    "konkrete": ">=1.9.2",
     "melody": ">=1.0.0",
     "minecraft": ">=${minecraft_version}",
     "java": ">=17"
@@ -35,7 +35,8 @@
   "breaks": {
     "drippyloadingscreen": "<3.0.0",
     "fmextension_audio": "*",
-    "fmextension_video": "*"
+    "fmextension_video": "*",
+    "rrls": "*"
   },
   "accessWidener": "fancymenu.accesswidener"
 }

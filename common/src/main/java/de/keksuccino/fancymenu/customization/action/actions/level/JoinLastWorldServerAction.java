@@ -35,11 +35,8 @@ public class JoinLastWorldServerAction extends Action {
             if (!LastWorldHandler.isLastWorldServer()) { // CASE: SINGLEPLAYER WORLD
                 File f = new File(LastWorldHandler.getLastWorld());
                 if (Minecraft.getInstance().getLevelSource().levelExists(f.getName())) {
-                    Screen current = (Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen : new TitleScreen();
                     Minecraft.getInstance().forceSetScreen(new GenericDirtMessageScreen(Component.translatable("selectWorld.data_read")));
-                    Minecraft.getInstance().createWorldOpenFlows().checkForBackupAndLoad(f.getName(), () -> {
-                        Minecraft.getInstance().setScreen(current);
-                    });
+                    Minecraft.getInstance().createWorldOpenFlows().loadLevel(Minecraft.getInstance().screen, f.getName());
                 }
             } else { //CASE: SERVER
                 String ipRaw = LastWorldHandler.getLastWorld().replace(" ", "");

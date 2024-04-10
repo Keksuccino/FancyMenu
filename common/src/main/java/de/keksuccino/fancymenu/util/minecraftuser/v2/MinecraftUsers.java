@@ -2,9 +2,7 @@ package de.keksuccino.fancymenu.util.minecraftuser.v2;
 
 import com.google.gson.Gson;
 import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.SignatureState;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
-import com.mojang.authlib.minecraft.MinecraftProfileTextures;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
@@ -22,13 +20,16 @@ public class MinecraftUsers {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String MOJANG_PROFILE_API_URL = "https://api.mojang.com/users/profiles/minecraft/";
     private static final Map<String, UserProfile> CACHED_PROFILES = Collections.synchronizedMap(new HashMap<>());
-    private static final Map<String, MinecraftProfileTextures> CACHED_PROFILE_TEXTURES = Collections.synchronizedMap(new HashMap<>());
+    private static final Map<String, Map<MinecraftProfileTexture.Type, MinecraftProfileTexture>> CACHED_PROFILE_TEXTURES = Collections.synchronizedMap(new HashMap<>());
 
     public static final UserProfile UNKNOWN_USER_PROFILE = new UserProfile();
     public static final MinecraftProfileTexture MISSING_SKIN_TEXTURE = new MinecraftProfileTexture("", Collections.emptyMap());
     public static final MinecraftProfileTexture MISSING_CAPE_TEXTURE = new MinecraftProfileTexture("", Collections.emptyMap());
     public static final MinecraftProfileTexture MISSING_ELYTRA_TEXTURE = new MinecraftProfileTexture("", Collections.emptyMap());
-    public static final MinecraftProfileTextures MISSING_PROFILE_TEXTURES = new MinecraftProfileTextures(MISSING_SKIN_TEXTURE, MISSING_CAPE_TEXTURE, MISSING_ELYTRA_TEXTURE, SignatureState.UNSIGNED);
+    public static final Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> MISSING_PROFILE_TEXTURES = Map.of(
+            MinecraftProfileTexture.Type.SKIN, MISSING_SKIN_TEXTURE,
+            MinecraftProfileTexture.Type.CAPE, MISSING_CAPE_TEXTURE,
+            MinecraftProfileTexture.Type.ELYTRA, MISSING_ELYTRA_TEXTURE);
 
     @NotNull
     public static UserProfile getUserProfile(@NotNull String playerName) {
@@ -62,7 +63,7 @@ public class MinecraftUsers {
     }
 
     @NotNull
-    public static MinecraftProfileTextures getProfileTextures(@NotNull String playerName) {
+    public static Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> getProfileTextures(@NotNull String playerName) {
 
         Objects.requireNonNull(playerName);
 
@@ -76,7 +77,7 @@ public class MinecraftUsers {
                 GameProfile gameProfile;
                 MinecraftSessionService minecraftSessionService = Minecraft.getInstance().getMinecraftSessionService();
                 gameProfile = Objects.requireNonNull(minecraftSessionService.fetchProfile(Objects.requireNonNull(profile.getUUID()), false)).profile();
-                MinecraftProfileTextures textures = Objects.requireNonNull(minecraftSessionService.getTextures(gameProfile));
+                Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> textures = Objects.requireNonNull(minecraftSessionService.getTextures(gameProfile, false));
                 CACHED_PROFILE_TEXTURES.put(playerName, textures);
             } else {
                 CACHED_PROFILE_TEXTURES.put(playerName, MISSING_PROFILE_TEXTURES);
@@ -93,10 +94,8 @@ public class MinecraftUsers {
 
     @Nullable
     public static MinecraftProfileTexture getProfileTexture(@NotNull String playerName, @NotNull MinecraftProfileTexture.Type type) {
-        MinecraftProfileTextures textures = getProfileTextures(playerName);
-        if (type == MinecraftProfileTexture.Type.CAPE) return textures.cape();
-        if (type == MinecraftProfileTexture.Type.ELYTRA) return textures.cape();
-        return textures.skin();
+        Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> textures = getProfileTextures(playerName);
+        return textures.get(type);
     }
 
 }

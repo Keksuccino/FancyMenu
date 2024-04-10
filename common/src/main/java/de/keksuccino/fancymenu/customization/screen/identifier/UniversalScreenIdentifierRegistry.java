@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.screen.identifier;
 
 import com.mojang.realmsclient.RealmsMainScreen;
 import com.mojang.realmsclient.gui.screens.*;
-import net.minecraft.client.gui.components.PopupScreen;
 import net.minecraft.client.gui.screens.*;
 import net.minecraft.client.gui.screens.achievement.StatsScreen;
 import net.minecraft.client.gui.screens.advancements.AdvancementsScreen;

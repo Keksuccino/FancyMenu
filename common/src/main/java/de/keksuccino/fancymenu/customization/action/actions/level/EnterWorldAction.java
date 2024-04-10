@@ -24,12 +24,9 @@ public class EnterWorldAction extends Action {
     @Override
     public void execute(@Nullable String value) {
         if (value != null) {
-            if (Minecraft.getInstance().getLevelSource().levelExists(value)) {
-                Screen current = (Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen : new TitleScreen();
+            if (Minecraft.getInstance().getLevelSource().levelExists(value) && (Minecraft.getInstance().screen != null)) {
                 Minecraft.getInstance().forceSetScreen(new GenericDirtMessageScreen(Component.translatable("selectWorld.data_read")));
-                Minecraft.getInstance().createWorldOpenFlows().checkForBackupAndLoad(value, () -> {
-                    Minecraft.getInstance().setScreen(current);
-                });
+                Minecraft.getInstance().createWorldOpenFlows().loadLevel(Minecraft.getInstance().screen, value);
             }
         }
     }
