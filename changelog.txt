@@ -1,4 +1,12 @@
 
+CHANGELOG | FANCYMENU v3.1.5
+ 
+- Forge should now show a detailed error when starting the game with the unsupported video and/or audio extensions installed
+ 
+%changelog:end%
+
+
+
 
 CHANGELOG | FANCYMENU v3.1.4
  
