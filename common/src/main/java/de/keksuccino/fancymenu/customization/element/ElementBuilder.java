@@ -23,6 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.client.gui.screens.Screen;
 
 /**
  * Builder to construct {@link AbstractElement} instances. Every element type needs its own {@link ElementBuilder}.<br>
@@ -367,6 +368,15 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
     public boolean isDeprecated() {
         return false;
+    }
+
+    //TODO übernehmen
+    /**
+     * This lets you control if it should be possible to add a new instance of this element type to a layout.<br>
+     * For example, by using this you can control if the element should only be available for specific types of {@link Screen}s.
+     */
+    public boolean shouldShowUpInEditorElementMenu(@NotNull LayoutEditorScreen editor) {
+        return true;
     }
 
     private static SerializedElement removeReservedPropertyKeys(SerializedElement serialized) {

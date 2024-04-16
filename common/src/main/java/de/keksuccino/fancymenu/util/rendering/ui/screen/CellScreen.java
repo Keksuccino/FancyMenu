@@ -121,7 +121,6 @@ public abstract class CellScreen extends Screen {
                 w.setY(widgetY - w.getHeight());
                 w.setWidth(widgetWidth);
                 this.addRenderableWidget(w);
-                //TODO übernehmen
                 topRightSideWidget = w;
             }
             widgetY -= w.getHeight() + this.getRightSideDefaultSpaceBetweenWidgets();

@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.background;
 
 import de.keksuccino.fancymenu.customization.background.backgrounds.image.ImageMenuBackground;
 import de.keksuccino.fancymenu.customization.background.backgrounds.image.ImageMenuBackgroundBuilder;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
@@ -209,6 +210,8 @@ public class ChooseMenuBackgroundScreen extends Screen {
         }
 
         for (MenuBackgroundBuilder<?> b : MenuBackgroundRegistry.getBuilders()) {
+            //TODO übernehmen
+            if ((LayoutEditorScreen.getCurrentInstance() != null) && !b.shouldShowUpInEditorBackgroundMenu(LayoutEditorScreen.getCurrentInstance())) continue;
             BackgroundTypeScrollEntry e = new BackgroundTypeScrollEntry(this.backgroundTypeListScrollArea, b, (entry) -> {
                 if (this.backgroundType != b) {
                     this.backgroundType = b;

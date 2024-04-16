@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import org.jetbrains.annotations.NotNull;
 
-//TODO übernehmen
 public class MusicControllerEditorElement extends AbstractEditorElement {
 
     public MusicControllerEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {

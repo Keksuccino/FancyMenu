@@ -24,6 +24,15 @@ public abstract class MenuBackgroundBuilder<T extends MenuBackground> {
         return false;
     }
 
+    //TODO übernehmen
+    /**
+     * This lets you control if it should be possible to add a new instance of this background type to a layout.<br>
+     * For example, by using this you can control if the background should only be available for specific types of {@link Screen}s.
+     */
+    public boolean shouldShowUpInEditorBackgroundMenu(@NotNull LayoutEditorScreen editor) {
+        return true;
+    }
+
     /**
      * Will build a new instance of the background type or edit an existing one.<br>
      * This is used in the {@link LayoutEditorScreen} when adding the background type to a layout and when editing an existing instance of the background type, so it's possible to open a screen here that has configuration options to construct/edit the {@link MenuBackground} instance.<br>

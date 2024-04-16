@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-//TODO übernehmen
 public class MusicControllerHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();
