@@ -1,4 +1,15 @@
 
+CHANGELOG | FANCYMENU v3.1.6 [ W I P !! Not public yet !! ]
+ 
+- For developers: It's now possible to control if elements, placeholders, loading requirements, actions and menu backgrounds should show up in their "Add" menus
+  - This for example makes it possible to allow elements/placeholders/requirements/actions/backgrounds only for specific types of screens (like the Title screen)
+- 
+ 
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.1.5
  
 - Forge should now show a detailed error when starting the game with the unsupported video and/or audio extensions installed
