@@ -2,7 +2,7 @@
 CHANGELOG | FANCYMENU v3.1.6 [ W I P !! Not public yet !! ]
  
 - For developers: It's now possible to control if elements, placeholders, loading requirements, actions and menu backgrounds should show up in their "Add" menus
-  - This for example makes it possible to allow elements/placeholders/requirements/actions/backgrounds only for specific types of screens (like the Title screen)
+  - This for example makes it possible to allow elements/placeholders/requirements/actions/backgrounds only for specific types of screens
 - For developers: You can now control if universal layouts should get applied to specific types of screens
  
 %changelog:end%
