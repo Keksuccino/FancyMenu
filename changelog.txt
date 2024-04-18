@@ -6,7 +6,7 @@ CHANGELOG | FANCYMENU v3.1.6 [ W I P !! Not public yet !! ]
     - This for example makes it possible to allow elements/placeholders/requirements/actions/backgrounds only for specific types of screens
   - You can now control if universal layouts should get applied to specific types of screens
   - Visibility and active state suppliers for ContextMenus are now stackable
-  - You can now control the visibility of FancyMenu's customization overlay (without, for example, blacklisting a whole screen)
+  - You can now control the visibility of FancyMenu's customization overlay (without, for example, completely blacklisting a screen)
 
  
 %changelog:end%
