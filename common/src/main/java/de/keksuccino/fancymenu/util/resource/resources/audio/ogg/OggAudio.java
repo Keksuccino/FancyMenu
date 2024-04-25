@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.resource.resources.audio.ogg;
 
-import com.mojang.blaze3d.audio.OggAudioStream;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
@@ -10,6 +9,7 @@ import de.keksuccino.melody.resources.audio.openal.ALAudioBuffer;
 import de.keksuccino.melody.resources.audio.openal.ALAudioClip;
 import de.keksuccino.melody.resources.audio.openal.ALUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.sounds.JOrbisAudioStream;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.sounds.SoundSource;
@@ -236,9 +236,9 @@ public class OggAudio implements IAudio {
         }
 
         new Thread(() -> {
-            OggAudioStream stream = null;
+            JOrbisAudioStream stream = null;
             try {
-                stream = new OggAudioStream(in);
+                stream = new JOrbisAudioStream(in);
                 ByteBuffer byteBuffer = stream.readAll();
                 ALAudioBuffer audioBuffer = new ALAudioBuffer(byteBuffer, stream.getFormat());
                 audio.audioBuffer = audioBuffer;

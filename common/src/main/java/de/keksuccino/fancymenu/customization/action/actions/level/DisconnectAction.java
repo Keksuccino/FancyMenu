@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierH
 import de.keksuccino.fancymenu.customization.screen.ScreenInstanceFactory;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
+import net.minecraft.client.gui.screens.GenericMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
@@ -50,7 +50,7 @@ public class DisconnectAction extends Action {
                         }
                         mc.level.disconnect();
                         if (isSinglePlayer) {
-                            mc.disconnect(new GenericDirtMessageScreen(SAVING_LEVEL));
+                            mc.disconnect(new GenericMessageScreen(SAVING_LEVEL));
                         } else {
                             mc.disconnect();
                         }

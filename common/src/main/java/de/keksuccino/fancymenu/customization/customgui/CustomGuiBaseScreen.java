@@ -49,18 +49,12 @@ public class CustomGuiBaseScreen extends Screen {
 	}
 
 	@Override
-	public void renderBackground(@NotNull GuiGraphics graphics, int $$1, int $$2, float $$3) {
-		if (this.gui.worldBackground) {
-			if (Minecraft.getInstance().level != null) {
-				if (this.gui.worldBackgroundOverlay) {
-					this.renderTransparentBackground(graphics);
-				}
-			} else {
-				this.renderDirtBackground(graphics);
-			}
-		} else {
-			this.renderDirtBackground(graphics);
+	public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+		if ((Minecraft.getInstance().level == null) || !this.gui.worldBackground) {
+			this.renderPanorama(graphics, partial);
 		}
+		this.renderBlurredBackground(partial);
+		this.renderMenuBackground(graphics);
 	}
 
 	@NotNull

@@ -6,13 +6,11 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
-import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
-import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.layouts.GridLayout;
 import net.minecraft.client.gui.layouts.LayoutElement;
+import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.network.chat.Component;
@@ -21,8 +19,6 @@ import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(CreateWorldScreen.class)
 public class MixinCreateWorldScreen extends Screen {
@@ -32,8 +28,8 @@ public class MixinCreateWorldScreen extends Screen {
     }
 
     //Make the footer buttons unique for better compatibility with the customization system
-    @WrapOperation(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/layouts/GridLayout$RowHelper;addChild(Lnet/minecraft/client/gui/layouts/LayoutElement;)Lnet/minecraft/client/gui/layouts/LayoutElement;"))
-    private <T extends LayoutElement> T wrapAddChildInInit_FancyMenu(GridLayout.RowHelper instance, T layoutElement, Operation<T> original) {
+    @WrapOperation(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/layouts/LinearLayout;addChild(Lnet/minecraft/client/gui/layouts/LayoutElement;)Lnet/minecraft/client/gui/layouts/LayoutElement;"))
+    private <T extends LayoutElement> T wrapAddChildInInit_FancyMenu(LinearLayout instance, T layoutElement, Operation<T> original) {
 
         if (layoutElement instanceof Button b) {
             if (b.getMessage() instanceof MutableComponent c) {
@@ -69,10 +65,11 @@ public class MixinCreateWorldScreen extends Screen {
         return true;
     }
 
-    //CreateWorldScreen overrides renderDirtBackground, so add back RenderedScreenBackgroundEvent
-    @Inject(method = "renderDirtBackground", at = @At("RETURN"))
-    private void afterRenderDirtBackgroundInCreateWorldFancyMenu(GuiGraphics graphics, CallbackInfo info) {
-        EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, graphics));
-    }
+    //TODO experimental
+//    //CreateWorldScreen overrides renderDirtBackground, so add back RenderedScreenBackgroundEvent
+//    @Inject(method = "renderDirtBackground", at = @At("RETURN"))
+//    private void afterRenderDirtBackgroundInCreateWorldFancyMenu(GuiGraphics graphics, CallbackInfo info) {
+//        EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, graphics));
+//    }
 
 }

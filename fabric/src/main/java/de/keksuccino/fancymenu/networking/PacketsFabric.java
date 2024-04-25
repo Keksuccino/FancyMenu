@@ -7,6 +7,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
 public class PacketsFabric {
 
@@ -39,6 +40,13 @@ public class PacketsFabric {
             BridgePacketMessageFabric msg = BridgePacketHandlerFabric.readFromByteBuf(buf);
             BridgePacketHandlerFabric.handle(player, msg, PacketHandler.PacketDirection.TO_SERVER);
         });
+
+//        ServerPlayNetworking.registerGlobalReceiver(CustomPacketPayload.createType("fancymenu:packet_bridge"), (payload, context) -> {
+//            BridgePacketMessageFabric msg = BridgePacketHandlerFabric.readFromByteBuf(buf);
+//            BridgePacketHandlerFabric.handle(player, msg, PacketHandler.PacketDirection.TO_SERVER);
+//        });
+
+        //TODO Der TYPE muss auch zusätzlich zu registerReceiver noch an anderer Stelle registriert werden
 
         //ON CLIENT
         if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {

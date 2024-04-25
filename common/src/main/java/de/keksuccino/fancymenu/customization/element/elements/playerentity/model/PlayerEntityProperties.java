@@ -141,7 +141,7 @@ public class PlayerEntityProperties {
     }
 
     protected float getEyeHeight(Pose pose, EntityDimensions entityDimensions) {
-        return pose == Pose.SLEEPING ? 0.2F : (entityDimensions.height * 0.85F);
+        return pose == Pose.SLEEPING ? 0.2F : (entityDimensions.height() * 0.85F);
     }
 
     @Nullable

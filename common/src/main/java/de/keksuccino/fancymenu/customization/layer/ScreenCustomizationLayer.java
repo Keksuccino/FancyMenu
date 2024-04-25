@@ -516,14 +516,15 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 			RenderingUtils.resetShaderColor(graphics);
 
-			if (this.layoutBase.renderScrollListHeaderShadow) {
-				graphics.fillGradient(RenderType.guiOverlay(), list.getX(), list.getY(), list.getRight(), list.getY() + 4, -16777216, 0, 0);
-			}
-			if (this.layoutBase.renderScrollListFooterShadow) {
-				graphics.fillGradient(RenderType.guiOverlay(), list.getX(), list.getBottom() - 4, list.getRight(), list.getBottom(), 0, -16777216, 0);
-			}
-
-			RenderingUtils.resetShaderColor(graphics);
+			//TODO experimental
+//			if (this.layoutBase.renderScrollListHeaderShadow) {
+//				graphics.fillGradient(RenderType.guiOverlay(), list.getX(), list.getY(), list.getRight(), list.getY() + 4, -16777216, 0, 0);
+//			}
+//			if (this.layoutBase.renderScrollListFooterShadow) {
+//				graphics.fillGradient(RenderType.guiOverlay(), list.getX(), list.getBottom() - 4, list.getRight(), list.getBottom(), 0, -16777216, 0);
+//			}
+//
+//			RenderingUtils.resetShaderColor(graphics);
 
 		}
 

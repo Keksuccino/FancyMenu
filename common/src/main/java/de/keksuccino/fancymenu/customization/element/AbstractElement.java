@@ -1,6 +1,9 @@
 package de.keksuccino.fancymenu.customization.element;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.serialization.JsonOps;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
@@ -22,13 +25,18 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.chat.MutableComponent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Objects;
 
 public abstract class AbstractElement implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget {
+
+	private static final Logger LOGGER = LogManager.getLogger();
 
 	/** The {@link AbstractElement#builder} field is NULL for this element! Keep that in mind when using it as placeholder! **/
 	@SuppressWarnings("all")
@@ -397,10 +405,28 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		serializedComponentOrPlainText = PlaceholderParser.replacePlaceholders(serializedComponentOrPlainText);
 		if (!serializedComponentOrPlainText.startsWith("{")) return Component.literal(serializedComponentOrPlainText);
 		try {
-			Component c = Component.Serializer.fromJson(serializedComponentOrPlainText);
+			Component c = deserializeComponentFromJson(serializedComponentOrPlainText);
 			if (c != null) return c;
 		} catch (Exception ignore) {}
 		return Component.literal(serializedComponentOrPlainText);
+	}
+
+	@Nullable
+	protected static MutableComponent deserializeComponentFromJson(@NotNull String json) {
+		try {
+			JsonElement jsonElement = JsonParser.parseString(json);
+			return (jsonElement == null) ? null : deserializeComponent(jsonElement);
+		} catch (Exception ex) {
+			LOGGER.error("[FANCYMENU] Failed to deserialize Component!", ex);
+		}
+		return null;
+	}
+
+	private static MutableComponent deserializeComponent(JsonElement jsonElement) {
+		if (ComponentSerialization.CODEC.parse(JsonOps.INSTANCE, jsonElement).getOrThrow() instanceof MutableComponent m) {
+			return m;
+		}
+		throw new IllegalStateException("Deserialized component was not a MutableComponent!");
 	}
 
 	@Override

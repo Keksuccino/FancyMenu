@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.action.actions.level;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
+import net.minecraft.client.gui.screens.GenericMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
@@ -26,8 +26,8 @@ public class EnterWorldAction extends Action {
         if (value != null) {
             if (Minecraft.getInstance().getLevelSource().levelExists(value)) {
                 Screen current = (Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen : new TitleScreen();
-                Minecraft.getInstance().forceSetScreen(new GenericDirtMessageScreen(Component.translatable("selectWorld.data_read")));
-                Minecraft.getInstance().createWorldOpenFlows().checkForBackupAndLoad(value, () -> {
+                Minecraft.getInstance().forceSetScreen(new GenericMessageScreen(Component.translatable("selectWorld.data_read")));
+                Minecraft.getInstance().createWorldOpenFlows().openWorld(value, () -> {
                     Minecraft.getInstance().setScreen(current);
                 });
             }

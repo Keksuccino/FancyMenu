@@ -67,7 +67,8 @@ repositories {
 jarJar.enable()
 
 dependencies {
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    //minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+	minecraft "net.minecraftforge:forge:1.20.4-${forge_version}"
     compileOnly project(":common")
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
     //Needs to be "implementation" when building and "compileOnly" in-dev for some frickin reason

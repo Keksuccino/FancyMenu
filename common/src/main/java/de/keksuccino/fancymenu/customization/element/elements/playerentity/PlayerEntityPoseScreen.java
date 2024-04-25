@@ -244,7 +244,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
 
         super.render(graphics, mouseX, mouseY, partial);
 
-        int entityX = this.width - 20 - (this.getRightSideWidgetWidth() / 2) - ((int)(this.element.getActiveEntityProperties().getDimensions().width * ENTITY_SCALE) / 2);
+        int entityX = this.width - 20 - (this.getRightSideWidgetWidth() / 2) - ((int)(this.element.getActiveEntityProperties().getDimensions().width() * ENTITY_SCALE) / 2);
         int entityY = (int) this.scrollArea.getYWithBorder() + 30;
         this.renderEntity(graphics, mouseX, mouseY, partial, entityX, entityY);
 

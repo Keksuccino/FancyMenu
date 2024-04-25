@@ -46,13 +46,23 @@ public abstract class MixinScreen implements CustomizableScreen {
 		this.nextFocusPath_called_FancyMenu = false;
 	}
 
-	@Inject(method = "setInitialFocus", at = @At("HEAD"))
+	@Inject(method = "setInitialFocus(Lnet/minecraft/client/gui/components/events/GuiEventListener;)V", at = @At("HEAD"))
 	private void beforeSetInitialFocusFancyMenu(GuiEventListener $$0, CallbackInfo info) {
 		this.nextFocusPath_called_FancyMenu = true;
 	}
 
-	@Inject(method = "setInitialFocus", at = @At("RETURN"))
+	@Inject(method = "setInitialFocus(Lnet/minecraft/client/gui/components/events/GuiEventListener;)V", at = @At("RETURN"))
 	private void afterSetInitialFocusFancyMenu(GuiEventListener $$0, CallbackInfo info) {
+		this.nextFocusPath_called_FancyMenu = false;
+	}
+
+	@Inject(method = "setInitialFocus()V", at = @At("HEAD"))
+	private void beforeSetInitialFocus_2_FancyMenu(CallbackInfo info) {
+		this.nextFocusPath_called_FancyMenu = true;
+	}
+
+	@Inject(method = "setInitialFocus()V", at = @At("RETURN"))
+	private void afterSetInitialFocus_2_FancyMenu(CallbackInfo info) {
 		this.nextFocusPath_called_FancyMenu = false;
 	}
 

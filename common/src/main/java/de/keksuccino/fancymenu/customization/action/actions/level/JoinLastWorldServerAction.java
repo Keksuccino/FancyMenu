@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConnectScreen;
-import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
+import net.minecraft.client.gui.screens.GenericMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.multiplayer.ServerData;
@@ -36,8 +36,8 @@ public class JoinLastWorldServerAction extends Action {
                 File f = new File(LastWorldHandler.getLastWorld());
                 if (Minecraft.getInstance().getLevelSource().levelExists(f.getName())) {
                     Screen current = (Minecraft.getInstance().screen != null) ? Minecraft.getInstance().screen : new TitleScreen();
-                    Minecraft.getInstance().forceSetScreen(new GenericDirtMessageScreen(Component.translatable("selectWorld.data_read")));
-                    Minecraft.getInstance().createWorldOpenFlows().checkForBackupAndLoad(f.getName(), () -> {
+                    Minecraft.getInstance().forceSetScreen(new GenericMessageScreen(Component.translatable("selectWorld.data_read")));
+                    Minecraft.getInstance().createWorldOpenFlows().openWorld(f.getName(), () -> {
                         Minecraft.getInstance().setScreen(current);
                     });
                 }
@@ -67,7 +67,7 @@ public class JoinLastWorldServerAction extends Action {
                     l.save();
                 }
                 boolean isQuickPlay = false;
-                ConnectScreen.startConnecting(Minecraft.getInstance().screen, Minecraft.getInstance(), new ServerAddress(ip, port), d, isQuickPlay);
+                ConnectScreen.startConnecting(Minecraft.getInstance().screen, Minecraft.getInstance(), new ServerAddress(ip, port), d, isQuickPlay, null);
             }
         }
     }

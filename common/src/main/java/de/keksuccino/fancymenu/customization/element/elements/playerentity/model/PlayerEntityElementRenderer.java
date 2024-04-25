@@ -138,7 +138,7 @@ public class PlayerEntityElementRenderer extends PlayerRenderer {
         matrix.popPose();
 
         if (this.properties.showDisplayName) {
-            this.renderNameTag(null, this.properties.displayName, matrix, bufferSource, i11);
+            this.renderNameTag(null, this.properties.displayName, matrix, bufferSource, i11, 0.0F);
         }
 
     }
@@ -234,25 +234,24 @@ public class PlayerEntityElementRenderer extends PlayerRenderer {
     }
 
     @Override
-    protected void renderNameTag(@Nullable AbstractClientPlayer entity, Component content, PoseStack matrix, MultiBufferSource bufferSource, int p_114502_) {
+    protected void renderNameTag(AbstractClientPlayer $$0, Component nameComponent, PoseStack pose, MultiBufferSource bufferSource, int i1, float $$5) {
         boolean flag = !this.properties.isCrouching();
-        float f = this.properties.getDimensions().height + 0.5F;
+        float f = this.properties.getDimensions().height() + 0.5F;
         int i = 0;
-        matrix.pushPose();
-        matrix.translate(0.0F, f, 0.0F);
-        matrix.scale(-0.025F, -0.025F, 0.025F);
-        Matrix4f matrix4f = matrix.last().pose();
+        pose.pushPose();
+        pose.translate(0.0F, f, 0.0F);
+        pose.scale(-0.025F, -0.025F, 0.025F);
+        Matrix4f matrix4f = pose.last().pose();
         float f1 = Minecraft.getInstance().options.getBackgroundOpacity(0.25F);
         int j = (int)(f1 * 255.0F) << 24;
         Font font = this.getFont();
-        float f2 = (float)(-font.width(content) / 2);
-        
-        font.drawInBatch(content, f2, (float)i, 553648127, false, matrix4f, bufferSource, flag ? Font.DisplayMode.SEE_THROUGH : Font.DisplayMode.NORMAL, j, p_114502_);
+        float f2 = (float)(-font.width(nameComponent) / 2);
+
+        font.drawInBatch(nameComponent, f2, (float)i, 553648127, false, matrix4f, bufferSource, flag ? Font.DisplayMode.SEE_THROUGH : Font.DisplayMode.NORMAL, j, i1);
         if (flag) {
-            font.drawInBatch(content, f2, (float)i, -1, false, matrix4f, bufferSource, Font.DisplayMode.NORMAL, 0, p_114502_);
+            font.drawInBatch(nameComponent, f2, (float)i, -1, false, matrix4f, bufferSource, Font.DisplayMode.NORMAL, 0, i1);
         }
-        
-        matrix.popPose();
+        pose.popPose();
     }
 
     protected void setupRotations(PoseStack matrix, float f11, float f12, float f13) {

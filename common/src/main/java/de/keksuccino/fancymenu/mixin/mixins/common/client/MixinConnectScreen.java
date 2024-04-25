@@ -11,6 +11,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.client.multiplayer.TransferState;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
@@ -26,7 +27,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ConnectScreen.class)
 public abstract class MixinConnectScreen extends Screen {
 
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER_FANCYMENU = LogManager.getLogger();
 
     @Shadow private Component status;
 
@@ -49,14 +50,14 @@ public abstract class MixinConnectScreen extends Screen {
     }
 
     @Inject(at = @At("HEAD"), method = "startConnecting")
-    private static void onStartConnectingFancyMenu(Screen screen, Minecraft mc, ServerAddress address, ServerData data, boolean $$4, CallbackInfo info) {
+    private static void onStartConnectingFancyMenu(Screen $$0, Minecraft $$1, ServerAddress address, ServerData $$3, boolean $$4, TransferState $$5, CallbackInfo ci) {
         if (address != null) {
             LastWorldHandler.setLastWorld(address.getHost() + ":" + address.getPort(), true);
         }
     }
 
     @Inject(at = @At("HEAD"), method = "connect", cancellable = true)
-    private void onConnectFancyMenu(Minecraft p_251955_, ServerAddress address, ServerData p_252078_, CallbackInfo info) {
+    private void onConnectFancyMenu(Minecraft $$0, ServerAddress address, ServerData $$2, TransferState $$3, CallbackInfo info) {
         if (address.getHost().equals("%fancymenu_dummy_address%")) {
             info.cancel();
         }

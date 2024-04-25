@@ -64,9 +64,9 @@ public class BuildCustomGuiScreen extends CellScreen {
             this.guiTemp.worldBackground = value.getAsBoolean();
         }), true);
 
-        this.addWidgetCell(new CycleButton<>(0, 0, 20, 20, CommonCycles.cycleEnabledDisabled("fancymenu.custom_guis.build.world_background_overlay", this.guiTemp.worldBackgroundOverlay), (value, button) -> {
-            this.guiTemp.worldBackgroundOverlay = value.getAsBoolean();
-        }), true);
+//        this.addWidgetCell(new CycleButton<>(0, 0, 20, 20, CommonCycles.cycleEnabledDisabled("fancymenu.custom_guis.build.world_background_overlay", this.guiTemp.worldBackgroundOverlay), (value, button) -> {
+//            this.guiTemp.worldBackgroundOverlay = value.getAsBoolean();
+//        }), true);
 
         this.addSpacerCell(10);
 

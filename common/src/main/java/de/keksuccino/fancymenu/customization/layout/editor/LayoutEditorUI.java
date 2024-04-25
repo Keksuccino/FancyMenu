@@ -672,17 +672,18 @@ public class LayoutEditorUI {
 
 		menu.addSeparatorEntry("separator_after_preserve_aspect_ratio");
 
-		menu.addValueCycleEntry("header_shadow", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.render_header_shadow", editor.layout.renderScrollListHeaderShadow).addCycleListener(cycle -> {
-			editor.history.saveSnapshot();
-			editor.layout.renderScrollListHeaderShadow = cycle.getAsBoolean();
-		})).setIcon(ContextMenu.IconFactory.getIcon("shadow"));
-
-		menu.addValueCycleEntry("footer_shadow", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.render_footer_shadow", editor.layout.renderScrollListFooterShadow).addCycleListener(cycle -> {
-			editor.history.saveSnapshot();
-			editor.layout.renderScrollListFooterShadow = cycle.getAsBoolean();
-		})).setIcon(ContextMenu.IconFactory.getIcon("shadow"));
-
-		menu.addSeparatorEntry("separator_after_footer_shadow");
+		//TODO experimental
+//		menu.addValueCycleEntry("header_shadow", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.render_header_shadow", editor.layout.renderScrollListHeaderShadow).addCycleListener(cycle -> {
+//			editor.history.saveSnapshot();
+//			editor.layout.renderScrollListHeaderShadow = cycle.getAsBoolean();
+//		})).setIcon(ContextMenu.IconFactory.getIcon("shadow"));
+//
+//		menu.addValueCycleEntry("footer_shadow", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.render_footer_shadow", editor.layout.renderScrollListFooterShadow).addCycleListener(cycle -> {
+//			editor.history.saveSnapshot();
+//			editor.layout.renderScrollListFooterShadow = cycle.getAsBoolean();
+//		})).setIcon(ContextMenu.IconFactory.getIcon("shadow"));
+//
+//		menu.addSeparatorEntry("separator_after_footer_shadow");
 
 		menu.addValueCycleEntry("show_header_footer_preview", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.show_preview", editor.layout.showScrollListHeaderFooterPreviewInEditor).addCycleListener(cycle -> {
 			editor.history.saveSnapshot();

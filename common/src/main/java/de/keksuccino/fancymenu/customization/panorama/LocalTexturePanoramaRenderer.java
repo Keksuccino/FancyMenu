@@ -27,6 +27,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
+import org.joml.Matrix4fStack;
 
 @SuppressWarnings("unused")
 public class LocalTexturePanoramaRenderer implements Renderable {
@@ -188,10 +189,9 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 		Matrix4f matrix4f = new Matrix4f().setPerspective(fovF, (float)mc.getWindow().getWidth() / (float)mc.getWindow().getHeight(), 0.05F, 10.0F);
 		RenderSystem.backupProjectionMatrix();
 		RenderSystem.setProjectionMatrix(matrix4f, VertexSorting.DISTANCE_TO_ORIGIN);
-		PoseStack modelViewStack = RenderSystem.getModelViewStack();
-		modelViewStack.pushPose();
-		modelViewStack.setIdentity();
-		modelViewStack.mulPose(Axis.XP.rotationDegrees(180.0f));
+		Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();
+		modelViewStack.pushMatrix();
+		modelViewStack.rotationX((float) Math.PI);
 		RenderSystem.applyModelViewMatrix();
 		RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
 		graphics.setColor(1.0f, 1.0f, 1.0f, this.opacity);
@@ -200,12 +200,14 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 		RenderSystem.depthMask(false);
 
 		for(int j = 0; j < 4; ++j) {
-			modelViewStack.pushPose();
+			modelViewStack.pushMatrix();
 			float k = ((float)(j % 2) / 2.0f - 0.5f) / 256.0f;
 			float l = ((float)(j / 2) / 2.0f - 0.5f) / 256.0f;
 			modelViewStack.translate(k, l, 0.0f);
-			modelViewStack.mulPose(Axis.XP.rotationDegrees(pitch));
-			modelViewStack.mulPose(Axis.YP.rotationDegrees(yaw));
+//			modelViewStack.mulPose(Axis.XP.rotationDegrees(pitch));
+//			modelViewStack.mulPose(Axis.YP.rotationDegrees(yaw));
+			modelViewStack.rotateX(pitch * (float) (Math.PI / 180.0));
+			modelViewStack.rotateY(yaw * (float) (Math.PI / 180.0));
 			RenderSystem.applyModelViewMatrix();
 			for (int n = 0; n < 6; ++n) {
 				ResourceLocation location = null;
@@ -258,14 +260,14 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 				}
 				tesselator.end();
 			}
-			modelViewStack.popPose();
+			modelViewStack.popMatrix();
 			RenderSystem.applyModelViewMatrix();
 			RenderSystem.colorMask(true, true, true, false);
 		}
 
 		RenderSystem.colorMask(true, true, true, true);
 		RenderSystem.restoreProjectionMatrix();
-		modelViewStack.popPose();
+		modelViewStack.popMatrix();
 		RenderSystem.applyModelViewMatrix();
 		RenderSystem.depthMask(true);
 		RenderSystem.enableCull();

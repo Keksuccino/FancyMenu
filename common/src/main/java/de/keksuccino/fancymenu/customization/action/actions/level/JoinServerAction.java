@@ -55,7 +55,7 @@ public class JoinServerAction extends Action {
             Screen current = Minecraft.getInstance().screen;
             if (current == null) current = new TitleScreen();
             boolean isQuickPlay = false;
-            ConnectScreen.startConnecting(current, Minecraft.getInstance(), new ServerAddress(ip, port), d, isQuickPlay);
+            ConnectScreen.startConnecting(current, Minecraft.getInstance(), new ServerAddress(ip, port), d, isQuickPlay, null);
         }
     }
 

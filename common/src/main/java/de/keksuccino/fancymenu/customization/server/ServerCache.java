@@ -86,7 +86,7 @@ public class ServerCache {
             try {
                 new Thread(() -> {
                     try {
-                        pinger.pingServer(d, () -> {});
+                        pinger.pingServer(d, () -> {}, () -> {});
                         if ((d == null) || d.status.getString().isEmpty()) {
                             d.ping = -1L;
                             d.motd = CANT_CONNECT_TEXT;

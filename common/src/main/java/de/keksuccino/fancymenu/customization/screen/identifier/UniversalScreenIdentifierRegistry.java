@@ -11,7 +11,6 @@ import net.minecraft.client.gui.screens.controls.KeyBindsList;
 import net.minecraft.client.gui.screens.debug.GameModeSwitcherScreen;
 import net.minecraft.client.gui.screens.inventory.*;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
-import net.minecraft.client.gui.screens.multiplayer.Realms32bitWarningScreen;
 import net.minecraft.client.gui.screens.multiplayer.SafetyScreen;
 import net.minecraft.client.gui.screens.multiplayer.WarningScreen;
 import net.minecraft.client.gui.screens.packs.PackSelectionScreen;
@@ -84,7 +83,7 @@ public class UniversalScreenIdentifierRegistry {
         register("disconnected_screen", DisconnectedScreen.class.getName());
         register("edit_server_screen", EditServerScreen.class.getName());
         register("error_screen", ErrorScreen.class.getName());
-        register("generic_dirt_message_screen", GenericDirtMessageScreen.class.getName());
+        register("generic_dirt_message_screen", GenericMessageScreen.class.getName());
         register("generic_waiting_screen", GenericWaitingScreen.class.getName());
         register("in_bed_chat_screen", InBedChatScreen.class.getName());
         register("language_select_screen", LanguageSelectScreen.class.getName());
@@ -142,7 +141,6 @@ public class UniversalScreenIdentifierRegistry {
         register("stonecutter_screen", StonecutterScreen.class.getName());
         register("structure_block_edit_screen", StructureBlockEditScreen.class.getName());
         register("join_multiplayer_screen", JoinMultiplayerScreen.class.getName());
-        register("realms_32bit_warning_screen", Realms32bitWarningScreen.class.getName());
         register("safety_screen", SafetyScreen.class.getName());
         register("warning_screen", WarningScreen.class.getName());
         register("pack_selection_screen", PackSelectionScreen.class.getName());

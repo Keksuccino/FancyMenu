@@ -1,7 +1,7 @@
 plugins {
     id 'idea'
     id 'maven-publish'
-    id 'net.neoforged.gradle.userdev' version '7.0.81'
+    id 'net.neoforged.gradle.userdev' version '7.0.105'
     id 'java-library'
 }
 base {
@@ -44,7 +44,7 @@ jarJar.enable()
 dependencies {
     implementation "net.neoforged:neoforge:${neoforge_version}"
     compileOnly project(":common")
-    implementation "flatdir:konkrete:1.0.0"
+    implementation "flatdir:konkrete:1.9.4"
 	implementation "flatdir:melody:1.0.0"
     //Also needs to get added to the client run configuration (runs -> client -> dependencies) since it's a non-Minecraft library
     implementation(jarJar("com.github.Keksuccino:japng:0.5.3")) {

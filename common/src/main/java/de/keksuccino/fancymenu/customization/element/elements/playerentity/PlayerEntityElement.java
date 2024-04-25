@@ -20,6 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4fStack;
 import org.joml.Quaternionf;
 
 public class PlayerEntityElement extends AbstractElement {
@@ -107,8 +108,8 @@ public class PlayerEntityElement extends AbstractElement {
             if (scale == 0.0F) scale = 30;
 
             //Update element size based on entity size
-            this.baseWidth = (int)(this.getActiveEntityProperties().getDimensions().width * scale);
-            this.baseHeight = (int)(this.getActiveEntityProperties().getDimensions().height * scale);
+            this.baseWidth = (int)(this.getActiveEntityProperties().getDimensions().width() * scale);
+            this.baseHeight = (int)(this.getActiveEntityProperties().getDimensions().height() * scale);
 
             RenderSystem.enableBlend();
 
@@ -153,9 +154,9 @@ public class PlayerEntityElement extends AbstractElement {
         float rightLegYRot = this.stringToFloat(this.rightLegYRot);
         float rightLegZRot = this.stringToFloat(this.rightLegZRot);
 
-        PoseStack modelViewStack = RenderSystem.getModelViewStack();
-        modelViewStack.pushPose();
-        modelViewStack.translate((posX+((props.getDimensions().width / 2) * scale)), (posY+(props.getDimensions().height * scale)), 1050.0F);
+        Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();
+        modelViewStack.pushMatrix();
+        modelViewStack.translate((posX+((props.getDimensions().width() / 2) * scale)), (posY+(props.getDimensions().height() * scale)), 1050.0F);
         modelViewStack.scale(1.0F, 1.0F, -1.0F);
         RenderSystem.applyModelViewMatrix();
         PoseStack innerPoseStack = new PoseStack();
@@ -210,7 +211,7 @@ public class PlayerEntityElement extends AbstractElement {
         });
         bufferSource.endBatch();
         dispatcher.setRenderShadow(true);
-        modelViewStack.popPose();
+        modelViewStack.popMatrix();
         RenderSystem.applyModelViewMatrix();
         Lighting.setupFor3DItems();
         innerPoseStack.popPose();

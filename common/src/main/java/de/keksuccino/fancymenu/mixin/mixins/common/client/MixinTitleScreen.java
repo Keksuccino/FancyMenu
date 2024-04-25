@@ -25,31 +25,37 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(TitleScreen.class)
-public abstract class MixinTitleScreen {
+public abstract class MixinTitleScreen extends Screen {
 
     @Shadow public boolean fading;
     @Unique boolean handleRealmsNotificationFancyMenu = false;
 
+    //unused dummy constructor
+    @SuppressWarnings("all")
+    private MixinTitleScreen() {
+        super(null);
+    }
+
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/LogoRenderer;renderLogo(Lnet/minecraft/client/gui/GuiGraphics;IF)V"))
     private void fireBackgroundRenderedEventAfterPanoramaOverlayFancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo ci) {
-        EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent((Screen)((Object)this), graphics));
+        EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, graphics));
     }
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/LogoRenderer;renderLogo(Lnet/minecraft/client/gui/GuiGraphics;IF)V"))
     private boolean cancelVanillaLogoRenderingFancyMenu(LogoRenderer instance, GuiGraphics $$0, int $$1, float $$2) {
-        return !ScreenCustomization.isCustomizationEnabledForScreen((Screen)((Object)this));
+        return !ScreenCustomization.isCustomizationEnabledForScreen(this);
     }
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/SplashRenderer;render(Lnet/minecraft/client/gui/GuiGraphics;ILnet/minecraft/client/gui/Font;I)V"))
     private boolean cancelVanillaSplashRenderingFancyMenu(SplashRenderer instance, GuiGraphics $$0, int $$1, Font $$2, int $$3) {
-        return !ScreenCustomization.isCustomizationEnabledForScreen((Screen)((Object)this));
+        return !ScreenCustomization.isCustomizationEnabledForScreen(this);
     }
 
     @Inject(method = "render", at = @At("HEAD"))
     private void beforeRenderFancyMenu(GuiGraphics $$0, int $$1, int $$2, float $$3, CallbackInfo ci) {
         this.handleRealmsNotificationFancyMenu = true;
         //Disable fading if customizations enabled, so FancyMenu can properly handle widget alpha
-        if (ScreenCustomization.isCustomizationEnabledForScreen((Screen)((Object)this))) {
+        if (ScreenCustomization.isCustomizationEnabledForScreen(this)) {
             this.fading = false;
         }
     }
@@ -61,7 +67,7 @@ public abstract class MixinTitleScreen {
 
     @Inject(method = "realmsNotificationsEnabled", at = @At("HEAD"), cancellable = true)
     private void cancelVanillaRealmsNotificationIconRenderingFancyMenu(CallbackInfoReturnable<Boolean> info) {
-        if (this.handleRealmsNotificationFancyMenu && ScreenCustomization.isCustomizationEnabledForScreen((Screen)((Object)this))) {
+        if (this.handleRealmsNotificationFancyMenu && ScreenCustomization.isCustomizationEnabledForScreen(this)) {
             ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen((Screen)((Object)this));
             if (layer != null) {
                 AbstractElement e = layer.getElementByInstanceIdentifier("deep:" + DeepScreenCustomizationLayers.TITLE_SCREEN.realmsNotification.getIdentifier());
@@ -77,9 +83,9 @@ public abstract class MixinTitleScreen {
     /**
      * @reason This is to make the Title screen not constantly update the alpha of its widgets, so FancyMenu can properly handle it.
      */
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractWidget;setAlpha(F)V"))
+    @WrapWithCondition(method = "fadeWidgets", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractWidget;setAlpha(F)V"))
     private boolean wrapRenderAlphaFancyMenu(AbstractWidget instance, float alpha) {
-        return !ScreenCustomization.isCustomizationEnabledForScreen((Screen)((Object)this));
+        return !ScreenCustomization.isCustomizationEnabledForScreen(this);
     }
 
 }

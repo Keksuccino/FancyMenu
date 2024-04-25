@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.layout.editor;
 import java.util.*;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetEditorElement;
@@ -54,6 +55,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
+@SuppressWarnings("all")
 public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	private static final Logger LOGGER = LogManager.getLogger();
@@ -366,8 +368,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 					}
 				}
 			} else {
-				graphics.setColor(0.25F, 0.25F, 0.25F, 1.0F);
-				graphics.blit(Screen.BACKGROUND_LOCATION, x0, 0, 0.0F, 0.0F, this.width, y0, 32, 32);
+				//TODO experimental
+//				graphics.setColor(0.25F, 0.25F, 0.25F, 1.0F);
+//				graphics.blit(Screen.BACKGROUND_LOCATION, x0, 0, 0.0F, 0.0F, this.width, y0, 32, 32);
 			}
 			//Footer Texture
 			if (footerTexture != null) {
@@ -393,20 +396,26 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 					}
 				}
 			} else {
-				graphics.setColor(0.25F, 0.25F, 0.25F, 1.0F);
-				graphics.blit(Screen.BACKGROUND_LOCATION, x0, y1, 0.0F, (float) y1, this.width, this.height - y1, 32, 32);
+				//TODO experimental
+//				graphics.setColor(0.25F, 0.25F, 0.25F, 1.0F);
+//				graphics.blit(Screen.BACKGROUND_LOCATION, x0, y1, 0.0F, (float) y1, this.width, this.height - y1, 32, 32);
 			}
 
 			RenderingUtils.resetShaderColor(graphics);
 
-			//Header Shadow
-			if (this.layout.renderScrollListHeaderShadow) {
-				graphics.fillGradient(x0, y0, x1, y0 + 4, -16777216, 0);
-			}
-			//Footer Shadow
-			if (this.layout.renderScrollListFooterShadow) {
-				graphics.fillGradient(x0, y1 - 4, x1, y1, 0, -16777216);
-			}
+			//TODO experimental
+//			//Header Shadow
+//			if (this.layout.renderScrollListHeaderShadow) {
+//				graphics.fillGradient(x0, y0, x1, y0 + 4, -16777216, 0);
+//			}
+//			//Footer Shadow
+//			if (this.layout.renderScrollListFooterShadow) {
+//				graphics.fillGradient(x0, y1 - 4, x1, y1, 0, -16777216);
+//			}
+
+			RenderSystem.enableBlend();
+			graphics.blit(Screen.HEADER_SEPARATOR, 0, y0 - 2, 0.0F, 0.0F, this.width, 2, 32, 2);
+			graphics.blit(Screen.FOOTER_SEPARATOR, 0, y1, 0.0F, 0.0F, this.width, 2, 32, 2);
 
 			RenderingUtils.resetShaderColor(graphics);
 
