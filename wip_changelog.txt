@@ -24,6 +24,7 @@ CHANGELOG | FANCYMENU v3.1.6 [ W I P !! NOT PUBLIC YET !! ]
   - This avoids difficult to read scroll list items
   - This overlay can be removed with a resource pack ("textures/gui/menu_list_background.png" and "textures/gui/inworld_menu_list_background.png")
 - I noticed a strange bug (?) that bricks the target screen when leaving the editor, so you get redirected to the Title screen for now, because that seems to fix it
+- Added an option to MC 1.20.5+ to render the dark screen background overlay rendered by Vanilla Minecraft on custom screen backgrounds (disabled by default)
  
 %changelog:end%
 
