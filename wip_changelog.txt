@@ -23,6 +23,7 @@ CHANGELOG | FANCYMENU v3.1.6 [ W I P !! NOT PUBLIC YET !! ]
 - MC 1.20.5+ renders a dark background overlay in scrollable screens, FancyMenu respects this overlay and renders custom backgrounds BEHIND this overlay
   - This avoids difficult to read scroll list items
   - This overlay can be removed with a resource pack ("textures/gui/menu_list_background.png" and "textures/gui/inworld_menu_list_background.png")
+- I noticed a strange bug (?) that bricks the target screen when leaving the editor, so you get redirected to the Title screen for now, because that seems to fix it
  
 %changelog:end%
 
