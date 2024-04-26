@@ -1,30 +1,4 @@
 
-CHANGELOG | FANCYMENU v3.1.7 [ W I P !! Not public yet !! ]
- 
-- For developers:
-  - It's now possible to control if elements, placeholders, loading requirements, actions and menu backgrounds should show up in their "Add" menus
-    - This for example makes it possible to allow elements/placeholders/requirements/actions/backgrounds only for specific types of screens
-  - You can now control if universal layouts should get applied to specific types of screens
-  - Visibility and active state suppliers for ContextMenus are now stackable
-  - You can now control the visibility of FancyMenu's customization overlay (without, for example, completely blacklisting a screen)
-
- 
-%changelog:end%
-
-
-
-
-CHANGELOG | FANCYMENU v3.1.6 [ W I P !! NOT PUBLIC YET !! ]
- 
-- Ported to MC 1.20.5
-- Removed option to toggle the header/footer shadow of scroll lists in MC 1.20.5+
-- Removed option of Custom GUIs to toggle the dark transparent background overlay that used to get rendered when in a world, because it no longer exists in MC
- 
-%changelog:end%
-
-
-
-
 CHANGELOG | FANCYMENU v3.1.5
  
 - Forge should now show a detailed error when starting the game with the unsupported video and/or audio extensions installed
