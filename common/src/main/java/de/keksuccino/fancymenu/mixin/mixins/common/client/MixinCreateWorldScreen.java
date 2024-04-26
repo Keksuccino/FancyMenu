@@ -65,11 +65,4 @@ public class MixinCreateWorldScreen extends Screen {
         return true;
     }
 
-    //TODO experimental
-//    //CreateWorldScreen overrides renderDirtBackground, so add back RenderedScreenBackgroundEvent
-//    @Inject(method = "renderDirtBackground", at = @At("RETURN"))
-//    private void afterRenderDirtBackgroundInCreateWorldFancyMenu(GuiGraphics graphics, CallbackInfo info) {
-//        EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, graphics));
-//    }
-
 }

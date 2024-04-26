@@ -430,6 +430,11 @@ public class LayoutEditorUI {
 			editor.layout.preserveBackgroundAspectRatio = cycle.getAsBoolean();
 		})).setIcon(ContextMenu.IconFactory.getIcon("aspect_ratio"));
 
+		menu.addValueCycleEntry("show_overlay_on_custom_background", CommonCycles.cycleEnabledDisabled("fancymenu.editor.background.show_overlay_on_custom_background", editor.layout.showScreenBackgroundOverlayOnCustomBackground).addCycleListener(cycle -> {
+			editor.history.saveSnapshot();
+			editor.layout.showScreenBackgroundOverlayOnCustomBackground = cycle.getAsBoolean();
+		})).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.background.show_overlay_on_custom_background.desc")));
+
 		menu.addSeparatorEntry("separator_after_keep_background_aspect");
 
 		if ((editor.layoutTargetScreen != null) && !editor.layout.isUniversalLayout()) {

@@ -13,7 +13,6 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.event.acara.EventPriority;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
-import de.keksuccino.fancymenu.events.widget.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.events.ScreenReloadEvent;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
@@ -105,8 +104,6 @@ public class ScreenCustomizationEvents {
 			WidgetLocatorHandler.clearCache();
 		}
 
-		ScreenCustomization.isCurrentScrollable = false;
-
 		//Stopping menu music when deactivated in config
 		if ((Minecraft.getInstance().level == null)) {
 			if (!FancyMenu.getOptions().playVanillaMenuMusic.getValue()) {
@@ -162,16 +159,7 @@ public class ScreenCustomizationEvents {
 				}
 			}
 		}
-
-		if (Minecraft.getInstance().screen == null) {
-			ScreenCustomization.isCurrentScrollable = false;
-		}
 		
-	}
-
-	@EventListener
-	public void onRenderListBackground(RenderGuiListBackgroundEvent.Pre e) {
-		ScreenCustomization.isCurrentScrollable = true;
 	}
 	
 }

@@ -5,8 +5,9 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
-import de.keksuccino.fancymenu.events.widget.RenderGuiListHeaderFooterEvent;
+import de.keksuccino.fancymenu.events.widget.RenderedGuiListHeaderFooterEvent;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.layout.Layout;
@@ -18,7 +19,6 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventPriority;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.screen.*;
-import de.keksuccino.fancymenu.events.widget.RenderGuiListBackgroundEvent;
 import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
@@ -40,10 +40,11 @@ import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSelectionList;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.components.tabs.TabNavigationBar;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -51,10 +52,13 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "deprecation", "removal"})
 public class ScreenCustomizationLayer implements ElementFactory {
 
 	private static final Logger LOGGER = LogManager.getLogger();
+
+	public static final ResourceLocation MENU_BACKGROUND = new ResourceLocation("textures/gui/menu_background.png");
+	public static final ResourceLocation INWORLD_MENU_BACKGROUND = new ResourceLocation("textures/gui/inworld_menu_background.png");
 
 	protected String screenIdentifier;
 	public LayoutBase layoutBase = new LayoutBase();
@@ -73,6 +77,9 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	public Map<LoadingRequirementContainer, Boolean> cachedLayoutWideLoadingRequirements = new HashMap<>();
 	@NotNull
 	public List<WidgetMeta> cachedScreenWidgetMetas = new ArrayList<>();
+	/** The first {@link TabNavigationBar} of the target {@link Screen}, if it has one. This is NULL if the {@link Screen} has no {@link TabNavigationBar}. **/
+	@Nullable
+	public TabNavigationBar cachedTabNavigationBar = null;
 	public boolean loadEarly = false;
 
 	public static Map<Class<?>, Component> cachedOriginalMenuTitles = new HashMap<>();
@@ -147,6 +154,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 	@EventListener
 	public void onInitOrResizeScreenPre(InitOrResizeScreenEvent.Pre e) {
+
+		this.cachedTabNavigationBar = null;
 
 		for (ThreadCaller t : this.delayThreads) {
 			t.running.set(false);
@@ -258,7 +267,16 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	@EventListener
 	public void onInitOrResizeScreenPost(InitOrResizeScreenEvent.Post e) {
 
+		this.cachedTabNavigationBar = null;
+
 		if (!this.shouldCustomize(e.getScreen())) return;
+
+		for (Renderable renderable : e.getRenderables()) {
+			if (renderable instanceof TabNavigationBar bar) {
+				this.cachedTabNavigationBar = bar;
+				break;
+			}
+		}
 
 		if (ScreenCustomization.isNewMenu() && (this.layoutBase.openAudio != null)) {
 			IAudio audio = this.layoutBase.openAudio.get();
@@ -434,22 +452,11 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 	@EventListener
 	public void drawToBackground(RenderedScreenBackgroundEvent e) {
-		if (!ScreenCustomization.isCurrentMenuScrollable()) {
-			this.renderBackground(e.getGraphics(), MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime(), e.getScreen());
-		}
+		this.renderBackground(e.getGraphics(), MouseInput.getMouseX(), MouseInput.getMouseY(), RenderingUtils.getPartialTick(), e.getScreen());
 	}
 
 	@EventListener
-	public void onRenderListBackground(RenderGuiListBackgroundEvent.Post e) {
-		Screen s = Minecraft.getInstance().screen;
-		if ((s != null) && this.shouldCustomize(s)) {
-			//Allow background rendering in scrollable GUIs
-			this.renderBackground(e.getGraphics(), MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime(), s);
-		}
-	}
-
-	@EventListener
-	public void onRenderListHeaderFooterPre(RenderGuiListHeaderFooterEvent.Pre e) {
+	public void onRenderListHeaderFooterPre(RenderedGuiListHeaderFooterEvent e) {
 
 		GuiGraphics graphics = e.getGraphics();
 
@@ -460,11 +467,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			ITexture headerTexture = (this.layoutBase.scrollListHeaderTexture != null) ? this.layoutBase.scrollListHeaderTexture.get() : null;
 			ITexture footerTexture = (this.layoutBase.scrollListFooterTexture != null) ? this.layoutBase.scrollListFooterTexture.get() : null;
 
-			if ((headerTexture != null) || (footerTexture != null) || !this.layoutBase.renderScrollListHeaderShadow || !this.layoutBase.renderScrollListFooterShadow) {
-				e.setCanceled(true);
-			} else {
-				return;
-			}
+			boolean canRenderCustom = (headerTexture != null) || (footerTexture != null) || !this.layoutBase.renderScrollListHeaderShadow || !this.layoutBase.renderScrollListFooterShadow;
+			if (!canRenderCustom) return;
 
 			if (headerTexture != null) {
 				ResourceLocation loc = headerTexture.getResourceLocation();
@@ -516,16 +520,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 			RenderingUtils.resetShaderColor(graphics);
 
-			//TODO experimental
-//			if (this.layoutBase.renderScrollListHeaderShadow) {
-//				graphics.fillGradient(RenderType.guiOverlay(), list.getX(), list.getY(), list.getRight(), list.getY() + 4, -16777216, 0, 0);
-//			}
-//			if (this.layoutBase.renderScrollListFooterShadow) {
-//				graphics.fillGradient(RenderType.guiOverlay(), list.getX(), list.getBottom() - 4, list.getRight(), list.getBottom(), 0, -16777216, 0);
-//			}
-//
-//			RenderingUtils.resetShaderColor(graphics);
-
 		}
 
 	}
@@ -575,6 +569,11 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			this.layoutBase.menuBackground.opacity = this.backgroundOpacity;
 			this.layoutBase.menuBackground.render(graphics, mouseX, mouseY, partial);
 			this.layoutBase.menuBackground.opacity = 1.0F;
+			if (this.layoutBase.showScreenBackgroundOverlayOnCustomBackground) {
+				int overlayY = 0;
+				if (this.cachedTabNavigationBar != null) overlayY = this.cachedTabNavigationBar.getRectangle().bottom();
+				this._renderBackgroundOverlay(graphics, 0, overlayY, screen.width, screen.height);
+			}
 		}
 
 		if (PopupHandler.isPopupActive()) return;
@@ -586,6 +585,16 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		this.backgroundDrawable = true;
 
+	}
+
+	protected void _renderBackgroundOverlay(GuiGraphics graphics, int x, int y, int width, int height) {
+		renderBackgroundOverlay(graphics, x, y, width, height);
+	}
+
+	public static void renderBackgroundOverlay(GuiGraphics graphics, int x, int y, int width, int height) {
+		ResourceLocation location = (Minecraft.getInstance().level == null) ? MENU_BACKGROUND : INWORLD_MENU_BACKGROUND;
+		RenderSystem.enableBlend();
+		graphics.blit(location, x, y, 0, 0.0F, 0.0F, width, height, 32, 32);
 	}
 
 	@Nullable

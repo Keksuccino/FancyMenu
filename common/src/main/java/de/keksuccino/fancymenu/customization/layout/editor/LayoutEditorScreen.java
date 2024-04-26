@@ -45,8 +45,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.TitleScreen;
-import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -323,6 +321,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			this.layout.menuBackground.keepBackgroundAspectRatio = this.layout.preserveBackgroundAspectRatio;
 			this.layout.menuBackground.opacity = 1.0F;
 			this.layout.menuBackground.render(graphics, mouseX, mouseY, partial);
+			if (this.layout.showScreenBackgroundOverlayOnCustomBackground) {
+				ScreenCustomizationLayer.renderBackgroundOverlay(graphics, 0, 0, this.width, this.height);
+			}
 		} else {
 			graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
 		}
@@ -367,10 +368,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 						graphics.blit(loc, x0, 0, 0.0F, 0.0F, this.width, y0, this.width, y0);
 					}
 				}
-			} else {
-				//TODO experimental
-//				graphics.setColor(0.25F, 0.25F, 0.25F, 1.0F);
-//				graphics.blit(Screen.BACKGROUND_LOCATION, x0, 0, 0.0F, 0.0F, this.width, y0, 32, 32);
 			}
 			//Footer Texture
 			if (footerTexture != null) {
@@ -395,23 +392,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 						graphics.blit(loc, x0, y1, 0.0F, 0.0F, this.width, footerHeight, this.width, footerHeight);
 					}
 				}
-			} else {
-				//TODO experimental
-//				graphics.setColor(0.25F, 0.25F, 0.25F, 1.0F);
-//				graphics.blit(Screen.BACKGROUND_LOCATION, x0, y1, 0.0F, (float) y1, this.width, this.height - y1, 32, 32);
 			}
 
 			RenderingUtils.resetShaderColor(graphics);
-
-			//TODO experimental
-//			//Header Shadow
-//			if (this.layout.renderScrollListHeaderShadow) {
-//				graphics.fillGradient(x0, y0, x1, y0 + 4, -16777216, 0);
-//			}
-//			//Footer Shadow
-//			if (this.layout.renderScrollListFooterShadow) {
-//				graphics.fillGradient(x0, y1 - 4, x1, y1, 0, -16777216);
-//			}
 
 			RenderSystem.enableBlend();
 			graphics.blit(Screen.HEADER_SEPARATOR, 0, y0 - 2, 0.0F, 0.0F, this.width, 2, 32, 2);
@@ -1283,11 +1266,13 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public void closeEditor() {
 		this.saveWidgetSettings();
 		currentInstance = null;
-		if (this.layoutTargetScreen instanceof CreateWorldScreen) {
-			CreateWorldScreen.openFresh(Minecraft.getInstance(), new TitleScreen());
-		} else {
-			Minecraft.getInstance().setScreen(this.layoutTargetScreen);
-		}
+//		if (this.layoutTargetScreen instanceof CreateWorldScreen) {
+//			CreateWorldScreen.openFresh(Minecraft.getInstance(), new TitleScreen());
+//		} else {
+//			Minecraft.getInstance().setScreen(this.layoutTargetScreen);
+//		}
+		//TODO experimental
+		Minecraft.getInstance().setScreen(null);
 	}
 
 	//TODO übernehmen

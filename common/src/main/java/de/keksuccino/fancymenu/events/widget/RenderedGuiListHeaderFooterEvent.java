@@ -6,12 +6,12 @@ import net.minecraft.client.gui.components.AbstractSelectionList;
 import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 
-public class RenderGuiListHeaderFooterEvent extends EventBase {
+public class RenderedGuiListHeaderFooterEvent extends EventBase {
 
     protected AbstractSelectionList<?> list;
     protected GuiGraphics graphics;
 
-    protected RenderGuiListHeaderFooterEvent(@NotNull GuiGraphics graphics, @NotNull AbstractSelectionList<?> list) {
+    public RenderedGuiListHeaderFooterEvent(@NotNull GuiGraphics graphics, @NotNull AbstractSelectionList<?> list) {
         this.list = Objects.requireNonNull(list);
         this.graphics = Objects.requireNonNull(graphics);
     }
@@ -29,27 +29,6 @@ public class RenderGuiListHeaderFooterEvent extends EventBase {
     @NotNull
     public GuiGraphics getGraphics() {
         return graphics;
-    }
-
-    public static class Pre extends RenderGuiListHeaderFooterEvent {
-
-        public Pre(GuiGraphics graphics, AbstractSelectionList<?> list) {
-            super(graphics, list);
-        }
-
-        @Override
-        public boolean isCancelable() {
-            return true;
-        }
-
-    }
-
-    public static class Post extends RenderGuiListHeaderFooterEvent {
-
-        public Post(GuiGraphics graphics, AbstractSelectionList<?> list) {
-            super(graphics, list);
-        }
-
     }
 
 }

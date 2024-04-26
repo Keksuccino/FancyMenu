@@ -1238,5 +1238,7 @@
   "fancymenu.elements.music_controller.play_world_music.desc": "This type of music plays in menus when a world is loaded.\nIt's basically the normal world music that\nkeeps playing in menus that don't pause the game,\nlike the inventory in SP and every menu in MP.",
   "fancymenu.commands.closeguiscreen.error": "[FANCYMENU] Failed to close GUI screen via /closeguiscreen command!",
   "fancymenu.commands.variable.get.error": "[FANCYMENU] Failed to get variable via /fmvariable command!",
-  "fancymenu.commands.variable.set.error": "[FANCYMENU] Failed to set variable via /fmvariable command!"
+  "fancymenu.commands.variable.set.error": "[FANCYMENU] Failed to set variable via /fmvariable command!",
+  "fancymenu.editor.background.show_overlay_on_custom_background": "Show Dark Overlay On Custom Background: %s",
+  "fancymenu.editor.background.show_overlay_on_custom_background.desc": "If the dark overlay rendered by Vanilla Minecraft\nshould be visible on custom backgrounds."
 }

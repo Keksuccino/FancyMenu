@@ -57,7 +57,6 @@ public class ScreenCustomization {
 	private static final List<ScreenBlacklistRule> SCREEN_BLACKLIST_RULES = new ArrayList<>();
 
 	private static PropertyContainerSet customizableScreens;
-	protected static boolean isCurrentScrollable = false;
 	protected static boolean isNewMenu = true;
 	protected static ScreenCustomizationEvents eventsInstance = new ScreenCustomizationEvents();
 	protected static boolean screenCustomizationEnabled = true;
@@ -252,10 +251,6 @@ public class ScreenCustomization {
 	public static void setIsNewMenu(boolean b) {
 		isNewMenu = b;
 		eventsInstance.lastScreen = null;
-	}
-
-	public static boolean isCurrentMenuScrollable() {
-		return isCurrentScrollable;
 	}
 
 	public static void reloadCurrentScreen() {

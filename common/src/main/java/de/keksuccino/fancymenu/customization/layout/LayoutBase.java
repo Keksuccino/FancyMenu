@@ -31,6 +31,7 @@ public class LayoutBase {
     public boolean renderScrollListHeaderShadow = true;
     public boolean renderScrollListFooterShadow = true;
     public boolean showScrollListHeaderFooterPreviewInEditor = false;
+    public boolean showScreenBackgroundOverlayOnCustomBackground = false;
 
     @NotNull
     public static LayoutBase stackLayoutBases(LayoutBase... layouts) {
@@ -85,6 +86,9 @@ public class LayoutBase {
                 }
                 if (l.showScrollListHeaderFooterPreviewInEditor) {
                     layout.showScrollListHeaderFooterPreviewInEditor = true;
+                }
+                if (l.showScreenBackgroundOverlayOnCustomBackground) {
+                    layout.showScreenBackgroundOverlayOnCustomBackground = true;
                 }
 
             }
