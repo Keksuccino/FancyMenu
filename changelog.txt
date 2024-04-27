@@ -3,7 +3,7 @@ CHANGELOG | FANCYMENU v3.1.6
 
 - Dropped support for MC 1.20.4
 - Ported to MC 1.20.5
-- Removed option to toggle the header/footer shadow of scroll lists in MC 1.20.5+
+- Removed option to toggle the header/footer shadow/separator of scroll lists in MC 1.20.5+
 - Removed option of Custom GUIs to toggle the dark transparent background overlay that used to get rendered when in a world, because it no longer exists in MC
 - MC 1.20.5+ renders a dark background overlay in scrollable screens and FancyMenu respects this overlay and renders custom backgrounds BEHIND this overlay
   - This avoids difficult to read scroll list items
