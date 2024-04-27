@@ -1,21 +1,16 @@
 package de.keksuccino.fancymenu;
 
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
-import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
-import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
-import de.keksuccino.konkrete.input.MouseInput;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import de.keksuccino.fancymenu.util.event.acara.EventPriority;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 
 public class Test {
 
-//    private static final Logger LOGGER = LogManager.getLogger();
+//    @EventListener(priority = EventPriority.VERY_LOW)
+//    public void onRenderPost(RenderScreenEvent.Post e) {
 //
-//    @EventListener
-//    public void onRenderPost(ClientTickEvent.Pre e) {
-//
-//        if (MouseInput.isLeftMouseDown()) LOGGER.info("##################### LEFT MOUSE DOWN!");
+//        RenderingUtils.renderBlur(e.getGraphics(), 50, 50, 100, 100, e.getPartial(), 1.0F);
 //
 //    }
 

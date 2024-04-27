@@ -1,27 +1,47 @@
 package de.keksuccino.fancymenu.networking.bridge;
 
+import de.keksuccino.fancymenu.networking.PacketHandler;
+import de.keksuccino.fancymenu.networking.PacketPayloadBaseNeoForge;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
-import java.util.Objects;
+import org.jetbrains.annotations.Nullable;
 
-public record BridgePacketPayloadNeoForge(@NotNull String dataWithIdentifier) implements CustomPacketPayload {
+public class BridgePacketPayloadNeoForge extends PacketPayloadBaseNeoForge implements CustomPacketPayload {
 
-    public static final ResourceLocation ID = new ResourceLocation("fancymenu", "bridge_payload");
+    public static final Type<BridgePacketPayloadNeoForge> TYPE = CustomPacketPayload.createType("fancymenu:packet_bridge");
+    public static final StreamCodec<FriendlyByteBuf, BridgePacketPayloadNeoForge> CODEC = CustomPacketPayload.codec(BridgePacketPayloadNeoForge::write, BridgePacketPayloadNeoForge::new);
 
-    public BridgePacketPayloadNeoForge(final FriendlyByteBuf buffer) {
-        this(buffer.readUtf());
+    public String dataWithIdentifier;
+
+    public BridgePacketPayloadNeoForge(@NotNull String direction, @NotNull String dataWithIdentifier) {
+        this.direction = direction;
+        this.dataWithIdentifier = dataWithIdentifier;
+    }
+
+    public BridgePacketPayloadNeoForge(FriendlyByteBuf byteBuf) {
+        this(
+                byteBuf.readUtf(), //direction
+                byteBuf.readUtf() //dataWithIdentifier
+        );
+    }
+
+    public void write(FriendlyByteBuf byteBuf) {
+        byteBuf.writeUtf(this.direction);
+        byteBuf.writeUtf(this.dataWithIdentifier);
+    }
+
+    public void handle(@Nullable ServerPlayer sender, PacketHandler.PacketDirection direction) {
+        if (this.dataWithIdentifier != null) {
+            PacketHandler.onPacketReceived(sender, direction, this.dataWithIdentifier);
+        }
     }
 
     @Override
-    public void write(@NotNull final FriendlyByteBuf buffer) {
-        buffer.writeUtf(Objects.requireNonNull(dataWithIdentifier()));
-    }
-
-    @Override
-    public @NotNull ResourceLocation id() {
-        return ID;
+    public @NotNull Type<BridgePacketPayloadNeoForge> type() {
+        return TYPE;
     }
 
 }

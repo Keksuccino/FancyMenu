@@ -45,7 +45,7 @@ dependencies {
     implementation "net.neoforged:neoforge:${neoforge_version}"
     compileOnly project(":common")
     implementation "flatdir:konkrete:1.9.4"
-	implementation "flatdir:melody:1.0.0"
+	implementation "maven.modrinth:melody:1.0.6-1.20.5-neoforge"
     //Also needs to get added to the client run configuration (runs -> client -> dependencies) since it's a non-Minecraft library
     implementation(jarJar("com.github.Keksuccino:japng:0.5.3")) {
         jarJar.ranged(it, "[0.5.3,)")

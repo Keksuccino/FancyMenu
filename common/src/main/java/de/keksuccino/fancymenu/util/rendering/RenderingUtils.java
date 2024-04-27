@@ -3,10 +3,12 @@ package de.keksuccino.fancymenu.util.rendering;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGameRenderer;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinMinecraft;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.PostChain;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import org.jetbrains.annotations.NotNull;
@@ -18,6 +20,23 @@ public class RenderingUtils {
 
     public static final DrawableColor MISSING_TEXTURE_COLOR_MAGENTA = DrawableColor.of(Color.MAGENTA);
     public static final DrawableColor MISSING_TEXTURE_COLOR_BLACK = DrawableColor.BLACK;
+
+    public static void processBlurEffect(@NotNull GuiGraphics graphics, int x, int y, int width, int height, float partial, float blurriness) {
+
+        RenderSystem.enableBlend();
+
+        PostChain blurEffect = ((IMixinGameRenderer)Minecraft.getInstance().gameRenderer).getBlurEffect_FancyMenu();
+        float _blurriness = blurriness * 10.0F;
+        if (blurEffect != null && (_blurriness >= 1.0F)) {
+            graphics.enableScissor(x, y, x + width, y + height);
+            blurEffect.setUniform("Radius", _blurriness);
+            blurEffect.process(partial);
+            graphics.disableScissor();
+        }
+
+        Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
+
+    }
 
     public static void renderMissing(@NotNull GuiGraphics graphics, int x, int y, int width, int height) {
         int partW = width / 2;

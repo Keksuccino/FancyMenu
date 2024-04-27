@@ -11,6 +11,7 @@
     "client.IMixinCommandSuggestions",
     "client.IMixinConnectScreen",
     "client.IMixinEditBox",
+    "client.IMixinGameRenderer",
     "client.IMixinLevelLoadingScreen",
     "client.IMixinMinecraft",
     "client.IMixinMusicManager",

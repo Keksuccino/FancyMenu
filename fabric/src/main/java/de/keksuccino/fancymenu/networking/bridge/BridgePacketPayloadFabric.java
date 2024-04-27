@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.networking.bridge;
 
 import de.keksuccino.fancymenu.networking.PacketHandler;
-import de.keksuccino.fancymenu.networking.PacketMessageBaseFabric;
+import de.keksuccino.fancymenu.networking.PacketPayloadBaseFabric;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -9,19 +9,19 @@ import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class BridgePacketPayload extends PacketMessageBaseFabric implements CustomPacketPayload {
+public class BridgePacketPayloadFabric extends PacketPayloadBaseFabric implements CustomPacketPayload {
 
-    public static final Type<BridgePacketPayload> TYPE = CustomPacketPayload.createType("fancymenu:packet_bridge");
-    public static final StreamCodec<FriendlyByteBuf, BridgePacketPayload> CODEC = CustomPacketPayload.codec(BridgePacketPayload::write, BridgePacketPayload::new);
+    public static final Type<BridgePacketPayloadFabric> TYPE = CustomPacketPayload.createType("fancymenu:packet_bridge");
+    public static final StreamCodec<FriendlyByteBuf, BridgePacketPayloadFabric> CODEC = CustomPacketPayload.codec(BridgePacketPayloadFabric::write, BridgePacketPayloadFabric::new);
 
     public String dataWithIdentifier;
 
-    public BridgePacketPayload(@NotNull String direction, @NotNull String dataWithIdentifier) {
+    public BridgePacketPayloadFabric(@NotNull String direction, @NotNull String dataWithIdentifier) {
         this.direction = direction;
         this.dataWithIdentifier = dataWithIdentifier;
     }
 
-    public BridgePacketPayload(FriendlyByteBuf byteBuf) {
+    public BridgePacketPayloadFabric(FriendlyByteBuf byteBuf) {
         this(
                 byteBuf.readUtf(), //direction
                 byteBuf.readUtf() //dataWithIdentifier
@@ -40,7 +40,7 @@ public class BridgePacketPayload extends PacketMessageBaseFabric implements Cust
     }
 
     @Override
-    public @NotNull Type<BridgePacketPayload> type() {
+    public @NotNull Type<BridgePacketPayloadFabric> type() {
         return TYPE;
     }
 

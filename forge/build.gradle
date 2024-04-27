@@ -16,7 +16,8 @@ mixin {
 
 minecraft {
 
-    mappings channel: 'official', version: minecraft_version
+    //mappings channel: 'official', version: minecraft_version
+    mappings channel: 'official', version: "1.20.4"
 
     copyIdeResources = true //Calls processResources when in dev
 
