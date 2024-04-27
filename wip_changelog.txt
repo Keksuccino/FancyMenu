@@ -13,20 +13,3 @@ CHANGELOG | FANCYMENU v3.1.7 [ W I P !! Not public yet !! ]
 
 
 
-
-CHANGELOG | FANCYMENU v3.1.6 [ W I P !! NOT PUBLIC YET !! ]
-
-- Dropped support for MC 1.20.4
-- Ported to MC 1.20.5
-- Removed option to toggle the header/footer shadow of scroll lists in MC 1.20.5+
-- Removed option of Custom GUIs to toggle the dark transparent background overlay that used to get rendered when in a world, because it no longer exists in MC
-- MC 1.20.5+ renders a dark background overlay in scrollable screens and FancyMenu respects this overlay and renders custom backgrounds BEHIND this overlay
-  - This avoids difficult to read scroll list items
-  - This overlay can be removed with a resource pack ("textures/gui/menu_list_background.png" and "textures/gui/inworld_menu_list_background.png")
-- I noticed a strange bug (?) that bricks the target screen when leaving the editor, so you get redirected to the Title screen for now, because that seems to fix it
-- Added an option to MC 1.20.5+ to render the dark screen background overlay rendered by Vanilla Minecraft on custom screen backgrounds (disabled by default)
- 
-%changelog:end%
-
-
-
