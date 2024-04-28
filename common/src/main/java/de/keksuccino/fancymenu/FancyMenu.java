@@ -20,14 +20,12 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO übernehmen : GIF lib jarJar
-
-	//TODO übernehmen : credits updaten
+	//TODO übernehmen (FMSIA) (locals updaten)
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	//TODO übernehmen
-	public static final String VERSION = "3.1.4";
+	//TODO übernehmen (FMSIA)
+	public static final String VERSION = "3.1.7";
 	public static final String MOD_LOADER = Services.PLATFORM.getPlatformName();
 	public static final String MOD_ID = "fancymenu";
 

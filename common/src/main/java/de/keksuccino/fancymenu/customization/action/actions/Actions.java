@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.action.actions;
 
-import de.keksuccino.fancymenu.customization.action.actions.file.*;
 import de.keksuccino.fancymenu.customization.action.actions.layout.DisableLayoutAction;
 import de.keksuccino.fancymenu.customization.action.actions.layout.EnableLayoutAction;
 import de.keksuccino.fancymenu.customization.action.actions.layout.ToggleLayoutAction;
@@ -34,16 +33,18 @@ public class Actions {
     public static final CloseScreenAction CLOSE_SCREEN = new CloseScreenAction();
     public static final UpdateScreenAction UPDATE_SCREEN = new UpdateScreenAction();
     public static final OpenLinkAction OPEN_LINK = new OpenLinkAction();
-    public static final OpenFileAction OPEN_FILE = new OpenFileAction();
-    public static final MoveFileAction MOVE_FILE = new MoveFileAction();
-    public static final CopyFileAction COPY_FILE = new CopyFileAction();
-    public static final DeleteFileAction DELETE_FILE = new DeleteFileAction();
-    public static final RenameFileAction RENAME_FILE = new RenameFileAction();
-    public static final DownloadFileAction DOWNLOAD_FILE = new DownloadFileAction();
-    public static final UnpackZipAction UNPACK_ZIP = new UnpackZipAction();
+    //TODO übernehmen (FMSIA)
+//    public static final OpenFileAction OPEN_FILE = new OpenFileAction();
+//    public static final MoveFileAction MOVE_FILE = new MoveFileAction();
+//    public static final CopyFileAction COPY_FILE = new CopyFileAction();
+//    public static final DeleteFileAction DELETE_FILE = new DeleteFileAction();
+//    public static final RenameFileAction RENAME_FILE = new RenameFileAction();
+//    public static final DownloadFileAction DOWNLOAD_FILE = new DownloadFileAction();
+//    public static final UnpackZipAction UNPACK_ZIP = new UnpackZipAction();
     public static final ReloadFancyMenuAction RELOAD_FANCYMENU = new ReloadFancyMenuAction();
     public static final RunButtonScriptAction RUN_BUTTON_SCRIPT = new RunButtonScriptAction();
-    public static final ExecuteTerminalCommandAction EXECUTE_TERMINAL_COMMAND = new ExecuteTerminalCommandAction();
+    //TODO übernehmen (FMSIA)
+//    public static final ExecuteTerminalCommandAction EXECUTE_TERMINAL_COMMAND = new ExecuteTerminalCommandAction();
     public static final CopyToClipboardAction COPY_TO_CLIPBOARD = new CopyToClipboardAction();
     public static final MimicButtonAction MIMIC_BUTTON = new MimicButtonAction();
     public static final EditMinecraftOptionAction EDIT_MINECRAFT_OPTION = new EditMinecraftOptionAction();
@@ -66,16 +67,18 @@ public class Actions {
         ActionRegistry.register(CLOSE_SCREEN);
         ActionRegistry.register(UPDATE_SCREEN);
         ActionRegistry.register(OPEN_LINK);
-        ActionRegistry.register(OPEN_FILE);
-        ActionRegistry.register(MOVE_FILE);
-        ActionRegistry.register(COPY_FILE);
-        ActionRegistry.register(DELETE_FILE);
-        ActionRegistry.register(RENAME_FILE);
-        ActionRegistry.register(DOWNLOAD_FILE);
-        ActionRegistry.register(UNPACK_ZIP);
+        //TODO übernehmen (FMSIA)
+//        ActionRegistry.register(OPEN_FILE);
+//        ActionRegistry.register(MOVE_FILE);
+//        ActionRegistry.register(COPY_FILE);
+//        ActionRegistry.register(DELETE_FILE);
+//        ActionRegistry.register(RENAME_FILE);
+//        ActionRegistry.register(DOWNLOAD_FILE);
+//        ActionRegistry.register(UNPACK_ZIP);
         ActionRegistry.register(RELOAD_FANCYMENU);
         ActionRegistry.register(RUN_BUTTON_SCRIPT);
-        ActionRegistry.register(EXECUTE_TERMINAL_COMMAND);
+        //TODO übernehmen (FMSIA)
+//        ActionRegistry.register(EXECUTE_TERMINAL_COMMAND);
         ActionRegistry.register(COPY_TO_CLIPBOARD);
         ActionRegistry.register(MIMIC_BUTTON);
         ActionRegistry.register(EDIT_MINECRAFT_OPTION);

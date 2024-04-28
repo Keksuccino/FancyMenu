@@ -47,6 +47,27 @@ versionRange="[0,)"
 side="BOTH"
 
 [[dependencies.${mod_id}]]
+modId="fmextension_audio"
+mandatory=false
+ordering="BEFORE"
+versionRange="[99999.0 §cFancyMenu v3+ does not support the audio extension. Please remove the extension.§r]"
+side="BOTH"
+
+[[dependencies.${mod_id}]]
+modId="fmextension_video"
+mandatory=false
+ordering="BEFORE"
+versionRange="[99999.0 §cFancyMenu v3+ does not support the video extension. Please remove the extension.§r]"
+side="BOTH"
+
+[[dependencies.${mod_id}]]
+modId="fancymenu_video"
+mandatory=false
+ordering="BEFORE"
+versionRange="[99999.0 §cFancyMenu v3+ does not support the video extension. Please remove the extension.§r]"
+side="BOTH"
+
+[[dependencies.${mod_id}]]
 modId="drippyloadingscreen"
 mandatory=false
 ordering="NONE"

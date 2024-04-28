@@ -26,7 +26,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
-//TODO übernehmen
 public class GifTexture implements ITexture, PlayableResource {
 
     private static final Logger LOGGER = LogManager.getLogger();
