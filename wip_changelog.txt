@@ -1,5 +1,5 @@
 
-CHANGELOG | FANCYMENU v3.1.7 [ W I P !! Not public yet !! ]
+CHANGELOG | FANCYMENU v3.1.8 [ W I P !! Not public yet !! ]
  
 - For developers:
   - It's now possible to control if elements, placeholders, loading requirements, actions and menu backgrounds should show up in their "Add" menus
@@ -8,6 +8,22 @@ CHANGELOG | FANCYMENU v3.1.7 [ W I P !! Not public yet !! ]
   - Visibility and active state suppliers for ContextMenus are now stackable
   - You can now control the visibility of FancyMenu's customization overlay (without, for example, completely blacklisting a screen)
 
+ 
+%changelog:end%
+
+
+
+
+CHANGELOG | FANCYMENU v3.1.7 [ W I P !! Not public yet !! ]
+ 
+- Moved the "Copy File/Folder" action to a separate optional addon ("FancyMenu System Interactions Addon") to make it more obvious it is used (action is opt-in now)
+- Moved the "Delete File/Folder" action to a separate optional addon ("FancyMenu System Interactions Addon") to make it more obvious it is used (action is opt-in now)
+- Moved the "Download File" action to a separate optional addon ("FancyMenu System Interactions Addon") to make it more obvious it is used (action is opt-in now)
+- Moved the "Move File/Folder" action to a separate optional addon ("FancyMenu System Interactions Addon") to make it more obvious it is used (action is opt-in now)
+- Moved the "Open File/Folder" action to a separate optional addon ("FancyMenu System Interactions Addon") to make it more obvious it is used (action is opt-in now)
+- Moved the "Rename File/Folder" action to a separate optional addon ("FancyMenu System Interactions Addon") to make it more obvious it is used (action is opt-in now)
+- Moved the "Unpack ZIP File" action to a separate optional addon ("FancyMenu System Interactions Addon") to make it more obvious it is used (action is opt-in now)
+- Moved the "Execute CMD/Terminal Command" action to a separate optional addon ("FancyMenu System Interactions Addon") to make it more obvious it is used (action is opt-in now)
  
 %changelog:end%
 
