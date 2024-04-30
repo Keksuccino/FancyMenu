@@ -13,21 +13,3 @@ CHANGELOG | FANCYMENU v3.1.8 [ W I P !! Not public yet !! ]
 
 
 
-
-CHANGELOG | FANCYMENU v3.1.7 [ W I P !! Not public yet !! ]
- 
-- Dropped versions (1.20.2 and 1.20.4) will get this update, but they remain "dropped" and will not get other feature updates in the future
- 
-- Moved the "Copy File/Folder" action to a separate optional addon ("FancyMenu System Interactions Addon") to make it more obvious it is used (action is opt-in now)
-- Moved the "Delete File/Folder" action to a separate optional addon ("FancyMenu System Interactions Addon") to make it more obvious it is used (action is opt-in now)
-- Moved the "Download File" action to a separate optional addon ("FancyMenu System Interactions Addon") to make it more obvious it is used (action is opt-in now)
-- Moved the "Move File/Folder" action to a separate optional addon ("FancyMenu System Interactions Addon") to make it more obvious it is used (action is opt-in now)
-- Moved the "Open File/Folder" action to a separate optional addon ("FancyMenu System Interactions Addon") to make it more obvious it is used (action is opt-in now)
-- Moved the "Rename File/Folder" action to a separate optional addon ("FancyMenu System Interactions Addon") to make it more obvious it is used (action is opt-in now)
-- Moved the "Unpack ZIP File" action to a separate optional addon ("FancyMenu System Interactions Addon") to make it more obvious it is used (action is opt-in now)
-- Moved the "Execute CMD/Terminal Command" action to a separate optional addon ("FancyMenu System Interactions Addon") to make it more obvious it is used (action is opt-in now)
- 
-%changelog:end%
-
-
-
