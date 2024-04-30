@@ -1,7 +1,7 @@
 
 CHANGELOG | FANCYMENU v3.1.6 for MC 1.20.6
 
-There was no update needed for 1.20.6, so I just added the MC 1.20.6 tag to the existing 1.20.6 builds on CurseForge and Modrinth.
+There was no update needed for 1.20.6, so I just added the MC 1.20.6 tag to the existing builds on CurseForge and Modrinth.
 
 I will also instantly drop support for MC 1.20.5.
 
