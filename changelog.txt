@@ -1,4 +1,22 @@
 
+CHANGELOG | FANCYMENU v3.1.7
+ 
+- Dropped versions (1.20.2, 1.20.4 and 1.20.5) will get this update, but they remain "dropped" and will not get other feature updates in the future
+ 
+- Moved the "Copy File/Folder" action to a separate optional addon ("FancyMenu System Interactions Addon") to make it more obvious it is used (action is opt-in now)
+- Moved the "Delete File/Folder" action to a separate optional addon ("FancyMenu System Interactions Addon") to make it more obvious it is used (action is opt-in now)
+- Moved the "Download File" action to a separate optional addon ("FancyMenu System Interactions Addon") to make it more obvious it is used (action is opt-in now)
+- Moved the "Move File/Folder" action to a separate optional addon ("FancyMenu System Interactions Addon") to make it more obvious it is used (action is opt-in now)
+- Moved the "Open File/Folder" action to a separate optional addon ("FancyMenu System Interactions Addon") to make it more obvious it is used (action is opt-in now)
+- Moved the "Rename File/Folder" action to a separate optional addon ("FancyMenu System Interactions Addon") to make it more obvious it is used (action is opt-in now)
+- Moved the "Unpack ZIP File" action to a separate optional addon ("FancyMenu System Interactions Addon") to make it more obvious it is used (action is opt-in now)
+- Moved the "Execute CMD/Terminal Command" action to a separate optional addon ("FancyMenu System Interactions Addon") to make it more obvious it is used (action is opt-in now)
+ 
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.1.6 for MC 1.20.6
 
 There was no update needed for 1.20.6, so I just added the MC 1.20.6 tag to the existing builds on CurseForge and Modrinth.
