@@ -20,10 +20,12 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO übernehmen (animation update) : update locals
+
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	//TODO übernehmen
-	public static final String VERSION = "3.1.7";
+	//TODO übernehmen (animation update)
+	public static final String VERSION = "3.1.8";
 	public static final String MOD_LOADER = Services.PLATFORM.getPlatformName();
 	public static final String MOD_ID = "fancymenu";
 
