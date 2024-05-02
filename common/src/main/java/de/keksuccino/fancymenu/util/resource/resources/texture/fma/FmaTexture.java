@@ -16,7 +16,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.ArrayList;
@@ -33,8 +32,11 @@ public class FmaTexture implements ITexture, PlayableResource {
 
     @NotNull
     protected volatile List<FmaFrame> frames = new ArrayList<>();
+    @NotNull
+    protected volatile List<FmaFrame> introFrames = new ArrayList<>();
     @Nullable
     protected volatile FmaTexture.FmaFrame current = null;
+    protected volatile boolean introFinishedPlaying = false;
     @NotNull
     protected volatile AspectRatio aspectRatio = new AspectRatio(10, 10);
     protected volatile int width = 10;
@@ -43,6 +45,7 @@ public class FmaTexture implements ITexture, PlayableResource {
     protected final AtomicBoolean tickerThreadRunning = new AtomicBoolean(false);
     protected final AtomicBoolean decoded = new AtomicBoolean(false);
     protected volatile boolean allFramesDecoded = false;
+    protected volatile boolean allIntroFramesDecoded = false;
     protected final AtomicInteger cycles = new AtomicInteger(0);
     /** How many times the FMA should loop. Value <= 0 means infinite loops. **/
     protected final AtomicInteger numPlays = new AtomicInteger(0);
@@ -185,12 +188,12 @@ public class FmaTexture implements ITexture, PlayableResource {
         return of(in, null, null);
     }
 
-    protected static void populateTexture(@NotNull FmaTexture texture, @NotNull InputStream in, @NotNull String gifTextureName) {
+    protected static void populateTexture(@NotNull FmaTexture texture, @NotNull InputStream in, @NotNull String fmaTextureName) {
         DecodedFmaImage decodedImage = null;
         if (!texture.closed.get()) {
-            decodedImage = decodeFma(in, gifTextureName);
+            decodedImage = decodeFma(in, fmaTextureName);
             if (decodedImage == null) {
-                LOGGER.error("[FANCYMENU] Failed to read FMA image, because DecodedGifImage was NULL: " + gifTextureName);
+                LOGGER.error("[FANCYMENU] Failed to read FMA image, because DecodedFmaImage was NULL: " + fmaTextureName);
                 texture.decoded.set(true);
                 texture.loadingFailed.set(true);
                 return;
@@ -201,14 +204,27 @@ public class FmaTexture implements ITexture, PlayableResource {
             texture.numPlays.set(decodedImage.numPlays);
             texture.decoded.set(true);
             try {
-                deliverFmaFrames(decodedImage.decoder(), gifTextureName, frame -> {
+                if (decodedImage.decoder().hasIntroFrames()) {
+                    deliverFmaIntroFrames(decodedImage.decoder(), fmaTextureName, frame -> {
+                        if (frame != null) {
+                            try {
+                                frame.nativeImage = NativeImage.read(frame.frameInputStream);
+                            } catch (Exception ex) {
+                                LOGGER.error("[FANCYMENU] Failed to read intro frame of FMA image into NativeImage: " + fmaTextureName, ex);
+                            }
+                            CloseableUtils.closeQuietly(frame.frameInputStream);
+                            texture.introFrames.add(frame);
+                        }
+                    });
+                }
+                texture.allIntroFramesDecoded = true;
+                deliverFmaFrames(decodedImage.decoder(), fmaTextureName, frame -> {
                     if (frame != null) {
                         try {
                             frame.nativeImage = NativeImage.read(frame.frameInputStream);
                         } catch (Exception ex) {
-                            LOGGER.error("[FANCYMENU] Failed to read frame of FMA image into NativeImage: " + gifTextureName, ex);
+                            LOGGER.error("[FANCYMENU] Failed to read frame of FMA image into NativeImage: " + fmaTextureName, ex);
                         }
-                        CloseableUtils.closeQuietly(frame.closeAfterLoading);
                         CloseableUtils.closeQuietly(frame.frameInputStream);
                         texture.frames.add(frame);
                     }
@@ -216,9 +232,10 @@ public class FmaTexture implements ITexture, PlayableResource {
                 texture.loadingCompleted.set(true);
             } catch (Exception ex) {
                 texture.loadingFailed.set(true);
-                LOGGER.error("[FANCYMENU] Failed to read frames of FMA image: " + gifTextureName, ex);
+                LOGGER.error("[FANCYMENU] Failed to read frames of FMA image: " + fmaTextureName, ex);
             }
             texture.allFramesDecoded = true;
+            texture.allIntroFramesDecoded = true;
         }
         texture.decoded.set(true);
         CloseableUtils.closeQuietly(in);
@@ -230,28 +247,30 @@ public class FmaTexture implements ITexture, PlayableResource {
 
     @SuppressWarnings("all")
     protected void startTickerIfNeeded() {
-        if (!this.tickerThreadRunning.get() && !this.frames.isEmpty() && !this.maxLoopsReached && !this.closed.get()) {
+        if (!this.tickerThreadRunning.get() && (!this.frames.isEmpty() || !this.introFrames.isEmpty()) && !this.maxLoopsReached && !this.closed.get()) {
 
             this.tickerThreadRunning.set(true);
             this.lastResourceLocationCall = System.currentTimeMillis();
 
             new Thread(() -> {
 
-                //Automatically stop thread if APNG was inactive for >=10 seconds
+                //Automatically stop thread if FMA was inactive for >=10 seconds
                 while ((this.lastResourceLocationCall + 10000) > System.currentTimeMillis()) {
-                    if (this.frames.isEmpty() || this.closed.get()) break;
+                    if ((this.frames.isEmpty() && this.introFrames.isEmpty()) || this.closed.get()) break;
                     //Don't tick frame if max loops reached
                     if (this.maxLoopsReached) break;
                     boolean sleep = false;
                     try {
                         boolean cachedAllDecoded = this.allFramesDecoded;
+                        boolean cachedAllIntroDecoded = this.allIntroFramesDecoded;
                         //Cache frames to avoid possible concurrent modification exceptions
                         List<FmaFrame> cachedFrames = new ArrayList<>(this.frames);
-                        if (!cachedFrames.isEmpty()) {
+                        List<FmaFrame> cachedIntroFrames = new ArrayList<>(this.introFrames);
+                        if (!cachedFrames.isEmpty() || !cachedIntroFrames.isEmpty()) {
                             //Set initial (first) frame if current is NULL
                             if (this.current == null) {
-                                this.current = cachedFrames.get(0);
-                                Thread.sleep(Math.max(20, cachedFrames.get(0).delayMs));
+                                this.current = !cachedIntroFrames.isEmpty() ? cachedIntroFrames.get(0) : cachedFrames.get(0);
+                                Thread.sleep(Math.max(10, this.current.delayMs));
                             }
                             //Cache current frame to make sure it stays the same instance while working with it
                             FmaFrame cachedCurrent = this.current;
@@ -259,28 +278,35 @@ public class FmaTexture implements ITexture, PlayableResource {
                                 FmaFrame newCurrent = null;
                                 int currentIndexIncrement = cachedCurrent.index + 1;
                                 //Check if there's a frame after the current one and if so, go to the next frame
-                                if (currentIndexIncrement < cachedFrames.size()) {
-                                    newCurrent = cachedFrames.get(currentIndexIncrement);
+                                boolean cachedIntroFinished = this.introFinishedPlaying;
+                                if (cachedIntroFrames.isEmpty()) cachedIntroFinished = true;
+                                boolean pickNextIntroFrame = (currentIndexIncrement < cachedIntroFrames.size()) && !cachedIntroFinished;
+                                if (!pickNextIntroFrame && !cachedIntroFinished && cachedAllIntroDecoded) {
+                                    currentIndexIncrement = 0; //reset current index to 0 if last intro frame reached, so the FMA starts playing the normal animation
+                                    this.introFinishedPlaying = true; //intro finished playing now, so set this to true
+                                }
+                                if (pickNextIntroFrame || (currentIndexIncrement < cachedFrames.size())) {
+                                    newCurrent = pickNextIntroFrame ? cachedIntroFrames.get(currentIndexIncrement) : cachedFrames.get(currentIndexIncrement);
                                 } else if (cachedAllDecoded) {
                                     int cachedNumPlays = this.numPlays.get();
-                                    //Count cycles up if APNG should not loop infinitely (numPlays > 0 = finite loops)
+                                    //Count cycles up if FMA should not loop infinitely (numPlays > 0 = finite loops)
                                     if (cachedNumPlays > 0) {
                                         int newCycles = this.cycles.incrementAndGet();
                                         if (newCycles >= cachedNumPlays) {
                                             this.maxLoopsReached = true;
                                             break; //end the while loop of the frame ticker
                                         } else {
-                                            //If APNG has a finite number of loops but did not reach its max loops yet, reset to first frame, because end reached
+                                            //If FMA has a finite number of loops but did not reach its max loops yet, reset to first frame, because end reached
                                             newCurrent = cachedFrames.get(0);
                                         }
                                     } else {
-                                        //If APNG loops infinitely, reset to first frame, because end reached
+                                        //If FMA loops infinitely, reset to first frame, because end reached
                                         newCurrent = cachedFrames.get(0);
                                     }
                                 }
                                 if (newCurrent != null) this.current = newCurrent;
                                 //Sleep for the new current frame's delay or sleep for 100ms if there's no new frame
-                                Thread.sleep(Math.max(20, (newCurrent != null) ? newCurrent.delayMs : 100));
+                                Thread.sleep(Math.max(10, (newCurrent != null) ? newCurrent.delayMs : 100));
                             } else {
                                 sleep = true;
                             }
@@ -289,13 +315,13 @@ public class FmaTexture implements ITexture, PlayableResource {
                         }
                     } catch (Exception ex) {
                         sleep = true;
-                        LOGGER.error("[FANCYMENU] An error happened in the frame ticker thread on an FMA!", ex);
+                        LOGGER.error("[FANCYMENU] An error happened in the frame ticker thread of an FMA texture!", ex);
                     }
                     if (sleep) {
                         try {
                             Thread.sleep(100);
                         } catch (Exception ex) {
-                            LOGGER.error("[FANCYMENU] An error happened in the frame ticker thread on an FMA!", ex);
+                            LOGGER.error("[FANCYMENU] An error happened in the frame ticker thread of an FMA texture!", ex);
                         }
                     }
                 }
@@ -319,7 +345,7 @@ public class FmaTexture implements ITexture, PlayableResource {
                 try {
                     this.frameRegistrationCounter++;
                     frame.dynamicTexture = new DynamicTexture(frame.nativeImage);
-                    frame.resourceLocation = Minecraft.getInstance().getTextureManager().register("fancymenu_gif_frame_" + this.uniqueId + "_" + this.frameRegistrationCounter, frame.dynamicTexture);
+                    frame.resourceLocation = Minecraft.getInstance().getTextureManager().register("fancymenu_fma_frame_" + this.uniqueId + "_" + this.frameRegistrationCounter, frame.dynamicTexture);
                 } catch (Exception ex) {
                     LOGGER.error("[FANCYMENU] Failed to register FMA frame to Minecraft's TextureManager!", ex);
                 }
@@ -370,12 +396,16 @@ public class FmaTexture implements ITexture, PlayableResource {
     }
 
     public void reset() {
+        this.introFinishedPlaying = false;
         this.current = null;
-        List<FmaFrame> l = new ArrayList<>(this.frames);
-        if (!l.isEmpty()) {
-            this.current = l.get(0);
-            this.cycles.set(0);
+        List<FmaFrame> normalFrames = new ArrayList<>(this.frames);
+        List<FmaFrame> introFrames = new ArrayList<>(this.introFrames);
+        if (!introFrames.isEmpty()) {
+            this.current = introFrames.get(0);
+        } else if (!normalFrames.isEmpty()) {
+            this.current = normalFrames.get(0);
         }
+        this.cycles.set(0);
     }
 
     @Override
@@ -424,7 +454,22 @@ public class FmaTexture implements ITexture, PlayableResource {
             frame.dynamicTexture = null;
             frame.nativeImage = null;
         }
+        for (FmaFrame frame : new ArrayList<>(this.introFrames)) {
+            try {
+                if (frame.dynamicTexture != null) frame.dynamicTexture.close();
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to close DynamicTexture of FMA intro frame!", ex);
+            }
+            try {
+                if (frame.nativeImage != null) frame.nativeImage.close();
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to close NativeImage of FMA intro frame!", ex);
+            }
+            frame.dynamicTexture = null;
+            frame.nativeImage = null;
+        }
         this.frames = new ArrayList<>();
+        this.introFrames = new ArrayList<>();
         this.current = null;
     }
 
@@ -433,7 +478,7 @@ public class FmaTexture implements ITexture, PlayableResource {
         try {
             FmaDecoder decoder = new FmaDecoder();
             decoder.read(in);
-            BufferedImage firstFrame = Objects.requireNonNull(decoder.getFirstFrame(), "Failed to get first frame of FMA image!");
+            BufferedImage firstFrame = Objects.requireNonNull(decoder.getFirstFrameAsBufferedImage(), "Failed to get first frame of FMA image!");
             return new DecodedFmaImage(decoder, firstFrame.getWidth(), firstFrame.getHeight(), Objects.requireNonNull(decoder.getMetadata(), "FmaDecoder returned NULL for metadata!").getLoopCount()); //loopCount == 0 == infinite loops | loopCount > 0 == number of loops
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to decode FMA image: " + fmaName, ex);
@@ -447,12 +492,9 @@ public class FmaTexture implements ITexture, PlayableResource {
         int index = 0;
         while (i < gifFrameCount) {
             try {
-                long delay = Objects.requireNonNull(decoder.getMetadata(), "FmaDecoder returned NULL for metadata!").getFrameTimeForFrame(i);
-                BufferedImage image = Objects.requireNonNull(decoder.getFrame(i), "FmaDecoder returned NULL for frame!");
-                ByteArrayOutputStream os = new ByteArrayOutputStream();
-                ImageIO.write(image, "PNG", os);
-                ByteArrayInputStream bis = new ByteArrayInputStream(os.toByteArray());
-                frameDelivery.accept(new FmaFrame(index, bis, delay, os));
+                long delay = Objects.requireNonNull(decoder.getMetadata(), "FmaDecoder returned NULL for metadata!").getFrameTimeForFrame(i, false);
+                InputStream image = Objects.requireNonNull(decoder.getFrame(i), "FmaDecoder returned NULL for frame!");
+                frameDelivery.accept(new FmaFrame(index, image, delay));
                 index++;
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to get frame '" + i + "' of FMA image '" + fmaName + "!", ex);
@@ -461,22 +503,38 @@ public class FmaTexture implements ITexture, PlayableResource {
         }
     }
 
+    public static void deliverFmaIntroFrames(@NotNull FmaDecoder decoder, @NotNull String fmaName, @NotNull Consumer<FmaFrame> frameDelivery) {
+        if (!decoder.hasIntroFrames()) return;
+        int gifFrameCount = decoder.getIntroFrameCount();
+        int i = 0;
+        int index = 0;
+        while (i < gifFrameCount) {
+            try {
+                long delay = Objects.requireNonNull(decoder.getMetadata(), "FmaDecoder returned NULL for metadata!").getFrameTimeForFrame(i, true);
+                InputStream image = Objects.requireNonNull(decoder.getIntroFrame(i), "FmaDecoder returned NULL for intro frame!");
+                frameDelivery.accept(new FmaFrame(index, image, delay));
+                index++;
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to get intro frame '" + i + "' of FMA image '" + fmaName + "!", ex);
+            }
+            i++;
+        }
+    }
+
     public static class FmaFrame {
 
         protected final int index;
-        protected final ByteArrayInputStream frameInputStream;
+        protected final InputStream frameInputStream;
         protected final long delayMs;
-        protected final ByteArrayOutputStream closeAfterLoading;
         protected DynamicTexture dynamicTexture;
         protected volatile NativeImage nativeImage;
         protected ResourceLocation resourceLocation;
         protected boolean loaded = false;
 
-        protected FmaFrame(int index, ByteArrayInputStream frameInputStream, long delayMs, ByteArrayOutputStream closeAfterLoading) {
+        protected FmaFrame(int index, InputStream frameInputStream, long delayMs) {
             this.index = index;
             this.frameInputStream = frameInputStream;
             this.delayMs = delayMs;
-            this.closeAfterLoading = closeAfterLoading;
         }
 
     }

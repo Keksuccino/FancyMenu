@@ -1,6 +1,8 @@
 package de.keksuccino.fancymenu;
 
 import java.io.File;
+
+import de.keksuccino.fancymenu.util.ObjectUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.file.FileUtils;
@@ -20,6 +22,13 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO ModpackMode Option implementieren !!!!! (deaktiviert alle customization overlays komplett; muss manuell in config gesetzt werden)
+	//TODO ModpackMode Option implementieren !!!!! (deaktiviert alle customization overlays komplett; muss manuell in config gesetzt werden)
+	//TODO ModpackMode Option implementieren !!!!! (deaktiviert alle customization overlays komplett; muss manuell in config gesetzt werden)
+	//TODO ModpackMode Option implementieren !!!!! (deaktiviert alle customization overlays komplett; muss manuell in config gesetzt werden)
+	//TODO ModpackMode Option implementieren !!!!! (deaktiviert alle customization overlays komplett; muss manuell in config gesetzt werden)
+	//TODO ModpackMode Option implementieren !!!!! (deaktiviert alle customization overlays komplett; muss manuell in config gesetzt werden)
+
 	//TODO übernehmen (animation update) : update locals
 
 	private static final Logger LOGGER = LogManager.getLogger();
@@ -31,7 +40,12 @@ public class FancyMenu {
 
 	public static final File MOD_DIR = createDirectory(new File(GameDirectoryUtils.getGameDirectory(), "/config/fancymenu"));
 	public static final File INSTANCE_DATA_DIR = createDirectory(new File(GameDirectoryUtils.getGameDirectory(), "/fancymenu_data"));
-	public static final File TEMP_DATA_DIR = createDirectory(new File(INSTANCE_DATA_DIR, "/.fancymenu_temp"));
+	//TODO übernehmen (animation update)
+	public static final File TEMP_DATA_DIR = ObjectUtils.build(() -> {
+		File f = new File(INSTANCE_DATA_DIR, "/fancymenu_temp");
+		if (f.isDirectory()) org.apache.commons.io.FileUtils.deleteQuietly(f);
+		return createDirectory(f);
+	});
 	public static final File CACHE_DIR = createDirectory(new File(INSTANCE_DATA_DIR, "/cached_data"));
 
 	private static Options options;
