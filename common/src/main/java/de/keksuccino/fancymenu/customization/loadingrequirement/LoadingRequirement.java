@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.loadingrequirement;
 
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
@@ -134,6 +135,14 @@ public abstract class LoadingRequirement {
     @NotNull
     public String getIdentifier() {
         return this.identifier;
+    }
+
+    /**
+     * This lets you control if it should be possible to add a new instance of this requirement type to a layout.<br>
+     * For example, by using this you can control if the requirement should only be available for specific types of {@link Screen}s.
+     */
+    public boolean shouldShowUpInEditorRequirementMenu(@NotNull LayoutEditorScreen editor) {
+        return true;
     }
 
 }

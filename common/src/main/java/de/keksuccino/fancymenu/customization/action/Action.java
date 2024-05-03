@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.action;
 
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import net.minecraft.client.Minecraft;
@@ -26,6 +27,14 @@ public abstract class Action {
 
     public boolean isDeprecated() {
         return false;
+    }
+
+    /**
+     * This lets you control if it should be possible to add a new instance of this action type to a layout.<br>
+     * For example, by using this you can control if the action should only be available for specific types of {@link Screen}s.
+     */
+    public boolean shouldShowUpInEditorActionMenu(@NotNull LayoutEditorScreen editor) {
+        return true;
     }
 
     /**

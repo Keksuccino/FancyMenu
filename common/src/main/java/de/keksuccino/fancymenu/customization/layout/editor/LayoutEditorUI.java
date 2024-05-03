@@ -121,8 +121,7 @@ public class LayoutEditorUI {
 		layoutMenu.addClickableEntry("close_editor", Component.translatable("fancymenu.editor.close"), (menu, entry) -> {
 			displayUnsavedWarning(call -> {
 				if (call) {
-					editor.saveWidgetSettings();
-					Minecraft.getInstance().setScreen(editor.layoutTargetScreen);
+					editor.closeEditor();
 				} else {
 					Minecraft.getInstance().setScreen(editor);
 				}
@@ -291,13 +290,7 @@ public class LayoutEditorUI {
 		menuBar.addClickableEntry(MenuBar.Side.RIGHT, "close_editor", Component.empty(), (bar, entry) -> {
 			displayUnsavedWarning(call -> {
 				if (call) {
-					editor.saveWidgetSettings();
-					if (editor.layoutTargetScreen instanceof CreateWorldScreen) {
-						//This fixes broken CreateWorldScreens after leaving the editor (footer buttons not clickable)
-						CreateWorldScreen.openFresh(Minecraft.getInstance(), new TitleScreen());
-					} else {
-						Minecraft.getInstance().setScreen(editor.layoutTargetScreen);
-					}
+					editor.closeEditor();
 				} else {
 					Minecraft.getInstance().setScreen(editor);
 				}
@@ -707,6 +700,7 @@ public class LayoutEditorUI {
 
 		int i = 0;
 		for (ElementBuilder<?,?> builder : ElementRegistry.getBuilders()) {
+			if ((LayoutEditorScreen.getCurrentInstance() != null) && !builder.shouldShowUpInEditorElementMenu(LayoutEditorScreen.getCurrentInstance())) continue;
 			if (!builder.isDeprecated()) {
 				ContextMenu.ClickableContextMenuEntry<?> entry = menu.addClickableEntry("element_" + i, builder.getDisplayName(null), (menu1, entry1) -> {
 					AbstractEditorElement editorElement = builder.wrapIntoEditorElementInternal(builder.buildDefaultInstance(), editor);
