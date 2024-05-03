@@ -7,6 +7,7 @@ CHANGELOG | FANCYMENU v3.1.8 [ W I P !! Not public yet !! ]
 - There's now a "modpack mode" that disables all overlays and hotkeys to toggle overlays
   - You need to manually enable this mode by setting "modpack_mode" to "true" in "/config/fancymenu/options.txt"
 - For developers:
+  - It should now be possible to access all of FancyMenu's registries in the mod init phase (Fabric, Forge & NeoForge) without any problems
   - It's now possible to control if elements, placeholders, loading requirements, actions and menu backgrounds should show up in their "Add" menus
     - This for example makes it possible to allow elements/placeholders/requirements/actions/backgrounds only for specific types of screens
   - You can now control if universal layouts should get applied to specific types of screens
