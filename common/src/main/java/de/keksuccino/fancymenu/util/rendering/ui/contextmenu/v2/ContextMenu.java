@@ -886,9 +886,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         protected EntryTask hoverAction;
         protected boolean hovered = false;
         protected ContextMenuStackMeta stackMeta = new ContextMenuStackMeta();
-        //TODO übernehmen
         protected List<BooleanSupplier> activeStateSuppliers = new ArrayList<>();
-        //TODO übernehmen
         protected List<BooleanSupplier> visibleStateSuppliers = new ArrayList<>();
         @Nullable
         protected Supplier<Tooltip> tooltipSupplier;
@@ -943,7 +941,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return (T) this;
         }
 
-        //TODO übernehmen
         public boolean isActive() {
             for (BooleanSupplier b : this.activeStateSuppliers) {
                 if (!b.getBoolean(this.parent, this)) return false;
@@ -951,7 +948,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return true;
         }
 
-        //TODO übernehmen
         /**
          * @deprecated Use {@link ContextMenuEntry#addIsActiveSupplier(BooleanSupplier)} instead.
          */
@@ -961,7 +957,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return (T) this;
         }
 
-        //TODO übernehmen
         /**
          * Add a {@link BooleanSupplier} that controls if this entry should be active (clickable).<br>
          * These controllers stack, so multiple controllers can handle the active state of the entry at the same time. If at least one controller returns false, the entry gets disabled.
@@ -971,7 +966,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return (T) this;
         }
 
-        //TODO übernehmen
         public boolean isVisible() {
             for (BooleanSupplier b : this.visibleStateSuppliers) {
                 if (!b.getBoolean(this.parent, this)) return false;
@@ -979,7 +973,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return true;
         }
 
-        //TODO übernehmen
         /**
          * @deprecated Use {@link ContextMenuEntry#addIsVisibleSupplier(BooleanSupplier)} instead.
          */
@@ -989,7 +982,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return (T) this;
         }
 
-        //TODO übernehmen
         /**
          * Add a {@link BooleanSupplier} that controls if this entry should be visible.<br>
          * These controllers stack, so multiple controllers can handle the visible state of the entry at the same time. If at least one controller returns false, the entry gets hidden.
@@ -1227,7 +1219,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             copy.height = this.height;
             copy.tickAction = this.tickAction;
             copy.tooltipSupplier = this.tooltipSupplier;
-            //TODO übernehmen
             copy.activeStateSuppliers = new ArrayList<>(this.activeStateSuppliers);
             copy.icon = this.icon;
             return copy;
@@ -1312,7 +1303,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             copy.height = this.height;
             copy.tickAction = this.tickAction;
             copy.tooltipSupplier = this.tooltipSupplier;
-            //TODO übernehmen
             copy.activeStateSuppliers = new ArrayList<>(this.activeStateSuppliers);
             copy.icon = this.icon;
             return copy;
@@ -1469,7 +1459,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             copy.height = this.height;
             copy.tickAction = this.tickAction;
             copy.tooltipSupplier = this.tooltipSupplier;
-            //TODO übernehmen
             copy.activeStateSuppliers = new ArrayList<>(this.activeStateSuppliers);
             copy.labelSupplier = this.labelSupplier;
             copy.icon = this.icon;
@@ -1534,7 +1523,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             copy.height = this.height;
             copy.tickAction = this.tickAction;
             copy.tooltipSupplier = this.tooltipSupplier;
-            //TODO übernehmen
             copy.activeStateSuppliers = new ArrayList<>(this.activeStateSuppliers);
             return copy;
         }

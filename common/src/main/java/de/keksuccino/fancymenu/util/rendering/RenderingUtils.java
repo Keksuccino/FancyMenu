@@ -1,9 +1,9 @@
 package de.keksuccino.fancymenu.util.rendering;
 
+import com.google.gson.JsonSyntaxException;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGameRenderer;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinMinecraft;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -11,21 +11,39 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.PostChain;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import java.awt.*;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.Objects;
 
 public class RenderingUtils {
 
+    private static final Logger LOGGER = LogManager.getLogger();
+
     public static final DrawableColor MISSING_TEXTURE_COLOR_MAGENTA = DrawableColor.of(Color.MAGENTA);
     public static final DrawableColor MISSING_TEXTURE_COLOR_BLACK = DrawableColor.BLACK;
+    public static final ResourceLocation FULLY_TRANSPARENT_TEXTURE = new ResourceLocation("fancymenu", "textures/fully_transparent.png");
+    public static final ResourceLocation BLUR_LOCATION = new ResourceLocation("shaders/post/blur.json");
 
+    public static PostChain blurEffect = null;
+
+    /**
+     * This is just for playing around with the blur effect and is not working correctly yet.
+     */
+    @ApiStatus.Experimental
     public static void processBlurEffect(@NotNull GuiGraphics graphics, int x, int y, int width, int height, float partial, float blurriness) {
+
+        // shader seems to render dark out-of-screen edges of top and bottom of screen (because nothing is rendered out-of-screen)
+
+        if (blurEffect == null) reloadBlurShader();
 
         RenderSystem.enableBlend();
 
-        PostChain blurEffect = ((IMixinGameRenderer)Minecraft.getInstance().gameRenderer).getBlurEffect_FancyMenu();
         float _blurriness = blurriness * 10.0F;
         if (blurEffect != null && (_blurriness >= 1.0F)) {
             graphics.enableScissor(x, y, x + width, y + height);
@@ -36,6 +54,27 @@ public class RenderingUtils {
 
         Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 
+        RenderSystem.disableBlend();
+
+    }
+
+    /**
+     * This is just for playing around with the blur effect and is not working correctly yet.
+     */
+    @ApiStatus.Experimental
+    public static void reloadBlurShader() {
+        if (blurEffect != null) {
+            blurEffect.close();
+        }
+        try {
+            GameRenderer.ResourceCache cache = new GameRenderer.ResourceCache(Minecraft.getInstance().getResourceManager(), new HashMap<>());
+            blurEffect = new PostChain(Minecraft.getInstance().getTextureManager(), cache, Minecraft.getInstance().getMainRenderTarget(), BLUR_LOCATION);
+            blurEffect.resize(Minecraft.getInstance().getWindow().getWidth(), Minecraft.getInstance().getWindow().getHeight());
+        } catch (IOException ex) {
+            LOGGER.warn("Failed to load shader: {}", BLUR_LOCATION, ex);
+        } catch (JsonSyntaxException var4) {
+            LOGGER.warn("Failed to parse shader: {}", BLUR_LOCATION, var4);
+        }
     }
 
     public static void renderMissing(@NotNull GuiGraphics graphics, int x, int y, int width, int height) {

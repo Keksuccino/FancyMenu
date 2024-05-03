@@ -210,7 +210,6 @@ public class ChooseMenuBackgroundScreen extends Screen {
         }
 
         for (MenuBackgroundBuilder<?> b : MenuBackgroundRegistry.getBuilders()) {
-            //TODO übernehmen
             if ((LayoutEditorScreen.getCurrentInstance() != null) && !b.shouldShowUpInEditorBackgroundMenu(LayoutEditorScreen.getCurrentInstance())) continue;
             BackgroundTypeScrollEntry e = new BackgroundTypeScrollEntry(this.backgroundTypeListScrollArea, b, (entry) -> {
                 if (this.backgroundType != b) {

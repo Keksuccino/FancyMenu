@@ -181,7 +181,6 @@ public class BuildActionScreen extends Screen {
     protected void setContentOfActionsList() {
         this.actionsListScrollArea.clearEntries();
         for (Action c : ActionRegistry.getActions()) {
-            //TODO übernehmen
             if ((LayoutEditorScreen.getCurrentInstance() != null) && !c.shouldShowUpInEditorActionMenu(LayoutEditorScreen.getCurrentInstance())) continue;
             ActionScrollEntry e = new ActionScrollEntry(this.actionsListScrollArea, c, (entry) -> {
                 this.instance.action = c;

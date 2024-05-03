@@ -119,7 +119,6 @@ public class LayoutEditorUI {
 		layoutMenu.addClickableEntry("close_editor", Component.translatable("fancymenu.editor.close"), (menu, entry) -> {
 			displayUnsavedWarning(call -> {
 				if (call) {
-					//TODO übernehmen
 					editor.closeEditor();
 				} else {
 					Minecraft.getInstance().setScreen(editor);
@@ -289,7 +288,6 @@ public class LayoutEditorUI {
 		menuBar.addClickableEntry(MenuBar.Side.RIGHT, "close_editor", Component.empty(), (bar, entry) -> {
 					displayUnsavedWarning(call -> {
 						if (call) {
-							//TODO übernehmen
 							editor.closeEditor();
 						} else {
 							Minecraft.getInstance().setScreen(editor);
@@ -677,19 +675,6 @@ public class LayoutEditorUI {
 
 		menu.addSeparatorEntry("separator_after_preserve_aspect_ratio");
 
-		//TODO experimental
-//		menu.addValueCycleEntry("header_shadow", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.render_header_shadow", editor.layout.renderScrollListHeaderShadow).addCycleListener(cycle -> {
-//			editor.history.saveSnapshot();
-//			editor.layout.renderScrollListHeaderShadow = cycle.getAsBoolean();
-//		})).setIcon(ContextMenu.IconFactory.getIcon("shadow"));
-//
-//		menu.addValueCycleEntry("footer_shadow", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.render_footer_shadow", editor.layout.renderScrollListFooterShadow).addCycleListener(cycle -> {
-//			editor.history.saveSnapshot();
-//			editor.layout.renderScrollListFooterShadow = cycle.getAsBoolean();
-//		})).setIcon(ContextMenu.IconFactory.getIcon("shadow"));
-//
-//		menu.addSeparatorEntry("separator_after_footer_shadow");
-
 		menu.addValueCycleEntry("show_header_footer_preview", CommonCycles.cycleEnabledDisabled("fancymenu.customization.scroll_lists.show_preview", editor.layout.showScrollListHeaderFooterPreviewInEditor).addCycleListener(cycle -> {
 			editor.history.saveSnapshot();
 			editor.layout.showScrollListHeaderFooterPreviewInEditor = cycle.getAsBoolean();
@@ -706,7 +691,6 @@ public class LayoutEditorUI {
 
 		int i = 0;
 		for (ElementBuilder<?,?> builder : ElementRegistry.getBuilders()) {
-			//TODO übernehmen
 			if ((LayoutEditorScreen.getCurrentInstance() != null) && !builder.shouldShowUpInEditorElementMenu(LayoutEditorScreen.getCurrentInstance())) continue;
 			if (!builder.isDeprecated()) {
 				ContextMenu.ClickableContextMenuEntry<?> entry = menu.addClickableEntry("element_" + i, builder.getDisplayName(null), (menu1, entry1) -> {

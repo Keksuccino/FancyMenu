@@ -32,7 +32,6 @@ public class LayoutHandler {
 	public static final File ASSETS_DIR = FileUtils.createDirectory(new File(FancyMenu.MOD_DIR, "/assets"));
 
 	private static final List<Layout> LAYOUTS = new ArrayList<>();
-	//TODO übernehmen
 	private static final Map<String, UniversalLayoutInclusionRule> UNIVERSAL_LAYOUT_INCLUSION_RULES = new HashMap<>();
 
 	public static void init() {
@@ -112,14 +111,12 @@ public class LayoutHandler {
 
 	@NotNull
 	public static List<Layout> getEnabledLayoutsForScreenIdentifier(@NotNull String screenIdentifier, boolean includeUniversalLayouts) {
-		//TODO übernehmen
 		for (UniversalLayoutInclusionRule inclusionRule : UNIVERSAL_LAYOUT_INCLUSION_RULES.values()) {
 			if (!inclusionRule.includeUniversalLayouts(screenIdentifier)) {
 				includeUniversalLayouts = false;
 				break;
 			}
 		}
-		//----------------------------
 		List<Layout> layouts = new ArrayList<>();
 		for (Layout layout : getEnabledLayouts()) {
 			if (ScreenIdentifierHandler.equalIdentifiers(screenIdentifier, layout.screenIdentifier)) {
@@ -258,7 +255,6 @@ public class LayoutHandler {
 					}
 				}
 			}
-			//TODO übernehmen (setAsCurrentInstance)
 			Minecraft.getInstance().setScreen(new LayoutEditorScreen(layoutTargetScreen, layout).setAsCurrentInstance());
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -304,7 +300,6 @@ public class LayoutHandler {
 		}
 	}
 
-	//TODO übernehmen
 	/**
 	 * Registers a new {@link UniversalLayoutInclusionRule}. These rules can be used to control if universal layouts should get applied to a specific {@link Screen} type.
 	 * @param rule
@@ -317,7 +312,6 @@ public class LayoutHandler {
 		return id;
 	}
 
-	//TODO übernehmen
 	/**
 	 * Unregisters a {@link UniversalLayoutInclusionRule} that got registered via {@link LayoutHandler#registerUniversalLayoutInclusionRule(UniversalLayoutInclusionRule)}.
 	 */
@@ -325,7 +319,6 @@ public class LayoutHandler {
 		UNIVERSAL_LAYOUT_INCLUSION_RULES.remove(identifier);
 	}
 
-	//TODO übernehmen
 	@FunctionalInterface
 	public interface UniversalLayoutInclusionRule {
 		boolean includeUniversalLayouts(@NotNull String screenIdentifier);

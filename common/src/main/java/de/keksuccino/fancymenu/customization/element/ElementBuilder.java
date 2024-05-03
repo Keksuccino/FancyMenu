@@ -370,7 +370,6 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
         return false;
     }
 
-    //TODO übernehmen
     /**
      * This lets you control if it should be possible to add a new instance of this element type to a layout.<br>
      * For example, by using this you can control if the element should only be available for specific types of {@link Screen}s.

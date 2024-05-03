@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu;
 
 import java.io.File;
-
 import de.keksuccino.fancymenu.util.ObjectUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.platform.Services;
@@ -15,19 +14,11 @@ import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.fancymenu.customization.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.customization.server.ServerCache;
 import net.minecraft.SharedConstants;
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
-
-	//TODO ModpackMode Option implementieren !!!!! (deaktiviert alle customization overlays komplett; muss manuell in config gesetzt werden)
-	//TODO ModpackMode Option implementieren !!!!! (deaktiviert alle customization overlays komplett; muss manuell in config gesetzt werden)
-	//TODO ModpackMode Option implementieren !!!!! (deaktiviert alle customization overlays komplett; muss manuell in config gesetzt werden)
-	//TODO ModpackMode Option implementieren !!!!! (deaktiviert alle customization overlays komplett; muss manuell in config gesetzt werden)
-	//TODO ModpackMode Option implementieren !!!!! (deaktiviert alle customization overlays komplett; muss manuell in config gesetzt werden)
-	//TODO ModpackMode Option implementieren !!!!! (deaktiviert alle customization overlays komplett; muss manuell in config gesetzt werden)
 
 	//TODO übernehmen (animation update) : update locals
 
@@ -66,7 +57,8 @@ public class FancyMenu {
 
 			TextColorFormatters.registerAll();
 
-			ScreenCustomization.init();
+			//TODO übernehmen (animation update)
+			//ScreenCustomization.init();
 
 			EventHandler.INSTANCE.registerListenersOf(new Test());
 

@@ -34,6 +34,7 @@
     "client.MixinCreateWorldScreen_MoreTab",
     "client.MixinCreateWorldScreen_WorldTab",
     "client.MixinCycleButton",
+    "client.MixinGameLoadCookie",
     "client.MixinGenericMessageScreen",
     "client.MixinImageButton",
     "client.MixinLevelLoadingScreen",

@@ -52,7 +52,6 @@ public abstract class Placeholder {
         return null;
     }
 
-    //TODO übernehmen
     /**
      * This lets you control if it should be possible to add a new instance of this placeholder type to a layout.<br>
      * For example, by using this you can control if the placeholder should only be available for specific types of {@link Screen}s.
