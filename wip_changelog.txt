@@ -1,6 +1,11 @@
 
 CHANGELOG | FANCYMENU v3.1.8 [ W I P !! Not public yet !! ]
- 
+
+- Added support for FMA (FancyMenu Animation) files, which is a new animated texture format created for FancyMenu
+  - This format is very similar to FM's old animation format, but it's now a single file and has very similar features as GIF and APNG images
+  - FMA files have no audio support, because it's an animated texture format (there will be video support for that in the future)
+- There's now a "modpack mode" that disables all overlays and hotkeys to toggle overlays
+  - You need to manually enable this mode by setting "modpack_mode" to "true" in "/config/fancymenu/options.txt"
 - For developers:
   - It's now possible to control if elements, placeholders, loading requirements, actions and menu backgrounds should show up in their "Add" menus
     - This for example makes it possible to allow elements/placeholders/requirements/actions/backgrounds only for specific types of screens
