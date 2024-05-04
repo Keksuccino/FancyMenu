@@ -170,7 +170,7 @@ public class MixinMinecraft {
 					protected void apply(@NotNull String prepareReturnValue, @NotNull ResourceManager var2, @NotNull ProfilerFiller var3) {
 						ResourceHandlers.reloadAll();
 						//TODO übernehmen (animation update)
-						ResourcePreLoader.preLoadAll(120000); //waits for 120 seconds per animation
+						ResourcePreLoader.preLoadAll(120000); //waits for 120 seconds per resource
 					}
 				});
 			}
