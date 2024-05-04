@@ -1,6 +1,8 @@
 package de.keksuccino.fancymenu;
 
 import java.io.File;
+
+import de.keksuccino.fancymenu.util.ObjectUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.file.FileUtils;
@@ -28,7 +30,11 @@ public class FancyMenu {
 
 	public static final File MOD_DIR = createDirectory(new File(GameDirectoryUtils.getGameDirectory(), "/config/fancymenu"));
 	public static final File INSTANCE_DATA_DIR = createDirectory(new File(GameDirectoryUtils.getGameDirectory(), "/fancymenu_data"));
-	public static final File TEMP_DATA_DIR = createDirectory(new File(INSTANCE_DATA_DIR, "/.fancymenu_temp"));
+	public static final File TEMP_DATA_DIR = ObjectUtils.build(() -> {
+		File f = new File(INSTANCE_DATA_DIR, "/fancymenu_temp");
+		if (f.isDirectory()) org.apache.commons.io.FileUtils.deleteQuietly(f);
+		return createDirectory(f);
+	});
 	public static final File CACHE_DIR = createDirectory(new File(INSTANCE_DATA_DIR, "/cached_data"));
 
 	private static Options options;
@@ -49,9 +55,6 @@ public class FancyMenu {
 
 			TextColorFormatters.registerAll();
 
-			ScreenCustomization.init();
-
-			//TODO remove debug
 			EventHandler.INSTANCE.registerListenersOf(new Test());
 
 		}

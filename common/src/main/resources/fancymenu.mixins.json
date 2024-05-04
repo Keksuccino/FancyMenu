@@ -44,7 +44,8 @@
     "client.MixinSoundEngine",
     "client.MixinStringDecomposer",
     "client.MixinTitleScreen",
-    "client.MixinWorldListEntry"
+    "client.MixinWorldListEntry",
+    "client.MixinGameNarrator"
   ],
   "mixins": [
   ],
