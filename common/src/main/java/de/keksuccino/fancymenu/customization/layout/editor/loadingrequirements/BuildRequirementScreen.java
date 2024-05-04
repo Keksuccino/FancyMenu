@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
@@ -244,6 +245,7 @@ public class BuildRequirementScreen extends Screen {
             }
             //Add requirement entries without category
             for (LoadingRequirement r : LoadingRequirementRegistry.getRequirementsWithoutCategory()) {
+                if ((LayoutEditorScreen.getCurrentInstance() != null) && !r.shouldShowUpInEditorRequirementMenu(LayoutEditorScreen.getCurrentInstance())) continue;
                 Component label = Components.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
                 RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUIColorTheme().listing_dot_color_1.getColor(), (entry) -> {
                     this.instance.requirement = r;
@@ -269,6 +271,7 @@ public class BuildRequirementScreen extends Screen {
             List<LoadingRequirement> l = categories.get(category);
             if (l != null) {
                 for (LoadingRequirement r : l) {
+                    if ((LayoutEditorScreen.getCurrentInstance() != null) && !r.shouldShowUpInEditorRequirementMenu(LayoutEditorScreen.getCurrentInstance())) continue;
                     Component label = Components.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
                     RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUIColorTheme().listing_dot_color_1.getColor(), (entry) -> {
                         this.instance.requirement = r;

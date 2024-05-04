@@ -5,6 +5,8 @@
 
 package de.keksuccino.fancymenu.customization.placeholder;
 
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
@@ -48,6 +50,16 @@ public abstract class Placeholder {
     @Nullable
     public List<String> getAlternativeIdentifiers() {
         return null;
+    }
+
+    /**
+     * This lets you control if it should be possible to add a new instance of this placeholder type to a layout.<br>
+     * For example, by using this you can control if the placeholder should only be available for specific types of {@link Screen}s.
+     *
+     * @param editor The {@link LayoutEditorScreen} instance if the editor is open. This is NULL if the placeholder menu is open outside the editor.
+     */
+    public boolean shouldShowUpInPlaceholderMenu(@Nullable LayoutEditorScreen editor) {
+        return true;
     }
 
 }

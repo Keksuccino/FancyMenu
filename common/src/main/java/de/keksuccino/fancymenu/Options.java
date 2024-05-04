@@ -13,6 +13,7 @@ public class Options extends AbstractOptions {
 
     public final Option<Boolean> advancedCustomizationMode = new Option<>(config, "advanced_customization_mode", false, "customization");
     public final Option<Boolean> showCustomizationOverlay = new Option<>(config, "show_customization_overlay", true, "customization");
+    public final Option<Boolean> modpackMode = new Option<>(config, "modpack_mode", false, "customization");
 
     public final Option<String> gameIntroAnimation = new Option<>(config, "game_intro_animation_name", "", "loading");
     public final Option<Boolean> gameIntroAllowSkip = new Option<>(config, "allow_game_intro_skip", true, "loading");

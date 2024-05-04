@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.file.type.types;
 import de.keksuccino.fancymenu.util.file.type.FileCodec;
 import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.FileTypeRegistry;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
@@ -14,6 +15,7 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ApngTexture;
 import de.keksuccino.fancymenu.util.resource.resources.texture.GifTexture;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.texture.SimpleTexture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.fma.FmaTexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
@@ -52,6 +54,11 @@ public class FileTypes {
             FileCodec.advanced(ITexture.class, ApngTexture::of, ApngTexture::location, ApngTexture::local, ApngTexture::web),
             "image/apng", "apng")
             .setCustomDisplayName(new TranslatableComponent("fancymenu.file_types.apng"))
+            .setAnimated(true);
+    public static final ImageFileType FMA_IMAGE = new ImageFileType(
+            FileCodec.advanced(ITexture.class, FmaTexture::of, FmaTexture::location, FmaTexture::local, FmaTexture::web),
+            "image/fma", "fma")
+            .setCustomDisplayName(Components.translatable("fancymenu.file_types.fma"))
             .setAnimated(true);
 
     public static final AudioFileType OGG_AUDIO = new AudioFileType(
@@ -109,6 +116,7 @@ public class FileTypes {
         FileTypeRegistry.register("png", PNG_IMAGE);
         FileTypeRegistry.register("gif", GIF_IMAGE);
         FileTypeRegistry.register("apng", APNG_IMAGE);
+        FileTypeRegistry.register("fma", FMA_IMAGE);
 
         FileTypeRegistry.register("ogg", OGG_AUDIO);
         FileTypeRegistry.register("wav", WAV_AUDIO);

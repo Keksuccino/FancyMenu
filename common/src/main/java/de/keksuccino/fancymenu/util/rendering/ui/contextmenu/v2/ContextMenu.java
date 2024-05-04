@@ -879,10 +879,8 @@ public class ContextMenu extends GuiComponent implements Widget, GuiEventListene
         protected EntryTask hoverAction;
         protected boolean hovered = false;
         protected ContextMenuStackMeta stackMeta = new ContextMenuStackMeta();
-        @Nullable
-        protected BooleanSupplier activeStateSupplier;
-        @Nullable
-        protected BooleanSupplier visibleStateSupplier;
+        protected List<BooleanSupplier> activeStateSuppliers = new ArrayList<>();
+        protected List<BooleanSupplier> visibleStateSuppliers = new ArrayList<>();
         @Nullable
         protected Supplier<Tooltip> tooltipSupplier;
         protected Font font = Minecraft.getInstance().font;
@@ -936,20 +934,52 @@ public class ContextMenu extends GuiComponent implements Widget, GuiEventListene
         }
 
         public boolean isActive() {
-            return (this.activeStateSupplier == null) || this.activeStateSupplier.getBoolean(this.parent, this);
+            for (BooleanSupplier b : this.activeStateSuppliers) {
+                if (!b.getBoolean(this.parent, this)) return false;
+            }
+            return true;
         }
 
+        /**
+         * @deprecated Use {@link ContextMenuEntry#addIsActiveSupplier(BooleanSupplier)} instead.
+         */
+        @Deprecated(forRemoval = true)
         public T setIsActiveSupplier(@Nullable BooleanSupplier activeStateSupplier) {
-            this.activeStateSupplier = activeStateSupplier;
+            if (activeStateSupplier != null) this.addIsActiveSupplier(activeStateSupplier);
+            return (T) this;
+        }
+
+        /**
+         * Add a {@link BooleanSupplier} that controls if this entry should be active (clickable).<br>
+         * These controllers stack, so multiple controllers can handle the active state of the entry at the same time. If at least one controller returns false, the entry gets disabled.
+         */
+        public T addIsActiveSupplier(@NotNull BooleanSupplier activeStateSupplier) {
+            this.activeStateSuppliers.add(Objects.requireNonNull(activeStateSupplier));
             return (T) this;
         }
 
         public boolean isVisible() {
-            return (this.visibleStateSupplier == null) || this.visibleStateSupplier.getBoolean(this.parent, this);
+            for (BooleanSupplier b : this.visibleStateSuppliers) {
+                if (!b.getBoolean(this.parent, this)) return false;
+            }
+            return true;
         }
 
+        /**
+         * @deprecated Use {@link ContextMenuEntry#addIsVisibleSupplier(BooleanSupplier)} instead.
+         */
+        @Deprecated(forRemoval = true)
         public T setIsVisibleSupplier(@Nullable BooleanSupplier visibleStateSupplier) {
-            this.visibleStateSupplier = visibleStateSupplier;
+            if (visibleStateSupplier != null) this.addIsVisibleSupplier(visibleStateSupplier);
+            return (T) this;
+        }
+
+        /**
+         * Add a {@link BooleanSupplier} that controls if this entry should be visible.<br>
+         * These controllers stack, so multiple controllers can handle the visible state of the entry at the same time. If at least one controller returns false, the entry gets hidden.
+         */
+        public T addIsVisibleSupplier(@NotNull BooleanSupplier visibleStateSupplier) {
+            this.visibleStateSuppliers.add(Objects.requireNonNull(visibleStateSupplier));
             return (T) this;
         }
 
@@ -1183,7 +1213,7 @@ public class ContextMenu extends GuiComponent implements Widget, GuiEventListene
             copy.height = this.height;
             copy.tickAction = this.tickAction;
             copy.tooltipSupplier = this.tooltipSupplier;
-            copy.activeStateSupplier = this.activeStateSupplier;
+            copy.activeStateSuppliers = new ArrayList<>(this.activeStateSuppliers);
             copy.icon = this.icon;
             return copy;
         }
@@ -1258,7 +1288,7 @@ public class ContextMenu extends GuiComponent implements Widget, GuiEventListene
             copy.height = this.height;
             copy.tickAction = this.tickAction;
             copy.tooltipSupplier = this.tooltipSupplier;
-            copy.activeStateSupplier = this.activeStateSupplier;
+            copy.activeStateSuppliers = new ArrayList<>(this.activeStateSuppliers);
             copy.icon = this.icon;
             return copy;
         }
@@ -1415,7 +1445,7 @@ public class ContextMenu extends GuiComponent implements Widget, GuiEventListene
             copy.height = this.height;
             copy.tickAction = this.tickAction;
             copy.tooltipSupplier = this.tooltipSupplier;
-            copy.activeStateSupplier = this.activeStateSupplier;
+            copy.activeStateSuppliers = new ArrayList<>(this.activeStateSuppliers);
             copy.labelSupplier = this.labelSupplier;
             copy.icon = this.icon;
             return copy;
@@ -1479,7 +1509,7 @@ public class ContextMenu extends GuiComponent implements Widget, GuiEventListene
             copy.height = this.height;
             copy.tickAction = this.tickAction;
             copy.tooltipSupplier = this.tooltipSupplier;
-            copy.activeStateSupplier = this.activeStateSupplier;
+            copy.activeStateSuppliers = new ArrayList<>(this.activeStateSuppliers);
             return copy;
         }
 
