@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.resource.resources.texture.fma;
 import com.mojang.blaze3d.platform.NativeImage;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.CloseableUtils;
+import de.keksuccino.fancymenu.util.ThreadUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
@@ -37,6 +38,7 @@ public class FmaTexture implements ITexture, PlayableResource {
     @Nullable
     protected volatile FmaTexture.FmaFrame current = null;
     protected volatile boolean introFinishedPlaying = false;
+    protected volatile boolean skipToFirstNormalAfterIntro = false;
     @NotNull
     protected volatile AspectRatio aspectRatio = new AspectRatio(10, 10);
     protected volatile int width = 10;
@@ -263,14 +265,26 @@ public class FmaTexture implements ITexture, PlayableResource {
                     try {
                         boolean cachedAllDecoded = this.allFramesDecoded;
                         boolean cachedAllIntroDecoded = this.allIntroFramesDecoded;
+                        boolean cachedIntroFinished = this.introFinishedPlaying;
+                        boolean cachedSkipToFirstAfterIntro = this.skipToFirstNormalAfterIntro;
                         //Cache frames to avoid possible concurrent modification exceptions
                         List<FmaFrame> cachedFrames = new ArrayList<>(this.frames);
                         List<FmaFrame> cachedIntroFrames = new ArrayList<>(this.introFrames);
                         if (!cachedFrames.isEmpty() || !cachedIntroFrames.isEmpty()) {
                             //Set initial (first) frame if current is NULL
                             if (this.current == null) {
-                                this.current = !cachedIntroFrames.isEmpty() ? cachedIntroFrames.get(0) : cachedFrames.get(0);
-                                Thread.sleep(Math.max(10, this.current.delayMs));
+                                FmaFrame first = !cachedIntroFrames.isEmpty() ? cachedIntroFrames.get(0) : cachedFrames.get(0);
+                                this.current = first;
+                                Thread.sleep(Math.max(10, first.delayMs));
+                            } else if (cachedSkipToFirstAfterIntro) {
+                                if (cachedFrames.isEmpty()) { //wait for first normal frame to be ready
+                                    ThreadUtils.sleep(100);
+                                    continue;
+                                }
+                                this.skipToFirstNormalAfterIntro = false;
+                                FmaFrame firstNormal = cachedFrames.get(0);
+                                this.current = firstNormal;
+                                Thread.sleep(Math.max(10, firstNormal.delayMs));
                             }
                             //Cache current frame to make sure it stays the same instance while working with it
                             FmaFrame cachedCurrent = this.current;
@@ -278,12 +292,11 @@ public class FmaTexture implements ITexture, PlayableResource {
                                 FmaFrame newCurrent = null;
                                 int currentIndexIncrement = cachedCurrent.index + 1;
                                 //Check if there's a frame after the current one and if so, go to the next frame
-                                boolean cachedIntroFinished = this.introFinishedPlaying;
-                                if (cachedIntroFrames.isEmpty()) cachedIntroFinished = true;
                                 boolean pickNextIntroFrame = (currentIndexIncrement < cachedIntroFrames.size()) && !cachedIntroFinished;
-                                if (!pickNextIntroFrame && !cachedIntroFinished && cachedAllIntroDecoded) {
-                                    currentIndexIncrement = 0; //reset current index to 0 if last intro frame reached, so the FMA starts playing the normal animation
+                                if (!pickNextIntroFrame && !cachedIntroFinished && !cachedSkipToFirstAfterIntro && cachedAllIntroDecoded) {
                                     this.introFinishedPlaying = true; //intro finished playing now, so set this to true
+                                    this.skipToFirstNormalAfterIntro = true;
+                                    continue;
                                 }
                                 if (pickNextIntroFrame || (currentIndexIncrement < cachedFrames.size())) {
                                     newCurrent = pickNextIntroFrame ? cachedIntroFrames.get(currentIndexIncrement) : cachedFrames.get(currentIndexIncrement);
@@ -397,6 +410,7 @@ public class FmaTexture implements ITexture, PlayableResource {
 
     public void reset() {
         this.introFinishedPlaying = false;
+        this.skipToFirstNormalAfterIntro = false;
         this.current = null;
         List<FmaFrame> normalFrames = new ArrayList<>(this.frames);
         List<FmaFrame> introFrames = new ArrayList<>(this.introFrames);

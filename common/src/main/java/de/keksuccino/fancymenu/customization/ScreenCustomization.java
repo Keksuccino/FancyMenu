@@ -70,7 +70,7 @@ public class ScreenCustomization {
 		}
 
 		//TODO übernehmen (animation update)
-		LOGGER.info("[FANCYMENU] Initializing screen customization engine! Addons should NOT ACCESS REGISTRIES anymore now!");
+		LOGGER.info("[FANCYMENU] Initializing screen customization engine! Addons should NOT REGISTER TO REGISTRIES anymore now!");
 
 		EventHandler.INSTANCE.registerListenersOf(eventsInstance);
 
