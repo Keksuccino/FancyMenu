@@ -6,6 +6,7 @@ CHANGELOG | FANCYMENU v3.1.8 [ W I P !! Not public yet !! ]
   - FMA files have no audio support, because it's an animated texture format (there will be video support for that in the future)
 - There's now a "modpack mode" that disables all overlays and hotkeys to toggle overlays
   - You need to manually enable this mode by setting "modpack_mode" to "true" in "/config/fancymenu/options.txt"
+- Player Entity elements fail to get their skin less often now (added fallback API (Minetools) for when Mojang's API is _not in the right mood_)
 - For developers:
   - It should now be possible to access all of FancyMenu's registries in the mod init phase (Fabric, Forge & NeoForge) without any problems
   - It's now possible to control if elements, placeholders, loading requirements, actions and menu backgrounds should show up in their "Add" menus
