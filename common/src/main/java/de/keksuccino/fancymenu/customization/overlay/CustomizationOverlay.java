@@ -52,6 +52,7 @@ public class CustomizationOverlay {
 	}
 
 	public static boolean isOverlayVisible(@Nullable Screen currentScreen) {
+		if (FancyMenu.getOptions().modpackMode.getValue()) return false;
 		if (!FancyMenu.getOptions().showCustomizationOverlay.getValue()) return false;
 		if (currentScreen == null) return false;
 		for (ConsumingSupplier<Screen, Boolean> s : OVERLAY_VISIBILITY_CONTROLLERS.values()) {
@@ -117,21 +118,25 @@ public class CustomizationOverlay {
 
 			String keyName = e.getKeyName();
 
-			//Toggle Menu Bar
-			if (keyName.equals("c") && Screen.hasControlDown() && Screen.hasAltDown()) {
-				FancyMenu.getOptions().showCustomizationOverlay.setValue(!FancyMenu.getOptions().showCustomizationOverlay.getValue());
-				ScreenCustomization.reInitCurrentScreen();
-			}
+			if (!FancyMenu.getOptions().modpackMode.getValue()) {
 
-			//Toggle Debug Overlay
-			if (keyName.equals("d") && Screen.hasControlDown() && Screen.hasAltDown()) {
-				FancyMenu.getOptions().showDebugOverlay.setValue(!FancyMenu.getOptions().showDebugOverlay.getValue());
-				ScreenCustomization.reInitCurrentScreen();
-			}
+				//Toggle Menu Bar
+				if (keyName.equals("c") && Screen.hasControlDown() && Screen.hasAltDown()) {
+					FancyMenu.getOptions().showCustomizationOverlay.setValue(!FancyMenu.getOptions().showCustomizationOverlay.getValue());
+					ScreenCustomization.reInitCurrentScreen();
+				}
 
-			//Reload FancyMenu
-			if (keyName.equals("r") && Screen.hasControlDown() && Screen.hasAltDown()) {
-				ScreenCustomization.reloadFancyMenu();
+				//Toggle Debug Overlay
+				if (keyName.equals("d") && Screen.hasControlDown() && Screen.hasAltDown()) {
+					FancyMenu.getOptions().showDebugOverlay.setValue(!FancyMenu.getOptions().showDebugOverlay.getValue());
+					ScreenCustomization.reInitCurrentScreen();
+				}
+
+				//Reload FancyMenu
+				if (keyName.equals("r") && Screen.hasControlDown() && Screen.hasAltDown()) {
+					ScreenCustomization.reloadFancyMenu();
+				}
+
 			}
 
 		}

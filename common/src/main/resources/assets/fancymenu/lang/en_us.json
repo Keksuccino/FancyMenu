@@ -1034,6 +1034,7 @@
   "fancymenu.elements.slider.v2.handle.textures.nine_slice.border_x": "Nine-Slice Handle X-Borders (Left & Right)",
   "fancymenu.elements.slider.v2.handle.textures.nine_slice.border_y": "Nine-Slice Handle Y-Borders (Top & Bottom)",
   "fancymenu.file_types.apng": "Animated PNG",
+  "fancymenu.file_types.fma": "FancyMenu Animation",
   "fancymenu.file_types.icns": "Apple Icon Image",
   "fancymenu.file_types.groups.image": "Images",
   "fancymenu.file_types.groups.audio": "Audio",

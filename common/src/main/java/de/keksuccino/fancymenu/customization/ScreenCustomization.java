@@ -70,6 +70,8 @@ public class ScreenCustomization {
 			return;
 		}
 
+		LOGGER.info("[FANCYMENU] Initializing screen customization engine! Addons should NOT REGISTER TO REGISTRIES anymore now!");
+
 		EventHandler.INSTANCE.registerListenersOf(eventsInstance);
 
 		addDefaultScreenBlacklistRules();

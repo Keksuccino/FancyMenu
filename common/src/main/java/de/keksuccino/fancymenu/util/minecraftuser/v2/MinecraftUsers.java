@@ -19,6 +19,7 @@ public class MinecraftUsers {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String MOJANG_PROFILE_API_URL = "https://api.mojang.com/users/profiles/minecraft/";
+    private static final String MINETOOLS_PROFILE_API_URL = "https://api.minetools.eu/uuid/";
     private static final Map<String, UserProfile> CACHED_PROFILES = Collections.synchronizedMap(new HashMap<>());
     private static final Map<String, Map<MinecraftProfileTexture.Type, MinecraftProfileTexture>> CACHED_PROFILE_TEXTURES = Collections.synchronizedMap(new HashMap<>());
 
@@ -33,6 +34,11 @@ public class MinecraftUsers {
 
     @NotNull
     public static UserProfile getUserProfile(@NotNull String playerName) {
+        return _getUserProfile(playerName, false);
+    }
+
+    @NotNull
+    private static UserProfile _getUserProfile(@NotNull String playerName, boolean useMojangApi) {
 
         Objects.requireNonNull(playerName);
 
@@ -44,7 +50,7 @@ public class MinecraftUsers {
         try {
 
             Gson gson = new Gson();
-            in = Objects.requireNonNull(WebUtils.openResourceStream(MOJANG_PROFILE_API_URL + playerName));
+            in = Objects.requireNonNull(WebUtils.openResourceStream(useMojangApi ? (MOJANG_PROFILE_API_URL + playerName) : (MINETOOLS_PROFILE_API_URL + playerName)));
             List<String> jsonLines = FileUtils.readTextLinesFrom(in);
             StringBuilder json = new StringBuilder();
             jsonLines.forEach(json::append);
@@ -52,8 +58,12 @@ public class MinecraftUsers {
             CACHED_PROFILES.put(playerName, profile);
 
         } catch (Exception ex) {
+            if (!useMojangApi) {
+                LOGGER.error("[FANCYMENU] Failed to get player profile '" + playerName + "' via Minetools API! Trying Mojang API now..", ex);
+                return _getUserProfile(playerName, true);
+            }
             CACHED_PROFILES.put(playerName, UNKNOWN_USER_PROFILE);
-            LOGGER.error("[FANCYMENU] Failed to get player profile!", ex);
+            LOGGER.error("[FANCYMENU] Failed to get player profile: " + playerName, ex);
         }
 
         CloseableUtils.closeQuietly(in);
