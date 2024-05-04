@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -508,6 +509,7 @@ public class TextEditorScreen extends Screen {
         //Build lists of all placeholders ordered by categories
         Map<String, List<Placeholder>> categories = new LinkedHashMap<>();
         for (Placeholder p : PlaceholderRegistry.getPlaceholders()) {
+            if (!p.shouldShowUpInPlaceholderMenu(LayoutEditorScreen.getCurrentInstance())) continue;
             String cat = p.getCategory();
             if (cat == null) {
                 cat = I18n.get("fancymenu.fancymenu.editor.dynamicvariabletextfield.categories.other");

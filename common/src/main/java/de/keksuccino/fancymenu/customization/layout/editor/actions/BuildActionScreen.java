@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionRegistry;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
@@ -177,6 +178,7 @@ public class BuildActionScreen extends Screen {
     protected void setContentOfActionsList() {
         this.actionsListScrollArea.clearEntries();
         for (Action c : ActionRegistry.getActions()) {
+            if ((LayoutEditorScreen.getCurrentInstance() != null) && !c.shouldShowUpInEditorActionMenu(LayoutEditorScreen.getCurrentInstance())) continue;
             ActionScrollEntry e = new ActionScrollEntry(this.actionsListScrollArea, c, (entry) -> {
                 this.instance.action = c;
                 if (this.originalAction == c) {

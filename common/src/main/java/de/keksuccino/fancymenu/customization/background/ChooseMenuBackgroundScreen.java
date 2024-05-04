@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.background;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.background.backgrounds.image.ImageMenuBackground;
 import de.keksuccino.fancymenu.customization.background.backgrounds.image.ImageMenuBackgroundBuilder;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -209,6 +210,7 @@ public class ChooseMenuBackgroundScreen extends Screen {
 
         //TODO handling für deprecated adden ---->
         for (MenuBackgroundBuilder<?> b : MenuBackgroundRegistry.getBuilders()) {
+            if ((LayoutEditorScreen.getCurrentInstance() != null) && !b.shouldShowUpInEditorBackgroundMenu(LayoutEditorScreen.getCurrentInstance())) continue;
             BackgroundTypeScrollEntry e = new BackgroundTypeScrollEntry(this.backgroundTypeListScrollArea, b, (entry) -> {
                 if (this.backgroundType != b) {
                     this.backgroundType = b;

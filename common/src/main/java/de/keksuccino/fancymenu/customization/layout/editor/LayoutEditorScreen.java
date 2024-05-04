@@ -48,6 +48,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -63,6 +65,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	protected static final Map<SerializedElement, ElementBuilder<?,?>> COPIED_ELEMENTS_CLIPBOARD = new LinkedHashMap<>();
 	public static final int ELEMENT_DRAG_CRUMPLE_ZONE = 5;
 
+	@Nullable
 	protected static LayoutEditorScreen currentInstance = null;
 
 	@Nullable
@@ -100,8 +103,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public LayoutEditorScreen(@Nullable Screen layoutTargetScreen, @NotNull Layout layout) {
 
 		super(Components.literal(""));
-
-		currentInstance = this;
 
 		this.layoutTargetScreen = layoutTargetScreen;
 		layout.updateLastEditedTime();
@@ -1275,6 +1276,24 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	}
 
+	public void closeEditor() {
+		this.saveWidgetSettings();
+		currentInstance = null;
+		if (this.layoutTargetScreen instanceof CreateWorldScreen) {
+			CreateWorldScreen.openFresh(Minecraft.getInstance(), new TitleScreen());
+		} else {
+			Minecraft.getInstance().setScreen(this.layoutTargetScreen);
+		}
+	}
+
+	public LayoutEditorScreen setAsCurrentInstance() {
+		currentInstance = this;
+		return this;
+	}
+
+	/**
+	 * The currently active editor instance. This is NULL when not in the editor.
+	 */
 	@Nullable
 	public static LayoutEditorScreen getCurrentInstance() {
 		return currentInstance;
