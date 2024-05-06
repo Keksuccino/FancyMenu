@@ -1,4 +1,13 @@
 
+CHANGELOG | FANCYMENU v3.2.1
+ 
+- Fixed custom backgrounds rendering after Vanilla widgets in the Title screen in MC 1.20.6
+ 
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.2.0
 
 - Added support for FMA (FancyMenu Animation) files, which is a new animated texture format created for FancyMenu
