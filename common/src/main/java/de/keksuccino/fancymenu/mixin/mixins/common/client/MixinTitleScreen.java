@@ -28,6 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinTitleScreen extends Screen {
 
     @Shadow public boolean fading;
+
     @Unique boolean handleRealmsNotificationFancyMenu = false;
 
     //unused dummy constructor
@@ -36,9 +37,21 @@ public abstract class MixinTitleScreen extends Screen {
         super(null);
     }
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/LogoRenderer;renderLogo(Lnet/minecraft/client/gui/GuiGraphics;IF)V"))
-    private void fireBackgroundRenderedEventAfterPanoramaOverlayFancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo ci) {
+    /**
+     * @reason Manually fire FancyMenu's {@link RenderedScreenBackgroundEvent} in {@link TitleScreen}, because normal event doesn't work correctly here.
+     */
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/TitleScreen;renderPanorama(Lnet/minecraft/client/gui/GuiGraphics;F)V", shift = At.Shift.AFTER))
+    private void after_renderPanorama_in_render_FancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
         EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, graphics));
+    }
+
+    /**
+     * @reason Makes FancyMenu not fire its {@link RenderedScreenBackgroundEvent} in {@link TitleScreen} when calling {@link Screen#render(GuiGraphics, int, int, float)}, because it would get fired too late.
+     */
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
+    private boolean wrap_super_render_in_render_FancyMenu(Screen instance, GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        ((IMixinScreen)this).getRenderablesFancyMenu().forEach(renderable -> renderable.render(graphics, mouseX, mouseY, partial));
+        return false;
     }
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/LogoRenderer;renderLogo(Lnet/minecraft/client/gui/GuiGraphics;IF)V"))
