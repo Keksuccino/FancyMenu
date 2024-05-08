@@ -119,7 +119,6 @@ public class LayoutEditorUI {
 		layoutMenu.addClickableEntry("close_editor", Component.translatable("fancymenu.editor.close"), (menu, entry) -> {
 			displayUnsavedWarning(call -> {
 				if (call) {
-					//TODO übernehmen
 					editor.closeEditor();
 				} else {
 					Minecraft.getInstance().setScreen(editor);
@@ -287,15 +286,14 @@ public class LayoutEditorUI {
 
 		//CLOSE EDITOR BUTTON
 		menuBar.addClickableEntry(MenuBar.Side.RIGHT, "close_editor", Component.empty(), (bar, entry) -> {
-					displayUnsavedWarning(call -> {
-						if (call) {
-							//TODO übernehmen
-							editor.closeEditor();
-						} else {
-							Minecraft.getInstance().setScreen(editor);
-						}
-					});
-				}).setIconTexture(CLOSE_EDITOR_TEXTURE)
+			displayUnsavedWarning(call -> {
+				if (call) {
+					editor.closeEditor();
+				} else {
+					Minecraft.getInstance().setScreen(editor);
+				}
+			});
+		}).setIconTexture(CLOSE_EDITOR_TEXTURE)
 				.setIconTextureColor(() -> UIBase.getUIColorTheme().layout_editor_close_icon_color);
 
 		return menuBar;
@@ -700,7 +698,6 @@ public class LayoutEditorUI {
 
 		int i = 0;
 		for (ElementBuilder<?,?> builder : ElementRegistry.getBuilders()) {
-			//TODO übernehmen
 			if ((LayoutEditorScreen.getCurrentInstance() != null) && !builder.shouldShowUpInEditorElementMenu(LayoutEditorScreen.getCurrentInstance())) continue;
 			if (!builder.isDeprecated()) {
 				ContextMenu.ClickableContextMenuEntry<?> entry = menu.addClickableEntry("element_" + i, builder.getDisplayName(null), (menu1, entry1) -> {

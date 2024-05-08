@@ -22,7 +22,6 @@ import java.util.Objects;
 public class CustomizationOverlay {
 
 	private static final Logger LOGGER = LogManager.getLogger();
-	//TODO übernehmen
 	private static final Map<String, ConsumingSupplier<Screen, Boolean>> OVERLAY_VISIBILITY_CONTROLLERS = new HashMap<>();
 
 	private static CustomizationOverlayMenuBar overlayMenuBar;
@@ -52,8 +51,8 @@ public class CustomizationOverlay {
 		return debugOverlay;
 	}
 
-	//TODO übernehmen
 	public static boolean isOverlayVisible(@Nullable Screen currentScreen) {
+		if (FancyMenu.getOptions().modpackMode.getValue()) return false;
 		if (!FancyMenu.getOptions().showCustomizationOverlay.getValue()) return false;
 		if (currentScreen == null) return false;
 		for (ConsumingSupplier<Screen, Boolean> s : OVERLAY_VISIBILITY_CONTROLLERS.values()) {
@@ -62,7 +61,6 @@ public class CustomizationOverlay {
 		return true;
 	}
 
-	//TODO übernehmen
 	/**
 	 * Registers a new overlay visibility controller that lets you control if the menu bar should be visible in certain screens and situations.
 	 * @return The unique identifier of the controller. Useful for when you need to unregister the controller later.
@@ -74,14 +72,12 @@ public class CustomizationOverlay {
 		return id;
 	}
 
-	//TODO übernehmen
 	public static void unregisterOverlayVisibilityController(@NotNull String identifier) {
 		OVERLAY_VISIBILITY_CONTROLLERS.remove(Objects.requireNonNull(identifier));
 	}
 
 	@EventListener(priority = -1000)
 	public void onInitScreenPost(InitOrResizeScreenCompletedEvent e) {
-		//TODO übernehmen (isOverlayVisible)
 		if (!ScreenCustomization.isScreenBlacklisted(e.getScreen().getClass().getName()) && isOverlayVisible(e.getScreen())) {
 			rebuildOverlay();
 			if ((overlayMenuBar != null) && (debugOverlay != null)) {
@@ -101,7 +97,6 @@ public class CustomizationOverlay {
 
 	@EventListener(priority = EventPriority.LOW)
 	public void onRenderPost(RenderScreenEvent.Post e) {
-		//TODO übernehmen (isOverlayVisible)
 		if (!ScreenCustomization.isScreenBlacklisted(e.getScreen().getClass().getName()) && (overlayMenuBar != null) && (debugOverlay != null) && isOverlayVisible(e.getScreen())) {
 			if (FancyMenu.getOptions().showDebugOverlay.getValue()) {
 				debugOverlay.allowRender = true;
@@ -123,21 +118,25 @@ public class CustomizationOverlay {
 
 			String keyName = e.getKeyName();
 
-			//Toggle Menu Bar
-			if (keyName.equals("c") && Screen.hasControlDown() && Screen.hasAltDown()) {
-				FancyMenu.getOptions().showCustomizationOverlay.setValue(!FancyMenu.getOptions().showCustomizationOverlay.getValue());
-				ScreenCustomization.reInitCurrentScreen();
-			}
+			if (!FancyMenu.getOptions().modpackMode.getValue()) {
 
-			//Toggle Debug Overlay
-			if (keyName.equals("d") && Screen.hasControlDown() && Screen.hasAltDown()) {
-				FancyMenu.getOptions().showDebugOverlay.setValue(!FancyMenu.getOptions().showDebugOverlay.getValue());
-				ScreenCustomization.reInitCurrentScreen();
-			}
+				//Toggle Menu Bar
+				if (keyName.equals("c") && Screen.hasControlDown() && Screen.hasAltDown()) {
+					FancyMenu.getOptions().showCustomizationOverlay.setValue(!FancyMenu.getOptions().showCustomizationOverlay.getValue());
+					ScreenCustomization.reInitCurrentScreen();
+				}
 
-			//Reload FancyMenu
-			if (keyName.equals("r") && Screen.hasControlDown() && Screen.hasAltDown()) {
-				ScreenCustomization.reloadFancyMenu();
+				//Toggle Debug Overlay
+				if (keyName.equals("d") && Screen.hasControlDown() && Screen.hasAltDown()) {
+					FancyMenu.getOptions().showDebugOverlay.setValue(!FancyMenu.getOptions().showDebugOverlay.getValue());
+					ScreenCustomization.reInitCurrentScreen();
+				}
+
+				//Reload FancyMenu
+				if (keyName.equals("r") && Screen.hasControlDown() && Screen.hasAltDown()) {
+					ScreenCustomization.reloadFancyMenu();
+				}
+
 			}
 
 		}

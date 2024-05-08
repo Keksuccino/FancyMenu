@@ -511,7 +511,6 @@ public class TextEditorScreen extends Screen {
         //Build lists of all placeholders ordered by categories
         Map<String, List<Placeholder>> categories = new LinkedHashMap<>();
         for (Placeholder p : PlaceholderRegistry.getPlaceholders()) {
-            //TODO übernehmen
             if (!p.shouldShowUpInPlaceholderMenu(LayoutEditorScreen.getCurrentInstance())) continue;
             String cat = p.getCategory();
             if (cat == null) {

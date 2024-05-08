@@ -61,7 +61,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	protected static final Map<SerializedElement, ElementBuilder<?,?>> COPIED_ELEMENTS_CLIPBOARD = new LinkedHashMap<>();
 	public static final int ELEMENT_DRAG_CRUMPLE_ZONE = 5;
 
-	//TODO übernehmen (nullable)
 	@Nullable
 	protected static LayoutEditorScreen currentInstance = null;
 
@@ -99,9 +98,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public LayoutEditorScreen(@Nullable Screen layoutTargetScreen, @NotNull Layout layout) {
 
 		super(Component.literal(""));
-
-		//TODO übernehmen
-		//currentInstance = this;
 
 		this.layoutTargetScreen = layoutTargetScreen;
 		layout.updateLastEditedTime();
@@ -1270,7 +1266,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	}
 
-	//TODO übernehmen
 	public void closeEditor() {
 		this.saveWidgetSettings();
 		currentInstance = null;
@@ -1281,7 +1276,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		}
 	}
 
-	//TODO übernehmen
 	public LayoutEditorScreen setAsCurrentInstance() {
 		currentInstance = this;
 		return this;

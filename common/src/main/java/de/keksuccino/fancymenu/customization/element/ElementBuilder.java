@@ -16,6 +16,7 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -370,7 +371,6 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
         return false;
     }
 
-    //TODO übernehmen
     /**
      * This lets you control if it should be possible to add a new instance of this element type to a layout.<br>
      * For example, by using this you can control if the element should only be available for specific types of {@link Screen}s.

@@ -337,7 +337,7 @@ public class CustomizationOverlayUI {
                 .setIcon(ContextMenu.IconFactory.getIcon("video"));
 
         ResourceSupplier<ITexture> emptyImageSupplier = ResourceSupplier.empty(ITexture.class, FileMediaType.IMAGE);
-        FileTypeGroup<ImageFileType> introFileTypeGroup = FileTypeGroup.of(FileTypes.APNG_IMAGE);
+        FileTypeGroup<ImageFileType> introFileTypeGroup = FileTypeGroup.of(FileTypes.APNG_IMAGE, FileTypes.GIF_IMAGE, FileTypes.FMA_IMAGE);
 
         NonStackableOverlayUI.addGenericResourceChooserContextMenuEntryTo(screenSettingsGameIntroMenu, "set_game_intro",
                 () -> new ResourceChooserScreen<>(Component.empty(), introFileTypeGroup, null, s -> {}),

@@ -24,7 +24,6 @@ public abstract class MenuBackgroundBuilder<T extends MenuBackground> {
         return false;
     }
 
-    //TODO übernehmen
     /**
      * This lets you control if it should be possible to add a new instance of this background type to a layout.<br>
      * For example, by using this you can control if the background should only be available for specific types of {@link Screen}s.
