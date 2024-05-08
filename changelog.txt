@@ -1,4 +1,14 @@
 
+CHANGELOG | FANCYMENU v3.2.2
+ 
+- Backported FM v3.2.X to MC 1.20.4 (1.20.4 will probably get dropped again after this update)
+- Fixed Game Intro only accepting APNG files (now also accepts GIF and FMA files)
+ 
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.2.1
  
 - Fixed custom backgrounds rendering after Vanilla widgets in the Title screen in MC 1.20.6
