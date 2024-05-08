@@ -84,6 +84,8 @@ dependencies {
     implementation fg.deobf("curse.maven:melody-938643:4970119")
     //This is only to fix the missing dependency error in-dev
     implementation group: 'ca.weblite', name: 'java-objc-bridge', version: '1.1'
+    implementation fg.deobf("curse.maven:rubidium-574856:4763255")
+    implementation fg.deobf("curse.maven:oculus-581495:4763262")
 }
 
 tasks.withType(JavaCompile).configureEach {
