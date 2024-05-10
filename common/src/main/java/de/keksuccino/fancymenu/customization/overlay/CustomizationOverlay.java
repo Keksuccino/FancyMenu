@@ -52,7 +52,6 @@ public class CustomizationOverlay {
 	}
 
 	public static boolean isOverlayVisible(@Nullable Screen currentScreen) {
-		//TODO übernehmen (animation update)
 		if (FancyMenu.getOptions().modpackMode.getValue()) return false;
 		if (!FancyMenu.getOptions().showCustomizationOverlay.getValue()) return false;
 		if (currentScreen == null) return false;
@@ -119,7 +118,6 @@ public class CustomizationOverlay {
 
 			String keyName = e.getKeyName();
 
-			//TODO übernehmen (animation update)
 			if (!FancyMenu.getOptions().modpackMode.getValue()) {
 
 				//Toggle Menu Bar

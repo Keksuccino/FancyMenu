@@ -20,7 +20,6 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.*;
 
-//TODO übernehmen (animation update)
 public class FmaDecoder implements Closeable {
 
     private static final Logger LOGGER = LogManager.getLogger();

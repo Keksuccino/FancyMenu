@@ -8,23 +8,21 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ExecutableElement;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinButton;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
@@ -84,16 +82,33 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
         if (!this.shouldRender()) return;
 
+        //TODO übernehmen
+//        if (isEditor()) {
+//            if (this.getWidget() instanceof ExtendedButton e) {
+//                e.setPressAction((button) -> {});
+//            } else if (this.getWidget() instanceof Button b) {
+//                ((IMixinButton)b).setPressActionFancyMenu((button) -> {});
+//            }
+//            this.getWidget().visible = true;
+//            this.getWidget().active = true;
+//            this.getWidget().setTooltip(null);
+//        }
+
+        //TODO übernehmen
         if (isEditor()) {
-            if (this.getWidget() instanceof ExtendedButton e) {
-                e.setPressAction((button) -> {});
-            } else if (this.getWidget() instanceof Button b) {
-                ((IMixinButton)b).setPressActionFancyMenu((button) -> {});
-            }
+            net.minecraft.client.gui.components.Tooltip cachedVanillaTooltip = this.getWidget().getTooltip();
+            boolean cachedVisible = this.getWidget().visible;
+            boolean cachedActive = this.getWidget().active;
             this.getWidget().visible = true;
             this.getWidget().active = true;
             this.getWidget().setTooltip(null);
+            MainThreadTaskExecutor.executeInMainThread(() -> {
+                this.getWidget().visible = cachedVisible;
+                this.getWidget().active = cachedActive;
+                this.getWidget().setTooltip(cachedVanillaTooltip);
+            }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
         }
+        //----------------
 
         this.renderElementWidget(graphics, mouseX, mouseY, partial);
 

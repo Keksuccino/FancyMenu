@@ -43,7 +43,6 @@ public class ResourcePreLoader {
                                     LOGGER.error("[FANCYMENU] Failed to pre-load resource! Loading failed for: " + source.getSourceWithPrefix());
                                 }
                                 if (!resource.isLoadingFailed() && !resource.isLoadingCompleted()) {
-                                    //TODO übernehmen (animation update)
                                     LOGGER.error("[FANCYMENU] Pre-loading resource took too long! Will not finish pre-loading resource: " + source.getSourceWithPrefix(), new TimeoutException("Resource pre-loading timed out! Took longer than millis: " + waitForCompletedMillis));
                                 }
                             }

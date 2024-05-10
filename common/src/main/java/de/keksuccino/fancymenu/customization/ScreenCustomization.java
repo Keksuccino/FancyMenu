@@ -29,6 +29,7 @@ import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.customization.world.LastWorldHandler;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.events.ModReloadEvent;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
@@ -69,7 +70,6 @@ public class ScreenCustomization {
 			return;
 		}
 
-		//TODO übernehmen (animation update)
 		LOGGER.info("[FANCYMENU] Initializing screen customization engine! Addons should NOT REGISTER TO REGISTRIES anymore now!");
 
 		EventHandler.INSTANCE.registerListenersOf(eventsInstance);
@@ -279,12 +279,17 @@ public class ScreenCustomization {
 		reInitCurrentScreen();
 	}
 
+	//TODO übernehmen
 	public static void reInitCurrentScreen() {
 		if (Minecraft.getInstance().screen != null) {
 			RenderingUtils.resetGuiScale();
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(Minecraft.getInstance().screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(Minecraft.getInstance().screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
-			Minecraft.getInstance().screen.resize(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
+			if (!((IMixinScreen)Minecraft.getInstance().screen).get_initialized_FancyMenu()) {
+				Minecraft.getInstance().setScreen(Minecraft.getInstance().screen);
+			} else {
+				Minecraft.getInstance().screen.resize(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
+			}
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(Minecraft.getInstance().screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(Minecraft.getInstance().screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
 		}

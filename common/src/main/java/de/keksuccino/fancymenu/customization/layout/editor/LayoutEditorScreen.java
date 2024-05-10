@@ -44,6 +44,7 @@ import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.screens.GenericMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -485,7 +486,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		this.cachedVanillaWidgetMetas.clear();
 		if (this.layoutTargetScreen != null) {
-			this.cachedVanillaWidgetMetas.addAll(ScreenWidgetDiscoverer.getWidgetsOfScreen(this.layoutTargetScreen, true, false));
+			//TODO übernehmen
+			this.cachedVanillaWidgetMetas.addAll(ScreenWidgetDiscoverer.getWidgetsOfScreen(this.layoutTargetScreen, true));
 		}
 		for (WidgetMeta m : this.cachedVanillaWidgetMetas) {
 			if (m.getWidget() instanceof CustomizableWidget w) {
@@ -1258,16 +1260,21 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	}
 
+	//TODO übernehmen
 	public void closeEditor() {
 		this.saveWidgetSettings();
 		currentInstance = null;
-//		if (this.layoutTargetScreen instanceof CreateWorldScreen) {
-//			CreateWorldScreen.openFresh(Minecraft.getInstance(), new TitleScreen());
-//		} else {
-//			Minecraft.getInstance().setScreen(this.layoutTargetScreen);
-//		}
-		//TODO experimental
-		Minecraft.getInstance().setScreen(null);
+		if (this.layoutTargetScreen != null) {
+			if (!((IMixinScreen)this.layoutTargetScreen).get_initialized_FancyMenu()) {
+				Minecraft.getInstance().setScreen(this.layoutTargetScreen);
+			} else {
+				Minecraft.getInstance().setScreen(new GenericMessageScreen(Component.literal("Closing editor..")));
+				Minecraft.getInstance().screen = this.layoutTargetScreen;
+				ScreenCustomization.reInitCurrentScreen();
+			}
+		} else {
+			Minecraft.getInstance().setScreen(null);
+		}
 	}
 
 	public LayoutEditorScreen setAsCurrentInstance() {

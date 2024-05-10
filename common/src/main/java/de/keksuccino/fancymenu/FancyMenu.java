@@ -20,18 +20,15 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO übernehmen (animation update) : update locals
-
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	//TODO übernehmen (animation update)
-	public static final String VERSION = "3.2.2";
+	//TODO übernehmen
+	public static final String VERSION = "3.2.3";
 	public static final String MOD_LOADER = Services.PLATFORM.getPlatformName();
 	public static final String MOD_ID = "fancymenu";
 
 	public static final File MOD_DIR = createDirectory(new File(GameDirectoryUtils.getGameDirectory(), "/config/fancymenu"));
 	public static final File INSTANCE_DATA_DIR = createDirectory(new File(GameDirectoryUtils.getGameDirectory(), "/fancymenu_data"));
-	//TODO übernehmen (animation update)
 	public static final File TEMP_DATA_DIR = ObjectUtils.build(() -> {
 		File f = new File(INSTANCE_DATA_DIR, "/fancymenu_temp");
 		if (f.isDirectory()) org.apache.commons.io.FileUtils.deleteQuietly(f);
@@ -56,9 +53,6 @@ public class FancyMenu {
 			UIColorThemes.registerAll();
 
 			TextColorFormatters.registerAll();
-
-			//TODO übernehmen (animation update)
-			//ScreenCustomization.init();
 
 			EventHandler.INSTANCE.registerListenersOf(new Test());
 

@@ -12,27 +12,33 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+//TODO übernehmen
 public class ScreenWidgetDiscoverer {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
 	@NotNull
-	public static List<WidgetMeta> getWidgetsOfScreen(@NotNull Screen screen, boolean updateScreenSize, boolean firstInit) {
+	public static List<WidgetMeta> getWidgetsOfScreen(@NotNull Screen screen) {
+		return getWidgetsOfScreen(screen, false);
+	}
+
+	@NotNull
+	public static List<WidgetMeta> getWidgetsOfScreen(@NotNull Screen screen, boolean updateScreenSize) {
 		int newWidth = screen.width;
 		int newHeight = screen.height;
 		if (updateScreenSize) {
 			newWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
 			newHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
 		}
-		return getWidgetsOfScreen(screen, newWidth, newHeight, firstInit);
+		return getWidgetsOfScreen(screen, newWidth, newHeight);
 	}
 
 	@NotNull
-	public static List<WidgetMeta> getWidgetsOfScreen(@NotNull Screen screen, int newWidth, int newHeight, boolean firstInit) {
+	public static List<WidgetMeta> getWidgetsOfScreen(@NotNull Screen screen, int newWidth, int newHeight) {
 		Map<Long, WidgetMeta> widgetMetas = new LinkedHashMap<>();
 		try {
-			List<WidgetMeta> ids = getWidgetsOfScreenInternal(screen, 1000, 1000, firstInit);
-			List<WidgetMeta> buttons = getWidgetsOfScreenInternal(screen, newWidth, newHeight, firstInit);
+			List<WidgetMeta> ids = _getWidgetsOfScreen(screen, 1000, 1000);
+			List<WidgetMeta> buttons = _getWidgetsOfScreen(screen, newWidth, newHeight);
 			if (buttons.size() == ids.size()) {
 				int i = 0;
 				for (WidgetMeta id : ids) {
@@ -59,13 +65,13 @@ public class ScreenWidgetDiscoverer {
 	}
 
 	@NotNull
-	private static List<WidgetMeta> getWidgetsOfScreenInternal(@NotNull Screen screen, int screenWidth, int screenHeight, boolean firstInit) {
+	private static List<WidgetMeta> _getWidgetsOfScreen(@NotNull Screen screen, int screenWidth, int screenHeight) {
 		List<WidgetMeta> widgetMetaList = new ArrayList<>();
 		List<Long> ids = new ArrayList<>();
 		try {
 
 			//This is to avoid NullPointers
-			if (firstInit) {
+			if (!((IMixinScreen)screen).get_initialized_FancyMenu()) {
 				screen.init(Minecraft.getInstance(), screenWidth, screenHeight);
 			} else {
 				screen.resize(Minecraft.getInstance(), screenWidth, screenHeight);
@@ -93,7 +99,7 @@ public class ScreenWidgetDiscoverer {
 		}
 	}
 
-	private static Long getAvailableIdFromBaseId(long baseId, List<Long> ids) {
+	private static Long getAvailableIdFromBaseId(long baseId, @NotNull List<Long> ids) {
 		if (ids.contains(baseId)) {
 			String newId = baseId + "1";
 			if (MathUtils.isLong(newId)) {

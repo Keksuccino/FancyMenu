@@ -21,7 +21,6 @@ public class MinecraftUsers {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String MOJANG_PROFILE_API_URL = "https://api.mojang.com/users/profiles/minecraft/";
-    //TODO übernehmen (animation update)
     private static final String MINETOOLS_PROFILE_API_URL = "https://api.minetools.eu/uuid/";
     private static final Map<String, UserProfile> CACHED_PROFILES = Collections.synchronizedMap(new HashMap<>());
     private static final Map<String, MinecraftProfileTextures> CACHED_PROFILE_TEXTURES = Collections.synchronizedMap(new HashMap<>());
@@ -32,13 +31,11 @@ public class MinecraftUsers {
     public static final MinecraftProfileTexture MISSING_ELYTRA_TEXTURE = new MinecraftProfileTexture("", Collections.emptyMap());
     public static final MinecraftProfileTextures MISSING_PROFILE_TEXTURES = new MinecraftProfileTextures(MISSING_SKIN_TEXTURE, MISSING_CAPE_TEXTURE, MISSING_ELYTRA_TEXTURE, SignatureState.UNSIGNED);
 
-    //TODO übernehmen (animation update)
     @NotNull
     public static UserProfile getUserProfile(@NotNull String playerName) {
         return _getUserProfile(playerName, false);
     }
 
-    //TODO übernehmen (animation update)
     @NotNull
     private static UserProfile _getUserProfile(@NotNull String playerName, boolean useMojangApi) {
 

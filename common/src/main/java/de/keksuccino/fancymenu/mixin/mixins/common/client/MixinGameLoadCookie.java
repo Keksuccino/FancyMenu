@@ -10,7 +10,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-//TODO übernehmen (animation update)
 @Mixin(targets = "net.minecraft.client.Minecraft$GameLoadCookie", remap = true)
 public class MixinGameLoadCookie {
 

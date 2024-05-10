@@ -286,7 +286,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			}
 		}
 
-		this.cachedScreenWidgetMetas = ScreenWidgetDiscoverer.getWidgetsOfScreen(e.getScreen(), false, false);
+		//TODO übernehmen
+		this.cachedScreenWidgetMetas = ScreenWidgetDiscoverer.getWidgetsOfScreen(e.getScreen());
 
 		this.constructElementInstances(this.getScreenIdentifier(), this.cachedScreenWidgetMetas, this.activeLayouts, this.normalElements, this.vanillaWidgetElements, this.deepElements);
 		this.allElements.addAll(this.normalElements.backgroundElements);

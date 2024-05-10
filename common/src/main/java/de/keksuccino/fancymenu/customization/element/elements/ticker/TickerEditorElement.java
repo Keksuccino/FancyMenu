@@ -42,7 +42,6 @@ public class TickerEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("ticker_separator_1");
 
-        //TODO übernehmen (animation update)
         this.addLongInputContextMenuEntryTo(this.rightClickMenu, "tick_delay", TickerEditorElement.class,
                         consumes -> consumes.getTickerElement().tickDelayMs,
                         (tickerEditorElement, aLong) -> tickerEditorElement.getTickerElement().tickDelayMs = Math.max(0L, aLong),
@@ -50,7 +49,6 @@ public class TickerEditorElement extends AbstractEditorElement {
                 .setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("timer"))
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.ticker.tick_delay.desc")));
-        //--------------------------
 
         this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "set_async",
                         consumes -> (consumes instanceof TickerEditorElement),
