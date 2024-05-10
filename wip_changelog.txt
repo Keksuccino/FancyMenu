@@ -1,7 +1,8 @@
 
-CHANGELOG | FANCYMENU v3.2.X [ W I P !! Not public yet !! ]
+CHANGELOG | FANCYMENU v3.2.3 [ W I P !! Not public yet !! ]
 
-- 
+- The layout editor now opens the target screen again when closing the editor in MC 1.20.6+
+- Minimized the changes the layout editor does to Vanilla widgets, so they are less likely to be broken when leaving the editor
 
  
 %changelog:end%
