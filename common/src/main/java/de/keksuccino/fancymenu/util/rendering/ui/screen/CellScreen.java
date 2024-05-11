@@ -145,6 +145,12 @@ public abstract class CellScreen extends Screen {
 
     }
 
+    //TODO übernehmen
+    @Override
+    protected void setInitialFocus() {
+        //This fixes a crash related to the custom GUI scale handling in init()
+    }
+
     protected abstract void onCancel();
 
     protected abstract void onDone();

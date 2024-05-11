@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.widget;
 import java.util.*;
 import de.keksuccino.fancymenu.customization.widget.identification.WidgetIdentifierHandler;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractSelectionList;
@@ -68,7 +69,14 @@ public class ScreenWidgetDiscoverer {
 	private static List<WidgetMeta> _getWidgetsOfScreen(@NotNull Screen screen, int screenWidth, int screenHeight) {
 		List<WidgetMeta> widgetMetaList = new ArrayList<>();
 		List<Long> ids = new ArrayList<>();
+
 		try {
+
+			//TODO übernehmen
+			((IMixinScreen)screen).getRenderablesFancyMenu().forEach(renderable -> {
+				if (renderable instanceof CustomizableWidget w) w.resetWidgetCustomizationsFancyMenu();
+			});
+			//------------------
 
 			//This is to avoid NullPointers
 			if (!((IMixinScreen)screen).get_initialized_FancyMenu()) {

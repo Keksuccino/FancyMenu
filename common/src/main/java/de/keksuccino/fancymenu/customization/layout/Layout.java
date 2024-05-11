@@ -44,6 +44,8 @@ import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Style;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
@@ -53,6 +55,7 @@ import java.util.function.Supplier;
 @SuppressWarnings("unused")
 public class Layout extends LayoutBase {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     public static final String UNIVERSAL_LAYOUT_IDENTIFIER = "%fancymenu:universal_layout%";
 
     @Nullable
