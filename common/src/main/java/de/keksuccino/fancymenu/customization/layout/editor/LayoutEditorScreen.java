@@ -318,6 +318,12 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			this.layout.menuBackground.keepBackgroundAspectRatio = this.layout.preserveBackgroundAspectRatio;
 			this.layout.menuBackground.opacity = 1.0F;
 			this.layout.menuBackground.render(graphics, mouseX, mouseY, partial);
+			//TODO übernehmen
+			if (this.layout.applyVanillaBackgroundBlur) {
+				Minecraft.getInstance().gameRenderer.processBlurEffect(partial);
+				Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
+			}
+			//------------------
 			if (this.layout.showScreenBackgroundOverlayOnCustomBackground) {
 				ScreenCustomizationLayer.renderBackgroundOverlay(graphics, 0, 0, this.width, this.height);
 			}

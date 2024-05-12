@@ -203,6 +203,8 @@ public class Layout extends LayoutBase {
         scrollListContainer.putProperty("repeat_scroll_list_header_texture", "" + this.repeatScrollListHeaderTexture);
         scrollListContainer.putProperty("repeat_scroll_list_footer_texture", "" + this.repeatScrollListFooterTexture);
         scrollListContainer.putProperty("show_screen_background_overlay_on_custom_background", "" + this.showScreenBackgroundOverlayOnCustomBackground);
+        //TODO übernehmen
+        scrollListContainer.putProperty("apply_vanilla_background_blur", "" + this.applyVanillaBackgroundBlur);
         set.putContainer(scrollListContainer);
 
         this.layoutWideLoadingRequirementContainer.serializeToExistingPropertyContainer(meta);
@@ -427,6 +429,8 @@ public class Layout extends LayoutBase {
                 layout.showScreenBackgroundOverlayOnCustomBackground = SerializationUtils.deserializeBoolean(layout.showScreenBackgroundOverlayOnCustomBackground, scrollListCustomizations.getValue("show_screen_background_overlay_on_custom_background"));
                 layout.repeatScrollListHeaderTexture = SerializationUtils.deserializeBoolean(layout.repeatScrollListHeaderTexture, scrollListCustomizations.getValue("repeat_scroll_list_header_texture"));
                 layout.repeatScrollListFooterTexture = SerializationUtils.deserializeBoolean(layout.repeatScrollListFooterTexture, scrollListCustomizations.getValue("repeat_scroll_list_footer_texture"));
+                //TODO übernehmen
+                layout.applyVanillaBackgroundBlur = SerializationUtils.deserializeBoolean(layout.applyVanillaBackgroundBlur, scrollListCustomizations.getValue("apply_vanilla_background_blur"));
             }
 
             //Handle everything else

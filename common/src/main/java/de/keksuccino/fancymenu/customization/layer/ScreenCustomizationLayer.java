@@ -569,6 +569,12 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			this.layoutBase.menuBackground.keepBackgroundAspectRatio = this.layoutBase.preserveBackgroundAspectRatio;
 			this.layoutBase.menuBackground.opacity = this.backgroundOpacity;
 			this.layoutBase.menuBackground.render(graphics, mouseX, mouseY, partial);
+			//TODO übernehmen
+			if (this.layoutBase.applyVanillaBackgroundBlur) {
+				Minecraft.getInstance().gameRenderer.processBlurEffect(partial);
+				Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
+			}
+			//------------------
 			this.layoutBase.menuBackground.opacity = 1.0F;
 			if (this.layoutBase.showScreenBackgroundOverlayOnCustomBackground) {
 				int overlayY = 0;

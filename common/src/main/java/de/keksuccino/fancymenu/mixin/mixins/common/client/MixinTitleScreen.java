@@ -1,6 +1,9 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.deep.layers.DeepScreenCustomizationLayers;
 import de.keksuccino.fancymenu.customization.deep.layers.titlescreen.realmsnotification.TitleScreenRealmsNotificationDeepElement;
@@ -9,6 +12,7 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -37,11 +41,25 @@ public abstract class MixinTitleScreen extends Screen {
         super(null);
     }
 
+    //TODO übernehmen
     /**
      * @reason Manually fire FancyMenu's {@link RenderedScreenBackgroundEvent} in {@link TitleScreen}, because normal event doesn't work correctly here.
      */
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/TitleScreen;renderPanorama(Lnet/minecraft/client/gui/GuiGraphics;F)V", shift = At.Shift.AFTER))
-    private void after_renderPanorama_in_render_FancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
+    @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/TitleScreen;renderPanorama(Lnet/minecraft/client/gui/GuiGraphics;F)V"))
+    private void wrap_renderPanorama_in_render_FancyMenu(TitleScreen instance, GuiGraphics graphics, float f, Operation<Void> original) {
+        ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen((Screen)((Object)this));
+        if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this)) {
+            if (l.layoutBase.menuBackground != null) {
+                RenderSystem.enableBlend();
+                //Render a black background before the custom background gets rendered
+                graphics.fill(0, 0, this.width, this.height, 0);
+                RenderingUtils.resetShaderColor(graphics);
+            } else {
+                original.call(instance, graphics, f);
+            }
+        } else {
+            original.call(instance, graphics, f);
+        }
         EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, graphics));
     }
 

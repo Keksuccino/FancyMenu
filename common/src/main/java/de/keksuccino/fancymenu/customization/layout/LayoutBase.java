@@ -32,6 +32,8 @@ public class LayoutBase {
     public boolean renderScrollListFooterShadow = true;
     public boolean showScrollListHeaderFooterPreviewInEditor = false;
     public boolean showScreenBackgroundOverlayOnCustomBackground = false;
+    //TODO übernehmen
+    public boolean applyVanillaBackgroundBlur = false;
 
     @NotNull
     public static LayoutBase stackLayoutBases(LayoutBase... layouts) {
@@ -89,6 +91,10 @@ public class LayoutBase {
                 }
                 if (l.showScreenBackgroundOverlayOnCustomBackground) {
                     layout.showScreenBackgroundOverlayOnCustomBackground = true;
+                }
+                //TODO übernehmen
+                if (l.applyVanillaBackgroundBlur) {
+                    layout.applyVanillaBackgroundBlur = true;
                 }
 
             }

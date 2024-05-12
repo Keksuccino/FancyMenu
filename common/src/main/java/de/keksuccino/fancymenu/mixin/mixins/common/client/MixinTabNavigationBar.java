@@ -63,7 +63,7 @@ public class MixinTabNavigationBar {
 
     //TODO übernehmen
     /**
-     * Re-init the screen when the tab got changed by clicking one of the Tab buttons at the top
+     * @reason Re-init the screen when the tab got changed by clicking one of the Tab buttons at the top
      */
     @Inject(method = "setFocused(Lnet/minecraft/client/gui/components/events/GuiEventListener;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/tabs/TabManager;setCurrentTab(Lnet/minecraft/client/gui/components/tabs/Tab;Z)V", shift = At.Shift.AFTER))
     private void after_setCurrentTab_in_setFocused_FancyMenu(GuiEventListener guiEventListener, CallbackInfo info) {
@@ -72,7 +72,7 @@ public class MixinTabNavigationBar {
 
     //TODO übernehmen
     /**
-     * Re-init the screen when the tab got changed by using keys (arrow keys, Tab key, number keys)
+     * @reason Re-init the screen when the tab got changed by using keys (arrow keys, Tab key, number keys)
      */
     @Inject(method = "keyPressed", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/tabs/TabNavigationBar;selectTab(IZ)V", shift = At.Shift.AFTER))
     private void after_selectTab_in_keyPressed_FancyMenu(int i, CallbackInfoReturnable<Boolean> info) {

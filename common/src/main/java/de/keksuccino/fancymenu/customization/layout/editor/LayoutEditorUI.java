@@ -433,6 +433,12 @@ public class LayoutEditorUI {
 			editor.layout.showScreenBackgroundOverlayOnCustomBackground = cycle.getAsBoolean();
 		})).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.background.show_overlay_on_custom_background.desc")));
 
+		//TODO übernehmen
+		menu.addValueCycleEntry("apply_vanilla_background_blur", CommonCycles.cycleEnabledDisabled("fancymenu.editor.background.blur_background", editor.layout.applyVanillaBackgroundBlur).addCycleListener(cycle -> {
+			editor.history.saveSnapshot();
+			editor.layout.applyVanillaBackgroundBlur = cycle.getAsBoolean();
+		})).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.background.blur_background.desc")));
+
 		menu.addSeparatorEntry("separator_after_keep_background_aspect");
 
 		if ((editor.layoutTargetScreen != null) && !editor.layout.isUniversalLayout()) {
