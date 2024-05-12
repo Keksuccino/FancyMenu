@@ -6,6 +6,7 @@ CHANGELOG | FANCYMENU v3.2.3 [ W I P !! Not public yet !! ]
 - Fixed game crash when opening the Create World screen while customizations are enabled for that screen in MC 1.20.6
 - Fixed customized Vanilla widgets show as uncustomized in the editor despite having a layout open that customizes said widgets in MC 1.20+ (maybe 1.19+)
 - Fixed some of FancyMenu's screens crashing the game (like the Choose Resource screen) in MC 1.20.6
+- Fixed Vanilla menu panorama rendering above FancyMenu's panorama backgrounds when the Vanilla one is changed with a resource pack
 
 %changelog:end%
 
