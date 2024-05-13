@@ -1,4 +1,20 @@
 
+CHANGELOG | FANCYMENU v3.2.3
+ 
+- Added option to apply Vanilla MC's background blur to custom backgrounds
+- The layout editor now opens the target screen again when closing the editor in MC 1.20.6+
+- Minimized the changes the layout editor does to Vanilla widgets, so they are less likely to be broken when leaving the editor
+- Fixed game crash when opening the Create World screen while customizations are enabled for that screen in MC 1.20.6
+- Fixed customized Vanilla widgets show as uncustomized in the editor despite having a layout open that customizes said widgets in MC 1.20+ (maybe 1.19+)
+- Fixed some of FancyMenu's screens crashing the game (like the Choose Resource screen) in MC 1.20.6
+- Fixed Vanilla menu panorama rendering above FancyMenu's panorama backgrounds when the Vanilla one is changed with a resource pack
+- Fixed missing localization for description of "Set Player Name" option of Player Entity elements
+ 
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.2.2
  
 - Backported FM v3.2.X to MC 1.20.4 (1.20.4 will probably get dropped again after this update)
