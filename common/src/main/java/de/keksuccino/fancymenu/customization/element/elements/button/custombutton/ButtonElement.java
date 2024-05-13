@@ -15,13 +15,13 @@ import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -85,13 +85,18 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         if (!this.shouldRender()) return;
 
         if (isEditor()) {
-            if (this.getWidget() instanceof ExtendedButton e) {
-                e.setPressAction((button) -> {});
-            } else if (this.getWidget() instanceof Button b) {
-                ((IMixinButton)b).setPressActionFancyMenu((button) -> {});
-            }
+            IMixinButton btn = (this.getWidget() instanceof Button b) ? ((IMixinButton)b) : null;
+            Button.OnTooltip cachedVanillaTooltip = (btn != null) ? btn.get_onTooltip_FancyMenu() : null;
+            boolean cachedVisible = this.getWidget().visible;
+            boolean cachedActive = this.getWidget().active;
             this.getWidget().visible = true;
             this.getWidget().active = true;
+            if (btn != null) btn.set_onTooltip_FancyMenu((button, poseStack, i, i1) -> {});
+            MainThreadTaskExecutor.executeInMainThread(() -> {
+                this.getWidget().visible = cachedVisible;
+                this.getWidget().active = cachedActive;
+                if (btn != null) btn.set_onTooltip_FancyMenu(cachedVanillaTooltip);
+            }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
         }
 
         this.renderElementWidget(graphics, mouseX, mouseY, partial);

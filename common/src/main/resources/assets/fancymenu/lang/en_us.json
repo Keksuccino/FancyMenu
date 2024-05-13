@@ -1218,5 +1218,7 @@
   "fancymenu.commands.variable.get.error": "[FANCYMENU] Failed to get variable via /fmvariable command!",
   "fancymenu.commands.variable.set.error": "[FANCYMENU] Failed to set variable via /fmvariable command!",
   "fancymenu.editor.background.show_overlay_on_custom_background": "Show Dark Overlay On Custom Background: %s",
-  "fancymenu.editor.background.show_overlay_on_custom_background.desc": "If the dark overlay rendered by Vanilla Minecraft\nshould be visible on custom backgrounds."
+  "fancymenu.editor.background.show_overlay_on_custom_background.desc": "If the dark overlay rendered by Vanilla Minecraft\nshould be visible on custom backgrounds.",
+  "fancymenu.editor.background.blur_background": "Apply Vanilla Background Blur: %s",
+  "fancymenu.editor.background.blur_background.desc": "If Vanilla's background blur should get\napplied to the custom background."
 }

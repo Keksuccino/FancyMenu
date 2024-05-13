@@ -39,6 +39,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.*;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.SaveFileScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
@@ -47,6 +48,7 @@ import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
@@ -502,7 +504,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		this.cachedVanillaWidgetMetas.clear();
 		if (this.layoutTargetScreen != null) {
-			this.cachedVanillaWidgetMetas.addAll(ScreenWidgetDiscoverer.getWidgetsOfScreen(this.layoutTargetScreen, true, false));
+			this.cachedVanillaWidgetMetas.addAll(ScreenWidgetDiscoverer.getWidgetsOfScreen(this.layoutTargetScreen, true));
 		}
 		for (WidgetMeta m : this.cachedVanillaWidgetMetas) {
 			if (m.getWidget() instanceof CustomizableWidget w) {
@@ -1279,10 +1281,20 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public void closeEditor() {
 		this.saveWidgetSettings();
 		currentInstance = null;
-		if (this.layoutTargetScreen instanceof CreateWorldScreen) {
-			Minecraft.getInstance().setScreen(CreateWorldScreen.createFresh(new TitleScreen()));
+		if (this.layoutTargetScreen != null) {
+			if (this.layoutTargetScreen instanceof CustomizableScreen c) {
+				if (!c.isScreenInitialized_FancyMenu()) {
+					Minecraft.getInstance().setScreen(this.layoutTargetScreen);
+				} else {
+					Minecraft.getInstance().setScreen(new GenericDirtMessageScreen(Components.literal("Closing editor..")));
+					Minecraft.getInstance().screen = this.layoutTargetScreen;
+					ScreenCustomization.reInitCurrentScreen();
+				}
+			} else {
+				Minecraft.getInstance().setScreen(this.layoutTargetScreen);
+			}
 		} else {
-			Minecraft.getInstance().setScreen(this.layoutTargetScreen);
+			Minecraft.getInstance().setScreen(null);
 		}
 	}
 

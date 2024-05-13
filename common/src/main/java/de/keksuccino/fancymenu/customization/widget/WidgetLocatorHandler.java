@@ -52,7 +52,7 @@ public class WidgetLocatorHandler {
                 }
             } else {
                 ScreenWidgetCollection collection = new ScreenWidgetCollection();
-                collection.setWidgets(ScreenWidgetDiscoverer.getWidgetsOfScreen(screen, false, false));
+                collection.setWidgets(ScreenWidgetDiscoverer.getWidgetsOfScreen(screen));
                 CACHED_WIDGETS.put(screenIdentifier, collection);
             }
         }
