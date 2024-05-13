@@ -53,9 +53,9 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                 .setIsActiveSupplier((menu, entry) -> !((PlayerEntityElement) this.element).copyClientPlayer)
                 .setTooltipSupplier((menu, entry) -> {
                     if (entry.isActive()) {
-                        return Tooltip.of("fancymenu.helper.editor.items.playerentity.set_player_name.desc");
+                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.set_player_name.desc"));
                     }
-                    return Tooltip.of("fancymenu.helper.editor.items.playerentity.copy_client_player.blocked_until_disabled");
+                    return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.copy_client_player.blocked_until_disabled"));
                 });
 
         this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "show_name",
