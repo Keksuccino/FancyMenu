@@ -17,7 +17,9 @@ import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -255,6 +257,9 @@ public class LayoutHandler {
 					}
 				}
 			}
+			GenericDirtMessageScreen msgScreen = new GenericDirtMessageScreen(Component.literal("Opening editor.."));
+			msgScreen.init(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
+			Minecraft.getInstance().screen = msgScreen;
 			Minecraft.getInstance().setScreen(new LayoutEditorScreen(layoutTargetScreen, layout).setAsCurrentInstance());
 		} catch (Exception e) {
 			e.printStackTrace();
