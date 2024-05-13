@@ -145,6 +145,10 @@ public abstract class CellScreen extends Screen {
 
     }
 
+    @Override
+    protected void setInitialFocus(GuiEventListener $$0) {
+    }
+
     protected abstract void onCancel();
 
     protected abstract void onDone();
