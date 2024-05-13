@@ -1,8 +1,8 @@
 
 CHANGELOG | FANCYMENU v3.2.3
  
-- Added option to apply Vanilla MC's background blur to custom backgrounds
-- The layout editor now opens the target screen again when closing the editor in MC 1.20.6+
+- Added option to apply Vanilla MC's background blur to custom backgrounds in MC 1.20.6
+- The layout editor now opens the target screen again when closing the editor in MC 1.20.6
 - Minimized the changes the layout editor does to Vanilla widgets, so they are less likely to be broken when leaving the editor
 - Fixed game crash when opening the Create World screen while customizations are enabled for that screen in MC 1.20.6
 - Fixed customized Vanilla widgets show as uncustomized in the editor despite having a layout open that customizes said widgets in MC 1.20+ (maybe 1.19+)
