@@ -72,11 +72,9 @@ public class ScreenWidgetDiscoverer {
 
 		try {
 
-			//TODO übernehmen
 			((IMixinScreen)screen).getRenderablesFancyMenu().forEach(renderable -> {
 				if (renderable instanceof CustomizableWidget w) w.resetWidgetCustomizationsFancyMenu();
 			});
-			//------------------
 
 			//This is to avoid NullPointers
 			if (!((IMixinScreen)screen).get_initialized_FancyMenu()) {

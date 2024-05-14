@@ -1,7 +1,7 @@
 plugins {
     id 'idea'
     id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+    id 'net.minecraftforge.gradle' version '[6.0.24,6.2)'
     id 'org.spongepowered.mixin' version '0.7-SNAPSHOT'
 }
 base {
@@ -14,12 +14,21 @@ mixin {
     config("${mod_id}.forge.mixins.json")
 }
 
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+jarJar.enable()
+
 minecraft {
 
-    //mappings channel: 'official', version: minecraft_version
-    mappings channel: 'official', version: "1.20.4"
+    mappings channel: 'official', version: minecraft_version
 
-    copyIdeResources = true //Calls processResources when in dev
+    // Tell FG to not automtically create the reobf tasks, as we now use Official mappings at runtime, If you don't use them at dev time then you'll have to fix your reobf yourself.
+    reobf = false
+
+    // This property allows configuring Gradle's ProcessResources task(s) to run on IDE output locations before launching the game.
+    // It is REQUIRED to be set to true for this template to function.
+    // See https://docs.gradle.org/current/dsl/org.gradle.language.jvm.tasks.ProcessResources.html
+    copyIdeResources = true
 
     // Automatically enable forge AccessTransformers if the file exists
     // This location is hardcoded in Forge and can not be changed.
@@ -59,17 +68,15 @@ minecraft {
 
 }
 
-sourceSets.main.resources.srcDir 'src/generated/resources'
-
 repositories {
     flatDir { dirs 'libs' }
 }
 
-jarJar.enable()
+sourceSets.main.resources.srcDir 'src/generated/resources'
 
 dependencies {
-    //minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-	minecraft "net.minecraftforge:forge:1.20.4-${forge_version}"
+    minecraft("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
+    implementation('net.sf.jopt-simple:jopt-simple:5.0.4') { version { strictly '5.0.4' } }
     compileOnly project(":common")
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
     //Needs to be "implementation" when building and "compileOnly" in-dev for some frickin reason
@@ -78,15 +85,19 @@ dependencies {
     implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.3.2")) {
         jarJar.ranged(it, "[0.3.2,)")
     }
+//    jarJar("io.github.llamalad7:mixinextras-forge:0.3.2") {
+//        jarJar.ranged(it, "[0.3.2,)")
+//    }
     minecraftLibrary(jarJar("com.github.Keksuccino:japng:0.5.3")) {
         jarJar.ranged(it, "[0.5.3,)")
     }
     minecraftLibrary(jarJar("com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7")) {
         jarJar.ranged(it, "[1.7,)")
     }
-    //implementation fg.deobf("maven.modrinth:konkrete:1.8.0-1.20.4-forge")
-    implementation fg.deobf("flatdir:konkrete:1.0.0")
-    implementation fg.deobf("maven.modrinth:melody:1.0.0-1.20.1-1.20.4-forge")
+    //implementation fg.deobf("maven.modrinth:konkrete:1.9.6-1.20.6-forge")
+    //implementation fg.deobf("maven.modrinth:melody:1.0.7-1.20.6-forge")
+    implementation "flatdir:dev_konkrete:1.9.6" //this is a Mojmap dev build because fg.deobf() refuses to work here in 1.20.6.. (I wasted a day trying to figure out why this happens and how to fix it, but gave up at the end)
+    implementation "flatdir:dev_melody:1.0.7" //this is a Mojmap dev build because fg.deobf() refuses to work here in 1.20.6.. (I wasted a day trying to figure out why this happens and how to fix it, but gave up at the end)
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -103,7 +114,7 @@ processResources {
     from project(":common").sourceSets.main.resources
 }
 
-jar.finalizedBy('reobfJar')
+//jar.finalizedBy('reobfJar')
 
 publishing {
     publications {

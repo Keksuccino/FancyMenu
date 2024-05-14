@@ -47,7 +47,7 @@ public abstract class MixinTitleScreen extends Screen {
      */
     @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/TitleScreen;renderPanorama(Lnet/minecraft/client/gui/GuiGraphics;F)V"))
     private void wrap_renderPanorama_in_render_FancyMenu(TitleScreen instance, GuiGraphics graphics, float f, Operation<Void> original) {
-        ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen((Screen)((Object)this));
+        ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen(this);
         if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this)) {
             if (l.layoutBase.menuBackground != null) {
                 RenderSystem.enableBlend();
