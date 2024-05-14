@@ -85,9 +85,6 @@ dependencies {
     implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.3.2")) {
         jarJar.ranged(it, "[0.3.2,)")
     }
-//    jarJar("io.github.llamalad7:mixinextras-forge:0.3.2") {
-//        jarJar.ranged(it, "[0.3.2,)")
-//    }
     minecraftLibrary(jarJar("com.github.Keksuccino:japng:0.5.3")) {
         jarJar.ranged(it, "[0.5.3,)")
     }
@@ -96,8 +93,8 @@ dependencies {
     }
     //implementation fg.deobf("maven.modrinth:konkrete:1.9.6-1.20.6-forge")
     //implementation fg.deobf("maven.modrinth:melody:1.0.7-1.20.6-forge")
-    implementation "flatdir:dev_konkrete:1.9.6" //this is a Mojmap dev build because fg.deobf() refuses to work here in 1.20.6.. (I wasted a day trying to figure out why this happens and how to fix it, but gave up at the end)
-    implementation "flatdir:dev_melody:1.0.7" //this is a Mojmap dev build because fg.deobf() refuses to work here in 1.20.6.. (I wasted a day trying to figure out why this happens and how to fix it, but gave up at the end)
+    implementation "flatdir:dev_konkrete:1.9.6"
+    implementation "flatdir:dev_melody:1.0.7"
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -115,6 +112,7 @@ processResources {
 }
 
 //jar.finalizedBy('reobfJar')
+jar.finalizedBy('jarJar')
 
 publishing {
     publications {
