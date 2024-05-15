@@ -42,6 +42,8 @@ public class MixinMinecraft {
 
 	@Inject(method = "setOverlay", at = @At("HEAD"))
 	private void beforeSetOverlayFancyMenu(Overlay overlay, CallbackInfo info) {
+		//TODO remove debug
+		LOGGER_FANCYMENU.info("############################################################### THIS IS A TEST FROM FANCYMENU !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 		if (!this.lateClientInitDoneFancyMenu) {
 			this.lateClientInitDoneFancyMenu = true;
 			FancyMenu.lateClientInit();
