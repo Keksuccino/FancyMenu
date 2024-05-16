@@ -132,3 +132,11 @@ sourceSets.each {
     it.output.resourcesDir = dir
     it.java.destinationDirectory = dir
 }
+
+jar {
+    manifest {
+        attributes([
+                "MixinConfigs": "${mod_id}.forge.mixins.json,${mod_id}.mixins.json"
+        ])
+    }
+}
