@@ -50,7 +50,6 @@ public class FileTypes {
             "image/apng", "apng")
             .setCustomDisplayName(Component.translatable("fancymenu.file_types.apng"))
             .setAnimated(true);
-    //TODO übernehmen (animation update)
     public static final ImageFileType FMA_IMAGE = new ImageFileType(
             FileCodec.advanced(ITexture.class, FmaTexture::of, FmaTexture::location, FmaTexture::local, FmaTexture::web),
             "image/fma", "fma")
@@ -111,7 +110,6 @@ public class FileTypes {
         FileTypeRegistry.register("png", PNG_IMAGE);
         FileTypeRegistry.register("gif", GIF_IMAGE);
         FileTypeRegistry.register("apng", APNG_IMAGE);
-        //TODO übernehmen (animation update)
         FileTypeRegistry.register("fma", FMA_IMAGE);
 
         FileTypeRegistry.register("ogg", OGG_AUDIO);

@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.ram.
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.ram.UsedRamPlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.player.PlayerNamePlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.player.PlayerUuidPlaceholder;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.world.*;
 
 public class Placeholders {
 
@@ -83,6 +84,12 @@ public class Placeholders {
     public static final JvmNamePlaceholder JVM_NAME = new JvmNamePlaceholder();
     public static final OpenGLVersionPlaceholder OPEN_GL_VERSION = new OpenGLVersionPlaceholder();
     public static final OSNamePlaceholder OS_NAME = new OSNamePlaceholder();
+    public static final ActiveHotbarSlotPlaceholder ACTIVE_HOTBAR_SLOT = new ActiveHotbarSlotPlaceholder();
+    public static final CurrentPlayerHealthPlaceholder CURRENT_PLAYER_HEALTH = new CurrentPlayerHealthPlaceholder();
+    public static final GameTimePlaceholder GAME_TIME = new GameTimePlaceholder();
+    public static final SlotItemPlaceholder SLOT_ITEM = new SlotItemPlaceholder();
+    public static final WorldDayTimePlaceholder WORLD_DAY_TIME = new WorldDayTimePlaceholder();
+    public static final WorldDifficultyPlaceholder WORLD_DIFFICULTY = new WorldDifficultyPlaceholder();
 
     public static void registerAll() {
 
@@ -112,6 +119,16 @@ public class Placeholders {
         //Player
         PlaceholderRegistry.register(PLAYER_NAME);
         PlaceholderRegistry.register(PLAYER_UUID);
+
+        //TODO übernehmen
+        //World
+        PlaceholderRegistry.register(ACTIVE_HOTBAR_SLOT);
+        PlaceholderRegistry.register(CURRENT_PLAYER_HEALTH);
+        PlaceholderRegistry.register(GAME_TIME);
+        PlaceholderRegistry.register(SLOT_ITEM);
+        PlaceholderRegistry.register(WORLD_DAY_TIME);
+        PlaceholderRegistry.register(WORLD_DIFFICULTY);
+        //----------------------------
 
         //Server
         PlaceholderRegistry.register(SERVER_MOTD);

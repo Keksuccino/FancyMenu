@@ -941,7 +941,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return (T) this;
         }
 
-        //TODO übernehmen
         public boolean isActive() {
             for (BooleanSupplier b : this.activeStateSuppliers) {
                 if (!b.getBoolean(this.parent, this)) return false;
@@ -967,7 +966,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return (T) this;
         }
 
-        //TODO übernehmen
         public boolean isVisible() {
             for (BooleanSupplier b : this.visibleStateSuppliers) {
                 if (!b.getBoolean(this.parent, this)) return false;

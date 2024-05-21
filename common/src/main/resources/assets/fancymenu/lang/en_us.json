@@ -1220,5 +1220,18 @@
   "fancymenu.editor.background.show_overlay_on_custom_background": "Show Dark Overlay On Custom Background: %s",
   "fancymenu.editor.background.show_overlay_on_custom_background.desc": "If the dark overlay rendered by Vanilla Minecraft\nshould be visible on custom backgrounds.",
   "fancymenu.editor.background.blur_background": "Apply Vanilla Background Blur: %s",
-  "fancymenu.editor.background.blur_background.desc": "If Vanilla's background blur should get\napplied to the custom background."
+  "fancymenu.editor.background.blur_background.desc": "If Vanilla's background blur should get\napplied to the custom background.",
+  "fancymenu.placeholders.categories.world": "World",
+  "fancymenu.placeholders.world.world_day_time": "World Day Time",
+  "fancymenu.placeholders.world.world_day_time.desc": "The current world's day time.\nThis is the time within a day.\nReturns '0' if no world is loaded.",
+  "fancymenu.placeholders.world.world_game_time": "World Game Time",
+  "fancymenu.placeholders.world.world_game_time.desc": "The current world's game time.\nThis is the total game time, not the day time.\nReturns '0' if no world is loaded.",
+  "fancymenu.placeholders.world.difficulty": "World Difficulty",
+  "fancymenu.placeholders.world.difficulty.desc": "Returns the current world's difficulty.\nReturns empty value if no world is loaded.\nPossible Values: peaceful, easy, normal, hard",
+  "fancymenu.placeholders.world.active_hotbar_slot": "Active Hotbar Slot",
+  "fancymenu.placeholders.world.active_hotbar_slot.desc": "The currently selected hotbar slot.\nReturns '0' if no world is loaded.\nPossible Values: 0-8",
+  "fancymenu.placeholders.world.slot_item": "Slot Item",
+  "fancymenu.placeholders.world.slot_item.desc": "Returns the item in the given\ninventory slot as resource location.\nReturns an empty value when not in a world.",
+  "fancymenu.placeholders.world.current_player_health": "Current Player Health",
+  "fancymenu.placeholders.world.current_player_health.desc": "Returns the current health of the player.\nReturns '0.0' when not in a world."
 }
