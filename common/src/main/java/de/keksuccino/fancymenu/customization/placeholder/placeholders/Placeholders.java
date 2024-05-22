@@ -90,6 +90,24 @@ public class Placeholders {
     public static final SlotItemPlaceholder SLOT_ITEM = new SlotItemPlaceholder();
     public static final WorldDayTimePlaceholder WORLD_DAY_TIME = new WorldDayTimePlaceholder();
     public static final WorldDifficultyPlaceholder WORLD_DIFFICULTY = new WorldDifficultyPlaceholder();
+    public static final MaxPlayerHealthPlaceholder MAX_PLAYER_HEALTH = new MaxPlayerHealthPlaceholder();
+    public static final CurrentPlayerHealthPercentagePlaceholder CURRENT_PLAYER_HEALTH_PERCENTAGE = new CurrentPlayerHealthPercentagePlaceholder();
+    public static final CurrentPlayerAbsorptionHealthPlaceholder CURRENT_PLAYER_ABSORPTION_HEALTH = new CurrentPlayerAbsorptionHealthPlaceholder();
+    public static final MaxPlayerAbsorptionHealthPlaceholder MAX_PLAYER_ABSORPTION_HEALTH = new MaxPlayerAbsorptionHealthPlaceholder();
+    public static final CurrentPlayerAbsorptionHealthPercentagePlaceholder CURRENT_PLAYER_ABSORPTION_HEALTH_PERCENTAGE = new CurrentPlayerAbsorptionHealthPercentagePlaceholder();
+    public static final CurrentPlayerHungerPlaceholder CURRENT_PLAYER_HUNGER = new CurrentPlayerHungerPlaceholder();
+    public static final MaxPlayerHungerPlaceholder MAX_PLAYER_HUNGER = new MaxPlayerHungerPlaceholder();
+    public static final CurrentPlayerHungerPercentagePlaceholder CURRENT_PLAYER_HUNGER_PERCENTAGE = new CurrentPlayerHungerPercentagePlaceholder();
+    public static final CurrentPlayerArmorPlaceholder CURRENT_PLAYER_ARMOR = new CurrentPlayerArmorPlaceholder();
+    public static final MaxPlayerArmorPlaceholder MAX_PLAYER_ARMOR = new MaxPlayerArmorPlaceholder();
+    public static final CurrentPlayerArmorPercentagePlaceholder CURRENT_PLAYER_ARMOR_PERCENTAGE = new CurrentPlayerArmorPercentagePlaceholder();
+    public static final CurrentPlayerExpProgressPlaceholder CURRENT_PLAYER_EXP_PROGRESS = new CurrentPlayerExpProgressPlaceholder();
+    public static final CurrentPlayerExperiencePlaceholder CURRENT_PLAYER_EXPERIENCE = new CurrentPlayerExperiencePlaceholder();
+    public static final CurrentPlayerLevelPlaceholder CURRENT_PLAYER_LEVEL = new CurrentPlayerLevelPlaceholder();
+    public static final CurrentMountHealthPlaceholder CURRENT_MOUNT_HEALTH = new CurrentMountHealthPlaceholder();
+    public static final MaxMountHealthPlaceholder MAX_MOUNT_HEALTH = new MaxMountHealthPlaceholder();
+    public static final CurrentMountHealthPercentagePlaceholder CURRENT_MOUNT_HEALTH_PERCENTAGE = new CurrentMountHealthPercentagePlaceholder();
+    public static final CurrentMountJumpMeterPlaceholder CURRENT_MOUNT_JUMP_METER = new CurrentMountJumpMeterPlaceholder();
 
     public static void registerAll() {
 
@@ -124,6 +142,24 @@ public class Placeholders {
         //World
         PlaceholderRegistry.register(ACTIVE_HOTBAR_SLOT);
         PlaceholderRegistry.register(CURRENT_PLAYER_HEALTH);
+        PlaceholderRegistry.register(MAX_PLAYER_HEALTH);
+        PlaceholderRegistry.register(CURRENT_PLAYER_HEALTH_PERCENTAGE);
+        PlaceholderRegistry.register(CURRENT_PLAYER_ABSORPTION_HEALTH);
+        PlaceholderRegistry.register(MAX_PLAYER_ABSORPTION_HEALTH);
+        PlaceholderRegistry.register(CURRENT_PLAYER_ABSORPTION_HEALTH_PERCENTAGE);
+        PlaceholderRegistry.register(CURRENT_PLAYER_HUNGER);
+        PlaceholderRegistry.register(MAX_PLAYER_HUNGER);
+        PlaceholderRegistry.register(CURRENT_PLAYER_HUNGER_PERCENTAGE);
+        PlaceholderRegistry.register(CURRENT_PLAYER_ARMOR);
+        PlaceholderRegistry.register(MAX_PLAYER_ARMOR);
+        PlaceholderRegistry.register(CURRENT_PLAYER_ARMOR_PERCENTAGE);
+        PlaceholderRegistry.register(CURRENT_PLAYER_EXP_PROGRESS);
+        PlaceholderRegistry.register(CURRENT_PLAYER_EXPERIENCE);
+        PlaceholderRegistry.register(CURRENT_PLAYER_LEVEL);
+        PlaceholderRegistry.register(CURRENT_MOUNT_HEALTH);
+        PlaceholderRegistry.register(MAX_MOUNT_HEALTH);
+        PlaceholderRegistry.register(CURRENT_MOUNT_HEALTH_PERCENTAGE);
+        PlaceholderRegistry.register(CURRENT_MOUNT_JUMP_METER);
         PlaceholderRegistry.register(GAME_TIME);
         PlaceholderRegistry.register(SLOT_ITEM);
         PlaceholderRegistry.register(WORLD_DAY_TIME);

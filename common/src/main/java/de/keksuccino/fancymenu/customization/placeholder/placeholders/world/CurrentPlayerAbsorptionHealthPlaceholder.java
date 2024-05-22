@@ -5,20 +5,20 @@ import net.minecraft.client.player.LocalPlayer;
 import org.jetbrains.annotations.NotNull;
 
 //TODO übernehmen
-public class CurrentPlayerHealthPlaceholder extends AbstractWorldFloatPlaceholder {
+public class CurrentPlayerAbsorptionHealthPlaceholder extends AbstractWorldFloatPlaceholder {
 
-    public CurrentPlayerHealthPlaceholder() {
-        super("current_player_health");
+    public CurrentPlayerAbsorptionHealthPlaceholder() {
+        super("current_player_absorption_health");
     }
 
     @Override
     protected float getFloatValue(@NotNull LocalPlayer player, @NotNull ClientLevel level) {
-        return player.getHealth();
+        return player.getAbsorptionAmount();
     }
 
     @Override
     protected @NotNull String getLocalizationBase() {
-        return "fancymenu.placeholders.world.current_player_health";
+        return "fancymenu.placeholders.world.current_player_absorption_health";
     }
 
 }

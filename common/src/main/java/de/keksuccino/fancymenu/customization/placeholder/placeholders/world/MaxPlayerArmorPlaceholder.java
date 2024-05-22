@@ -5,20 +5,20 @@ import net.minecraft.client.player.LocalPlayer;
 import org.jetbrains.annotations.NotNull;
 
 //TODO übernehmen
-public class CurrentPlayerHealthPlaceholder extends AbstractWorldFloatPlaceholder {
+public class MaxPlayerArmorPlaceholder extends AbstractWorldFloatPlaceholder {
 
-    public CurrentPlayerHealthPlaceholder() {
-        super("current_player_health");
+    public MaxPlayerArmorPlaceholder() {
+        super("max_player_armor");
     }
 
     @Override
     protected float getFloatValue(@NotNull LocalPlayer player, @NotNull ClientLevel level) {
-        return player.getHealth();
+        return 20; //hardcoded max value for players
     }
 
     @Override
     protected @NotNull String getLocalizationBase() {
-        return "fancymenu.placeholders.world.current_player_health";
+        return "fancymenu.placeholders.world.max_player_armor";
     }
 
 }
