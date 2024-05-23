@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.platform.services.IPlatformHelper;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.ModContainer;
@@ -84,6 +85,17 @@ public class ForgePlatformHelper implements IPlatformHelper {
     public @Nullable ResourceLocation getItemKey(@NotNull Item item) {
         try {
             return ForgeRegistries.ITEMS.getKey(item);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    //TODO übernehmen
+    @Override
+    public @Nullable ResourceLocation getEffectKey(@NotNull MobEffect effect) {
+        try {
+            return ForgeRegistries.MOB_EFFECTS.getKey(effect); //TODO neoforge <---------------------
         } catch (Exception ex) {
             ex.printStackTrace();
         }

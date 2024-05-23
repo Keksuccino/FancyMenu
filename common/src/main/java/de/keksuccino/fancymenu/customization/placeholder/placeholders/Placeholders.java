@@ -108,6 +108,18 @@ public class Placeholders {
     public static final MaxMountHealthPlaceholder MAX_MOUNT_HEALTH = new MaxMountHealthPlaceholder();
     public static final CurrentMountHealthPercentagePlaceholder CURRENT_MOUNT_HEALTH_PERCENTAGE = new CurrentMountHealthPercentagePlaceholder();
     public static final CurrentMountJumpMeterPlaceholder CURRENT_MOUNT_JUMP_METER = new CurrentMountJumpMeterPlaceholder();
+    public static final CurrentBossHealthPlaceholder CURRENT_BOSS_HEALTH = new CurrentBossHealthPlaceholder();
+    public static final BossNamePlaceholder BOSS_NAME = new BossNamePlaceholder();
+    public static final BossCountPlaceholder BOSS_COUNT = new BossCountPlaceholder();
+    public static final ActiveEffectsCountPlaceholder ACTIVE_EFFECTS_COUNT = new ActiveEffectsCountPlaceholder();
+    public static final ActiveEffectPlaceholder ACTIVE_EFFECT = new ActiveEffectPlaceholder();
+    public static final CurrentTitlePlaceholder CURRENT_TITLE = new CurrentTitlePlaceholder();
+    public static final PlayerXCoordinatePlaceholder PLAYER_X_COORDINATE = new PlayerXCoordinatePlaceholder();
+    public static final PlayerYCoordinatePlaceholder PLAYER_Y_COORDINATE = new PlayerYCoordinatePlaceholder();
+    public static final PlayerZCoordinatePlaceholder PLAYER_Z_COORDINATE = new PlayerZCoordinatePlaceholder();
+    public static final CurrentServerIpPlaceholder CURRENT_SERVER_IP = new CurrentServerIpPlaceholder();
+    public static final PlayerAttackStrengthPercentagePlaceholder PLAYER_ATTACK_STRENGTH_PERCENTAGE = new PlayerAttackStrengthPercentagePlaceholder();
+    public static final PlayerGamemodePlaceholder PLAYER_GAMEMODE = new PlayerGamemodePlaceholder();
 
     public static void registerAll() {
 
@@ -164,6 +176,18 @@ public class Placeholders {
         PlaceholderRegistry.register(SLOT_ITEM);
         PlaceholderRegistry.register(WORLD_DAY_TIME);
         PlaceholderRegistry.register(WORLD_DIFFICULTY);
+        PlaceholderRegistry.register(CURRENT_BOSS_HEALTH);
+        PlaceholderRegistry.register(BOSS_NAME);
+        PlaceholderRegistry.register(BOSS_COUNT);
+        PlaceholderRegistry.register(ACTIVE_EFFECTS_COUNT);
+        PlaceholderRegistry.register(ACTIVE_EFFECT);
+        PlaceholderRegistry.register(CURRENT_TITLE);
+        PlaceholderRegistry.register(PLAYER_X_COORDINATE);
+        PlaceholderRegistry.register(PLAYER_Y_COORDINATE);
+        PlaceholderRegistry.register(PLAYER_Z_COORDINATE);
+        PlaceholderRegistry.register(CURRENT_SERVER_IP);
+        PlaceholderRegistry.register(PLAYER_ATTACK_STRENGTH_PERCENTAGE);
+        PlaceholderRegistry.register(PLAYER_GAMEMODE);
         //----------------------------
 
         //Server

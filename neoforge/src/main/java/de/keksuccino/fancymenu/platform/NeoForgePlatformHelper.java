@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.platform.services.IPlatformHelper;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.item.Item;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.ModContainer;
@@ -85,6 +86,17 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
     public @Nullable ResourceLocation getItemKey(@NotNull Item item) {
         try {
             return BuiltInRegistries.ITEM.getKey(item);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    //TODO übernehmen
+    @Override
+    public @Nullable ResourceLocation getEffectKey(@NotNull MobEffect effect) {
+        try {
+            return BuiltInRegistries.MOB_EFFECT.getKey(effect);
         } catch (Exception ex) {
             ex.printStackTrace();
         }

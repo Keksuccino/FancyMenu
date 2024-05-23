@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.platform.services;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.item.Item;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -52,6 +53,10 @@ public interface IPlatformHelper {
     //TODO übernehmen
     @Nullable
     ResourceLocation getItemKey(@NotNull Item item);
+
+    //TODO übernehmen
+    @Nullable
+    ResourceLocation getEffectKey(@NotNull MobEffect effect);
 
     /**
      * Gets the name of the environment type as a string.
