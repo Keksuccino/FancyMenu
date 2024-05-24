@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.platform.services.IPlatformHelper;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.ModContainer;
@@ -95,7 +96,18 @@ public class ForgePlatformHelper implements IPlatformHelper {
     @Override
     public @Nullable ResourceLocation getEffectKey(@NotNull MobEffect effect) {
         try {
-            return ForgeRegistries.MOB_EFFECTS.getKey(effect); //TODO neoforge <---------------------
+            return ForgeRegistries.MOB_EFFECTS.getKey(effect);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    //TODO übernehmen
+    @Override
+    public @Nullable ResourceLocation getEntityKey(@NotNull EntityType<?> type) {
+        try {
+            return ForgeRegistries.ENTITY_TYPES.getKey(type);
         } catch (Exception ex) {
             ex.printStackTrace();
         }

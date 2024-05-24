@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.wor
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.gamemode.IsSurvivalRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.IsMultiplayerRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.IsSingleplayerRequirement;
+import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.player.*;
 
 public class LoadingRequirements {
 
@@ -55,6 +56,29 @@ public class LoadingRequirements {
     public static final IsServerIpRequirement IS_SERVER_IP = new IsServerIpRequirement();
     public static final IsServerOnlineRequirement IS_SERVER_ONLINE = new IsServerOnlineRequirement();
     public static final IsVariableValueRequirement IS_VARIABLE_VALUE = new IsVariableValueRequirement();
+    public static final IsPlayerRunningRequirement IS_PLAYER_RUNNING = new IsPlayerRunningRequirement();
+    public static final IsPlayerSneakingRequirement IS_PLAYER_SNEAKING = new IsPlayerSneakingRequirement();
+    public static final IsPlayerSwimmingRequirement IS_PLAYER_SWIMMING = new IsPlayerSwimmingRequirement();
+    public static final IsPlayerJumpingRequirement IS_PLAYER_JUMPING = new IsPlayerJumpingRequirement();
+    public static final IsPlayerUnderWaterRequirement IS_PLAYER_UNDER_WATER = new IsPlayerUnderWaterRequirement();
+    public static final IsPlayerInWaterRequirement IS_PLAYER_IN_WATER = new IsPlayerInWaterRequirement();
+    public static final IsPlayerInLavaRequirement IS_PLAYER_IN_LAVA = new IsPlayerInLavaRequirement();
+    public static final IsPlayerInFluidRequirement IS_PLAYER_IN_FLUID = new IsPlayerInFluidRequirement();
+    public static final IsPlayerRidingEntityRequirement IS_PLAYER_RIDING_ENTITY = new IsPlayerRidingEntityRequirement();
+    public static final IsPlayerRidingJumpableEntityRequirement IS_PLAYER_RIDING_JUMPABLE_ENTITY = new IsPlayerRidingJumpableEntityRequirement();
+    public static final IsPlayerRidingEntityWithHealthRequirement IS_PLAYER_RIDING_ENTITY_WITH_HEALTH = new IsPlayerRidingEntityWithHealthRequirement();
+    public static final IsPlayerInPowderSnowRequirement IS_PLAYER_IN_POWDER_SNOW = new IsPlayerInPowderSnowRequirement();
+    public static final WasPlayerInPowderSnowRequirement WAS_PLAYER_IN_POWDER_SNOW = new WasPlayerInPowderSnowRequirement();
+    public static final IsPlayerWearingPumpkinRequirement IS_PLAYER_WEARING_PUMPKIN = new IsPlayerWearingPumpkinRequirement();
+    public static final IsPlayerFlyingWithElytraRequirement IS_PLAYER_FLYING_WITH_ELYTRA = new IsPlayerFlyingWithElytraRequirement();
+    public static final IsPlayerCreativeFlyingRequirement IS_PLAYER_CREATIVE_FLYING = new IsPlayerCreativeFlyingRequirement();
+    public static final HasPlayerAbsorptionHeartsRequirement HAS_PLAYER_ABSORPTION_HEARTS = new HasPlayerAbsorptionHeartsRequirement();
+    public static final IsPlayerWitheredRequirement IS_PLAYER_WITHERED = new IsPlayerWitheredRequirement();
+    public static final IsPlayerFullyFrozenRequirement IS_PLAYER_FULLY_FROZEN = new IsPlayerFullyFrozenRequirement();
+    public static final IsPlayerPoisonedRequirement IS_PLAYER_POISONED = new IsPlayerPoisonedRequirement();
+    public static final IsPlayerInBiomeRequirement IS_PLAYER_IN_BIOME = new IsPlayerInBiomeRequirement();
+    public static final IsPlayerInDimensionRequirement IS_PLAYER_IN_DIMENSION = new IsPlayerInDimensionRequirement();
+    public static final IsEntityNearbyRequirement IS_ENTITY_NEARBY = new IsEntityNearbyRequirement();
 
     public static void registerAll() {
 
@@ -93,6 +117,32 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(IS_MULTIPLAYER);
         LoadingRequirementRegistry.register(IS_SINGLEPLAYER);
         LoadingRequirementRegistry.register(IS_WORLD_LOADED);
+
+        //TODO übernehmen
+        LoadingRequirementRegistry.register(IS_PLAYER_RUNNING);
+        LoadingRequirementRegistry.register(IS_PLAYER_SNEAKING);
+        LoadingRequirementRegistry.register(IS_PLAYER_SWIMMING);
+        LoadingRequirementRegistry.register(IS_PLAYER_JUMPING);
+        LoadingRequirementRegistry.register(IS_PLAYER_UNDER_WATER);
+        LoadingRequirementRegistry.register(IS_PLAYER_IN_WATER);
+        LoadingRequirementRegistry.register(IS_PLAYER_IN_LAVA);
+        LoadingRequirementRegistry.register(IS_PLAYER_IN_FLUID);
+        LoadingRequirementRegistry.register(IS_PLAYER_RIDING_ENTITY);
+        LoadingRequirementRegistry.register(IS_PLAYER_RIDING_JUMPABLE_ENTITY);
+        LoadingRequirementRegistry.register(IS_PLAYER_RIDING_ENTITY_WITH_HEALTH);
+        LoadingRequirementRegistry.register(IS_PLAYER_IN_POWDER_SNOW);
+        LoadingRequirementRegistry.register(WAS_PLAYER_IN_POWDER_SNOW);
+        LoadingRequirementRegistry.register(IS_PLAYER_WEARING_PUMPKIN);
+        LoadingRequirementRegistry.register(IS_PLAYER_FLYING_WITH_ELYTRA);
+        LoadingRequirementRegistry.register(IS_PLAYER_CREATIVE_FLYING);
+        LoadingRequirementRegistry.register(HAS_PLAYER_ABSORPTION_HEARTS);
+        LoadingRequirementRegistry.register(IS_PLAYER_WITHERED);
+        LoadingRequirementRegistry.register(IS_PLAYER_FULLY_FROZEN);
+        LoadingRequirementRegistry.register(IS_PLAYER_POISONED);
+        LoadingRequirementRegistry.register(IS_PLAYER_IN_BIOME);
+        LoadingRequirementRegistry.register(IS_PLAYER_IN_DIMENSION);
+        LoadingRequirementRegistry.register(IS_ENTITY_NEARBY);
+        //-------------------------
 
         LoadingRequirementRegistry.register(IS_LANGUAGE);
         LoadingRequirementRegistry.register(IS_MOD_LOADED);
