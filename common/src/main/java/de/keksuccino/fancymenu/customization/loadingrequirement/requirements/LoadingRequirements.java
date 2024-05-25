@@ -79,6 +79,18 @@ public class LoadingRequirements {
     public static final IsPlayerInBiomeRequirement IS_PLAYER_IN_BIOME = new IsPlayerInBiomeRequirement();
     public static final IsPlayerInDimensionRequirement IS_PLAYER_IN_DIMENSION = new IsPlayerInDimensionRequirement();
     public static final IsEntityNearbyRequirement IS_ENTITY_NEARBY = new IsEntityNearbyRequirement();
+    public static final IsEffectActiveRequirement IS_EFFECT_ACTIVE = new IsEffectActiveRequirement();
+    public static final IsAnyEffectActiveRequirement IS_ANY_EFFECT_ACTIVE = new IsAnyEffectActiveRequirement();
+    public static final IsGameModeRequirement IS_GAME_MODE = new IsGameModeRequirement();
+    public static final IsDifficultyRequirement IS_DIFFICULTY = new IsDifficultyRequirement();
+    public static final IsRainingRequirement IS_RAINING = new IsRainingRequirement();
+    public static final IsThunderingRequirement IS_THUNDERING = new IsThunderingRequirement();
+    public static final IsClearWeatherRequirement IS_CLEAR_WEATHER = new IsClearWeatherRequirement();
+    public static final IsSnowingRequirement IS_SNOWING = new IsSnowingRequirement();
+    public static final IsPlayerLeftHandedRequirement IS_PLAYER_LEFT_HANDED = new IsPlayerLeftHandedRequirement();
+    public static final IsInventorySlotFilledRequirement IS_INVENTORY_SLOT_FILLED = new IsInventorySlotFilledRequirement();
+    public static final IsHotbarSlotActiveRequirement IS_HOTBAR_SLOT_ACTIVE = new IsHotbarSlotActiveRequirement();
+    public static final IsAttackStrengthWeakenedRequirement IS_ATTACK_STRENGTH_WEAKENED = new IsAttackStrengthWeakenedRequirement();
 
     public static void registerAll() {
 
@@ -142,6 +154,18 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(IS_PLAYER_IN_BIOME);
         LoadingRequirementRegistry.register(IS_PLAYER_IN_DIMENSION);
         LoadingRequirementRegistry.register(IS_ENTITY_NEARBY);
+        LoadingRequirementRegistry.register(IS_EFFECT_ACTIVE);
+        LoadingRequirementRegistry.register(IS_ANY_EFFECT_ACTIVE);
+        LoadingRequirementRegistry.register(IS_GAME_MODE);
+        LoadingRequirementRegistry.register(IS_DIFFICULTY);
+        LoadingRequirementRegistry.register(IS_RAINING);
+        LoadingRequirementRegistry.register(IS_THUNDERING);
+        LoadingRequirementRegistry.register(IS_CLEAR_WEATHER);
+        LoadingRequirementRegistry.register(IS_SNOWING);
+        LoadingRequirementRegistry.register(IS_PLAYER_LEFT_HANDED);
+        LoadingRequirementRegistry.register(IS_INVENTORY_SLOT_FILLED);
+        LoadingRequirementRegistry.register(IS_HOTBAR_SLOT_ACTIVE);
+        LoadingRequirementRegistry.register(IS_ATTACK_STRENGTH_WEAKENED);
         //-------------------------
 
         LoadingRequirementRegistry.register(IS_LANGUAGE);

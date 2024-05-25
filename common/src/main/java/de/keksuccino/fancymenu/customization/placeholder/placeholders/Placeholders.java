@@ -120,6 +120,7 @@ public class Placeholders {
     public static final CurrentServerIpPlaceholder CURRENT_SERVER_IP = new CurrentServerIpPlaceholder();
     public static final PlayerAttackStrengthPercentagePlaceholder PLAYER_ATTACK_STRENGTH_PERCENTAGE = new PlayerAttackStrengthPercentagePlaceholder();
     public static final PlayerGamemodePlaceholder PLAYER_GAMEMODE = new PlayerGamemodePlaceholder();
+    public static final PlayerViewDirectionPlaceholder PLAYER_VIEW_DIRECTION = new PlayerViewDirectionPlaceholder();
 
     public static void registerAll() {
 
@@ -188,6 +189,7 @@ public class Placeholders {
         PlaceholderRegistry.register(CURRENT_SERVER_IP);
         PlaceholderRegistry.register(PLAYER_ATTACK_STRENGTH_PERCENTAGE);
         PlaceholderRegistry.register(PLAYER_GAMEMODE);
+        PlaceholderRegistry.register(PLAYER_VIEW_DIRECTION);
         //----------------------------
 
         //Server
