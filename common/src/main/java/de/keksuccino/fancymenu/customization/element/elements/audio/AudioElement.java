@@ -314,9 +314,11 @@ public class AudioElement extends AbstractElement {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        this.renderTick();
+        //TODO übernehmen
+        //this.renderTick();
 
-        if (!this.shouldRender()) return;
+        //TODO übernehmen
+        //if (!this.shouldRender()) return;
 
         if (isEditor()) {
             int x = this.getAbsoluteX();
@@ -331,6 +333,12 @@ public class AudioElement extends AbstractElement {
             RenderingUtils.resetShaderColor(graphics);
         }
 
+    }
+
+    //TODO übernehmen
+    @Override
+    public void renderTick_Post_ShouldRender_Stage_1() {
+        this.renderTick();
     }
 
     public enum PlayMode implements LocalizedCycleEnum<PlayMode> {

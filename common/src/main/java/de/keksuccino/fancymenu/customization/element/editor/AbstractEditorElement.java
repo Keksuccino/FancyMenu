@@ -505,7 +505,8 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		this.hovered = this.isMouseOver(mouseX, mouseY);
 
-		this.element.render(graphics, mouseX, mouseY, partial);
+		//TODO übernehmen
+		this.element.renderInternal(graphics, mouseX, mouseY, partial);
 
 		this.renderDraggingNotAllowedOverlay(graphics);
 

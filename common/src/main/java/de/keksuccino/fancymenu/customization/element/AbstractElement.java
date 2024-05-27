@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -23,6 +24,7 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
@@ -64,9 +66,23 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public volatile boolean visible = true;
 	public volatile AppearanceDelay appearanceDelay = AppearanceDelay.NO_DELAY;
 	public volatile float appearanceDelayInSeconds = 1.0F;
-	public volatile boolean fadeIn = false;
-	public volatile float fadeInSpeed = 1.0F;
-	public volatile float opacity = 1.0F;
+	//TODO übernehmen
+	public long appearanceDelayEndTime = -1;
+	@NotNull
+	public Fading fadeIn = Fading.NO_FADING;
+	public Fading fadeOut = Fading.NO_FADING;
+	public float fadeInSpeed = 1.0F;
+	public float fadeOutSpeed = 1.0F;
+	public boolean shouldDoFadeInIfNeeded = false;
+	public boolean fadeInStarted = false;
+	public boolean shouldDoFadeOutIfNeeded = false;
+	public boolean fadeOutStarted = false;
+	public boolean fadeOutFinished = false;
+	public float opacity = 1.0F;
+	public float baseOpacity = 1.0F;
+	public boolean becameVisible = false;
+	public boolean becameInvisible = false;
+	//-------------------
 	/**
 	 * This is for when the render scale was changed in a non-system-wide way like via {@link PoseStack#translate(float, float, float)}.<br>
 	 * Elements that do not support scaling via {@link PoseStack#translate(float, float, float)} need to use this value to manually scale themselves.<br>
@@ -99,6 +115,137 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	@Override
 	public abstract void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
+
+	//TODO übernehmen
+	/**
+	 * This is the internal render method that should only get overridden if there's really no other way around it.<br>
+	 * The normal element rendering logic should be in {@link AbstractElement#render(GuiGraphics, int, int, float)}.
+	 */
+	public void renderInternal(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+		this.renderTick_Head();
+
+		//This is the first stage of shouldRender() checks + handling of becomeVisible/Invisible methods
+		if (!this._shouldRender()) {
+			if (!this.becameInvisible) {
+				this.becameInvisible = true;
+				this.onBecomeInvisible();
+			}
+			this.becameVisible = false;
+			return;
+		}
+		this.becameInvisible = false;
+		if (!this.becameVisible) {
+			this.becameVisible = true;
+			this.onBecomeVisible();
+		}
+
+		this.renderTick_Post_ShouldRender_Stage_1();
+
+		//This is the second stage of shouldRender() checks that also checks for appearance delays
+		if (!this.shouldRender()) return;
+
+		//Handle fade-in
+		if ((this.fadeIn != Fading.NO_FADING) && this.shouldDoFadeInIfNeeded && (this.baseOpacity > 0.0F)) {
+			boolean fadeInDone = this.getMemory().putPropertyIfAbsentAndGet("fade_in_done", false);
+			if ((this.fadeIn != Fading.FIRST_TIME) || !fadeInDone) {
+				if (!this.fadeInStarted) {
+					this.fadeInStarted = true;
+					this.opacity = 0.0F;
+				}
+				float addToOpacity = 0.02F * this.fadeInSpeed;
+				this.opacity += addToOpacity;
+				if (this.opacity >= this.baseOpacity) {
+					this.opacity = this.baseOpacity;
+					this.shouldDoFadeInIfNeeded = false;
+					this.getMemory().putProperty("fade_in_done", true);
+				}
+			}
+		}
+
+		//Handle fade-out
+		if ((this.fadeOut != Fading.NO_FADING) && this.shouldDoFadeOutIfNeeded && (this.baseOpacity > 0.0F)) {
+			boolean fadeOutDone = this.getMemory().putPropertyIfAbsentAndGet("fade_out_done", false);
+			if ((this.fadeOut != Fading.FIRST_TIME) || !fadeOutDone) {
+				if (!this.fadeOutStarted) {
+					this.fadeOutStarted = true;
+					this.opacity = this.baseOpacity;
+				}
+				float subtractFromOpacity = 0.02F * this.fadeOutSpeed;
+				this.opacity -= subtractFromOpacity;
+				if (this.opacity <= 0.0F) {
+					this.opacity = 0.0F;
+					this.shouldDoFadeOutIfNeeded = false;
+					this.fadeOutFinished = true;
+					this.getMemory().putProperty("fade_out_done", true);
+				}
+			}
+		}
+
+		this.renderTick_Post_ShouldRender_Stage_2();
+
+		//Render the actual element
+		this.render(graphics, mouseX, mouseY, partial);
+
+		this.renderTick_Tail();
+
+	}
+
+	//TODO übernehmen
+	public void renderTick_Head() {
+	}
+
+	//TODO übernehmen
+	public void renderTick_Post_ShouldRender_Stage_1() {
+	}
+
+	//TODO übernehmen
+	public void renderTick_Post_ShouldRender_Stage_2() {
+	}
+
+	//TODO übernehmen
+	public void renderTick_Tail() {
+	}
+
+	//TODO übernehmen
+	public void onBecomeVisible() {
+
+		this.applyAppearanceDelay();
+
+		this.fadeInStarted = false;
+		this.fadeOutStarted = false;
+		this.fadeOutFinished = false;
+		this.shouldDoFadeInIfNeeded = true;
+		this.shouldDoFadeOutIfNeeded = false;
+
+	}
+
+	//TODO übernehmen
+	public void onBecomeInvisible() {
+
+		this.fadeInStarted = false;
+		this.fadeOutStarted = false;
+		this.fadeOutFinished = false;
+		this.shouldDoFadeOutIfNeeded = true;
+		this.shouldDoFadeInIfNeeded = false;
+
+	}
+
+	//TODO übernehmen
+	public void applyAppearanceDelay() {
+		boolean applied = this.getMemory().putPropertyIfAbsentAndGet("appearance_delay_applied", false);
+		if ((this.appearanceDelay != AppearanceDelay.NO_DELAY) && (this.appearanceDelayInSeconds > 0.0F)) {
+			if ((this.appearanceDelay == AppearanceDelay.FIRST_TIME) && applied) {
+				this.appearanceDelayEndTime = -1;
+			} else {
+				this.getMemory().putProperty("appearance_delay_applied", true);
+				this.appearanceDelayEndTime = System.currentTimeMillis() + ((long)this.appearanceDelayInSeconds * 1000L);
+			}
+		} else {
+			this.getMemory().putProperty("appearance_delay_applied", false);
+			this.appearanceDelayEndTime = -1;
+		}
+	}
 
 	/**
 	 * Gets called every {@link Screen} tick, after {@link Screen#tick()} got called.
@@ -321,7 +468,16 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		return this.getAbsoluteY();
 	}
 
+	//TODO übernehmen
 	public boolean shouldRender() {
+		if (System.currentTimeMillis() < this.appearanceDelayEndTime) return false;
+		boolean b = this._shouldRender();
+		if (!b && this.fadeOutStarted && !this.fadeOutFinished) return true;
+		return b;
+	}
+
+	//TODO übernehmen
+	protected boolean _shouldRender() {
 		if (!this.loadingRequirementsMet()) return false;
 		return this.visible;
 	}
@@ -482,6 +638,33 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 				if (d.name.equals(name)) {
 					return d;
 				}
+			}
+			return null;
+		}
+
+	}
+
+	//TODO übernehmen
+	public enum Fading {
+
+		NO_FADING("no_fading"),
+		FIRST_TIME("first_time"),
+		EVERY_TIME("every_time");
+
+		private final String name;
+
+		Fading(@NotNull String name) {
+			this.name = name;
+		}
+
+		public @NotNull String getName() {
+			return this.name;
+		}
+
+		@Nullable
+		public static Fading getByName(@NotNull String name) {
+			for (Fading mode : Fading.values()) {
+				if (mode.getName().equals(name)) return mode;
 			}
 			return null;
 		}

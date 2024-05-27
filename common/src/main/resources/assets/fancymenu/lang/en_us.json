@@ -1378,5 +1378,11 @@
   "fancymenu.requirements.world.is_hotbar_slot_active.desc": "If a certain hotbar slot (0-8) is currently active/selected.\nTakes the number of the target hotbar slot (0-8) as value.\nReturns false when no world is loaded.",
   "fancymenu.requirements.world.is_hotbar_slot_active.value": "Hotbar Slot [Number 0-8]",
   "fancymenu.requirements.world.is_attack_strength_weakened": "Is Attack Strength Weakened",
-  "fancymenu.requirements.world.is_attack_strength_weakened.desc": "If the player's attack strength is currently not at 100%.\nIn Vanilla, this means the Attack Indicator is visible.\nReturns false when no world is loaded."
+  "fancymenu.requirements.world.is_attack_strength_weakened.desc": "If the player's attack strength is currently not at 100%.\nIn Vanilla, this means the Attack Indicator is visible.\nReturns false when no world is loaded.",
+  "fancymenu.element.fading": "Fading In/Out",
+  "fancymenu.element.fading.fade_in": "Fade-In: %s",
+  "fancymenu.element.fading.fade_in.speed": "Fade-In Speed",
+  "fancymenu.element.fading.fade_out": "Fade-Out: %s",
+  "fancymenu.element.fading.fade_out.speed": "Fade-Out Speed",
+  "fancymenu.element.base_opacity": "Opacity"
 }
