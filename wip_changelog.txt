@@ -1,6 +1,8 @@
 
-CHANGELOG | FANCYMENU v3.2.X [ W I P !! Not public yet !! ]
+CHANGELOG | FANCYMENU v3.3.0 [ W I P !! Not public yet !! ]
  
+- Removed FancyMenu's deprecated (old) animation format MENU BACKGROUND (use FMA files instead and set them as normal Image background)
+- Removed FancyMenu's deprecated (old) animation format ELEMENT (use FMA files instead and set them as normal Image element)
 - 
  
 %changelog:end%
