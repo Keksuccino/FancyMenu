@@ -31,7 +31,8 @@ public class Elements {
     public static final PlayerEntityElementBuilder PLAYER_ENTITY = new PlayerEntityElementBuilder();
     public static final ImageElementBuilder IMAGE = new ImageElementBuilder();
     public static final SplashTextElementBuilder SPLASH_TEXT = new SplashTextElementBuilder();
-    public static final AnimationElementBuilder ANIMATION = new AnimationElementBuilder();
+    //TODO übernehmen
+    //public static final AnimationElementBuilder ANIMATION = new AnimationElementBuilder();
     public static final SlideshowElementBuilder SLIDESHOW = new SlideshowElementBuilder();
     public static final ShapeElementBuilder SHAPE = new ShapeElementBuilder();
     public static final CursorElementBuilder CURSOR = new CursorElementBuilder();
@@ -51,7 +52,8 @@ public class Elements {
         ElementRegistry.register(PLAYER_ENTITY);
         ElementRegistry.register(IMAGE);
         ElementRegistry.register(SPLASH_TEXT);
-        ElementRegistry.register(ANIMATION);
+        //TODO übernehmen
+        //ElementRegistry.register(ANIMATION);
         ElementRegistry.register(SLIDESHOW);
         ElementRegistry.register(SHAPE);
         ElementRegistry.register(CURSOR);

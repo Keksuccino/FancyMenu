@@ -1383,6 +1383,12 @@
   "fancymenu.element.fading.fade_in": "Fade-In: %s",
   "fancymenu.element.fading.fade_in.speed": "Fade-In Speed",
   "fancymenu.element.fading.fade_out": "Fade-Out: %s",
+  "fancymenu.element.fading.fade_out.desc": "Fade-Out will NOT fade-out elements before opening a new menu!\nIt is meant to be used when elements change\ntheir visibility via loading requirements.",
   "fancymenu.element.fading.fade_out.speed": "Fade-Out Speed",
-  "fancymenu.element.base_opacity": "Opacity"
+  "fancymenu.element.fading.values.no_fading": "No Fading",
+  "fancymenu.element.fading.values.first_time": "Only Once",
+  "fancymenu.element.fading.values.every_time": "Every Time",
+  "fancymenu.element.fading.error.negative_value": "Fading speed needs to be a positive and\nvalid floating point value (bigger than 0.0).",
+  "fancymenu.element.base_opacity": "Opacity",
+  "fancymenu.element.base_opacity.error.invalid_value": "Opacity needs to be a floating point value between 0.0 and 1.0!"
 }

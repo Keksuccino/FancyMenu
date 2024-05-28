@@ -24,6 +24,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
 import net.minecraft.client.gui.screens.Screen;
 
 /**
@@ -64,6 +66,8 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
         try {
 
+            //TODO übernehmen ( alles bis X Y )
+
             E element = deserializeElement(serialized);
 
             String id = serialized.getValue("instance_identifier");
@@ -71,26 +75,12 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             if (id == null) id = ScreenCustomization.generateUniqueIdentifier();
             if (id.equals("null")) {
                 id = ScreenCustomization.generateUniqueIdentifier();
-                LOGGER.warn("[FANCYMENU] Automatically corrected broken element instance identifier from 'null' to '" + id + "'! This could break parts of its parent layout!");
+                LOGGER.warn("[FANCYMENU] Automatically corrected broken element instance identifier from 'null' to '" + id + "'! This could break parts of its parent layout!", new NullPointerException());
             }
             element.setInstanceIdentifier(id);
 
             element.customElementLayerName = serialized.getValue("custom_element_layer_name");
 
-            String fi = serialized.getValue("fade_in");
-            if (fi == null) {
-                fi = serialized.getValue("fadein");
-            }
-            if ((fi != null) && fi.equalsIgnoreCase("true")) {
-                element.fadeIn = true;
-            }
-            String fis = serialized.getValue("fade_in_speed");
-            if (fis == null) {
-                fis = serialized.getValue("fadeinspeed");
-            }
-            if ((fis != null) && MathUtils.isFloat(fis)) {
-                element.fadeInSpeed = Float.parseFloat(fis);
-            }
             String delay = serialized.getValue("appearance_delay");
             //Compatibility layer for old appearance delay format
             if (delay == null) {
@@ -116,6 +106,43 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             if ((delaySec != null) && MathUtils.isFloat(delaySec)) {
                 element.appearanceDelayInSeconds = Float.parseFloat(delaySec);
             }
+
+            //Backwards compat for old fade-in logic
+            String fi = serialized.getValue("fade_in");
+            if (fi == null) {
+                fi = serialized.getValue("fadein");
+            }
+            if ((fi != null) && fi.equalsIgnoreCase("true")) {
+                if (element.appearanceDelay == AbstractElement.AppearanceDelay.FIRST_TIME) {
+                    element.fadeIn = AbstractElement.Fading.FIRST_TIME;
+                } else if (element.appearanceDelay == AbstractElement.AppearanceDelay.EVERY_TIME) {
+                    element.fadeIn = AbstractElement.Fading.EVERY_TIME;
+                }
+            }
+
+            String fadeIn_v2 = serialized.getValue("fade_in_v2");
+            if (fadeIn_v2 != null) {
+                element.fadeIn = Objects.requireNonNullElse(AbstractElement.Fading.getByName(fadeIn_v2), element.fadeIn);
+            }
+
+            String fadeOut = serialized.getValue("fade_out");
+            if (fadeOut != null) {
+                element.fadeOut = Objects.requireNonNullElse(AbstractElement.Fading.getByName(fadeOut), element.fadeOut);
+            }
+
+            String fis = serialized.getValue("fade_in_speed");
+            if (fis == null) {
+                fis = serialized.getValue("fadeinspeed");
+            }
+            if ((fis != null) && MathUtils.isFloat(fis)) {
+                element.fadeInSpeed = Float.parseFloat(fis);
+            }
+
+            element.fadeOutSpeed = deserializeNumber(Float.class, element.fadeOutSpeed, serialized.getValue("fade_out_speed"));
+
+            element.baseOpacity = deserializeNumber(Float.class, element.baseOpacity, serialized.getValue("base_opacity"));
+
+            //----------------------------------
 
             String x = serialized.getValue("x");
             String y = serialized.getValue("y");
@@ -284,8 +311,13 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
             sec.putProperty("appearance_delay", element.appearanceDelay.name);
             sec.putProperty("appearance_delay_seconds", "" + element.appearanceDelayInSeconds);
-            sec.putProperty("fade_in", "" + element.fadeIn);
+            //TODO übernehmen
+            sec.putProperty("fade_in_v2", element.fadeIn.getName());
             sec.putProperty("fade_in_speed", "" + element.fadeInSpeed);
+            sec.putProperty("fade_out", element.fadeOut.getName());
+            sec.putProperty("fade_out_speed", "" + element.fadeOutSpeed);
+            sec.putProperty("base_opacity", "" + element.baseOpacity);
+            //------------------------
 
             sec.putProperty("anchor_point", (element.anchorPoint != null) ? element.anchorPoint.getName() : ElementAnchorPoints.TOP_LEFT.getName());
             if ((element.anchorPoint == ElementAnchorPoints.ELEMENT) && (element.anchorPointElementIdentifier != null)) {

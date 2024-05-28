@@ -1,7 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget;
 
-import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
-import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.HideableElement;
@@ -13,7 +11,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import org.apache.logging.log4j.LogManager;
@@ -80,6 +77,7 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
         //do nothing
     }
 
+    //TODO übernehmen
     @Override
     public void updateWidgetTexture() {
 
@@ -89,25 +87,11 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
         RenderableResource sliderBackHighlighted = null;
 
         //Normal
-        if ((this.sliderBackgroundAnimationNormal != null) && AnimationHandler.animationExists(this.sliderBackgroundAnimationNormal)) {
-            IAnimationRenderer r = AnimationHandler.getAnimation(this.sliderBackgroundAnimationNormal);
-            if (r instanceof AdvancedAnimation a) {
-                a.setLooped(this.loopBackgroundAnimations);
-                sliderBackNormal = a;
-            }
-        }
-        if ((sliderBackNormal == null) && (this.sliderBackgroundTextureNormal != null)) {
+        if (this.sliderBackgroundTextureNormal != null) {
             sliderBackNormal = this.sliderBackgroundTextureNormal.get();
         }
         //Highlighted
-        if ((this.sliderBackgroundAnimationHighlighted != null) && AnimationHandler.animationExists(this.sliderBackgroundAnimationHighlighted)) {
-            IAnimationRenderer r = AnimationHandler.getAnimation(this.sliderBackgroundAnimationHighlighted);
-            if (r instanceof AdvancedAnimation a) {
-                a.setLooped(this.loopBackgroundAnimations);
-                sliderBackHighlighted = a;
-            }
-        }
-        if ((sliderBackHighlighted == null) && (this.sliderBackgroundTextureHighlighted != null)) {
+        if (this.sliderBackgroundTextureHighlighted != null) {
             sliderBackHighlighted = this.sliderBackgroundTextureHighlighted.get();
         }
 

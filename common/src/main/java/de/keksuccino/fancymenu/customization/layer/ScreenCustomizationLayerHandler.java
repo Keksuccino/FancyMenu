@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.layer;
 import java.util.HashMap;
 import java.util.Map;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.util.MinecraftResourceReloadObserver;
@@ -58,9 +57,10 @@ public class ScreenCustomizationLayerHandler {
 			//Reset isNewMenu, so first-time stuff and on-load stuff works correctly
 			ScreenCustomization.setIsNewMenu(true);
 
-			//Update resource pack animation sizes after reloading textures
-			LOGGER.info("[FANCYMENU] Updating animation sizes..");
-			AnimationHandler.updateAnimationSizes();
+			//TODO übernehmen
+//			//Update resource pack animation sizes after reloading textures
+//			LOGGER.info("[FANCYMENU] Updating animation sizes..");
+//			AnimationHandler.updateAnimationSizes();
 
 			LOGGER.info("[FANCYMENU] Minecraft resource reload: FINISHED");
 

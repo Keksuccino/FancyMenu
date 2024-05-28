@@ -1,8 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.slider.v2;
 
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
-import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
-import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ExecutableElement;
@@ -21,7 +19,6 @@ import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
-import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
@@ -185,31 +182,18 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         }
     }
 
+    //TODO übernehmen
     public void updateWidgetTexture() {
 
         RenderableResource sliderBackNormal = null;
         RenderableResource sliderBackHighlighted = null;
 
         //Normal Slider Background
-        if ((this.sliderBackgroundAnimationNormal != null) && AnimationHandler.animationExists(this.sliderBackgroundAnimationNormal)) {
-            IAnimationRenderer r = AnimationHandler.getAnimation(this.sliderBackgroundAnimationNormal);
-            if (r instanceof AdvancedAnimation a) {
-                a.setLooped(this.loopBackgroundAnimations);
-                sliderBackNormal = a;
-            }
-        }
-        if ((sliderBackNormal == null) && (this.sliderBackgroundTextureNormal != null)) {
+        if (this.sliderBackgroundTextureNormal != null) {
             sliderBackNormal = this.sliderBackgroundTextureNormal.get();
         }
         //Highlighted Slider Background
-        if ((this.sliderBackgroundAnimationHighlighted != null) && AnimationHandler.animationExists(this.sliderBackgroundAnimationHighlighted)) {
-            IAnimationRenderer r = AnimationHandler.getAnimation(this.sliderBackgroundAnimationHighlighted);
-            if (r instanceof AdvancedAnimation a) {
-                a.setLooped(this.loopBackgroundAnimations);
-                sliderBackHighlighted = a;
-            }
-        }
-        if ((sliderBackHighlighted == null) && (this.sliderBackgroundTextureHighlighted != null)) {
+        if (this.sliderBackgroundTextureHighlighted != null) {
             sliderBackHighlighted = this.sliderBackgroundTextureHighlighted.get();
         }
 
@@ -223,36 +207,15 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         RenderableResource handleTextureInactive = null;
 
         //Normal
-        if ((this.handleAnimationNormal != null) && AnimationHandler.animationExists(this.handleAnimationNormal)) {
-            IAnimationRenderer r = AnimationHandler.getAnimation(this.handleAnimationNormal);
-            if (r instanceof AdvancedAnimation a) {
-                a.setLooped(this.loopBackgroundAnimations);
-                handleTextureNormal = a;
-            }
-        }
-        if ((handleTextureNormal == null) && (this.handleTextureNormal != null)) {
+        if (this.handleTextureNormal != null) {
             handleTextureNormal = this.handleTextureNormal.get();
         }
         //Hover
-        if ((this.handleAnimationHover != null) && AnimationHandler.animationExists(this.handleAnimationHover)) {
-            IAnimationRenderer r = AnimationHandler.getAnimation(this.handleAnimationHover);
-            if (r instanceof AdvancedAnimation a) {
-                a.setLooped(this.loopBackgroundAnimations);
-                handleTextureHover = a;
-            }
-        }
-        if ((handleTextureHover == null) && (this.handleTextureHover != null)) {
+        if (this.handleTextureHover != null) {
             handleTextureHover = this.handleTextureHover.get();
         }
         //Inactive
-        if ((this.handleAnimationInactive != null) && AnimationHandler.animationExists(this.handleAnimationInactive)) {
-            IAnimationRenderer r = AnimationHandler.getAnimation(this.handleAnimationInactive);
-            if (r instanceof AdvancedAnimation a) {
-                a.setLooped(this.loopBackgroundAnimations);
-                handleTextureInactive = a;
-            }
-        }
-        if ((handleTextureInactive == null) && (this.handleTextureInactive != null)) {
+        if (this.handleTextureInactive != null) {
             handleTextureInactive = this.handleTextureInactive.get();
         }
 

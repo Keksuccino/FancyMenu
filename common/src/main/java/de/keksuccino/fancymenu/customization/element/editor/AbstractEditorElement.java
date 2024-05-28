@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.M
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.util.*;
 import de.keksuccino.fancymenu.util.cycle.ValueCycle;
+import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.file.type.FileType;
@@ -437,6 +438,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		this.rightClickMenu.addSeparatorEntry("separator_7").setStackable(true);
 
+		//TODO übernehmen
 		if (this.settings.isDelayable()) {
 
 			ContextMenu appearanceDelayMenu = new ContextMenu();
@@ -473,24 +475,117 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 					.setIsActiveSupplier((menu, entry) -> appearanceDelayIsActive.get())
 					.setStackable(true);
 
-			appearanceDelayMenu.addSeparatorEntry("separator_1").setStackable(true);
+		}
 
-			this.addGenericBooleanSwitcherContextMenuEntryTo(appearanceDelayMenu, "appearance_delay_fade_in",
-							consumes -> consumes.settings.isDelayable(),
-							consumes -> consumes.element.fadeIn,
-							(element, switcherValue) -> element.element.fadeIn = switcherValue,
-							"fancymenu.element.general.appearance_delay.fade_in")
-					.setIsActiveSupplier((menu, entry) -> appearanceDelayIsActive.get())
+		//TODO übernehmen
+		if (this.settings.isFadeable()) {
+
+			ContextMenu fadingMenu = new ContextMenu();
+			this.rightClickMenu.addSubMenuEntry("fading_in_out", Component.translatable("fancymenu.element.fading"), fadingMenu)
 					.setStackable(true);
 
-			this.addGenericFloatInputContextMenuEntryTo(appearanceDelayMenu, "appearance_delay_fade_in_speed",
-							element -> element.settings.isDelayable(),
-							element -> element.element.fadeInSpeed,
-							(element, input) -> element.element.fadeInSpeed = input,
-							Component.translatable("fancymenu.element.general.appearance_delay.fade_in.speed"),
-							true, 1.0F, null, null)
-					.setIsActiveSupplier((menu, entry) -> appearanceDelayIsActive.get())
-					.setStackable(true);
+			this.addGenericCycleContextMenuEntryTo(fadingMenu, "fade_in",
+					List.of(AbstractElement.Fading.NO_FADING, AbstractElement.Fading.FIRST_TIME, AbstractElement.Fading.EVERY_TIME),
+					consumes -> consumes.settings.isFadeable(),
+					consumes -> consumes.element.fadeIn,
+					(abstractEditorElement, fading) -> abstractEditorElement.element.fadeIn = fading,
+					(menu, entry, switcherValue) -> {
+						if (switcherValue == AbstractElement.Fading.FIRST_TIME) {
+							return Component.translatable("fancymenu.element.fading.fade_in", Component.translatable("fancymenu.element.fading.values.first_time").setStyle(LocalizedCycleEnum.WARNING_TEXT_STYLE.get()));
+						}
+						if (switcherValue == AbstractElement.Fading.EVERY_TIME) {
+							return Component.translatable("fancymenu.element.fading.fade_in", Component.translatable("fancymenu.element.fading.values.every_time").setStyle(LocalizedCycleEnum.WARNING_TEXT_STYLE.get()));
+						}
+						return Component.translatable("fancymenu.element.fading.fade_in", Component.translatable("fancymenu.element.fading.values.no_fading").setStyle(LocalizedCycleEnum.WARNING_TEXT_STYLE.get()));
+					}
+			).setStackable(true);
+
+			this.addGenericFloatInputContextMenuEntryTo(fadingMenu, "fade_in_speed",
+					consumes -> consumes.settings.isFadeable(),
+					consumes -> consumes.element.fadeInSpeed,
+					(abstractEditorElement, aFloat) -> abstractEditorElement.element.fadeInSpeed = aFloat,
+					Component.translatable("fancymenu.element.fading.fade_in.speed"), true, 1.0F,
+					consumes -> {
+						if (de.keksuccino.fancymenu.util.MathUtils.isFloat(consumes)) {
+							float f = Float.parseFloat(consumes);
+							return (f > 0.0F);
+						}
+						return false;
+					},
+					consumes -> {
+						if (de.keksuccino.fancymenu.util.MathUtils.isFloat(consumes)) {
+							float f = Float.parseFloat(consumes);
+							if (f <= 0.0F) return null;
+						}
+						return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.fading.error.negative_value"));
+					}).setStackable(true);
+
+			fadingMenu.addSeparatorEntry("separator_after_fade_in_speed").setStackable(true);
+
+			this.addGenericCycleContextMenuEntryTo(fadingMenu, "fade_out",
+							List.of(AbstractElement.Fading.NO_FADING, AbstractElement.Fading.FIRST_TIME, AbstractElement.Fading.EVERY_TIME),
+							consumes -> consumes.settings.isFadeable(),
+							consumes -> consumes.element.fadeOut,
+							(abstractEditorElement, fading) -> abstractEditorElement.element.fadeOut = fading,
+							(menu, entry, switcherValue) -> {
+								if (switcherValue == AbstractElement.Fading.FIRST_TIME) {
+									return Component.translatable("fancymenu.element.fading.fade_out", Component.translatable("fancymenu.element.fading.values.first_time").setStyle(LocalizedCycleEnum.WARNING_TEXT_STYLE.get()));
+								}
+								if (switcherValue == AbstractElement.Fading.EVERY_TIME) {
+									return Component.translatable("fancymenu.element.fading.fade_out", Component.translatable("fancymenu.element.fading.values.every_time").setStyle(LocalizedCycleEnum.WARNING_TEXT_STYLE.get()));
+								}
+								return Component.translatable("fancymenu.element.fading.fade_out", Component.translatable("fancymenu.element.fading.values.no_fading").setStyle(LocalizedCycleEnum.WARNING_TEXT_STYLE.get()));
+							}
+					).setStackable(true)
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.fading.fade_out.desc")));
+
+			this.addGenericFloatInputContextMenuEntryTo(fadingMenu, "fade_out_speed",
+					consumes -> consumes.settings.isFadeable(),
+					consumes -> consumes.element.fadeOutSpeed,
+					(abstractEditorElement, aFloat) -> abstractEditorElement.element.fadeOutSpeed = aFloat,
+					Component.translatable("fancymenu.element.fading.fade_out.speed"), true, 1.0F,
+					consumes -> {
+						if (de.keksuccino.fancymenu.util.MathUtils.isFloat(consumes)) {
+							float f = Float.parseFloat(consumes);
+							return (f > 0.0F);
+						}
+						return false;
+					},
+					consumes -> {
+						if (de.keksuccino.fancymenu.util.MathUtils.isFloat(consumes)) {
+							float f = Float.parseFloat(consumes);
+							if (f <= 0.0F) return null;
+						}
+						return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.fading.error.negative_value"));
+					}).setStackable(true);
+
+		}
+
+		if (this.settings.isOpacityChangeable()) {
+
+			this.addGenericFloatInputContextMenuEntryTo(this.rightClickMenu, "base_opacity",
+					consumes -> consumes.settings.isOpacityChangeable(),
+					consumes -> consumes.element.baseOpacity,
+					(abstractEditorElement, aFloat) -> {
+						abstractEditorElement.element.baseOpacity = aFloat;
+						abstractEditorElement.element.updateOpacity();
+					},
+					Component.translatable("fancymenu.element.base_opacity"), true, 1.0F,
+					consumes -> {
+						if (de.keksuccino.fancymenu.util.MathUtils.isFloat(consumes)) {
+							float f = Float.parseFloat(consumes);
+							return ((f >= 0.0F) && (f <= 1.0F));
+						}
+						return false;
+					},
+					consumes -> {
+						if (de.keksuccino.fancymenu.util.MathUtils.isFloat(consumes)) {
+							float f = Float.parseFloat(consumes);
+							boolean b = ((f >= 0.0F) && (f <= 1.0F));
+							if (!b) return null;
+						}
+						return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.base_opacity.error.invalid_value"));
+					}).setStackable(true);
 
 		}
 

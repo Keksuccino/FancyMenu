@@ -19,7 +19,6 @@ import de.keksuccino.fancymenu.util.event.acara.EventPriority;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.screen.*;
 import de.keksuccino.fancymenu.events.widget.RenderGuiListBackgroundEvent;
-import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
@@ -672,9 +671,10 @@ public class ScreenCustomizationLayer implements ElementFactory {
 							}
 						}
 					} else {
-						AnimationHandler.resetAnimations();
-						AnimationHandler.resetAnimationSounds();
-						AnimationHandler.stopAnimationSounds();
+						//TODO übernehmen
+//						AnimationHandler.resetAnimations();
+//						AnimationHandler.resetAnimationSounds();
+//						AnimationHandler.stopAnimationSounds();
 					}
 				}
 				int i = MathUtils.getRandomNumberInRange(0, this.layouts.size()-1);
