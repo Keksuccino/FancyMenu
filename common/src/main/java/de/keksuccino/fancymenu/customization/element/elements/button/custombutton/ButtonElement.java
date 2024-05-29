@@ -55,8 +55,6 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public boolean navigatable = true;
     @NotNull
     public GenericExecutableBlock actionExecutor = new GenericExecutableBlock();
-    //TODO übernehmen
-    public boolean buttonElementJustCreated = true;
 
     public ButtonElement(ElementBuilder<ButtonElement, ButtonEditorElement> builder) {
         super(builder);
@@ -66,27 +64,6 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public void tick() {
 
         if (this.getWidget() == null) return;
-
-        //TODO button appearance delay + fade fixen !!!! <-----------------------
-        //TODO button appearance delay + fade fixen !!!! <-----------------------
-        //TODO button appearance delay + fade fixen !!!! <-----------------------
-        //TODO button appearance delay + fade fixen !!!! <-----------------------
-        //TODO button appearance delay + fade fixen !!!! <-----------------------
-        //TODO button appearance delay + fade fixen !!!! <-----------------------
-        //TODO button appearance delay + fade fixen !!!! <-----------------------
-        //TODO button appearance delay + fade fixen !!!! <-----------------------
-        //TODO button appearance delay + fade fixen !!!! <-----------------------
-
-        //TODO übernehmen
-//        if (this.buttonElementJustCreated) {
-//            this.applyAppearanceDelay();
-//            this.updateOpacity();
-//            if (this.tickVisibleInvisible()) {
-//                this.tickFadeInOut();
-//            }
-//        }
-//        this.buttonElementJustCreated = false;
-        //--------------------
 
         //This is mainly to make Vanilla buttons not flicker for the first frame when hidden
         this.updateWidget();
