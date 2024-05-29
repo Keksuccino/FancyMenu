@@ -9,7 +9,7 @@ CHANGELOG | FANCYMENU v3.3.0 [ W I P !! Not public yet !! ]
 - Fade-In will now trigger again when the element gets visible again because of its loading requirements
 - Fading and Appearance Delay are now separated from each other, so you don't need to enable appearance delays anymore to use fading
 - You can set the base opacity of elements now (in other words, you can make elements translucent now)
-- Fixed a bug that made the last hovered hyperlink of a Text element stay hovered when it was hovered while the element got hidden by their loading requirements
+- Fixed a bug that made the last hovered hyperlink of a Text element stay hovered when it was hovered while the element got hidden by its loading requirements
 - 
  
 %changelog:end%
