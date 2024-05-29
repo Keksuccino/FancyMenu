@@ -78,14 +78,14 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         //TODO button appearance delay + fade fixen !!!! <-----------------------
 
         //TODO übernehmen
-        if (this.buttonElementJustCreated) {
-            this.applyAppearanceDelay();
-            this.updateOpacity();
-            if (this.tickVisibleInvisible()) {
-                this.tickFadeInOut();
-            }
-        }
-        this.buttonElementJustCreated = false;
+//        if (this.buttonElementJustCreated) {
+//            this.applyAppearanceDelay();
+//            this.updateOpacity();
+//            if (this.tickVisibleInvisible()) {
+//                this.tickFadeInOut();
+//            }
+//        }
+//        this.buttonElementJustCreated = false;
         //--------------------
 
         //This is mainly to make Vanilla buttons not flicker for the first frame when hidden
@@ -120,6 +120,13 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
         RenderingUtils.resetShaderColor(graphics);
 
+    }
+
+    //TODO übernehmen
+    @Override
+    public void tickVisibleInvisible() {
+        super.tickVisibleInvisible();
+        if (this.getWidget() != null) this.updateWidget();
     }
 
     protected void renderElementWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {

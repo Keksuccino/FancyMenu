@@ -86,6 +86,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public boolean becameInvisible = false;
 	public boolean isNewMenu = ScreenCustomization.isNewMenu();
 	public boolean fadeInElementJustCreated = true;
+	public boolean fadeOutElementJustCreated = true;
 	public boolean appearanceDelayElementJustCreated = true;
 	public boolean lastTickAppearanceDelayed = false;
 	//-------------------
@@ -131,23 +132,21 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		this.renderTick_Head();
 
-		//This is the first stage of shouldRender() checks + handling of becomeVisible/Invisible methods
-		if (!this.tickVisibleInvisible()) return;
+		this.tickVisibleInvisible();
 
-		this.renderTick_Post_ShouldRender_Stage_1();
-
-		//This is the second stage of shouldRender() checks that also checks for appearance delays
-		if (!this.shouldRender()) return;
+		this.renderTick_Inner_Stage_1();
 
 		if (!isEditor()) {
 
-			this.tickAppearanceDelay();
+			this.tickAppearanceDelay(this.shouldRender());
 
-			this.tickFadeInOut();
+			this.tickFadeInOut(this.shouldRender());
 
 		}
 
-		this.renderTick_Post_ShouldRender_Stage_2();
+		if (!this.shouldRender()) return;
+
+		this.renderTick_Inner_Stage_2();
 
 		//Render the actual element
 		this.render(graphics, mouseX, mouseY, partial);
@@ -161,11 +160,11 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	}
 
 	//TODO übernehmen
-	public void renderTick_Post_ShouldRender_Stage_1() {
+	public void renderTick_Inner_Stage_1() {
 	}
 
 	//TODO übernehmen
-	public void renderTick_Post_ShouldRender_Stage_2() {
+	public void renderTick_Inner_Stage_2() {
 	}
 
 	//TODO übernehmen
@@ -173,16 +172,15 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	}
 
 	//TODO übernehmen
-	public boolean tickVisibleInvisible() {
+	public void tickVisibleInvisible() {
 
-		//This is the first stage of shouldRender() checks + handling of becomeVisible/Invisible methods
 		if (!this._shouldRender()) {
 			if (!this.becameInvisible) {
 				this.becameInvisible = true;
 				this.onBecomeInvisible();
 			}
 			this.becameVisible = false;
-			return false;
+			return;
 		}
 		this.becameInvisible = false;
 		if (!this.becameVisible) {
@@ -190,12 +188,12 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			this.onBecomeVisible();
 		}
 
-		return true;
-
 	}
 
 	//TODO übernehmen
-	public void tickAppearanceDelay() {
+	public void tickAppearanceDelay(boolean shouldRender) {
+
+		if (!shouldRender) return;
 
 		//Make element remember that the appearance delay got applied (for only-first-time appearance delays)
 		if (this.lastTickAppearanceDelayed && !this.isAppearanceDelayed()) {
@@ -206,54 +204,61 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	}
 
 	//TODO übernehmen
-	public void tickFadeInOut() {
+	public void tickFadeInOut(boolean shouldRender) {
 
-		//Handle fade-in
-		boolean fadeInIsResize = !this.isNewMenu && this.fadeInElementJustCreated;
-		boolean fadeInDone = this.getMemory().putPropertyIfAbsentAndGet("fade_in_done", false);
-		if (!fadeInIsResize || !fadeInDone) {
-			if ((this.fadeIn != Fading.NO_FADING) && this.shouldDoFadeInIfNeeded && (this.baseOpacity > 0.0F)) {
-				if ((this.fadeIn != Fading.FIRST_TIME) || !fadeInDone) {
-					if (!this.fadeInStarted) {
-						this.fadeInStarted = true;
-						this.opacity = 0.0F;
-					}
-					if ((this.lastFadeInTick + (long)(50.0F * this.fadeInSpeed)) < System.currentTimeMillis()) {
-						this.lastFadeInTick = System.currentTimeMillis();
-						this.opacity += 0.02F;
-					}
-					if (this.opacity >= this.baseOpacity) {
-						this.opacity = this.baseOpacity;
-						this.shouldDoFadeInIfNeeded = false;
-						this.fadeInFinished = true;
-						this.getMemory().putProperty("fade_in_done", true);
+		if (shouldRender) {
+
+			//Handle fade-in
+			boolean fadeInIsResize = !this.isNewMenu && this.fadeInElementJustCreated;
+			boolean fadeInDone = this.getMemory().putPropertyIfAbsentAndGet("fade_in_done", false);
+			if (!fadeInIsResize || !fadeInDone) {
+				if ((this.fadeIn != Fading.NO_FADING) && this.shouldDoFadeInIfNeeded && (this.baseOpacity > 0.0F)) {
+					if ((this.fadeIn != Fading.FIRST_TIME) || !fadeInDone) {
+						if (!this.fadeInStarted) {
+							this.fadeInStarted = true;
+							this.opacity = 0.0F;
+						}
+						if ((this.lastFadeInTick + (long)(50.0F * this.fadeInSpeed)) < System.currentTimeMillis()) {
+							this.lastFadeInTick = System.currentTimeMillis();
+							this.opacity += 0.02F;
+						}
+						if (this.opacity >= this.baseOpacity) {
+							this.opacity = this.baseOpacity;
+							this.shouldDoFadeInIfNeeded = false;
+							this.fadeInFinished = true;
+							this.getMemory().putProperty("fade_in_done", true);
+						}
 					}
 				}
+			} else {
+				this.shouldDoFadeInIfNeeded = false;
+				this.fadeInStarted = false;
+				this.fadeInFinished = false;
 			}
-		} else {
-			this.shouldDoFadeInIfNeeded = false;
-			this.fadeInStarted = false;
-			this.fadeInFinished = false;
+
 		}
+
 		this.fadeInElementJustCreated = false;
 
 		//Handle fade-out
 		if ((this.fadeOut != Fading.NO_FADING) && this.shouldDoFadeOutIfNeeded && (this.baseOpacity > 0.0F)) {
-			boolean fadeOutDone = this.getMemory().putPropertyIfAbsentAndGet("fade_out_done", false);
-			if ((this.fadeOut != Fading.FIRST_TIME) || !fadeOutDone) {
-				if (!this.fadeOutStarted) {
-					this.fadeOutStarted = true;
-					this.opacity = this.baseOpacity;
-				}
-				if ((this.lastFadeOutTick + (long)(100.0F * this.fadeOutSpeed)) < System.currentTimeMillis()) {
-					this.lastFadeOutTick = System.currentTimeMillis();
-					this.opacity -= 0.02F;
-				}
-				if (this.opacity <= 0.0F) {
-					this.opacity = 0.0F;
-					this.shouldDoFadeOutIfNeeded = false;
-					this.fadeOutFinished = true;
-					this.getMemory().putProperty("fade_out_done", true);
+			if (!this.fadeOutFinished) {
+				boolean fadeOutDone = this.getMemory().putPropertyIfAbsentAndGet("fade_out_done", false);
+				if ((this.fadeOut != Fading.FIRST_TIME) || !fadeOutDone) {
+					if (!this.fadeOutStarted) {
+						this.fadeOutStarted = true;
+						this.opacity = this.baseOpacity;
+					}
+					if ((this.lastFadeOutTick + (long)(50.0F * this.fadeOutSpeed)) < System.currentTimeMillis()) {
+						this.lastFadeOutTick = System.currentTimeMillis();
+						this.opacity -= 0.02F;
+					}
+					if (this.opacity <= 0.0F) {
+						this.opacity = 0.0F;
+						this.shouldDoFadeOutIfNeeded = false;
+						this.fadeOutFinished = true;
+						this.getMemory().putProperty("fade_out_done", true);
+					}
 				}
 			}
 		}
@@ -286,6 +291,11 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		this.fadeOutFinished = false;
 		this.shouldDoFadeOutIfNeeded = true;
 		this.shouldDoFadeInIfNeeded = false;
+
+		if (this.fadeOutElementJustCreated) {
+			this.shouldDoFadeOutIfNeeded = false;
+		}
+		this.fadeOutElementJustCreated = false;
 
 	}
 

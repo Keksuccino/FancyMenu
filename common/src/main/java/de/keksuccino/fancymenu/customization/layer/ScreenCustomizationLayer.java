@@ -404,6 +404,13 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			ScreenTitleUtils.setScreenTitle(e.getScreen(), Component.literal(PlaceholderParser.replacePlaceholders(this.layoutBase.customMenuTitle)));
 		}
 
+		//TODO übernehmen
+		//Render vanilla button elements (render in pre, because Vanilla Widget elements don't actually render the widget, they just manage it, so it's important to call their render logic before everything else)
+		for (AbstractElement element : new ArrayList<>(this.vanillaWidgetElements)) {
+			element.renderInternal(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
+		}
+		//-----------------------------------
+
 	}
 
 	@EventListener
@@ -419,11 +426,11 @@ public class ScreenCustomizationLayer implements ElementFactory {
 				element.renderInternal(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 			}
 		}
-		//Render vanilla button elements
-		for (AbstractElement element : new ArrayList<>(this.vanillaWidgetElements)) {
-			//TODO übernehmen
-			element.renderInternal(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
-		}
+		//TODO übernehmen
+//		//Render vanilla button elements
+//		for (AbstractElement element : new ArrayList<>(this.vanillaWidgetElements)) {
+//			element.render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
+//		}
 		//Render deep elements
 		for (AbstractElement element : new ArrayList<>(this.deepElements)) {
 			//TODO übernehmen

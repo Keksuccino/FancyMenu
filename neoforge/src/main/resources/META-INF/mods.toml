@@ -55,6 +55,13 @@ versionRange="[3.0.0,)"
 side="BOTH"
 
 [[dependencies.${mod_id}]]
+modId="rrls"
+type="optional"
+ordering="NONE"
+versionRange="[4.0.1,)"
+side="BOTH"
+
+[[dependencies.${mod_id}]]
 modId="neoforge"
 type="required"
 versionRange="[${neoforge_version},)"

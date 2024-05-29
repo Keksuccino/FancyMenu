@@ -337,7 +337,7 @@ public class AudioElement extends AbstractElement {
 
     //TODO übernehmen
     @Override
-    public void renderTick_Post_ShouldRender_Stage_1() {
+    public void renderTick_Inner_Stage_1() {
         this.renderTick();
     }
 

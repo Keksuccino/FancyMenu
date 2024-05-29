@@ -37,8 +37,8 @@ dependencies {
 //    modImplementation "maven.modrinth:sodium:mc1.20.4-0.5.8"
 //    modImplementation "maven.modrinth:lithium:mc1.20.4-0.12.1"
 //    modImplementation "maven.modrinth:ferrite-core:pguEMpy9"
-//    modImplementation "curse.maven:rrls-833233:5127595"
-//    modImplementation "curse.maven:cloth-config-348521:4973455"
+    modImplementation("maven.modrinth:rrls:4.0.1+mc1.20.4-fabric")
+    modImplementation("maven.modrinth:cloth-config:13.0.121+fabric")
 }
 
 loom {
