@@ -561,33 +561,32 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		}
 
+		//TODO übernehmen
 		if (this.settings.isOpacityChangeable()) {
 
-			this.addGenericFloatInputContextMenuEntryTo(this.rightClickMenu, "base_opacity",
-					consumes -> consumes.settings.isOpacityChangeable(),
-					consumes -> consumes.element.baseOpacity,
-					(abstractEditorElement, aFloat) -> {
-						abstractEditorElement.element.baseOpacity = aFloat;
-						abstractEditorElement.element.updateOpacity();
-					},
-					Component.translatable("fancymenu.element.base_opacity"), true, 1.0F,
-					consumes -> {
-						if (de.keksuccino.fancymenu.util.MathUtils.isFloat(consumes)) {
-							float f = Float.parseFloat(consumes);
-							return ((f >= 0.0F) && (f <= 1.0F));
-						}
-						return false;
-					},
-					consumes -> {
-						if (de.keksuccino.fancymenu.util.MathUtils.isFloat(consumes)) {
-							float f = Float.parseFloat(consumes);
-							boolean b = ((f >= 0.0F) && (f <= 1.0F));
-							if (!b) return null;
-						}
-						return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.base_opacity.error.invalid_value"));
-					}).setStackable(true);
+			this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "base_opacity",
+							consumes -> consumes.settings.isOpacityChangeable(),
+							consumes -> consumes.element.baseOpacity,
+							(abstractEditorElement, s) -> abstractEditorElement.element.baseOpacity = s,
+							null, false, true, Component.translatable("fancymenu.element.base_opacity"),
+							true, "1.0", null, null)
+					.setStackable(true)
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.base_opacity.desc")));
 
 		}
+
+		//TODO übernehmen
+		this.addToggleContextMenuEntryTo(this.rightClickMenu, "auto_sizing", AbstractEditorElement.class,
+						consumes -> consumes.element.autoSizing,
+						(abstractEditorElement, aBoolean) -> {
+							abstractEditorElement.element.setAutoSizingBaseWidthAndHeight();
+							abstractEditorElement.element.autoSizing = aBoolean;
+							abstractEditorElement.element.updateAutoSizing(true);
+						},
+						"fancymenu.element.auto_sizing")
+				.setStackable(true)
+				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.auto_sizing.desc")))
+				.setIcon(ContextMenu.IconFactory.getIcon("measure"));
 
 		this.rightClickMenu.addSeparatorEntry("separator_8").setStackable(true);
 
@@ -782,6 +781,12 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		if (button == 0) {
 			if (!this.rightClickMenu.isUserNavigatingInMenu()) {
 				this.activeResizeGrabber = !this.isMultiSelected() ? this.getHoveredResizeGrabber() : null;
+				//TODO übernehmen
+				if (this.activeResizeGrabber != null) {
+					this.element.setAutoSizingBaseWidthAndHeight();
+					this.element.updateAutoSizing(true);
+				}
+				//----------------
 				if (this.isHovered() || (this.isMultiSelected() && !this.editor.getHoveredElements().isEmpty()) || this.isGettingResized()) {
 					this.leftMouseDown = true;
 					this.updateLeftMouseDownCachedValues((int) mouseX, (int) mouseY);
@@ -797,6 +802,9 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		if (button == 0) {
 			this.leftMouseDown = false;
 			this.activeResizeGrabber = null;
+			//TODO übernehmen
+			this.element.updateAutoSizing(true);
+			//------------------
 			this.recentlyMovedByDragging = false;
 			this.movingCrumpleZonePassed = false;
 		}

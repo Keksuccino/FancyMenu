@@ -1390,5 +1390,7 @@
   "fancymenu.element.fading.values.every_time": "Every Time",
   "fancymenu.element.fading.error.negative_value": "Fading speed needs to be a positive and\nvalid floating point value (bigger than 0.0).",
   "fancymenu.element.base_opacity": "Opacity",
-  "fancymenu.element.base_opacity.error.invalid_value": "Opacity needs to be a floating point value between 0.0 and 1.0!"
+  "fancymenu.element.base_opacity.desc": "Should be a floating point value between 0.0 and 1.0.",
+  "fancymenu.element.auto_sizing": "Auto-Sizing: %s",
+  "fancymenu.element.auto_sizing.desc": "Auto-sizing will try to adjust the element's size\nbased on the screen size, so it's never too big or\ntoo small for the current screen size.\n\nIt is not recommended to use this when\n§lauto-scaling §ris enabled in the layout."
 }

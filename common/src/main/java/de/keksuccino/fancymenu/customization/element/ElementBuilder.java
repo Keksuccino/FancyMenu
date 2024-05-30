@@ -26,8 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import net.minecraft.client.gui.screens.Screen;
-
 /**
  * Builder to construct {@link AbstractElement} instances. Every element type needs its own {@link ElementBuilder}.<br>
  * Needs to get registered to the {@link ElementRegistry}.
@@ -140,7 +138,11 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
             element.fadeOutSpeed = deserializeNumber(Float.class, element.fadeOutSpeed, serialized.getValue("fade_out_speed"));
 
-            element.baseOpacity = deserializeNumber(Float.class, element.baseOpacity, serialized.getValue("base_opacity"));
+            element.baseOpacity = Objects.requireNonNullElse(serialized.getValue("base_opacity"), element.baseOpacity);
+
+            element.autoSizing = deserializeBoolean(element.autoSizing, serialized.getValue("auto_sizing"));
+            element.autoSizingBaseScreenWidth = deserializeNumber(Integer.class, element.autoSizingBaseScreenWidth, serialized.getValue("auto_sizing_base_screen_width"));
+            element.autoSizingBaseScreenHeight = deserializeNumber(Integer.class, element.autoSizingBaseScreenHeight, serialized.getValue("auto_sizing_base_screen_height"));
 
             //----------------------------------
 
@@ -316,7 +318,10 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             sec.putProperty("fade_in_speed", "" + element.fadeInSpeed);
             sec.putProperty("fade_out", element.fadeOut.getName());
             sec.putProperty("fade_out_speed", "" + element.fadeOutSpeed);
-            sec.putProperty("base_opacity", "" + element.baseOpacity);
+            sec.putProperty("base_opacity", element.baseOpacity);
+            sec.putProperty("auto_sizing", "" + element.autoSizing);
+            sec.putProperty("auto_sizing_base_screen_width", "" + element.autoSizingBaseScreenWidth);
+            sec.putProperty("auto_sizing_base_screen_height", "" + element.autoSizingBaseScreenHeight);
             //------------------------
 
             sec.putProperty("anchor_point", (element.anchorPoint != null) ? element.anchorPoint.getName() : ElementAnchorPoints.TOP_LEFT.getName());

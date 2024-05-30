@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.element;
 
+import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
@@ -81,7 +82,11 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public long lastFadeInTick = -1;
 	public long lastFadeOutTick = -1;
 	public float opacity = 1.0F;
-	public float baseOpacity = 1.0F;
+	@NotNull
+	public String baseOpacity = "1.0";
+	public float lastBaseOpacity = -1.0F;
+	public long lastBaseOpacityParse = -1L;
+	public float cachedBaseOpacity = 1.0F;
 	public boolean becameVisible = false;
 	public boolean becameInvisible = false;
 	public boolean isNewMenu = ScreenCustomization.isNewMenu();
@@ -89,6 +94,13 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public boolean fadeOutElementJustCreated = true;
 	public boolean appearanceDelayElementJustCreated = true;
 	public boolean lastTickAppearanceDelayed = false;
+	public boolean autoSizing = false;
+	public int autoSizingBaseScreenWidth = 0;
+	public int autoSizingBaseScreenHeight = 0;
+	public double autoSizingLastTickScreenWidth = -1;
+	public double autoSizingLastTickScreenHeight = -1;
+	public int autoSizingWidth = 0;
+	public int autoSizingHeight = 0;
 	//-------------------
 	/**
 	 * This is for when the render scale was changed in a non-system-wide way like via {@link PoseStack#translate(float, float, float)}.<br>
@@ -129,6 +141,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 * The normal element rendering logic should be in {@link AbstractElement#render(GuiGraphics, int, int, float)}.
 	 */
 	public void renderInternal(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+		this.tickBaseOpacity();
 
 		this.renderTick_Head();
 
@@ -172,6 +186,21 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	}
 
 	//TODO übernehmen
+	public void tickBaseOpacity() {
+
+		//Don't update opacity while fade-in/out is active
+		if (this.fadeInStarted && !this.fadeInFinished) return;
+		if (this.fadeOutStarted && !this.fadeOutFinished) return;
+
+		float newBaseOpacity = this.getBaseOpacity();
+		if (newBaseOpacity != this.lastBaseOpacity) {
+			this.updateOpacity();
+		}
+		this.lastBaseOpacity = newBaseOpacity;
+
+	}
+
+	//TODO übernehmen
 	public void tickVisibleInvisible() {
 
 		if (!this._shouldRender()) {
@@ -212,7 +241,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			boolean fadeInIsResize = !this.isNewMenu && this.fadeInElementJustCreated;
 			boolean fadeInDone = this.getMemory().putPropertyIfAbsentAndGet("fade_in_done", false);
 			if (!fadeInIsResize || !fadeInDone) {
-				if ((this.fadeIn != Fading.NO_FADING) && this.shouldDoFadeInIfNeeded && (this.baseOpacity > 0.0F)) {
+				if ((this.fadeIn != Fading.NO_FADING) && this.shouldDoFadeInIfNeeded && (this.lastBaseOpacity > 0.0F)) {
 					if ((this.fadeIn != Fading.FIRST_TIME) || !fadeInDone) {
 						if (!this.fadeInStarted) {
 							this.fadeInStarted = true;
@@ -222,8 +251,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 							this.lastFadeInTick = System.currentTimeMillis();
 							this.opacity += 0.02F;
 						}
-						if (this.opacity >= this.baseOpacity) {
-							this.opacity = this.baseOpacity;
+						if (this.opacity >= this.lastBaseOpacity) {
+							this.opacity = this.lastBaseOpacity;
 							this.shouldDoFadeInIfNeeded = false;
 							this.fadeInFinished = true;
 							this.getMemory().putProperty("fade_in_done", true);
@@ -241,13 +270,13 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		this.fadeInElementJustCreated = false;
 
 		//Handle fade-out
-		if ((this.fadeOut != Fading.NO_FADING) && this.shouldDoFadeOutIfNeeded && (this.baseOpacity > 0.0F)) {
+		if ((this.fadeOut != Fading.NO_FADING) && this.shouldDoFadeOutIfNeeded && (this.lastBaseOpacity > 0.0F)) {
 			if (!this.fadeOutFinished) {
 				boolean fadeOutDone = this.getMemory().putPropertyIfAbsentAndGet("fade_out_done", false);
 				if ((this.fadeOut != Fading.FIRST_TIME) || !fadeOutDone) {
 					if (!this.fadeOutStarted) {
 						this.fadeOutStarted = true;
-						this.opacity = this.baseOpacity;
+						this.opacity = this.lastBaseOpacity;
 					}
 					if ((this.lastFadeOutTick + (long)(50.0F * this.fadeOutSpeed)) < System.currentTimeMillis()) {
 						this.lastFadeOutTick = System.currentTimeMillis();
@@ -323,7 +352,24 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	//TODO übernehmen
 	public void updateOpacity() {
-		this.opacity = this.baseOpacity;
+		this.opacity = this.getBaseOpacity();
+	}
+
+	//TODO übernehmen
+	public float getBaseOpacity() {
+		long now = System.currentTimeMillis();
+		if ((this.lastBaseOpacityParse + 30L) > now) return this.cachedBaseOpacity;
+		this.lastBaseOpacityParse = now;
+		String s = PlaceholderParser.replacePlaceholders(this.baseOpacity);
+		if (MathUtils.isFloat(s)) {
+			float f = Float.parseFloat(s);
+			if (f < 0.0F) f = 0.0F;
+			if (f > 1.0F) f = 1.0F;
+			this.cachedBaseOpacity = f;
+			return f;
+		}
+		this.cachedBaseOpacity = 1.0F;
+		return 1.0F;
 	}
 
 	/**
@@ -466,6 +512,43 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		return y;
 	}
 
+	//TODO übernehmen
+	public void setAutoSizingBaseWidthAndHeight() {
+		Window window = Minecraft.getInstance().getWindow();
+		double guiWidth = getScreenWidth() * window.getGuiScale();
+		double guiHeight = getScreenHeight() * window.getGuiScale();
+		this.autoSizingBaseScreenWidth = (int)guiWidth;
+		this.autoSizingBaseScreenHeight = (int)guiHeight;
+	}
+
+	//TODO übernehmen
+	public void updateAutoSizing(boolean ignoreLastTickScreenSize) {
+
+		Window window = Minecraft.getInstance().getWindow();
+		double guiWidth = getScreenWidth() * window.getGuiScale();
+		double guiHeight = getScreenHeight() * window.getGuiScale();
+
+		if (((this.autoSizingLastTickScreenWidth != guiWidth) || (this.autoSizingLastTickScreenHeight != guiHeight)) || ignoreLastTickScreenSize) {
+			if (this.autoSizing && (this.autoSizingBaseScreenWidth > 0) && (this.autoSizingBaseScreenHeight > 0)) {
+				double percentX = Math.max(1.0D, (guiWidth / (double) this.autoSizingBaseScreenWidth) * 100.0D);
+				double percentY = Math.max(1.0D, (guiHeight / (double) this.autoSizingBaseScreenHeight) * 100.0D);
+				double percent = Math.min(percentX, percentY);
+				this.autoSizingWidth = Math.max(1, (int) ((percent / 100.0D) * (double) this.baseWidth));
+				this.autoSizingHeight = Math.max(1, (int) ((percent / 100.0D) * (double) this.baseHeight));
+				if ((this.autoSizingBaseScreenWidth == guiWidth) && (this.autoSizingBaseScreenHeight == guiHeight)) {
+					this.autoSizingWidth = 0;
+					this.autoSizingHeight = 0;
+				}
+			} else {
+				this.autoSizingWidth = 0;
+				this.autoSizingHeight = 0;
+			}
+		}
+		this.autoSizingLastTickScreenWidth = guiWidth;
+		this.autoSizingLastTickScreenHeight = guiHeight;
+
+	}
+
 	/**
 	 * Returns the actual/final width the element will have when it gets rendered.
 	 */
@@ -487,6 +570,12 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		if (this.stretchX) {
 			return getScreenWidth();
 		}
+		//TODO übernehmen
+		this.updateAutoSizing(false);
+		if (this.autoSizing && (this.autoSizingWidth > 0)) {
+			return this.autoSizingWidth;
+		}
+		//--------------------
 		return this.baseWidth;
 	}
 
@@ -511,6 +600,12 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		if (this.stretchY) {
 			return getScreenHeight();
 		}
+		//TODO übernehmen
+		this.updateAutoSizing(false);
+		if (this.autoSizing && (this.autoSizingHeight > 0)) {
+			return this.autoSizingHeight;
+		}
+		//--------------------
 		return this.baseHeight;
 	}
 

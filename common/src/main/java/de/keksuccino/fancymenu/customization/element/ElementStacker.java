@@ -74,8 +74,17 @@ public interface ElementStacker<E extends AbstractElement> {
         if (e.fadeOutSpeed != 1.0F) {
             stack.fadeOutSpeed = e.fadeOutSpeed;
         }
-        if (e.baseOpacity != 1.0F) {
+        if (!e.baseOpacity.equals("1.0")) {
             stack.baseOpacity = e.baseOpacity;
+        }
+        if (e.autoSizing) {
+            stack.autoSizing = true;
+        }
+        if (e.autoSizingBaseScreenWidth != 0) {
+            stack.autoSizingBaseScreenWidth = e.autoSizingBaseScreenWidth;
+        }
+        if (e.autoSizingBaseScreenHeight != 0) {
+            stack.autoSizingBaseScreenHeight = e.autoSizingBaseScreenHeight;
         }
         //---------------------
 
