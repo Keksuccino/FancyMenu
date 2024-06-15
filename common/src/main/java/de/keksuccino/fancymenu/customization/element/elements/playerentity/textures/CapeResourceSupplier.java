@@ -24,7 +24,7 @@ import java.util.Objects;
 public class CapeResourceSupplier extends ResourceSupplier<ITexture> {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final ResourceLocation DEFAULT_CAPE_LOCATION = new ResourceLocation("fancymenu", "textures/player_entity/default_cape_texture.png");
+    public static final ResourceLocation DEFAULT_CAPE_LOCATION = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/player_entity/default_cape_texture.png");
     public static final PngTexture DEFAULT_CAPE = PngTexture.location(DEFAULT_CAPE_LOCATION);
     protected static final Map<String, String> CACHED_PLAYER_NAME_CAPE_URLS = new HashMap<>();
 

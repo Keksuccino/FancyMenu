@@ -47,7 +47,7 @@ import java.util.function.Consumer;
 public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> extends CellScreen {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    protected static final PngTexture WARNING_TEXTURE = PngTexture.location(new ResourceLocation("fancymenu", "textures/warning_framed_24x24.png"));
+    protected static final PngTexture WARNING_TEXTURE = PngTexture.location(ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/warning_framed_24x24.png"));
 
     @Nullable
     protected FileTypeGroup<F> allowedFileTypes;

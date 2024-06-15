@@ -6,14 +6,16 @@ import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
+@SuppressWarnings("all")
 public class AnimationMenuBackground extends MenuBackground {
 
-    private static final ResourceLocation MISSING = new ResourceLocation("missing_texture");
+    private static final ResourceLocation MISSING = ITexture.MISSING_TEXTURE_LOCATION;
 
     public String animationName;
     public boolean restartOnMenuLoad = false;

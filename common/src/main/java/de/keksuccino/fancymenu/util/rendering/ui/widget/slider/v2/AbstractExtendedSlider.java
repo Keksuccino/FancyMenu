@@ -24,10 +24,10 @@ import java.awt.*;
 @SuppressWarnings("unused")
 public abstract class AbstractExtendedSlider extends AbstractSliderButton implements IExtendedWidget, NavigatableWidget {
 
-    public static final ResourceLocation SLIDER_SPRITE = new ResourceLocation("widget/slider");
-    public static final ResourceLocation HIGHLIGHTED_SPRITE = new ResourceLocation("widget/slider_highlighted");
-    public static final ResourceLocation SLIDER_HANDLE_SPRITE = new ResourceLocation("widget/slider_handle");
-    public static final ResourceLocation SLIDER_HANDLE_HIGHLIGHTED_SPRITE = new ResourceLocation("widget/slider_handle_highlighted");
+    public static final ResourceLocation SLIDER_SPRITE = ResourceLocation.parse("widget/slider");
+    public static final ResourceLocation HIGHLIGHTED_SPRITE = ResourceLocation.parse("widget/slider_highlighted");
+    public static final ResourceLocation SLIDER_HANDLE_SPRITE = ResourceLocation.parse("widget/slider_handle");
+    public static final ResourceLocation SLIDER_HANDLE_HIGHLIGHTED_SPRITE = ResourceLocation.parse("widget/slider_handle_highlighted");
 
     @Nullable
     protected DrawableColor sliderBackgroundColorNormal;

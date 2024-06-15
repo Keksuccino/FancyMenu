@@ -27,8 +27,8 @@ public class RenderingUtils {
 
     public static final DrawableColor MISSING_TEXTURE_COLOR_MAGENTA = DrawableColor.of(Color.MAGENTA);
     public static final DrawableColor MISSING_TEXTURE_COLOR_BLACK = DrawableColor.BLACK;
-    public static final ResourceLocation FULLY_TRANSPARENT_TEXTURE = new ResourceLocation("fancymenu", "textures/fully_transparent.png");
-    public static final ResourceLocation BLUR_LOCATION = new ResourceLocation("shaders/post/blur.json");
+    public static final ResourceLocation FULLY_TRANSPARENT_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/fully_transparent.png");
+    public static final ResourceLocation BLUR_LOCATION = ResourceLocation.parse("shaders/post/blur.json");
 
     public static PostChain blurEffect = null;
 
@@ -222,7 +222,7 @@ public class RenderingUtils {
     }
 
     public static float getPartialTick() {
-        return Minecraft.getInstance().isPaused() ? ((IMixinMinecraft)Minecraft.getInstance()).getPausePartialTickFancyMenu() : Minecraft.getInstance().getFrameTime();
+        return Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(false);
     }
 
     public static boolean isXYInArea(int targetX, int targetY, int x, int y, int width, int height) {
@@ -295,15 +295,14 @@ public class RenderingUtils {
         float green = (float)FastColor.ARGB32.green(color) / 255.0F;
         float blue = (float)FastColor.ARGB32.blue(color) / 255.0F;
         float alpha = (float) FastColor.ARGB32.alpha(color) / 255.0F;
-        BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
+        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
         RenderSystem.enableBlend();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-        bufferBuilder.vertex(matrix4f, minX, minY, z).color(red, green, blue, alpha).endVertex();
-        bufferBuilder.vertex(matrix4f, minX, maxY, z).color(red, green, blue, alpha).endVertex();
-        bufferBuilder.vertex(matrix4f, maxX, maxY, z).color(red, green, blue, alpha).endVertex();
-        bufferBuilder.vertex(matrix4f, maxX, minY, z).color(red, green, blue, alpha).endVertex();
-        BufferUploader.drawWithShader(bufferBuilder.end());
+        bufferBuilder.addVertex(matrix4f, minX, minY, z).setColor(red, green, blue, alpha);
+        bufferBuilder.addVertex(matrix4f, minX, maxY, z).setColor(red, green, blue, alpha);
+        bufferBuilder.addVertex(matrix4f, maxX, maxY, z).setColor(red, green, blue, alpha);
+        bufferBuilder.addVertex(matrix4f, maxX, minY, z).setColor(red, green, blue, alpha);
+        BufferUploader.drawWithShader(Objects.requireNonNull(bufferBuilder.build()));
         RenderSystem.disableBlend();
     }
 
@@ -335,13 +334,12 @@ public class RenderingUtils {
         RenderSystem.setShaderTexture(0, location);
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         Matrix4f $$10 = graphics.pose().last().pose();
-        BufferBuilder $$11 = Tesselator.getInstance().getBuilder();
-        $$11.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-        $$11.vertex($$10, $$1, $$3, $$5).uv($$6, $$8).endVertex();
-        $$11.vertex($$10, $$1, $$4, $$5).uv($$6, $$9).endVertex();
-        $$11.vertex($$10, $$2, $$4, $$5).uv($$7, $$9).endVertex();
-        $$11.vertex($$10, $$2, $$3, $$5).uv($$7, $$8).endVertex();
-        BufferUploader.drawWithShader($$11.end());
+        BufferBuilder $$11 = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        $$11.addVertex($$10, $$1, $$3, $$5).setUv($$6, $$8);
+        $$11.addVertex($$10, $$1, $$4, $$5).setUv($$6, $$9);
+        $$11.addVertex($$10, $$2, $$4, $$5).setUv($$7, $$9);
+        $$11.addVertex($$10, $$2, $$3, $$5).setUv($$7, $$8);
+        BufferUploader.drawWithShader(Objects.requireNonNull($$11.build()));
     }
 
 }

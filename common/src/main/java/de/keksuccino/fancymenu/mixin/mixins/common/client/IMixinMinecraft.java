@@ -11,8 +11,6 @@ public interface IMixinMinecraft {
 
     @Invoker("openChatScreen") void openChatScreenFancyMenu(String msg);
 
-    @Accessor("pausePartialTick") float getPausePartialTickFancyMenu();
-
     @Accessor("reloadStateTracker") ResourceLoadStateTracker getReloadStateTrackerFancyMenu();
 
 }

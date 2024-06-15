@@ -32,9 +32,9 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     private static final Logger LOGGER = LogManager.getLogger();
 
     public static final WidgetSprites SPRITES = new WidgetSprites(
-            new ResourceLocation("widget/button"),
-            new ResourceLocation("widget/button_disabled"),
-            new ResourceLocation("widget/button_highlighted")
+            ResourceLocation.parse("widget/button"),
+            ResourceLocation.parse("widget/button_disabled"),
+            ResourceLocation.parse("widget/button_highlighted")
     );
 
     protected final Minecraft mc = Minecraft.getInstance();

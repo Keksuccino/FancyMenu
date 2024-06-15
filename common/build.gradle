@@ -20,8 +20,8 @@ dependencies {
     //compileOnly fileTree('libs') { include '*.jar' }
     compileOnly 'com.github.Keksuccino:japng:0.5.3'
     compileOnly 'com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7'
-    compileOnly "curse.maven:melody-938643:4953732"
-    compileOnly "maven.modrinth:konkrete:1.9.7-1.20.6-forge"
+    compileOnly "maven.modrinth:melody:1.0.10-1.21-forge"
+    compileOnly "maven.modrinth:konkrete:1.9.9-1.21-forge"
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
     implementation group: 'org.ow2.asm', name: 'asm-tree', version: '9.7'
 }

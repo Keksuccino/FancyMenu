@@ -46,9 +46,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+@SuppressWarnings("all")
 public class LayoutEditorUI {
 
-	private static final PngTexture CLOSE_EDITOR_TEXTURE = PngTexture.location(new ResourceLocation("fancymenu", "textures/menubar/icons/close.png"));
+	private static final PngTexture CLOSE_EDITOR_TEXTURE = PngTexture.location(ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/menubar/icons/close.png"));
 
 	private static MenuBar grandfatheredMenuBar = null;
 

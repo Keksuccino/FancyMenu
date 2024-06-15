@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.element.elements.slider.v1;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v1.ExtendedSliderButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v1.ListSliderButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v1.RangeSliderButton;
@@ -92,7 +93,7 @@ public class SliderElement extends AbstractElement {
             this.slider.setY(this.getAbsoluteY());
             this.slider.setWidth(this.getAbsoluteWidth());
             ((IMixinAbstractWidget)this.slider).setHeightFancyMenu(this.getAbsoluteHeight());
-            this.slider.render(graphics, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime());
+            this.slider.render(graphics, MouseInput.getMouseX(), MouseInput.getMouseY(), RenderingUtils.getPartialTick());
 
             //Update variable value on change
             if (this.linkedVariable != null) {

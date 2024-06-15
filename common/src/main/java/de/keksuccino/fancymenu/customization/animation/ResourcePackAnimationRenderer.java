@@ -52,9 +52,9 @@ public class ResourcePackAnimationRenderer implements IAnimationRenderer {
             for (String s : this.frameNames) {
                 ResourceLocation r;
                 if (this.resourceNamespace == null) {
-                    r = new ResourceLocation(s);
+                    r = ResourceLocation.parse(s);
                 } else {
-                    r = new ResourceLocation(this.resourceNamespace, s);
+                    r = ResourceLocation.fromNamespaceAndPath(this.resourceNamespace, s);
                 }
                 this.resources.add(r);
             }

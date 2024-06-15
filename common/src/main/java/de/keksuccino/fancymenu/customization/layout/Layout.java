@@ -647,15 +647,15 @@ public class Layout extends LayoutBase {
                     }
                 }
 
-                if (action.equalsIgnoreCase("addanimation")) {
-                    AnimationElement e = Elements.ANIMATION.deserializeElementInternal(convertContainerToSerializedElement(sec));
-                    if (e != null) {
-                        e.stayOnScreen = false;
-                        e.animationName = sec.getValue("name");
-                        elements.add(Elements.ANIMATION.serializeElementInternal(e));
-                        elementOrder.add(e.getInstanceIdentifier());
-                    }
-                }
+//                if (action.equalsIgnoreCase("addanimation")) {
+//                    AnimationElement e = Elements.ANIMATION.deserializeElementInternal(convertContainerToSerializedElement(sec));
+//                    if (e != null) {
+//                        e.stayOnScreen = false;
+//                        e.animationName = sec.getValue("name");
+//                        elements.add(Elements.ANIMATION.serializeElementInternal(e));
+//                        elementOrder.add(e.getInstanceIdentifier());
+//                    }
+//                }
 
                 if (action.equalsIgnoreCase("addshape")) {
                     ShapeElement e = Elements.SHAPE.deserializeElementInternal(convertContainerToSerializedElement(sec));

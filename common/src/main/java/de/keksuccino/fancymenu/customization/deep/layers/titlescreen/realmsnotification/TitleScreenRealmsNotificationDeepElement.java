@@ -10,10 +10,10 @@ import org.jetbrains.annotations.NotNull;
 
 public class TitleScreenRealmsNotificationDeepElement extends AbstractDeepElement {
 
-    protected static final ResourceLocation UNSEEN_NOTIFICATION_SPRITE = new ResourceLocation("icon/unseen_notification");
-    protected static final ResourceLocation NEWS_SPRITE = new ResourceLocation("icon/news");
-    protected static final ResourceLocation INVITE_SPRITE = new ResourceLocation("icon/invite");
-    protected static final ResourceLocation TRIAL_AVAILABLE_SPRITE = new ResourceLocation("icon/trial_available");
+    protected static final ResourceLocation UNSEEN_NOTIFICATION_SPRITE = ResourceLocation.parse("icon/unseen_notification");
+    protected static final ResourceLocation NEWS_SPRITE = ResourceLocation.parse("icon/news");
+    protected static final ResourceLocation INVITE_SPRITE = ResourceLocation.parse("icon/invite");
+    protected static final ResourceLocation TRIAL_AVAILABLE_SPRITE = ResourceLocation.parse("icon/trial_available");
 
     public TitleScreenRealmsNotificationDeepElement(DeepElementBuilder<?, ?, ?> builder) {
         super(builder);

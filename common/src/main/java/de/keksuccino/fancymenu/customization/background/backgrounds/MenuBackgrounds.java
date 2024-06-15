@@ -9,14 +9,14 @@ import de.keksuccino.fancymenu.customization.background.backgrounds.slideshow.Sl
 public class MenuBackgrounds {
 
     public static final ImageMenuBackgroundBuilder IMAGE = new ImageMenuBackgroundBuilder();
-    public static final AnimationMenuBackgroundBuilder ANIMATION = new AnimationMenuBackgroundBuilder();
+    //public static final AnimationMenuBackgroundBuilder ANIMATION = new AnimationMenuBackgroundBuilder();
     public static final SlideshowMenuBackgroundBuilder SLIDESHOW = new SlideshowMenuBackgroundBuilder();
     public static final PanoramaMenuBackgroundBuilder PANORAMA = new PanoramaMenuBackgroundBuilder();
 
     public static void registerAll() {
 
         MenuBackgroundRegistry.register(IMAGE);
-        MenuBackgroundRegistry.register(ANIMATION);
+        //MenuBackgroundRegistry.register(ANIMATION);
         MenuBackgroundRegistry.register(SLIDESHOW);
         MenuBackgroundRegistry.register(PANORAMA);
 

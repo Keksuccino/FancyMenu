@@ -57,8 +57,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	public static final ResourceLocation MENU_BACKGROUND = new ResourceLocation("textures/gui/menu_background.png");
-	public static final ResourceLocation INWORLD_MENU_BACKGROUND = new ResourceLocation("textures/gui/inworld_menu_background.png");
+	public static final ResourceLocation MENU_BACKGROUND = ResourceLocation.parse("textures/gui/menu_background.png");
+	public static final ResourceLocation INWORLD_MENU_BACKGROUND = ResourceLocation.parse("textures/gui/inworld_menu_background.png");
 
 	protected String screenIdentifier;
 	public LayoutBase layoutBase = new LayoutBase();

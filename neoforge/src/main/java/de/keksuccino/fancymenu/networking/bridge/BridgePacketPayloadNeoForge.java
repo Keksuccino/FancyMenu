@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class BridgePacketPayloadNeoForge extends PacketPayloadBaseNeoForge implements CustomPacketPayload {
 
-    public static final Type<BridgePacketPayloadNeoForge> TYPE = CustomPacketPayload.createType("fancymenu:packet_bridge");
+    public static final Type<BridgePacketPayloadNeoForge> TYPE = CustomPacketPayload.createType("fancymenu_packet_bridge");
     public static final StreamCodec<FriendlyByteBuf, BridgePacketPayloadNeoForge> CODEC = CustomPacketPayload.codec(BridgePacketPayloadNeoForge::write, BridgePacketPayloadNeoForge::new);
 
     public String dataWithIdentifier;

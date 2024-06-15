@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 public interface RenderableResource extends Resource {
 
     public static final ResourceLocation MISSING_TEXTURE_LOCATION = TextureManager.INTENTIONAL_MISSING_TEXTURE;
-    public static final ResourceLocation FULLY_TRANSPARENT_TEXTURE = new ResourceLocation("fancymenu", "textures/fully_transparent.png");
+    public static final ResourceLocation FULLY_TRANSPARENT_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/fully_transparent.png");
 
     /**
      * Some resource types asynchronously update their current {@link ResourceLocation},

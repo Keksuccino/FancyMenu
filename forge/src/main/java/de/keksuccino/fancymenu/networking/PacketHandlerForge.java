@@ -11,10 +11,11 @@ import net.minecraftforge.network.SimpleChannel;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+@SuppressWarnings("all")
 public class PacketHandlerForge {
 
     public static final int PROTOCOL_VERSION = 1;
-    public static final SimpleChannel INSTANCE = ChannelBuilder.named(new ResourceLocation("fancymenu", "play")).networkProtocolVersion(PROTOCOL_VERSION).acceptedVersions((status, version) -> true).simpleChannel();
+    public static final SimpleChannel INSTANCE = ChannelBuilder.named(ResourceLocation.fromNamespaceAndPath("fancymenu", "play")).networkProtocolVersion(PROTOCOL_VERSION).acceptedVersions((status, version) -> true).simpleChannel();
 
     public static <MSG> void registerMessage(Class<MSG> messageType, BiConsumer<MSG, FriendlyByteBuf> encoder, Function<FriendlyByteBuf, MSG> decoder, BiConsumer<MSG, CustomPayloadEvent.Context> messageConsumer) {
         INSTANCE.messageBuilder(messageType).encoder(encoder).decoder(decoder).consumerMainThread(messageConsumer).add();

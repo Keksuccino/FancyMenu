@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class BridgePacketPayloadFabric extends PacketPayloadBaseFabric implements CustomPacketPayload {
 
-    public static final Type<BridgePacketPayloadFabric> TYPE = CustomPacketPayload.createType("fancymenu:packet_bridge");
+    public static final Type<BridgePacketPayloadFabric> TYPE = CustomPacketPayload.createType("fancymenu_packet_bridge");
     public static final StreamCodec<FriendlyByteBuf, BridgePacketPayloadFabric> CODEC = CustomPacketPayload.codec(BridgePacketPayloadFabric::write, BridgePacketPayloadFabric::new);
 
     public String dataWithIdentifier;

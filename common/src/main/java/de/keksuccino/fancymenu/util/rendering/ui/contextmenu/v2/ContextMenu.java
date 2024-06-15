@@ -36,8 +36,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final ResourceLocation SUB_CONTEXT_MENU_ARROW_ICON = new ResourceLocation("fancymenu", "textures/contextmenu/context_menu_sub_arrow.png");
-    private static final ResourceLocation CONTEXT_MENU_TOOLTIP_ICON = new ResourceLocation("fancymenu", "textures/contextmenu/context_menu_tooltip.png");
+    private static final ResourceLocation SUB_CONTEXT_MENU_ARROW_ICON = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/contextmenu/context_menu_sub_arrow.png");
+    private static final ResourceLocation CONTEXT_MENU_TOOLTIP_ICON = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/contextmenu/context_menu_tooltip.png");
     private static final DrawableColor SHADOW_COLOR = DrawableColor.of(new Color(43, 43, 43, 100));
 
     protected final List<ContextMenuEntry<?>> entries = new ArrayList<>();
@@ -1646,7 +1646,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     public static class IconFactory {
         @NotNull
         public static ResourceLocation getIcon(@NotNull String iconName) {
-            return new ResourceLocation("fancymenu", "textures/contextmenu/icons/" + iconName + ".png");
+            return ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/contextmenu/icons/" + iconName + ".png");
         }
     }
 

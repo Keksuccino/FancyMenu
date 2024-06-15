@@ -77,9 +77,9 @@ public class PlayerEntityElementRenderer extends PlayerRenderer {
         this.innerRender(f11, f12, matrix, bufferSource, i11);
     }
 
-    protected void innerRender(float f11, float f12, PoseStack matrix, MultiBufferSource bufferSource, int i11) {
+    protected void innerRender(float f11, float f12, PoseStack pose, MultiBufferSource bufferSource, int i11) {
 
-        matrix.pushPose();
+        pose.pushPose();
 
         boolean shouldSit = this.properties.shouldSit;
         this.playerModel.riding = shouldSit;
@@ -94,15 +94,15 @@ public class PlayerEntityElementRenderer extends PlayerRenderer {
             Direction direction = this.properties.getBedOrientation();
             if (direction != null) {
                 float f4 = this.properties.getEyeHeight(Pose.STANDING) - 0.1F;
-                matrix.translate((float)(-direction.getStepX()) * f4, 0.0F, (float)(-direction.getStepZ()) * f4);
+                pose.translate((float)(-direction.getStepX()) * f4, 0.0F, (float)(-direction.getStepZ()) * f4);
             }
         }
 
         float f7 = f12;
-        this.setupRotations(matrix, f7, f, f12);
-        matrix.scale(-1.0F, -1.0F, 1.0F);
-        this.scale(matrix, f12);
-        matrix.translate(0.0F, -1.501F, 0.0F);
+        this.setupRotations(pose, f7, f, f12);
+        pose.scale(-1.0F, -1.0F, 1.0F);
+        this.scale(pose, f12);
+        pose.translate(0.0F, -1.501F, 0.0F);
         float f8 = 0.0F;
         float f5 = 0.0F;
         if (!shouldSit) {
@@ -124,21 +124,23 @@ public class PlayerEntityElementRenderer extends PlayerRenderer {
         if (rendertype != null) {
             VertexConsumer vertexconsumer = bufferSource.getBuffer(rendertype);
             int i = OverlayTexture.pack(OverlayTexture.u(this.getWhiteOverlayProgress(null, f12)), OverlayTexture.v(false));
-            this.playerModel.renderToBuffer(matrix, vertexconsumer, i11, i, 1.0F, 1.0F, 1.0F, flag1 ? 0.15F : 1.0F);
+//            this.playerModel.renderToBuffer(matrix, vertexconsumer, i11, i, 1.0F, 1.0F, 1.0F, flag1 ? 0.15F : 1.0F);
+            //TODO EXPERIMENTAL
+            this.playerModel.renderToBuffer(pose, vertexconsumer, i11, i);
         }
 
         if (!this.properties.isSpectator()) {
             for(RenderLayer<?,?> renderlayer : this.layers) {
                 if (renderlayer instanceof PlayerEntityRenderLayer pl) {
-                    pl.render(matrix, bufferSource, i11, null, f5, f8, f12, f7, f2, f6);
+                    pl.render(pose, bufferSource, i11, null, f5, f8, f12, f7, f2, f6);
                 }
             }
         }
 
-        matrix.popPose();
+        pose.popPose();
 
         if (this.properties.showDisplayName) {
-            this.renderNameTag(null, this.properties.displayName, matrix, bufferSource, i11, 0.0F);
+            this.renderNameTag(null, this.properties.displayName, pose, bufferSource, i11, 0.0F);
         }
 
     }

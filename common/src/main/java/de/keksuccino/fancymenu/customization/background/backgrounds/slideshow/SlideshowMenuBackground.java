@@ -1,20 +1,19 @@
 package de.keksuccino.fancymenu.customization.background.backgrounds.slideshow;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.slideshow.ExternalTextureSlideshowRenderer;
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
-import de.keksuccino.konkrete.rendering.RenderUtils;
+import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
 public class SlideshowMenuBackground extends MenuBackground {
 
-    private static final ResourceLocation MISSING = new ResourceLocation("missing_texture");
+    private static final ResourceLocation MISSING = ITexture.MISSING_TEXTURE_LOCATION;
 
     public String slideshowName;
 

@@ -26,18 +26,6 @@ public class MixinTabNavigationBar {
     @Shadow @Final private static int HEIGHT;
     @Shadow private int width;
 
-    //TODO übernehmen
-//    @Inject(method = "setFocused(Lnet/minecraft/client/gui/components/events/GuiEventListener;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/tabs/TabManager;setCurrentTab(Lnet/minecraft/client/gui/components/tabs/Tab;Z)V", shift = At.Shift.AFTER))
-//    private void afterSetCurrentTabInSetFocused_FancyMenu(GuiEventListener guiEventListener, CallbackInfo info) {
-//        this.reInitScreenAfterTabChanged_FancyMenu();
-//    }
-
-    //TODO übernehmen
-//    @Inject(method = "selectTab", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/tabs/TabManager;setCurrentTab(Lnet/minecraft/client/gui/components/tabs/Tab;Z)V", shift = At.Shift.AFTER))
-//    private void afterSetCurrentTabInSelectTab_FancyMenu(int i, boolean b, CallbackInfo info) {
-//        this.reInitScreenAfterTabChanged_FancyMenu();
-//    }
-
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lnet/minecraft/resources/ResourceLocation;IIFFIIII)V"))
     private boolean wrapHeaderSeparatorRenderingInRender_FancyMenu(GuiGraphics instance, ResourceLocation p_283272_, int p_283605_, int p_281879_, float p_282809_, float p_282942_, int p_281922_, int p_282385_, int p_282596_, int p_281699_) {
         if (this.isBarPartOfCurrentScreen_FancyMenu()) {
@@ -61,7 +49,6 @@ public class MixinTabNavigationBar {
         EventHandler.INSTANCE.postEvent(new RenderTabNavigationBarHeaderBackgroundEvent.Post(this.getBar_FancyMenu(), graphics, this.width, HEIGHT));
     }
 
-    //TODO übernehmen
     /**
      * @reason Re-init the screen when the tab got changed by clicking one of the Tab buttons at the top
      */
@@ -70,7 +57,6 @@ public class MixinTabNavigationBar {
         this.reInitScreenAfterTabChanged_FancyMenu();
     }
 
-    //TODO übernehmen
     /**
      * @reason Re-init the screen when the tab got changed by using keys (arrow keys, Tab key, number keys)
      */

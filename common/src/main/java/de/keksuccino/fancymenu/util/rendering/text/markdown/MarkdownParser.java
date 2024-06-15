@@ -172,7 +172,7 @@ public class MarkdownParser {
                                 if (StringUtils.contains(subText, FORMATTING_CODE_FONT_SUFFIX)) {
                                     ResourceLocation font = null;
                                     try {
-                                        font = new ResourceLocation(fontName);
+                                        font = ResourceLocation.parse(fontName);
                                     } catch (Exception ignore) {}
                                     if (font != null) {
                                         if (isStartOfLine || !builder.text.isEmpty()) {

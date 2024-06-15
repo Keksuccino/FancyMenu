@@ -185,8 +185,8 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
     public static class LayerElementEntry extends ScrollAreaEntry {
 
-        protected static final ResourceLocation MOVE_UP_TEXTURE = new ResourceLocation("fancymenu", "textures/layout_editor/widgets/layers/move_up.png");
-        protected static final ResourceLocation MOVE_DOWN_TEXTURE = new ResourceLocation("fancymenu", "textures/layout_editor/widgets/layers/move_down.png");
+        protected static final ResourceLocation MOVE_UP_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/layout_editor/widgets/layers/move_up.png");
+        protected static final ResourceLocation MOVE_DOWN_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/layout_editor/widgets/layers/move_down.png");
 
         protected AbstractEditorElement element;
         protected LayerLayoutEditorWidget layerWidget;
@@ -384,8 +384,8 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
     public static class VanillaLayerElementEntry extends ScrollAreaEntry {
 
-        protected static final ResourceLocation MOVE_TO_TOP_TEXTURE = new ResourceLocation("fancymenu", "textures/layout_editor/widgets/layers/move_top.png");
-        protected static final ResourceLocation MOVE_BEHIND_TEXTURE = new ResourceLocation("fancymenu", "textures/layout_editor/widgets/layers/move_bottom.png");
+        protected static final ResourceLocation MOVE_TO_TOP_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/layout_editor/widgets/layers/move_top.png");
+        protected static final ResourceLocation MOVE_BEHIND_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/layout_editor/widgets/layers/move_bottom.png");
 
         protected LayerLayoutEditorWidget layerWidget;
         protected boolean moveTopBottomButtonHovered = false;

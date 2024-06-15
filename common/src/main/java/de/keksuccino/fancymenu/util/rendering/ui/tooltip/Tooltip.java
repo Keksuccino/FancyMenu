@@ -25,6 +25,7 @@ import org.joml.Matrix4f;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * A tooltip that gets rendered at the mouse position by default.<br>
@@ -161,11 +162,6 @@ public class Tooltip implements Renderable {
         graphics.pose().pushPose();
 
         ShaderInstance shaderInstance = RenderSystem.getShader();
-        Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder bufferBuilder2 = tesselator.getBuilder();
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        bufferBuilder2.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-        Matrix4f matrix4f2 = graphics.pose().last().pose();
 
         //Set Z to 0, because Z level gets handled in parent method instead
         int z = 0;
@@ -173,7 +169,6 @@ public class Tooltip implements Renderable {
 
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        BufferUploader.drawWithShader(bufferBuilder2.end());
         if (shaderInstance != null) {
             RenderSystem.setShader(() -> shaderInstance);
         }

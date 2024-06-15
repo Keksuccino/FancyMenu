@@ -41,7 +41,6 @@ public abstract class MixinTitleScreen extends Screen {
         super(null);
     }
 
-    //TODO übernehmen
     /**
      * @reason Manually fire FancyMenu's {@link RenderedScreenBackgroundEvent} in {@link TitleScreen}, because normal event doesn't work correctly here.
      */
