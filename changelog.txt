@@ -3,6 +3,7 @@ CHANGELOG | FANCYMENU v3.2.5
  
 - Ported to Forge 1.21.0
 - Completely removed FancyMenu's old deprecated animation format (menu background, element)
+  - FMA files are the new recommended way to implement animated textures
   - It stopped working anyways, because Load My Resources will not get any more updates
  
 %changelog:end%
