@@ -1,4 +1,15 @@
 
+CHANGELOG | FANCYMENU v3.2.5
+ 
+- Ported to Forge 1.21.0
+- Completely removed FancyMenu's old deprecated animation format (menu background, element)
+  - It stopped working anyways, because Load My Resources will not get any more updates
+ 
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.2.4
  
 - Ported to Forge 1.20.6
