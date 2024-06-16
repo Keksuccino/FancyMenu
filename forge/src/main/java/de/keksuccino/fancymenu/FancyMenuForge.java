@@ -33,9 +33,6 @@ public class FancyMenuForge {
         if (Compat.isVideoExtensionLoaded() || Services.PLATFORM.isModLoaded("fmextension_video")) {
             throw new RuntimeException("§rFancyMenu v2's §cVideo Extension§r is not supported by §cFancyMenu v3§r. Please remove the video extension.");
         }
-        if (Services.PLATFORM.isModLoaded("rrls")) {
-            throw new RuntimeException("§cFancyMenu§r is not compatible with §cRemove Reloading Screen§r! Please §nremove§r RRLS or FM.");
-        }
         if (Services.PLATFORM.isModLoaded("fancymenu_video")) {
             throw new RuntimeException("§cFancyMenu v3.0.0+§r is not compatible with the §cvideo extension§r by SrRapero720! Please §nremove§r the extension.");
         }
