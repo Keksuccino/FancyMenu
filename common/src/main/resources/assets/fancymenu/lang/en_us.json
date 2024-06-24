@@ -1392,5 +1392,7 @@
   "fancymenu.element.base_opacity": "Opacity",
   "fancymenu.element.base_opacity.desc": "Should be a floating point value between 0.0 and 1.0.",
   "fancymenu.element.auto_sizing": "Auto-Sizing: %s",
-  "fancymenu.element.auto_sizing.desc": "Auto-sizing will try to adjust the element's size\nbased on the screen size, so it's never too big or\ntoo small for the current screen size.\n\nIt is not recommended to use this when\n§lauto-scaling §ris enabled in the layout."
+  "fancymenu.element.auto_sizing.desc": "Auto-sizing will try to adjust the element's size\nbased on the screen size, so it's never too big or\ntoo small for the current screen size.\n\nIt is not recommended to use this when\n§lauto-scaling §ris enabled in the layout.",
+  "fancymenu.element.sticky_anchor": "Sticky Anchor: %s",
+  "fancymenu.element.sticky_anchor.desc": "In this mode, the element's position will get\ncalculated in a different way than normal.\nThis mod makes the element always keep the exact same distance\nto its anchor, no matter the current size of the element.\nThis means the size of the element can dynamically change\nwithout it moving away or getting closer to its anchor.\nWhile this can be useful in some situations, there\nare also cases where this behaviour is not optimal."
 }

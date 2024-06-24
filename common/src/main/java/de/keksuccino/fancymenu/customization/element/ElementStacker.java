@@ -86,6 +86,15 @@ public interface ElementStacker<E extends AbstractElement> {
         if (e.autoSizingBaseScreenHeight != 0) {
             stack.autoSizingBaseScreenHeight = e.autoSizingBaseScreenHeight;
         }
+        if (e.stickyAnchor) {
+            stack.stickyAnchor = true;
+        }
+        if (e.stickyAnchorBaseWidth != -1) {
+            stack.stickyAnchorBaseWidth = e.stickyAnchorBaseWidth;
+        }
+        if (e.stickyAnchorBaseHeight != -1) {
+            stack.stickyAnchorBaseHeight = e.stickyAnchorBaseHeight;
+        }
         //---------------------
 
         this.stackElements((E) e, (E) stack);

@@ -144,6 +144,10 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             element.autoSizingBaseScreenWidth = deserializeNumber(Integer.class, element.autoSizingBaseScreenWidth, serialized.getValue("auto_sizing_base_screen_width"));
             element.autoSizingBaseScreenHeight = deserializeNumber(Integer.class, element.autoSizingBaseScreenHeight, serialized.getValue("auto_sizing_base_screen_height"));
 
+            element.stickyAnchor = deserializeBoolean(element.stickyAnchor, serialized.getValue("sticky_anchor"));
+            element.stickyAnchorBaseWidth = deserializeNumber(Integer.class, element.stickyAnchorBaseWidth, serialized.getValue("sticky_anchor_base_width"));
+            element.stickyAnchorBaseHeight = deserializeNumber(Integer.class, element.stickyAnchorBaseHeight, serialized.getValue("sticky_anchor_base_height"));
+
             //----------------------------------
 
             String x = serialized.getValue("x");
@@ -322,6 +326,9 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             sec.putProperty("auto_sizing", "" + element.autoSizing);
             sec.putProperty("auto_sizing_base_screen_width", "" + element.autoSizingBaseScreenWidth);
             sec.putProperty("auto_sizing_base_screen_height", "" + element.autoSizingBaseScreenHeight);
+            sec.putProperty("sticky_anchor", "" + element.stickyAnchor);
+            sec.putProperty("sticky_anchor_base_width", "" + element.stickyAnchorBaseWidth);
+            sec.putProperty("sticky_anchor_base_height", "" + element.stickyAnchorBaseHeight);
             //------------------------
 
             sec.putProperty("anchor_point", (element.anchorPoint != null) ? element.anchorPoint.getName() : ElementAnchorPoints.TOP_LEFT.getName());

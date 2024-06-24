@@ -588,6 +588,22 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.auto_sizing.desc")))
 				.setIcon(ContextMenu.IconFactory.getIcon("measure"));
 
+		//TODO übernehmen
+		if (this.settings.isAnchorPointChangeable()) {
+
+			this.addToggleContextMenuEntryTo(this.rightClickMenu, "sticky_anchor", AbstractEditorElement.class,
+							consumes -> consumes.element.stickyAnchor,
+							(abstractEditorElement, aBoolean) -> {
+								abstractEditorElement.element.stickyAnchor = aBoolean;
+								abstractEditorElement.element.setStickyAnchorBaseSize();
+							},
+							"fancymenu.element.sticky_anchor")
+					.setStackable(true)
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.sticky_anchor.desc")))
+					.setIcon(ContextMenu.IconFactory.getIcon("anchor"));
+
+		}
+
 		this.rightClickMenu.addSeparatorEntry("separator_8").setStackable(true);
 
 	}
@@ -797,6 +813,13 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		return false;
 	}
 
+	//TODO sticky anchors testen !!!!!!!!!!!!!!!!!!!!!!!!!
+	//TODO sticky anchors testen !!!!!!!!!!!!!!!!!!!!!!!!!
+	//TODO sticky anchors testen !!!!!!!!!!!!!!!!!!!!!!!!!
+	//TODO sticky anchors testen !!!!!!!!!!!!!!!!!!!!!!!!!
+	//TODO sticky anchors testen !!!!!!!!!!!!!!!!!!!!!!!!!
+	//TODO sticky anchors testen !!!!!!!!!!!!!!!!!!!!!!!!!
+
 	@Override
 	public boolean mouseReleased(double mouseX, double mouseY, int button) {
 		if (button == 0) {
@@ -804,6 +827,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			this.activeResizeGrabber = null;
 			//TODO übernehmen
 			this.element.updateAutoSizing(true);
+			this.element.setStickyAnchorBaseSize();
 			//------------------
 			this.recentlyMovedByDragging = false;
 			this.movingCrumpleZonePassed = false;

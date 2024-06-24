@@ -243,6 +243,26 @@ public class ElementAnchorPoint {
             return -(element.getAbsoluteHeight() / 2);
         }
 
+        //TODO übernehmen
+        @Override
+        public int getElementPositionX(@NotNull AbstractElement element) {
+            if (element.stickyAnchor) {
+                int offsetWithoutSize = element.posOffsetX - element.stickyAnchorBaseWidth;
+                return this.getOriginX(element) + offsetWithoutSize - element.baseWidth;
+            }
+            return super.getElementPositionX(element);
+        }
+
+        //TODO übernehmen
+        @Override
+        public int getElementPositionY(@NotNull AbstractElement element) {
+            if (element.stickyAnchor) {
+                int offsetWithoutSize = element.posOffsetY - (element.stickyAnchorBaseHeight / 2);
+                return this.getOriginY(element) + offsetWithoutSize - (element.baseHeight / 2);
+            }
+            return super.getElementPositionY(element);
+        }
+
     }
 
     public static class AnchorBottomRight extends ElementAnchorPoint {
