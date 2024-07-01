@@ -3,7 +3,7 @@ plugins {
     id 'java'
     id 'idea'
     id 'maven-publish'
-    id 'fabric-loom' version '1.5-SNAPSHOT'
+    id 'fabric-loom' version '1.6-SNAPSHOT'
 }
 
 base {
@@ -27,18 +27,9 @@ dependencies {
     include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.3.2")))
     include(implementation 'com.github.Keksuccino:japng:0.5.3')
     include(implementation 'com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7')
-    modImplementation "maven.modrinth:load-my-resources:1.0.4-1.20.2-fabric"
-    modImplementation "maven.modrinth:melody:1.0.1-1.20.1-1.20.4-fabric"
-    //modImplementation "maven.modrinth:konkrete:1.8.0-1.20.4-fabric"
-    modImplementation "flatdir:konkrete:1.9.1"
-    modImplementation "maven.modrinth:modmenu:9.0.0"
-//    modImplementation "maven.modrinth:modernfix:T8GvLNSz"
-//    modImplementation "maven.modrinth:ukulib:1.1.1+1.20.3"
-//    modImplementation "maven.modrinth:sodium:mc1.20.4-0.5.8"
-//    modImplementation "maven.modrinth:lithium:mc1.20.4-0.12.1"
-//    modImplementation "maven.modrinth:ferrite-core:pguEMpy9"
-//    modImplementation("maven.modrinth:rrls:4.0.1+mc1.20.4-fabric")
-//    modImplementation("maven.modrinth:cloth-config:13.0.121+fabric")
+    modImplementation "maven.modrinth:melody:1.0.4-1.20.1-1.20.4-fabric"
+    modImplementation "maven.modrinth:konkrete:1.9.2-1.20.4-fabric"
+    modImplementation "maven.modrinth:modmenu:9.2.0"
 }
 
 loom {

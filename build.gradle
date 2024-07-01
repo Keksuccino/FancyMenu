@@ -66,6 +66,7 @@ subprojects {
     tasks.withType(JavaCompile).configureEach {
         it.options.encoding = 'UTF-8'
         it.options.getRelease().set(17)
+        it.options.compilerArgs += ['-Xlint:-deprecation', '-Xlint:-removal']
     }
 
     processResources {
@@ -86,7 +87,7 @@ subprojects {
                 "neoforge_version": neoforge_version,
                 "neoforge_loader_version": neoforge_loader_version
         ]
-        filesMatching(['pack.mcmeta', 'fabric.mod.json', 'META-INF/mods.toml', '*.mixins.json']) {
+        filesMatching(['pack.mcmeta', 'fabric.mod.json', 'META-INF/mods.toml', 'META-INF/neoforge.mods.toml', '*.mixins.json']) {
             expand expandProps
         }
         inputs.properties(expandProps)
