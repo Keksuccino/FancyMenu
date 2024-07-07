@@ -595,7 +595,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 							consumes -> consumes.element.stickyAnchor,
 							(abstractEditorElement, aBoolean) -> {
 								abstractEditorElement.element.stickyAnchor = aBoolean;
-								abstractEditorElement.element.setStickyAnchorBaseSize();
+								abstractEditorElement.element.updateStickyCorrections();
 							},
 							"fancymenu.element.sticky_anchor")
 					.setStackable(true)
@@ -813,13 +813,6 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		return false;
 	}
 
-	//TODO sticky anchors testen !!!!!!!!!!!!!!!!!!!!!!!!!
-	//TODO sticky anchors testen !!!!!!!!!!!!!!!!!!!!!!!!!
-	//TODO sticky anchors testen !!!!!!!!!!!!!!!!!!!!!!!!!
-	//TODO sticky anchors testen !!!!!!!!!!!!!!!!!!!!!!!!!
-	//TODO sticky anchors testen !!!!!!!!!!!!!!!!!!!!!!!!!
-	//TODO sticky anchors testen !!!!!!!!!!!!!!!!!!!!!!!!!
-
 	@Override
 	public boolean mouseReleased(double mouseX, double mouseY, int button) {
 		if (button == 0) {
@@ -827,7 +820,6 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			this.activeResizeGrabber = null;
 			//TODO übernehmen
 			this.element.updateAutoSizing(true);
-			this.element.setStickyAnchorBaseSize();
 			//------------------
 			this.recentlyMovedByDragging = false;
 			this.movingCrumpleZonePassed = false;
@@ -848,6 +840,8 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 					if (!this.isMultiSelected() || !this.isElementAnchorAndParentIsSelected()) {
 						this.element.posOffsetX = this.leftMouseDownBaseX + diffX;
 						this.element.posOffsetY = this.leftMouseDownBaseY + diffY;
+						//TODO übernehmen
+						this.element.updateStickyCorrections();
 					}
 					if ((diffX > 0) || (diffY > 0)) {
 						this.recentlyMovedByDragging = true;
@@ -867,6 +861,8 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 						if (Screen.hasShiftDown()) {
 							this.element.baseHeight = this.resizeAspectRatio.getAspectRatioHeight(this.element.baseWidth);
 						}
+						//TODO übernehmen
+						this.element.updateStickyCorrections();
 					}
 				}
 				if ((this.activeResizeGrabber.type == ResizeGrabberType.TOP) || (this.activeResizeGrabber.type == ResizeGrabberType.BOTTOM)) {
@@ -877,6 +873,8 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 						if (Screen.hasShiftDown()) {
 							this.element.baseWidth = this.resizeAspectRatio.getAspectRatioWidth(this.element.baseHeight);
 						}
+						//TODO übernehmen
+						this.element.updateStickyCorrections();
 					}
 				}
 			}

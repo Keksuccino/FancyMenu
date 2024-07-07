@@ -102,8 +102,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public int autoSizingWidth = 0;
 	public int autoSizingHeight = 0;
 	public boolean stickyAnchor = false;
-	public int stickyAnchorBaseWidth = -1;
-	public int stickyAnchorBaseHeight = -1;
+	public int stickyPosOffsetXCorrection = 0;
+	public int stickyPosOffsetYCorrection = 0;
 	//-------------------
 	/**
 	 * This is for when the render scale was changed in a non-system-wide way like via {@link PoseStack#translate(float, float, float)}.<br>
@@ -516,17 +516,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	}
 
 	//TODO übernehmen
-	public void setStickyAnchorBaseSize() {
-		if (this.stickyAnchor) {
-			this.stickyAnchorBaseWidth = this.baseWidth;
-			this.stickyAnchorBaseHeight = this.baseHeight;
-		} else {
-			this.stickyAnchorBaseWidth = -1;
-			this.stickyAnchorBaseHeight = -1;
-		}
-	}
-
-	//TODO übernehmen
 	public void setAutoSizingBaseWidthAndHeight() {
 		Window window = Minecraft.getInstance().getWindow();
 		double guiWidth = getScreenWidth() * window.getGuiScale();
@@ -561,6 +550,14 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		this.autoSizingLastTickScreenWidth = guiWidth;
 		this.autoSizingLastTickScreenHeight = guiHeight;
 
+	}
+
+	//TODO übernehmen
+	public void updateStickyCorrections() {
+		if (this.anchorPoint != null) {
+			this.stickyPosOffsetXCorrection = this.anchorPoint.getStickyOffsetXCorrection(this);
+			this.stickyPosOffsetYCorrection = this.anchorPoint.getStickyOffsetYCorrection(this);
+		}
 	}
 
 	/**

@@ -145,8 +145,8 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             element.autoSizingBaseScreenHeight = deserializeNumber(Integer.class, element.autoSizingBaseScreenHeight, serialized.getValue("auto_sizing_base_screen_height"));
 
             element.stickyAnchor = deserializeBoolean(element.stickyAnchor, serialized.getValue("sticky_anchor"));
-            element.stickyAnchorBaseWidth = deserializeNumber(Integer.class, element.stickyAnchorBaseWidth, serialized.getValue("sticky_anchor_base_width"));
-            element.stickyAnchorBaseHeight = deserializeNumber(Integer.class, element.stickyAnchorBaseHeight, serialized.getValue("sticky_anchor_base_height"));
+            element.stickyPosOffsetXCorrection = deserializeNumber(Integer.class, element.stickyPosOffsetXCorrection, serialized.getValue("sticky_correction_x"));
+            element.stickyPosOffsetYCorrection = deserializeNumber(Integer.class, element.stickyPosOffsetYCorrection, serialized.getValue("sticky_correction_y"));
 
             //----------------------------------
 
@@ -327,8 +327,8 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             sec.putProperty("auto_sizing_base_screen_width", "" + element.autoSizingBaseScreenWidth);
             sec.putProperty("auto_sizing_base_screen_height", "" + element.autoSizingBaseScreenHeight);
             sec.putProperty("sticky_anchor", "" + element.stickyAnchor);
-            sec.putProperty("sticky_anchor_base_width", "" + element.stickyAnchorBaseWidth);
-            sec.putProperty("sticky_anchor_base_height", "" + element.stickyAnchorBaseHeight);
+            sec.putProperty("sticky_correction_x", "" + element.stickyPosOffsetXCorrection);
+            sec.putProperty("sticky_correction_y", "" + element.stickyPosOffsetYCorrection);
             //------------------------
 
             sec.putProperty("anchor_point", (element.anchorPoint != null) ? element.anchorPoint.getName() : ElementAnchorPoints.TOP_LEFT.getName());

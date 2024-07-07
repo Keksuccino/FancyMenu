@@ -1,13 +1,17 @@
 package de.keksuccino.fancymenu.customization.element.anchor;
 
+import com.mojang.logging.LogUtils;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
 
 public class ElementAnchorPoint {
+
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private final String name;
 
@@ -64,6 +68,16 @@ public class ElementAnchorPoint {
         if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.BOTTOM) {
             return 0;
         }
+        return 0;
+    }
+
+    //TODO übernehmen
+    public int getStickyOffsetXCorrection(@NotNull AbstractElement element) {
+        return 0;
+    }
+
+    //TODO übernehmen
+    public int getStickyOffsetYCorrection(@NotNull AbstractElement element) {
         return 0;
     }
 
@@ -245,10 +259,21 @@ public class ElementAnchorPoint {
 
         //TODO übernehmen
         @Override
+        public int getStickyOffsetXCorrection(@NotNull AbstractElement element) {
+            return element.getAbsoluteWidth();
+        }
+
+        //TODO übernehmen
+        @Override
+        public int getStickyOffsetYCorrection(@NotNull AbstractElement element) {
+            return (element.getAbsoluteHeight() / 2);
+        }
+
+        //TODO übernehmen
+        @Override
         public int getElementPositionX(@NotNull AbstractElement element) {
             if (element.stickyAnchor) {
-                int offsetWithoutSize = element.posOffsetX - element.stickyAnchorBaseWidth;
-                return this.getOriginX(element) + offsetWithoutSize - element.baseWidth;
+                return (this.getOriginX(element) + (element.posOffsetX + element.stickyPosOffsetXCorrection)) - element.getAbsoluteWidth();
             }
             return super.getElementPositionX(element);
         }
@@ -257,8 +282,7 @@ public class ElementAnchorPoint {
         @Override
         public int getElementPositionY(@NotNull AbstractElement element) {
             if (element.stickyAnchor) {
-                int offsetWithoutSize = element.posOffsetY - (element.stickyAnchorBaseHeight / 2);
-                return this.getOriginY(element) + offsetWithoutSize - (element.baseHeight / 2);
+                return (this.getOriginY(element) + (element.posOffsetY + element.stickyPosOffsetYCorrection)) - (element.getAbsoluteHeight() / 2);
             }
             return super.getElementPositionY(element);
         }
