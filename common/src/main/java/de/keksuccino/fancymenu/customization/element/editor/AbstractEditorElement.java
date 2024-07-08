@@ -595,7 +595,16 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 							consumes -> consumes.element.stickyAnchor,
 							(abstractEditorElement, aBoolean) -> {
 								abstractEditorElement.element.stickyAnchor = aBoolean;
-								abstractEditorElement.element.updateStickyCorrections();
+								//Fix element position on sticky anchor toggle, so it stays at the same position
+								if (abstractEditorElement.element.anchorPoint != null) {
+									if (aBoolean) {
+										abstractEditorElement.element.posOffsetX += abstractEditorElement.element.anchorPoint.getStickyOffsetXCorrection(abstractEditorElement.element);
+										abstractEditorElement.element.posOffsetY += abstractEditorElement.element.anchorPoint.getStickyOffsetYCorrection(abstractEditorElement.element);
+									} else {
+										abstractEditorElement.element.posOffsetX -= abstractEditorElement.element.anchorPoint.getStickyOffsetXCorrection(abstractEditorElement.element);
+										abstractEditorElement.element.posOffsetY -= abstractEditorElement.element.anchorPoint.getStickyOffsetYCorrection(abstractEditorElement.element);
+									}
+								}
 							},
 							"fancymenu.element.sticky_anchor")
 					.setStackable(true)
@@ -781,6 +790,10 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		this.resizingStartPosY = mouseY;
 	}
 
+	/**
+	 * If the element's anchor point is {@link ElementAnchorPoints#ELEMENT} and its parent is selected.<br>
+	 * Returns FALSE if the element has no parent, the parent is not selected or the element's anchor is not {@link ElementAnchorPoints#ELEMENT}, otherwise returns TRUE.
+	 */
 	public boolean isElementAnchorAndParentIsSelected() {
 		if (this.element.anchorPoint != ElementAnchorPoints.ELEMENT) return false;
 		if (this.element.anchorPointElementIdentifier == null) return false;
@@ -797,16 +810,18 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		if (button == 0) {
 			if (!this.rightClickMenu.isUserNavigatingInMenu()) {
 				this.activeResizeGrabber = !this.isMultiSelected() ? this.getHoveredResizeGrabber() : null;
-				//TODO übernehmen
-				if (this.activeResizeGrabber != null) {
-					this.element.setAutoSizingBaseWidthAndHeight();
-					this.element.updateAutoSizing(true);
-				}
-				//----------------
 				if (this.isHovered() || (this.isMultiSelected() && !this.editor.getHoveredElements().isEmpty()) || this.isGettingResized()) {
 					this.leftMouseDown = true;
 					this.updateLeftMouseDownCachedValues((int) mouseX, (int) mouseY);
 					this.resizeAspectRatio = new AspectRatio(this.getWidth(), this.getHeight());
+					//TODO übernehmen
+					if (this.element.autoSizingWidth > 0) this.element.baseWidth = this.element.autoSizingWidth;
+					if (this.element.autoSizingHeight > 0) this.element.baseHeight = this.element.autoSizingHeight;
+					this.element.setAutoSizingBaseWidthAndHeight();
+					this.element.updateAutoSizing(true);
+					this.element.autoSizingWidth = 0;
+					this.element.autoSizingHeight = 0;
+					//----------------
 				}
 			}
 		}
@@ -840,8 +855,6 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 					if (!this.isMultiSelected() || !this.isElementAnchorAndParentIsSelected()) {
 						this.element.posOffsetX = this.leftMouseDownBaseX + diffX;
 						this.element.posOffsetY = this.leftMouseDownBaseY + diffY;
-						//TODO übernehmen
-						this.element.updateStickyCorrections();
 					}
 					if ((diffX > 0) || (diffY > 0)) {
 						this.recentlyMovedByDragging = true;
@@ -856,25 +869,41 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				if ((this.activeResizeGrabber.type == ResizeGrabberType.LEFT) || (this.activeResizeGrabber.type == ResizeGrabberType.RIGHT)) {
 					int i = (this.activeResizeGrabber.type == ResizeGrabberType.LEFT) ? (this.leftMouseDownBaseWidth - diffX) : (this.leftMouseDownBaseWidth + diffX);
 					if (i >= 2) {
+						//TODO übernehmen
+						this.element.autoSizingWidth = 0;
+						this.element.autoSizingHeight = 0;
+						int cachedOldOffsetX = this.element.posOffsetX;
+						int cachedOldPosX = this.element.getAbsoluteX();
+						int cachedOldWidth = this.element.getAbsoluteWidth();
 						this.element.baseWidth = i;
 						this.element.posOffsetX = this.leftMouseDownBaseX + this.element.anchorPoint.getResizePositionOffsetX(this.element, diffX, this.activeResizeGrabber.type);
+						if (this.element.stickyAnchor) {
+							this.element.posOffsetX += this.element.anchorPoint.getStickyResizePositionCorrectionX(this.element, diffX, cachedOldOffsetX, this.element.posOffsetX, cachedOldPosX, this.element.getAbsoluteX(), cachedOldWidth, this.element.getAbsoluteWidth(), this.activeResizeGrabber.type);
+						}
 						if (Screen.hasShiftDown()) {
 							this.element.baseHeight = this.resizeAspectRatio.getAspectRatioHeight(this.element.baseWidth);
 						}
-						//TODO übernehmen
-						this.element.updateStickyCorrections();
+						//---------------------------
 					}
 				}
 				if ((this.activeResizeGrabber.type == ResizeGrabberType.TOP) || (this.activeResizeGrabber.type == ResizeGrabberType.BOTTOM)) {
 					int i = (this.activeResizeGrabber.type == ResizeGrabberType.TOP) ? (this.leftMouseDownBaseHeight - diffY) : (this.leftMouseDownBaseHeight + diffY);
 					if (i >= 2) {
+						//TODO übernehmen
+						this.element.autoSizingWidth = 0;
+						this.element.autoSizingHeight = 0;
+						int cachedOldOffsetY = this.element.posOffsetY;
+						int cachedOldPosY = this.element.getAbsoluteY();
+						int cachedOldHeight = this.element.baseHeight;
 						this.element.baseHeight = i;
 						this.element.posOffsetY = this.leftMouseDownBaseY + this.element.anchorPoint.getResizePositionOffsetY(this.element, diffY, this.activeResizeGrabber.type);
+						if (this.element.stickyAnchor) {
+							this.element.posOffsetY += this.element.anchorPoint.getStickyResizePositionCorrectionY(this.element, diffY, cachedOldOffsetY, this.element.posOffsetY, cachedOldPosY, this.element.getAbsoluteY(), cachedOldHeight, this.element.baseHeight, this.activeResizeGrabber.type);
+						}
 						if (Screen.hasShiftDown()) {
 							this.element.baseWidth = this.resizeAspectRatio.getAspectRatioWidth(this.element.baseHeight);
 						}
-						//TODO übernehmen
-						this.element.updateStickyCorrections();
+						//----------------------------
 					}
 				}
 			}

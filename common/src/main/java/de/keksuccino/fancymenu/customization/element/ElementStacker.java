@@ -89,12 +89,6 @@ public interface ElementStacker<E extends AbstractElement> {
         if (e.stickyAnchor) {
             stack.stickyAnchor = true;
         }
-        if (e.stickyPosOffsetXCorrection != 0) {
-            stack.stickyPosOffsetXCorrection = e.stickyPosOffsetXCorrection;
-        }
-        if (e.stickyPosOffsetYCorrection != 0) {
-            stack.stickyPosOffsetYCorrection = e.stickyPosOffsetYCorrection;
-        }
         //---------------------
 
         this.stackElements((E) e, (E) stack);

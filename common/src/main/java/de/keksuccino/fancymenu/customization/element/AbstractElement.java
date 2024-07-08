@@ -102,8 +102,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public int autoSizingWidth = 0;
 	public int autoSizingHeight = 0;
 	public boolean stickyAnchor = false;
-	public int stickyPosOffsetXCorrection = 0;
-	public int stickyPosOffsetYCorrection = 0;
 	//-------------------
 	/**
 	 * This is for when the render scale was changed in a non-system-wide way like via {@link PoseStack#translate(float, float, float)}.<br>
@@ -550,14 +548,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		this.autoSizingLastTickScreenWidth = guiWidth;
 		this.autoSizingLastTickScreenHeight = guiHeight;
 
-	}
-
-	//TODO übernehmen
-	public void updateStickyCorrections() {
-		if (this.anchorPoint != null) {
-			this.stickyPosOffsetXCorrection = this.anchorPoint.getStickyOffsetXCorrection(this);
-			this.stickyPosOffsetYCorrection = this.anchorPoint.getStickyOffsetYCorrection(this);
-		}
 	}
 
 	/**
