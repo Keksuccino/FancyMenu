@@ -89,6 +89,8 @@ public class Placeholders {
     public static final GameTimePlaceholder GAME_TIME = new GameTimePlaceholder();
     public static final SlotItemPlaceholder SLOT_ITEM = new SlotItemPlaceholder();
     public static final WorldDayTimePlaceholder WORLD_DAY_TIME = new WorldDayTimePlaceholder();
+    public static final WorldDayTimeHourPlaceholder WORLD_DAY_TIME_HOUR = new WorldDayTimeHourPlaceholder();
+    public static final WorldDayTimeMinutePlaceholder WORLD_DAY_TIME_MINUTE = new WorldDayTimeMinutePlaceholder();
     public static final WorldDifficultyPlaceholder WORLD_DIFFICULTY = new WorldDifficultyPlaceholder();
     public static final MaxPlayerHealthPlaceholder MAX_PLAYER_HEALTH = new MaxPlayerHealthPlaceholder();
     public static final CurrentPlayerHealthPercentagePlaceholder CURRENT_PLAYER_HEALTH_PERCENTAGE = new CurrentPlayerHealthPercentagePlaceholder();
@@ -176,6 +178,8 @@ public class Placeholders {
         PlaceholderRegistry.register(GAME_TIME);
         PlaceholderRegistry.register(SLOT_ITEM);
         PlaceholderRegistry.register(WORLD_DAY_TIME);
+        PlaceholderRegistry.register(WORLD_DAY_TIME_HOUR);
+        PlaceholderRegistry.register(WORLD_DAY_TIME_MINUTE);
         PlaceholderRegistry.register(WORLD_DIFFICULTY);
         PlaceholderRegistry.register(CURRENT_BOSS_HEALTH);
         PlaceholderRegistry.register(BOSS_NAME);
