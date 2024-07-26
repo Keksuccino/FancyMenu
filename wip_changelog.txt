@@ -10,6 +10,7 @@ CHANGELOG | FANCYMENU v3.3.0 [ W I P !! Not public yet !! ]
 - Fading and Appearance Delay are now separated from each other, so you don't need to enable appearance delays anymore to use fading
 - You can set the base opacity of elements now (in other words, you can make elements translucent now)
 - You can rename layouts now
+- You can control the active state of buttons and sliders now, which means you can disable them now
 - Fixed a bug that made the last hovered hyperlink of a Text element stay hovered when it was hovered while the element got hidden by its loading requirements
 - 
  
