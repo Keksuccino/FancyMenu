@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBloc
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ExecutableElement;
+import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
@@ -66,6 +67,9 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     public boolean navigatable = true;
     @NotNull
     public GenericExecutableBlock executableBlock = new GenericExecutableBlock();
+    //TODO übernehmen
+    @NotNull
+    public LoadingRequirementContainer activeStateSupplier = new LoadingRequirementContainer();
 
     public SliderElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -170,9 +174,17 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
 
     public void updateWidget() {
         if (this.slider == null) return;
+        //TODO übernehmen
+        this.updateWidgetActiveState();
         this.updateWidgetTooltip();
         this.updateWidgetTexture();
         this.slider.updateMessage();
+    }
+
+    //TODO übernehmen
+    public void updateWidgetActiveState() {
+        if (this.slider == null) return;
+        this.slider.active = this.activeStateSupplier.requirementsMet();
     }
 
     public void updateWidgetTooltip() {

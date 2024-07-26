@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.ExecutableBlockDeseri
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
+import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
@@ -99,6 +100,16 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
 
         element.navigatable = deserializeBoolean(element.navigatable, serialized.getValue("navigatable"));
 
+        //TODO übernehmen
+        String activeStateRequirementContainerIdentifier = serialized.getValue("widget_active_state_requirement_container_identifier");
+        if (activeStateRequirementContainerIdentifier != null) {
+            LoadingRequirementContainer c = LoadingRequirementContainer.deserializeWithIdentifier(activeStateRequirementContainerIdentifier, serialized);
+            if (c != null) {
+                element.activeStateSupplier = c;
+            }
+        }
+        //--------------------------
+
         return element;
 
     }
@@ -148,6 +159,11 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
             serializeTo.putProperty("label", element.label);
         }
         serializeTo.putProperty("navigatable", "" + element.navigatable);
+
+        //TODO übernehmen
+        serializeTo.putProperty("widget_active_state_requirement_container_identifier", element.activeStateSupplier.identifier);
+        element.activeStateSupplier.serializeToExistingPropertyContainer(serializeTo);
+        //-----------------------
 
         return serializeTo;
 

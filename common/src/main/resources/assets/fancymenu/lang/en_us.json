@@ -741,6 +741,9 @@
   "fancymenu.layout.manage.edit": "Edit Layout",
   "fancymenu.layout.manage.delete": "Delete Layout",
   "fancymenu.layout.manage.delete.confirm": "§x§lDelete Layout?\n\nDo you really want to §xdelete §rthis layout?\n\nYou can't undo this!",
+  "fancymenu.layout.manage.rename": "Rename Layout",
+  "fancymenu.layout.manage.rename.error.file_already_exists": "Unable to rename layout!\n\nA layout with the same name already exists!",
+  "fancymenu.layout.manage.rename.error.empty_name": "Unable to rename layout!\n\nThe file name has to be at least one character long!",
   "fancymenu.layout.manage.open_in_text_editor": "Open in System Text Editor",
   "fancymenu.layout.manage.layouts": "Layouts",
   "fancymenu.layout.manage.layouts.sort_by": "Sort By: %s",
@@ -1398,5 +1401,11 @@
   "fancymenu.element.auto_sizing": "Auto-Sizing: %s",
   "fancymenu.element.auto_sizing.desc": "Auto-sizing will try to adjust the element's size\nbased on the screen size, so it's never too big or\ntoo small for the current screen size.\n\nIt is not recommended to use this when\n§lauto-scaling §ris enabled in the layout.",
   "fancymenu.element.sticky_anchor": "Sticky Anchor: %s",
-  "fancymenu.element.sticky_anchor.desc": "In this mode, the element's position will get\ncalculated in a different way than normal.\nThis mod makes the element always keep the exact same distance\nto its anchor, no matter the current size of the element.\nThis means the size of the element can dynamically change\nwithout it moving away or getting closer to its anchor.\nWhile this can be useful in some situations, there\nare also cases where this behaviour is not optimal."
+  "fancymenu.element.sticky_anchor.desc": "In this mode, the element's position will get\ncalculated in a different way than normal.\nThis mod makes the element always keep the exact same distance\nto its anchor, no matter the current size of the element.\nThis means the size of the element can dynamically change\nwithout it moving away or getting closer to its anchor.\nWhile this can be useful in some situations, there\nare also cases where this behaviour is not optimal.",
+  "fancymenu.elements.button.active_state_controller": "Control Active State",
+  "fancymenu.elements.button.active_state_controller.desc": "Control when/if the widget should be enabled (clickable)\nor disabled (not clickable and greyed out).",
+  "fancymenu.welcome.screen.headline": "Thank you for using FancyMenu!",
+  "fancymenu.welcome.screen.text": "Before you begin customizing with FancyMenu, please make sure to **read the documentation** thoroughly. While FancyMenu can seem overwhelming initially, the documentation will guide you step-by-step.\n\nStart with the 'Getting Started' page for the basics of menu customization. Don’t forget to explore the other sections as they offer valuable insights and tips!\n\n**Have a fantastic time with FancyMenu!**",
+  "fancymenu.welcome.screen.title": "FancyMenu Welcome Screen",
+  "fancymenu.welcome.screen.open_docs": "Open Documentation"
 }

@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBloc
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ExecutableElement;
+import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -55,6 +56,9 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public boolean navigatable = true;
     @NotNull
     public GenericExecutableBlock actionExecutor = new GenericExecutableBlock();
+    //TODO übernehmen
+    @NotNull
+    public LoadingRequirementContainer activeStateSupplier = new LoadingRequirementContainer();
 
     public ButtonElement(ElementBuilder<ButtonElement, ButtonEditorElement> builder) {
         super(builder);
@@ -119,6 +123,8 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     }
 
     public void updateWidget() {
+        //TODO übernehmen
+        this.updateWidgetActiveState();
         this.updateWidgetVisibility();
         this.updateWidgetAlpha();
         this.updateWidgetTooltip();
@@ -129,6 +135,12 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         this.updateWidgetSize();
         this.updateWidgetPosition();
         this.updateWidgetNavigatable();
+    }
+
+    //TODO übernehmen
+    public void updateWidgetActiveState() {
+        if (this.getWidget() == null) return;
+        this.getWidget().active = this.activeStateSupplier.requirementsMet();
     }
 
     public void updateWidgetNavigatable() {
