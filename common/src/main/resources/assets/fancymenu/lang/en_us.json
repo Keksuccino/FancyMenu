@@ -1409,7 +1409,7 @@
   "fancymenu.welcome.screen.title": "FancyMenu Welcome Screen",
   "fancymenu.welcome.screen.open_docs": "Open Documentation",
   "fancymenu.elements.dragger": "Dragger",
-  "fancymenu.elements.dragger.desc": "The Dragger allows you to make parts of your layout dragable,\nwhich means users can \"grab\" parts of layouts with\ntheir mouse cursor and move them around.",
+  "fancymenu.elements.dragger.desc": "The Dragger allows you to make parts of your layout dragable,\nwhich means users can \"grab\" parts of layouts with\nthe mouse cursor and move them around.",
   "fancymenu.elements.dragger.save_offset": "Save User Drag Offset: %s",
   "fancymenu.elements.dragger.save_offset.desc": "If the drag offset should be persistent\nor reset every time the menu gets reopened."
 }

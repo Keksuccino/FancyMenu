@@ -18,14 +18,6 @@ import java.util.List;
 //TODO übernehmen
 public class DraggerElement extends AbstractElement {
 
-    //TODO verbessern, wie sich das Element verhält, wenn es out-of-screen gemovt wird
-    //TODO verbessern, wie sich das Element verhält, wenn es out-of-screen gemovt wird
-    //TODO verbessern, wie sich das Element verhält, wenn es out-of-screen gemovt wird
-    //TODO verbessern, wie sich das Element verhält, wenn es out-of-screen gemovt wird
-    //TODO verbessern, wie sich das Element verhält, wenn es out-of-screen gemovt wird
-    //TODO verbessern, wie sich das Element verhält, wenn es out-of-screen gemovt wird
-    //TODO verbessern, wie sich das Element verhält, wenn es out-of-screen gemovt wird
-
     private static final Logger LOGGER = LogManager.getLogger();
     private static final DrawableColor ELEMENT_COLOR = DrawableColor.of(new Color(227, 14, 35));
 
@@ -50,8 +42,18 @@ public class DraggerElement extends AbstractElement {
             int draggingDiffX = (int) (mouseX - this.mouseDownX);
             int draggingDiffY = (int) (mouseY - this.mouseDownY);
             if ((draggingDiffX != 0) || (draggingDiffY != 0)) {
+                int xCached = this.userDragOffsetX;
+                int yCached = this.userDragOffsetY;
                 this.userDragOffsetX = this.mouseDownOffsetX + draggingDiffX;
                 this.userDragOffsetY = this.mouseDownOffsetY + draggingDiffY;
+                if (this.stayOnScreen) {
+                    if (!this.checkIsValidStayOnScreenX(this._getAbsoluteX())) {
+                        this.userDragOffsetX = xCached;
+                    }
+                    if (!this.checkIsValidStayOnScreenY(this._getAbsoluteY())) {
+                        this.userDragOffsetY = yCached;
+                    }
+                }
             }
         }
     }
@@ -133,12 +135,62 @@ public class DraggerElement extends AbstractElement {
 
     @Override
     public int getAbsoluteX() {
+        int i = this._getAbsoluteX();
+        if (this.stayOnScreen) {
+            if (i < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
+                i = STAY_ON_SCREEN_EDGE_ZONE_SIZE;
+            }
+            if (i > (getScreenWidth() - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getAbsoluteWidth())) {
+                i = getScreenWidth() - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getAbsoluteWidth();
+            }
+        }
+        return i;
+    }
+
+    protected int _getAbsoluteX() {
         return super.getAbsoluteX() + ((!isEditor()) ? this.userDragOffsetX : 0);
     }
 
     @Override
     public int getAbsoluteY() {
+        int i = this._getAbsoluteY();
+        if (this.stayOnScreen) {
+            if (i < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
+                i = STAY_ON_SCREEN_EDGE_ZONE_SIZE;
+            }
+            if (i > (getScreenHeight() - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getAbsoluteHeight())) {
+                i = getScreenHeight() - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getAbsoluteHeight();
+            }
+        }
+        return i;
+    }
+
+    protected int _getAbsoluteY() {
         return super.getAbsoluteY() + ((!isEditor()) ? this.userDragOffsetY : 0);
+    }
+
+    public boolean checkIsValidStayOnScreenX(int x) {
+        if (this.stayOnScreen) {
+            if (x < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
+                return false;
+            }
+            if (x > (getScreenWidth() - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getAbsoluteWidth())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean checkIsValidStayOnScreenY(int y) {
+        if (this.stayOnScreen) {
+            if (y < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
+                return false;
+            }
+            if (y > (getScreenHeight() - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getAbsoluteHeight())) {
+                return false;
+            }
+        }
+        return true;
     }
 
 }
