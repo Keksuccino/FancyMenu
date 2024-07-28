@@ -15,6 +15,7 @@ CHANGELOG | FANCYMENU v3.3.0 [ W I P !! Not public yet !! ]
 - Added "Dragger" element that can be dragged by users to make parts of your layouts movable
 - Fixed a bug that made the last hovered hyperlink of a Text element stay hovered when it was hovered while the element got hidden by its loading requirements
 - Fixed Progress Bar elements not showing alpha of HEX color
+- Fixed Debug Overlay not interactable after enabling it until changing or resizing the screen
  
 %changelog:end%
 
