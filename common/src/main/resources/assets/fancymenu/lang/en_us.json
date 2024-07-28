@@ -1407,5 +1407,9 @@
   "fancymenu.welcome.screen.headline": "Thank you for using FancyMenu!",
   "fancymenu.welcome.screen.text": "Before you begin customizing with FancyMenu, please make sure to **read the documentation** thoroughly. While FancyMenu can seem overwhelming initially, the documentation will guide you step-by-step.\n\nStart with the 'Getting Started' page for the basics of menu customization. Don’t forget to explore the other sections as they offer valuable insights and tips!\n\n**Have a fantastic time with FancyMenu!**",
   "fancymenu.welcome.screen.title": "FancyMenu Welcome Screen",
-  "fancymenu.welcome.screen.open_docs": "Open Documentation"
+  "fancymenu.welcome.screen.open_docs": "Open Documentation",
+  "fancymenu.elements.dragger": "Dragger",
+  "fancymenu.elements.dragger.desc": "The Dragger allows you to make parts of your layout dragable,\nwhich means users can \"grab\" parts of layouts with\ntheir mouse cursor and move them around.",
+  "fancymenu.elements.dragger.save_offset": "Save User Drag Offset: %s",
+  "fancymenu.elements.dragger.save_offset.desc": "If the drag offset should be persistent\nor reset every time the menu gets reopened."
 }

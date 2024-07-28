@@ -425,7 +425,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	/**
 	 * All widgets of the returned list will get registered to {@link Screen#children()}.<br>
-	 * Take in mind the returned widgets will NOT get registered to {@link Screen#renderables}.<br>
+	 * Keep in mind the returned widgets will NOT get registered to {@link Screen#renderables}.<br>
 	 * Widgets need to extend {@link GuiEventListener} and {@link NarratableEntry}.
 	 */
 	@SuppressWarnings("all")
