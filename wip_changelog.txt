@@ -12,6 +12,7 @@ CHANGELOG | FANCYMENU v3.3.0 [ W I P !! Not public yet !! ]
 - You can rename layouts now
 - You can control the active state of buttons and sliders now, which means you can disable them now
 - Added a Welcome screen that tells the user to read the docs (only opens the very first time and will not show for modpack users, as long as the config file gets shipped)
+- Added "Dragger" element that can be dragged by users to make parts of your layouts movable
 - Fixed a bug that made the last hovered hyperlink of a Text element stay hovered when it was hovered while the element got hidden by its loading requirements
 - Fixed Progress Bar elements not showing alpha of HEX color
  
