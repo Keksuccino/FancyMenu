@@ -1411,5 +1411,8 @@
   "fancymenu.elements.dragger": "Dragger",
   "fancymenu.elements.dragger.desc": "The Dragger allows you to make parts of your layout dragable,\nwhich means users can \"grab\" parts of layouts with\nthe mouse cursor and move them around.",
   "fancymenu.elements.dragger.save_offset": "Save User Drag Offset: %s",
-  "fancymenu.elements.dragger.save_offset.desc": "If the drag offset should be persistent\nor reset every time the menu gets reopened."
+  "fancymenu.elements.dragger.save_offset.desc": "If the drag offset should be persistent\nor reset every time the menu gets reopened.",
+  "fancymenu.actions.audio.set_audio_element_volume": "Set Audio Element Volume",
+  "fancymenu.actions.audio.set_audio_element_volume.desc": "Sets the volume of an Audio element by its identifier.\nThe volume is a value between 0.0 (0%) and 1.0 (100%).",
+  "fancymenu.actions.audio.set_audio_element_volume.value.desc": "Element Identifier + Volume [ Separated by : ]"
 }

@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.action.actions;
 
+import de.keksuccino.fancymenu.customization.action.actions.audio.SetAudioElementVolumeAction;
 import de.keksuccino.fancymenu.customization.action.actions.layout.DisableLayoutAction;
 import de.keksuccino.fancymenu.customization.action.actions.layout.EnableLayoutAction;
 import de.keksuccino.fancymenu.customization.action.actions.layout.ToggleLayoutAction;
@@ -38,6 +39,8 @@ public class Actions {
     public static final CopyToClipboardAction COPY_TO_CLIPBOARD = new CopyToClipboardAction();
     public static final MimicButtonAction MIMIC_BUTTON = new MimicButtonAction();
     public static final EditMinecraftOptionAction EDIT_MINECRAFT_OPTION = new EditMinecraftOptionAction();
+    //TODO übernehmen
+    public static final SetAudioElementVolumeAction SET_AUDIO_ELEMENT_VOLUME = new SetAudioElementVolumeAction();
 
     public static void registerAll() {
 
@@ -62,6 +65,8 @@ public class Actions {
         ActionRegistry.register(COPY_TO_CLIPBOARD);
         ActionRegistry.register(MIMIC_BUTTON);
         ActionRegistry.register(EDIT_MINECRAFT_OPTION);
+        //TODO übernehmen
+        ActionRegistry.register(SET_AUDIO_ELEMENT_VOLUME);
 
     }
 
