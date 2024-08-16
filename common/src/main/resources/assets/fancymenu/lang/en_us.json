@@ -1413,6 +1413,9 @@
   "fancymenu.elements.dragger.save_offset": "Save User Drag Offset: %s",
   "fancymenu.elements.dragger.save_offset.desc": "If the drag offset should be persistent\nor reset every time the menu gets reopened.",
   "fancymenu.actions.audio.set_audio_element_volume": "Set Audio Element Volume",
-  "fancymenu.actions.audio.set_audio_element_volume.desc": "Sets the volume of an Audio element by its identifier.\nThe volume is a value between 0.0 (0%) and 1.0 (100%).",
-  "fancymenu.actions.audio.set_audio_element_volume.value.desc": "Element Identifier + Volume [ Separated by : ]"
+  "fancymenu.actions.audio.set_audio_element_volume.desc": "Sets the volume of an Audio element by its identifier.\nThe volume is a value between 0.0 (0%%) and 1.0 (100%%).",
+  "fancymenu.actions.audio.set_audio_element_volume.value.desc": "Element Identifier + Volume [ Separated by : ]",
+  "fancymenu.placeholders.categories.audio": "Audio",
+  "fancymenu.placeholders.audio_element_volume": "Audio Element Volume",
+  "fancymenu.placeholders.audio_element_volume.desc": "Returns the volume of an Audio element\nas a value between 0.0 (0%%) and 1.0 (100%%).\nTakes the element identifier of the target Audio element."
 }

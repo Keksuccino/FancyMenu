@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.placeholder.placeholders;
 
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.advanced.*;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.audio.AudioElementVolumePlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.client.*;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.gui.*;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderRegistry;
@@ -123,6 +124,8 @@ public class Placeholders {
     public static final PlayerAttackStrengthPercentagePlaceholder PLAYER_ATTACK_STRENGTH_PERCENTAGE = new PlayerAttackStrengthPercentagePlaceholder();
     public static final PlayerGamemodePlaceholder PLAYER_GAMEMODE = new PlayerGamemodePlaceholder();
     public static final PlayerViewDirectionPlaceholder PLAYER_VIEW_DIRECTION = new PlayerViewDirectionPlaceholder();
+    //TODO übernehmen
+    public static final AudioElementVolumePlaceholder AUDIO_ELEMENT_VOLUME = new AudioElementVolumePlaceholder();
 
     public static void registerAll() {
 
@@ -230,6 +233,11 @@ public class Placeholders {
         PlaceholderRegistry.register(MATH_COSH);
         PlaceholderRegistry.register(MATH_TAN);
         PlaceholderRegistry.register(MATH_TANH);
+
+        //TODO übernehmen
+        //Audio
+        PlaceholderRegistry.register(AUDIO_ELEMENT_VOLUME);
+        //----------------------
 
         //Other
         PlaceholderRegistry.register(PERCENT_RAM);
