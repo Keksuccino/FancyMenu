@@ -6,6 +6,7 @@ CHANGELOG | FANCYMENU v3.3.0 [ W I P !! Not public yet !! ]
 - !!!!!!! add all new placeholders to changelog !!!!!!!!
 - !!!!!!! add all new requirements to changelog !!!!!!!!
 - Added "Set Audio Element Volume" action to set the volume of Audio elements
+- Added "Audio Element Volume" placeholder to get the volume of an Audio element
 - Added Fade-Out feature to elements (can be used to fade-out elements when their loading requirements hide them)
 - Fade-In will now trigger again when the element gets visible again because of its loading requirements
 - Fading and Appearance Delay are now separated from each other, so you don't need to enable appearance delays anymore to use fading
