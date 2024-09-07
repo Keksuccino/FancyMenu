@@ -2,7 +2,7 @@
 
 This is the repository for FancyMenu, a mod for Minecraft to customize menus.
 
-## Branches
+## Branches | Source Code
 
 Check the branches to see the **source code** for all versions of FancyMenu.
 
