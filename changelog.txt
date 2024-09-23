@@ -1,4 +1,15 @@
 
+CHANGELOG | FANCYMENU v3.2.6
+ 
+- Dropped support for MC 1.21.0
+- Fixed crash on latest Forge 1.21.1 build
+- Fixed crash on latest NeoForge 1.21.1 build
+ 
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.2.5
  
 - Ported to Minecraft 1.21.0
