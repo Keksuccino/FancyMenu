@@ -32,7 +32,7 @@ public class TitleScreenForgeCopyrightDeepElement extends AbstractDeepElement {
             this.posOffsetX = getScreenWidth() - this.getAbsoluteWidth() - 1;
             this.posOffsetY = getScreenHeight() - 11 - font.lineHeight;
         } else {
-            BrandingControl.forEachAboveCopyrightLine((brdline, brd) -> {
+            BrandingControl.forEachAboveCopyrightLine((brd, brdline) -> {
                 graphics.drawString(font, brd, getScreenWidth() - font.width(brd) - 1, getScreenHeight() - (11 + (brdline + 1) * (font.lineHeight + 1)), 16777215);
             });
         }

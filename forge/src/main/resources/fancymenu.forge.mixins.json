@@ -5,7 +5,7 @@
   "mixins": [
   ],
   "client": [
-    "client.MixinForgeGameRenderer",
+    "client.MixinForgeHooksClient",
     "client.MixinForgeLoadingOverlay",
     "client.MixinForgeTitleScreen"
   ],

@@ -10,7 +10,7 @@ public class Test {
 //    @EventListener(priority = EventPriority.VERY_LOW)
 //    public void onRenderPost(RenderScreenEvent.Post e) {
 //
-//        RenderingUtils.processBlurEffect(e.getGraphics(), 50, 50, 100, 100, e.getPartial(), 1.0F);
+//        RenderingUtils.renderBlurredArea(e.getGraphics(), 30, 30, 200, 200, e.getPartial(), 10);
 //
 //    }
 

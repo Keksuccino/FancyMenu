@@ -178,7 +178,10 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         return this.textShadow;
     }
 
-    public ExtendedEditBox setTextShadow(boolean textShadow) {
+    /**
+     * Had to rename this in 1.21.1+, because NeoForge seems to add its own setTextShadow() method to the {@link EditBox} class.
+     */
+    public ExtendedEditBox setTextShadow_FancyMenu(boolean textShadow) {
         this.textShadow = textShadow;
         return this;
     }

@@ -15,7 +15,7 @@ public class ForgeCompatibilityLayer implements IPlatformCompatibilityLayer {
     @Override
     public List<Component> getTitleScreenBrandingLines() {
         List<Component> lines = new ArrayList<>();
-        BrandingControl.forEachLine(true, true, (brdline, brd) -> lines.add(Component.literal(brd)));
+        BrandingControl.forEachLine(true, true, (brd, brdline) -> lines.add(Component.literal(brd)));
         return lines;
     }
 

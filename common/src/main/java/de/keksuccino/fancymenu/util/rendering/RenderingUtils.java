@@ -1,10 +1,11 @@
 package de.keksuccino.fancymenu.util.rendering;
 
 import com.google.gson.JsonSyntaxException;
+import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinMinecraft;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGameRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
@@ -31,6 +32,129 @@ public class RenderingUtils {
     public static final ResourceLocation BLUR_LOCATION = ResourceLocation.parse("shaders/post/blur.json");
 
     public static PostChain blurEffect = null;
+
+    //Generated with GPT-o1 for testing purposes
+    public static void renderBlurredArea(GuiGraphics graphics, int x, int y, int width, int height, float partialTicks, int blurRadius) {
+
+        Minecraft minecraft = Minecraft.getInstance();
+
+        RenderSystem.backupProjectionMatrix();
+
+        // Define margin based on blur radius
+        int margin = blurRadius * 2;
+
+        // Adjusted area to capture
+        int captureX = x - margin;
+        int captureY = y - margin;
+        int captureWidth = width + margin * 2;
+        int captureHeight = height + margin * 2;
+
+        // Ensure the capture area is within screen bounds
+        int screenWidth = minecraft.getWindow().getGuiScaledWidth();
+        int screenHeight = minecraft.getWindow().getGuiScaledHeight();
+
+        captureX = Math.max(0, captureX);
+        captureY = Math.max(0, captureY);
+        captureWidth = Math.min(captureWidth, screenWidth - captureX);
+        captureHeight = Math.min(captureHeight, screenHeight - captureY);
+
+        // Step 1: Create a TextureTarget for the blur effect
+        TextureTarget blurRenderTarget = new TextureTarget(captureWidth, captureHeight, true, Minecraft.ON_OSX);
+        blurRenderTarget.setClearColor(0, 0, 0, 0);
+        blurRenderTarget.clear(true);
+
+        // Step 2: Bind the RenderTarget
+        blurRenderTarget.bindWrite(true);
+
+        // Step 3: Set up the projection matrix for rendering to the RenderTarget
+        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0.0F, (float)captureWidth, (float)captureHeight, 0.0F, 1000.0F, 3000.0F), VertexSorting.ORTHOGRAPHIC_Z);
+        RenderSystem.applyModelViewMatrix();
+
+        // Step 4: Copy the area from the main RenderTarget to the blurRenderTarget
+        // Bind the main RenderTarget's texture
+        RenderSystem.setShaderTexture(0, minecraft.getMainRenderTarget().getColorTextureId());
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+
+        // Draw the textured quad to the blurRenderTarget
+        Tesselator tesselator = Tesselator.getInstance();
+        BufferBuilder bufferBuilder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+
+        float u0 = (float)captureX / (float)screenWidth;
+        float v0 = (float)captureY / (float)screenHeight;
+        float u1 = (float)(captureX + captureWidth) / (float)screenWidth;
+        float v1 = (float)(captureY + captureHeight) / (float)screenHeight;
+
+        // Add vertices
+        bufferBuilder.addVertex(0.0F, (float)captureHeight, 0.0F).setUv(u0, v1);
+        bufferBuilder.addVertex((float)captureWidth, (float)captureHeight, 0.0F).setUv(u1, v1);
+        bufferBuilder.addVertex((float)captureWidth, 0.0F, 0.0F).setUv(u1, v0);
+        bufferBuilder.addVertex(0.0F, 0.0F, 0.0F).setUv(u0, v0);
+
+        // Build the mesh and draw it
+        MeshData meshData = bufferBuilder.buildOrThrow();
+        BufferUploader.drawWithShader(meshData);
+
+        // Step 5: Apply the blur shader to the RenderTarget
+        PostChain blurEffect = ((IMixinGameRenderer)Minecraft.getInstance().gameRenderer).getBlurEffect_FancyMenu();
+        if (blurEffect != null) {
+            blurEffect.resize(captureWidth, captureHeight);
+            blurEffect.setUniform("Radius", (float)blurRadius);
+            blurEffect.process(partialTicks);
+        }
+
+        // Step 6: Unbind the RenderTarget
+        blurRenderTarget.unbindWrite();
+
+        // Restore the original projection matrix
+        Window window = minecraft.getWindow();
+        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0.0F, (float)window.getGuiScaledWidth(), (float)window.getGuiScaledHeight(), 0.0F, 1000.0F, 3000.0F), VertexSorting.ORTHOGRAPHIC_Z);
+        RenderSystem.applyModelViewMatrix();
+
+        // Step 7: Render the blurred texture back onto the screen at (x, y)
+        minecraft.getMainRenderTarget().bindWrite(false);
+
+        // Set up rendering state
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+
+        // Bind the blurred texture
+        RenderSystem.setShaderTexture(0, blurRenderTarget.getColorTextureId());
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+
+        // Draw the textured quad at (x, y) with size (width, height)
+        // Using texture coordinates to exclude the margins
+        float texU0 = (float)margin / (float)captureWidth;
+        float texV0 = (float)margin / (float)captureHeight;
+        float texU1 = (float)(margin + width) / (float)captureWidth;
+        float texV1 = (float)(margin + height) / (float)captureHeight;
+
+        // Prepare for rendering on the main screen
+        bufferBuilder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+
+        PoseStack poseStack = graphics.pose();
+        poseStack.pushPose();
+        poseStack.translate((float)x, (float)y, 0.0F);
+
+        Matrix4f screenMatrix = poseStack.last().pose();
+
+        bufferBuilder.addVertex(screenMatrix, 0.0F, (float)height, 0.0F).setUv(texU0, texV1);
+        bufferBuilder.addVertex(screenMatrix, (float)width, (float)height, 0.0F).setUv(texU1, texV1);
+        bufferBuilder.addVertex(screenMatrix, (float)width, 0.0F, 0.0F).setUv(texU1, texV0);
+        bufferBuilder.addVertex(screenMatrix, 0.0F, 0.0F, 0.0F).setUv(texU0, texV0);
+
+        MeshData screenMeshData = bufferBuilder.buildOrThrow();
+        BufferUploader.drawWithShader(screenMeshData);
+
+        poseStack.popPose();
+
+        // Cleanup
+        RenderSystem.disableBlend();
+        blurRenderTarget.destroyBuffers();
+
+        RenderSystem.restoreProjectionMatrix();
+        RenderSystem.applyModelViewMatrix();
+
+    }
 
     /**
      * This is just for playing around with the blur effect and is not working correctly yet.

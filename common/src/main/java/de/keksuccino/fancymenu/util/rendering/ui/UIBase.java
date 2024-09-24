@@ -88,7 +88,7 @@ public class UIBase extends RenderingUtils {
 		editBox.setBorderNormalColor(theme.edit_box_border_color_normal);
 		editBox.setBorderFocusedColor(theme.edit_box_border_color_focused);
 		editBox.setSuggestionTextColor(theme.edit_box_suggestion_text_color);
-		editBox.setTextShadow(false);
+		editBox.setTextShadow_FancyMenu(false);
 		return editBox;
 	}
 

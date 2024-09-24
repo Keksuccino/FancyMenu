@@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import java.util.function.BiConsumer;
+import java.util.function.ObjIntConsumer;
 
 @Mixin(TitleScreen.class)
 public class MixinForgeTitleScreen {
@@ -30,13 +30,13 @@ public class MixinForgeTitleScreen {
         return !ScreenCustomization.isCustomizationEnabledForScreen((Screen)((Object)this));
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/internal/BrandingControl;forEachLine(ZZLjava/util/function/BiConsumer;)V", remap = false))
-    private boolean cancelForgeBrandingRenderingFancyMenu(boolean includeMC, boolean reverse, BiConsumer<Integer, String> lineConsumer) {
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/internal/BrandingControl;forEachLine(ZZLjava/util/function/ObjIntConsumer;)V", remap = false))
+    private boolean cancelForgeBrandingRenderingFancyMenu(boolean idx, boolean includeMC, ObjIntConsumer<String> reverse) {
         return !ScreenCustomization.isCustomizationEnabledForScreen((Screen)((Object)this));
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/internal/BrandingControl;forEachAboveCopyrightLine(Ljava/util/function/BiConsumer;)V", remap = false))
-    private boolean cancelForgeBrandingAboveCopyrightRenderingFancyMenu(BiConsumer<Integer, String> lineConsumer) {
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/internal/BrandingControl;forEachAboveCopyrightLine(Ljava/util/function/ObjIntConsumer;)V", remap = false))
+    private boolean cancelForgeBrandingAboveCopyrightRenderingFancyMenu(ObjIntConsumer<String> idx) {
         return !ScreenCustomization.isCustomizationEnabledForScreen((Screen)((Object)this));
     }
 
