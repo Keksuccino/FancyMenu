@@ -22,6 +22,7 @@ CHANGELOG | FANCYMENU v3.3.0 [ W I P !! Not public yet !! ]
 - Fixed panoramas rendering behind list backgrounds in scrollable screens (#908)
 - Fixed FMA file used as button texture not restarting on button hover in some cases (#878)
 - Fixed "Is Number" requirement showing "Bigger Than or Equals" as mode when "Smaller Than or Equals" is selected (#866)
+- Fixed being able to anchor a parent element to one of its children if parent has at least 2 children (#872)
  
 %changelog:end%
 
