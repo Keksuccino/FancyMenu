@@ -18,7 +18,8 @@ CHANGELOG | FANCYMENU v3.3.0 [ W I P !! Not public yet !! ]
 - Fixed a bug that made the last hovered hyperlink of a Text element stay hovered when it was hovered while the element got hidden by its loading requirements
 - Fixed Progress Bar elements not showing alpha of HEX color
 - Fixed Debug Overlay not interactable after enabling it until changing or resizing the screen
-- Fixed issue with alpha handling of ImageButtons that caused issues with some other mods
+- Fixed issue with alpha handling of ImageButtons that caused issues with some other mods (#936)
+- Fixed panoramas rendering behind list backgrounds in scrollable screens (#908)
  
 %changelog:end%
 
