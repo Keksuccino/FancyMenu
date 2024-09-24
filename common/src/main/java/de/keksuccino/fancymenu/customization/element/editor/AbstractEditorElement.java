@@ -575,43 +575,49 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		}
 
-		//TODO übernehmen
-		this.addToggleContextMenuEntryTo(this.rightClickMenu, "auto_sizing", AbstractEditorElement.class,
-						consumes -> consumes.element.autoSizing,
-						(abstractEditorElement, aBoolean) -> {
-							abstractEditorElement.element.setAutoSizingBaseWidthAndHeight();
-							abstractEditorElement.element.autoSizing = aBoolean;
-							abstractEditorElement.element.updateAutoSizing(true);
-						},
-						"fancymenu.element.auto_sizing")
-				.setStackable(true)
-				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.auto_sizing.desc")))
-				.setIcon(ContextMenu.IconFactory.getIcon("measure"));
+		//TODO re-implement auto-sizing and sticky anchor in later update (needs more work first)
+		//TODO re-implement auto-sizing and sticky anchor in later update (needs more work first)
+		//TODO re-implement auto-sizing and sticky anchor in later update (needs more work first)
+		//TODO re-implement auto-sizing and sticky anchor in later update (needs more work first)
+		//TODO re-implement auto-sizing and sticky anchor in later update (needs more work first)
 
-		//TODO übernehmen
-		if (this.settings.isAnchorPointChangeable()) {
-
-			this.addToggleContextMenuEntryTo(this.rightClickMenu, "sticky_anchor", AbstractEditorElement.class,
-							consumes -> consumes.element.stickyAnchor,
-							(abstractEditorElement, aBoolean) -> {
-								abstractEditorElement.element.stickyAnchor = aBoolean;
-								//Fix element position on sticky anchor toggle, so it stays at the same position
-								if (abstractEditorElement.element.anchorPoint != null) {
-									if (aBoolean) {
-										abstractEditorElement.element.posOffsetX += abstractEditorElement.element.anchorPoint.getStickyOffsetXCorrection(abstractEditorElement.element);
-										abstractEditorElement.element.posOffsetY += abstractEditorElement.element.anchorPoint.getStickyOffsetYCorrection(abstractEditorElement.element);
-									} else {
-										abstractEditorElement.element.posOffsetX -= abstractEditorElement.element.anchorPoint.getStickyOffsetXCorrection(abstractEditorElement.element);
-										abstractEditorElement.element.posOffsetY -= abstractEditorElement.element.anchorPoint.getStickyOffsetYCorrection(abstractEditorElement.element);
-									}
-								}
-							},
-							"fancymenu.element.sticky_anchor")
-					.setStackable(true)
-					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.sticky_anchor.desc")))
-					.setIcon(ContextMenu.IconFactory.getIcon("anchor"));
-
-		}
+//		//TODO übernehmen
+//		this.addToggleContextMenuEntryTo(this.rightClickMenu, "auto_sizing", AbstractEditorElement.class,
+//						consumes -> consumes.element.autoSizing,
+//						(abstractEditorElement, aBoolean) -> {
+//							abstractEditorElement.element.setAutoSizingBaseWidthAndHeight();
+//							abstractEditorElement.element.autoSizing = aBoolean;
+//							abstractEditorElement.element.updateAutoSizing(true);
+//						},
+//						"fancymenu.element.auto_sizing")
+//				.setStackable(true)
+//				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.auto_sizing.desc")))
+//				.setIcon(ContextMenu.IconFactory.getIcon("measure"));
+//
+//		//TODO übernehmen
+//		if (this.settings.isAnchorPointChangeable()) {
+//
+//			this.addToggleContextMenuEntryTo(this.rightClickMenu, "sticky_anchor", AbstractEditorElement.class,
+//							consumes -> consumes.element.stickyAnchor,
+//							(abstractEditorElement, aBoolean) -> {
+//								abstractEditorElement.element.stickyAnchor = aBoolean;
+//								//Fix element position on sticky anchor toggle, so it stays at the same position
+//								if (abstractEditorElement.element.anchorPoint != null) {
+//									if (aBoolean) {
+//										abstractEditorElement.element.posOffsetX += abstractEditorElement.element.anchorPoint.getStickyOffsetXCorrection(abstractEditorElement.element);
+//										abstractEditorElement.element.posOffsetY += abstractEditorElement.element.anchorPoint.getStickyOffsetYCorrection(abstractEditorElement.element);
+//									} else {
+//										abstractEditorElement.element.posOffsetX -= abstractEditorElement.element.anchorPoint.getStickyOffsetXCorrection(abstractEditorElement.element);
+//										abstractEditorElement.element.posOffsetY -= abstractEditorElement.element.anchorPoint.getStickyOffsetYCorrection(abstractEditorElement.element);
+//									}
+//								}
+//							},
+//							"fancymenu.element.sticky_anchor")
+//					.setStackable(true)
+//					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.sticky_anchor.desc")))
+//					.setIcon(ContextMenu.IconFactory.getIcon("anchor"));
+//
+//		}
 
 		this.rightClickMenu.addSeparatorEntry("separator_8").setStackable(true);
 

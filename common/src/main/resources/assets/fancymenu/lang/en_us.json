@@ -897,7 +897,7 @@
   "fancymenu.loading_requirements.is_number.compare_mode.bigger_than": "Bigger Than",
   "fancymenu.loading_requirements.is_number.compare_mode.smaller_than": "Smaller Than",
   "fancymenu.loading_requirements.is_number.compare_mode.bigger_than_or_equals": "Bigger Than Or Equals",
-  "fancymenu.loading_requirements.is_number.compare_mode.smaller_than_or_equals": "Bigger Than Or Equals",
+  "fancymenu.loading_requirements.is_number.compare_mode.smaller_than_or_equals": "Smaller Than Or Equals",
   "fancymenu.loading_requirements.is_number.compare_mode.first_number": "Number:",
   "fancymenu.loading_requirements.is_number.compare_mode.second_number": "Compare to Number:",
   "fancymenu.loading_requirements.is_text.compare_mode": "Compare Mode: %s",

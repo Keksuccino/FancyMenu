@@ -13,16 +13,6 @@ import org.jetbrains.annotations.Nullable;
 //TODO übernehmen
 public class SetAudioElementVolumeAction extends Action {
 
-    //TODO add placeholder to get Audio element controller volume !!!!!!!!!!!!!
-    //TODO add placeholder to get Audio element controller volume !!!!!!!!!!!!!
-    //TODO add placeholder to get Audio element controller volume !!!!!!!!!!!!!
-    //TODO add placeholder to get Audio element controller volume !!!!!!!!!!!!!
-    //TODO add placeholder to get Audio element controller volume !!!!!!!!!!!!!
-    //TODO add placeholder to get Audio element controller volume !!!!!!!!!!!!!
-    //TODO add placeholder to get Audio element controller volume !!!!!!!!!!!!!
-    //TODO add placeholder to get Audio element controller volume !!!!!!!!!!!!!
-    //TODO add placeholder to get Audio element controller volume !!!!!!!!!!!!!
-
     private static final Logger LOGGER = LogManager.getLogger();
 
     public SetAudioElementVolumeAction() {

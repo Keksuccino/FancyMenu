@@ -20,6 +20,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+	//TODO re-implement auto-sizing and sticky anchor in later update (needs more work first) (uncomment options in AbstractEditorElement)
+
 	//TODO übernehmen (locals)
 
 	private static final Logger LOGGER = LogManager.getLogger();
