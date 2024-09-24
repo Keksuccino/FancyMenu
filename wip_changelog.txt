@@ -21,6 +21,7 @@ CHANGELOG | FANCYMENU v3.3.0 [ W I P !! Not public yet !! ]
 - Fixed issue with alpha handling of ImageButtons that caused issues with some other mods (#936)
 - Fixed panoramas rendering behind list backgrounds in scrollable screens (#908)
 - Fixed FMA file used as button texture not restarting on button hover in some cases (#878)
+- Fixed "Is Number" requirement showing "Bigger Than or Equals" as mode when "Smaller Than or Equals" is selected (#866)
  
 %changelog:end%
 
