@@ -3,8 +3,8 @@ CHANGELOG | FANCYMENU v3.3.0 [ W I P !! Not public yet !! ]
  
 - Removed FancyMenu's deprecated (old) animation format MENU BACKGROUND (use FMA files instead and set them as normal Image background)
 - Removed FancyMenu's deprecated (old) animation format ELEMENT (use FMA files instead and set them as normal Image element)
-- !!!!!!! add all new placeholders to changelog !!!!!!!!
-- !!!!!!! add all new requirements to changelog !!!!!!!!
+- Added tons of new placeholders related to the current world/server the player is in (too many to list all of them, just go exploring :p)
+- Added tons of new requirements related to the current world/server the player is in (too many to list all of them, just go exploring :p)
 - Added "Set Audio Element Volume" action to set the volume of Audio elements
 - Added "Audio Element Volume" placeholder to get the volume of an Audio element
 - Added Fade-Out feature to elements (can be used to fade-out elements when their loading requirements hide them)
