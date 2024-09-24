@@ -1,6 +1,8 @@
 
 CHANGELOG | FANCYMENU v3.3.0 [ W I P !! Not public yet !! ]
  
+IMPORTANT: Because I developed this update over a long time, it's possible that I forgot some of the changes. I'm sorry for that.
+ 
 - Removed FancyMenu's deprecated (old) animation format MENU BACKGROUND (use FMA files instead and set them as normal Image background)
 - Removed FancyMenu's deprecated (old) animation format ELEMENT (use FMA files instead and set them as normal Image element)
 - Added tons of new placeholders related to the current world/server the player is in (too many to list all of them, just go exploring :p)
