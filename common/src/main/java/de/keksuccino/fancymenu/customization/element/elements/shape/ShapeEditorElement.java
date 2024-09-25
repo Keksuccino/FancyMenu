@@ -3,8 +3,6 @@ package de.keksuccino.fancymenu.customization.element.elements.shape;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.input.TextValidators;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.network.chat.Component;
@@ -21,16 +19,21 @@ public class ShapeEditorElement extends AbstractEditorElement {
 
         super.init();
 
-        this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "set_color",
-                        consumes -> (consumes instanceof ShapeEditorElement),
-                        consumes -> ((ShapeElement)consumes.element).color.getHex(),
-                        (element, colorHex) -> {
-                            ((ShapeElement) element.element).color = DrawableColor.of(colorHex);
-                        }, null, false, false, Component.translatable("fancymenu.editor.items.shape.color"),
-                        true, "#ffffff", TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
+        //TODO übernehmen
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_color", ShapeEditorElement.class,
+                        consumes -> consumes.getElement().colorRaw,
+                        (shapeEditorElement, s) -> shapeEditorElement.getElement().colorRaw = s,
+                        null, false, true, Component.translatable("fancymenu.editor.items.shape.color"),
+                        true, "#FFFFFF", null, null)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.shape.color.btndesc")));
+        //-------------------------
 
+    }
+
+    //TODO übernehmen
+    public ShapeElement getElement() {
+        return (ShapeElement) this.element;
     }
 
 }
