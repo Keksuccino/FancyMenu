@@ -15,6 +15,7 @@ IMPORTANT: Because I developed this update over a long time, it's possible that 
 - You can set the base opacity of elements now (in other words, you can make elements translucent now)
 - You can rename layouts now
 - You can control the active state of buttons and sliders now, which means you can disable them now
+- You can use placeholders as color value for the Rectangle Shape element now
 - Added a Welcome screen that tells the user to read the docs (only opens the very first time and will not show for modpack users, as long as the config file gets shipped)
 - Added "Dragger" element that can be dragged by users to make parts of your layouts movable
 - Fixed a bug that made the last hovered hyperlink of a Text element stay hovered when it was hovered while the element got hidden by its loading requirements
