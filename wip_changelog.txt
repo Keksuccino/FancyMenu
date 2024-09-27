@@ -26,7 +26,7 @@ IMPORTANT: Because I developed this update over a long time, it's possible that 
 - Fixed FMA file used as button texture not restarting on button hover in some cases (#878)
 - Fixed "Is Number" requirement showing "Bigger Than or Equals" as mode when "Smaller Than or Equals" is selected (#866)
 - Fixed being able to anchor a parent element to one of its children if parent has at least 2 children (#872)
-- Fixed panoramas fail to get loaded when the properties file has special space chars or misses spaces before lines inside the 'panorama-meta' section (#944)
+- Fixed panoramas fail to get loaded when the properties file has special space chars (or misses spaces) before lines inside the 'panorama-meta' section (#944)
  
 %changelog:end%
 
