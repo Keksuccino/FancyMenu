@@ -2,31 +2,33 @@ plugins {
     id 'idea'
     id 'java'
     id 'maven-publish'
-    id 'org.spongepowered.gradle.vanilla'
+    id 'org.spongepowered.gradle.vanilla' version '0.2.1-SNAPSHOT'
 }
 base {
     archivesName = "${mod_id}"
 }
 minecraft {
     version(minecraft_version)
-    if(file("src/main/resources/${mod_id}.accesswidener").exists()){
+    if (file("src/main/resources/${mod_id}.accesswidener").exists()) {
         accessWideners(file("src/main/resources/${mod_id}.accesswidener"))
     }
 }
 
+repositories {
+    flatDir { dirs 'libs' }
+}
+
 dependencies {
-    implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:0.3.1"))
+    compileOnly(annotationProcessor('io.github.llamalad7:mixinextras-common:0.3.5'))
     compileOnly group:'org.spongepowered', name:'mixin', version:'0.8.5'
-    implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
-    implementation group: 'org.ow2.asm', name: 'asm-tree', version: '9.3'
-//    implementation "curse.maven:konkrete-fabric-416797:4514891"
-    implementation "curse.maven:load-my-resources-fabric-534835:4118347"
-    implementation fileTree('libs') { include '*.jar' }
-    implementation 'com.github.Keksuccino:japng:0.5.3'
-    implementation "curse.maven:melody-938643:4970117"
+    compileOnly 'com.github.Keksuccino:japng:0.5.3'
+    compileOnly 'com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7'
+    compileOnly "curse.maven:melody-938643:4953732"
+    compileOnly "flatdir:konkrete:1.8.0"
+    implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
+    implementation group: 'org.ow2.asm', name: 'asm-tree', version: '9.7'
     //This is only to fix the missing dependency error in-dev
     implementation group: 'ca.weblite', name: 'java-objc-bridge', version: '1.1'
-    implementation 'com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7'
 }
 
 publishing {

@@ -1,11 +1,11 @@
+
 plugins {
-    id 'fabric-loom' version '1.2-SNAPSHOT' apply(false)
-    id 'net.minecraftforge.gradle' version '[6.0,6.2)' apply(false)
-    id 'org.spongepowered.gradle.vanilla' version '0.2.1-SNAPSHOT' apply(false)
-    id("org.spongepowered.mixin") version "0.7-SNAPSHOT" apply(false)
+    // Required for NeoGradle
+    id "org.jetbrains.gradle.plugin.idea-ext" version "1.1.7"
 }
 
 subprojects {
+
     apply plugin: 'java'
 
     java.toolchain.languageVersion = JavaLanguageVersion.of(17)
@@ -33,15 +33,13 @@ subprojects {
     }
 
     sourcesJar {
-//        from(rootProject.file("LICENSE")) {
-//            rename { "${it}_${mod_name}" }
-//        }
+        from(rootProject.file("LICENSE")) {
+            rename { "${it}_${mod_name}" }
+        }
     }
 
     repositories {
         mavenCentral()
-        maven { url 'https://jitpack.io' }
-        maven { url 'https://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-releases/' }
         maven {
             name = 'Sponge / Mixin'
             url = 'https://repo.spongepowered.org/repository/maven-public/'
@@ -62,11 +60,13 @@ subprojects {
                 includeGroup "maven.modrinth"
             }
         }
+        maven { url 'https://jitpack.io' }
     }
 
     tasks.withType(JavaCompile).configureEach {
         it.options.encoding = 'UTF-8'
         it.options.getRelease().set(17)
+        it.options.compilerArgs += ['-Xlint:-deprecation', '-Xlint:-removal']
     }
 
     processResources {
@@ -85,9 +85,9 @@ subprojects {
                 "forge_version": forge_version,
                 "forge_loader_version": forge_loader_version,
                 "neoforge_version": neoforge_version,
-                "neoforge_loader_version_range": neoforge_loader_version_range
+                "neoforge_loader_version": neoforge_loader_version
         ]
-        filesMatching(['pack.mcmeta', 'fabric.mod.json', 'META-INF/mods.toml', '*.mixins.json']) {
+        filesMatching(['pack.mcmeta', 'fabric.mod.json', 'META-INF/mods.toml', 'META-INF/neoforge.mods.toml', '*.mixins.json']) {
             expand expandProps
         }
         inputs.properties(expandProps)
