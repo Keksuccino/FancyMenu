@@ -23,7 +23,7 @@ minecraft {
     mappings channel: 'official', version: minecraft_version
 
     // Tell FG to not automtically create the reobf tasks, as we now use Official mappings at runtime, If you don't use them at dev time then you'll have to fix your reobf yourself.
-    reobf = false
+    //reobf = false
 
     // This property allows configuring Gradle's ProcessResources task(s) to run on IDE output locations before launching the game.
     // It is REQUIRED to be set to true for this template to function.
@@ -90,8 +90,8 @@ dependencies {
     minecraftLibrary(jarJar("com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7")) {
         jarJar.ranged(it, "[1.7,)")
     }
-    implementation "maven.modrinth:konkrete:1.9.5-1.20.4-forge"
-    implementation "maven.modrinth:melody:1.0.3-1.20.1-1.20.4-forge"
+    implementation fg.deobf("maven.modrinth:konkrete:1.9.5-1.20.4-forge")
+    implementation fg.deobf("maven.modrinth:melody:1.0.3-1.20.1-1.20.4-forge")
     compileOnly project(":common")
 }
 
@@ -109,8 +109,8 @@ processResources {
     from project(":common").sourceSets.main.resources
 }
 
-//jar.finalizedBy('reobfJar')
-jar.finalizedBy('jarJar')
+jar.finalizedBy('reobfJar')
+//jar.finalizedBy('jarJar')
 
 publishing {
     publications {
