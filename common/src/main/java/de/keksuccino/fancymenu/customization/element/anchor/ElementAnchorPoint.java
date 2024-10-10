@@ -1,13 +1,17 @@
 package de.keksuccino.fancymenu.customization.element.anchor;
 
+import com.mojang.logging.LogUtils;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
 
 public class ElementAnchorPoint {
+
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private final String name;
 
@@ -64,6 +68,26 @@ public class ElementAnchorPoint {
         if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.BOTTOM) {
             return 0;
         }
+        return 0;
+    }
+
+    //TODO übernehmen
+    public int getStickyResizePositionCorrectionX(@NotNull AbstractElement element, int mouseTravelX, int oldOffsetX, int newOffsetX, int oldPosX, int newPosX, int oldWidth, int newWidth, @NotNull AbstractEditorElement.ResizeGrabberType resizeGrabberType) {
+        return 0;
+    }
+
+    //TODO übernehmen
+    public int getStickyResizePositionCorrectionY(@NotNull AbstractElement element, int mouseTravelY, int oldOffsetY, int newOffsetY, int oldPosY, int newPosY, int oldHeight, int newHeight, @NotNull AbstractEditorElement.ResizeGrabberType resizeGrabberType) {
+        return 0;
+    }
+
+    //TODO übernehmen
+    public int getStickyOffsetXCorrection(@NotNull AbstractElement element) {
+        return 0;
+    }
+
+    //TODO übernehmen
+    public int getStickyOffsetYCorrection(@NotNull AbstractElement element) {
         return 0;
     }
 
@@ -242,6 +266,99 @@ public class ElementAnchorPoint {
         public int getDefaultElementBaseY(@NotNull AbstractElement element) {
             return -(element.getAbsoluteHeight() / 2);
         }
+
+        //TODO übernehmen
+        @Override
+        public int getStickyOffsetXCorrection(@NotNull AbstractElement element) {
+            return element.getAbsoluteWidth();
+        }
+
+        //TODO übernehmen
+        @Override
+        public int getStickyOffsetYCorrection(@NotNull AbstractElement element) {
+            return (element.getAbsoluteHeight() / 2);
+        }
+
+        //TODO übernehmen
+        @Override
+        public int getElementPositionX(@NotNull AbstractElement element) {
+            if (element.stickyAnchor) {
+                return (this.getOriginX(element) - element.getAbsoluteWidth()) + element.posOffsetX;
+            }
+            return super.getElementPositionX(element);
+        }
+
+        //TODO übernehmen
+        @Override
+        public int getElementPositionY(@NotNull AbstractElement element) {
+            if (element.stickyAnchor) {
+                return (this.getOriginY(element) - (element.getAbsoluteHeight() / 2)) + element.posOffsetY;
+            }
+            return super.getElementPositionY(element);
+        }
+
+        //TODO übernehmen
+        @Override
+        public int getStickyResizePositionCorrectionX(@NotNull AbstractElement element, int mouseTravelX, int oldOffsetX, int newOffsetX, int oldPosX, int newPosX, int oldWidth, int newWidth, AbstractEditorElement.@NotNull ResizeGrabberType resizeGrabberType) {
+            if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.RIGHT) {
+                return mouseTravelX;
+            }
+            if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.LEFT) {
+                return -mouseTravelX;
+            }
+            return 0;
+        }
+
+        //TODO übernehmen
+        @Override
+        public int getStickyResizePositionCorrectionY(@NotNull AbstractElement element, int mouseTravelY, int oldOffsetY, int newOffsetY, int oldPosY, int newPosY, int oldHeight, int newHeight, AbstractEditorElement.@NotNull ResizeGrabberType resizeGrabberType) {
+            int diffPos = Math.max(oldPosY, newPosY) - Math.min(oldPosY, newPosY);
+            int diffHeight = Math.max(oldHeight, newHeight) - Math.min(oldHeight, newHeight);
+            //TODO remove debug
+            LOGGER.info("############# OLD POS Y: " + oldPosY + " | NEW POS Y: " + newPosY + " | DIFF POS: " + diffPos + " | OLD OFF: " + oldOffsetY + " | NEW OFF: " + newOffsetY + " | OLD H: " + oldHeight + " | NEW H: " + newHeight + " | DIFF H: " + diffHeight);
+            if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.TOP) {
+                if (newHeight > oldHeight) return diffHeight;
+                if (newHeight < oldHeight) return -diffHeight;
+            }
+            if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.BOTTOM) {
+                if (newPosY > oldPosY) return -diffPos;
+                if (newPosY < oldPosY) return diffPos;
+            }
+            return 0;
+        }
+
+//        @Override
+//        public int getResizePositionOffsetX(@NotNull AbstractElement element, int mouseTravelX, @NotNull AbstractEditorElement.ResizeGrabberType resizeGrabberType) {
+//            if (element.stickyAnchor) {
+//                if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.RIGHT) {
+//                    return mouseTravelX;
+//                }
+//                if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.LEFT) {
+//                    return 0;
+//                }
+//                return 0;
+//            }
+//            return super.getResizePositionOffsetX(element, mouseTravelX, resizeGrabberType);
+//        }
+//
+//        @Override
+//        public int getResizePositionOffsetY(@NotNull AbstractElement element, int mouseTravelY, @NotNull AbstractEditorElement.ResizeGrabberType resizeGrabberType) {
+//            if (element.stickyAnchor) {
+//                if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.TOP) {
+//                    return 0;
+//                }
+//                if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.BOTTOM) {
+//                    double d = (double)mouseTravelY / 2.0D;
+//                    if ((d >= 0) && (d % 1 == 0)) { //is positive and is whole number
+//                        d += 1;
+//                    }
+//                    LOGGER.info("################# RESIZE OFFSET Y: " + d);
+//                    return (int)d;
+//                }
+//                return 0;
+//            }
+//            return super.getResizePositionOffsetY(element, mouseTravelY, resizeGrabberType);
+//        }
 
     }
 

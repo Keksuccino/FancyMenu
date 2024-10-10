@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.layout.editor;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.HideableElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
@@ -326,10 +327,13 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
         Objects.requireNonNull(area);
         if (this.isAttachedToAnchor(element, area)) return false;
         //Check if area is ElementAnchorPointArea and if so, check if area's element is child of the given element parameter
-        if (area instanceof ElementAnchorPointArea a) {
-            String parentOfElement = element.element.anchorPointElementIdentifier;
-            if ((parentOfElement != null) && parentOfElement.equals(a.elementIdentifier)) return false;
+        //TODO übernehmen
+        if (area instanceof ElementAnchorPointArea) {
+            AbstractEditorElement areaElement = this.editor.getElementByInstanceIdentifier(((ElementAnchorPointArea) area).elementIdentifier);
+            AbstractElement parentOfAreaElement = (areaElement != null) ? areaElement.element.getElementAnchorPointParent() : null;
+            if ((parentOfAreaElement != null) && parentOfAreaElement.getInstanceIdentifier().equals(element.element.getInstanceIdentifier())) return false;
         }
+        //------------------
         return true;
     }
 
@@ -397,10 +401,20 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
                 if (a.isMouseOver(mouseX, mouseY)) return a;
             }
         }
+        //TODO übernehmen
         if (FancyMenu.getOptions().anchorOverlayChangeAnchorOnElementHover.getValue()) {
             AbstractEditorElement e = this.getTopHoveredNotDraggedElement();
-            if ((e != null) && !e.isSelected() && !e.isMultiSelected()) return new ElementAnchorPointArea(e.element.getInstanceIdentifier());
+            if (e != null) {
+                AbstractElement parentOfHovered = e.element.getElementAnchorPointParent();
+                if (parentOfHovered != null) {
+                    for (AbstractEditorElement dragged : this.editor.getCurrentlyDraggedElements()) {
+                        if (parentOfHovered.getInstanceIdentifier().equals(dragged.element.getInstanceIdentifier())) return null;
+                    }
+                }
+                if (!e.isSelected() && !e.isMultiSelected()) return new ElementAnchorPointArea(e.element.getInstanceIdentifier());
+            }
         }
+        //---------------------
         return null;
     }
 

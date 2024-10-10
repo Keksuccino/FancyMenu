@@ -1,5 +1,8 @@
 package de.keksuccino.fancymenu.util.rendering.text;
 
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
@@ -55,6 +58,46 @@ public class TextFormattingUtils {
         in = StringUtils.replace(in, oldPrefix + FORMATTING_CODE_MAGIC, newPrefix + FORMATTING_CODE_MAGIC);
         in = StringUtils.replace(in, oldPrefix + FORMATTING_CODE_RESET, newPrefix + FORMATTING_CODE_RESET);
         return in;
+    }
+
+    //TODO übernehmen
+    public static String textComponentToString(@NotNull Component textComponent) {
+        StringBuilder sb = new StringBuilder();
+        appendComponent(sb, textComponent, textComponent.getStyle());
+        return sb.toString();
+    }
+
+    //TODO übernehmen
+    private static void appendComponent(@NotNull StringBuilder sb, @NotNull Component component, @NotNull Style parentStyle) {
+
+        Style style = component.getStyle().applyTo(parentStyle);
+        if (style.isBold()) {
+            sb.append(ChatFormatting.BOLD);
+        }
+        if (style.isItalic()) {
+            sb.append(ChatFormatting.ITALIC);
+        }
+        if (style.isUnderlined()) {
+            sb.append(ChatFormatting.UNDERLINE);
+        }
+        if (style.isStrikethrough()) {
+            sb.append(ChatFormatting.STRIKETHROUGH);
+        }
+        if (style.isObfuscated()) {
+            sb.append(ChatFormatting.OBFUSCATED);
+        }
+        if (style.getColor() != null) {
+            sb.append(style.getColor().toString());
+        }
+
+        sb.append(component.getContents());
+
+        sb.append(ChatFormatting.RESET);
+
+        for (Component sibling : component.getSiblings()) {
+            appendComponent(sb, sibling, style);
+        }
+
     }
 
 }

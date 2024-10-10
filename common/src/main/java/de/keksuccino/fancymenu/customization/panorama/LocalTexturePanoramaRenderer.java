@@ -198,6 +198,8 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 		RenderSystem.enableBlend();
 		RenderSystem.disableCull();
 		RenderSystem.depthMask(false);
+		//TODO übernehmen
+		RenderSystem.disableDepthTest();
 
 		for(int j = 0; j < 4; ++j) {
 			modelViewStack.pushMatrix();

@@ -8,7 +8,6 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
-
 import java.util.List;
 
 public class ScreenKeyPressedEvent extends EventBase {
