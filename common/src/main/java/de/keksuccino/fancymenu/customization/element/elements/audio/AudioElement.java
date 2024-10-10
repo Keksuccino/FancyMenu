@@ -45,6 +45,8 @@ public class AudioElement extends AbstractElement {
     protected boolean currentAudioStarted = false;
     protected long lastAudioStart = -1L;
     protected boolean cacheChecked = false;
+    //TODO übernehmen
+    protected float lastControllerVolume = 1.0F;
 
     public AudioElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -138,7 +140,8 @@ public class AudioElement extends AbstractElement {
                     this.lastAudioStart = now;
                     this.currentAudioStarted = true;
                 }
-                this.currentAudio.setVolume(this.volume);
+                //TODO übernehmen
+                this.updateVolume();
                 this.currentAudio.setSoundChannel(this.soundSource);
             }
 
@@ -148,13 +151,21 @@ public class AudioElement extends AbstractElement {
             if (!isOnCooldown && (this.currentAudioInstance != null)) {
                 if (!this.currentAudioStarted && this.currentAudio.isReady() && !this.currentAudio.isPlaying()) {
                     this.lastAudioStart = now;
-                    this.currentAudio.setVolume(this.volume);
+                    //TODO übernehmen
+                    this.updateVolume();
                     this.currentAudio.setSoundChannel(this.soundSource);
                     this.currentAudio.play();
                     this.currentAudioStarted = true;
 //                    LOGGER.info("############## STARTING NEW AUDIO: " + this.currentAudioInstance.supplier.getSourceWithPrefix() + " | INSTANCE: " + this);
                 }
             }
+
+            //TODO übernehmen
+            if (this.lastControllerVolume != this.getControllerVolume()) {
+                this.updateVolume();
+                this.lastControllerVolume = this.getControllerVolume();
+            }
+            //--------------
 
         }
 
@@ -280,6 +291,14 @@ public class AudioElement extends AbstractElement {
         return this.playMode;
     }
 
+    //TODO übernehmen
+    public void updateVolume() {
+        float v = Math.max(0.0F, Math.min(1.0F, this.getControllerVolume() * this.volume));
+        if (this.currentAudio != null) {
+            this.currentAudio.setVolume(v);
+        }
+    }
+
     /**
      * Value between 0.0F and 1.0F.
      */
@@ -287,9 +306,8 @@ public class AudioElement extends AbstractElement {
         if (volume > 1.0F) volume = 1.0F;
         if (volume < 0.0F) volume = 0.0F;
         this.volume = volume;
-        if (this.currentAudio != null) {
-            this.currentAudio.setVolume(this.volume);
-        }
+        //TODO übernehmen
+        this.updateVolume();
     }
 
     /**
@@ -297,6 +315,28 @@ public class AudioElement extends AbstractElement {
      */
     public float getVolume() {
         return this.volume;
+    }
+
+    //TODO übernehmen
+    /**
+     * Returns the volume of this element that is set in the {@link AudioElementController}.<br>
+     * The controller volume is set by actions and similar things that are user-controlled in most cases.
+     */
+    public float getControllerVolume() {
+        AudioElementController.AudioElementMeta meta = AudioElementController.getMeta(this.getInstanceIdentifier());
+        if (meta != null) return Math.max(0.0F, Math.min(1.0F, meta.volume));
+        return 1.0F;
+    }
+
+    //TODO übernehmen
+    public void setControllerVolume(float volume) {
+        AudioElementController.AudioElementMeta meta = AudioElementController.getMeta(this.getInstanceIdentifier());
+        if (meta == null) {
+            meta = new AudioElementController.AudioElementMeta(this.getInstanceIdentifier(), 1.0F);
+            AudioElementController.putMeta(this.getInstanceIdentifier(), meta);
+        }
+        meta.volume = Math.max(0.0F, Math.min(1.0F, volume));
+        AudioElementController.syncChanges();
     }
 
     public void setSoundSource(@NotNull SoundSource soundSource) {
@@ -314,9 +354,11 @@ public class AudioElement extends AbstractElement {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        this.renderTick();
+        //TODO übernehmen
+        //this.renderTick();
 
-        if (!this.shouldRender()) return;
+        //TODO übernehmen
+        //if (!this.shouldRender()) return;
 
         if (isEditor()) {
             int x = this.getAbsoluteX();
@@ -331,6 +373,12 @@ public class AudioElement extends AbstractElement {
             RenderingUtils.resetShaderColor(graphics);
         }
 
+    }
+
+    //TODO übernehmen
+    @Override
+    public void renderTick_Inner_Stage_1() {
+        this.renderTick();
     }
 
     public enum PlayMode implements LocalizedCycleEnum<PlayMode> {

@@ -8,6 +8,8 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 @Mod(FancyMenu.MOD_ID)
 public class FancyMenuForge {
+
+    //TODO übernehmen (add rrls to mods.toml)
     
     public FancyMenuForge() {
 

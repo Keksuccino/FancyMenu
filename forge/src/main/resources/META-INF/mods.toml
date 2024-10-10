@@ -75,6 +75,13 @@ versionRange="[3.0.0,)"
 side="BOTH"
 
 [[dependencies.${mod_id}]]
+modId="rrls"
+mandatory=false
+ordering="NONE"
+versionRange="[4.0.1,)"
+side="BOTH"
+
+[[dependencies.${mod_id}]]
 modId="forge"
 mandatory=true
 versionRange="[47.1.47,)"

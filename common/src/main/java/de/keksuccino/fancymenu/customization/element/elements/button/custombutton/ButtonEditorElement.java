@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
+import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -40,6 +41,20 @@ public class ButtonEditorElement extends AbstractEditorElement {
             Minecraft.getInstance().setScreen(s);
         }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.elements.button.manage_actions.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"))
+                .setStackable(false);
+
+        //TODO übernehmen
+        this.rightClickMenu.addClickableEntry("widget_active_state_controller", Component.translatable("fancymenu.elements.button.active_state_controller"), (menu, entry) -> {
+                    ManageRequirementsScreen s = new ManageRequirementsScreen(this.getElement().activeStateSupplier.copy(false), (call) -> {
+                        if (call != null) {
+                            this.editor.history.saveSnapshot();
+                            this.getElement().activeStateSupplier = call;
+                        }
+                        Minecraft.getInstance().setScreen(this.editor);
+                    });
+                    Minecraft.getInstance().setScreen(s);
+                })
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.active_state_controller.desc")))
                 .setStackable(false);
 
         this.rightClickMenu.addSeparatorEntry("button_separator_1");
