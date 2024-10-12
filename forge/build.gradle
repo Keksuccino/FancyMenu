@@ -92,6 +92,7 @@ dependencies {
     }
     implementation fg.deobf("maven.modrinth:konkrete:1.8.0-1.20-1.20.1-forge")
     implementation fg.deobf("maven.modrinth:melody:1.0.3-1.20.1-1.20.4-forge")
+    implementation fg.deobf("maven.modrinth:rrls:4.0.6.1+mc1.20.1-forge")
     compileOnly project(":common")
 }
 

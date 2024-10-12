@@ -40,13 +40,6 @@ versionRange="[1.0.0,)"
 side="BOTH"
 
 [[dependencies.${mod_id}]]
-modId="rrls"
-mandatory=false
-ordering="AFTER"
-versionRange="[0,)"
-side="BOTH"
-
-[[dependencies.${mod_id}]]
 modId="fmextension_audio"
 mandatory=false
 ordering="BEFORE"
@@ -78,7 +71,7 @@ side="BOTH"
 modId="rrls"
 mandatory=false
 ordering="NONE"
-versionRange="[4.0.1,)"
+versionRange="[4.0.6.1,)"
 side="BOTH"
 
 [[dependencies.${mod_id}]]
