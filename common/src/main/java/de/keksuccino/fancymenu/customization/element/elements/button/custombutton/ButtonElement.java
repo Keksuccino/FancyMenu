@@ -116,6 +116,9 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
     protected void renderElementWidget(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {
         if (this.getWidget() != null) {
+            //Prevents crashes related to dividing by zero
+            if (this.getWidget().getHeight() <= 0) return;
+            if (this.getWidget().getWidth() <= 0) return;
             this.getWidget().render(graphics, mouseX, mouseY, partial);
         }
     }
