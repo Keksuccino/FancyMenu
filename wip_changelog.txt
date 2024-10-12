@@ -29,6 +29,7 @@ IMPORTANT: Because I developed this update over a long time, it's possible that 
 - Fixed being able to anchor a parent element to one of its children if parent has at least 2 children (#872)
 - Fixed panoramas and slideshows fail to get loaded when the properties file has special space chars before lines (#944)
 - Fixed unable to open CreateWorldScreen via command or action in MC 1.21.1 (#888)
+- Fixed game sometimes crashing when customizing certain screens like the PauseScreen (#907)
  
 %changelog:end%
 
