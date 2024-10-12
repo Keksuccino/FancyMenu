@@ -18,6 +18,7 @@ IMPORTANT: Because I developed this update over a long time, it's possible that 
 - You can use placeholders as color value for the Rectangle Shape element now
 - Added a Welcome screen that tells the user to read the docs (only opens the very first time and will not show for modpack users, as long as the config file gets shipped)
 - Added "Dragger" element that can be dragged by users to make parts of your layouts movable
+- Removed hardcoded incompatibility with RRLS (Remove Reloading Screen) in MC 1.20.1 (#858)
 - Fixed a bug that made the last hovered hyperlink of a Text element stay hovered when it was hovered while the element got hidden by its loading requirements
 - Fixed Progress Bar elements not showing alpha of HEX color
 - Fixed Debug Overlay not interactable after enabling it until changing or resizing the screen
