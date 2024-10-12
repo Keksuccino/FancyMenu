@@ -22,6 +22,8 @@ public class EditorElementSettings {
     private boolean allowVanillaAnchorPoint = false;
     private boolean enableLoadingRequirements = true;
     private boolean identifierCopyable = true;
+    //TODO übernehmen
+    private boolean opacityChangeable = true;
 
     private boolean skipReInit = false;
 
@@ -85,6 +87,17 @@ public class EditorElementSettings {
 
     public void setFadeable(boolean fadeable) {
         this.fadeable = fadeable;
+        this.settingsChanged();
+    }
+
+    //TODO übernehmen
+    public boolean isOpacityChangeable() {
+        return this.opacityChangeable;
+    }
+
+    //TODO übernehmen
+    public void setOpacityChangeable(boolean changeable) {
+        this.opacityChangeable = changeable;
         this.settingsChanged();
     }
 

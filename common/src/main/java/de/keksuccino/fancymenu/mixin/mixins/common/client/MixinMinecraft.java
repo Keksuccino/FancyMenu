@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.WelcomeScreen;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.*;
@@ -11,6 +12,7 @@ import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
@@ -97,6 +99,14 @@ public class MixinMinecraft {
 
 		//Reset GUI scale in case some layout changed it
 		RenderingUtils.resetGuiScale();
+
+		//TODO übernehmen
+		if (!FancyMenu.getOptions().welcomeScreenShown.getValue() && (screen instanceof TitleScreen)) {
+			info.cancel();
+			Minecraft.getInstance().setScreen(new WelcomeScreen(screen));
+			return;
+		}
+		//---------------------
 
 		//Handle Overrides
 		Screen overrideWith = CustomGuiHandler.beforeSetScreen(screen);

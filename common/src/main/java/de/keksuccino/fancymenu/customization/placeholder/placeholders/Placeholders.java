@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.placeholder.placeholders;
 
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.advanced.*;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.audio.AudioElementVolumePlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.client.*;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.gui.*;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderRegistry;
@@ -15,6 +16,7 @@ import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.ram.
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.ram.UsedRamPlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.player.PlayerNamePlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.player.PlayerUuidPlaceholder;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.world.*;
 
 public class Placeholders {
 
@@ -83,6 +85,47 @@ public class Placeholders {
     public static final JvmNamePlaceholder JVM_NAME = new JvmNamePlaceholder();
     public static final OpenGLVersionPlaceholder OPEN_GL_VERSION = new OpenGLVersionPlaceholder();
     public static final OSNamePlaceholder OS_NAME = new OSNamePlaceholder();
+    public static final ActiveHotbarSlotPlaceholder ACTIVE_HOTBAR_SLOT = new ActiveHotbarSlotPlaceholder();
+    public static final CurrentPlayerHealthPlaceholder CURRENT_PLAYER_HEALTH = new CurrentPlayerHealthPlaceholder();
+    public static final GameTimePlaceholder GAME_TIME = new GameTimePlaceholder();
+    public static final SlotItemPlaceholder SLOT_ITEM = new SlotItemPlaceholder();
+    public static final WorldDayTimePlaceholder WORLD_DAY_TIME = new WorldDayTimePlaceholder();
+    public static final WorldDayTimeHourPlaceholder WORLD_DAY_TIME_HOUR = new WorldDayTimeHourPlaceholder();
+    public static final WorldDayTimeMinutePlaceholder WORLD_DAY_TIME_MINUTE = new WorldDayTimeMinutePlaceholder();
+    public static final WorldDifficultyPlaceholder WORLD_DIFFICULTY = new WorldDifficultyPlaceholder();
+    public static final MaxPlayerHealthPlaceholder MAX_PLAYER_HEALTH = new MaxPlayerHealthPlaceholder();
+    public static final CurrentPlayerHealthPercentagePlaceholder CURRENT_PLAYER_HEALTH_PERCENTAGE = new CurrentPlayerHealthPercentagePlaceholder();
+    public static final CurrentPlayerAbsorptionHealthPlaceholder CURRENT_PLAYER_ABSORPTION_HEALTH = new CurrentPlayerAbsorptionHealthPlaceholder();
+    public static final MaxPlayerAbsorptionHealthPlaceholder MAX_PLAYER_ABSORPTION_HEALTH = new MaxPlayerAbsorptionHealthPlaceholder();
+    public static final CurrentPlayerAbsorptionHealthPercentagePlaceholder CURRENT_PLAYER_ABSORPTION_HEALTH_PERCENTAGE = new CurrentPlayerAbsorptionHealthPercentagePlaceholder();
+    public static final CurrentPlayerHungerPlaceholder CURRENT_PLAYER_HUNGER = new CurrentPlayerHungerPlaceholder();
+    public static final MaxPlayerHungerPlaceholder MAX_PLAYER_HUNGER = new MaxPlayerHungerPlaceholder();
+    public static final CurrentPlayerHungerPercentagePlaceholder CURRENT_PLAYER_HUNGER_PERCENTAGE = new CurrentPlayerHungerPercentagePlaceholder();
+    public static final CurrentPlayerArmorPlaceholder CURRENT_PLAYER_ARMOR = new CurrentPlayerArmorPlaceholder();
+    public static final MaxPlayerArmorPlaceholder MAX_PLAYER_ARMOR = new MaxPlayerArmorPlaceholder();
+    public static final CurrentPlayerArmorPercentagePlaceholder CURRENT_PLAYER_ARMOR_PERCENTAGE = new CurrentPlayerArmorPercentagePlaceholder();
+    public static final CurrentPlayerExpProgressPlaceholder CURRENT_PLAYER_EXP_PROGRESS = new CurrentPlayerExpProgressPlaceholder();
+    public static final CurrentPlayerExperiencePlaceholder CURRENT_PLAYER_EXPERIENCE = new CurrentPlayerExperiencePlaceholder();
+    public static final CurrentPlayerLevelPlaceholder CURRENT_PLAYER_LEVEL = new CurrentPlayerLevelPlaceholder();
+    public static final CurrentMountHealthPlaceholder CURRENT_MOUNT_HEALTH = new CurrentMountHealthPlaceholder();
+    public static final MaxMountHealthPlaceholder MAX_MOUNT_HEALTH = new MaxMountHealthPlaceholder();
+    public static final CurrentMountHealthPercentagePlaceholder CURRENT_MOUNT_HEALTH_PERCENTAGE = new CurrentMountHealthPercentagePlaceholder();
+    public static final CurrentMountJumpMeterPlaceholder CURRENT_MOUNT_JUMP_METER = new CurrentMountJumpMeterPlaceholder();
+    public static final CurrentBossHealthPlaceholder CURRENT_BOSS_HEALTH = new CurrentBossHealthPlaceholder();
+    public static final BossNamePlaceholder BOSS_NAME = new BossNamePlaceholder();
+    public static final BossCountPlaceholder BOSS_COUNT = new BossCountPlaceholder();
+    public static final ActiveEffectsCountPlaceholder ACTIVE_EFFECTS_COUNT = new ActiveEffectsCountPlaceholder();
+    public static final ActiveEffectPlaceholder ACTIVE_EFFECT = new ActiveEffectPlaceholder();
+    public static final CurrentTitlePlaceholder CURRENT_TITLE = new CurrentTitlePlaceholder();
+    public static final PlayerXCoordinatePlaceholder PLAYER_X_COORDINATE = new PlayerXCoordinatePlaceholder();
+    public static final PlayerYCoordinatePlaceholder PLAYER_Y_COORDINATE = new PlayerYCoordinatePlaceholder();
+    public static final PlayerZCoordinatePlaceholder PLAYER_Z_COORDINATE = new PlayerZCoordinatePlaceholder();
+    public static final CurrentServerIpPlaceholder CURRENT_SERVER_IP = new CurrentServerIpPlaceholder();
+    public static final PlayerAttackStrengthPercentagePlaceholder PLAYER_ATTACK_STRENGTH_PERCENTAGE = new PlayerAttackStrengthPercentagePlaceholder();
+    public static final PlayerGamemodePlaceholder PLAYER_GAMEMODE = new PlayerGamemodePlaceholder();
+    public static final PlayerViewDirectionPlaceholder PLAYER_VIEW_DIRECTION = new PlayerViewDirectionPlaceholder();
+    //TODO übernehmen
+    public static final AudioElementVolumePlaceholder AUDIO_ELEMENT_VOLUME = new AudioElementVolumePlaceholder();
 
     public static void registerAll() {
 
@@ -112,6 +155,49 @@ public class Placeholders {
         //Player
         PlaceholderRegistry.register(PLAYER_NAME);
         PlaceholderRegistry.register(PLAYER_UUID);
+
+        //TODO übernehmen
+        //World
+        PlaceholderRegistry.register(ACTIVE_HOTBAR_SLOT);
+        PlaceholderRegistry.register(CURRENT_PLAYER_HEALTH);
+        PlaceholderRegistry.register(MAX_PLAYER_HEALTH);
+        PlaceholderRegistry.register(CURRENT_PLAYER_HEALTH_PERCENTAGE);
+        PlaceholderRegistry.register(CURRENT_PLAYER_ABSORPTION_HEALTH);
+        PlaceholderRegistry.register(MAX_PLAYER_ABSORPTION_HEALTH);
+        PlaceholderRegistry.register(CURRENT_PLAYER_ABSORPTION_HEALTH_PERCENTAGE);
+        PlaceholderRegistry.register(CURRENT_PLAYER_HUNGER);
+        PlaceholderRegistry.register(MAX_PLAYER_HUNGER);
+        PlaceholderRegistry.register(CURRENT_PLAYER_HUNGER_PERCENTAGE);
+        PlaceholderRegistry.register(CURRENT_PLAYER_ARMOR);
+        PlaceholderRegistry.register(MAX_PLAYER_ARMOR);
+        PlaceholderRegistry.register(CURRENT_PLAYER_ARMOR_PERCENTAGE);
+        PlaceholderRegistry.register(CURRENT_PLAYER_EXP_PROGRESS);
+        PlaceholderRegistry.register(CURRENT_PLAYER_EXPERIENCE);
+        PlaceholderRegistry.register(CURRENT_PLAYER_LEVEL);
+        PlaceholderRegistry.register(CURRENT_MOUNT_HEALTH);
+        PlaceholderRegistry.register(MAX_MOUNT_HEALTH);
+        PlaceholderRegistry.register(CURRENT_MOUNT_HEALTH_PERCENTAGE);
+        PlaceholderRegistry.register(CURRENT_MOUNT_JUMP_METER);
+        PlaceholderRegistry.register(GAME_TIME);
+        PlaceholderRegistry.register(SLOT_ITEM);
+        PlaceholderRegistry.register(WORLD_DAY_TIME);
+        PlaceholderRegistry.register(WORLD_DAY_TIME_HOUR);
+        PlaceholderRegistry.register(WORLD_DAY_TIME_MINUTE);
+        PlaceholderRegistry.register(WORLD_DIFFICULTY);
+        PlaceholderRegistry.register(CURRENT_BOSS_HEALTH);
+        PlaceholderRegistry.register(BOSS_NAME);
+        PlaceholderRegistry.register(BOSS_COUNT);
+        PlaceholderRegistry.register(ACTIVE_EFFECTS_COUNT);
+        PlaceholderRegistry.register(ACTIVE_EFFECT);
+        PlaceholderRegistry.register(CURRENT_TITLE);
+        PlaceholderRegistry.register(PLAYER_X_COORDINATE);
+        PlaceholderRegistry.register(PLAYER_Y_COORDINATE);
+        PlaceholderRegistry.register(PLAYER_Z_COORDINATE);
+        PlaceholderRegistry.register(CURRENT_SERVER_IP);
+        PlaceholderRegistry.register(PLAYER_ATTACK_STRENGTH_PERCENTAGE);
+        PlaceholderRegistry.register(PLAYER_GAMEMODE);
+        PlaceholderRegistry.register(PLAYER_VIEW_DIRECTION);
+        //----------------------------
 
         //Server
         PlaceholderRegistry.register(SERVER_MOTD);
@@ -147,6 +233,11 @@ public class Placeholders {
         PlaceholderRegistry.register(MATH_COSH);
         PlaceholderRegistry.register(MATH_TAN);
         PlaceholderRegistry.register(MATH_TANH);
+
+        //TODO übernehmen
+        //Audio
+        PlaceholderRegistry.register(AUDIO_ELEMENT_VOLUME);
+        //----------------------
 
         //Other
         PlaceholderRegistry.register(PERCENT_RAM);

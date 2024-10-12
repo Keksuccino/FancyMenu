@@ -296,10 +296,11 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		this.allElements.addAll(this.vanillaWidgetElements);
 
 		for (AbstractElement ae : this.allElements) {
-			//Handle appearance delay
-			if (ScreenCustomization.isNewMenu()) {
-				this.handleAppearanceDelayFor(ae);
-			}
+			//TODO übernehmen
+//			//Handle appearance delay
+//			if (ScreenCustomization.isNewMenu()) {
+//				this.handleAppearanceDelayFor(ae);
+//			}
 			//Add widgets of element to screen
 			List<GuiEventListener> widgetsToRegister = ae.getWidgetsToRegister();
 			if (widgetsToRegister != null) {
@@ -336,58 +337,59 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 	}
 
-	@SuppressWarnings("all")
-	protected void handleAppearanceDelayFor(AbstractElement element) {
-		if ((element.appearanceDelay != null) && (element.appearanceDelay != AbstractElement.AppearanceDelay.NO_DELAY)) {
-			if ((element.appearanceDelay == AbstractElement.AppearanceDelay.FIRST_TIME) && delayAppearanceFirstTime.contains(element.getInstanceIdentifier())) {
-				return;
-			}
-			if (element.appearanceDelay == AbstractElement.AppearanceDelay.FIRST_TIME) {
-				if (!this.delayAppearanceFirstTime.contains(element.getInstanceIdentifier())) {
-					delayAppearanceFirstTime.add(element.getInstanceIdentifier());
-				}
-			}
-			element.visible = false;
-			if (element.fadeIn) {
-				element.opacity = 0.1F;
-			}
-			ThreadCaller c = new ThreadCaller();
-			this.delayThreads.add(c);
-			new Thread(() -> {
-				long start = System.currentTimeMillis();
-				float delay = (float) (1000.0 * element.appearanceDelayInSeconds);
-				boolean fade = false;
-				while (c.running.get()) {
-					try {
-						long now = System.currentTimeMillis();
-						if (!fade) {
-							if (now >= start + (int)delay) {
-								element.visible = true;
-								if (!element.fadeIn) {
-									return;
-								} else {
-									fade = true;
-								}
-							}
-						} else {
-							float o = element.opacity + (0.03F * element.fadeInSpeed);
-							if (o > 1.0F) {
-								o = 1.0F;
-							}
-							if (element.opacity < 1.0F) {
-								element.opacity = o;
-							} else {
-								return;
-							}
-						}
-						Thread.sleep(50);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			}).start();
-		}
-	}
+	//TODO übernehmen
+//	@SuppressWarnings("all")
+//	protected void handleAppearanceDelayFor(AbstractElement element) {
+//		if ((element.appearanceDelay != null) && (element.appearanceDelay != AbstractElement.AppearanceDelay.NO_DELAY)) {
+//			if ((element.appearanceDelay == AbstractElement.AppearanceDelay.FIRST_TIME) && delayAppearanceFirstTime.contains(element.getInstanceIdentifier())) {
+//				return;
+//			}
+//			if (element.appearanceDelay == AbstractElement.AppearanceDelay.FIRST_TIME) {
+//				if (!this.delayAppearanceFirstTime.contains(element.getInstanceIdentifier())) {
+//					delayAppearanceFirstTime.add(element.getInstanceIdentifier());
+//				}
+//			}
+//			element.visible = false;
+//			if (element.fadeIn) {
+//				element.opacity = 0.1F;
+//			}
+//			ThreadCaller c = new ThreadCaller();
+//			this.delayThreads.add(c);
+//			new Thread(() -> {
+//				long start = System.currentTimeMillis();
+//				float delay = (float) (1000.0 * element.appearanceDelayInSeconds);
+//				boolean fade = false;
+//				while (c.running.get()) {
+//					try {
+//						long now = System.currentTimeMillis();
+//						if (!fade) {
+//							if (now >= start + (int)delay) {
+//								element.visible = true;
+//								if (!element.fadeIn) {
+//									return;
+//								} else {
+//									fade = true;
+//								}
+//							}
+//						} else {
+//							float o = element.opacity + (0.03F * element.fadeInSpeed);
+//							if (o > 1.0F) {
+//								o = 1.0F;
+//							}
+//							if (element.opacity < 1.0F) {
+//								element.opacity = o;
+//							} else {
+//								return;
+//							}
+//						}
+//						Thread.sleep(50);
+//					} catch (Exception e) {
+//						e.printStackTrace();
+//					}
+//				}
+//			}).start();
+//		}
+//	}
 
 	@EventListener
 	public void onScreenTickPre(ScreenTickEvent.Post e) {
@@ -422,6 +424,13 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			ScreenTitleUtils.setScreenTitle(e.getScreen(), Component.literal(PlaceholderParser.replacePlaceholders(this.layoutBase.customMenuTitle)));
 		}
 
+		//TODO übernehmen
+		//Render vanilla button elements (render in pre, because Vanilla Widget elements don't actually render the widget, they just manage it, so it's important to call their render logic before everything else)
+		for (AbstractElement element : new ArrayList<>(this.vanillaWidgetElements)) {
+			element.renderInternal(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
+		}
+		//-----------------------------------
+
 	}
 
 	@EventListener
@@ -433,20 +442,24 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		//Render background elements in foreground if it wasn't possible to render to the menu background
 		if (!this.backgroundDrawable) {
 			for (AbstractElement element : new ArrayList<>(this.normalElements.backgroundElements)) {
-				element.render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
+				//TODO übernehmen
+				element.renderInternal(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 			}
 		}
-		//Render vanilla button elements
-		for (AbstractElement element : new ArrayList<>(this.vanillaWidgetElements)) {
-			element.render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
-		}
+		//TODO übernehmen
+//		//Render vanilla button elements
+//		for (AbstractElement element : new ArrayList<>(this.vanillaWidgetElements)) {
+//			element.render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
+//		}
 		//Render deep elements
 		for (AbstractElement element : new ArrayList<>(this.deepElements)) {
-			element.render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
+			//TODO übernehmen
+			element.renderInternal(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 		}
 		//Render foreground elements
 		for (AbstractElement element : new ArrayList<>(this.normalElements.foregroundElements)) {
-			element.render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
+			//TODO übernehmen
+			element.renderInternal(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 		}
 
 	}
@@ -587,7 +600,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		//Render background elements
 		for (AbstractElement elements : new ArrayList<>(this.normalElements.backgroundElements)) {
-			elements.render(graphics, mouseX, mouseY, partial);
+			//TODO übernehmen
+			elements.renderInternal(graphics, mouseX, mouseY, partial);
 		}
 
 		this.backgroundDrawable = true;
@@ -682,9 +696,10 @@ public class ScreenCustomizationLayer implements ElementFactory {
 							}
 						}
 					} else {
-						AnimationHandler.resetAnimations();
-						AnimationHandler.resetAnimationSounds();
-						AnimationHandler.stopAnimationSounds();
+						//TODO übernehmen
+//						AnimationHandler.resetAnimations();
+//						AnimationHandler.resetAnimationSounds();
+//						AnimationHandler.stopAnimationSounds();
 					}
 				}
 				int i = MathUtils.getRandomNumberInRange(0, this.layouts.size()-1);

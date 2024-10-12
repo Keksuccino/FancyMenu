@@ -35,7 +35,8 @@
   "breaks": {
     "drippyloadingscreen": "<3.0.0",
     "fmextension_audio": "*",
-    "fmextension_video": "*"
+    "fmextension_video": "*",
+    "rrls": "<4.0.1"
   },
   "accessWidener": "fancymenu.accesswidener"
 }

@@ -50,6 +50,8 @@ public class TextElement extends AbstractElement {
     public volatile ScrollArea scrollArea;
     protected List<String> lastLines;
     protected IText lastIText;
+    //TODO übernehmen
+    protected boolean lastTickShouldRender = false;
 
     public TextElement(@NotNull ElementBuilder<?, ?> builder) {
 
@@ -130,6 +132,19 @@ public class TextElement extends AbstractElement {
             RenderingUtils.resetShaderColor(graphics);
 
         }
+
+    }
+
+    //TODO übernehmen
+    @Override
+    public void renderInternal(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+        super.renderInternal(graphics, mouseX, mouseY, partial);
+
+        if (!this.shouldRender() && this.lastTickShouldRender) {
+            this.markdownRenderer.resetHovered();
+        }
+        this.lastTickShouldRender = this.shouldRender();
 
     }
 
