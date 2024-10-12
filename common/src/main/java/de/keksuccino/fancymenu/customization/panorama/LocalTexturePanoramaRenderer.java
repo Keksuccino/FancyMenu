@@ -196,6 +196,7 @@ public class LocalTexturePanoramaRenderer implements Widget {
 		RenderSystem.disableCull();
 		RenderSystem.depthMask(false);
 		RenderSystem.defaultBlendFunc();
+		RenderSystem.disableDepthTest();
 
 		for(int j = 0; j < 4; ++j) {
 			modelViewStack.pushPose();

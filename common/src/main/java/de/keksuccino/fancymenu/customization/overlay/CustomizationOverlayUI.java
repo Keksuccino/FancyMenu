@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.overlay;
 
+import com.google.common.io.Files;
 import de.keksuccino.fancymenu.CreditsScreen;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
@@ -26,12 +27,14 @@ import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroups;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
+import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.NonStackableOverlayUI;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorThemeRegistry;
@@ -62,6 +65,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -631,11 +635,15 @@ public class CustomizationOverlayUI {
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.debug.toggle.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"));
 
+        //TODO übernehmen
         debugOverlayMenu.addValueCycleEntry("toggle_debug_overlay", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.debug.toggle", FancyMenu.getOptions().showDebugOverlay.getValue())
                         .addCycleListener(cycleEnabledDisabled -> {
                             FancyMenu.getOptions().showDebugOverlay.setValue(cycleEnabledDisabled.getAsBoolean());
+                            ScreenCustomization.reInitCurrentScreen();
+                            forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("debug_overlay")));
                         }))
-                .setShortcutTextSupplier((menu, entry) -> Components.translatable("fancymenu.overlay.debug.toggle.shortcut"));
+                .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.overlay.debug.toggle.shortcut"));
+        //-------------------
 
         debugOverlayMenu.addSeparatorEntry("separator_after_toggle_debug_overlay");
 
@@ -881,7 +889,45 @@ public class CustomizationOverlayUI {
             }, LocalizationUtils.splitLocalizedStringLines("fancymenu.layout.manage.delete.confirm")));
         }).setIcon(ContextMenu.IconFactory.getIcon("delete"));
 
-        menu.addClickableEntry("edit_in_system_text_editor", Components.translatable("fancymenu.layout.manage.open_in_text_editor"), (menu1, entry) -> {
+        //TODO übernehmen
+        menu.addClickableEntry("rename_layout", Component.translatable("fancymenu.layout.manage.rename"), (menu1, entry) -> {
+            if (layout.layoutFile == null) return;
+            menu1.closeMenu();
+            Minecraft.getInstance().setScreen(TextInputScreen.build(Component.translatable("fancymenu.layout.manage.rename"), CharacterFilter.buildLowercaseAndUppercaseFileNameFilter(), s -> {
+                if ((s != null) && !s.isBlank()) {
+                    String newName = s + ".txt";
+                    String newPath = layout.layoutFile.getParent();
+                    if (newPath == null) newPath = "";
+                    newPath = newPath + "/" + newName;
+                    File f = new File(newPath);
+                    if (!f.isFile()) {
+                        try {
+                            Files.move(layout.layoutFile, f);
+                        } catch (Exception ex) {
+                            LOGGER.error("[FANCYMENU] Failed to rename layout file!", ex);
+                        }
+                        LayoutHandler.reloadLayouts();
+                        Minecraft.getInstance().setScreen(screen);
+                        forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(entryPath));
+                    } else {
+                        Minecraft.getInstance().setScreen(NotificationScreen.error(aBoolean -> {
+                            Minecraft.getInstance().setScreen(screen);
+                            forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(entryPath));
+                        }, LocalizationUtils.splitLocalizedLines("fancymenu.layout.manage.rename.error.file_already_exists")));
+                    }
+                } else if (s != null) {
+                    Minecraft.getInstance().setScreen(NotificationScreen.error(aBoolean -> {
+                        Minecraft.getInstance().setScreen(screen);
+                        forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(entryPath));
+                    }, LocalizationUtils.splitLocalizedLines("fancymenu.layout.manage.rename.error.empty_name")));
+                } else {
+                    Minecraft.getInstance().setScreen(screen);
+                    forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(entryPath));
+                }
+            }).setText(layout.getLayoutName()));
+        });
+
+        menu.addClickableEntry("edit_in_system_text_editor", Component.translatable("fancymenu.layout.manage.open_in_text_editor"), (menu1, entry) -> {
             if (layout.layoutFile != null) {
                 FileUtils.openFile(layout.layoutFile);
             }

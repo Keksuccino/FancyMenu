@@ -12,6 +12,8 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+//TODO übernehnmen (annotation)
+@Deprecated(forRemoval = true)
 public class AnimationElementBuilder extends ElementBuilder<AnimationElement, AnimationEditorElement> {
 
     private static final Logger LOGGER = LogManager.getLogger();

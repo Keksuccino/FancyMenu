@@ -9,6 +9,7 @@ import java.util.Objects;
 import de.keksuccino.fancymenu.util.Legacy;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.konkrete.input.StringUtils;
+import org.apache.commons.lang3.RegExUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -51,7 +52,10 @@ public class PropertiesParser {
             PropertyContainer currentContainer = null;
             boolean insideData = false;
             for (String line : lines) {
-                String compactLine = line.replace(" ", "");
+                //TODO übernehmen
+                //Remove all types of spaces from line
+                String compactLine = RegExUtils.replacePattern(line, "[\\p{Z}\\s]+", "");
+                //-------------------
                 //Set type of container set
                 if (compactLine.startsWith("type=") && !insideData) {
                     propertiesType = compactLine.split("=", 2)[1];

@@ -2,11 +2,10 @@ package de.keksuccino.fancymenu.customization.element.elements.button.custombutt
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
-import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
-import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ExecutableElement;
+import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinButton;
@@ -60,6 +59,9 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public boolean navigatable = true;
     @NotNull
     public GenericExecutableBlock actionExecutor = new GenericExecutableBlock();
+    //TODO übernehmen
+    @NotNull
+    public LoadingRequirementContainer activeStateSupplier = new LoadingRequirementContainer();
 
     public ButtonElement(ElementBuilder<ButtonElement, ButtonEditorElement> builder) {
         super(builder);
@@ -105,6 +107,13 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
     }
 
+    //TODO übernehmen
+    @Override
+    public void tickVisibleInvisible() {
+        super.tickVisibleInvisible();
+        if (this.getWidget() != null) this.updateWidget();
+    }
+
     protected void renderElementWidget(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {
         if (this.getWidget() != null) {
             this.getWidget().render(graphics, mouseX, mouseY, partial);
@@ -118,6 +127,8 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     }
 
     public void updateWidget() {
+        //TODO übernehmen
+        this.updateWidgetActiveState();
         this.updateWidgetVisibility();
         this.updateWidgetAlpha();
         this.updateWidgetTooltip();
@@ -128,6 +139,12 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         this.updateWidgetSize();
         this.updateWidgetPosition();
         this.updateWidgetNavigatable();
+    }
+
+    //TODO übernehmen
+    public void updateWidgetActiveState() {
+        if (this.getWidget() == null) return;
+        this.getWidget().active = this.activeStateSupplier.requirementsMet();
     }
 
     public void updateWidgetNavigatable() {
@@ -190,6 +207,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         }
     }
 
+    //TODO übernehmen
     public void updateWidgetTexture() {
 
         RenderableResource backNormal = null;
@@ -197,36 +215,15 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         RenderableResource backInactive = null;
 
         //Normal
-        if ((this.backgroundAnimationNormal != null) && AnimationHandler.animationExists(this.backgroundAnimationNormal)) {
-            IAnimationRenderer r = AnimationHandler.getAnimation(this.backgroundAnimationNormal);
-            if (r instanceof AdvancedAnimation a) {
-                a.setLooped(this.loopBackgroundAnimations);
-                backNormal = a;
-            }
-        }
-        if ((backNormal == null) && (this.backgroundTextureNormal != null)) {
+        if (this.backgroundTextureNormal != null) {
             backNormal = this.backgroundTextureNormal.get();
         }
         //Hover
-        if ((this.backgroundAnimationHover != null) && AnimationHandler.animationExists(this.backgroundAnimationHover)) {
-            IAnimationRenderer r = AnimationHandler.getAnimation(this.backgroundAnimationHover);
-            if (r instanceof AdvancedAnimation a) {
-                a.setLooped(this.loopBackgroundAnimations);
-                backHover = a;
-            }
-        }
-        if ((backHover == null) && (this.backgroundTextureHover != null)) {
+        if (this.backgroundTextureHover != null) {
             backHover = this.backgroundTextureHover.get();
         }
         //Inactive
-        if ((this.backgroundAnimationInactive != null) && AnimationHandler.animationExists(this.backgroundAnimationInactive)) {
-            IAnimationRenderer r = AnimationHandler.getAnimation(this.backgroundAnimationInactive);
-            if (r instanceof AdvancedAnimation a) {
-                a.setLooped(this.loopBackgroundAnimations);
-                backInactive = a;
-            }
-        }
-        if ((backInactive == null) && (this.backgroundTextureInactive != null)) {
+        if (this.backgroundTextureInactive != null) {
             backInactive = this.backgroundTextureInactive.get();
         }
 

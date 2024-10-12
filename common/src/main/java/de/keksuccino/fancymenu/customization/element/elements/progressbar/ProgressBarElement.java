@@ -14,6 +14,7 @@ import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -101,9 +102,14 @@ public class ProgressBarElement extends AbstractElement {
                 }
             }
         } else if (this.barColor != null) {
+            //TODO übernehmen
             RenderingUtils.resetShaderColor();
-            fill(pose, progressX, progressY, progressX + progressWidth, progressY + progressHeight, RenderingUtils.replaceAlphaInColor(this.barColor.getColorInt(), this.opacity));
+            RenderSystem.enableBlend();
+            float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) FastColor.ARGB32.alpha(this.barColor.getColorInt()) / 255.0F));
+            if (this.opacity <= colorAlpha) colorAlpha = this.opacity;
+            fill(pose, progressX, progressY, progressX + progressWidth, progressY + progressHeight, RenderingUtils.replaceAlphaInColor(this.barColor.getColorInt(), colorAlpha));
             RenderingUtils.resetShaderColor();
+            //----------------------
         }
 
     }
@@ -118,9 +124,14 @@ public class ProgressBarElement extends AbstractElement {
                 RenderingUtils.resetShaderColor();
             });
         } else if (this.backgroundColor != null) {
+            //TODO übernehmen
             RenderingUtils.resetShaderColor();
-            fill(pose, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), RenderingUtils.replaceAlphaInColor(this.backgroundColor.getColorInt(), this.opacity));
+            RenderSystem.enableBlend();
+            float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) FastColor.ARGB32.alpha(this.backgroundColor.getColorInt()) / 255.0F));
+            if (this.opacity <= colorAlpha) colorAlpha = this.opacity;
+            fill(pose, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), RenderingUtils.replaceAlphaInColor(this.backgroundColor.getColorInt(), colorAlpha));
             RenderingUtils.resetShaderColor();
+            //-------------------------
         }
     }
 

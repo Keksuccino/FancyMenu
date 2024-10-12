@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
+import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
@@ -17,6 +18,11 @@ public class ShapeElement extends AbstractElement {
     private static final Logger LOGGER = LogManager.getLogger();
 
     public Shape shape = Shape.RECTANGLE;
+    //TODO übernehmen
+    @NotNull
+    public String colorRaw = "#FFFFFF";
+    protected String lastColor = null;
+    //-----------------
     public DrawableColor color = DrawableColor.of(255, 255, 255);
 
     public ShapeElement(@NotNull ElementBuilder<?, ?> builder) {
@@ -28,7 +34,16 @@ public class ShapeElement extends AbstractElement {
 
         if (!this.shouldRender()) return;
 
-        if ((this.shape != null) && (this.color != null)) {
+        //TODO übernehmen (if)
+        if (this.shape != null) {
+
+            //TODO übernehmen
+            String colorFinal = PlaceholderParser.replacePlaceholders(this.colorRaw);
+            if (!colorFinal.equals(this.lastColor) || (this.color == null)) {
+                this.color = DrawableColor.of(colorFinal);
+            }
+            this.lastColor = colorFinal;
+            //-------------------------
 
             int alpha = this.color.getColor().getAlpha();
             int i = Mth.ceil(this.opacity * 255.0F);

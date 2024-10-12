@@ -16,6 +16,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.M
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.util.*;
 import de.keksuccino.fancymenu.util.cycle.ValueCycle;
+import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.file.type.FileType;
@@ -440,6 +441,7 @@ public abstract class AbstractEditorElement extends GuiComponent implements Widg
 
 		this.rightClickMenu.addSeparatorEntry("separator_7").setStackable(true);
 
+		//TODO übernehmen
 		if (this.settings.isDelayable()) {
 
 			ContextMenu appearanceDelayMenu = new ContextMenu();
@@ -476,26 +478,149 @@ public abstract class AbstractEditorElement extends GuiComponent implements Widg
 					.setIsActiveSupplier((menu, entry) -> appearanceDelayIsActive.get())
 					.setStackable(true);
 
-			appearanceDelayMenu.addSeparatorEntry("separator_1").setStackable(true);
+		}
 
-			this.addGenericBooleanSwitcherContextMenuEntryTo(appearanceDelayMenu, "appearance_delay_fade_in",
-							consumes -> consumes.settings.isDelayable(),
-							consumes -> consumes.element.fadeIn,
-							(element, switcherValue) -> element.element.fadeIn = switcherValue,
-							"fancymenu.element.general.appearance_delay.fade_in")
-					.setIsActiveSupplier((menu, entry) -> appearanceDelayIsActive.get())
+		//TODO übernehmen
+		if (this.settings.isFadeable()) {
+
+			ContextMenu fadingMenu = new ContextMenu();
+			this.rightClickMenu.addSubMenuEntry("fading_in_out", Component.translatable("fancymenu.element.fading"), fadingMenu)
 					.setStackable(true);
 
-			this.addGenericFloatInputContextMenuEntryTo(appearanceDelayMenu, "appearance_delay_fade_in_speed",
-							element -> element.settings.isDelayable(),
-							element -> element.element.fadeInSpeed,
-							(element, input) -> element.element.fadeInSpeed = input,
-							Components.translatable("fancymenu.element.general.appearance_delay.fade_in.speed"),
-							true, 1.0F, null, null)
-					.setIsActiveSupplier((menu, entry) -> appearanceDelayIsActive.get())
-					.setStackable(true);
+			this.addGenericCycleContextMenuEntryTo(fadingMenu, "fade_in",
+					List.of(AbstractElement.Fading.NO_FADING, AbstractElement.Fading.FIRST_TIME, AbstractElement.Fading.EVERY_TIME),
+					consumes -> consumes.settings.isFadeable(),
+					consumes -> consumes.element.fadeIn,
+					(abstractEditorElement, fading) -> abstractEditorElement.element.fadeIn = fading,
+					(menu, entry, switcherValue) -> {
+						if (switcherValue == AbstractElement.Fading.FIRST_TIME) {
+							return Component.translatable("fancymenu.element.fading.fade_in", Component.translatable("fancymenu.element.fading.values.first_time").setStyle(LocalizedCycleEnum.WARNING_TEXT_STYLE.get()));
+						}
+						if (switcherValue == AbstractElement.Fading.EVERY_TIME) {
+							return Component.translatable("fancymenu.element.fading.fade_in", Component.translatable("fancymenu.element.fading.values.every_time").setStyle(LocalizedCycleEnum.WARNING_TEXT_STYLE.get()));
+						}
+						return Component.translatable("fancymenu.element.fading.fade_in", Component.translatable("fancymenu.element.fading.values.no_fading").setStyle(LocalizedCycleEnum.WARNING_TEXT_STYLE.get()));
+					}
+			).setStackable(true);
+
+			this.addGenericFloatInputContextMenuEntryTo(fadingMenu, "fade_in_speed",
+					consumes -> consumes.settings.isFadeable(),
+					consumes -> consumes.element.fadeInSpeed,
+					(abstractEditorElement, aFloat) -> abstractEditorElement.element.fadeInSpeed = aFloat,
+					Component.translatable("fancymenu.element.fading.fade_in.speed"), true, 1.0F,
+					consumes -> {
+						if (de.keksuccino.fancymenu.util.MathUtils.isFloat(consumes)) {
+							float f = Float.parseFloat(consumes);
+							return (f > 0.0F);
+						}
+						return false;
+					},
+					consumes -> {
+						if (de.keksuccino.fancymenu.util.MathUtils.isFloat(consumes)) {
+							float f = Float.parseFloat(consumes);
+							if (f <= 0.0F) return null;
+						}
+						return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.fading.error.negative_value"));
+					}).setStackable(true);
+
+			fadingMenu.addSeparatorEntry("separator_after_fade_in_speed").setStackable(true);
+
+			this.addGenericCycleContextMenuEntryTo(fadingMenu, "fade_out",
+							List.of(AbstractElement.Fading.NO_FADING, AbstractElement.Fading.FIRST_TIME, AbstractElement.Fading.EVERY_TIME),
+							consumes -> consumes.settings.isFadeable(),
+							consumes -> consumes.element.fadeOut,
+							(abstractEditorElement, fading) -> abstractEditorElement.element.fadeOut = fading,
+							(menu, entry, switcherValue) -> {
+								if (switcherValue == AbstractElement.Fading.FIRST_TIME) {
+									return Component.translatable("fancymenu.element.fading.fade_out", Component.translatable("fancymenu.element.fading.values.first_time").setStyle(LocalizedCycleEnum.WARNING_TEXT_STYLE.get()));
+								}
+								if (switcherValue == AbstractElement.Fading.EVERY_TIME) {
+									return Component.translatable("fancymenu.element.fading.fade_out", Component.translatable("fancymenu.element.fading.values.every_time").setStyle(LocalizedCycleEnum.WARNING_TEXT_STYLE.get()));
+								}
+								return Component.translatable("fancymenu.element.fading.fade_out", Component.translatable("fancymenu.element.fading.values.no_fading").setStyle(LocalizedCycleEnum.WARNING_TEXT_STYLE.get()));
+							}
+					).setStackable(true)
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.fading.fade_out.desc")));
+
+			this.addGenericFloatInputContextMenuEntryTo(fadingMenu, "fade_out_speed",
+					consumes -> consumes.settings.isFadeable(),
+					consumes -> consumes.element.fadeOutSpeed,
+					(abstractEditorElement, aFloat) -> abstractEditorElement.element.fadeOutSpeed = aFloat,
+					Component.translatable("fancymenu.element.fading.fade_out.speed"), true, 1.0F,
+					consumes -> {
+						if (de.keksuccino.fancymenu.util.MathUtils.isFloat(consumes)) {
+							float f = Float.parseFloat(consumes);
+							return (f > 0.0F);
+						}
+						return false;
+					},
+					consumes -> {
+						if (de.keksuccino.fancymenu.util.MathUtils.isFloat(consumes)) {
+							float f = Float.parseFloat(consumes);
+							if (f <= 0.0F) return null;
+						}
+						return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.fading.error.negative_value"));
+					}).setStackable(true);
 
 		}
+
+		//TODO übernehmen
+		if (this.settings.isOpacityChangeable()) {
+
+			this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "base_opacity",
+							consumes -> consumes.settings.isOpacityChangeable(),
+							consumes -> consumes.element.baseOpacity,
+							(abstractEditorElement, s) -> abstractEditorElement.element.baseOpacity = s,
+							null, false, true, Component.translatable("fancymenu.element.base_opacity"),
+							true, "1.0", null, null)
+					.setStackable(true)
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.base_opacity.desc")));
+
+		}
+
+		//TODO re-implement auto-sizing and sticky anchor in later update (needs more work first)
+		//TODO re-implement auto-sizing and sticky anchor in later update (needs more work first)
+		//TODO re-implement auto-sizing and sticky anchor in later update (needs more work first)
+		//TODO re-implement auto-sizing and sticky anchor in later update (needs more work first)
+		//TODO re-implement auto-sizing and sticky anchor in later update (needs more work first)
+
+//		//TODO übernehmen
+//		this.addToggleContextMenuEntryTo(this.rightClickMenu, "auto_sizing", AbstractEditorElement.class,
+//						consumes -> consumes.element.autoSizing,
+//						(abstractEditorElement, aBoolean) -> {
+//							abstractEditorElement.element.setAutoSizingBaseWidthAndHeight();
+//							abstractEditorElement.element.autoSizing = aBoolean;
+//							abstractEditorElement.element.updateAutoSizing(true);
+//						},
+//						"fancymenu.element.auto_sizing")
+//				.setStackable(true)
+//				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.auto_sizing.desc")))
+//				.setIcon(ContextMenu.IconFactory.getIcon("measure"));
+//
+//		//TODO übernehmen
+//		if (this.settings.isAnchorPointChangeable()) {
+//
+//			this.addToggleContextMenuEntryTo(this.rightClickMenu, "sticky_anchor", AbstractEditorElement.class,
+//							consumes -> consumes.element.stickyAnchor,
+//							(abstractEditorElement, aBoolean) -> {
+//								abstractEditorElement.element.stickyAnchor = aBoolean;
+//								//Fix element position on sticky anchor toggle, so it stays at the same position
+//								if (abstractEditorElement.element.anchorPoint != null) {
+//									if (aBoolean) {
+//										abstractEditorElement.element.posOffsetX += abstractEditorElement.element.anchorPoint.getStickyOffsetXCorrection(abstractEditorElement.element);
+//										abstractEditorElement.element.posOffsetY += abstractEditorElement.element.anchorPoint.getStickyOffsetYCorrection(abstractEditorElement.element);
+//									} else {
+//										abstractEditorElement.element.posOffsetX -= abstractEditorElement.element.anchorPoint.getStickyOffsetXCorrection(abstractEditorElement.element);
+//										abstractEditorElement.element.posOffsetY -= abstractEditorElement.element.anchorPoint.getStickyOffsetYCorrection(abstractEditorElement.element);
+//									}
+//								}
+//							},
+//							"fancymenu.element.sticky_anchor")
+//					.setStackable(true)
+//					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.sticky_anchor.desc")))
+//					.setIcon(ContextMenu.IconFactory.getIcon("anchor"));
+//
+//		}
 
 		this.rightClickMenu.addSeparatorEntry("separator_8").setStackable(true);
 
@@ -508,7 +633,8 @@ public abstract class AbstractEditorElement extends GuiComponent implements Widg
 
 		this.hovered = this.isMouseOver(mouseX, mouseY);
 
-		this.element.render(pose, mouseX, mouseY, partial);
+		//TODO übernehmen
+		this.element.renderInternal(pose, mouseX, mouseY, partial);
 
 		this.renderDraggingNotAllowedOverlay(pose);
 
@@ -675,6 +801,10 @@ public abstract class AbstractEditorElement extends GuiComponent implements Widg
 		this.resizingStartPosY = mouseY;
 	}
 
+	/**
+	 * If the element's anchor point is {@link ElementAnchorPoints#ELEMENT} and its parent is selected.<br>
+	 * Returns FALSE if the element has no parent, the parent is not selected or the element's anchor is not {@link ElementAnchorPoints#ELEMENT}, otherwise returns TRUE.
+	 */
 	public boolean isElementAnchorAndParentIsSelected() {
 		if (this.element.anchorPoint != ElementAnchorPoints.ELEMENT) return false;
 		if (this.element.anchorPointElementIdentifier == null) return false;
@@ -695,6 +825,14 @@ public abstract class AbstractEditorElement extends GuiComponent implements Widg
 					this.leftMouseDown = true;
 					this.updateLeftMouseDownCachedValues((int) mouseX, (int) mouseY);
 					this.resizeAspectRatio = new AspectRatio(this.getWidth(), this.getHeight());
+					//TODO übernehmen
+					if (this.element.autoSizingWidth > 0) this.element.baseWidth = this.element.autoSizingWidth;
+					if (this.element.autoSizingHeight > 0) this.element.baseHeight = this.element.autoSizingHeight;
+					this.element.setAutoSizingBaseWidthAndHeight();
+					this.element.updateAutoSizing(true);
+					this.element.autoSizingWidth = 0;
+					this.element.autoSizingHeight = 0;
+					//----------------
 				}
 			}
 		}
@@ -706,6 +844,9 @@ public abstract class AbstractEditorElement extends GuiComponent implements Widg
 		if (button == 0) {
 			this.leftMouseDown = false;
 			this.activeResizeGrabber = null;
+			//TODO übernehmen
+			this.element.updateAutoSizing(true);
+			//------------------
 			this.recentlyMovedByDragging = false;
 			this.movingCrumpleZonePassed = false;
 		}
@@ -739,21 +880,41 @@ public abstract class AbstractEditorElement extends GuiComponent implements Widg
 				if ((this.activeResizeGrabber.type == ResizeGrabberType.LEFT) || (this.activeResizeGrabber.type == ResizeGrabberType.RIGHT)) {
 					int i = (this.activeResizeGrabber.type == ResizeGrabberType.LEFT) ? (this.leftMouseDownBaseWidth - diffX) : (this.leftMouseDownBaseWidth + diffX);
 					if (i >= 2) {
+						//TODO übernehmen
+						this.element.autoSizingWidth = 0;
+						this.element.autoSizingHeight = 0;
+						int cachedOldOffsetX = this.element.posOffsetX;
+						int cachedOldPosX = this.element.getAbsoluteX();
+						int cachedOldWidth = this.element.getAbsoluteWidth();
 						this.element.baseWidth = i;
 						this.element.posOffsetX = this.leftMouseDownBaseX + this.element.anchorPoint.getResizePositionOffsetX(this.element, diffX, this.activeResizeGrabber.type);
+						if (this.element.stickyAnchor) {
+							this.element.posOffsetX += this.element.anchorPoint.getStickyResizePositionCorrectionX(this.element, diffX, cachedOldOffsetX, this.element.posOffsetX, cachedOldPosX, this.element.getAbsoluteX(), cachedOldWidth, this.element.getAbsoluteWidth(), this.activeResizeGrabber.type);
+						}
 						if (Screen.hasShiftDown()) {
 							this.element.baseHeight = this.resizeAspectRatio.getAspectRatioHeight(this.element.baseWidth);
 						}
+						//---------------------------
 					}
 				}
 				if ((this.activeResizeGrabber.type == ResizeGrabberType.TOP) || (this.activeResizeGrabber.type == ResizeGrabberType.BOTTOM)) {
 					int i = (this.activeResizeGrabber.type == ResizeGrabberType.TOP) ? (this.leftMouseDownBaseHeight - diffY) : (this.leftMouseDownBaseHeight + diffY);
 					if (i >= 2) {
+						//TODO übernehmen
+						this.element.autoSizingWidth = 0;
+						this.element.autoSizingHeight = 0;
+						int cachedOldOffsetY = this.element.posOffsetY;
+						int cachedOldPosY = this.element.getAbsoluteY();
+						int cachedOldHeight = this.element.baseHeight;
 						this.element.baseHeight = i;
 						this.element.posOffsetY = this.leftMouseDownBaseY + this.element.anchorPoint.getResizePositionOffsetY(this.element, diffY, this.activeResizeGrabber.type);
+						if (this.element.stickyAnchor) {
+							this.element.posOffsetY += this.element.anchorPoint.getStickyResizePositionCorrectionY(this.element, diffY, cachedOldOffsetY, this.element.posOffsetY, cachedOldPosY, this.element.getAbsoluteY(), cachedOldHeight, this.element.baseHeight, this.activeResizeGrabber.type);
+						}
 						if (Screen.hasShiftDown()) {
 							this.element.baseWidth = this.resizeAspectRatio.getAspectRatioWidth(this.element.baseHeight);
 						}
+						//----------------------------
 					}
 				}
 			}

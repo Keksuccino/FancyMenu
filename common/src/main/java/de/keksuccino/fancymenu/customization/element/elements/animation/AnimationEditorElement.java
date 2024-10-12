@@ -14,6 +14,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
+//TODO übernehmen (annotation)
+@Deprecated(forRemoval = true)
 public class AnimationEditorElement extends AbstractEditorElement {
 
     public AnimationEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {

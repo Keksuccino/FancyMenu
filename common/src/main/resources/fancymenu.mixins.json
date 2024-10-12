@@ -5,6 +5,7 @@
   "client": [
     "client.IMixinAbstractSelectionList",
     "client.IMixinAbstractWidget",
+    "client.IMixinBossHealthOverlay",
     "client.IMixinButton",
     "client.IMixinChatScreen",
     "client.IMixinClientLanguage",
@@ -12,6 +13,7 @@
     "client.IMixinConnectScreen",
     "client.IMixinCreateWorldScreen",
     "client.IMixinEditBox",
+    "client.IMixinGui",
     "client.IMixinLevelLoadingScreen",
     "client.IMixinMinecraft",
     "client.IMixinMusicManager",
@@ -27,6 +29,7 @@
     "client.MixinAbstractSliderButton",
     "client.MixinAbstractWidget",
     "client.MixinConnectScreen",
+    "client.MixinGameNarrator",
     "client.MixinGenericDirtMessageScreen",
     "client.MixinImageButton",
     "client.MixinLevelLoadingScreen",
@@ -44,8 +47,7 @@
     "client.MixinSoundEngine",
     "client.MixinStringDecomposer",
     "client.MixinTitleScreen",
-    "client.MixinWorldListEntry",
-    "client.MixinGameNarrator"
+    "client.MixinWorldListEntry"
   ],
   "mixins": [
   ],

@@ -638,15 +638,16 @@ public class Layout extends LayoutBase {
                     }
                 }
 
-                if (action.equalsIgnoreCase("addanimation")) {
-                    AnimationElement e = Elements.ANIMATION.deserializeElementInternal(convertContainerToSerializedElement(sec));
-                    if (e != null) {
-                        e.stayOnScreen = false;
-                        e.animationName = sec.getValue("name");
-                        elements.add(Elements.ANIMATION.serializeElementInternal(e));
-                        elementOrder.add(e.getInstanceIdentifier());
-                    }
-                }
+                //TODO übernehmen
+//                if (action.equalsIgnoreCase("addanimation")) {
+//                    AnimationElement e = Elements.ANIMATION.deserializeElementInternal(convertContainerToSerializedElement(sec));
+//                    if (e != null) {
+//                        e.stayOnScreen = false;
+//                        e.animationName = sec.getValue("name");
+//                        elements.add(Elements.ANIMATION.serializeElementInternal(e));
+//                        elementOrder.add(e.getInstanceIdentifier());
+//                    }
+//                }
 
                 if (action.equalsIgnoreCase("addshape")) {
                     ShapeElement e = Elements.SHAPE.deserializeElementInternal(convertContainerToSerializedElement(sec));
@@ -895,7 +896,13 @@ public class Layout extends LayoutBase {
                     }
                     if ((fadeIn != null) && fadeIn.equalsIgnoreCase("true")) {
                         if ((fadeInSpeed != null) && MathUtils.isFloat(fadeInSpeed)) {
-                            element.fadeIn = true;
+                            //TODO übernehmen
+                            if (element.appearanceDelay == AbstractElement.AppearanceDelay.FIRST_TIME) {
+                                element.fadeIn = AbstractElement.Fading.FIRST_TIME;
+                            } else if (element.appearanceDelay == AbstractElement.AppearanceDelay.EVERY_TIME) {
+                                element.fadeIn = AbstractElement.Fading.EVERY_TIME;
+                            }
+                            //-----------------------
                             element.fadeInSpeed = Float.parseFloat(fadeInSpeed);
                         }
                     }
