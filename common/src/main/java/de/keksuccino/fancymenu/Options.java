@@ -58,6 +58,9 @@ public class Options extends AbstractOptions {
     public final Option<Boolean> debugOverlayShowResourcesCategory = new Option<>(config, "debug_overlay_show_resources_category", true, "debug_overlay");
     public final Option<Boolean> debugOverlayShowSystemCategory = new Option<>(config, "debug_overlay_show_system_category", true, "debug_overlay");
 
+    //TODO übernehmen
+    public final Option<Boolean> welcomeScreenShown = new Option<>(config, "welcome_screen_shown", false, "tutorial");
+
     public Options() {
         this.config.syncConfig();
         this.config.clearUnusedValues();

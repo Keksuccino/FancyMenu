@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.element;
 
+import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
@@ -65,9 +66,44 @@ public abstract class AbstractElement extends GuiComponent implements Widget, Gu
 	public volatile boolean visible = true;
 	public volatile AppearanceDelay appearanceDelay = AppearanceDelay.NO_DELAY;
 	public volatile float appearanceDelayInSeconds = 1.0F;
-	public volatile boolean fadeIn = false;
-	public volatile float fadeInSpeed = 1.0F;
-	public volatile float opacity = 1.0F;
+	//TODO übernehmen
+	public long appearanceDelayEndTime = -1;
+	@NotNull
+	public Fading fadeIn = Fading.NO_FADING;
+	@NotNull
+	public Fading fadeOut = Fading.NO_FADING;
+	public float fadeInSpeed = 1.0F;
+	public float fadeOutSpeed = 1.0F;
+	public boolean shouldDoFadeInIfNeeded = false;
+	public boolean fadeInStarted = false;
+	public boolean fadeInFinished = false;
+	public boolean shouldDoFadeOutIfNeeded = false;
+	public boolean fadeOutStarted = false;
+	public boolean fadeOutFinished = false;
+	public long lastFadeInTick = -1;
+	public long lastFadeOutTick = -1;
+	public float opacity = 1.0F;
+	@NotNull
+	public String baseOpacity = "1.0";
+	public float lastBaseOpacity = -1.0F;
+	public long lastBaseOpacityParse = -1L;
+	public float cachedBaseOpacity = 1.0F;
+	public boolean becameVisible = false;
+	public boolean becameInvisible = false;
+	public boolean isNewMenu = ScreenCustomization.isNewMenu();
+	public boolean fadeInElementJustCreated = true;
+	public boolean fadeOutElementJustCreated = true;
+	public boolean appearanceDelayElementJustCreated = true;
+	public boolean lastTickAppearanceDelayed = false;
+	public boolean autoSizing = false;
+	public int autoSizingBaseScreenWidth = 0;
+	public int autoSizingBaseScreenHeight = 0;
+	public double autoSizingLastTickScreenWidth = -1;
+	public double autoSizingLastTickScreenHeight = -1;
+	public int autoSizingWidth = 0;
+	public int autoSizingHeight = 0;
+	public boolean stickyAnchor = false;
+	//-------------------
 	/**
 	 * This is for when the render scale was changed in a non-system-wide way like via {@link PoseStack#translate(float, float, float)}.<br>
 	 * Elements that do not support scaling via {@link PoseStack#translate(float, float, float)} need to use this value to manually scale themselves.<br>
@@ -100,6 +136,243 @@ public abstract class AbstractElement extends GuiComponent implements Widget, Gu
 
 	@Override
 	public abstract void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial);
+
+	//TODO übernehmen
+	/**
+	 * This is the internal render method that should only get overridden if there's really no other way around it.<br>
+	 * The normal element rendering logic should be in {@link AbstractElement#render(PoseStack, int, int, float)}.
+	 */
+	public void renderInternal(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+
+		this.tickBaseOpacity();
+
+		this.renderTick_Head();
+
+		this.tickVisibleInvisible();
+
+		this.renderTick_Inner_Stage_1();
+
+		if (!isEditor()) {
+
+			this.tickAppearanceDelay(this.shouldRender());
+
+			this.tickFadeInOut(this.shouldRender());
+
+		}
+
+		if (!this.shouldRender()) return;
+
+		this.renderTick_Inner_Stage_2();
+
+		//Render the actual element
+		this.render(pose, mouseX, mouseY, partial);
+
+		this.renderTick_Tail();
+
+	}
+
+	//TODO übernehmen
+	public void renderTick_Head() {
+	}
+
+	//TODO übernehmen
+	public void renderTick_Inner_Stage_1() {
+	}
+
+	//TODO übernehmen
+	public void renderTick_Inner_Stage_2() {
+	}
+
+	//TODO übernehmen
+	public void renderTick_Tail() {
+	}
+
+	//TODO übernehmen
+	public void tickBaseOpacity() {
+
+		//Don't update opacity while fade-in/out is active
+		if (this.fadeInStarted && !this.fadeInFinished) return;
+		if (this.fadeOutStarted && !this.fadeOutFinished) return;
+
+		float newBaseOpacity = this.getBaseOpacity();
+		if (newBaseOpacity != this.lastBaseOpacity) {
+			this.updateOpacity();
+		}
+		this.lastBaseOpacity = newBaseOpacity;
+
+	}
+
+	//TODO übernehmen
+	public void tickVisibleInvisible() {
+
+		if (!this._shouldRender()) {
+			if (!this.becameInvisible) {
+				this.becameInvisible = true;
+				this.onBecomeInvisible();
+			}
+			this.becameVisible = false;
+			return;
+		}
+		this.becameInvisible = false;
+		if (!this.becameVisible) {
+			this.becameVisible = true;
+			this.onBecomeVisible();
+		}
+
+	}
+
+	//TODO übernehmen
+	public void tickAppearanceDelay(boolean shouldRender) {
+
+		if (!shouldRender) return;
+
+		//Make element remember that the appearance delay got applied (for only-first-time appearance delays)
+		if (this.lastTickAppearanceDelayed && !this.isAppearanceDelayed()) {
+			this.getMemory().putProperty("appearance_delay_applied", true);
+		}
+		this.lastTickAppearanceDelayed = this.isAppearanceDelayed();
+
+	}
+
+	//TODO übernehmen
+	public void tickFadeInOut(boolean shouldRender) {
+
+		if (shouldRender) {
+
+			//Handle fade-in
+			boolean fadeInIsResize = !this.isNewMenu && this.fadeInElementJustCreated;
+			boolean fadeInDone = this.getMemory().putPropertyIfAbsentAndGet("fade_in_done", false);
+			if (!fadeInIsResize || !fadeInDone) {
+				if ((this.fadeIn != Fading.NO_FADING) && this.shouldDoFadeInIfNeeded && (this.lastBaseOpacity > 0.0F)) {
+					if ((this.fadeIn != Fading.FIRST_TIME) || !fadeInDone) {
+						if (!this.fadeInStarted) {
+							this.fadeInStarted = true;
+							this.opacity = 0.0F;
+						}
+						if ((this.lastFadeInTick + (long)(50.0F * this.fadeInSpeed)) < System.currentTimeMillis()) {
+							this.lastFadeInTick = System.currentTimeMillis();
+							this.opacity += 0.02F;
+						}
+						if (this.opacity >= this.lastBaseOpacity) {
+							this.opacity = this.lastBaseOpacity;
+							this.shouldDoFadeInIfNeeded = false;
+							this.fadeInFinished = true;
+							this.getMemory().putProperty("fade_in_done", true);
+						}
+					}
+				}
+			} else {
+				this.shouldDoFadeInIfNeeded = false;
+				this.fadeInStarted = false;
+				this.fadeInFinished = false;
+			}
+
+		}
+
+		this.fadeInElementJustCreated = false;
+
+		//Handle fade-out
+		if ((this.fadeOut != Fading.NO_FADING) && this.shouldDoFadeOutIfNeeded && (this.lastBaseOpacity > 0.0F)) {
+			if (!this.fadeOutFinished) {
+				boolean fadeOutDone = this.getMemory().putPropertyIfAbsentAndGet("fade_out_done", false);
+				if ((this.fadeOut != Fading.FIRST_TIME) || !fadeOutDone) {
+					if (!this.fadeOutStarted) {
+						this.fadeOutStarted = true;
+						this.opacity = this.lastBaseOpacity;
+					}
+					if ((this.lastFadeOutTick + (long)(50.0F * this.fadeOutSpeed)) < System.currentTimeMillis()) {
+						this.lastFadeOutTick = System.currentTimeMillis();
+						this.opacity -= 0.02F;
+					}
+					if (this.opacity <= 0.0F) {
+						this.opacity = 0.0F;
+						this.shouldDoFadeOutIfNeeded = false;
+						this.fadeOutFinished = true;
+						this.getMemory().putProperty("fade_out_done", true);
+					}
+				}
+			}
+		}
+
+	}
+
+	//TODO übernehmen
+	public void onBecomeVisible() {
+
+		this.applyAppearanceDelay();
+		this.updateOpacity();
+
+		this.fadeInStarted = false;
+		this.fadeInFinished = false;
+		this.fadeOutStarted = false;
+		this.fadeOutFinished = false;
+		this.shouldDoFadeInIfNeeded = true;
+		this.shouldDoFadeOutIfNeeded = false;
+
+	}
+
+	//TODO übernehmen
+	public void onBecomeInvisible() {
+
+		this.updateOpacity();
+
+		this.fadeInStarted = false;
+		this.fadeInFinished = false;
+		this.fadeOutStarted = false;
+		this.fadeOutFinished = false;
+		this.shouldDoFadeOutIfNeeded = true;
+		this.shouldDoFadeInIfNeeded = false;
+
+		if (this.fadeOutElementJustCreated) {
+			this.shouldDoFadeOutIfNeeded = false;
+		}
+		this.fadeOutElementJustCreated = false;
+
+	}
+
+	//TODO übernehmen
+	public void applyAppearanceDelay() {
+		boolean isResize = !this.isNewMenu && this.appearanceDelayElementJustCreated;
+		this.appearanceDelayElementJustCreated = false;
+		if (isEditor()) {
+			this.appearanceDelayEndTime = -1;
+			return;
+		}
+		boolean applied = this.getMemory().putPropertyIfAbsentAndGet("appearance_delay_applied", false);
+		if ((!isResize || !applied) && (this.appearanceDelay != AppearanceDelay.NO_DELAY) && (this.appearanceDelayInSeconds > 0.0F)) {
+			if ((this.appearanceDelay == AppearanceDelay.FIRST_TIME) && applied) {
+				this.appearanceDelayEndTime = -1;
+			} else {
+				this.appearanceDelayEndTime = System.currentTimeMillis() + ((long)this.appearanceDelayInSeconds * 1000L);
+			}
+		} else {
+			//this.getMemory().putProperty("appearance_delay_applied", false);
+			this.appearanceDelayEndTime = -1;
+		}
+		this.lastTickAppearanceDelayed = this.isAppearanceDelayed();
+	}
+
+	//TODO übernehmen
+	public void updateOpacity() {
+		this.opacity = this.getBaseOpacity();
+	}
+
+	//TODO übernehmen
+	public float getBaseOpacity() {
+		long now = System.currentTimeMillis();
+		if ((this.lastBaseOpacityParse + 30L) > now) return this.cachedBaseOpacity;
+		this.lastBaseOpacityParse = now;
+		String s = PlaceholderParser.replacePlaceholders(this.baseOpacity);
+		if (MathUtils.isFloat(s)) {
+			float f = Float.parseFloat(s);
+			if (f < 0.0F) f = 0.0F;
+			if (f > 1.0F) f = 1.0F;
+			this.cachedBaseOpacity = f;
+			return f;
+		}
+		this.cachedBaseOpacity = 1.0F;
+		return 1.0F;
+	}
 
 	/**
 	 * Gets called every {@link Screen} tick, after {@link Screen#tick()} got called.
@@ -153,7 +426,7 @@ public abstract class AbstractElement extends GuiComponent implements Widget, Gu
 
 	/**
 	 * All widgets of the returned list will get registered to {@link Screen#children()}.<br>
-	 * Take in mind the returned widgets will NOT get registered to {@link Screen#renderables}.<br>
+	 * Keep in mind the returned widgets will NOT get registered to {@link Screen#renderables}.<br>
 	 * Widgets need to extend {@link GuiEventListener} and {@link NarratableEntry}.
 	 */
 	@SuppressWarnings("all")
@@ -241,6 +514,43 @@ public abstract class AbstractElement extends GuiComponent implements Widget, Gu
 		return y;
 	}
 
+	//TODO übernehmen
+	public void setAutoSizingBaseWidthAndHeight() {
+		Window window = Minecraft.getInstance().getWindow();
+		double guiWidth = getScreenWidth() * window.getGuiScale();
+		double guiHeight = getScreenHeight() * window.getGuiScale();
+		this.autoSizingBaseScreenWidth = (int)guiWidth;
+		this.autoSizingBaseScreenHeight = (int)guiHeight;
+	}
+
+	//TODO übernehmen
+	public void updateAutoSizing(boolean ignoreLastTickScreenSize) {
+
+		Window window = Minecraft.getInstance().getWindow();
+		double guiWidth = getScreenWidth() * window.getGuiScale();
+		double guiHeight = getScreenHeight() * window.getGuiScale();
+
+		if (((this.autoSizingLastTickScreenWidth != guiWidth) || (this.autoSizingLastTickScreenHeight != guiHeight)) || ignoreLastTickScreenSize) {
+			if (this.autoSizing && (this.autoSizingBaseScreenWidth > 0) && (this.autoSizingBaseScreenHeight > 0)) {
+				double percentX = Math.max(1.0D, (guiWidth / (double) this.autoSizingBaseScreenWidth) * 100.0D);
+				double percentY = Math.max(1.0D, (guiHeight / (double) this.autoSizingBaseScreenHeight) * 100.0D);
+				double percent = Math.min(percentX, percentY);
+				this.autoSizingWidth = Math.max(1, (int) ((percent / 100.0D) * (double) this.baseWidth));
+				this.autoSizingHeight = Math.max(1, (int) ((percent / 100.0D) * (double) this.baseHeight));
+				if ((this.autoSizingBaseScreenWidth == guiWidth) && (this.autoSizingBaseScreenHeight == guiHeight)) {
+					this.autoSizingWidth = 0;
+					this.autoSizingHeight = 0;
+				}
+			} else {
+				this.autoSizingWidth = 0;
+				this.autoSizingHeight = 0;
+			}
+		}
+		this.autoSizingLastTickScreenWidth = guiWidth;
+		this.autoSizingLastTickScreenHeight = guiHeight;
+
+	}
+
 	/**
 	 * Returns the actual/final width the element will have when it gets rendered.
 	 */
@@ -262,6 +572,12 @@ public abstract class AbstractElement extends GuiComponent implements Widget, Gu
 		if (this.stretchX) {
 			return getScreenWidth();
 		}
+		//TODO übernehmen
+		this.updateAutoSizing(false);
+		if (this.autoSizing && (this.autoSizingWidth > 0)) {
+			return this.autoSizingWidth;
+		}
+		//--------------------
 		return this.baseWidth;
 	}
 
@@ -286,6 +602,12 @@ public abstract class AbstractElement extends GuiComponent implements Widget, Gu
 		if (this.stretchY) {
 			return getScreenHeight();
 		}
+		//TODO übernehmen
+		this.updateAutoSizing(false);
+		if (this.autoSizing && (this.autoSizingHeight > 0)) {
+			return this.autoSizingHeight;
+		}
+		//--------------------
 		return this.baseHeight;
 	}
 
@@ -322,7 +644,23 @@ public abstract class AbstractElement extends GuiComponent implements Widget, Gu
 		return this.getAbsoluteY();
 	}
 
+	//TODO übernehmen
+	public boolean isAppearanceDelayed() {
+		return (System.currentTimeMillis() < this.appearanceDelayEndTime);
+	}
+
+	//TODO übernehmen
 	public boolean shouldRender() {
+		if (this.isAppearanceDelayed() && !isEditor()) return false;
+		boolean b = this._shouldRender();
+		if (!isEditor()) {
+			if (!b && this.fadeOutStarted && !this.fadeOutFinished) return true;
+		}
+		return b;
+	}
+
+	//TODO übernehmen
+	protected boolean _shouldRender() {
 		if (!this.loadingRequirementsMet()) return false;
 		return this.visible;
 	}
@@ -474,6 +812,33 @@ public abstract class AbstractElement extends GuiComponent implements Widget, Gu
 				if (d.name.equals(name)) {
 					return d;
 				}
+			}
+			return null;
+		}
+
+	}
+
+	//TODO übernehmen
+	public enum Fading {
+
+		NO_FADING("no_fading"),
+		FIRST_TIME("first_time"),
+		EVERY_TIME("every_time");
+
+		private final String name;
+
+		Fading(@NotNull String name) {
+			this.name = name;
+		}
+
+		public @NotNull String getName() {
+			return this.name;
+		}
+
+		@Nullable
+		public static Fading getByName(@NotNull String name) {
+			for (Fading mode : Fading.values()) {
+				if (mode.getName().equals(name)) return mode;
 			}
 			return null;
 		}

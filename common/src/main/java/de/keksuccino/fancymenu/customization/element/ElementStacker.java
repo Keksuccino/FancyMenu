@@ -61,12 +61,35 @@ public interface ElementStacker<E extends AbstractElement> {
         if (e.appearanceDelayInSeconds != 1.0F) {
             stack.appearanceDelayInSeconds = e.appearanceDelayInSeconds;
         }
-        if (e.fadeIn) {
-            stack.fadeIn = true;
+        //TODO übernehmen
+        if (e.fadeIn != AbstractElement.Fading.NO_FADING) {
+            stack.fadeIn = e.fadeIn;
         }
         if (e.fadeInSpeed != 1.0F) {
             stack.fadeInSpeed = e.fadeInSpeed;
         }
+        if (e.fadeOut != AbstractElement.Fading.NO_FADING) {
+            stack.fadeOut = e.fadeOut;
+        }
+        if (e.fadeOutSpeed != 1.0F) {
+            stack.fadeOutSpeed = e.fadeOutSpeed;
+        }
+        if (!e.baseOpacity.equals("1.0")) {
+            stack.baseOpacity = e.baseOpacity;
+        }
+        if (e.autoSizing) {
+            stack.autoSizing = true;
+        }
+        if (e.autoSizingBaseScreenWidth != 0) {
+            stack.autoSizingBaseScreenWidth = e.autoSizingBaseScreenWidth;
+        }
+        if (e.autoSizingBaseScreenHeight != 0) {
+            stack.autoSizingBaseScreenHeight = e.autoSizingBaseScreenHeight;
+        }
+        if (e.stickyAnchor) {
+            stack.stickyAnchor = true;
+        }
+        //---------------------
 
         this.stackElements((E) e, (E) stack);
 

@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -110,6 +111,16 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
 
         element.navigatable = deserializeBoolean(element.navigatable, serialized.getValue("navigatable"));
 
+        //TODO übernehmen
+        String activeStateRequirementContainerIdentifier = serialized.getValue("widget_active_state_requirement_container_identifier");
+        if (activeStateRequirementContainerIdentifier != null) {
+            LoadingRequirementContainer c = LoadingRequirementContainer.deserializeWithIdentifier(activeStateRequirementContainerIdentifier, serialized);
+            if (c != null) {
+                element.activeStateSupplier = c;
+            }
+        }
+        //--------------------------
+
         element.buildSlider();
         element.prepareExecutableBlock();
 
@@ -184,6 +195,11 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
         serializeTo.putProperty("nine_slice_slider_handle_border_y", "" + element.nineSliceSliderHandleBorderY);
 
         serializeTo.putProperty("navigatable", "" + element.navigatable);
+
+        //TODO übernehmen
+        serializeTo.putProperty("widget_active_state_requirement_container_identifier", element.activeStateSupplier.identifier);
+        element.activeStateSupplier.serializeToExistingPropertyContainer(serializeTo);
+        //-----------------------
 
         return serializeTo;
 

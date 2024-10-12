@@ -12,7 +12,6 @@ import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierH
 import de.keksuccino.fancymenu.customization.screen.identifier.UniversalScreenIdentifierRegistry;
 import de.keksuccino.fancymenu.customization.widget.identification.identificationcontext.contexts.WidgetIdentificationContexts;
 import de.keksuccino.fancymenu.customization.action.actions.Actions;
-import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.background.backgrounds.MenuBackgrounds;
 import de.keksuccino.fancymenu.customization.action.ButtonScriptHandler;
 import de.keksuccino.fancymenu.customization.widget.VanillaButtonHandler;
@@ -103,8 +102,9 @@ public class ScreenCustomization {
 
 		DummyScreens.registerAll();
 
-		AnimationHandler.init();
-		AnimationHandler.discoverAndRegisterExternalAnimations();
+		//TODO übernehmen
+//		AnimationHandler.init();
+//		AnimationHandler.discoverAndRegisterExternalAnimations();
 
 		PanoramaHandler.init();
 
@@ -280,9 +280,10 @@ public class ScreenCustomization {
 		FancyMenu.reloadOptions();
 		ResourceHandlers.reloadAll();
 		UIColorThemes.reloadThemes();
-		AnimationHandler.resetAnimations();
-		AnimationHandler.resetAnimationSounds();
-		AnimationHandler.stopAnimationSounds();
+		//TODO übernehmen
+//		AnimationHandler.resetAnimations();
+//		AnimationHandler.resetAnimationSounds();
+//		AnimationHandler.stopAnimationSounds();
 		LayoutHandler.reloadLayouts();
 		EventHandler.INSTANCE.postEvent(new ModReloadEvent(Minecraft.getInstance().screen));
 		reInitCurrentScreen();

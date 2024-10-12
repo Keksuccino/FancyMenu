@@ -4,7 +4,6 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.network.chat.Component;
@@ -39,13 +38,12 @@ public class ShapeElementBuilder extends ElementBuilder<ShapeElement, ShapeEdito
             element.shape = ShapeElement.Shape.getByName(shape);
         }
 
+        //TODO übernehmen
         String colorHex = serialized.getValue("color");
         if (colorHex != null) {
-            element.color = DrawableColor.of(colorHex);
-            if (element.color == null) {
-                DrawableColor.of(255, 255, 255);
-            }
+            element.colorRaw = colorHex;
         }
+        //---------------
 
         return element;
 
@@ -59,7 +57,8 @@ public class ShapeElementBuilder extends ElementBuilder<ShapeElement, ShapeEdito
         }
 
         if (element.color != null) {
-            serializeTo.putProperty("color", element.color.getHex());
+            //TODO übernehmen
+            serializeTo.putProperty("color", element.colorRaw);
         }
 
         return serializeTo;

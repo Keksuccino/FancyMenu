@@ -19,6 +19,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
 
+//TODO übernehmen (annotation)
+@Deprecated(forRemoval = true)
 public class AnimationMenuBackgroundConfigScreen extends Screen {
 
     protected Screen parent;

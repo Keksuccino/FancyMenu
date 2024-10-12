@@ -2,6 +2,13 @@ package de.keksuccino.fancymenu.platform.services;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.Item;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.List;
 
 public interface IPlatformHelper {
@@ -43,6 +50,18 @@ public interface IPlatformHelper {
 
     /** Get the key of a {@link KeyMapping}. **/
     InputConstants.Key getKeyMappingKey(KeyMapping keyMapping);
+
+    //TODO übernehmen
+    @Nullable
+    ResourceLocation getItemKey(@NotNull Item item);
+
+    //TODO übernehmen
+    @Nullable
+    ResourceLocation getEffectKey(@NotNull MobEffect effect);
+
+    //TODO übernehmen
+    @Nullable
+    ResourceLocation getEntityKey(@NotNull EntityType<?> type);
 
     /**
      * Gets the name of the environment type as a string.

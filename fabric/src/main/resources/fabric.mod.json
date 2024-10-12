@@ -36,7 +36,7 @@
     "drippyloadingscreen": "<3.0.0",
     "fmextension_audio": "*",
     "fmextension_video": "*",
-    "rrls": "*"
+    "rrls": "<4.0.1"
   },
   "accessWidener": "fancymenu.accesswidener"
 }
