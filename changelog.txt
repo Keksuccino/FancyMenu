@@ -1,4 +1,13 @@
 
+CHANGELOG | FANCYMENU v3.3.1
+ 
+- Fixed game crashing on start when using Forge for MC 1.19.2 and 1.20.1
+ 
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.3.0
  
 IMPORTANT: I developed this update over a long time, so it's possible that I forgot about some changes and didn't mention them here. Sorry for that.
