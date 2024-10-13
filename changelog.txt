@@ -1,4 +1,42 @@
 
+CHANGELOG | FANCYMENU v3.3.0
+ 
+IMPORTANT: I developed this update over a long time, so it's possible that I forgot about some changes and didn't mention them here. Sorry for that.
+ 
+- Removed FancyMenu's deprecated (old) animation format MENU BACKGROUND (use FMA files instead and set them as normal Image background)
+- Removed FancyMenu's deprecated (old) animation format ELEMENT (use FMA files instead and set them as normal Image element)
+- Added tons of new placeholders related to the current world/server the player is in (too many to list all of them, just go exploring :p)
+- Added tons of new requirements related to the current world/server the player is in (too many to list all of them, just go exploring :p)
+- Added "Set Audio Element Volume" action to set the volume of Audio elements
+- Added "Audio Element Volume" placeholder to get the volume of an Audio element
+- Added Fade-Out feature to elements (can be used to fade-out elements when their loading requirements hide them)
+- Fade-In will now trigger again when the element gets visible again because of its loading requirements
+- Fading and Appearance Delay are now separated from each other, so you don't need to enable appearance delays anymore to use fading
+- You can set the base opacity of elements now (in other words, you can make elements translucent now)
+- You can rename layouts now
+- You can control the active state of buttons and sliders now, which means you can disable them now
+- You can use placeholders as color value for the Rectangle Shape element now
+- Added a Welcome screen that tells the user to read the docs (only opens the very first time and will not show for modpack users, as long as the config file gets shipped)
+- Added "Dragger" element that can be dragged by users to make parts of your layouts movable
+- Removed hardcoded incompatibility with RRLS (Remove Reloading Screen) in MC 1.20.1 (#858)
+- Fixed a bug that made the last hovered hyperlink of a Text element stay hovered when it was hovered while the element got hidden by its loading requirements
+- Fixed Progress Bar elements not showing alpha of HEX color
+- Fixed Debug Overlay not interactable after enabling it until changing or resizing the screen
+- Fixed issue with alpha handling of ImageButtons that caused issues with some other mods (#936)
+- Fixed panoramas rendering behind list backgrounds in scrollable screens (#908)
+- Fixed FMA file used as button texture not restarting on button hover in some cases (#878)
+- Fixed "Is Number" requirement showing "Bigger Than or Equals" as mode when "Smaller Than or Equals" is selected (#866)
+- Fixed being able to anchor a parent element to one of its children if parent has at least 2 children (#872)
+- Fixed panoramas and slideshows fail to get loaded when the properties file has special space chars before lines (#944)
+- Fixed unable to open CreateWorldScreen via command or action in MC 1.21.1 (#888)
+- Fixed game sometimes crashing when customizing certain screens like the PauseScreen (#907)
+- Fixed game crashing when transfering to another server in MC 1.21.1 (#929)
+ 
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.2.6
  
 - Dropped support for MC 1.21.0
