@@ -55,7 +55,7 @@ public class WelcomeScreen extends Screen {
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to open FancyMenu docs in WelcomeScreen!", ex);
             }
-            FancyMenu.getOptions().welcomeScreenShown.setValue(true);
+            FancyMenu.getOptions().showWelcomeScreen.setValue(false);
             this.onClose();
         }));
 

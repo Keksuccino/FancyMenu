@@ -101,7 +101,7 @@ public class MixinMinecraft {
 		RenderingUtils.resetGuiScale();
 
 		//TODO übernehmen
-		if (!FancyMenu.getOptions().welcomeScreenShown.getValue() && (screen instanceof TitleScreen)) {
+		if (FancyMenu.getOptions().showWelcomeScreen.getValue() && (screen instanceof TitleScreen)) {
 			info.cancel();
 			Minecraft.getInstance().setScreen(new WelcomeScreen(screen));
 			return;
