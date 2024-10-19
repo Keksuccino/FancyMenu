@@ -1,4 +1,17 @@
 
+CHANGELOG | FANCYMENU v3.3.2
+ 
+- Renamed config option "welcome_screen_shown" to "show_welcome_screen"
+  - The value now needs to be FALSE to NOT SHOW the Welcome screen
+  - This RESETS the config option to control the Welcome screen, so it will now show again when opening the game
+  - Sorry for that, but I had enough of people asking why the screen shows up every launch or tell me they can't disable it..
+- Added a tooltip to the "Open Documentation" button in the Welcome screen that tells the user clicking this button will permanently hide the screen
+ 
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.3.1
  
 - Fixed game crashing on start when using Forge for MC 1.19.2 and 1.20.1
