@@ -22,11 +22,9 @@ public class FancyMenu {
 
 	//TODO re-implement auto-sizing and sticky anchor in later update (needs more work first) (uncomment options in AbstractEditorElement)
 
-	//TODO übernehmen (locals)
-
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	//TODO übernehmen
+	//TODO übernehmen 3.3.2
 	public static final String VERSION = "3.3.2";
 	public static final String MOD_LOADER = Services.PLATFORM.getPlatformName();
 	public static final String MOD_ID = "fancymenu";

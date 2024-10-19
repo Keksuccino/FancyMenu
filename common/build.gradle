@@ -15,7 +15,7 @@ minecraft {
 }
 
 dependencies {
-    compileOnly(annotationProcessor('io.github.llamalad7:mixinextras-common:0.3.5'))
+    compileOnly(annotationProcessor('io.github.llamalad7:mixinextras-common:0.4.1'))
     compileOnly group:'org.spongepowered', name:'mixin', version:'0.8.5'
     //compileOnly fileTree('libs') { include '*.jar' }
     compileOnly 'com.github.Keksuccino:japng:0.5.3'

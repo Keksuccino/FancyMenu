@@ -100,13 +100,12 @@ public class MixinMinecraft {
 		//Reset GUI scale in case some layout changed it
 		RenderingUtils.resetGuiScale();
 
-		//TODO übernehmen
+		//TODO übernehmen 3.3.2
 		if (FancyMenu.getOptions().showWelcomeScreen.getValue() && (screen instanceof TitleScreen)) {
 			info.cancel();
 			Minecraft.getInstance().setScreen(new WelcomeScreen(screen));
 			return;
 		}
-		//---------------------
 
 		//Handle Overrides
 		Screen overrideWith = CustomGuiHandler.beforeSetScreen(screen);
