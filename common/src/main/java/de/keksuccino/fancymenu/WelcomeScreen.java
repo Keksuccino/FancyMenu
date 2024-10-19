@@ -3,9 +3,11 @@ package de.keksuccino.fancymenu;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.ScrollableMarkdownRenderer;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -55,9 +57,9 @@ public class WelcomeScreen extends Screen {
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to open FancyMenu docs in WelcomeScreen!", ex);
             }
-            FancyMenu.getOptions().welcomeScreenShown.setValue(true);
+            FancyMenu.getOptions().showWelcomeScreen.setValue(false);
             this.onClose();
-        }));
+        })).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.welcome.screen.open_docs.tooltip")));
 
     }
 

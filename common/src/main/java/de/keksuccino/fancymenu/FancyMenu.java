@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu;
 
 import java.io.File;
-
 import de.keksuccino.fancymenu.util.ObjectUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.platform.Services;
@@ -15,21 +14,15 @@ import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.fancymenu.customization.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.customization.server.ServerCache;
 import net.minecraft.SharedConstants;
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO re-implement auto-sizing and sticky anchor in later update (needs more work first) (uncomment options in AbstractEditorElement)
-
-	//TODO übernehmen (locals)
-
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	//TODO übernehmen
-	public static final String VERSION = "3.3.1";
+	public static final String VERSION = "3.3.2";
 	public static final String MOD_LOADER = Services.PLATFORM.getPlatformName();
 	public static final String MOD_ID = "fancymenu";
 
