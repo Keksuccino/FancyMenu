@@ -70,6 +70,7 @@ public class Placeholders {
     public static final MathCoshPlaceholder MATH_COSH = new MathCoshPlaceholder();
     public static final MathTanPlaceholder MATH_TAN = new MathTanPlaceholder();
     public static final MathTanhPlaceholder MATH_TANH = new MathTanhPlaceholder();
+    public static final RemoveLastCharPlaceholder REMOVE_LAST_CHAR = new RemoveLastCharPlaceholder();
     public static final PercentRamPlaceholder PERCENT_RAM = new PercentRamPlaceholder();
     public static final UsedRamPlaceholder USED_RAM = new UsedRamPlaceholder();
     public static final MaxRamPlaceholder MAX_RAM = new MaxRamPlaceholder();
@@ -233,6 +234,10 @@ public class Placeholders {
         PlaceholderRegistry.register(MATH_COSH);
         PlaceholderRegistry.register(MATH_TAN);
         PlaceholderRegistry.register(MATH_TANH);
+
+        PlaceholderRegistry.register(REMOVE_LAST_CHAR);
+
+//        PlaceholderRegistry
 
         //TODO übernehmen
         //Audio

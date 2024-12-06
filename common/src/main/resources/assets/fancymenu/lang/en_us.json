@@ -268,6 +268,8 @@
   "fancymenu.helper.buttonaction.paste_to_chat.desc": "Paste text to the\nchat input field.",
   "fancymenu.helper.placeholder.get_variable": "Get Stored Variable",
   "fancymenu.helper.placeholder.get_variable.desc": "Gets the value of a stored variable.\n\nJust replace 'some_variable' with\nthe actual variable name.",
+  "fancymenu.helper.placeholder.remove_last_char": "Remove last character",
+  "fancymenu.helper.placeholder.remove_last_char.desc": "Removes the last character of a string.\n\nJust replace 'some_string' with\na string or placeholder variable.",
   "fancymenu.helper.visibilityrequirement.is_variable_value": "Is Variable Value (FM Variable)",
   "fancymenu.helper.visibilityrequirement.is_variable_value.desc": "Check if the value of a stored variable is X.\nThis only supports FancyMenu's own variable system.\nIt does not support mod variables or Vanilla variables.",
   "fancymenu.helper.visibilityrequirement.is_variable_value.value.desc": "Variable Name & Value to Check For",
