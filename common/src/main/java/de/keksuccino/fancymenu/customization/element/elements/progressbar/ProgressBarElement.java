@@ -102,7 +102,7 @@ public class ProgressBarElement extends AbstractElement {
             RenderSystem.enableBlend();
             float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) ARGB.alpha(this.barColor.getColorInt()) / 255.0F));
             if (this.opacity <= colorAlpha) colorAlpha = this.opacity;
-            graphics.fill(progressX, progressY, progressX + progressWidth, progressY + progressHeight, RenderingUtils.replaceAlphaInColor(this.barColor.getColorInt(), colorAlpha));
+            graphics.fill(RenderType.guiOverlay(), progressX, progressY, progressX + progressWidth, progressY + progressHeight, RenderingUtils.replaceAlphaInColor(this.barColor.getColorInt(), colorAlpha));
         }
 
     }
@@ -117,7 +117,7 @@ public class ProgressBarElement extends AbstractElement {
             RenderSystem.enableBlend();
             float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) ARGB.alpha(this.backgroundColor.getColorInt()) / 255.0F));
             if (this.opacity <= colorAlpha) colorAlpha = this.opacity;
-            graphics.fill(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), RenderingUtils.replaceAlphaInColor(this.backgroundColor.getColorInt(), colorAlpha));
+            graphics.fill(RenderType.guiOverlay(), this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), RenderingUtils.replaceAlphaInColor(this.backgroundColor.getColorInt(), colorAlpha));
         }
     }
 

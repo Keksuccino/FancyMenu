@@ -36,12 +36,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-//TODO vermutlich hat sich in children handling was verändert, sodass nur noch menu bar clickable ist ?? aber dann wären auch normale menu buttons nicht mehr clickable..
-//TODO vermutlich hat sich in children handling was verändert, sodass nur noch menu bar clickable ist ?? aber dann wären auch normale menu buttons nicht mehr clickable..
-//TODO vermutlich hat sich in children handling was verändert, sodass nur noch menu bar clickable ist ?? aber dann wären auch normale menu buttons nicht mehr clickable..
-//TODO vermutlich hat sich in children handling was verändert, sodass nur noch menu bar clickable ist ?? aber dann wären auch normale menu buttons nicht mehr clickable..
-//TODO vermutlich hat sich in children handling was verändert, sodass nur noch menu bar clickable ist ?? aber dann wären auch normale menu buttons nicht mehr clickable..
-
 @SuppressWarnings("unused")
 public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget, FancyMenuUiComponent {
 
@@ -152,18 +146,18 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
     }
 
     protected void renderBackground(GuiGraphics graphics, int xMin, int yMin, int xMax, int yMax) {
-        graphics.fill(xMin, yMin, xMax, yMax, UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
+        graphics.fill(RenderType.guiOverlay(), xMin, yMin, xMax, yMax, UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
     }
 
     protected void renderBottomLine(GuiGraphics graphics, int width, int height) {
-        graphics.fill(0, height - this.getBottomLineThickness(), width, height, UIBase.getUIColorTheme().menu_bar_bottom_line_color.getColorInt());
+        graphics.fill(RenderType.guiOverlay(), 0, height - this.getBottomLineThickness(), width, height, UIBase.getUIColorTheme().menu_bar_bottom_line_color.getColorInt());
     }
 
     protected void renderExpandEntryBorder(GuiGraphics graphics, int width, int height) {
         //bottom line
-        graphics.fill(this.collapseOrExpandEntry.x, height - this.getBottomLineThickness(), width, height, UIBase.getUIColorTheme().menu_bar_bottom_line_color.getColorInt());
+        graphics.fill(RenderType.guiOverlay(), this.collapseOrExpandEntry.x, height - this.getBottomLineThickness(), width, height, UIBase.getUIColorTheme().menu_bar_bottom_line_color.getColorInt());
         //left side line
-        graphics.fill(this.collapseOrExpandEntry.x - this.getBottomLineThickness(), 0, this.collapseOrExpandEntry.x, height, UIBase.getUIColorTheme().menu_bar_bottom_line_color.getColorInt());
+        graphics.fill(RenderType.guiOverlay(), this.collapseOrExpandEntry.x - this.getBottomLineThickness(), 0, this.collapseOrExpandEntry.x, height, UIBase.getUIColorTheme().menu_bar_bottom_line_color.getColorInt());
     }
 
     @NotNull
@@ -478,19 +472,14 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        LOGGER.info("###### menu bar click 1");
         float scale = UIBase.calculateFixedScale(this.scale);
         int scaledMouseX = (int) ((float)mouseX / scale);
         int scaledMouseY = (int) ((float)mouseY / scale);
         boolean entryClick = false;
         if (this.expanded) {
-            LOGGER.info("###### menu bar click 2");
             for (MenuBarEntry e : ListUtils.mergeLists(this.leftEntries, this.rightEntries)) {
-                LOGGER.info("###### menu bar click 3");
                 if (e.isVisible()) {
-                    LOGGER.info("###### menu bar click 4");
                     if (e instanceof ContextMenuBarEntry c) {
-                        LOGGER.info("###### menu bar click 5");
                         if (c.contextMenu.mouseClicked(mouseX, mouseY, button)) entryClick = true;
                     }
                     if (e.mouseClicked(scaledMouseX, scaledMouseY, button)) entryClick = true;
@@ -669,7 +658,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         }
 
         protected void renderBackground(GuiGraphics graphics) {
-            graphics.fill(this.x, this.y, this.x + this.getWidth(), this.y + this.height, this.getBackgroundColor().getColorInt());
+            graphics.fill(RenderType.guiOverlay(), this.x, this.y, this.x + this.getWidth(), this.y + this.height, this.getBackgroundColor().getColorInt());
         }
 
         protected void renderLabelOrIcon(GuiGraphics graphics) {
@@ -936,7 +925,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         }
 
         protected void renderBackground(GuiGraphics graphics) {
-            graphics.fill(this.x, this.y, this.x + this.getWidth(), this.y + this.height, UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
+            graphics.fill(RenderType.guiOverlay(), this.x, this.y, this.x + this.getWidth(), this.y + this.height, UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
         }
 
         @Override
@@ -983,7 +972,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         @Override
         protected void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             RenderSystem.enableBlend();
-            graphics.fill(this.x, this.y, this.x + this.getWidth(), this.y + this.height, color.getColorInt());
+            graphics.fill(RenderType.guiOverlay(), this.x, this.y, this.x + this.getWidth(), this.y + this.height, color.getColorInt());
         }
 
         @Override

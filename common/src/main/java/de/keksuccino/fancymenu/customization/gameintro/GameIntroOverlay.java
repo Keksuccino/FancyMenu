@@ -80,7 +80,7 @@ public class GameIntroOverlay extends Overlay {
             this.fadeTo.render(graphics, mouseX, mouseY, partial);
             EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(this.fadeTo, graphics, mouseX, mouseY, partial));
         } else {
-            graphics.fill(0, 0, this.width, this.height, DrawableColor.BLACK.getColorInt());
+            graphics.fill(RenderType.guiOverlay(), 0, 0, this.width, this.height, DrawableColor.BLACK.getColorInt());
         }
 
         this.renderIntro(graphics, mouseX, mouseY, partial);

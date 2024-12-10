@@ -20,6 +20,17 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
+
+
+
+	//TODO FIXEN: Layers editor widget rendert seine entries nicht
+
+	//TODO FIXEN: Save File screen (save layout) rendert halben screen nicht
+
+
+
+
+
 	//TODO re-implement auto-sizing and sticky anchor in later update (needs more work first) (uncomment options in AbstractEditorElement)
 
 	private static final Logger LOGGER = LogManager.getLogger();

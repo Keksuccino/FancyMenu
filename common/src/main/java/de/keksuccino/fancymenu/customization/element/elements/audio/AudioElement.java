@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Style;
 import net.minecraft.sounds.SoundSource;
 import org.apache.commons.lang3.StringUtils;
@@ -366,7 +367,7 @@ public class AudioElement extends AbstractElement {
             int w = this.getAbsoluteWidth();
             int h = this.getAbsoluteHeight();
             RenderSystem.enableBlend();
-            graphics.fill(x, y, x + w, y + h, BACKGROUND_COLOR.getColorInt());
+            graphics.fill(RenderType.guiOverlay(), x, y, x + w, y + h, BACKGROUND_COLOR.getColorInt());
             graphics.enableScissor(x, y, x + w, y + h);
             graphics.drawCenteredString(Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
             graphics.disableScissor();

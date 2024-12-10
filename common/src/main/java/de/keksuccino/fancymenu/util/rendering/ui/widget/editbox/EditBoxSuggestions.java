@@ -20,6 +20,7 @@ import net.minecraft.client.gui.components.CommandSuggestions;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.Rect2i;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.network.chat.Style;
@@ -380,25 +381,25 @@ public class EditBoxSuggestions extends CommandSuggestions {
             }
             if (bl3) {
                 int m;
-                graphics.fill(this.getRect().getX(), this.getRect().getY() - 1, this.getRect().getX() + this.getRect().getWidth(), this.getRect().getY(), EditBoxSuggestions.this.backgroundColor.getColorInt());
-                graphics.fill(this.getRect().getX(), this.getRect().getY() + this.getRect().getHeight(), this.getRect().getX() + this.getRect().getWidth(), this.getRect().getY() + this.getRect().getHeight() + 1, EditBoxSuggestions.this.backgroundColor.getColorInt());
+                graphics.fill(RenderType.guiOverlay(), this.getRect().getX(), this.getRect().getY() - 1, this.getRect().getX() + this.getRect().getWidth(), this.getRect().getY(), EditBoxSuggestions.this.backgroundColor.getColorInt());
+                graphics.fill(RenderType.guiOverlay(), this.getRect().getX(), this.getRect().getY() + this.getRect().getHeight(), this.getRect().getX() + this.getRect().getWidth(), this.getRect().getY() + this.getRect().getHeight() + 1, EditBoxSuggestions.this.backgroundColor.getColorInt());
                 if (bl) {
                     for (m = 0; m < this.getRect().getWidth(); ++m) {
                         if (m % 2 != 0) continue;
-                        graphics.fill(this.getRect().getX() + m, this.getRect().getY() - 1, this.getRect().getX() + m + 1, this.getRect().getY(), -1);
+                        graphics.fill(RenderType.guiOverlay(), this.getRect().getX() + m, this.getRect().getY() - 1, this.getRect().getX() + m + 1, this.getRect().getY(), -1);
                     }
                 }
                 if (bl2) {
                     for (m = 0; m < this.getRect().getWidth(); ++m) {
                         if (m % 2 != 0) continue;
-                        graphics.fill(this.getRect().getX() + m, this.getRect().getY() + this.getRect().getHeight(), this.getRect().getX() + m + 1, this.getRect().getY() + this.getRect().getHeight() + 1, -1);
+                        graphics.fill(RenderType.guiOverlay(), this.getRect().getX() + m, this.getRect().getY() + this.getRect().getHeight(), this.getRect().getX() + m + 1, this.getRect().getY() + this.getRect().getHeight() + 1, -1);
                     }
                 }
             }
             boolean bl52 = false;
             for (int n = 0; n < suggestionLineCount; ++n) {
                 Suggestion suggestion = this.suggestionList.get(n + this.getOffset());
-                graphics.fill(this.getRect().getX(), this.getRect().getY() + 12 * n, this.getRect().getX() + this.getRect().getWidth(), this.getRect().getY() + 12 * n + 12, EditBoxSuggestions.this.backgroundColor.getColorInt());
+                graphics.fill(RenderType.guiOverlay(), this.getRect().getX(), this.getRect().getY() + 12 * n, this.getRect().getX() + this.getRect().getWidth(), this.getRect().getY() + 12 * n + 12, EditBoxSuggestions.this.backgroundColor.getColorInt());
                 if (mouseX > this.getRect().getX() && mouseX < this.getRect().getX() + this.getRect().getWidth() && mouseY > this.getRect().getY() + 12 * n && mouseY < this.getRect().getY() + 12 * n + 12) {
                     if (bl4) {
                         this.select(n + this.getOffset());

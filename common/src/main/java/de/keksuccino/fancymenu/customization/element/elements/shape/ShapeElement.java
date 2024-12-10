@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
@@ -53,7 +54,7 @@ public class ShapeElement extends AbstractElement {
             int c = ARGB.color(alpha, this.color.getColor().getRed(), this.color.getColor().getGreen(), this.color.getColor().getBlue());
 
             if (this.shape == Shape.RECTANGLE) {
-                graphics.fill(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), c);
+                graphics.fill(RenderType.guiOverlay(), this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), c);
             }
 
         }

@@ -665,7 +665,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	protected void renderDraggingNotAllowedOverlay(GuiGraphics graphics) {
 		if (this.renderMovingNotAllowedTime >= System.currentTimeMillis()) {
 			RenderSystem.enableBlend();
-			graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), UIBase.getUIColorTheme().layout_editor_element_dragging_not_allowed_color.getColorInt());
+			graphics.fill(RenderType.guiOverlay(), this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), UIBase.getUIColorTheme().layout_editor_element_dragging_not_allowed_color.getColorInt());
 			AspectRatio ratio = new AspectRatio(32, 32);
 			int[] size = ratio.getAspectRatioSizeByMaximumSize(this.getWidth(), this.getHeight());
 			int texW = size[0];
@@ -694,13 +694,13 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		if (((this.editor.getTopHoveredElement() == this) && !this.editor.isUserNavigatingInRightClickMenu() && !this.editor.isUserNavigatingInElementMenu()) || this.isSelected() || this.isMultiSelected()) {
 
 			//TOP
-			graphics.fill(this.getX() + 1, this.getY(), this.getX() + this.getWidth() - 1, this.getY() + 1, BORDER_COLOR.get(this));
+			graphics.fill(RenderType.guiOverlay(), this.getX() + 1, this.getY(), this.getX() + this.getWidth() - 1, this.getY() + 1, BORDER_COLOR.get(this));
 			//BOTTOM
-			graphics.fill(this.getX() + 1, this.getY() + this.getHeight() - 1, this.getX() + this.getWidth() - 1, this.getY() + this.getHeight(), BORDER_COLOR.get(this));
+			graphics.fill(RenderType.guiOverlay(), this.getX() + 1, this.getY() + this.getHeight() - 1, this.getX() + this.getWidth() - 1, this.getY() + this.getHeight(), BORDER_COLOR.get(this));
 			//LEFT
-			graphics.fill(this.getX(), this.getY(), this.getX() + 1, this.getY() + this.getHeight(), BORDER_COLOR.get(this));
+			graphics.fill(RenderType.guiOverlay(), this.getX(), this.getY(), this.getX() + 1, this.getY() + this.getHeight(), BORDER_COLOR.get(this));
 			//RIGHT
-			graphics.fill(this.getX() + this.getWidth() - 1, this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), BORDER_COLOR.get(this));
+			graphics.fill(RenderType.guiOverlay(), this.getX() + this.getWidth() - 1, this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), BORDER_COLOR.get(this));
 
 			for (ResizeGrabber g : this.resizeGrabbers) {
 				g.render(graphics, mouseX, mouseY, partial);
@@ -1020,7 +1020,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 			this.hovered = AbstractEditorElement.this.isSelected() && this.isGrabberEnabled() && this.isMouseOver(mouseX, mouseY);
 			if (AbstractEditorElement.this.isSelected() && this.isGrabberEnabled()) {
-				graphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, BORDER_COLOR.get(AbstractEditorElement.this));
+				graphics.fill(RenderType.guiOverlay(), this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, BORDER_COLOR.get(AbstractEditorElement.this));
 			}
 		}
 

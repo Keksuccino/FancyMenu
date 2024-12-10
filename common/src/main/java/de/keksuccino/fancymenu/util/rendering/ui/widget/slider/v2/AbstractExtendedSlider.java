@@ -92,13 +92,13 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     protected boolean renderColorBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         RenderSystem.enableBlend();
         if ((this.isFocused() && !this.getAccessor().getCanChangeValueFancyMenu()) && (this.sliderBackgroundColorHighlighted != null)) {
-            graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.sliderBackgroundColorHighlighted.getColorInt());
+            graphics.fill(RenderType.guiOverlay(), this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.sliderBackgroundColorHighlighted.getColorInt());
             if (this.sliderBorderColorHighlighted != null) {
                 UIBase.renderBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.sliderBorderColorHighlighted.getColorInt(), true, true, true, true);
             }
             return false;
         } else if (this.sliderBackgroundColorNormal != null) {
-            graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.sliderBackgroundColorNormal.getColorInt());
+            graphics.fill(RenderType.guiOverlay(), this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.sliderBackgroundColorNormal.getColorInt());
             if (this.sliderBorderColorNormal != null) {
                 UIBase.renderBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.sliderBorderColorNormal.getColorInt(), true, true, true, true);
             }
@@ -130,18 +130,18 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
         if (this.active) {
             if (this.isHoveredOrFocused()) {
                 if (this.sliderHandleColorHover != null) {
-                    graphics.fill(handleX, this.getY(), handleX + handleWidth, this.getY() + this.getHeight(), this.sliderHandleColorHover.getColorInt());
+                    graphics.fill(RenderType.guiOverlay(), handleX, this.getY(), handleX + handleWidth, this.getY() + this.getHeight(), this.sliderHandleColorHover.getColorInt());
                     return false;
                 }
             } else {
                 if (this.sliderHandleColorNormal != null) {
-                    graphics.fill(handleX, this.getY(), handleX + handleWidth, this.getY() + this.getHeight(), this.sliderHandleColorNormal.getColorInt());
+                    graphics.fill(RenderType.guiOverlay(), handleX, this.getY(), handleX + handleWidth, this.getY() + this.getHeight(), this.sliderHandleColorNormal.getColorInt());
                     return false;
                 }
             }
         } else {
             if (this.sliderHandleColorInactive != null) {
-                graphics.fill(handleX, this.getY(), handleX + handleWidth, this.getY() + this.getHeight(), this.sliderHandleColorInactive.getColorInt());
+                graphics.fill(RenderType.guiOverlay(), handleX, this.getY(), handleX + handleWidth, this.getY() + this.getHeight(), this.sliderHandleColorInactive.getColorInt());
                 return false;
             }
         }

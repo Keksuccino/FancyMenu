@@ -18,6 +18,7 @@ import de.keksuccino.konkrete.web.WebUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -162,7 +163,7 @@ public class TextElement extends AbstractElement {
 
                 } else if (isEditor()) {
                     //Render "updating" view in editor
-                    graphics.fill(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), Color.MAGENTA.getRGB());
+                    graphics.fill(RenderType.guiOverlay(), this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), Color.MAGENTA.getRGB());
                     graphics.drawCenteredString(font, Component.translatable("fancymenu.customization.items.text.status.loading"), this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY() + (this.getAbsoluteHeight() / 2) - (font.lineHeight / 2), -1);
                 }
 

@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtend
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -136,7 +137,7 @@ public class UIBase extends RenderingUtils {
 	}
 
 	public static void renderListingDot(GuiGraphics graphics, int x, int y, Color color) {
-		graphics.fill(x, y, x + 4, y + 4, color.getRGB());
+		graphics.fill(RenderType.guiOverlay(), x, y, x + 4, y + 4, color.getRGB());
 	}
 
 	public static void renderBorder(GuiGraphics graphics, int xMin, int yMin, int xMax, int yMax, int borderThickness, DrawableColor borderColor, boolean renderTop, boolean renderLeft, boolean renderRight, boolean renderBottom) {

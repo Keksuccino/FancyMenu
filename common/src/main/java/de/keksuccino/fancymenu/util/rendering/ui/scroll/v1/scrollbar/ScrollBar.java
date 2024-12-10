@@ -89,13 +89,13 @@ public class ScrollBar {
             if (this.hoverBarTexture != null) {
                 graphics.blit(RenderType::guiTextured, this.hoverBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
             } else if (this.hoverBarColor != null) {
-                graphics.fill(x, y, x + this.grabberWidth, y + this.grabberHeight, this.hoverBarColor.getRGB());
+                graphics.fill(RenderType.guiOverlay(), x, y, x + this.grabberWidth, y + this.grabberHeight, this.hoverBarColor.getRGB());
             }
         } else {
             if (this.idleBarTexture != null) {
                 graphics.blit(RenderType::guiTextured, this.idleBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
             } else if (this.idleBarColor != null) {
-                graphics.fill(x, y, x + this.grabberWidth, y + this.grabberHeight, this.idleBarColor.getRGB());
+                graphics.fill(RenderType.guiOverlay(), x, y, x + this.grabberWidth, y + this.grabberHeight, this.idleBarColor.getRGB());
             }
         }
 

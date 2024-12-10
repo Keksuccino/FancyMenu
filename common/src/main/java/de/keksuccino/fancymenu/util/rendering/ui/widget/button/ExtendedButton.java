@@ -126,7 +126,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
         if (this.active) {
             if (this.isHoveredOrFocused()) {
                 if (this.backgroundColorHover != null) {
-                    graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.backgroundColorHover.getColorInt());
+                    graphics.fill(RenderType.guiOverlay(), this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.backgroundColorHover.getColorInt());
                     if (this.borderColorHover != null) {
                         UIBase.renderBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.borderColorHover.getColorInt(), true, true, true, true);
                     }
@@ -134,7 +134,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
                 }
             } else {
                 if (this.backgroundColorNormal != null) {
-                    graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.backgroundColorNormal.getColorInt());
+                    graphics.fill(RenderType.guiOverlay(), this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.backgroundColorNormal.getColorInt());
                     if (this.borderColorNormal != null) {
                         UIBase.renderBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.borderColorNormal.getColorInt(), true, true, true, true);
                     }
@@ -143,7 +143,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
             }
         } else {
             if (this.backgroundColorInactive != null) {
-                graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.backgroundColorInactive.getColorInt());
+                graphics.fill(RenderType.guiOverlay(), this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.backgroundColorInactive.getColorInt());
                 if (this.borderColorInactive != null) {
                     UIBase.renderBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.borderColorInactive.getColorInt(), true, true, true, true);
                 }

@@ -9,6 +9,7 @@ import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -89,7 +90,7 @@ public class TextEditorLine extends AdvancedTextField {
 
             if (this.isFocused()) {
                 //Render focused background
-                graphics.fill(0, this.getY(), this.parent.width, this.getY() + this.height, this.parent.focusedLineColor.getRGB());
+                graphics.fill(RenderType.guiOverlay(), 0, this.getY(), this.parent.width, this.getY() + this.height, this.parent.focusedLineColor.getRGB());
             }
 
             int textColorInt = this.isEditable() ? this.getAsAccessor().getTextColorFancyMenu() : this.getAsAccessor().getTextColorUneditableFancyMenu();
@@ -134,7 +135,7 @@ public class TextEditorLine extends AdvancedTextField {
 
             if (renderCursor) {
                 if (isCursorNotAtEndOfLine) {
-                    graphics.fill(cursorPosRender, textY - 1, cursorPosRender + 1, textY + 1 + 9, textColorInt);
+                    graphics.fill(RenderType.guiOverlay(), cursorPosRender, textY - 1, cursorPosRender + 1, textY + 1 + 9, textColorInt);
                 } else {
                     graphics.drawString(this.font2, "_", cursorPosRender, textY, textColorInt, false);
                 }

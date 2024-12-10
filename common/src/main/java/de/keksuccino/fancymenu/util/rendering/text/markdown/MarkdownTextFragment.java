@@ -13,6 +13,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -75,7 +76,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
         if (this.imageSupplier != null) {
             this.imageSupplier.forRenderable((iTexture, location) -> {
                 RenderSystem.enableBlend();
-                RenderingUtils.blitF(graphics, location, this.x, this.y, 0.0F, 0.0F, this.getRenderWidth(), this.getRenderHeight(), this.getRenderWidth(), this.getRenderHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.parent.textOpacity));
+                RenderingUtils.blitF(graphics, RenderType::guiTextured, location, this.x, this.y, 0.0F, 0.0F, this.getRenderWidth(), this.getRenderHeight(), this.getRenderWidth(), this.getRenderHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.parent.textOpacity));
             });
         } else if (this.separationLine) {
 

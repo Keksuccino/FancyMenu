@@ -20,6 +20,7 @@ import net.minecraft.client.gui.components.LogoRenderer;
 import net.minecraft.client.gui.components.SplashRenderer;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.renderer.RenderType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -51,7 +52,7 @@ public abstract class MixinTitleScreen extends Screen {
             if (l.layoutBase.menuBackground != null) {
                 RenderSystem.enableBlend();
                 //Render a black background before the custom background gets rendered
-                graphics.fill(0, 0, this.width, this.height, 0);
+                graphics.fill(RenderType.guiOverlay(), 0, 0, this.width, this.height, 0);
             } else {
                 original.call(instance, graphics, f);
             }

@@ -165,7 +165,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
         RenderSystem.enableBlend();
 
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        graphics.fill(RenderType.guiOverlay(), 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
@@ -245,7 +245,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
                 int h = size[1];
                 int x = this.width - 20 - w;
                 int y = 50 + 15;
-                graphics.fill(x, y, x + w, y + h, UIBase.getUIColorTheme().area_background_color.getColorInt());
+                graphics.fill(RenderType.guiOverlay(), x, y, x + w, y + h, UIBase.getUIColorTheme().area_background_color.getColorInt());
                 RenderSystem.enableBlend();
                 graphics.blit(RenderType::guiTextured, loc, x, y, 0.0F, 0.0F, w, h, w, h);
                 UIBase.renderBorder(graphics, x, y, x + w, y + h, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUIColorTheme().element_border_color_normal.getColor(), true, true, true, true);
@@ -262,7 +262,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
     protected int renderCurrentDirectoryField(GuiGraphics graphics, int mouseX, int mouseY, float partial, int x, int y, int width, int height) {
         int xEnd = x + width;
         int yEnd = y + height;
-        graphics.fill(x + 1, y + 1, xEnd - 1, yEnd - 1, UIBase.getUIColorTheme().area_background_color.getColorInt());
+        graphics.fill(RenderType.guiOverlay(), x + 1, y + 1, xEnd - 1, yEnd - 1, UIBase.getUIColorTheme().area_background_color.getColorInt());
         UIBase.renderBorder(graphics, x, y, xEnd, yEnd, 1, UIBase.getUIColorTheme().element_border_color_normal.getColor(), true, true, true, true);
         this.currentDirectoryComponent.setX(x + 4);
         this.currentDirectoryComponent.setY(y + (height / 2) - (this.currentDirectoryComponent.getHeight() / 2));

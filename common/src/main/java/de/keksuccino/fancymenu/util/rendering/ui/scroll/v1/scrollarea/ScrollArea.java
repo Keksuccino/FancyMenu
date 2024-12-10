@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollbar.ScrollBar;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -73,7 +74,7 @@ public class ScrollArea extends UIBase {
     }
 
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        graphics.fill(this.getInnerX(), this.getInnerY(), this.getInnerX() + this.getInnerWidth(), this.getInnerY() + this.getInnerHeight(), this.backgroundColor.getRGB());
+        graphics.fill(RenderType.guiOverlay(), this.getInnerX(), this.getInnerY(), this.getInnerX() + this.getInnerWidth(), this.getInnerY() + this.getInnerHeight(), this.backgroundColor.getRGB());
     }
 
     public void renderBorder(GuiGraphics graphics, int mouseX, int mouseY, float partial) {

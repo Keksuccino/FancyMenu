@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
@@ -27,6 +28,7 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
@@ -165,7 +167,7 @@ public abstract class CellScreen extends Screen {
 
         this.updateSelectedCell();
 
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        graphics.fill(RenderType.guiOverlay(), 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
@@ -298,6 +300,23 @@ public abstract class CellScreen extends Screen {
         return this.selectedCell;
     }
 
+    /**
+     * This restores the old click logic.
+     */
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        for (GuiEventListener listener : this.children()) {
+            if (listener.mouseClicked(mouseX, mouseY, button)) {
+                this.setFocused(listener);
+                if (button == 0) {
+                    this.setDragging(true);
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public boolean keyPressed(int keycode, int scancode, int modifiers) {
 
@@ -344,7 +363,7 @@ public abstract class CellScreen extends Screen {
             //Use the scroll entry position and size to check for cell hover, to cover the whole cell line and not just the (sometimes too small) actual cell size
             this.cell.hovered = UIBase.isXYInArea(mouseX, mouseY, this.getX(), this.getY(), this.parent.getInnerWidth(), this.getHeight());
             if ((cell.isSelectable() && cell.isHovered()) || (cell == CellScreen.this.selectedCell)) {
-                graphics.fill((int) this.getX(), (int) this.getY(), (int) (this.getX() + this.parent.getInnerWidth()), (int) (this.getY() + this.getHeight()), this.cell.hoverColorSupplier.get().getColorInt());
+                graphics.fill(RenderType.guiOverlay(), (int) this.getX(), (int) this.getY(), (int) (this.getX() + this.parent.getInnerWidth()), (int) (this.getY() + this.getHeight()), this.cell.hoverColorSupplier.get().getColorInt());
             }
             this.cell.render(graphics, mouseX, mouseY, partial);
         }
@@ -377,7 +396,7 @@ public abstract class CellScreen extends Screen {
         public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             int centerY = this.getY() + (this.getHeight() / 2);
             int halfThickness = Math.max(1, this.separatorThickness / 2);
-            graphics.fill(this.getX(), centerY - ((halfThickness > 1) ? halfThickness : 0), this.getX() + this.getWidth(), centerY + halfThickness, this.separatorColorSupplier.get().getColorInt());
+            graphics.fill(RenderType.guiOverlay(), this.getX(), centerY - ((halfThickness > 1) ? halfThickness : 0), this.getX() + this.getWidth(), centerY + halfThickness, this.separatorColorSupplier.get().getColorInt());
         }
 
         @Override
@@ -600,7 +619,7 @@ public abstract class CellScreen extends Screen {
 
     }
 
-    public abstract class RenderCell extends AbstractContainerEventHandler implements Renderable, NarratableEntry {
+    public abstract class RenderCell extends AbstractContainerEventHandler implements Renderable, NarratableEntry, FancyMenuUiComponent {
 
         protected int x;
         protected int y;

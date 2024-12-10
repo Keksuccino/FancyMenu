@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -44,7 +45,7 @@ public abstract class MixinScreen implements CustomizableScreen {
 			if (l.layoutBase.menuBackground != null) {
 				RenderSystem.enableBlend();
 				//Render a black background before the custom background gets rendered
-				graphics.fill(0, 0, this.getScreen_FancyMenu().width, this.getScreen_FancyMenu().height, 0);
+				graphics.fill(RenderType.guiOverlay(), 0, 0, this.getScreen_FancyMenu().width, this.getScreen_FancyMenu().height, 0);
 			} else {
 				original.call(instance, graphics, mouseX, mouseY, partial);
 			}

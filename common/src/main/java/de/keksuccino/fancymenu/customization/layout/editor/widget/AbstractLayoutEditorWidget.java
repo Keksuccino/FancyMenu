@@ -16,6 +16,7 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -492,7 +493,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
                 ResourceLocation location = icon.getResourceLocation();
                 if (location != null) {
                     RenderSystem.enableBlend();
-                    blitF(graphics, location, this.x, this.y, 0.0F, 0.0F, (int) this.width, (int) this.parent.getHeaderHeight(), (int) this.width, (int) this.parent.getHeaderHeight(), UIBase.getUIColorTheme().ui_texture_color.getColorInt());
+                    blitF(graphics, RenderType::guiTextured, location, this.x, this.y, 0.0F, 0.0F, (int) this.width, (int) this.parent.getHeaderHeight(), (int) this.width, (int) this.parent.getHeaderHeight(), UIBase.getUIColorTheme().ui_texture_color.getColorInt());
                 }
             }
 

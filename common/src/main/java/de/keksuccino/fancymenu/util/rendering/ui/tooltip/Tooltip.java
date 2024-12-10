@@ -139,17 +139,17 @@ public class Tooltip implements Renderable {
         } else {
             if (this.borderColor != null) {
                 //BACKGROUND
-                graphics.fill(x + 1, y + 1, x + this.getWidth() - 1, y + this.getHeight() - 1, this.backgroundColor.getColorInt());
+                graphics.fill(RenderType.guiOverlay(), x + 1, y + 1, x + this.getWidth() - 1, y + this.getHeight() - 1, this.backgroundColor.getColorInt());
                 //TOP
-                graphics.fill(x + 1, y, x + this.getWidth() - 1, y + 1, this.borderColor.getColorInt());
+                graphics.fill(RenderType.guiOverlay(), x + 1, y, x + this.getWidth() - 1, y + 1, this.borderColor.getColorInt());
                 //BOTTOM
-                graphics.fill(x + 1, y + this.getHeight() - 1, x + this.getWidth() - 1, y + this.getHeight(), this.borderColor.getColorInt());
+                graphics.fill(RenderType.guiOverlay(), x + 1, y + this.getHeight() - 1, x + this.getWidth() - 1, y + this.getHeight(), this.borderColor.getColorInt());
                 //LEFT
-                graphics.fill(x, y, x + 1, y + this.getHeight(), this.borderColor.getColorInt());
+                graphics.fill(RenderType.guiOverlay(), x, y, x + 1, y + this.getHeight(), this.borderColor.getColorInt());
                 //RIGHT
-                graphics.fill(x + this.getWidth() - 1, y, x + this.getWidth(), y + this.getHeight(), this.borderColor.getColorInt());
+                graphics.fill(RenderType.guiOverlay(), x + this.getWidth() - 1, y, x + this.getWidth(), y + this.getHeight(), this.borderColor.getColorInt());
             } else {
-                graphics.fill(x, y, x + this.getWidth(), y + this.getHeight(), this.backgroundColor.getColorInt());
+                graphics.fill(RenderType.guiOverlay(), x, y, x + this.getWidth(), y + this.getHeight(), this.backgroundColor.getColorInt());
             }
         }
     }

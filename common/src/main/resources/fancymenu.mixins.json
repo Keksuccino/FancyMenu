@@ -13,6 +13,7 @@
     "client.IMixinConnectScreen",
     "client.IMixinEditBox",
     "client.IMixinGui",
+    "client.IMixinGuiGraphics",
     "client.IMixinLevelLoadingScreen",
     "client.IMixinMinecraft",
     "client.IMixinMusicManager",

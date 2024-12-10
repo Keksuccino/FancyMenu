@@ -20,6 +20,7 @@ import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -65,7 +66,7 @@ public class TextEditorScreen extends Screen {
     protected int borderLeft = 40;
     protected int borderRight = 20;
     protected int lineHeight = 14;
-    protected Color screenBackgroundColor = UIBase.getUIColorTheme().screen_background_color.getColor();
+    protected DrawableColor screenBackgroundColor = UIBase.getUIColorTheme().screen_background_color;
     protected Color editorAreaBorderColor = UIBase.getUIColorTheme().element_border_color_normal.getColor();
     protected Color editorAreaBackgroundColor = UIBase.getUIColorTheme().area_background_color.getColor();
     protected Color textColor = UIBase.getUIColorTheme().text_editor_text_color.getColor();
@@ -290,6 +291,9 @@ public class TextEditorScreen extends Screen {
         //Adjust the scroll wheel speed depending on the amount of lines
         this.verticalScrollBar.setWheelScrollSpeed(1.0F / ((float)this.getTotalScrollHeight() / 500.0F));
 
+        //Render Vanilla background
+        this.renderBackground(graphics, mouseX, mouseY, partial);
+
         this.renderScreenBackground(graphics);
 
         this.renderEditorAreaBackground(graphics);
@@ -297,7 +301,7 @@ public class TextEditorScreen extends Screen {
         Window win = Minecraft.getInstance().getWindow();
         double scale = win.getGuiScale();
         int sciBottom = this.height - this.footerHeight;
-        //Don't render parts of lines outside of editor area
+        //Don't render parts of lines outside editor area
         RenderSystem.enableScissor((int)(this.borderLeft * scale), (int)(win.getHeight() - (sciBottom * scale)), (int)(this.getEditorAreaWidth() * scale), (int)(this.getEditorAreaHeight() * scale));
 
         this.formattingRules.forEach((rule) -> rule.resetRule(this));
@@ -349,9 +353,9 @@ public class TextEditorScreen extends Screen {
 
     }
 
-    @Override
-    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-    }
+//    @Override
+//    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+//    }
 
     protected void renderMultilineNotSupportedNotification(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         long now = System.currentTimeMillis();
@@ -379,7 +383,7 @@ public class TextEditorScreen extends Screen {
             }
 
             //Render placeholder menu background
-            graphics.fill(this.width - this.borderRight - this.placeholderMenuWidth, this.getEditorAreaY(), this.width - this.borderRight, this.getEditorAreaY() + this.getEditorAreaHeight(), this.editorAreaBackgroundColor.getRGB());
+            graphics.fill(RenderType.guiOverlay(), this.width - this.borderRight - this.placeholderMenuWidth, this.getEditorAreaY(), this.width - this.borderRight, this.getEditorAreaY() + this.getEditorAreaHeight(), this.editorAreaBackgroundColor.getRGB());
 
             Window win = Minecraft.getInstance().getWindow();
             double scale = win.getGuiScale();
@@ -533,7 +537,7 @@ public class TextEditorScreen extends Screen {
     }
 
     protected void renderLineNumberBackground(GuiGraphics graphics, int width) {
-        graphics.fill(this.getEditorAreaX(), this.getEditorAreaY() - 1, this.getEditorAreaX() - width - 1, this.getEditorAreaY() + this.getEditorAreaHeight() + 1, this.sideBarColor.getRGB());
+        graphics.fill(RenderType.guiOverlay(), this.getEditorAreaX(), this.getEditorAreaY() - 1, this.getEditorAreaX() - width - 1, this.getEditorAreaY() + this.getEditorAreaHeight() + 1, this.sideBarColor.getRGB());
     }
 
     protected void renderLineNumber(GuiGraphics graphics, TextEditorLine line) {
@@ -543,11 +547,11 @@ public class TextEditorScreen extends Screen {
     }
 
     protected void renderEditorAreaBackground(GuiGraphics graphics) {
-        graphics.fill(this.getEditorAreaX(), this.getEditorAreaY(), this.getEditorAreaX() + this.getEditorAreaWidth(), this.getEditorAreaY() + this.getEditorAreaHeight(), this.editorAreaBackgroundColor.getRGB());
+        graphics.fill(RenderType.guiOverlay(), this.getEditorAreaX(), this.getEditorAreaY(), this.getEditorAreaX() + this.getEditorAreaWidth(), this.getEditorAreaY() + this.getEditorAreaHeight(), this.editorAreaBackgroundColor.getRGB());
     }
 
     protected void renderScreenBackground(GuiGraphics graphics) {
-        graphics.fill(0, 0, this.width, this.height, this.screenBackgroundColor.getRGB());
+        graphics.fill(RenderType.guiOverlay(), 0, 0, this.width, this.height, this.screenBackgroundColor.getColorInt());
     }
 
     protected void tickMouseHighlighting() {
@@ -560,7 +564,7 @@ public class TextEditorScreen extends Screen {
             return;
         }
 
-        //Auto-scroll if mouse outside of editor area and in mouse-highlighting mode
+        //Auto-scroll if mouse outside editor area and in mouse-highlighting mode
         if (this.isInMouseHighlightingMode()) {
             int mX = MouseInput.getMouseX();
             int mY = MouseInput.getMouseY();

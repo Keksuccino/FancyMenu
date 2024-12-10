@@ -35,7 +35,7 @@ public class ImageMenuBackground extends MenuBackground {
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         RenderSystem.enableBlend();
-        graphics.fill(0, 0, getScreenWidth(), getScreenHeight(), BACKGROUND_COLOR.getColorIntWithAlpha(this.opacity));
+        graphics.fill(RenderType.guiOverlay(), 0, 0, getScreenWidth(), getScreenHeight(), BACKGROUND_COLOR.getColorIntWithAlpha(this.opacity));
 
         ResourceLocation resourceLocation = null;
         ITexture tex = null;
@@ -112,7 +112,7 @@ public class ImageMenuBackground extends MenuBackground {
                         graphics.blit(RenderType::guiTextured, resourceLocation, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
                     }
                 } else {
-                    RenderingUtils.blitF(graphics, resourceLocation, (float)slidePos, 0.0F, 0.0F, 0.0F, w, getScreenHeight(), w, getScreenHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
+                    RenderingUtils.blitF(graphics, RenderType::guiTextured, resourceLocation, (float)slidePos, 0.0F, 0.0F, 0.0F, w, getScreenHeight(), w, getScreenHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
                 }
             } else if (this.keepBackgroundAspectRatio) {
                 this.renderKeepAspectRatio(graphics, ratio, resourceLocation);

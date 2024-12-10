@@ -24,6 +24,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -159,7 +160,7 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
 
     protected void renderLineBackground(@NotNull GuiGraphics graphics, int x, int y, int width, int height) {
         RenderSystem.enableBlend();
-        graphics.fill(x, y, x + width, y + height, this.lineBackgroundColor.getColorInt());
+        graphics.fill(RenderType.guiOverlay(), x, y, x + width, y + height, this.lineBackgroundColor.getColorInt());
     }
 
     public DebugOverlay setLineTextShadow(boolean shadow) {

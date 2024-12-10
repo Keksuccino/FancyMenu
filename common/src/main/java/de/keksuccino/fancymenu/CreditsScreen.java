@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.List;
@@ -75,10 +76,10 @@ public class CreditsScreen extends Screen {
         RenderSystem.enableBlend();
 
         //Background
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
+        graphics.fill(RenderType.guiOverlay(), 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
 
         //Footer
-        graphics.fill(0, this.height - this.footerHeight, this.width, this.height, UIBase.getUIColorTheme().area_background_color.getColorInt());
+        graphics.fill(RenderType.guiOverlay(), 0, this.height - this.footerHeight, this.width, this.height, UIBase.getUIColorTheme().area_background_color.getColorInt());
 
         super.render(graphics, mouseX, mouseY, partial);
 

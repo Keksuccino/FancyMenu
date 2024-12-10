@@ -1242,16 +1242,13 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            LOGGER.info("############# CLICK 1");
             if ((button == 0) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered() && !this.tooltipIconHovered) {
                 if (FancyMenu.getOptions().playUiClickSounds.getValue() && this.enableClickSound) {
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 }
                 this.clickAction.onClick(this.parent, this);
-                LOGGER.info("############# CLICK 2");
                 return true;
             }
-            LOGGER.info("############# CLICK 3");
             return super.mouseClicked(mouseX, mouseY, button);
         }
 

@@ -8,6 +8,7 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
@@ -92,13 +93,13 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
         DrawableColor hoverC = this.hoverBarColor.get();
         if (this.isGrabberHovered() || this.isGrabberGrabbed()) {
             if (this.hoverBarTexture != null) {
-                blitF(graphics, this.hoverBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
+                blitF(graphics, RenderType::guiTextured, this.hoverBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
             } else if (hoverC != null) {
                 fillF(graphics, x, y, x + this.grabberWidth, y + this.grabberHeight, hoverC.getColorInt());
             }
         } else {
             if (this.idleBarTexture != null) {
-                blitF(graphics, this.idleBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
+                blitF(graphics, RenderType::guiTextured, this.idleBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
             } else if (normalC != null) {
                 fillF(graphics, x, y, x + this.grabberWidth, y + this.grabberHeight, normalC.getColorInt());
             }

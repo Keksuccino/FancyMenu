@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphics;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.CoreShaders;
@@ -15,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import java.awt.*;
 import java.util.Objects;
+import java.util.function.Function;
 
 public class RenderingUtils {
 
@@ -28,13 +30,13 @@ public class RenderingUtils {
         int partW = width / 2;
         int partH = height / 2;
         //Top-left
-        graphics.fill(x, y, x + partW, y + partH, MISSING_TEXTURE_COLOR_MAGENTA.getColorInt());
+        graphics.fill(RenderType.guiOverlay(), x, y, x + partW, y + partH, MISSING_TEXTURE_COLOR_MAGENTA.getColorInt());
         //Top-right
-        graphics.fill(x + partW, y, x + width, y + partH, MISSING_TEXTURE_COLOR_BLACK.getColorInt());
+        graphics.fill(RenderType.guiOverlay(), x + partW, y, x + width, y + partH, MISSING_TEXTURE_COLOR_BLACK.getColorInt());
         //Bottom-left
-        graphics.fill(x, y + partH, x + partW, y + height, MISSING_TEXTURE_COLOR_BLACK.getColorInt());
+        graphics.fill(RenderType.guiOverlay(), x, y + partH, x + partW, y + height, MISSING_TEXTURE_COLOR_BLACK.getColorInt());
         //Bottom-right
-        graphics.fill(x + partW, y + partH, x + width, y + height, MISSING_TEXTURE_COLOR_MAGENTA.getColorInt());
+        graphics.fill(RenderType.guiOverlay(), x + partW, y + partH, x + width, y + height, MISSING_TEXTURE_COLOR_MAGENTA.getColorInt());
     }
 
     /**
@@ -227,66 +229,69 @@ public class RenderingUtils {
     }
 
     public static void fillF(@NotNull GuiGraphics graphics, float minX, float minY, float maxX, float maxY, float z, int color) {
+        fillF(graphics, RenderType.guiOverlay(), minX, minY, maxX, maxY, z, color);
+    }
+
+    public static void fillF(@NotNull GuiGraphics graphics, @NotNull RenderType renderType, float minX, float minY, float maxX, float maxY, int color) {
+        fillF(graphics, renderType, minX, minY, maxX, maxY, 0, color);
+    }
+
+    public static void fillF(@NotNull GuiGraphics graphics, @NotNull RenderType renderType, float minX, float minY, float maxX, float maxY, float z, int color) {
         Matrix4f matrix4f = graphics.pose().last().pose();
         if (minX < maxX) {
-            float $$8 = minX;
+            float f = minX;
             minX = maxX;
-            maxX = $$8;
+            maxX = f;
         }
         if (minY < maxY) {
-            float $$9 = minY;
+            float f = minY;
             minY = maxY;
-            maxY = $$9;
+            maxY = f;
         }
-        float red = (float)ARGB.red(color) / 255.0F;
-        float green = (float)ARGB.green(color) / 255.0F;
-        float blue = (float)ARGB.blue(color) / 255.0F;
-        float alpha = (float)ARGB.alpha(color) / 255.0F;
-        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-        RenderSystem.enableBlend();
-        RenderSystem.setShader(CoreShaders.POSITION_COLOR);
-        bufferBuilder.addVertex(matrix4f, minX, minY, z).setColor(red, green, blue, alpha);
-        bufferBuilder.addVertex(matrix4f, minX, maxY, z).setColor(red, green, blue, alpha);
-        bufferBuilder.addVertex(matrix4f, maxX, maxY, z).setColor(red, green, blue, alpha);
-        bufferBuilder.addVertex(matrix4f, maxX, minY, z).setColor(red, green, blue, alpha);
-        BufferUploader.drawWithShader(Objects.requireNonNull(bufferBuilder.build()));
-        RenderSystem.disableBlend();
+        VertexConsumer $$10 = ((IMixinGuiGraphics)graphics).getBufferSource_FancyMenu().getBuffer(renderType);
+        $$10.addVertex(matrix4f, (float)minX, (float)minY, (float)z).setColor(color);
+        $$10.addVertex(matrix4f, (float)minX, (float)maxY, (float)z).setColor(color);
+        $$10.addVertex(matrix4f, (float)maxX, (float)maxY, (float)z).setColor(color);
+        $$10.addVertex(matrix4f, (float)maxX, (float)minY, (float)z).setColor(color);
     }
 
-    public static void blitF(@NotNull GuiGraphics graphics, ResourceLocation location, float x, float y, float f3, float f4, float width, float height, float width2, float height2, int color) {
-        blit(graphics, location, x, y, width, height, f3, f4, width, height, width2, height2, color);
+    public static void blitF(@NotNull GuiGraphics graphics, Function<ResourceLocation, RenderType> renderTypeFunc, ResourceLocation location, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, int color) {
+        blitF(graphics, renderTypeFunc, location, $$2, $$3, $$4, $$5, $$6, $$7, $$6, $$7, $$8, $$9, color);
     }
 
-    private static void blit(GuiGraphics $$0, ResourceLocation location, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float $$10) {
-        blit($$0, location, $$1, $$1 + $$3, $$2, $$2 + $$4, 0, $$7, $$8, $$5, $$6, $$9, $$10);
+    public static void blitF(@NotNull GuiGraphics graphics, Function<ResourceLocation, RenderType> renderTypeFunc, ResourceLocation location, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9) {
+        blitF(graphics, renderTypeFunc, location, $$2, $$3, $$4, $$5, $$6, $$7, $$6, $$7, $$8, $$9);
     }
 
-    private static void blit(GuiGraphics graphics, ResourceLocation location, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float $$10, float $$11) {
+    public static void blitF(@NotNull GuiGraphics graphics, Function<ResourceLocation, RenderType> renderTypeFunc, ResourceLocation location, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float $$10, float $$11) {
+        blitF(graphics, renderTypeFunc, location, $$2, $$3, $$4, $$5, $$6, $$7, $$8, $$9, $$10, $$11, -1);
+    }
+
+    public static void blitF(@NotNull GuiGraphics graphics, Function<ResourceLocation, RenderType> renderTypeFunc, ResourceLocation location, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, float $$10, float $$11, int color) {
         innerBlit(
                 graphics,
+                renderTypeFunc,
                 location,
-                $$1,
                 $$2,
+                $$2 + $$6,
                 $$3,
-                $$4,
-                $$5,
-                ($$8 + 0.0F) / (float)$$10,
-                ($$8 + (float)$$6) / (float)$$10,
-                ($$9 + 0.0F) / (float)$$11,
-                ($$9 + (float)$$7) / (float)$$11
+                $$3 + $$7,
+                ($$4 + 0.0F) / (float)$$10,
+                ($$4 + (float)$$8) / (float)$$10,
+                ($$5 + 0.0F) / (float)$$11,
+                ($$5 + (float)$$9) / (float)$$11,
+                color
         );
     }
 
-    private static void innerBlit(GuiGraphics graphics, ResourceLocation location, float $$1, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9) {
-        RenderSystem.setShaderTexture(0, location);
-        RenderSystem.setShader(CoreShaders.POSITION_TEX_COLOR);
-        Matrix4f $$10 = graphics.pose().last().pose();
-        BufferBuilder $$11 = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-        $$11.addVertex($$10, $$1, $$3, $$5).setUv($$6, $$8);
-        $$11.addVertex($$10, $$1, $$4, $$5).setUv($$6, $$9);
-        $$11.addVertex($$10, $$2, $$4, $$5).setUv($$7, $$9);
-        $$11.addVertex($$10, $$2, $$3, $$5).setUv($$7, $$8);
-        BufferUploader.drawWithShader(Objects.requireNonNull($$11.build()));
+    private static void innerBlit(@NotNull GuiGraphics graphics, Function<ResourceLocation, RenderType> renderTypeFunc, ResourceLocation location, float $$2, float $$3, float $$4, float $$5, float $$6, float $$7, float $$8, float $$9, int color) {
+        RenderType renderType = renderTypeFunc.apply(location);
+        Matrix4f matrix4f = graphics.pose().last().pose();
+        VertexConsumer consumer = ((IMixinGuiGraphics)graphics).getBufferSource_FancyMenu().getBuffer(renderType);
+        consumer.addVertex(matrix4f, (float)$$2, (float)$$4, 0.0F).setUv($$6, $$8).setColor(color);
+        consumer.addVertex(matrix4f, (float)$$2, (float)$$5, 0.0F).setUv($$6, $$9).setColor(color);
+        consumer.addVertex(matrix4f, (float)$$3, (float)$$5, 0.0F).setUv($$7, $$9).setColor(color);
+        consumer.addVertex(matrix4f, (float)$$3, (float)$$4, 0.0F).setUv($$7, $$8).setColor(color);
     }
 
 }
