@@ -157,7 +157,6 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
 
         this.tickAreaMouseOver(mouseX, mouseY);
 
-        RenderingUtils.resetShaderColor(graphics);
         RenderSystem.enableBlend();
         //Invert color of overlay based on what's rendered behind it
         if (this.invertOverlayColors()) {
@@ -168,7 +167,6 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
         this.renderConnectionLines(graphics);
 
         RenderSystem.defaultBlendFunc();
-        RenderingUtils.resetShaderColor(graphics);
 
     }
 
@@ -265,12 +263,10 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
         }
 
         RenderSystem.enableBlend();
-        UIBase.resetShaderColor(graphics);
         //Horizontal Line
         graphics.fill(horizontalX, horizontalY, horizontalX + horizontalWidth, horizontalY + lineThickness, color);
         //Vertical Line
         graphics.fill(verticalX, verticalY, verticalX + lineThickness, verticalY + verticalHeight, color);
-        UIBase.resetShaderColor(graphics);
 
     }
 
@@ -551,7 +547,6 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
             int endY = this.getY() + this.getHeight();
             graphics.fill(this.getX(), this.getY(), endX, endY, RenderingUtils.replaceAlphaInColor(getOverlayColorBase().getColorInt(), getOverlayOpacity()));
             UIBase.renderBorder(graphics, this.getX(), this.getY(), endX, endY, 1, RenderingUtils.replaceAlphaInColor(getOverlayColorBorder().getColorInt(), getOverlayOpacity()), true, true, true, true);
-            UIBase.resetShaderColor(graphics);
         }
 
         protected void renderMouseOverProgress(@NotNull GuiGraphics graphics, float progress) {
@@ -572,7 +567,6 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
                 startY = endY - progressHeight;
             }
             graphics.fill(startX, startY, endX, endY, RenderingUtils.replaceAlphaInColor(getOverlayColorBorder().getColorInt(), getOverlayOpacity()));
-            UIBase.resetShaderColor(graphics);
         }
 
         protected int getWidth() {

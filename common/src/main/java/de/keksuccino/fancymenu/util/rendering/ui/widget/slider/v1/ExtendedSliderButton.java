@@ -13,9 +13,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -81,7 +83,6 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
         this.renderHandle(graphics);
         int labelColorInt = this.active ? this.labelColorNormal.getColorInt() : this.labelColorInactive.getColorInt();
         this.renderScrollingLabel(graphics, Minecraft.getInstance().font, 2, labelColorInt | Mth.ceil(this.alpha * 255.0F) << 24);
-        RenderingUtils.resetShaderColor(graphics);
     }
 
     protected void renderHandle(@NotNull GuiGraphics graphics) {
@@ -91,12 +92,10 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
         int handleX = this.getX() + (int)(this.value * (double)(this.width - 8));
         DrawableColor c = this.getHandleRenderColor();
         if (c == null) {
-            graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
-            graphics.blitSprite(this.getHandleSprite(), handleX, this.getY(), 8, this.getHeight());
+            graphics.blitSprite(RenderType::guiTextured, this.getHandleSprite(), handleX, this.getY(), 8, this.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.alpha));
         } else {
             graphics.fill(handleX, this.getY(), handleX + 8, this.getY() + this.getHeight(), RenderingUtils.replaceAlphaInColor(c.getColorInt(), this.alpha));
         }
-        RenderingUtils.resetShaderColor(graphics);
     }
 
     @Nullable
@@ -110,8 +109,7 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();
         if (this.backgroundColor == null) {
-            graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
-            graphics.blitSprite(this.getSprite(), this.getX(), this.getY(), this.getWidth(), this.getHeight());
+            graphics.blitSprite(RenderType::guiTextured, this.getSprite(), this.getX(), this.getY(), this.getWidth(), this.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.alpha));
         } else {
             int borderOffset = (this.borderColor != null) ? 1 : 0;
             graphics.fill(this.getX() + borderOffset, this.getY() + borderOffset, this.getX() + this.getWidth() - borderOffset, this.getY() + this.getHeight() - borderOffset, RenderingUtils.replaceAlphaInColor(this.backgroundColor.getColorInt(), this.alpha));
@@ -119,7 +117,6 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
                 UIBase.renderBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.borderColor, true, true, true, true);
             }
         }
-        RenderingUtils.resetShaderColor(graphics);
     }
 
     @Override

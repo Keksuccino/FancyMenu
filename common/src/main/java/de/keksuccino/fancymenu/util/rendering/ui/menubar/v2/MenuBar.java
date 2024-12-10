@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -15,7 +16,6 @@ import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.ScreenUtils;
-import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -23,6 +23,7 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -35,8 +36,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
+//TODO vermutlich hat sich in children handling was verändert, sodass nur noch menu bar clickable ist ?? aber dann wären auch normale menu buttons nicht mehr clickable..
+//TODO vermutlich hat sich in children handling was verändert, sodass nur noch menu bar clickable ist ?? aber dann wären auch normale menu buttons nicht mehr clickable..
+//TODO vermutlich hat sich in children handling was verändert, sodass nur noch menu bar clickable ist ?? aber dann wären auch normale menu buttons nicht mehr clickable..
+//TODO vermutlich hat sich in children handling was verändert, sodass nur noch menu bar clickable ist ?? aber dann wären auch normale menu buttons nicht mehr clickable..
+//TODO vermutlich hat sich in children handling was verändert, sodass nur noch menu bar clickable ist ?? aber dann wären auch normale menu buttons nicht mehr clickable..
+
 @SuppressWarnings("unused")
-public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget {
+public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget, FancyMenuUiComponent {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -80,7 +87,6 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
 
         RenderSystem.enableBlend();
         RenderSystem.enableDepthTest();
-        UIBase.resetShaderColor(graphics);
 
         graphics.pose().pushPose();
         graphics.pose().scale(scale, scale, scale);
@@ -102,7 +108,6 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
                 e.hovered = e.isMouseOver(scaledMouseX, scaledMouseY);
                 if (e.isVisible()) {
                     RenderSystem.enableBlend();
-                    UIBase.resetShaderColor(graphics);
                     e.render(graphics, scaledMouseX, scaledMouseY, partial);
                 }
                 leftX += e.getWidth();
@@ -115,7 +120,6 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
                 e.hovered = e.isMouseOver(scaledMouseX, scaledMouseY);
                 if (e.isVisible()) {
                     RenderSystem.enableBlend();
-                    UIBase.resetShaderColor(graphics);
                     e.render(graphics, scaledMouseX, scaledMouseY, partial);
                 }
                 rightX -= e.getWidth();
@@ -131,7 +135,6 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         }
 
         graphics.pose().popPose();
-        UIBase.resetShaderColor(graphics);
 
         graphics.pose().pushPose();
         RenderSystem.enableDepthTest();
@@ -146,18 +149,14 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         RenderSystem.disableDepthTest();
         graphics.pose().popPose();
 
-        UIBase.resetShaderColor(graphics);
-
     }
 
     protected void renderBackground(GuiGraphics graphics, int xMin, int yMin, int xMax, int yMax) {
         graphics.fill(xMin, yMin, xMax, yMax, UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
-        UIBase.resetShaderColor(graphics);
     }
 
     protected void renderBottomLine(GuiGraphics graphics, int width, int height) {
         graphics.fill(0, height - this.getBottomLineThickness(), width, height, UIBase.getUIColorTheme().menu_bar_bottom_line_color.getColorInt());
-        UIBase.resetShaderColor(graphics);
     }
 
     protected void renderExpandEntryBorder(GuiGraphics graphics, int width, int height) {
@@ -165,7 +164,6 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         graphics.fill(this.collapseOrExpandEntry.x, height - this.getBottomLineThickness(), width, height, UIBase.getUIColorTheme().menu_bar_bottom_line_color.getColorInt());
         //left side line
         graphics.fill(this.collapseOrExpandEntry.x - this.getBottomLineThickness(), 0, this.collapseOrExpandEntry.x, height, UIBase.getUIColorTheme().menu_bar_bottom_line_color.getColorInt());
-        UIBase.resetShaderColor(graphics);
     }
 
     @NotNull
@@ -480,14 +478,19 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        LOGGER.info("###### menu bar click 1");
         float scale = UIBase.calculateFixedScale(this.scale);
         int scaledMouseX = (int) ((float)mouseX / scale);
         int scaledMouseY = (int) ((float)mouseY / scale);
         boolean entryClick = false;
         if (this.expanded) {
+            LOGGER.info("###### menu bar click 2");
             for (MenuBarEntry e : ListUtils.mergeLists(this.leftEntries, this.rightEntries)) {
+                LOGGER.info("###### menu bar click 3");
                 if (e.isVisible()) {
+                    LOGGER.info("###### menu bar click 4");
                     if (e instanceof ContextMenuBarEntry c) {
+                        LOGGER.info("###### menu bar click 5");
                         if (c.contextMenu.mouseClicked(mouseX, mouseY, button)) entryClick = true;
                     }
                     if (e.mouseClicked(scaledMouseX, scaledMouseY, button)) entryClick = true;
@@ -666,9 +669,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         }
 
         protected void renderBackground(GuiGraphics graphics) {
-            UIBase.resetShaderColor(graphics);
             graphics.fill(this.x, this.y, this.x + this.getWidth(), this.y + this.height, this.getBackgroundColor().getColorInt());
-            UIBase.resetShaderColor(graphics);
         }
 
         protected void renderLabelOrIcon(GuiGraphics graphics) {
@@ -677,15 +678,16 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
             ITexture iconTexture = this.getIconTexture();
             if (iconTexture != null) {
                 int[] size = iconTexture.getAspectRatio().getAspectRatioSizeByMaximumSize(this.getWidth(), this.height);
-                UIBase.resetShaderColor(graphics);
                 DrawableColor iconColor = (this.iconTextureColor != null) ? this.iconTextureColor.get() : null;
-                if (iconColor != null) UIBase.setShaderColor(graphics, iconColor);
                 ResourceLocation loc = (iconTexture.getResourceLocation() != null) ? iconTexture.getResourceLocation() : ITexture.MISSING_TEXTURE_LOCATION;
-                graphics.blit(loc, this.x, this.y, 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
+                if (iconColor != null) {
+                    graphics.blit(RenderType::guiTextured, loc, this.x, this.y, 0.0F, 0.0F, size[0], size[1], size[0], size[1], iconColor.getColorInt());
+                } else {
+                    graphics.blit(RenderType::guiTextured, loc, this.x, this.y, 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
+                }
             } else {
                 UIBase.drawElementLabel(graphics, this.font, label, this.x + ENTRY_LABEL_SPACE_LEFT_RIGHT, this.y + (this.height / 2) - (this.font.lineHeight / 2), this.isActive() ? UIBase.getUIColorTheme().element_label_color_normal.getColorInt() : UIBase.getUIColorTheme().element_label_color_inactive.getColorInt());
             }
-            UIBase.resetShaderColor(graphics);
         }
 
         @Override
@@ -930,13 +932,11 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         @Override
         protected void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             RenderSystem.enableBlend();
-            UIBase.resetShaderColor(graphics);
             this.renderBackground(graphics);
         }
 
         protected void renderBackground(GuiGraphics graphics) {
             graphics.fill(this.x, this.y, this.x + this.getWidth(), this.y + this.height, UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
-            UIBase.resetShaderColor(graphics);
         }
 
         @Override
@@ -983,9 +983,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         @Override
         protected void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             RenderSystem.enableBlend();
-            UIBase.resetShaderColor(graphics);
             graphics.fill(this.x, this.y, this.x + this.getWidth(), this.y + this.height, color.getColorInt());
-            UIBase.resetShaderColor(graphics);
         }
 
         @Override

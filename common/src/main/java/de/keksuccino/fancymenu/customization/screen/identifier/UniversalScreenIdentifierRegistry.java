@@ -55,7 +55,7 @@ public class UniversalScreenIdentifierRegistry {
         register("realms_parental_consent_screen", RealmsParentalConsentScreen.class.getName());
         register("realms_pending_invites_screen", RealmsPendingInvitesScreen.class.getName());
         register("realms_player_screen", RealmsPlayerScreen.class.getName());
-        register("realms_reset_normal_world_screen", RealmsResetNormalWorldScreen.class.getName());
+//        register("realms_reset_normal_world_screen", RealmsResetNormalWorldScreen.class.getName());
         register("realms_reset_world_screen", RealmsResetWorldScreen.class.getName());
         register("realms_select_file_to_upload_screen", RealmsSelectFileToUploadScreen.class.getName());
         register("realms_select_world_template_screen", RealmsSelectWorldTemplateScreen.class.getName());
@@ -121,7 +121,7 @@ public class UniversalScreenIdentifierRegistry {
         register("crafting_screen", CraftingScreen.class.getName());
         register("creative_mode_inventory_screen", CreativeModeInventoryScreen.class.getName());
         register("dispenser_screen", DispenserScreen.class.getName());
-        register("effect_rendering_inventory_screen", EffectRenderingInventoryScreen.class.getName());
+//        register("effect_rendering_inventory_screen", EffectRenderingInventoryScreen.class.getName());
         register("enchantment_screen", EnchantmentScreen.class.getName());
         register("furnace_screen", FurnaceScreen.class.getName());
         register("grindstone_screen", GrindstoneScreen.class.getName());

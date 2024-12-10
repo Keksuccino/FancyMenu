@@ -52,7 +52,6 @@ public abstract class MixinTitleScreen extends Screen {
                 RenderSystem.enableBlend();
                 //Render a black background before the custom background gets rendered
                 graphics.fill(0, 0, this.width, this.height, 0);
-                RenderingUtils.resetShaderColor(graphics);
             } else {
                 original.call(instance, graphics, f);
             }

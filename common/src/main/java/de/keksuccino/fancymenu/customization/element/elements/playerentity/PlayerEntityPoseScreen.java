@@ -248,8 +248,6 @@ public class PlayerEntityPoseScreen extends CellScreen {
         int entityY = (int) this.scrollArea.getYWithBorder() + 30;
         this.renderEntity(graphics, mouseX, mouseY, partial, entityX, entityY);
 
-        RenderingUtils.resetShaderColor(graphics);
-
     }
 
     protected void renderEntity(GuiGraphics graphics, int mouseX, int mouseY, float partial, int posX, int posY) {

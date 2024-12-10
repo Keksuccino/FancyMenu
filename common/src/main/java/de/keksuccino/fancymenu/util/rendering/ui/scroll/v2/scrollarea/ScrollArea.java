@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea;
 
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollbar.ScrollBar;
@@ -19,7 +20,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @SuppressWarnings("all")
-public class ScrollArea extends UIBase implements GuiEventListener, Renderable, NarratableEntry {
+public class ScrollArea extends UIBase implements GuiEventListener, Renderable, NarratableEntry, FancyMenuUiComponent {
 
     private static final Logger LOGGER = LogManager.getLogger();
 

@@ -87,9 +87,9 @@ public class UIColorTheme {
         this.display_name = display_name;
     }
 
-    public void setUITextureShaderColor(GuiGraphics graphics, float alpha) {
-        UIBase.setShaderColor(graphics, ui_texture_color, alpha);
-    }
+//    public void setUITextureShaderColor(GuiGraphics graphics, float alpha) {
+//        UIBase.setShaderColor(graphics, ui_texture_color, alpha);
+//    }
 
     @NotNull
     public String getIdentifier() {

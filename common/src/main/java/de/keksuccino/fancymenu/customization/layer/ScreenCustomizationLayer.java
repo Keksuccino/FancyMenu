@@ -45,8 +45,10 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.components.tabs.TabNavigationBar;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -487,7 +489,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			if (headerTexture != null) {
 				ResourceLocation loc = headerTexture.getResourceLocation();
 				if (loc != null) {
-					RenderingUtils.resetShaderColor(graphics);
 					if (this.layoutBase.preserveScrollListHeaderFooterAspectRatio) {
 						int[] headerSize = headerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(list.getWidth(), list.getY());
 						int headerWidth = headerSize[0];
@@ -495,12 +496,12 @@ public class ScreenCustomizationLayer implements ElementFactory {
 						int headerX = list.getX() + (list.getWidth() / 2) - (headerWidth / 2);
 						int headerY = (list.getY() / 2) - (headerHeight / 2);
 						graphics.enableScissor(list.getX(), 0, list.getRight(), list.getY());
-						graphics.blit(loc, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
+						graphics.blit(RenderType::guiTextured, loc, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
 						graphics.disableScissor();
 					} else if (this.layoutBase.repeatScrollListHeaderTexture) {
-						RenderingUtils.blitRepeat(graphics, loc, list.getX(), 0, list.getWidth(), list.getY(), headerTexture.getWidth(), headerTexture.getHeight());
+						RenderingUtils.blitRepeat(graphics, loc, list.getX(), 0, list.getWidth(), list.getY(), headerTexture.getWidth(), headerTexture.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
 					} else {
-						graphics.blit(loc, list.getX(), 0, 0.0F, 0.0F, list.getWidth(), list.getY(), list.getWidth(), list.getY());
+						graphics.blit(RenderType::guiTextured, loc, list.getX(), 0, 0.0F, 0.0F, list.getWidth(), list.getY(), list.getWidth(), list.getY());
 					}
 				}
 			}
@@ -508,7 +509,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			if (footerTexture != null) {
 				ResourceLocation loc = footerTexture.getResourceLocation();
 				if (loc != null) {
-					RenderingUtils.resetShaderColor(graphics);
 					if (this.layoutBase.preserveScrollListHeaderFooterAspectRatio) {
 						int footerOriginalHeight = ScreenUtils.getScreenHeight() - list.getBottom();
 						if (footerOriginalHeight <= 0) footerOriginalHeight = 1;
@@ -518,21 +518,19 @@ public class ScreenCustomizationLayer implements ElementFactory {
 						int footerX = list.getX() + (list.getWidth() / 2) - (footerWidth / 2);
 						int footerY = list.getBottom() + (footerOriginalHeight / 2) - (footerHeight / 2);
 						graphics.enableScissor(list.getX(), list.getBottom(), list.getRight(), list.getBottom() + footerOriginalHeight);
-						graphics.blit(loc, footerX, footerY, 0.0F, 0.0F, footerWidth, footerHeight, footerWidth, footerHeight);
+						graphics.blit(RenderType::guiTextured, loc, footerX, footerY, 0.0F, 0.0F, footerWidth, footerHeight, footerWidth, footerHeight);
 						graphics.disableScissor();
 					} else if (this.layoutBase.repeatScrollListFooterTexture) {
 						int footerHeight = ScreenUtils.getScreenHeight() - list.getBottom();
 						if (footerHeight <= 0) footerHeight = 1;
-						RenderingUtils.blitRepeat(graphics, loc, list.getX(), list.getBottom(), list.getWidth(), footerHeight, footerTexture.getWidth(), footerTexture.getHeight());
+						RenderingUtils.blitRepeat(graphics, loc, list.getX(), list.getBottom(), list.getWidth(), footerHeight, footerTexture.getWidth(), footerTexture.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
 					} else {
 						int footerHeight = ScreenUtils.getScreenHeight() - list.getBottom();
 						if (footerHeight <= 0) footerHeight = 1;
-						graphics.blit(loc, list.getX(), list.getBottom(), 0.0F, 0.0F, list.getWidth(), footerHeight, list.getWidth(), footerHeight);
+						graphics.blit(RenderType::guiTextured, loc, list.getX(), list.getBottom(), 0.0F, 0.0F, list.getWidth(), footerHeight, list.getWidth(), footerHeight);
 					}
 				}
 			}
-
-			RenderingUtils.resetShaderColor(graphics);
 
 		}
 
@@ -551,7 +549,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 				ResourceLocation loc = headerTexture.getResourceLocation();
 				if (loc != null) {
 					e.setCanceled(true);
-					RenderingUtils.resetShaderColor(graphics);
 					if (this.layoutBase.preserveScrollListHeaderFooterAspectRatio) {
 						int[] headerSize = headerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(e.getHeaderWidth(), e.getHeaderHeight());
 						int headerWidth = headerSize[0];
@@ -559,14 +556,13 @@ public class ScreenCustomizationLayer implements ElementFactory {
 						int headerX = (e.getHeaderWidth() / 2) - (headerWidth / 2);
 						int headerY = (e.getHeaderHeight() / 2) - (headerHeight / 2);
 						graphics.enableScissor(0, 0, e.getHeaderWidth(), e.getHeaderHeight());
-						graphics.blit(loc, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
+						graphics.blit(RenderType::guiTextured, loc, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
 						graphics.disableScissor();
 					} else if (this.layoutBase.repeatScrollListHeaderTexture) {
-						RenderingUtils.blitRepeat(graphics, loc, 0, 0, e.getHeaderWidth(), e.getHeaderHeight(), headerTexture.getWidth(), headerTexture.getHeight());
+						RenderingUtils.blitRepeat(graphics, loc, 0, 0, e.getHeaderWidth(), e.getHeaderHeight(), headerTexture.getWidth(), headerTexture.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
 					} else {
-						graphics.blit(loc, 0, 0, 0.0F, 0.0F, e.getHeaderWidth(), e.getHeaderHeight(), e.getHeaderWidth(), e.getHeaderHeight());
+						graphics.blit(RenderType::guiTextured, loc, 0, 0, 0.0F, 0.0F, e.getHeaderWidth(), e.getHeaderHeight(), e.getHeaderWidth(), e.getHeaderHeight());
 					}
-					RenderingUtils.resetShaderColor(graphics);
 				}
 			}
 
@@ -584,7 +580,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			this.layoutBase.menuBackground.render(graphics, mouseX, mouseY, partial);
 			//TODO übernehmen
 			if (this.layoutBase.applyVanillaBackgroundBlur) {
-				Minecraft.getInstance().gameRenderer.processBlurEffect(partial);
+				Minecraft.getInstance().gameRenderer.processBlurEffect();
 				Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 			}
 			//------------------
@@ -615,7 +611,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	public static void renderBackgroundOverlay(GuiGraphics graphics, int x, int y, int width, int height) {
 		ResourceLocation location = (Minecraft.getInstance().level == null) ? MENU_BACKGROUND : INWORLD_MENU_BACKGROUND;
 		RenderSystem.enableBlend();
-		graphics.blit(location, x, y, 0, 0.0F, 0.0F, width, height, 32, 32);
+		graphics.blit(RenderType::guiTextured, location, x, y, 0, 0.0F, 0, width, height, 32, 32);
 	}
 
 	@Nullable

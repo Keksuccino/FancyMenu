@@ -119,7 +119,6 @@ public class DraggerElement extends AbstractElement {
                 graphics.enableScissor(x, y, x + w, y + h);
                 graphics.drawCenteredString(Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
                 graphics.disableScissor();
-                RenderingUtils.resetShaderColor(graphics);
             }
 
         } else {

@@ -18,9 +18,11 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -81,8 +83,6 @@ public class GameIntroOverlay extends Overlay {
             graphics.fill(0, 0, this.width, this.height, DrawableColor.BLACK.getColorInt());
         }
 
-        RenderingUtils.resetShaderColor(graphics);
-
         this.renderIntro(graphics, mouseX, mouseY, partial);
 
         this.renderSkipText(graphics, mouseX, mouseY, partial);
@@ -103,11 +103,8 @@ public class GameIntroOverlay extends Overlay {
             ResourceLocation location = r.getResourceLocation();
             if (location != null) {
                 RenderSystem.enableBlend();
-                graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
-                graphics.blit(location, x, y, 0.0F, 0.0F, aspectWidth, aspectHeight, aspectWidth, aspectHeight);
+                graphics.blit(RenderType::guiTextured, location, x, y, 0.0F, 0.0F, aspectWidth, aspectHeight, aspectWidth, aspectHeight, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.opacity));
             }
-
-            RenderingUtils.resetShaderColor(graphics);
 
         }
 
@@ -124,14 +121,12 @@ public class GameIntroOverlay extends Overlay {
             graphics.pose().pushPose();
             graphics.pose().scale(scale, scale, scale);
             RenderSystem.enableBlend();
-            RenderingUtils.resetShaderColor(graphics);
             int normalizedWidth = (int)(this.width / scale);
             int normalizedHeight = (int)(this.height / scale);
             int textX = (normalizedWidth / 2) - (this.font.width(skipComp) / 2);
             int textY = normalizedHeight - 40;
             graphics.drawString(this.font, skipComp, textX, textY, RenderingUtils.replaceAlphaInColor(DrawableColor.WHITE.getColorInt(), Math.max(0.1F, 0.6F * this.opacity)), false);
             graphics.pose().popPose();
-            RenderingUtils.resetShaderColor(graphics);
         }
     }
 

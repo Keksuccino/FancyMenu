@@ -56,9 +56,7 @@ public class TextWidget extends AbstractWidget implements UniqueWidget, Navigata
         if (this.alignment == TextAlignment.RIGHT) {
             textX = this.getX() + this.getWidth() - textWidth;
         }
-        RenderingUtils.resetShaderColor(graphics);
         graphics.drawString(this.font, this.getMessage(), textX, textY, this.baseColor.getColorInt(), this.shadow);
-        RenderingUtils.resetShaderColor(graphics);
     }
 
     public int getTextWidth() {

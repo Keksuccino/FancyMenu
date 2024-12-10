@@ -22,7 +22,7 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.util.FastColor;
+import net.minecraft.util.ARGB;
 import org.jetbrains.annotations.NotNull;
 import java.awt.*;
 import java.io.BufferedReader;
@@ -165,8 +165,6 @@ public class TextElement extends AbstractElement {
                     graphics.fill(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), Color.MAGENTA.getRGB());
                     graphics.drawCenteredString(font, Component.translatable("fancymenu.customization.items.text.status.loading"), this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY() + (this.getAbsoluteHeight() / 2) - (font.lineHeight / 2), -1);
                 }
-
-                graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 
             }
 
@@ -419,11 +417,10 @@ public class TextElement extends AbstractElement {
             Color c = this.parentItem.getBaseColor();
             int textColor;
             if (c != null) {
-                textColor = FastColor.ARGB32.color(Math.max(0, Math.min(255, (int)(this.parentItem.opacity * 255.0F))), c.getRed(), c.getGreen(), c.getBlue());
+                textColor = ARGB.color(Math.max(0, Math.min(255, (int)(this.parentItem.opacity * 255.0F))), c.getRed(), c.getGreen(), c.getBlue());
             } else {
-                textColor = FastColor.ARGB32.color(Math.max(0, Math.min(255, (int)(this.parentItem.opacity * 255.0F))), 255, 255, 255);
+                textColor = ARGB.color(Math.max(0, Math.min(255, (int)(this.parentItem.opacity * 255.0F))), 255, 255, 255);
             }
-            graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
             graphics.drawString(this.font, this.text, textX, textY, textColor, this.parentItem.shadow);
             graphics.pose().popPose();
 

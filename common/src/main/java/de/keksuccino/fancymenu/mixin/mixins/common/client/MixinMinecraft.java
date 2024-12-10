@@ -74,13 +74,13 @@ public class MixinMinecraft {
 		}
 	}
 
-	@Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;wrapScreenError(Ljava/lang/Runnable;Ljava/lang/String;Ljava/lang/String;)V"))
+	@Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;tick()V"))
 	private void beforeScreenTickFancyMenu(CallbackInfo info) {
 		if (this.screen == null) return;
 		EventHandler.INSTANCE.postEvent(new ScreenTickEvent.Pre(this.screen));
 	}
 
-	@Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;wrapScreenError(Ljava/lang/Runnable;Ljava/lang/String;Ljava/lang/String;)V", shift = At.Shift.AFTER))
+	@Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;tick()V", shift = At.Shift.AFTER))
 	private void afterScreenTickFancyMenu(CallbackInfo info) {
 		if (this.screen == null) return;
 		EventHandler.INSTANCE.postEvent(new ScreenTickEvent.Post(this.screen));
@@ -100,7 +100,6 @@ public class MixinMinecraft {
 		//Reset GUI scale in case some layout changed it
 		RenderingUtils.resetGuiScale();
 
-		//TODO übernehmen 3.3.2
 		if (FancyMenu.getOptions().showWelcomeScreen.getValue() && (screen instanceof TitleScreen)) {
 			info.cancel();
 			Minecraft.getInstance().setScreen(new WelcomeScreen(screen));

@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import net.minecraft.client.gui.GuiGraphics;
@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class ScrollableMarkdownRenderer implements Renderable, ContainerEventHandler, NarratableEntry {
+public class ScrollableMarkdownRenderer implements Renderable, ContainerEventHandler, NarratableEntry, FancyMenuUiComponent {
 
     @NotNull
     protected ScrollArea scrollArea = new ScrollArea(0,0,0,0);
@@ -101,7 +101,6 @@ public class ScrollableMarkdownRenderer implements Renderable, ContainerEventHan
 
         RenderSystem.enableBlend();
         this.scrollArea.render(graphics, mouseX, mouseY, partial);
-        RenderingUtils.resetShaderColor(graphics);
 
     }
 
@@ -173,6 +172,23 @@ public class ScrollableMarkdownRenderer implements Renderable, ContainerEventHan
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         this.markdownRenderer.mouseReleased(mouseX, mouseY, button);
         this.scrollArea.mouseReleased(mouseX, mouseY, button);
+        return false;
+    }
+
+    /**
+     * This restores the old click logic.
+     */
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        for (GuiEventListener listener : this.children()) {
+            if (listener.mouseClicked(mouseX, mouseY, button)) {
+                this.setFocused(listener);
+                if (button == 0) {
+                    this.setDragging(true);
+                }
+                return true;
+            }
+        }
         return false;
     }
 

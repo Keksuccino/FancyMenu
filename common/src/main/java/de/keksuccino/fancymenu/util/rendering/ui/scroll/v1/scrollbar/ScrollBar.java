@@ -6,7 +6,9 @@ import de.keksuccino.fancymenu.events.screen.ScreenMouseScrollEvent;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -82,17 +84,16 @@ public class ScrollBar {
         this.lastGrabberY = y;
 
         RenderSystem.enableBlend();
-        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 
         if (this.isGrabberHovered() || this.isGrabberGrabbed()) {
             if (this.hoverBarTexture != null) {
-                graphics.blit(this.hoverBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight);
+                graphics.blit(RenderType::guiTextured, this.hoverBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
             } else if (this.hoverBarColor != null) {
                 graphics.fill(x, y, x + this.grabberWidth, y + this.grabberHeight, this.hoverBarColor.getRGB());
             }
         } else {
             if (this.idleBarTexture != null) {
-                graphics.blit(this.idleBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight);
+                graphics.blit(RenderType::guiTextured, this.idleBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
             } else if (this.idleBarColor != null) {
                 graphics.fill(x, y, x + this.grabberWidth, y + this.grabberHeight, this.idleBarColor.getRGB());
             }

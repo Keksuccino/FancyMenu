@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
+import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.ellerton.japng.Png;
 import net.ellerton.japng.argb8888.Argb8888Bitmap;
 import net.ellerton.japng.argb8888.Argb8888BitmapSequence;
@@ -318,7 +319,7 @@ public class ApngTexture implements ITexture, PlayableResource {
                 try {
                     this.frameRegistrationCounter++;
                     frame.dynamicTexture = new DynamicTexture(frame.nativeImage);
-                    frame.resourceLocation = Minecraft.getInstance().getTextureManager().register("fancymenu_apng_frame_" + this.uniqueId + "_" + this.frameRegistrationCounter, frame.dynamicTexture);
+                    frame.resourceLocation = RenderUtils.register("fancymenu_apng_frame_" + this.uniqueId + "_" + this.frameRegistrationCounter, frame.dynamicTexture);
                 } catch (Exception ex) {
                     LOGGER.error("[FANCYMENU] Failed to register APNG frame to Minecraft's TextureManager!", ex);
                 }

@@ -121,8 +121,6 @@ public class PlayerEntityElement extends AbstractElement {
             if (props.isBaby) mouseOffsetY += (this.baseHeight / 2) - mouseOffsetY; //not exactly the same eye pos as for adult size, but good enough
             this.renderPlayerEntity(x, y, (int)scale, (float)x - mouseX + mouseOffsetX, (float)y - mouseY + mouseOffsetY, props);
 
-            RenderingUtils.resetShaderColor(graphics);
-
         }
 
     }
@@ -158,7 +156,6 @@ public class PlayerEntityElement extends AbstractElement {
         modelViewStack.pushMatrix();
         modelViewStack.translate((posX+((props.getDimensions().width() / 2) * scale)), (posY+(props.getDimensions().height() * scale)), 1050.0F);
         modelViewStack.scale(1.0F, 1.0F, -1.0F);
-        RenderSystem.applyModelViewMatrix();
         PoseStack innerPoseStack = new PoseStack();
         innerPoseStack.pushPose();
         innerPoseStack.translate(0.0F, 0.0F, 1000.0F);
@@ -206,13 +203,10 @@ public class PlayerEntityElement extends AbstractElement {
         dispatcher.overrideCameraOrientation(quat2);
         dispatcher.setRenderShadow(false);
         MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
-        RenderSystem.runAsFancy(() -> {
-            renderer.renderPlayerEntityItem(0.0D, 0.0D, 0.0D, 0.0F, 1.0F, innerPoseStack, bufferSource, 15728880);
-        });
+        renderer.renderPlayerEntityItem(0.0D, 0.0D, 0.0D, 0.0F, 1.0F, innerPoseStack, bufferSource, 15728880);
         bufferSource.endBatch();
         dispatcher.setRenderShadow(true);
         modelViewStack.popMatrix();
-        RenderSystem.applyModelViewMatrix();
         Lighting.setupFor3DItems();
         innerPoseStack.popPose();
     }

@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 /**
  * {@link ContainerEventHandler}, but fires all events for every child instead of just focused/hovered ones in some cases.
  */
-public interface FocuslessContainerEventHandler extends ContainerEventHandler {
+public interface FocuslessContainerEventHandler extends ContainerEventHandler, FancyMenuUiComponent {
 
     @Override
     default boolean mouseReleased(double mouseX, double mouseY, int button) {

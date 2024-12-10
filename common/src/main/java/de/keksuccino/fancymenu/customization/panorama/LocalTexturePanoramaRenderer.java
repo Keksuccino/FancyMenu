@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
@@ -20,8 +22,11 @@ import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -162,9 +167,7 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 		this.startTickerThreadIfNeeded();
 		if (this.panoramaImageSuppliers.size() < 6) {
 			RenderSystem.enableBlend();
-			RenderingUtils.resetShaderColor(graphics);
-			graphics.blit(ITexture.MISSING_TEXTURE_LOCATION, 0, 0, 0.0F, 0.0F, ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight(), ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight());
-			RenderingUtils.resetShaderColor(graphics);
+			graphics.blit(RenderType::guiTextured, ITexture.MISSING_TEXTURE_LOCATION, 0, 0, 0.0F, 0.0F, ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight(), ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight());
 		} else {
 			this._render(graphics, Minecraft.getInstance(), this.opacity);
 		}
@@ -182,15 +185,14 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 		Tesselator tesselator = Tesselator.getInstance();
 		Matrix4f $$5 = (new Matrix4f()).setPerspective(fovF, (float)mc.getWindow().getWidth() / (float)mc.getWindow().getHeight(), 0.05F, 10.0F);
 		RenderSystem.backupProjectionMatrix();
-		RenderSystem.setProjectionMatrix($$5, VertexSorting.DISTANCE_TO_ORIGIN);
+		RenderSystem.setProjectionMatrix($$5, ProjectionType.PERSPECTIVE);
 		Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();
 		modelViewStack.pushMatrix();
 		modelViewStack.rotationX(3.1415927F);
-		RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+		RenderSystem.setShader(CoreShaders.POSITION_TEX_COLOR);
 		RenderSystem.enableBlend();
 		RenderSystem.disableCull();
 		RenderSystem.depthMask(false);
-		//TODO übernehmen
 		RenderSystem.disableDepthTest();
 
 		for(int $$8 = 0; $$8 < 4; ++$$8) {
@@ -199,11 +201,8 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 			float $$10 = ((float)($$8 / 2) / 2.0F - 0.5F) / 256.0F;
 			float $$11 = 0.0F;
 			modelViewStack.translate($$9, $$10, 0.0F);
-//			modelViewStack.rotateX($$1 * 0.017453292F);
-//			modelViewStack.rotateY($$2 * 0.017453292F);
 			modelViewStack.rotateX(pitch * (float) (Math.PI / 180.0));
 			modelViewStack.rotateY(yaw * (float) (Math.PI / 180.0));
-			RenderSystem.applyModelViewMatrix();
 
 			for(int texNum = 0; texNum < 6; ++texNum) {
 				ResourceLocation location = null;
@@ -270,26 +269,20 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 		RenderSystem.colorMask(true, true, true, true);
 		RenderSystem.restoreProjectionMatrix();
 		modelViewStack.popMatrix();
-		RenderSystem.applyModelViewMatrix();
 		RenderSystem.depthMask(true);
 		RenderSystem.enableCull();
 		RenderSystem.enableDepthTest();
-
-		RenderingUtils.resetShaderColor(graphics);
 
 		if (this.overlayTextureSupplier != null) {
 			ITexture texture = this.overlayTextureSupplier.get();
 			if (texture != null) {
 				ResourceLocation location = texture.getResourceLocation();
 				if (location != null) {
-					graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
 					RenderSystem.enableBlend();
-					graphics.blit(location, 0, 0, 0.0F, 0.0F, screenW, screenH, screenW, screenH);
+					graphics.blit(RenderType::guiTextured, location, 0, 0, 0.0F, 0.0F, screenW, screenH, screenW, screenH, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.opacity));
 				}
 			}
 		}
-
-		RenderingUtils.resetShaderColor(graphics);
 
 	}
 

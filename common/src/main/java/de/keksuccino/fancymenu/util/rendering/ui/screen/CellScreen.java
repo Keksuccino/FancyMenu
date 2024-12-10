@@ -344,9 +344,7 @@ public abstract class CellScreen extends Screen {
             //Use the scroll entry position and size to check for cell hover, to cover the whole cell line and not just the (sometimes too small) actual cell size
             this.cell.hovered = UIBase.isXYInArea(mouseX, mouseY, this.getX(), this.getY(), this.parent.getInnerWidth(), this.getHeight());
             if ((cell.isSelectable() && cell.isHovered()) || (cell == CellScreen.this.selectedCell)) {
-                RenderingUtils.resetShaderColor(graphics);
                 graphics.fill((int) this.getX(), (int) this.getY(), (int) (this.getX() + this.parent.getInnerWidth()), (int) (this.getY() + this.getHeight()), this.cell.hoverColorSupplier.get().getColorInt());
-                RenderingUtils.resetShaderColor(graphics);
             }
             this.cell.render(graphics, mouseX, mouseY, partial);
         }
@@ -380,7 +378,6 @@ public abstract class CellScreen extends Screen {
             int centerY = this.getY() + (this.getHeight() / 2);
             int halfThickness = Math.max(1, this.separatorThickness / 2);
             graphics.fill(this.getX(), centerY - ((halfThickness > 1) ? halfThickness : 0), this.getX() + this.getWidth(), centerY + halfThickness, this.separatorColorSupplier.get().getColorInt());
-            RenderingUtils.resetShaderColor(graphics);
         }
 
         @Override
@@ -477,9 +474,7 @@ public abstract class CellScreen extends Screen {
 
         @Override
         public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            RenderingUtils.resetShaderColor(graphics);
             UIBase.drawElementLabel(graphics, Minecraft.getInstance().font, this.text, this.getX(), this.getY());
-            RenderingUtils.resetShaderColor(graphics);
         }
 
         @Override

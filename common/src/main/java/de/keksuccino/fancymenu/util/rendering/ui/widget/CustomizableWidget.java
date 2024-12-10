@@ -9,8 +9,10 @@ import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ARGB;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
@@ -64,16 +66,14 @@ public interface CustomizableWidget {
             ResourceLocation location = customBackground.getResourceLocation();
             if (location != null) {
                 renderVanilla = false;
-                graphics.setColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)widget).getAlphaFancyMenu());
                 RenderSystem.enableBlend();
                 if ((widget instanceof CustomizableSlider s) && s.isNineSliceCustomSliderHandle_FancyMenu()) {
-                    RenderingUtils.blitNineSliced(graphics, location, x, y, width, height, s.getNineSliceSliderHandleBorderX_FancyMenu(), s.getNineSliceSliderHandleBorderY_FancyMenu(), s.getNineSliceSliderHandleBorderX_FancyMenu(), s.getNineSliceSliderHandleBorderY_FancyMenu(), customBackground.getWidth(), customBackground.getHeight(), 0, 0, customBackground.getWidth(), customBackground.getHeight());
+                    RenderingUtils.blitNineSliced(graphics, location, x, y, width, height, s.getNineSliceSliderHandleBorderX_FancyMenu(), s.getNineSliceSliderHandleBorderY_FancyMenu(), s.getNineSliceSliderHandleBorderX_FancyMenu(), s.getNineSliceSliderHandleBorderY_FancyMenu(), customBackground.getWidth(), customBackground.getHeight(), 0, 0, customBackground.getWidth(), customBackground.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)widget).getAlphaFancyMenu()));
                 } else if (!(widget instanceof CustomizableSlider) && this.isNineSliceCustomBackgroundTexture_FancyMenu()) {
-                    RenderingUtils.blitNineSliced(graphics, location, x, y, width, height, getNineSliceCustomBackgroundBorderX_FancyMenu(), getNineSliceCustomBackgroundBorderY_FancyMenu(), getNineSliceCustomBackgroundBorderX_FancyMenu(), getNineSliceCustomBackgroundBorderY_FancyMenu(), customBackground.getWidth(), customBackground.getHeight(), 0, 0, customBackground.getWidth(), customBackground.getHeight());
+                    RenderingUtils.blitNineSliced(graphics, location, x, y, width, height, getNineSliceCustomBackgroundBorderX_FancyMenu(), getNineSliceCustomBackgroundBorderY_FancyMenu(), getNineSliceCustomBackgroundBorderX_FancyMenu(), getNineSliceCustomBackgroundBorderY_FancyMenu(), customBackground.getWidth(), customBackground.getHeight(), 0, 0, customBackground.getWidth(), customBackground.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)widget).getAlphaFancyMenu()));
                 } else {
-                    graphics.blit(location, x, y, 0.0F, 0.0F, width, height, width, height);
+                    graphics.blit(RenderType::guiTextured, location, x, y, 0.0F, 0.0F, width, height, width, height, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)widget).getAlphaFancyMenu()));
                 }
-                RenderingUtils.resetShaderColor(graphics);
             }
         }
         return renderVanilla;

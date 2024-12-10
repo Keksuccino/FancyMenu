@@ -48,7 +48,7 @@ public class IsSnowingRequirement extends LoadingRequirement {
     private static boolean isSnowingAt(@NotNull Level level, @NotNull BlockPos pos) {
         Biome biome = level.getBiome(pos).value();
         if (!level.isRaining()) return false;
-        return (biome.getPrecipitationAt(pos) == Biome.Precipitation.SNOW);
+        return (biome.getPrecipitationAt(pos, level.getSeaLevel()) == Biome.Precipitation.SNOW);
     }
 
     @Override

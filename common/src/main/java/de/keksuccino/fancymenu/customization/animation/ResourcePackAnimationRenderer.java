@@ -7,7 +7,9 @@ import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import javax.annotation.Nullable;
@@ -113,8 +115,7 @@ public class ResourcePackAnimationRenderer implements IAnimationRenderer {
             x2 = 0;
             y2 = 0;
         }
-        graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
-        graphics.blit(this.resources.get(this.frame), x2, y2, 0.0F, 0.0F, w, h, w, h);
+        graphics.blit(RenderType::guiTextured, this.resources.get(this.frame), x2, y2, 0.0F, 0.0F, w, h, w, h, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.opacity));
         RenderSystem.disableBlend();
     }
 

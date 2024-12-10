@@ -79,10 +79,10 @@ dependencies {
     implementation('net.sf.jopt-simple:jopt-simple:5.0.4') { version { strictly '5.0.4' } }
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
     //Needs to be "implementation" when building and "compileOnly" in-dev for some frickin reason
-    implementation(annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.5"))
-    //compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.5"))
-    implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.3.5")) {
-        jarJar.ranged(it, "[0.3.5,)")
+    implementation(annotationProcessor("io.github.llamalad7:mixinextras-common:0.4.1"))
+    //compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.4.1"))
+    implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.4.1")) {
+        jarJar.ranged(it, "[0.4.1,)")
     }
     minecraftLibrary(jarJar("com.github.Keksuccino:japng:0.5.3")) {
         jarJar.ranged(it, "[0.5.3,)")
@@ -90,7 +90,7 @@ dependencies {
     minecraftLibrary(jarJar("com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7")) {
         jarJar.ranged(it, "[1.7,)")
     }
-    implementation "maven.modrinth:konkrete:1.9.9-1.21-forge"
+    implementation "maven.modrinth:konkrete:1.9.9-1.21.4-forge"
     implementation "maven.modrinth:melody:1.0.10-1.21-forge"
     compileOnly project(":common")
 }

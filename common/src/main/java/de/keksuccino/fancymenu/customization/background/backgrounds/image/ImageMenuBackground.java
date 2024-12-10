@@ -9,7 +9,9 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ARGB;
 import org.jetbrains.annotations.NotNull;
 
 public class ImageMenuBackground extends MenuBackground {
@@ -35,8 +37,6 @@ public class ImageMenuBackground extends MenuBackground {
         RenderSystem.enableBlend();
         graphics.fill(0, 0, getScreenWidth(), getScreenHeight(), BACKGROUND_COLOR.getColorIntWithAlpha(this.opacity));
 
-        RenderingUtils.resetShaderColor(graphics);
-
         ResourceLocation resourceLocation = null;
         ITexture tex = null;
         AspectRatio ratio = new AspectRatio(10, 10);
@@ -60,10 +60,9 @@ public class ImageMenuBackground extends MenuBackground {
         if (resourceLocation != null) {
 
             RenderSystem.enableBlend();
-            graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
 
             if (this.repeat) {
-                RenderingUtils.blitRepeat(graphics, resourceLocation, 0, 0, getScreenWidth(), getScreenHeight(), tex.getWidth(), tex.getHeight());
+                RenderingUtils.blitRepeat(graphics, resourceLocation, 0, 0, getScreenWidth(), getScreenHeight(), tex.getWidth(), tex.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.opacity));
             } else if (this.slideLeftRight) {
                 int w = ratio.getAspectRatioWidth(getScreenHeight());
                 //Check if background should move to the left or the right side
@@ -110,20 +109,18 @@ public class ImageMenuBackground extends MenuBackground {
                     if (this.keepBackgroundAspectRatio) {
                         this.renderKeepAspectRatio(graphics, ratio, resourceLocation);
                     } else {
-                        graphics.blit(resourceLocation, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
+                        graphics.blit(RenderType::guiTextured, resourceLocation, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
                     }
                 } else {
-                    RenderingUtils.blitF(graphics, resourceLocation, (float)slidePos, 0.0F, 0.0F, 0.0F, w, getScreenHeight(), w, getScreenHeight());
+                    RenderingUtils.blitF(graphics, resourceLocation, (float)slidePos, 0.0F, 0.0F, 0.0F, w, getScreenHeight(), w, getScreenHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
                 }
             } else if (this.keepBackgroundAspectRatio) {
                 this.renderKeepAspectRatio(graphics, ratio, resourceLocation);
             } else {
-                graphics.blit(resourceLocation, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
+                graphics.blit(RenderType::guiTextured, resourceLocation, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
             }
 
         }
-
-        RenderingUtils.resetShaderColor(graphics);
 
     }
 
@@ -137,7 +134,7 @@ public class ImageMenuBackground extends MenuBackground {
         if (size[1] > getScreenHeight()) {
             y = -((size[1] - getScreenHeight()) / 2);
         }
-        graphics.blit(resourceLocation, x, y, 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
+        graphics.blit(RenderType::guiTextured, resourceLocation, x, y, 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
     }
 
 }

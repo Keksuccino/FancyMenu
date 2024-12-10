@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
@@ -19,6 +20,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -32,7 +34,7 @@ import java.util.List;
 import java.util.Objects;
 
 @SuppressWarnings("all")
-public class ContextMenu implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget {
+public class ContextMenu implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget, FancyMenuUiComponent {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -67,7 +69,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         float scale = UIBase.calculateFixedScale(this.getScale());
 
         RenderSystem.enableBlend();
-        UIBase.resetShaderColor(graphics);
         graphics.pose().pushPose();
         graphics.pose().scale(scale, scale, scale);
         graphics.pose().translate(0.0F, 0.0F, 500.0F / scale);
@@ -129,11 +130,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         //Render shadow
         if (this.hasShadow()) {
             RenderingUtils.fillF(graphics, (float) (scaledX + 4), (float) (scaledY + 4), (float) (scaledX + this.getWidth() + 4), (float) (scaledY + this.getHeight() + 4), SHADOW_COLOR.getColorInt());
-            UIBase.resetShaderColor(graphics);
         }
         //Render background
         RenderingUtils.fillF(graphics, (float) scaledX, (float) scaledY, (float) (scaledX + this.getWidth()), (float) (scaledY + this.getHeight()), UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
-        UIBase.resetShaderColor(graphics);
         //Update + render entries
         float entryY = scaledY;
         for (ContextMenuEntry<?> e : renderEntries) {
@@ -147,11 +146,9 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 e.hoverAction.run(this, e, false);
             }
             RenderSystem.enableBlend();
-            UIBase.resetShaderColor(graphics);
             e.render(graphics, (int) scaledMouseX, (int) scaledMouseY, partial);
             entryY += e.getHeight(); //don't scale this, because already scaled via graphics.pose().scale()
         }
-        UIBase.resetShaderColor(graphics);
         //Render border
         UIBase.renderBorder(graphics, (float) (scaledX - this.getBorderThickness()), (float) (scaledY - this.getBorderThickness()), (float) (scaledX + this.getWidth() + this.getBorderThickness()), (float) (scaledY + this.getHeight() + this.getBorderThickness()), (float) this.getBorderThickness(), UIBase.getUIColorTheme().element_border_color_normal.getColorInt(), true, true, true, true);
 
@@ -175,8 +172,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 s.subContextMenu.render(graphics, mouseX, mouseY, partial);
             }
         }
-
-        UIBase.resetShaderColor(graphics);
 
     }
 
@@ -1097,9 +1092,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         protected void renderIcon(GuiGraphics graphics) {
             if (this.icon != null) {
                 RenderSystem.enableBlend();
-                UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
-                graphics.blit(this.icon, (int) (this.x + 10), (int) (this.y + (this.getHeight() / 2) - (ICON_WIDTH_HEIGHT / 2)), 0.0F, 0.0F, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
-                UIBase.resetShaderColor(graphics);
+                graphics.blit(RenderType::guiTextured, this.icon, (int) (this.x + 10), (int) (this.y + (this.getHeight() / 2) - (ICON_WIDTH_HEIGHT / 2)), 0.0F, 0.0F, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, UIBase.getUIColorTheme().ui_texture_color.getColorInt());
             }
         }
 
@@ -1120,9 +1113,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 this.tooltipActive = (this.tooltipIconHoverStart != -1) && ((this.tooltipIconHoverStart + 200) < System.currentTimeMillis());
 
                 RenderSystem.enableBlend();
-                UIBase.getUIColorTheme().setUITextureShaderColor(graphics, this.tooltipIconHovered ? 1.0F : 0.2F);
-                graphics.blit(CONTEXT_MENU_TOOLTIP_ICON, this.getTooltipIconX() + offsetX, this.getTooltipIconY(), 0.0F, 0.0F, 10, 10, 10, 10);
-                UIBase.resetShaderColor(graphics);
+                graphics.blit(RenderType::guiTextured, CONTEXT_MENU_TOOLTIP_ICON, this.getTooltipIconX() + offsetX, this.getTooltipIconY(), 0.0F, 0.0F, 10, 10, 10, 10, UIBase.getUIColorTheme().ui_texture_color.getColorIntWithAlpha(this.tooltipIconHovered ? 1.0F : 0.2F));
 
                 if (this.tooltipActive) {
                     if (this.parent.isForceDefaultTooltipStyle()) {
@@ -1251,13 +1242,16 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            LOGGER.info("############# CLICK 1");
             if ((button == 0) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered() && !this.tooltipIconHovered) {
                 if (FancyMenu.getOptions().playUiClickSounds.getValue() && this.enableClickSound) {
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 }
                 this.clickAction.onClick(this.parent, this);
+                LOGGER.info("############# CLICK 2");
                 return true;
             }
+            LOGGER.info("############# CLICK 3");
             return super.mouseClicked(mouseX, mouseY, button);
         }
 
@@ -1341,9 +1335,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         protected void renderSubMenuArrow(GuiGraphics graphics) {
             RenderSystem.enableBlend();
-            UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
-            graphics.blit(SUB_CONTEXT_MENU_ARROW_ICON, (int) (this.x + this.width - 20), (int) (this.y + 5), 0.0F, 0.0F, 10, 10, 10, 10);
-            UIBase.resetShaderColor(graphics);
+            graphics.blit(RenderType::guiTextured, SUB_CONTEXT_MENU_ARROW_ICON, (int) (this.x + this.width - 20), (int) (this.y + 5), 0.0F, 0.0F, 10, 10, 10, 10, UIBase.getUIColorTheme().ui_texture_color.getColorInt());
         }
 
         @Override

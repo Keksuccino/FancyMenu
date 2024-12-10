@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
@@ -37,8 +38,6 @@ public class TitleScreenRealmsNotificationDeepElement extends AbstractDeepElemen
             this.drawIcons(graphics);
         }
 
-        RenderingUtils.resetShaderColor(graphics);
-
     }
 
     private void drawIcons(GuiGraphics graphics) {
@@ -48,16 +47,16 @@ public class TitleScreenRealmsNotificationDeepElement extends AbstractDeepElemen
         int m = k + 48 + 2;
         int n = l - 3;
 
-        graphics.blitSprite(UNSEEN_NOTIFICATION_SPRITE, n - 12, m + 3, 10, 10);
+        graphics.blitSprite(RenderType::guiTextured, UNSEEN_NOTIFICATION_SPRITE, n - 12, m + 3, 10, 10);
         n -= 16;
 
-        graphics.blitSprite(NEWS_SPRITE, n - 14, m + 1, 14, 14);
+        graphics.blitSprite(RenderType::guiTextured, NEWS_SPRITE, n - 14, m + 1, 14, 14);
         n -= 16;
 
-        graphics.blitSprite(INVITE_SPRITE, n - 14, m + 1, 14, 14);
+        graphics.blitSprite(RenderType::guiTextured, INVITE_SPRITE, n - 14, m + 1, 14, 14);
         n -= 16;
 
-        graphics.blitSprite(TRIAL_AVAILABLE_SPRITE, n - 10, m + 4, 8, 8);
+        graphics.blitSprite(RenderType::guiTextured, TRIAL_AVAILABLE_SPRITE, n - 10, m + 4, 8, 8);
 
     }
 

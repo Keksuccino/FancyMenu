@@ -8,7 +8,9 @@ import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ARGB;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -73,14 +75,12 @@ public interface CustomizableSlider {
             }
         }
         if (location != null) {
-            graphics.setColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)this).getAlphaFancyMenu());
             RenderSystem.enableBlend();
             if (this.isNineSliceCustomSliderBackground_FancyMenu()) {
-                RenderingUtils.blitNineSliced(graphics, location, widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight(), this.getNineSliceSliderBackgroundBorderX_FancyMenu(), this.getNineSliceSliderBackgroundBorderY_FancyMenu(), this.getNineSliceSliderBackgroundBorderX_FancyMenu(), this.getNineSliceSliderBackgroundBorderY_FancyMenu(), texture.getWidth(), texture.getHeight(), 0, 0, texture.getWidth(), texture.getHeight());
+                RenderingUtils.blitNineSliced(graphics, location, widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight(), this.getNineSliceSliderBackgroundBorderX_FancyMenu(), this.getNineSliceSliderBackgroundBorderY_FancyMenu(), this.getNineSliceSliderBackgroundBorderX_FancyMenu(), this.getNineSliceSliderBackgroundBorderY_FancyMenu(), texture.getWidth(), texture.getHeight(), 0, 0, texture.getWidth(), texture.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)this).getAlphaFancyMenu()));
             } else {
-                graphics.blit(location, widget.getX(), widget.getY(), 0.0F, 0.0F, widget.getWidth(), widget.getHeight(), widget.getWidth(), widget.getHeight());
+                graphics.blit(RenderType::guiTextured, location, widget.getX(), widget.getY(), 0.0F, 0.0F, widget.getWidth(), widget.getHeight(), widget.getWidth(), widget.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)this).getAlphaFancyMenu()));
             }
-            RenderingUtils.resetShaderColor(graphics);
             return false;
         }
         return true;

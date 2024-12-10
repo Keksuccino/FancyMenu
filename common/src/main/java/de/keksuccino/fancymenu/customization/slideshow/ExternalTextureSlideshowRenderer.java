@@ -14,7 +14,9 @@ import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -225,13 +227,11 @@ public class ExternalTextureSlideshowRenderer {
 			if (o > this.slideshowOpacity) {
 				o = this.slideshowOpacity;
 			}
-			graphics.setColor(1.0F, 1.0F, 1.0F, o);
 			ITexture t = this.previous.get();
 			ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
 			if (loc != null) {
-				graphics.blit(loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
+				graphics.blit(RenderType::guiTextured, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, o));
 			}
-			graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 			graphics.pose().popPose();
 		}
 	}
@@ -239,11 +239,10 @@ public class ExternalTextureSlideshowRenderer {
 	protected void renderCurrent(GuiGraphics graphics) {
 		if (this.current != null) {
 			RenderSystem.enableBlend();
-			graphics.setColor(1.0F, 1.0F, 1.0F, this.slideshowOpacity);
 			ITexture t = this.current.get();
 			ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
 			if (loc != null) {
-				graphics.blit(loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
+				graphics.blit(RenderType::guiTextured, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.slideshowOpacity));
 			}
 		}
 	}
@@ -251,11 +250,10 @@ public class ExternalTextureSlideshowRenderer {
 	protected void renderOverlay(GuiGraphics graphics) {
 		if (this.overlayTexture != null) {
 			RenderSystem.enableBlend();
-			graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 			ITexture t = this.overlayTexture.get();
 			ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
 			if (loc != null) {
-				graphics.blit(loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
+				graphics.blit(RenderType::guiTextured, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
 			}
 		}
 	}

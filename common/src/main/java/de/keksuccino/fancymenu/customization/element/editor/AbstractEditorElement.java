@@ -46,10 +46,12 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -670,7 +672,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			int texH = size[1];
 			int texX = this.getX() + (this.getWidth() / 2) - (texW / 2);
 			int texY = this.getY() + (this.getHeight() / 2) - (texH / 2);
-			graphics.blit(DRAGGING_NOT_ALLOWED_TEXTURE, texX, texY, 0.0F, 0.0F, texW, texH, texW, texH);
+			graphics.blit(RenderType::guiTextured, DRAGGING_NOT_ALLOWED_TEXTURE, texX, texY, 0.0F, 0.0F, texW, texH, texW, texH);
 		}
 	}
 
@@ -683,9 +685,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			int texH = size[1];
 			int texX = this.getX() + this.getWidth() - texW;
 			int texY = this.getY();
-			UIBase.setShaderColor(graphics, UIBase.getUIColorTheme().warning_text_color);
-			graphics.blit(DEPRECATED_WARNING_TEXTURE, texX, texY, 0.0F, 0.0F, texW, texH, texW, texH);
-			RenderingUtils.resetShaderColor(graphics);
+			graphics.blit(RenderType::guiTextured, DEPRECATED_WARNING_TEXTURE, texX, texY, 0.0F, 0.0F, texW, texH, texW, texH, UIBase.getUIColorTheme().warning_text_color.getColorInt());
 		}
 	}
 

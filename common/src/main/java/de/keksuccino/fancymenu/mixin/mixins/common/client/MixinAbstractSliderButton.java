@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
@@ -8,6 +9,7 @@ import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
@@ -17,6 +19,8 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.function.Function;
 
 @SuppressWarnings("unused")
 @Mixin(AbstractSliderButton.class)
@@ -54,8 +58,8 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
         this.sliderInitializedFancyMenu = true;
     }
 
-    @WrapWithCondition(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lnet/minecraft/resources/ResourceLocation;IIII)V"))
-    private boolean wrapBlitNineSlicedInRenderWidgetFancyMenu(GuiGraphics graphics, ResourceLocation p_300860_, int p_298718_, int p_298541_, int blitWidth, int p_298426_) {
+    @WrapWithCondition(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Ljava/util/function/Function;Lnet/minecraft/resources/ResourceLocation;IIIII)V"))
+    private boolean wrapBlitNineSlicedInRenderWidgetFancyMenu(GuiGraphics graphics, Function<ResourceLocation, RenderType> $$0, ResourceLocation $$1, int $$2, int $$3, int $$4, int blitWidth, int $$6) {
         CustomizableWidget cus = this.getAsCustomizableWidgetFancyMenu();
         boolean isHandle = (blitWidth == 8);
         boolean renderVanilla;
@@ -66,7 +70,8 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
         } else {
             renderVanilla = this.renderSliderBackgroundFancyMenu(graphics, (AbstractSliderButton)((Object)this), this.canChangeValue);
         }
-        graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
+        //TODO fix missing color handling
+//        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
         return renderVanilla;
     }
 

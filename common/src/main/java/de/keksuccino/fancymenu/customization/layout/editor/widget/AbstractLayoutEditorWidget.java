@@ -108,12 +108,10 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
         this.updateCursor();
 
-        RenderingUtils.resetShaderColor(graphics);
         if (this.isExpanded()) {
             this.renderBody(graphics, mouseX, mouseY, partial);
         }
         this.renderFrame(graphics, mouseX, mouseY, partial, x, y, this.getWidth(), this.getHeight());
-        RenderingUtils.resetShaderColor(graphics);
 
     }
 
@@ -125,7 +123,6 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
         //Separator between header and body
         if (this.isExpanded()) {
-            RenderingUtils.resetShaderColor(graphics);
             float separatorXMin = x + this.getBorderThickness();
             float separatorYMin =  y + this.getBorderThickness() + this.getHeaderHeight();
             float separatorXMax = separatorXMin + this.getBodyWidth();
@@ -134,23 +131,18 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
         }
 
         //Widget border
-        RenderingUtils.resetShaderColor(graphics);
         if (this.isExpanded()) {
             UIBase.renderBorder(graphics, x, y, x + width, y + height, this.getBorderThickness(), UIBase.getUIColorTheme().element_border_color_normal.getColorInt(), true, true, true, true);
         } else {
             UIBase.renderBorder(graphics, x, y, x + width, y + this.getBorderThickness() + this.getHeaderHeight() + this.getBorderThickness(), this.getBorderThickness(), UIBase.getUIColorTheme().element_border_color_normal.getColorInt(), true, true, true, true);
         }
 
-        RenderingUtils.resetShaderColor(graphics);
-
     }
 
     protected void renderHeader(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
 
         //Background
-        RenderingUtils.resetShaderColor(graphics);
         fillF(graphics, x + this.getBorderThickness(), y + this.getBorderThickness(), x + this.getBorderThickness() + this.getBodyWidth(), y + this.getBorderThickness() + this.getHeaderHeight(), UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
-        RenderingUtils.resetShaderColor(graphics);
 
         //Buttons
         float buttonX = x + this.getBorderThickness() + this.getBodyWidth();
@@ -171,14 +163,12 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
         float labelDisplayWidth = Math.max(1, this.getBodyWidth() - this.getCombinedHeaderButtonWidth() - 3);
         float scissorX = x + this.getBorderThickness() - 1;
         float scissorY = y + this.getBorderThickness() - 1;
-        RenderingUtils.resetShaderColor(graphics);
         RenderSystem.enableBlend();
         graphics.pose().pushPose();
         this.enableComponentScissor(graphics, (int) scissorX, (int) scissorY, (int) labelDisplayWidth + 1, (int) this.getHeaderHeight() + 2, true);
         UIBase.drawElementLabel(graphics, Minecraft.getInstance().font, this.displayLabel, (int)(headerX + 3), (int)(headerY + (this.getHeaderHeight() / 2f) - (Minecraft.getInstance().font.lineHeight / 2f)));
         this.disableComponentScissor(graphics);
         graphics.pose().popPose();
-        RenderingUtils.resetShaderColor(graphics);
     }
 
     protected void addHeaderButton(@NotNull HeaderButton button) {
@@ -501,10 +491,8 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
             if (icon != null) {
                 ResourceLocation location = icon.getResourceLocation();
                 if (location != null) {
-                    UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
                     RenderSystem.enableBlend();
-                    blitF(graphics, location, this.x, this.y, 0.0F, 0.0F, (int) this.width, (int) this.parent.getHeaderHeight(), (int) this.width, (int) this.parent.getHeaderHeight());
-                    RenderingUtils.resetShaderColor(graphics);
+                    blitF(graphics, location, this.x, this.y, 0.0F, 0.0F, (int) this.width, (int) this.parent.getHeaderHeight(), (int) this.width, (int) this.parent.getHeaderHeight(), UIBase.getUIColorTheme().ui_texture_color.getColorInt());
                 }
             }
 
@@ -512,9 +500,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
         protected void renderHoverBackground(GuiGraphics graphics) {
             if (this.isMouseOver()) {
-                RenderingUtils.resetShaderColor(graphics);
                 fillF(graphics, this.x, this.y, this.x + this.width, this.y + this.parent.getHeaderHeight(), UIBase.getUIColorTheme().element_background_color_hover.getColorInt());
-                RenderingUtils.resetShaderColor(graphics);
             }
         }
 

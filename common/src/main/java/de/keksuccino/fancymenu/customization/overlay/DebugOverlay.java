@@ -120,7 +120,6 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
         graphics.pose().popPose();
 
         RenderSystem.disableDepthTest();
-        RenderingUtils.resetShaderColor(graphics);
 
         //Close right-click context menu if context menu of overlay menu bar is open
         if ((CustomizationOverlay.getCurrentMenuBarInstance() != null) && CustomizationOverlay.getCurrentMenuBarInstance().isEntryContextMenuOpen()) {
@@ -136,8 +135,6 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
             graphics.pose().popPose();
             RenderSystem.disableDepthTest();
         }
-
-        RenderingUtils.resetShaderColor(graphics);
 
     }
 
@@ -158,14 +155,11 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
             UIBase.renderBorder(graphics, e.getAbsoluteX(), e.getAbsoluteY(), e.getAbsoluteX() + e.getAbsoluteWidth(), e.getAbsoluteY() + e.getAbsoluteHeight(), 1, UIBase.getUIColorTheme().layout_editor_element_border_color_normal, true, true, true, true);
         }
 
-        RenderingUtils.resetShaderColor(graphics);
-
     }
 
     protected void renderLineBackground(@NotNull GuiGraphics graphics, int x, int y, int width, int height) {
         RenderSystem.enableBlend();
         graphics.fill(x, y, x + width, y + height, this.lineBackgroundColor.getColorInt());
-        RenderingUtils.resetShaderColor(graphics);
     }
 
     public DebugOverlay setLineTextShadow(boolean shadow) {

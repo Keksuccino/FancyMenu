@@ -3,8 +3,8 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.elements.musiccontroller.MusicControllerHandler;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.sounds.MusicInfo;
 import net.minecraft.client.sounds.MusicManager;
-import net.minecraft.sounds.Music;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -26,7 +26,7 @@ public abstract class MixinMusicManager {
     }
 
     @Inject(method = "startPlaying", at = @At("HEAD"), cancellable = true)
-    private void stopMusicIfDisabledInConfigFancyMenu(Music $$0, CallbackInfo info) {
+    private void stopMusicIfDisabledInConfigFancyMenu(MusicInfo $$0, CallbackInfo info) {
         if ((Minecraft.getInstance().level == null) && !FancyMenu.getOptions().playVanillaMenuMusic.getValue()) {
             this.stopPlaying();
             info.cancel();

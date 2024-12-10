@@ -13,19 +13,19 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
+import net.minecraft.client.renderer.CompiledShaderProgram;
+import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * A tooltip that gets rendered at the mouse position by default.<br>
@@ -100,15 +100,12 @@ public class Tooltip implements Renderable {
             }
             graphics.pose().translate(0.0F, 0.0F, 600.0F / scale);
             RenderSystem.enableDepthTest();
-            RenderingUtils.resetShaderColor(graphics);
 
             this.renderBackground(graphics, x, y);
             this.renderTextLines(graphics, x, y);
 
             RenderSystem.disableDepthTest();
             graphics.pose().popPose();
-
-            RenderingUtils.resetShaderColor(graphics);
 
         }
     }
@@ -137,7 +134,7 @@ public class Tooltip implements Renderable {
         } else if (this.backgroundTexture != null) {
             ResourceLocation loc = this.backgroundTexture.getResourceLocation();
             if (loc != null) {
-                graphics.blit(loc, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+                graphics.blit(RenderType::guiTextured, loc, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
             }
         } else {
             if (this.borderColor != null) {
@@ -161,20 +158,19 @@ public class Tooltip implements Renderable {
 
         graphics.pose().pushPose();
 
-        ShaderInstance shaderInstance = RenderSystem.getShader();
+        CompiledShaderProgram shaderInstance = RenderSystem.getShader();
 
         //Set Z to 0, because Z level gets handled in parent method instead
         int z = 0;
-        TooltipRenderUtil.renderTooltipBackground(graphics, x, y, width, height, z);
+        TooltipRenderUtil.renderTooltipBackground(graphics, x, y, width, height, z, null);
 
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         if (shaderInstance != null) {
-            RenderSystem.setShader(() -> shaderInstance);
+            RenderSystem.setShader(shaderInstance);
         }
 
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderingUtils.resetShaderColor(graphics);
+        RenderSystem.setShader(CoreShaders.POSITION_TEX_COLOR);
 
         graphics.pose().popPose();
 

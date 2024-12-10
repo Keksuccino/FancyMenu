@@ -14,8 +14,10 @@ import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -71,13 +73,10 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.renderBackground(graphics, mouseX, mouseY, partial);
-        RenderingUtils.resetShaderColor(graphics);
 
         this.renderHandle(graphics, mouseX, mouseY, partial);
-        RenderingUtils.resetShaderColor(graphics);
 
         this.renderLabel(graphics, mouseX, mouseY, partial);
-        RenderingUtils.resetShaderColor(graphics);
 
     }
 
@@ -92,7 +91,6 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
      */
     protected boolean renderColorBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         RenderSystem.enableBlend();
-        RenderingUtils.resetShaderColor(graphics);
         if ((this.isFocused() && !this.getAccessor().getCanChangeValueFancyMenu()) && (this.sliderBackgroundColorHighlighted != null)) {
             graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.sliderBackgroundColorHighlighted.getColorInt());
             if (this.sliderBorderColorHighlighted != null) {
@@ -110,12 +108,10 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     }
 
     protected void renderVanillaBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();
-        graphics.blitSprite(this.getSprite(), this.getX(), this.getY(), this.getWidth(), this.getHeight());
-        RenderingUtils.resetShaderColor(graphics);
+        graphics.blitSprite(RenderType::guiTextured, this.getSprite(), this.getX(), this.getY(), this.getWidth(), this.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.alpha));
     }
 
     protected void renderHandle(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
@@ -153,12 +149,10 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     }
 
     protected void renderVanillaHandle(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();
-        graphics.blitSprite(this.getHandleSprite(), this.getHandleX(), this.getY(), this.getHandleWidth(), this.getHeight());
-        RenderingUtils.resetShaderColor(graphics);
+        graphics.blitSprite(RenderType::guiTextured, this.getHandleSprite(), this.getHandleX(), this.getY(), this.getHandleWidth(), this.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.alpha));
     }
 
     protected void renderLabel(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {

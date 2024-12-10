@@ -11,9 +11,10 @@ import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.FastColor;
+import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -94,20 +95,14 @@ public class ProgressBarElement extends AbstractElement {
             if (t != null) {
                 ResourceLocation loc = t.getResourceLocation();
                 if (loc != null) {
-                    graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
-                    graphics.blit(loc, progressX, progressY, offsetX, offsetY, progressWidth, progressHeight, this.getAbsoluteWidth(), this.getAbsoluteHeight());
-                    RenderingUtils.resetShaderColor(graphics);
+                    graphics.blit(RenderType::guiTextured, loc, progressX, progressY, offsetX, offsetY, progressWidth, progressHeight, this.getAbsoluteWidth(), this.getAbsoluteHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.opacity));
                 }
             }
         } else if (this.barColor != null) {
-            //TODO übernehmen
-            RenderingUtils.resetShaderColor(graphics);
             RenderSystem.enableBlend();
-            float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) FastColor.ARGB32.alpha(this.barColor.getColorInt()) / 255.0F));
+            float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) ARGB.alpha(this.barColor.getColorInt()) / 255.0F));
             if (this.opacity <= colorAlpha) colorAlpha = this.opacity;
             graphics.fill(progressX, progressY, progressX + progressWidth, progressY + progressHeight, RenderingUtils.replaceAlphaInColor(this.barColor.getColorInt(), colorAlpha));
-            RenderingUtils.resetShaderColor(graphics);
-            //----------------------
         }
 
     }
@@ -116,19 +111,13 @@ public class ProgressBarElement extends AbstractElement {
         RenderSystem.enableBlend();
         if (this.backgroundTextureSupplier != null) {
             this.backgroundTextureSupplier.forRenderable((iTexture, location) -> {
-                graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
-                graphics.blit(location, this.getAbsoluteX(), this.getAbsoluteY(), 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
-                RenderingUtils.resetShaderColor(graphics);
+                graphics.blit(RenderType::guiTextured, location, this.getAbsoluteX(), this.getAbsoluteY(), 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.opacity));
             });
         } else if (this.backgroundColor != null) {
-            //TODO übernehmen
-            RenderingUtils.resetShaderColor(graphics);
             RenderSystem.enableBlend();
-            float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) FastColor.ARGB32.alpha(this.backgroundColor.getColorInt()) / 255.0F));
+            float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) ARGB.alpha(this.backgroundColor.getColorInt()) / 255.0F));
             if (this.opacity <= colorAlpha) colorAlpha = this.opacity;
             graphics.fill(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), RenderingUtils.replaceAlphaInColor(this.backgroundColor.getColorInt(), colorAlpha));
-            RenderingUtils.resetShaderColor(graphics);
-            //-------------------------
         }
     }
 

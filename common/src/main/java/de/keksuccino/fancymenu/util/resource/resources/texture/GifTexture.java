@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
+import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceLocation;
@@ -316,7 +317,7 @@ public class GifTexture implements ITexture, PlayableResource {
                 try {
                     this.frameRegistrationCounter++;
                     frame.dynamicTexture = new DynamicTexture(frame.nativeImage);
-                    frame.resourceLocation = Minecraft.getInstance().getTextureManager().register("fancymenu_gif_frame_" + this.uniqueId + "_" + this.frameRegistrationCounter, frame.dynamicTexture);
+                    frame.resourceLocation = RenderUtils.register("fancymenu_gif_frame_" + this.uniqueId + "_" + this.frameRegistrationCounter, frame.dynamicTexture);
                 } catch (Exception ex) {
                     LOGGER.error("[FANCYMENU] Failed to register GIF frame to Minecraft's TextureManager!", ex);
                 }

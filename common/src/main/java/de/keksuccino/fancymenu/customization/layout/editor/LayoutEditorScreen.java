@@ -46,8 +46,10 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.GenericMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -276,7 +278,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			int endY = Math.max(this.mouseSelectionStartY, mouseY);
 			graphics.fill(startX, startY, endX, endY, RenderingUtils.replaceAlphaInColor(UIBase.getUIColorTheme().layout_editor_mouse_selection_rectangle_color.getColorInt(), 70));
 			UIBase.renderBorder(graphics, startX, startY, endX, endY, 1, UIBase.getUIColorTheme().layout_editor_mouse_selection_rectangle_color.getColor(), true, true, true, true);
-			graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 		}
 	}
 
@@ -320,7 +321,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			this.layout.menuBackground.render(graphics, mouseX, mouseY, partial);
 			//TODO übernehmen
 			if (this.layout.applyVanillaBackgroundBlur) {
-				Minecraft.getInstance().gameRenderer.processBlurEffect(partial);
+				Minecraft.getInstance().gameRenderer.processBlurEffect();
 				Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 			}
 			//------------------
@@ -330,7 +331,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		} else {
 			graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
 		}
-		RenderingUtils.resetShaderColor(graphics);
 
 		this.renderScrollListHeaderFooterPreview(graphics, mouseX, mouseY, partial);
 
@@ -355,7 +355,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			if (headerTexture != null) {
 				ResourceLocation loc = headerTexture.getResourceLocation();
 				if (loc != null) {
-					RenderingUtils.resetShaderColor(graphics);
 					if (this.layout.preserveScrollListHeaderFooterAspectRatio) {
 						int[] headerSize = headerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(this.width, y0);
 						int headerWidth = headerSize[0];
@@ -363,12 +362,12 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 						int headerX = x0 + (this.width / 2) - (headerWidth / 2);
 						int headerY = (y0 / 2) - (headerHeight / 2);
 						graphics.enableScissor(x0, 0, x0 + this.width, y0);
-						graphics.blit(loc, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
+						graphics.blit(RenderType::guiTextured, loc, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
 						graphics.disableScissor();
 					} else if (this.layout.repeatScrollListHeaderTexture) {
-						RenderingUtils.blitRepeat(graphics, loc, x0, 0, this.width, y0, headerTexture.getWidth(), headerTexture.getHeight());
+						RenderingUtils.blitRepeat(graphics, loc, x0, 0, this.width, y0, headerTexture.getWidth(), headerTexture.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
 					} else {
-						graphics.blit(loc, x0, 0, 0.0F, 0.0F, this.width, y0, this.width, y0);
+						graphics.blit(RenderType::guiTextured, loc, x0, 0, 0.0F, 0.0F, this.width, y0, this.width, y0, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
 					}
 				}
 			}
@@ -376,7 +375,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			if (footerTexture != null) {
 				ResourceLocation loc = footerTexture.getResourceLocation();
 				if (loc != null) {
-					RenderingUtils.resetShaderColor(graphics);
 					if (this.layout.preserveScrollListHeaderFooterAspectRatio) {
 						int footerOriginalHeight = this.height - y1;
 						int[] footerSize = footerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(this.width, footerOriginalHeight);
@@ -385,25 +383,21 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 						int footerX = x0 + (this.width / 2) - (footerWidth / 2);
 						int footerY = y1 + (footerOriginalHeight / 2) - (footerHeight / 2);
 						graphics.enableScissor(x0, y1, x0 + this.width, y1 + footerOriginalHeight);
-						graphics.blit(loc, footerX, footerY, 0.0F, 0.0F, footerWidth, footerHeight, footerWidth, footerHeight);
+						graphics.blit(RenderType::guiTextured, loc, footerX, footerY, 0.0F, 0.0F, footerWidth, footerHeight, footerWidth, footerHeight);
 						graphics.disableScissor();
 					} else if (this.layout.repeatScrollListFooterTexture) {
 						int footerHeight = this.height - y1;
-						RenderingUtils.blitRepeat(graphics, loc, x0, y1, this.width, footerHeight, footerTexture.getWidth(), footerTexture.getHeight());
+						RenderingUtils.blitRepeat(graphics, loc, x0, y1, this.width, footerHeight, footerTexture.getWidth(), footerTexture.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
 					} else {
 						int footerHeight = this.height - y1;
-						graphics.blit(loc, x0, y1, 0.0F, 0.0F, this.width, footerHeight, this.width, footerHeight);
+						graphics.blit(RenderType::guiTextured, loc, x0, y1, 0.0F, 0.0F, this.width, footerHeight, this.width, footerHeight);
 					}
 				}
 			}
 
-			RenderingUtils.resetShaderColor(graphics);
-
 			RenderSystem.enableBlend();
-			graphics.blit(Screen.HEADER_SEPARATOR, 0, y0 - 2, 0.0F, 0.0F, this.width, 2, 32, 2);
-			graphics.blit(Screen.FOOTER_SEPARATOR, 0, y1, 0.0F, 0.0F, this.width, 2, 32, 2);
-
-			RenderingUtils.resetShaderColor(graphics);
+			graphics.blit(RenderType::guiTextured, Screen.HEADER_SEPARATOR, 0, y0 - 2, 0.0F, 0.0F, this.width, 2, 32, 2);
+			graphics.blit(RenderType::guiTextured, Screen.FOOTER_SEPARATOR, 0, y1, 0.0F, 0.0F, this.width, 2, 32, 2);
 
 		}
 

@@ -129,8 +129,6 @@ public class SliderElement extends AbstractElement {
                 ((RangeSliderButton)this.slider).minValue = this.minRangeValue;
             }
 
-            graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
-
         }
 
     }

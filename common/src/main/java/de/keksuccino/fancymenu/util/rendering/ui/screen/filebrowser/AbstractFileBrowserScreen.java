@@ -31,6 +31,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -244,12 +245,9 @@ public abstract class AbstractFileBrowserScreen extends Screen {
                 int h = size[1];
                 int x = this.width - 20 - w;
                 int y = 50 + 15;
-                UIBase.resetShaderColor(graphics);
                 graphics.fill(x, y, x + w, y + h, UIBase.getUIColorTheme().area_background_color.getColorInt());
-                RenderingUtils.resetShaderColor(graphics);
                 RenderSystem.enableBlend();
-                graphics.blit(loc, x, y, 0.0F, 0.0F, w, h, w, h);
-                UIBase.resetShaderColor(graphics);
+                graphics.blit(RenderType::guiTextured, loc, x, y, 0.0F, 0.0F, w, h, w, h);
                 UIBase.renderBorder(graphics, x, y, x + w, y + h, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUIColorTheme().element_border_color_normal.getColor(), true, true, true, true);
             }
         } else {
@@ -259,7 +257,6 @@ public abstract class AbstractFileBrowserScreen extends Screen {
             this.previewTextScrollArea.setY(50 + 15, true);
             this.previewTextScrollArea.render(graphics, mouseX, mouseY, partial);
         }
-        UIBase.resetShaderColor(graphics);
     }
 
     protected int renderCurrentDirectoryField(GuiGraphics graphics, int mouseX, int mouseY, float partial, int x, int y, int width, int height) {
@@ -707,10 +704,8 @@ public abstract class AbstractFileBrowserScreen extends Screen {
                 RenderSystem.enableBlend();
 
                 //Render icon
-                UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
                 ResourceLocation loc = this.file.isFile() ? FILE_ICON_TEXTURE : FOLDER_ICON_TEXTURE;
-                graphics.blit(loc, this.x + BORDER, this.y + BORDER, 0.0F, 0.0F, 20, 20, 20, 20);
-                UIBase.resetShaderColor(graphics);
+                graphics.blit(RenderType::guiTextured, loc, this.x + BORDER, this.y + BORDER, 0.0F, 0.0F, 20, 20, 20, 20, UIBase.getUIColorTheme().ui_texture_color.getColorInt());
 
                 //Render file name
                 int textColor = this.resourceUnfriendlyFileName ? UIBase.getUIColorTheme().error_text_color.getColorInt() : UIBase.getUIColorTheme().description_area_text_color.getColorInt();
@@ -758,9 +753,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
             RenderSystem.enableBlend();
 
             //Render icon
-            UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
-            graphics.blit(GO_UP_ICON_TEXTURE, this.x + BORDER, this.y + BORDER, 0.0F, 0.0F, 20, 20, 20, 20);
-            UIBase.resetShaderColor(graphics);
+            graphics.blit(RenderType::guiTextured, GO_UP_ICON_TEXTURE, this.x + BORDER, this.y + BORDER, 0.0F, 0.0F, 20, 20, 20, 20, UIBase.getUIColorTheme().ui_texture_color.getColorInt());
 
             //Render file name
             graphics.drawString(this.font, this.labelComponent, this.x + BORDER + 20 + 3, this.y + (this.height / 2) - (this.font.lineHeight / 2) , -1, false);

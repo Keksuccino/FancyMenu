@@ -76,11 +76,9 @@ public class CreditsScreen extends Screen {
 
         //Background
         graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
-        RenderingUtils.resetShaderColor(graphics);
 
         //Footer
         graphics.fill(0, this.height - this.footerHeight, this.width, this.height, UIBase.getUIColorTheme().area_background_color.getColorInt());
-        RenderingUtils.resetShaderColor(graphics);
 
         super.render(graphics, mouseX, mouseY, partial);
 

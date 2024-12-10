@@ -74,8 +74,6 @@ public class InputFieldElement extends AbstractElement {
                 this.lastValue = this.editBox.getValue();
             }
 
-            RenderingUtils.resetShaderColor(graphics);
-
         }
 
     }

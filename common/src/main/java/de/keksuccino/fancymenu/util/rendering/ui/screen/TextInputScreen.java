@@ -14,6 +14,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.util.ARGB;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
@@ -71,8 +72,7 @@ public class TextInputScreen extends Screen {
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         RenderSystem.enableBlend();
-        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
-        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
 
         RenderSystem.enableBlend();
         MutableComponent t = this.title.copy().withStyle(Style.EMPTY.withBold(true));

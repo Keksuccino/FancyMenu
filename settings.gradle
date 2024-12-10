@@ -17,6 +17,7 @@ pluginManagement {
             name = 'Sponge Snapshots'
             url = 'https://repo.spongepowered.org/repository/maven-public/'
         }
+        maven { url 'https://jitpack.io' }
     }
 }
 
@@ -25,7 +26,7 @@ plugins {
 }
 
 // This should match the folder name of the project, or else IDEA may complain (see https://youtrack.jetbrains.com/issue/IDEA-317606)
-rootProject.name = 'fancymenu-1.21.1'
+rootProject.name = 'fancymenu-1.21.4'
 include("common")
 include("fabric")
 include("forge")

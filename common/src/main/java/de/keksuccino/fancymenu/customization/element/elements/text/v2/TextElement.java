@@ -129,8 +129,6 @@ public class TextElement extends AbstractElement {
                 e.printStackTrace();
             }
 
-            RenderingUtils.resetShaderColor(graphics);
-
         }
 
     }

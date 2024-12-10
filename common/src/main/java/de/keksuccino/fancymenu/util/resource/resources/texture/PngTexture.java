@@ -4,14 +4,18 @@ import com.mojang.blaze3d.platform.NativeImage;
 import java.io.*;
 import java.util.Objects;
 import java.util.Optional;
+
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinNativeImage;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.rendering.NativeImageUtil;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
+import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceLocation;
@@ -242,7 +246,7 @@ public class PngTexture implements ITexture {
         if ((this.resourceLocation == null) && !this.loadedIntoMinecraft && (this.nativeImage != null)) {
             try {
                 this.dynamicTexture = new DynamicTexture(this.nativeImage);
-                this.resourceLocation = Minecraft.getInstance().getTextureManager().register("fancymenu_simple_texture", this.dynamicTexture);
+                this.resourceLocation = RenderUtils.register("fancymenu_simple_texture", this.dynamicTexture);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -266,7 +270,8 @@ public class PngTexture implements ITexture {
 
     @Override
     public @Nullable InputStream open() throws IOException {
-        if (this.nativeImage != null) return new ByteArrayInputStream(this.nativeImage.asByteArray());
+
+        if (this.nativeImage != null) return new ByteArrayInputStream(NativeImageUtil.asByteArray(this.nativeImage));
         return null;
     }
 
