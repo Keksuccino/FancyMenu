@@ -22,12 +22,15 @@ public class FancyMenu {
 
 
 
-
 	//TODO FIXEN: Layers editor widget rendert seine entries nicht
-
-	//TODO FIXEN: Save File screen (save layout) rendert halben screen nicht
-
-
+	//TODO FIXEN: Layers editor widget rendert seine entries nicht
+	//TODO FIXEN: Layers editor widget rendert seine entries nicht
+	//TODO FIXEN: Layers editor widget rendert seine entries nicht
+	//TODO FIXEN: Layers editor widget rendert seine entries nicht
+	//TODO FIXEN: Layers editor widget rendert seine entries nicht
+	//TODO FIXEN: Layers editor widget rendert seine entries nicht
+	//TODO FIXEN: Layers editor widget rendert seine entries nicht
+	//TODO FIXEN: Layers editor widget rendert seine entries nicht
 
 
 

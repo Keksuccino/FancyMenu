@@ -74,7 +74,7 @@ public class ScrollArea extends UIBase {
     }
 
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        graphics.fill(RenderType.guiOverlay(), this.getInnerX(), this.getInnerY(), this.getInnerX() + this.getInnerWidth(), this.getInnerY() + this.getInnerHeight(), this.backgroundColor.getRGB());
+        graphics.fill(RenderType.gui(), this.getInnerX(), this.getInnerY(), this.getInnerX() + this.getInnerWidth(), this.getInnerY() + this.getInnerHeight(), this.backgroundColor.getRGB());
     }
 
     public void renderBorder(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
@@ -83,11 +83,7 @@ public class ScrollArea extends UIBase {
 
     public void renderEntries(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        Window win = Minecraft.getInstance().getWindow();
-        
-        double scale = (this.customGuiScale != -1F) ? this.customGuiScale : win.getGuiScale();
-        int sciBottomY = this.getInnerY() + this.getInnerHeight();
-        RenderSystem.enableScissor((int)(this.getInnerX() * scale), (int)(win.getHeight() - (sciBottomY * scale)), (int)(this.getInnerWidth() * scale), (int)(this.getInnerHeight() * scale));
+        graphics.enableScissor(this.getInnerX(), this.getInnerY(), this.getInnerX() + this.getInnerWidth(), this.getInnerY() + this.getInnerHeight());
 
         this.updateEntries((entry) -> {
             int cachedWidth = -1;
@@ -103,7 +99,7 @@ public class ScrollArea extends UIBase {
             }
         });
 
-        RenderSystem.disableScissor();
+        graphics.disableScissor();
 
     }
 

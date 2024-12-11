@@ -90,7 +90,7 @@ public class TextEditorLine extends AdvancedTextField {
 
             if (this.isFocused()) {
                 //Render focused background
-                graphics.fill(RenderType.guiOverlay(), 0, this.getY(), this.parent.width, this.getY() + this.height, this.parent.focusedLineColor.getRGB());
+                graphics.fill(RenderType.gui(), 0, this.getY(), this.parent.width, this.getY() + this.height, this.parent.focusedLineColor.getRGB());
             }
 
             int textColorInt = this.isEditable() ? this.getAsAccessor().getTextColorFancyMenu() : this.getAsAccessor().getTextColorUneditableFancyMenu();

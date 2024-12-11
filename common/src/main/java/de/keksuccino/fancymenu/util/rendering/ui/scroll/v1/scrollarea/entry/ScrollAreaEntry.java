@@ -1,14 +1,17 @@
 package de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry;
 
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
-import de.keksuccino.konkrete.gui.content.AdvancedButton;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
+import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.sounds.SoundManager;
 import org.jetbrains.annotations.NotNull;
 import java.awt.*;
+import java.util.Objects;
 
 @SuppressWarnings("unused")
 public abstract class ScrollAreaEntry extends UIBase implements Renderable {
@@ -18,9 +21,9 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
     protected int y;
     protected int width;
     protected int height;
-    public AdvancedButton buttonBase;
-    protected Color backgroundColorIdle = UIBase.getUIColorTheme().area_background_color.getColor();
-    protected Color backgroundColorHover = UIBase.getUIColorTheme().list_entry_color_selected_hovered.getColor();
+    public ExtendedButton buttonBase;
+    protected DrawableColor backgroundColorIdle = UIBase.getUIColorTheme().area_background_color;
+    protected DrawableColor backgroundColorHover = UIBase.getUIColorTheme().list_entry_color_selected_hovered;
     protected boolean selectable = true;
     protected boolean selected = false;
     protected boolean playClickSound = true;
@@ -28,11 +31,14 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
     public boolean selectOnClick = true;
     public int index = 0;
 
+    /** Shared boolean to not chain-click entries if scroll areas change on click. **/
+    protected static boolean leftMouseDown = false;
+
     public ScrollAreaEntry(ScrollArea parent, int width, int height) {
         this.parent = parent;
         this.width = width;
         this.height = height;
-        this.buttonBase = new AdvancedButton(0, 0, 0, 0, "", true, (button) -> {
+        this.buttonBase = new ExtendedButton(0, 0, 0, 0, "", var1 -> {
             if (this.selectOnClick) {
                 this.setSelected(true);
             }
@@ -75,6 +81,12 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
 
         this.buttonBase.render(graphics, mouseX, mouseY, partial);
 
+        if (MouseInput.isLeftMouseDown() && !leftMouseDown && this.isHovered()) {
+            leftMouseDown = true;
+            this.buttonBase.onClick(mouseX, mouseY);
+        }
+        if (!MouseInput.isLeftMouseDown()) leftMouseDown = false;
+
     }
 
     public abstract void onClick(ScrollAreaEntry entry);
@@ -83,11 +95,11 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
         this.buttonBase.setX(this.x);
         this.buttonBase.setY(this.y);
         this.buttonBase.setWidth(this.width);
-        ((IMixinAbstractWidget)this.buttonBase).setHeightFancyMenu(this.height);
+        this.buttonBase.setHeight(this.height);
         if (!this.isSelected()) {
-            this.buttonBase.setBackgroundColor(this.backgroundColorIdle, this.backgroundColorHover, this.backgroundColorIdle, this.backgroundColorHover, 1);
+            this.buttonBase.setBackgroundColor(this.backgroundColorIdle, this.backgroundColorHover, this.backgroundColorIdle, this.backgroundColorIdle, this.backgroundColorHover, this.backgroundColorIdle);
         } else {
-            this.buttonBase.setBackgroundColor(this.backgroundColorHover, this.backgroundColorHover, this.backgroundColorHover, this.backgroundColorHover, 1);
+            this.buttonBase.setBackgroundColor(this.backgroundColorHover, this.backgroundColorHover, this.backgroundColorHover, this.backgroundColorHover, this.backgroundColorHover, this.backgroundColorHover);
         }
     }
 
@@ -168,26 +180,48 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
         return this.playClickSound;
     }
 
+    @NotNull
+    public DrawableColor getBackgroundColorNormal() {
+        return this.backgroundColorIdle;
+    }
+
+    @Deprecated
     public Color getBackgroundColorIdle() {
-        return backgroundColorIdle;
+        return this.getBackgroundColorNormal().getColor();
     }
 
-    public void setBackgroundColorIdle(Color backgroundColorIdle) {
-        this.backgroundColorIdle = backgroundColorIdle;
+    public void setBackgroundColorNormal(@NotNull DrawableColor color) {
+        this.backgroundColorIdle = Objects.requireNonNull(color);
         this.updateEntry();
     }
 
+    @Deprecated
+    public void setBackgroundColorIdle(@NotNull Color color) {
+        this.setBackgroundColorNormal(DrawableColor.of(color));
+    }
+
+    @NotNull
+    public DrawableColor getBackgroundColorHovered() {
+        return this.backgroundColorHover;
+    }
+
+    @Deprecated
     public Color getBackgroundColorHover() {
-        return backgroundColorHover;
+        return this.getBackgroundColorHovered().getColor();
     }
 
-    public void setBackgroundColorHover(Color backgroundColorHover) {
-        this.backgroundColorHover = backgroundColorHover;
+    public void setBackgroundColorHovered(@NotNull DrawableColor color) {
+        this.backgroundColorHover = Objects.requireNonNull(color);
         this.updateEntry();
+    }
+
+    @Deprecated
+    public void setBackgroundColorHover(@NotNull Color color) {
+        this.setBackgroundColorHovered(DrawableColor.of(color));
     }
 
     public void setTooltip(String... tooltipLines) {
-        this.buttonBase.setDescription(tooltipLines);
+        this.buttonBase.setTooltip(Tooltip.of(tooltipLines));
     }
 
 }

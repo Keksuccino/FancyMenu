@@ -1,15 +1,12 @@
 package de.keksuccino.fancymenu.util.rendering;
 
 import com.mojang.blaze3d.platform.Window;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphics;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -26,6 +23,16 @@ public class RenderingUtils {
     public static final DrawableColor MISSING_TEXTURE_COLOR_BLACK = DrawableColor.BLACK;
     public static final ResourceLocation FULLY_TRANSPARENT_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/fully_transparent.png");
 
+    /**
+     * Renders a "missing" texture.
+     * This is a 2x2 pattern of magenta and black squares.
+     *
+     * @param graphics The graphics instance to render to.
+     * @param x Top-left X coordinate of the area to render to.
+     * @param y Top-left Y coordinate of the area to render to.
+     * @param width Width of the rendered area.
+     * @param height Height of the rendered area.
+     */
     public static void renderMissing(@NotNull GuiGraphics graphics, int x, int y, int width, int height) {
         int partW = width / 2;
         int partH = height / 2;
@@ -229,7 +236,7 @@ public class RenderingUtils {
     }
 
     public static void fillF(@NotNull GuiGraphics graphics, float minX, float minY, float maxX, float maxY, float z, int color) {
-        fillF(graphics, RenderType.guiOverlay(), minX, minY, maxX, maxY, z, color);
+        fillF(graphics, RenderType.gui(), minX, minY, maxX, maxY, z, color);
     }
 
     public static void fillF(@NotNull GuiGraphics graphics, @NotNull RenderType renderType, float minX, float minY, float maxX, float maxY, int color) {

@@ -165,11 +165,9 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
         float scissorX = x + this.getBorderThickness() - 1;
         float scissorY = y + this.getBorderThickness() - 1;
         RenderSystem.enableBlend();
-        graphics.pose().pushPose();
         this.enableComponentScissor(graphics, (int) scissorX, (int) scissorY, (int) labelDisplayWidth + 1, (int) this.getHeaderHeight() + 2, true);
         UIBase.drawElementLabel(graphics, Minecraft.getInstance().font, this.displayLabel, (int)(headerX + 3), (int)(headerY + (this.getHeaderHeight() / 2f) - (Minecraft.getInstance().font.lineHeight / 2f)));
         this.disableComponentScissor(graphics);
-        graphics.pose().popPose();
     }
 
     protected void addHeaderButton(@NotNull HeaderButton button) {

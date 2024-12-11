@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
@@ -374,8 +375,8 @@ public class TextElement extends AbstractElement {
             this.parentItem = parentItem;
             this.selectable = false;
             this.playClickSound = false;
-            this.backgroundColorIdle = new Color(0,0,0,0);
-            this.backgroundColorHover = new Color(0,0,0,0);
+            this.backgroundColorIdle = DrawableColor.of(0,0,0,0);
+            this.backgroundColorHover = DrawableColor.of(0,0,0,0);
             this.buttonBase.setAlpha(0.0F);
             this.setHeight(((int)(((float)Minecraft.getInstance().font.lineHeight) * scale)) + parentItem.lineSpacing);
         }
