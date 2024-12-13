@@ -21,24 +21,24 @@ import org.jetbrains.annotations.NotNull;
 public class FancyMenu {
 
 
-
-	//TODO FIXEN: Layers editor widget rendert seine entries nicht
-	//TODO FIXEN: Layers editor widget rendert seine entries nicht
-	//TODO FIXEN: Layers editor widget rendert seine entries nicht
-	//TODO FIXEN: Layers editor widget rendert seine entries nicht
-	//TODO FIXEN: Layers editor widget rendert seine entries nicht
-	//TODO FIXEN: Layers editor widget rendert seine entries nicht
-	//TODO FIXEN: Layers editor widget rendert seine entries nicht
-	//TODO FIXEN: Layers editor widget rendert seine entries nicht
-	//TODO FIXEN: Layers editor widget rendert seine entries nicht
+	//TODO fix Player Entity element !!!!!!!!!
+	//TODO fix Player Entity element !!!!!!!!!
+	//TODO fix Player Entity element !!!!!!!!!
+	//TODO fix Player Entity element !!!!!!!!!
+	//TODO fix Player Entity element !!!!!!!!!
+	//TODO fix Player Entity element !!!!!!!!!
+	//TODO fix Player Entity element !!!!!!!!!
 
 
 
 	//TODO re-implement auto-sizing and sticky anchor in later update (needs more work first) (uncomment options in AbstractEditorElement)
 
+
+
+
+
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	//TODO übernehmen 3.3.2
 	public static final String VERSION = "3.3.2";
 	public static final String MOD_LOADER = Services.PLATFORM.getPlatformName();
 	public static final String MOD_ID = "fancymenu";

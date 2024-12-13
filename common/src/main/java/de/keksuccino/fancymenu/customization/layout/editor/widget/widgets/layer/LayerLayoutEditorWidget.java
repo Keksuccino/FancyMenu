@@ -107,12 +107,17 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         this.scrollArea.horizontalScrollBar.active = false;
         this.scrollArea.makeEntriesWidthOfArea = true;
         this.scrollArea.makeAllEntriesWidthOfWidestEntry = false;
-        this.enableComponentScissor(graphics, (int) this.getRealBodyX()-5, (int) this.getRealBodyY(), (int) this.getBodyWidth()+10, (int) this.getBodyHeight()+1, true);
+
+        graphics.enableScissor((int) this.getRealBodyX(), (int) this.getRealBodyY(), (int) (this.getRealBodyX() + this.getBodyWidth()), (int) (this.getRealBodyY() + this.getBodyHeight()));
+
         graphics.pose().pushPose();
         graphics.pose().translate(0.0F, 0.0F, 400.0F);
+
         this.scrollArea.render(graphics, (int) mouseX, (int) mouseY, partial);
+
         graphics.pose().popPose();
-        this.disableComponentScissor(graphics);
+
+        graphics.disableScissor();
 
     }
 
@@ -238,9 +243,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             blitF(graphics, RenderType::guiTextured, MOVE_DOWN_TEXTURE, this.x, this.y + this.getButtonHeight(), 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight(), UIBase.getUIColorTheme().ui_texture_color.getColorIntWithAlpha(this.layerWidget.editor.canMoveLayerUp(this.element) ? 1.0f : 0.3f));
 
             if (!this.displayEditLayerNameBox) {
-                this.layerWidget.enableComponentScissor(graphics, (int) (this.x + this.getButtonWidth() + 1f), (int) this.y, (int) (this.getWidth() - this.getButtonWidth() - 4f), (int) this.getHeight(), true);
                 UIBase.drawElementLabel(graphics, this.font, Component.literal(this.getLayerName()), (int)this.getLayerNameX(), (int)this.getLayerNameY());
-                this.layerWidget.disableComponentScissor(graphics);
             } else {
                 UIBase.applyDefaultWidgetSkinTo(this.editLayerNameBox);
                 this.editLayerNameBox.setX((int)this.getLayerNameX());
@@ -403,9 +406,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             ResourceLocation loc = this.layerWidget.editor.layout.renderElementsBehindVanilla ? MOVE_BEHIND_TEXTURE : MOVE_TO_TOP_TEXTURE;
             blitF(graphics, RenderType::guiTextured, loc, this.x, this.y, 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight(), UIBase.getUIColorTheme().ui_texture_color.getColorInt());
 
-            this.layerWidget.enableComponentScissor(graphics, (int)(this.x + this.getButtonWidth() + 1f), (int) this.y, (int) (this.getWidth() - this.getButtonWidth() - 4f), (int) this.getHeight(), true);
             UIBase.drawElementLabel(graphics, this.font, Component.translatable("fancymenu.editor.widgets.layers.vanilla_elements").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), (int)(this.getX() + this.getButtonWidth() + 3f), (int)(this.getY() + (this.getHeight() / 2f) - (this.font.lineHeight / 2f)));
-            this.layerWidget.disableComponentScissor(graphics);
 
         }
 

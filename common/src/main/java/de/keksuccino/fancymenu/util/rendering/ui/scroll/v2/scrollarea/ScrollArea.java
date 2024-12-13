@@ -92,12 +92,10 @@ public class ScrollArea extends UIBase implements GuiEventListener, Renderable, 
     }
 
     public void renderEntries(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        
+
         if (this.isApplyScissor()) {
-            //TODO this is probably broken if actually used (leftover from old scissor stuff)
+            //TODO renderScale (not used by default) is probably broken if actually used (leftover from old scissor stuff)
             double scale = (this.renderScale != null) ? this.renderScale : 1;
-//            float sciBottomY = this.getInnerY() + this.getInnerHeight();
-//            RenderSystem.enableScissor((int)(this.getInnerX() * scale), (int)(win.getHeight() - (sciBottomY * scale)), (int)(this.getInnerWidth() * scale), (int)(this.getInnerHeight() * scale));
             int xMin = (int)(this.getInnerX() * scale);
             int yMin = (int)(this.getInnerY() * scale);
             int xMax = xMin + (int)this.getInnerWidth();

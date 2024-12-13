@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.customization.element.elements.dragger.DraggerEle
 import de.keksuccino.fancymenu.customization.element.elements.image.ImageElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.inputfield.InputFieldElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.musiccontroller.MusicControllerElementBuilder;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.PlayerEntityElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.v2.PlayerEntityElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.progressbar.ProgressBarElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.shape.ShapeElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.slideshow.SlideshowElementBuilder;
@@ -31,15 +31,12 @@ public class Elements {
     public static final PlayerEntityElementBuilder PLAYER_ENTITY = new PlayerEntityElementBuilder();
     public static final ImageElementBuilder IMAGE = new ImageElementBuilder();
     public static final SplashTextElementBuilder SPLASH_TEXT = new SplashTextElementBuilder();
-    //TODO übernehmen
-    //public static final AnimationElementBuilder ANIMATION = new AnimationElementBuilder();
     public static final SlideshowElementBuilder SLIDESHOW = new SlideshowElementBuilder();
     public static final ShapeElementBuilder SHAPE = new ShapeElementBuilder();
     public static final CursorElementBuilder CURSOR = new CursorElementBuilder();
     public static final ProgressBarElementBuilder PROGRESS_BAR = new ProgressBarElementBuilder();
     public static final AudioElementBuilder AUDIO_V2 = new AudioElementBuilder();
     public static final MusicControllerElementBuilder MUSIC_CONTROLLER = new MusicControllerElementBuilder();
-    //TODO übernehmen
     public static final DraggerElementBuilder DRAGGER = new DraggerElementBuilder();
 
     public static void registerAll() {
