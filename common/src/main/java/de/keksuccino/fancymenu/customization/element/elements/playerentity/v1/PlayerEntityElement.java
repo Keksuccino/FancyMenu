@@ -2,24 +2,22 @@ package de.keksuccino.fancymenu.customization.element.elements.playerentity.v1;
 
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.renderer.v1.model.PlayerEntityElementRenderer;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.renderer.v1.model.PlayerEntityProperties;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.textures.*;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.model.PlayerEntityElementRenderer;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.model.PlayerEntityProperties;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.textures.CapeResourceSupplier;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.textures.SkinResourceSupplier;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4fStack;
 import org.joml.Quaternionf;
 
 public class PlayerEntityElement extends AbstractElement {
@@ -118,20 +116,20 @@ public class PlayerEntityElement extends AbstractElement {
             int mouseOffsetX = this.baseWidth / 2;
             int mouseOffsetY = (this.baseHeight / 4) / 2;
             if (props.isBaby) mouseOffsetY += (this.baseHeight / 2) - mouseOffsetY; //not exactly the same eye pos as for adult size, but good enough
-            this.renderPlayerEntity(x, y, (int)scale, (float)x - mouseX + mouseOffsetX, (float)y - mouseY + mouseOffsetY, props);
+            this.renderPlayerEntity(graphics, x, y, (int)scale, (float)x - mouseX + mouseOffsetX, (float)y - mouseY + mouseOffsetY, props);
 
         }
 
     }
 
-    protected void renderPlayerEntity(int posX, int posY, int scale, float angleXComponent, float angleYComponent, PlayerEntityProperties props) {
+    protected void renderPlayerEntity(GuiGraphics graphics, int posX, int posY, int scale, float angleXComponent, float angleYComponent, PlayerEntityProperties props) {
         float f = (float)Math.atan(angleXComponent / 40.0F);
         float f1 = (float)Math.atan(angleYComponent / 40.0F);
-        innerRenderPlayerEntity(posX, posY, scale, f, f1, props, this.getActiveRenderer());
+        innerRenderPlayerEntity(graphics, posX, posY, scale, f, f1, props, this.getActiveRenderer());
     }
 
     @SuppressWarnings("all")
-    protected void innerRenderPlayerEntity(int posX, int posY, int scale, float angleXComponent, float angleYComponent, PlayerEntityProperties props, PlayerEntityElementRenderer renderer) {
+    protected void innerRenderPlayerEntity(GuiGraphics graphics, int posX, int posY, int scale, float angleXComponent, float angleYComponent, PlayerEntityProperties props, PlayerEntityElementRenderer renderer) {
 
         float bodyXRot = this.stringToFloat(this.bodyXRot);
         float bodyYRot = this.stringToFloat(this.bodyYRot);
@@ -151,19 +149,16 @@ public class PlayerEntityElement extends AbstractElement {
         float rightLegYRot = this.stringToFloat(this.rightLegYRot);
         float rightLegZRot = this.stringToFloat(this.rightLegZRot);
 
-        Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();
-        modelViewStack.pushMatrix();
-        modelViewStack.translate((posX+((props.getDimensions().width() / 2) * scale)), (posY+(props.getDimensions().height() * scale)), 1050.0F);
-        modelViewStack.scale(1.0F, 1.0F, -1.0F);
-        PoseStack innerPoseStack = new PoseStack();
-        innerPoseStack.pushPose();
-        innerPoseStack.translate(0.0F, 0.0F, 1000.0F);
-        innerPoseStack.scale((float)scale, (float)scale, (float)scale);
+        graphics.pose().pushPose();
+        graphics.pose().translate((posX+((props.getDimensions().width() / 2) * scale)), (posY+(props.getDimensions().height() * scale)), 1050.0F);
+        graphics.pose().scale(1.0F, 1.0F, -1.0F);
+        graphics.pose().translate(0.0F, 0.0F, 1000.0F);
+        graphics.pose().scale((float)scale, (float)scale, (float)scale);
 
         Quaternionf quat1 = this.bodyFollowsMouse ? new Quaternionf().rotateZ((float)Math.PI) : Axis.ZP.rotationDegrees(180.0F);
         Quaternionf quat2 = this.bodyFollowsMouse ? new Quaternionf().rotateX(angleYComponent * 20.0F * ((float)Math.PI / 180F)) : Axis.XP.rotationDegrees(bodyYRot);
         quat1.mul(quat2);
-        innerPoseStack.mulPose(quat1);
+        graphics.pose().mulPose(quat1);
 
         //Apply follow-mouse values by default
         props.yBodyRot = 180.0F + angleXComponent * 20.0F;
@@ -196,18 +191,19 @@ public class PlayerEntityElement extends AbstractElement {
         props.rightLegYRot = rightLegYRot;
         props.rightLegZRot = rightLegZRot;
 
+        graphics.flush();
         Lighting.setupForEntityInInventory();
         EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         quat2.conjugate();
         dispatcher.overrideCameraOrientation(quat2);
         dispatcher.setRenderShadow(false);
-        MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
-        renderer.renderPlayerEntityItem(0.0D, 0.0D, 0.0D, 0.0F, 1.0F, innerPoseStack, bufferSource, 15728880);
-        bufferSource.endBatch();
+
+        graphics.drawSpecial(bufferSource1 -> renderer.renderPlayerEntity(0.0D, 0.0D, 0.0D, 0.0F, 1.0F, graphics.pose(), bufferSource1, 15728880));
+
+        graphics.flush();
         dispatcher.setRenderShadow(true);
-        modelViewStack.popMatrix();
+        graphics.pose().popPose();
         Lighting.setupFor3DItems();
-        innerPoseStack.popPose();
     }
 
     protected float stringToFloat(@Nullable String s) {

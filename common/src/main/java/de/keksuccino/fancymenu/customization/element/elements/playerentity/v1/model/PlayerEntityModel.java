@@ -1,7 +1,9 @@
-package de.keksuccino.fancymenu.customization.element.elements.playerentity.renderer.v1.model;
+package de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.model;
 
+import net.minecraft.client.model.AnimationUtils;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.entity.state.PlayerRenderState;
 
 public class PlayerEntityModel extends PlayerModel {
 
@@ -12,6 +14,10 @@ public class PlayerEntityModel extends PlayerModel {
         this.properties = properties;
     }
 
+    @Override
+    public void setupAnim(PlayerRenderState $$0) {
+    }
+
     public void setupAnimWithoutEntity(float animationSpeed, float animationSpeedOld, float someFloatThatsAlways1, float headRotY, float headRotX) {
         this.setupAnimRaw(animationSpeed, animationSpeedOld, someFloatThatsAlways1, headRotY, headRotX);
         this.leftPants.copyFrom(this.leftLeg);
@@ -19,13 +25,13 @@ public class PlayerEntityModel extends PlayerModel {
         this.leftSleeve.copyFrom(this.leftArm);
         this.rightSleeve.copyFrom(this.rightArm);
         this.jacket.copyFrom(this.body);
-//        if (this.properties.isCrouching()) {
-//            ((IMixinPlayerModel)this).getCloakFancyMenu().z = 1.4F;
-//            ((IMixinPlayerModel)this).getCloakFancyMenu().y = 1.85F;
-//        } else {
-//            ((IMixinPlayerModel)this).getCloakFancyMenu().z = 0.0F;
-//            ((IMixinPlayerModel)this).getCloakFancyMenu().y = 0.0F;
-//        }
+        if (this.properties.isCrouching()) {
+            this.root.z = 1.4F;
+            this.root.y = 1.85F;
+        } else {
+            this.root.z = 0.0F;
+            this.root.y = 0.0F;
+        }
     }
 
     protected void setupAnimRaw(float animationSpeed, float animationSpeedOld, float someFloatThatsAlways1, float headRotY, float headRotX) {
@@ -65,37 +71,33 @@ public class PlayerEntityModel extends PlayerModel {
         this.rightLeg.yRot = this.properties.rightLegYRot * ((float)Math.PI / 180F); // 0.0F;
         this.rightLeg.zRot = this.properties.rightLegZRot * ((float)Math.PI / 180F); // 0.0F;
 
-//        if (this.crouching) {
-//            this.body.xRot = 0.5F;
-//            this.rightArm.xRot += 0.4F;
-//            this.leftArm.xRot += 0.4F;
-//            this.rightLeg.z = 4.0F;
-//            this.leftLeg.z = 4.0F;
-//            this.rightLeg.y = 12.2F;
-//            this.leftLeg.y = 12.2F;
-//            this.head.y = 4.2F;
-//            this.body.y = 3.2F;
-//            this.leftArm.y = 5.2F;
-//            this.rightArm.y = 5.2F;
-//        } else {
-//            this.body.xRot = 0.0F;
-//            this.rightLeg.z = 0.1F;
-//            this.leftLeg.z = 0.1F;
-//            this.rightLeg.y = 12.0F;
-//            this.leftLeg.y = 12.0F;
-//            this.head.y = 0.0F;
-//            this.body.y = 0.0F;
-//            this.leftArm.y = 2.0F;
-//            this.rightArm.y = 2.0F;
-//        }
-//
-//        if (this.rightArmPose != HumanoidModel.ArmPose.SPYGLASS) {
-//            AnimationUtils.bobModelPart(this.rightArm, someFloatThatsAlways1, 1.0F);
-//        }
-//
-//        if (this.leftArmPose != HumanoidModel.ArmPose.SPYGLASS) {
-//            AnimationUtils.bobModelPart(this.leftArm, someFloatThatsAlways1, -1.0F);
-//        }
+        if (this.properties.isCrouching()) {
+            this.body.xRot = 0.5F;
+            this.rightArm.xRot += 0.4F;
+            this.leftArm.xRot += 0.4F;
+            this.rightLeg.z = 4.0F;
+            this.leftLeg.z = 4.0F;
+            this.rightLeg.y = 12.2F;
+            this.leftLeg.y = 12.2F;
+            this.head.y = 4.2F;
+            this.body.y = 3.2F;
+            this.leftArm.y = 5.2F;
+            this.rightArm.y = 5.2F;
+        } else {
+            this.body.xRot = 0.0F;
+            this.rightLeg.z = 0.1F;
+            this.leftLeg.z = 0.1F;
+            this.rightLeg.y = 12.0F;
+            this.leftLeg.y = 12.0F;
+            this.head.y = 0.0F;
+            this.body.y = 0.0F;
+            this.leftArm.y = 2.0F;
+            this.rightArm.y = 2.0F;
+        }
+
+        AnimationUtils.bobModelPart(this.rightArm, someFloatThatsAlways1, 1.0F);
+
+        AnimationUtils.bobModelPart(this.leftArm, someFloatThatsAlways1, -1.0F);
 
         this.hat.copyFrom(this.head);
 

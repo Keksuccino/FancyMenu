@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.customization.element.elements.dragger.DraggerEle
 import de.keksuccino.fancymenu.customization.element.elements.image.ImageElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.inputfield.InputFieldElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.musiccontroller.MusicControllerElementBuilder;
+//import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.PlayerEntityElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.v2.PlayerEntityElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.progressbar.ProgressBarElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.shape.ShapeElementBuilder;

@@ -1,22 +1,20 @@
 package de.keksuccino.fancymenu.customization.element.elements.playerentity.v2;
 
 import com.mojang.blaze3d.platform.Lighting;
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.renderer.v2.PlayerEntityRenderer;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.textures.CapeResourceSupplier;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.textures.SkinResourceSupplier;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.v2.textures.CapeResourceSupplier;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.v2.textures.SkinResourceSupplier;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.PlayerSkinWidget;
 import net.minecraft.client.renderer.entity.state.PlayerRenderState;
 import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.ARGB;
 import net.minecraft.world.entity.animal.Parrot;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,6 +25,9 @@ public class PlayerEntityElement extends AbstractElement {
     
     private static final Logger LOGGER = LogManager.getLogger();
 
+    protected DrawableColor nameTagBackgroundColor = DrawableColor.BLACK;
+
+    protected final PlayerRenderState renderState = new PlayerRenderState();
     public final PlayerEntityRenderer normalRenderer = new PlayerEntityRenderer(false);
     public final PlayerEntityRenderer slimRenderer = new PlayerEntityRenderer(true);
 
@@ -83,11 +84,12 @@ public class PlayerEntityElement extends AbstractElement {
     public boolean rightLegYRotAdvancedMode;
     public boolean rightLegZRotAdvancedMode;
 
-    protected final PlayerRenderState renderState = new PlayerRenderState();
-    protected final DrawableColor nameTagBackgroundColor = DrawableColor.BLACK;
+    public PlayerSkinWidget widget = new PlayerSkinWidget(0, 0, Minecraft.getInstance().getEntityModels(), this::updateSkinAndCape);
 
     public PlayerEntityElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+        this.normalRenderer.playerState = this.renderState;
+        this.slimRenderer.playerState = this.renderState;
     }
 
     @Override
@@ -99,9 +101,13 @@ public class PlayerEntityElement extends AbstractElement {
             this.updateParrotOnShoulder();
             this.updatePose(mouseX, mouseY);
 
-            RenderSystem.enableBlend();
-
             this.renderEntity(graphics);
+
+//            this.widget.setX(this.getAbsoluteX());
+//            this.widget.setY(this.getAbsoluteY());
+//            this.widget.setWidth(this.getAbsoluteWidth());
+//            this.widget.setHeight(this.getAbsoluteHeight());
+//            this.widget.render(graphics, mouseX, mouseY, partial);
 
             this.renderNameTag(graphics, mouseX, mouseY, partial);
 
@@ -290,7 +296,7 @@ public class PlayerEntityElement extends AbstractElement {
 
     }
 
-    protected void updateSkinAndCape() {
+    protected PlayerSkin updateSkinAndCape() {
 
         if (this.copyClientPlayer || this.autoSkin) {
             this.slim = (this.skinTextureSupplier == null) || this.skinTextureSupplier.isSlimPlayerNameSkin();
@@ -307,9 +313,11 @@ public class PlayerEntityElement extends AbstractElement {
             if (capeLoc == CapeResourceSupplier.DEFAULT_CAPE_LOCATION) capeLoc = null;
         }
 
-        PlayerSkin skin = new PlayerSkin(skinLoc, null, capeLoc, null, this.slim ? PlayerSkin.Model.SLIM : PlayerSkin.Model.WIDE, false);
+        PlayerSkin skin = new PlayerSkin(skinLoc, null, capeLoc, null, this.slim ? PlayerSkin.Model.SLIM : PlayerSkin.Model.WIDE, true);
         this.normalRenderer.skin = skin;
         this.slimRenderer.skin = skin;
+
+        return skin;
 
     }
 

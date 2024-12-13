@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.element.elements.playerentity.renderer.v1.model.layers;
+package de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.model.layers;
 
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;

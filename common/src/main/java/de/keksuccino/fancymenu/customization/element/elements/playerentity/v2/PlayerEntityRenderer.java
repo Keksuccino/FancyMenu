@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.element.elements.playerentity.renderer.v2;
+package de.keksuccino.fancymenu.customization.element.elements.playerentity.v2;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
@@ -6,25 +6,21 @@ import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.layers.ParrotOnShoulderLayer;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.client.renderer.entity.state.PlayerRenderState;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.client.resources.model.EquipmentAssetManager;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.entity.EntityAttachment;
-import net.minecraft.world.entity.EntityAttachments;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.animal.Parrot;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class PlayerEntityRenderer extends PlayerRenderer {
 
-    protected static final EntityRendererProvider.Context RENDER_CONTEXT = new EntityRendererProvider.Context(Minecraft.getInstance().getEntityRenderDispatcher(), Minecraft.getInstance().getItemModelResolver(), Minecraft.getInstance().getMapRenderer(), Minecraft.getInstance().getBlockRenderer(), Minecraft.getInstance().getResourceManager(), Minecraft.getInstance().getEntityModels(), new EquipmentAssetManager(), Minecraft.getInstance().font);
-    protected static final EntityAttachments ENTITY_ATTACHMENTS = EntityAttachments.builder().attach(EntityAttachment.NAME_TAG, 0.0F, 0.0F, 0.0F).build(0.0F, 0.0F);
-
     @NotNull
-    public PlayerSkin skin = DefaultPlayerSkin.getDefaultSkin();
+    public volatile PlayerSkin skin = DefaultPlayerSkin.getDefaultSkin();
     public boolean isCrouching = false;
     public boolean isBaby = false;
     public boolean isGlowing = false;
@@ -56,19 +52,61 @@ public class PlayerEntityRenderer extends PlayerRenderer {
     public float bodyXRot = 0F;
     public float bodyYRot = 0F;
 
+    @Nullable
+    public ParrotOnShoulderLayer parrotLayer;
+    public PlayerRenderState playerState;
+
+    private static final EntityRendererProvider.Context RENDER_CONTEXT = new EntityRendererProvider.Context(Minecraft.getInstance().getEntityRenderDispatcher(), Minecraft.getInstance().getItemModelResolver(), Minecraft.getInstance().getMapRenderer(), Minecraft.getInstance().getBlockRenderer(), Minecraft.getInstance().getResourceManager(), Minecraft.getInstance().getEntityModels(), new EquipmentAssetManager(), Minecraft.getInstance().font);
+
     public PlayerEntityRenderer(boolean slim) {
 
         super(RENDER_CONTEXT, slim);
+
+        // removing the parrot layer for now because broken
+        this.layers.forEach(layer -> {
+            if (layer instanceof ParrotOnShoulderLayer p) this.parrotLayer = p;
+        });
+        if (this.parrotLayer != null) this.layers.remove(this.parrotLayer);
 
         this.model = new PlayerModel(RENDER_CONTEXT.bakeLayer(slim ? ModelLayers.PLAYER_SLIM : ModelLayers.PLAYER), slim) {
             @Override
             public void setupAnim(@NotNull PlayerRenderState state) {
                 super.setupAnim(state);
-                PlayerEntityRenderer.this.updatePlayerProperties(state);
+                updatePlayerProperties(state);
             }
         };
 
+//        this.parrotLayer = new ParrotOnShoulderLayer(this, RENDER_CONTEXT.getModelSet()) {
+//            @Override
+//            public void render(PoseStack $$0, MultiBufferSource $$1, int $$2, PlayerRenderState $$3, float $$4, float $$5) {
+//                updatePlayerProperties(playerState);
+//                super.render($$0, $$1, $$2, $$3, $$4, $$5);
+//            }
+//        };
+//        ((IMixinParrotOnShoulderLayer)this.parrotLayer).setModel_FancyMenu(new ParrotModel(RENDER_CONTEXT.getModelSet().bakeLayer(ModelLayers.PARROT)) {
+//            @Override
+//            public void setupAnim(@NotNull ParrotRenderState state) {
+//                super.setupAnim(state);
+//                getParrotModel().root().xRot = model.root().xRot;
+//                getParrotModel().root().yRot = model.root().yRot;
+//                getParrotModel().root().offsetPos(new Vector3f(0.0F, 45.0F, 0.0F));
+//            }
+//        });
+//        this.addLayer(this.parrotLayer);
+
     }
+
+//    @NotNull
+//    public ParrotRenderState getParrotRenderState() {
+//        Objects.requireNonNull(this.parrotLayer);
+//        return ((IMixinParrotOnShoulderLayer)this.parrotLayer).getParrotState_FancyMenu();
+//    }
+//
+//    @NotNull
+//    public ParrotModel getParrotModel() {
+//        Objects.requireNonNull(this.parrotLayer);
+//        return ((IMixinParrotOnShoulderLayer)this.parrotLayer).getModel_FancyMenu();
+//    }
 
     @SuppressWarnings("all")
     public void updatePlayerProperties(@NotNull PlayerRenderState state) {
@@ -83,6 +121,10 @@ public class PlayerEntityRenderer extends PlayerRenderer {
         state.isBaby = this.isBaby;
         state.appearsGlowing = this.isGlowing;
         state.isSpectator = false;
+        state.ageInTicks = 1000;
+        state.walkAnimationPos = 0.0F;
+        state.walkAnimationSpeed = 0.0F;
+        state.pose = this.isCrouching ? Pose.CROUCHING : Pose.STANDING;
 
         // X and Y rotations are switched for some reason
 
