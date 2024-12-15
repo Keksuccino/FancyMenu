@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.deep.layers.titlescreen.forge.copy
 
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
@@ -25,18 +26,16 @@ public class TitleScreenForgeCopyrightDeepElement extends AbstractDeepElement {
         if (isEditor()) {
             String line = I18n.get("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.forge.copyright.example.line1");
             int lineCount = 0;
-            graphics.drawString(font, line, getScreenWidth() - font.width(line) - 1, getScreenHeight() - (11 + (lineCount + 1) * (font.lineHeight + 1)), 16777215);
+            graphics.drawString(font, line, getScreenWidth() - font.width(line) - 1, getScreenHeight() - (11 + (lineCount + 1) * (font.lineHeight + 1)), DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
             this.baseWidth = font.width(line);
             this.baseHeight = font.lineHeight;
             this.posOffsetX = getScreenWidth() - this.getAbsoluteWidth() - 1;
             this.posOffsetY = getScreenHeight() - 11 - font.lineHeight;
         } else {
             BrandingControl.forEachAboveCopyrightLine((brdline, brd) -> {
-                graphics.drawString(font, brd, getScreenWidth() - font.width(brd) - 1, getScreenHeight() - (11 + (brdline + 1) * (font.lineHeight + 1)), 16777215);
+                graphics.drawString(font, brd, getScreenWidth() - font.width(brd) - 1, getScreenHeight() - (11 + (brdline + 1) * (font.lineHeight + 1)), DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
             });
         }
-
-        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 
     }
 

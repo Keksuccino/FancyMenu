@@ -97,6 +97,7 @@ dependencies {
 
 tasks.withType(JavaCompile).configureEach {
     source(project(":common").sourceSets.main.allSource)
+    it.options.compilerArgs += ['-Xlint:-deprecation', '-Xlint:-removal']
 }
 tasks.withType(Javadoc).configureEach {
     source(project(":common").sourceSets.main.allJava)

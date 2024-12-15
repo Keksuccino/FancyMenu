@@ -120,11 +120,15 @@ public class PlayerEntityElement extends AbstractElement {
 
         if (this.shouldRender()) {
 
-            graphics.fill(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), Color.RED.getRGB());
+            if (isEditor()) {
 
-            graphics.drawCenteredString(Minecraft.getInstance().font, Component.literal("PLAYER ENTITY ELEMENT"), this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY() + (this.getAbsoluteHeight() / 2) - 11, -1);
-            graphics.drawCenteredString(Minecraft.getInstance().font, Component.literal("TEMPORARILY REMOVED FROM FANCYMENU!"), this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY() + (this.getAbsoluteHeight() / 2), -1);
-            graphics.drawCenteredString(Minecraft.getInstance().font, Component.literal("WILL GET ADDED BACK SOON!"), this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY() + (this.getAbsoluteHeight() / 2) + 11, -1);
+                graphics.fill(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), Color.RED.getRGB());
+
+                graphics.drawCenteredString(Minecraft.getInstance().font, Component.literal("PLAYER ENTITY ELEMENT"), this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY() + (this.getAbsoluteHeight() / 2) - 11, -1);
+                graphics.drawCenteredString(Minecraft.getInstance().font, Component.literal("TEMPORARILY REMOVED FROM FANCYMENU!"), this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY() + (this.getAbsoluteHeight() / 2), -1);
+                graphics.drawCenteredString(Minecraft.getInstance().font, Component.literal("WILL GET ADDED BACK SOON!"), this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY() + (this.getAbsoluteHeight() / 2) + 11, -1);
+
+            }
 
 //            this.updateSkinAndCape();
 //            this.updateParrotOnShoulder();

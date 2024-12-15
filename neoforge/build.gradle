@@ -67,6 +67,7 @@ Spec<Task> notNeoTask = { Task it -> !it.name.startsWith("neo") } as Spec<Task>
 
 tasks.withType(JavaCompile).matching(notNeoTask).configureEach {
     source(project(":common").sourceSets.main.allSource)
+    it.options.compilerArgs += ['-Xlint:-deprecation', '-Xlint:-removal']
 }
 
 tasks.withType(Javadoc).matching(notNeoTask).configureEach {

@@ -4,8 +4,6 @@ import com.mojang.blaze3d.platform.NativeImage;
 import java.io.*;
 import java.util.Objects;
 import java.util.Optional;
-
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinNativeImage;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
@@ -15,7 +13,6 @@ import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
-import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceLocation;
@@ -246,7 +243,7 @@ public class PngTexture implements ITexture {
         if ((this.resourceLocation == null) && !this.loadedIntoMinecraft && (this.nativeImage != null)) {
             try {
                 this.dynamicTexture = new DynamicTexture(this.nativeImage);
-                this.resourceLocation = RenderUtils.register("fancymenu_simple_texture", this.dynamicTexture);
+                this.resourceLocation = this.registerAbstractTexture(this.dynamicTexture);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
