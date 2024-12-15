@@ -38,6 +38,7 @@
     "client.MixinCreateWorldScreen_MoreTab",
     "client.MixinCreateWorldScreen_WorldTab",
     "client.MixinCycleButton",
+    "client.MixinEntityRenderDispatcher",
     "client.MixinGameLoadCookie",
     "client.MixinGenericMessageScreen",
     "client.MixinImageButton",
@@ -61,6 +62,8 @@
     "client.MixinWorldListEntry"
   ],
   "mixins": [
+    "client.IMixinEntity",
+    "client.IMixinLivingEntity"
   ],
   "injectors": {
     "defaultRequire": 1

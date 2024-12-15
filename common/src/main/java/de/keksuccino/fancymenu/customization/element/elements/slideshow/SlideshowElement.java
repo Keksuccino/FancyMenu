@@ -51,7 +51,9 @@ public class SlideshowElement extends AbstractElement {
             this.slideshow.width = this.getAbsoluteWidth();
             this.slideshow.height = this.getAbsoluteHeight();
 
+            graphics.flush();
             this.slideshow.render(graphics);
+            graphics.flush();
 
             this.slideshow.x = cachedX;
             this.slideshow.y = cachedY;

@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -46,11 +47,11 @@ public class ImageElement extends AbstractElement {
                 ResourceLocation loc = t.getResourceLocation();
                 if (loc != null) {
                     if (this.repeat) {
-                        RenderingUtils.blitRepeat(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.opacity));
+                        RenderingUtils.blitRepeat(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight(),  DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
                     } else if (this.nineSlice) {
-                        RenderingUtils.blitNineSliced(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.nineSliceBorderX, this.nineSliceBorderY, this.nineSliceBorderX, this.nineSliceBorderY, t.getWidth(), t.getHeight(), 0, 0, t.getWidth(), t.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.opacity));
+                        RenderingUtils.blitNineSliced(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.nineSliceBorderX, this.nineSliceBorderY, this.nineSliceBorderX, this.nineSliceBorderY, t.getWidth(), t.getHeight(), 0, 0, t.getWidth(), t.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
                     } else {
-                        graphics.blit(RenderType::guiTextured, loc, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.opacity));
+                        graphics.blit(RenderType::guiTextured, loc, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
                     }
                 }
             } else if (isEditor()) {

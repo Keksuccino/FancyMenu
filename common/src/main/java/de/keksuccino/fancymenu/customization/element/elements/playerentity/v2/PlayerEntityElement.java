@@ -1,29 +1,47 @@
 package de.keksuccino.fancymenu.customization.element.elements.playerentity.v2;
 
 import com.mojang.blaze3d.platform.Lighting;
+import de.keksuccino.fancymenu.customization.DummyLocalPlayer;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.v2.textures.CapeResourceSupplier;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.v2.textures.SkinResourceSupplier;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEntity;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.PlayerSkinWidget;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.state.PlayerRenderState;
 import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.SyncedDataHolder;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.Parrot;
+import net.minecraft.world.phys.Vec3;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
+import sun.misc.Unsafe;
+
+import java.awt.*;
+import java.lang.reflect.Field;
 
 public class PlayerEntityElement extends AbstractElement {
     
     private static final Logger LOGGER = LogManager.getLogger();
+
+//    private static final Camera CAMERA = new Camera();
 
     protected DrawableColor nameTagBackgroundColor = DrawableColor.BLACK;
 
@@ -84,12 +102,17 @@ public class PlayerEntityElement extends AbstractElement {
     public boolean rightLegYRotAdvancedMode;
     public boolean rightLegZRotAdvancedMode;
 
-    public PlayerSkinWidget widget = new PlayerSkinWidget(0, 0, Minecraft.getInstance().getEntityModels(), this::updateSkinAndCape);
+//    public PlayerSkinWidget widget = new PlayerSkinWidget(0, 0, Minecraft.getInstance().getEntityModels(), this::updateSkinAndCape);
+//
+//    public final DummyLocalPlayer player = createUnsafePlayer();
 
     public PlayerEntityElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
         this.normalRenderer.playerState = this.renderState;
         this.slimRenderer.playerState = this.renderState;
+//        if (this.player != null) {
+//            this.player.initializeInstance();
+//        }
     }
 
     @Override
@@ -97,11 +120,19 @@ public class PlayerEntityElement extends AbstractElement {
 
         if (this.shouldRender()) {
 
-            this.updateSkinAndCape();
-            this.updateParrotOnShoulder();
-            this.updatePose(mouseX, mouseY);
+            graphics.fill(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), Color.RED.getRGB());
 
-            this.renderEntity(graphics);
+            graphics.drawCenteredString(Minecraft.getInstance().font, Component.literal("PLAYER ENTITY ELEMENT"), this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY() + (this.getAbsoluteHeight() / 2) - 11, -1);
+            graphics.drawCenteredString(Minecraft.getInstance().font, Component.literal("TEMPORARILY REMOVED FROM FANCYMENU!"), this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY() + (this.getAbsoluteHeight() / 2), -1);
+            graphics.drawCenteredString(Minecraft.getInstance().font, Component.literal("WILL GET ADDED BACK SOON!"), this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY() + (this.getAbsoluteHeight() / 2) + 11, -1);
+
+//            this.updateSkinAndCape();
+//            this.updateParrotOnShoulder();
+//            this.updatePose(mouseX, mouseY);
+//
+//            renderEntityInInventoryFollowsMouse(graphics, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), 30, 0.0625F, mouseX, mouseY, this.player);
+
+//            this.renderEntity(graphics);
 
 //            this.widget.setX(this.getAbsoluteX());
 //            this.widget.setY(this.getAbsoluteY());
@@ -109,11 +140,97 @@ public class PlayerEntityElement extends AbstractElement {
 //            this.widget.setHeight(this.getAbsoluteHeight());
 //            this.widget.render(graphics, mouseX, mouseY, partial);
 
-            this.renderNameTag(graphics, mouseX, mouseY, partial);
+//            this.renderNameTag(graphics, mouseX, mouseY, partial);
 
         }
 
     }
+
+//    @Nullable
+//    public static DummyLocalPlayer createUnsafePlayer() {
+//
+//        try {
+//
+//            // Access the Unsafe instance
+//            Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+//            unsafeField.setAccessible(true);
+//            Unsafe unsafe = (Unsafe) unsafeField.get(null);
+//
+//            // Create an instance of the class without invoking its constructor
+//            DummyLocalPlayer instance = (DummyLocalPlayer) unsafe.allocateInstance(DummyLocalPlayer.class);
+//
+//            return instance;
+//
+//        } catch (Exception ex) {
+//            ex.printStackTrace();
+//        }
+//
+//        return null;
+//
+//    }
+//
+//    public static void renderEntityInInventoryFollowsMouse(GuiGraphics guiGraphics, int x1, int y1, int x2, int y2, int scale, float yOffset, float mouseX, float mouseY, LocalPlayer localPlayer) {
+//        float f = (float)(x1 + x2) / 2.0F;
+//        float g = (float)(y1 + y2) / 2.0F;
+//        guiGraphics.enableScissor(x1, y1, x2, y2);
+//        float h = (float)Math.atan((double)((f - mouseX) / 40.0F));
+//        float i = (float)Math.atan((double)((g - mouseY) / 40.0F));
+//        Quaternionf quaternionf = new Quaternionf().rotateZ((float) Math.PI);
+//        Quaternionf quaternionf2 = new Quaternionf().rotateX(i * 20.0F * (float) (Math.PI / 180.0));
+//        quaternionf.mul(quaternionf2);
+//        float j = localPlayer.yBodyRot;
+//        float k = localPlayer.getYRot();
+//        float l = localPlayer.getXRot();
+//        float m = localPlayer.yHeadRotO;
+//        float n = localPlayer.yHeadRot;
+//        localPlayer.yBodyRot = 180.0F + h * 20.0F;
+//        localPlayer.setYRot(180.0F + h * 40.0F);
+//        localPlayer.setXRot(-i * 20.0F);
+//        localPlayer.yHeadRot = localPlayer.getYRot();
+//        localPlayer.yHeadRotO = localPlayer.getYRot();
+//        float o = localPlayer.getScale();
+//        Vector3f vector3f = new Vector3f(0.0F, localPlayer.getBbHeight() / 2.0F + yOffset * o, 0.0F);
+//        float p = (float)scale / o;
+//        renderEntityInInventory(guiGraphics, f, g, p, vector3f, quaternionf, quaternionf2, localPlayer);
+//        localPlayer.yBodyRot = j;
+//        localPlayer.setYRot(k);
+//        localPlayer.setXRot(l);
+//        localPlayer.yHeadRotO = m;
+//        localPlayer.yHeadRot = n;
+//        guiGraphics.disableScissor();
+//    }
+//
+//    public static void renderEntityInInventory(GuiGraphics guiGraphics, float x, float y, float scale, Vector3f translate, Quaternionf pose, @Nullable Quaternionf cameraOrientation, LocalPlayer localPlayer) {
+//
+//        LocalPlayer cachedPlayer = Minecraft.getInstance().player;
+//        Minecraft.getInstance().player = localPlayer;
+//
+//        try {
+//            guiGraphics.pose().pushPose();
+//            guiGraphics.pose().translate((double)x, (double)y, 50.0);
+//            guiGraphics.pose().scale(scale, scale, -scale);
+//            guiGraphics.pose().translate(translate.x, translate.y, translate.z);
+//            guiGraphics.pose().mulPose(pose);
+//            guiGraphics.flush();
+//            Lighting.setupForEntityInInventory();
+//            EntityRenderDispatcher entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
+//            if (entityRenderDispatcher.camera == null) entityRenderDispatcher.camera = CAMERA;
+//            if (cameraOrientation != null) {
+//                entityRenderDispatcher.overrideCameraOrientation(cameraOrientation.conjugate(new Quaternionf()).rotateY((float) Math.PI));
+//            }
+//            entityRenderDispatcher.setRenderShadow(false);
+//            guiGraphics.drawSpecial(multiBufferSource -> entityRenderDispatcher.render(localPlayer, 0.0, 0.0, 0.0, 1.0F, guiGraphics.pose(), multiBufferSource, 15728880));
+//            guiGraphics.flush();
+//            entityRenderDispatcher.setRenderShadow(true);
+//            guiGraphics.pose().popPose();
+//            Lighting.setupFor3DItems();
+//        } catch (Exception ex) {
+//            LOGGER.error("[FANCYMENU] Failed to render Player Entity element!", ex);
+//        }
+//
+//        Minecraft.getInstance().player = cachedPlayer;
+//
+//    }
 
     protected void renderEntity(@NotNull GuiGraphics graphics) {
 

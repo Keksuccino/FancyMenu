@@ -7,6 +7,7 @@ import java.util.List;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -156,6 +157,7 @@ public class ExternalTextureSlideshowRenderer {
 		try {
 			if (!this.images.isEmpty()) {
 				this.tick();
+				RenderSystem.enableBlend();
 				this.renderCurrent(graphics);
 				this.renderPrevious(graphics);
 				this.renderOverlay(graphics);
@@ -221,8 +223,6 @@ public class ExternalTextureSlideshowRenderer {
 
 	protected void renderPrevious(GuiGraphics graphics) {
 		if ((this.previous != null) && (this.current != this.previous)) {
-			graphics.pose().pushPose();
-			RenderSystem.enableBlend();
 			float o = this.opacity;
 			if (o > this.slideshowOpacity) {
 				o = this.slideshowOpacity;
@@ -230,30 +230,27 @@ public class ExternalTextureSlideshowRenderer {
 			ITexture t = this.previous.get();
 			ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
 			if (loc != null) {
-				graphics.blit(RenderType::guiTextured, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, o));
+				graphics.blit(RenderType::guiTextured, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height, DrawableColor.WHITE.getColorIntWithAlpha(o));
 			}
-			graphics.pose().popPose();
 		}
 	}
 
 	protected void renderCurrent(GuiGraphics graphics) {
 		if (this.current != null) {
-			RenderSystem.enableBlend();
 			ITexture t = this.current.get();
 			ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
 			if (loc != null) {
-				graphics.blit(RenderType::guiTextured, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.slideshowOpacity));
+				graphics.blit(RenderType::guiTextured, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height, DrawableColor.WHITE.getColorIntWithAlpha(this.slideshowOpacity));
 			}
 		}
 	}
 
 	protected void renderOverlay(GuiGraphics graphics) {
 		if (this.overlayTexture != null) {
-			RenderSystem.enableBlend();
 			ITexture t = this.overlayTexture.get();
 			ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
 			if (loc != null) {
-				graphics.blit(RenderType::guiTextured, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
+				graphics.blit(RenderType::guiTextured, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height, -1);
 			}
 		}
 	}
