@@ -1,4 +1,15 @@
 
+CHANGELOG | FANCYMENU v3.3.3
+ 
+- Added support for MC 1.21.4
+- Temporarily removed the "Player Entity" element in MC 1.21.4+, because I'm waiting for an API to make rendering it easier
+  - These elements will show as red boxes for now in the editor and will be invisible outside the editor
+ 
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.3.2
  
 - Renamed config option "welcome_screen_shown" to "show_welcome_screen"
