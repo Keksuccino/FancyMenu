@@ -1,4 +1,13 @@
 
+CHANGELOG | FANCYMENU v3.3.4
+ 
+- Fixed broken texture opacity in various places
+ 
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.3.3
  
 - Added support for MC 1.21.4
