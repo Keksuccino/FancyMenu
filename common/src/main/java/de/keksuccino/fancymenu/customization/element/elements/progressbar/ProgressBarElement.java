@@ -95,14 +95,14 @@ public class ProgressBarElement extends AbstractElement {
             if (t != null) {
                 ResourceLocation loc = t.getResourceLocation();
                 if (loc != null) {
-                    graphics.blit(RenderType::guiTextured, loc, progressX, progressY, offsetX, offsetY, progressWidth, progressHeight, this.getAbsoluteWidth(), this.getAbsoluteHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.opacity));
+                    graphics.blit(RenderType::guiTextured, loc, progressX, progressY, offsetX, offsetY, progressWidth, progressHeight, this.getAbsoluteWidth(), this.getAbsoluteHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
                 }
             }
         } else if (this.barColor != null) {
             RenderSystem.enableBlend();
             float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) ARGB.alpha(this.barColor.getColorInt()) / 255.0F));
             if (this.opacity <= colorAlpha) colorAlpha = this.opacity;
-            graphics.fill(RenderType.guiOverlay(), progressX, progressY, progressX + progressWidth, progressY + progressHeight, RenderingUtils.replaceAlphaInColor(this.barColor.getColorInt(), colorAlpha));
+            graphics.fill(RenderType.guiOverlay(), progressX, progressY, progressX + progressWidth, progressY + progressHeight, this.barColor.getColorIntWithAlpha(colorAlpha));
         }
 
     }
@@ -111,13 +111,13 @@ public class ProgressBarElement extends AbstractElement {
         RenderSystem.enableBlend();
         if (this.backgroundTextureSupplier != null) {
             this.backgroundTextureSupplier.forRenderable((iTexture, location) -> {
-                graphics.blit(RenderType::guiTextured, location, this.getAbsoluteX(), this.getAbsoluteY(), 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.opacity));
+                graphics.blit(RenderType::guiTextured, location, this.getAbsoluteX(), this.getAbsoluteY(), 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
             });
         } else if (this.backgroundColor != null) {
             RenderSystem.enableBlend();
             float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) ARGB.alpha(this.backgroundColor.getColorInt()) / 255.0F));
             if (this.opacity <= colorAlpha) colorAlpha = this.opacity;
-            graphics.fill(RenderType.guiOverlay(), this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), RenderingUtils.replaceAlphaInColor(this.backgroundColor.getColorInt(), colorAlpha));
+            graphics.fill(RenderType.guiOverlay(), this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), this.backgroundColor.getColorIntWithAlpha(colorAlpha));
         }
     }
 

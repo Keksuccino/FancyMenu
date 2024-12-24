@@ -76,7 +76,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
         if (this.imageSupplier != null) {
             this.imageSupplier.forRenderable((iTexture, location) -> {
                 RenderSystem.enableBlend();
-                RenderingUtils.blitF(graphics, RenderType::guiTextured, location, this.x, this.y, 0.0F, 0.0F, this.getRenderWidth(), this.getRenderHeight(), this.getRenderWidth(), this.getRenderHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.parent.textOpacity));
+                RenderingUtils.blitF(graphics, RenderType::guiTextured, location, this.x, this.y, 0.0F, 0.0F, this.getRenderWidth(), this.getRenderHeight(), this.getRenderWidth(), this.getRenderHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.parent.textOpacity));
             });
         } else if (this.separationLine) {
 

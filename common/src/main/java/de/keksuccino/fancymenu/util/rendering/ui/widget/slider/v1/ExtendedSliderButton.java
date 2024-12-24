@@ -92,9 +92,9 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
         int handleX = this.getX() + (int)(this.value * (double)(this.width - 8));
         DrawableColor c = this.getHandleRenderColor();
         if (c == null) {
-            graphics.blitSprite(RenderType::guiTextured, this.getHandleSprite(), handleX, this.getY(), 8, this.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.alpha));
+            graphics.blitSprite(RenderType::guiTextured, this.getHandleSprite(), handleX, this.getY(), 8, this.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.alpha));
         } else {
-            graphics.fill(RenderType.guiOverlay(), handleX, this.getY(), handleX + 8, this.getY() + this.getHeight(), RenderingUtils.replaceAlphaInColor(c.getColorInt(), this.alpha));
+            graphics.fill(RenderType.guiOverlay(), handleX, this.getY(), handleX + 8, this.getY() + this.getHeight(), c.getColorIntWithAlpha(this.alpha));
         }
     }
 
@@ -109,7 +109,7 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();
         if (this.backgroundColor == null) {
-            graphics.blitSprite(RenderType::guiTextured, this.getSprite(), this.getX(), this.getY(), this.getWidth(), this.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.alpha));
+            graphics.blitSprite(RenderType::guiTextured, this.getSprite(), this.getX(), this.getY(), this.getWidth(), this.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.alpha));
         } else {
             int borderOffset = (this.borderColor != null) ? 1 : 0;
             graphics.fill(RenderType.guiOverlay(), this.getX() + borderOffset, this.getY() + borderOffset, this.getX() + this.getWidth() - borderOffset, this.getY() + this.getHeight() - borderOffset, RenderingUtils.replaceAlphaInColor(this.backgroundColor.getColorInt(), this.alpha));

@@ -62,7 +62,7 @@ public class ImageMenuBackground extends MenuBackground {
             RenderSystem.enableBlend();
 
             if (this.repeat) {
-                RenderingUtils.blitRepeat(graphics, resourceLocation, 0, 0, getScreenWidth(), getScreenHeight(), tex.getWidth(), tex.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.opacity));
+                RenderingUtils.blitRepeat(graphics, resourceLocation, 0, 0, getScreenWidth(), getScreenHeight(), tex.getWidth(), tex.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
             } else if (this.slideLeftRight) {
                 int w = ratio.getAspectRatioWidth(getScreenHeight());
                 //Check if background should move to the left or the right side
@@ -112,7 +112,7 @@ public class ImageMenuBackground extends MenuBackground {
                         graphics.blit(RenderType::guiTextured, resourceLocation, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
                     }
                 } else {
-                    RenderingUtils.blitF(graphics, RenderType::guiTextured, resourceLocation, (float)slidePos, 0.0F, 0.0F, 0.0F, w, getScreenHeight(), w, getScreenHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
+                    RenderingUtils.blitF(graphics, RenderType::guiTextured, resourceLocation, (float)slidePos, 0.0F, 0.0F, 0.0F, w, getScreenHeight(), w, getScreenHeight(), -1);
                 }
             } else if (this.keepBackgroundAspectRatio) {
                 this.renderKeepAspectRatio(graphics, ratio, resourceLocation);

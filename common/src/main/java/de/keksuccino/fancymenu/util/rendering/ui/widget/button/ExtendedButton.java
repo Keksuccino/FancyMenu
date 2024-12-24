@@ -113,7 +113,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
             if (this.renderColorBackground(graphics)) {
                 RenderSystem.enableBlend();
                 RenderSystem.enableDepthTest();
-                graphics.blitSprite(RenderType::guiTextured, SPRITES.get(this.active, this.isHoveredOrFocused()), this.getX(), this.getY(), this.getWidth(), this.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.alpha));
+                graphics.blitSprite(RenderType::guiTextured, SPRITES.get(this.active, this.isHoveredOrFocused()), this.getX(), this.getY(), this.getWidth(), this.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.alpha));
             }
         }
     }

@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.animation;
 import java.util.ArrayList;
 import java.util.List;
 import com.mojang.blaze3d.platform.NativeImage;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
@@ -115,7 +116,7 @@ public class ResourcePackAnimationRenderer implements IAnimationRenderer {
             x2 = 0;
             y2 = 0;
         }
-        graphics.blit(RenderType::guiTextured, this.resources.get(this.frame), x2, y2, 0.0F, 0.0F, w, h, w, h, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.opacity));
+        graphics.blit(RenderType::guiTextured, this.resources.get(this.frame), x2, y2, 0.0F, 0.0F, w, h, w, h, DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
         RenderSystem.disableBlend();
     }
 

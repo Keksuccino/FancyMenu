@@ -8,6 +8,7 @@ import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.util.ScreenUtils;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
@@ -275,7 +276,7 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 				ResourceLocation location = texture.getResourceLocation();
 				if (location != null) {
 					RenderSystem.enableBlend();
-					graphics.blit(RenderType::guiTextured, location, 0, 0, 0.0F, 0.0F, screenW, screenH, screenW, screenH, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.opacity));
+					graphics.blit(RenderType::guiTextured, location, 0, 0, 0.0F, 0.0F, screenW, screenH, screenW, screenH, DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
 				}
 			}
 		}

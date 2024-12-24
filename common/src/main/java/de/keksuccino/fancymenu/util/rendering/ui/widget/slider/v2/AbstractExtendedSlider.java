@@ -111,7 +111,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();
-        graphics.blitSprite(RenderType::guiTextured, this.getSprite(), this.getX(), this.getY(), this.getWidth(), this.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.alpha));
+        graphics.blitSprite(RenderType::guiTextured, this.getSprite(), this.getX(), this.getY(), this.getWidth(), this.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.alpha));
     }
 
     protected void renderHandle(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
@@ -152,7 +152,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();
-        graphics.blitSprite(RenderType::guiTextured, this.getHandleSprite(), this.getHandleX(), this.getY(), this.getHandleWidth(), this.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.alpha));
+        graphics.blitSprite(RenderType::guiTextured, this.getHandleSprite(), this.getHandleX(), this.getY(), this.getHandleWidth(), this.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.alpha));
     }
 
     protected void renderLabel(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {

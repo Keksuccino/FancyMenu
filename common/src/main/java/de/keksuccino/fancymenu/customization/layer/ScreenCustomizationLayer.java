@@ -499,7 +499,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 						graphics.blit(RenderType::guiTextured, loc, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
 						graphics.disableScissor();
 					} else if (this.layoutBase.repeatScrollListHeaderTexture) {
-						RenderingUtils.blitRepeat(graphics, loc, list.getX(), 0, list.getWidth(), list.getY(), headerTexture.getWidth(), headerTexture.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
+						RenderingUtils.blitRepeat(graphics, loc, list.getX(), 0, list.getWidth(), list.getY(), headerTexture.getWidth(), headerTexture.getHeight(), -1);
 					} else {
 						graphics.blit(RenderType::guiTextured, loc, list.getX(), 0, 0.0F, 0.0F, list.getWidth(), list.getY(), list.getWidth(), list.getY());
 					}
@@ -523,7 +523,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 					} else if (this.layoutBase.repeatScrollListFooterTexture) {
 						int footerHeight = ScreenUtils.getScreenHeight() - list.getBottom();
 						if (footerHeight <= 0) footerHeight = 1;
-						RenderingUtils.blitRepeat(graphics, loc, list.getX(), list.getBottom(), list.getWidth(), footerHeight, footerTexture.getWidth(), footerTexture.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
+						RenderingUtils.blitRepeat(graphics, loc, list.getX(), list.getBottom(), list.getWidth(), footerHeight, footerTexture.getWidth(), footerTexture.getHeight(), -1);
 					} else {
 						int footerHeight = ScreenUtils.getScreenHeight() - list.getBottom();
 						if (footerHeight <= 0) footerHeight = 1;
@@ -559,7 +559,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 						graphics.blit(RenderType::guiTextured, loc, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
 						graphics.disableScissor();
 					} else if (this.layoutBase.repeatScrollListHeaderTexture) {
-						RenderingUtils.blitRepeat(graphics, loc, 0, 0, e.getHeaderWidth(), e.getHeaderHeight(), headerTexture.getWidth(), headerTexture.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
+						RenderingUtils.blitRepeat(graphics, loc, 0, 0, e.getHeaderWidth(), e.getHeaderHeight(), headerTexture.getWidth(), headerTexture.getHeight(), -1);
 					} else {
 						graphics.blit(RenderType::guiTextured, loc, 0, 0, 0.0F, 0.0F, e.getHeaderWidth(), e.getHeaderHeight(), e.getHeaderWidth(), e.getHeaderHeight());
 					}

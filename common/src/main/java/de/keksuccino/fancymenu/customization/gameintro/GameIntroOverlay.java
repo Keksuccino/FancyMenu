@@ -103,7 +103,7 @@ public class GameIntroOverlay extends Overlay {
             ResourceLocation location = r.getResourceLocation();
             if (location != null) {
                 RenderSystem.enableBlend();
-                graphics.blit(RenderType::guiTextured, location, x, y, 0.0F, 0.0F, aspectWidth, aspectHeight, aspectWidth, aspectHeight, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, this.opacity));
+                graphics.blit(RenderType::guiTextured, location, x, y, 0.0F, 0.0F, aspectWidth, aspectHeight, aspectWidth, aspectHeight, DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
             }
 
         }
@@ -125,7 +125,7 @@ public class GameIntroOverlay extends Overlay {
             int normalizedHeight = (int)(this.height / scale);
             int textX = (normalizedWidth / 2) - (this.font.width(skipComp) / 2);
             int textY = normalizedHeight - 40;
-            graphics.drawString(this.font, skipComp, textX, textY, RenderingUtils.replaceAlphaInColor(DrawableColor.WHITE.getColorInt(), Math.max(0.1F, 0.6F * this.opacity)), false);
+            graphics.drawString(this.font, skipComp, textX, textY, DrawableColor.WHITE.getColorIntWithAlpha(Math.max(0.1F, 0.6F * this.opacity)), false);
             graphics.pose().popPose();
         }
     }
