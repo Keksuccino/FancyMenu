@@ -1,4 +1,11 @@
 
+CHANGELOG | FANCYMENU v3.3.5
+ 
+- Fixed opacity not working for the Image menu background type in MC 1.21.4
+
+
+
+
 CHANGELOG | FANCYMENU v3.3.4
  
 - Fixed broken texture opacity in various places
