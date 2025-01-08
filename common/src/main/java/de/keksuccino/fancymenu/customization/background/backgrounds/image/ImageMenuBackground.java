@@ -109,15 +109,15 @@ public class ImageMenuBackground extends MenuBackground {
                     if (this.keepBackgroundAspectRatio) {
                         this.renderKeepAspectRatio(graphics, ratio, resourceLocation);
                     } else {
-                        graphics.blit(RenderType::guiTextured, resourceLocation, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
+                        graphics.blit(RenderType::guiTextured, resourceLocation, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight(), ARGB.white(this.opacity));
                     }
                 } else {
-                    RenderingUtils.blitF(graphics, RenderType::guiTextured, resourceLocation, (float)slidePos, 0.0F, 0.0F, 0.0F, w, getScreenHeight(), w, getScreenHeight(), -1);
+                    RenderingUtils.blitF(graphics, RenderType::guiTextured, resourceLocation, (float)slidePos, 0.0F, 0.0F, 0.0F, w, getScreenHeight(), w, getScreenHeight(), ARGB.white(this.opacity));
                 }
             } else if (this.keepBackgroundAspectRatio) {
                 this.renderKeepAspectRatio(graphics, ratio, resourceLocation);
             } else {
-                graphics.blit(RenderType::guiTextured, resourceLocation, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
+                graphics.blit(RenderType::guiTextured, resourceLocation, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight(), ARGB.white(this.opacity));
             }
 
         }
@@ -134,7 +134,7 @@ public class ImageMenuBackground extends MenuBackground {
         if (size[1] > getScreenHeight()) {
             y = -((size[1] - getScreenHeight()) / 2);
         }
-        graphics.blit(RenderType::guiTextured, resourceLocation, x, y, 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
+        graphics.blit(RenderType::guiTextured, resourceLocation, x, y, 0.0F, 0.0F, size[0], size[1], size[0], size[1], ARGB.white(this.opacity));
     }
 
 }
