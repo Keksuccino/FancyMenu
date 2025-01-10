@@ -707,7 +707,7 @@ public class LayoutEditorUI {
 						editor.normalEditorElements.add(editorElement);
 						if ((editor.rightClickMenuOpenPosX != -1000) && (editor.rightClickMenuOpenPosY != -1000)) {
 							//Add new element at right-click menu coordinates
-							editorElement.setAnchorPoint(editorElement.element.anchorPoint, true, editor.rightClickMenuOpenPosX, editor.rightClickMenuOpenPosY, true);
+							editorElement.setAnchorPoint(editorElement.element.anchorPoint, editor.rightClickMenuOpenPosX, editor.rightClickMenuOpenPosY, true);
 							editor.deselectAllElements();
 							editorElement.setSelected(true);
 							editor.rightClickMenuOpenPosX = -1000;

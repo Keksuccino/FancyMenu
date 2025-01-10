@@ -475,7 +475,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		}
 		if (this.stretchX) {
 			x = 0;
-		} else if (this.stayOnScreen) {
+		} else if (this.stayOnScreen && !this.stickyAnchor) {
 			if (x < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
 				x = STAY_ON_SCREEN_EDGE_ZONE_SIZE;
 			}
@@ -510,7 +510,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		}
 		if (this.stretchY) {
 			y = 0;
-		} else if (this.stayOnScreen) {
+		} else if (this.stayOnScreen && !this.stickyAnchor) {
 			if (y < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
 				y = STAY_ON_SCREEN_EDGE_ZONE_SIZE;
 			}
