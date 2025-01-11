@@ -5,6 +5,7 @@ CHANGELOG | FANCYMENU v3.4.0 [ W I P !! Not public yet !! ]
 - Added "Sticky Anchor" mode for elements that makes them always keep the same distance to their anchor, no matter the element's size
 - Added "Auto Sizing" mode for elements that makes them adjust their size automatically when the screen size changes
 - Elements will now always stay at the same position when their anchor point gets changed (this was previously only the case when changing their anchor via hovering)
+- Fixed Copyright button in TitleScreen can be deleted (#997)
 - 
  
 %changelog:end%
