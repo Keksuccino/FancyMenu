@@ -12,6 +12,7 @@ CHANGELOG | FANCYMENU v3.4.0 [ W I P !! Not public yet !! ]
 - Fixed "Smaller Than" being forcibly replaced with "Smaller Than or Equals" in the "Is Number" requirement (#954)
 - Fixed typo in tooltip of Layout Index (#968)
 - Fixed FM's menu bar not being clickable in the Create World screen until resizing the window in some cases (#1004)
+- Fixed game crashing when resetting the "base color" of a Text element (#1003)
 - 
  
 %changelog:end%
