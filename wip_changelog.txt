@@ -17,6 +17,7 @@ CHANGELOG | FANCYMENU v3.4.0 [ W I P !! Not public yet !! ]
 - Fixed nine-slicing being broken in MC 1.21.4 (#1000)
 - Fixed incompatibility with "Exit Confirmation" mod (#972)
 - Fixed incompatibility with "DungeonZ" mod (#755)
+- Fixed incompatibility with "RPG HUD" mod (#739)
 - FancyMenu does not cancel the call to super.render() in the TitleScreen anymore to make mods who inject into this method work again (#857)
 - 
  
