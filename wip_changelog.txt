@@ -8,6 +8,7 @@ CHANGELOG | FANCYMENU v3.4.0 [ W I P !! Not public yet !! ]
 - Elements will now always stay at the same position when their anchor point gets changed (this was previously only the case when changing their anchor via hovering)
 - The Title screen Copyright button's opacity is now capped at 0.4, so people can't make it invisible via the opacity setting anymore (#984)
 - Fixed being able to delete the Copyright button in the Title screen (#997)
+- Fixed conflict with "Immersive Engineering" by disabling FancyMenu in all screens related to this mod (#965)
  
 %changelog:end%
 
