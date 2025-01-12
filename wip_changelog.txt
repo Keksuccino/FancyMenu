@@ -15,6 +15,7 @@ CHANGELOG | FANCYMENU v3.4.0 [ W I P !! Not public yet !! ]
 - Fixed game crashing when resetting the "base color" of a Text element (#1003)
 - Fixed text input field in Resource Chooser screen breaks when pressing CTRL + BACKSPACE (#1006)
 - Fixed nine-slicing being broken in MC 1.21.4 (#1000)
+- Fixed incompatibility with "Exit Confirmation" mod (#972)
 - 
  
 %changelog:end%
