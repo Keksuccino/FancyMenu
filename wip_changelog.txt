@@ -10,6 +10,7 @@ CHANGELOG | FANCYMENU v3.4.0 [ W I P !! Not public yet !! ]
 - Fixed being able to delete the Copyright button in the Title screen (#997)
 - Fixed conflict with "Immersive Engineering" by disabling FancyMenu in all screens related to this mod (#965)
 - Fixed "Smaller Than" being forcibly replaced with "Smaller Than or Equals" in the "Is Number" requirement (#954)
+- Fixed typo in tooltip of Layout Index (#968)
 - 
  
 %changelog:end%
