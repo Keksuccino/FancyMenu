@@ -5,7 +5,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.contents.PlainTextContents;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import org.jetbrains.annotations.NotNull;
 
@@ -48,11 +47,6 @@ public class TitleScreenWidgetIdentificationContext extends WidgetIdentification
                     if (key.equals("modmenu.title")) {
                         return "modmenu_titlescreen_mods_button";
                     }
-                }
-            } else if (c.getContents() instanceof PlainTextContents.LiteralContents l) {
-                String label = l.text();
-                if (label.equals("Copyright Mojang AB. Do not distribute!")) {
-                    return "mc_titlescreen_copyright_button";
                 }
             }
             return null;

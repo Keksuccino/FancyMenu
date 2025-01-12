@@ -55,6 +55,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
     public HeadlineType headlineType = HeadlineType.NONE;
     public QuoteContext quoteContext = null;
     public CodeBlockContext codeBlockContext = null;
+    public boolean plainText = false;
     public ResourceLocation font = null;
     public boolean hovered = false;
 
@@ -206,6 +207,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
             addSpaceComponentAtEnd = true;
         }
         if (this.codeBlockContext != null) {
+            style = Style.EMPTY;
+        }
+        if (this.plainText) {
             style = Style.EMPTY;
         }
         if (this.parent.textCase == MarkdownRenderer.TextCase.ALL_UPPER) {

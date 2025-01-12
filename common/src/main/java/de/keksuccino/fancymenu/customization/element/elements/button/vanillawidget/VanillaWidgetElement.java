@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.customization.element.elements.button.custombutto
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -200,10 +201,17 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
         this.vanillaButtonHidden = hidden;
     }
 
+    @Override
+    public float getBaseOpacity() {
+        float o = super.getBaseOpacity();
+        if (this.isCopyrightButton() && (o < 0.4F)) o = 0.4F;
+        return o;
+    }
+
     public boolean isCopyrightButton() {
         if (this.widgetMeta == null) return false;
-        String compId = this.widgetMeta.getUniversalIdentifier();
-        return ((compId != null) && compId.equals("mc_titlescreen_copyright_button"));
+        String compId = ((UniqueWidget)this.widgetMeta.getWidget()).getWidgetIdentifierFancyMenu();
+        return ((compId != null) && compId.equals("title_screen_copyright_button"));
     }
 
 }

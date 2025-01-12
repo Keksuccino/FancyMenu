@@ -12,15 +12,18 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
-import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.LogoRenderer;
+import net.minecraft.client.gui.components.PlainTextButton;
 import net.minecraft.client.gui.components.SplashRenderer;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.network.chat.Component;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -32,6 +35,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(TitleScreen.class)
 public abstract class MixinTitleScreen extends Screen {
 
+    @Shadow @Final private static Component COPYRIGHT_TEXT;
     @Shadow public boolean fading;
 
     @Unique boolean handleRealmsNotificationFancyMenu = false;
@@ -40,6 +44,20 @@ public abstract class MixinTitleScreen extends Screen {
     @SuppressWarnings("all")
     private MixinTitleScreen() {
         super(null);
+    }
+
+    /**
+     * @reason Add an identifier to the Copyright button.
+     */
+    @Inject(method = "init", at = @At("RETURN"))
+    private void at_return_of_screen_init_FancyMenu(CallbackInfo info) {
+
+        this.children().forEach(guiEventListener -> {
+            if (guiEventListener instanceof PlainTextButton b) {
+                if (b.getMessage() == COPYRIGHT_TEXT) ((UniqueWidget)b).setWidgetIdentifierFancyMenu("title_screen_copyright_button");
+            }
+        });
+
     }
 
     /**

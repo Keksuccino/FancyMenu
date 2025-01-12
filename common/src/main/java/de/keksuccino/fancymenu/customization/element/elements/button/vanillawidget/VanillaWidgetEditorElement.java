@@ -233,8 +233,7 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements H
     }
 
     public boolean isCopyrightButton() {
-        String compId = ((VanillaWidgetElement)this.element).widgetMeta.getUniversalIdentifier();
-        return ((compId != null) && compId.equals("mc_titlescreen_copyright_button"));
+        return ((VanillaWidgetElement)this.element).isCopyrightButton();
     }
 
     public VanillaWidgetElement getElement() {

@@ -91,6 +91,7 @@ public class LoadingRequirements {
     public static final IsInventorySlotFilledRequirement IS_INVENTORY_SLOT_FILLED = new IsInventorySlotFilledRequirement();
     public static final IsHotbarSlotActiveRequirement IS_HOTBAR_SLOT_ACTIVE = new IsHotbarSlotActiveRequirement();
     public static final IsAttackStrengthWeakenedRequirement IS_ATTACK_STRENGTH_WEAKENED = new IsAttackStrengthWeakenedRequirement();
+    public static final IsKeyPressedRequirement IS_KEY_PRESSED = new IsKeyPressedRequirement();
 
     public static void registerAll() {
 
@@ -101,6 +102,7 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(IS_GUI_SCALE);
         LoadingRequirementRegistry.register(IS_BUTTON_ACTIVE);
         LoadingRequirementRegistry.register(IS_MENU_TITLE);
+        LoadingRequirementRegistry.register(IS_KEY_PRESSED);
 
         LoadingRequirementRegistry.register(IS_REAL_TIME_DAY);
         LoadingRequirementRegistry.register(IS_REAL_TIME_HOUR);

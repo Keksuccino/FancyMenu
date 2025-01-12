@@ -73,7 +73,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public volatile boolean visible = true;
 	public volatile AppearanceDelay appearanceDelay = AppearanceDelay.NO_DELAY;
 	public volatile float appearanceDelayInSeconds = 1.0F;
-	//TODO übernehmen
 	public long appearanceDelayEndTime = -1;
 	@NotNull
 	public Fading fadeIn = Fading.NO_FADING;
@@ -110,7 +109,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public int autoSizingWidth = 0;
 	public int autoSizingHeight = 0;
 	public boolean stickyAnchor = false;
-	//-------------------
 	/**
 	 * This is for when the render scale was changed in a non-system-wide way like via {@link PoseStack#translate(float, float, float)}.<br>
 	 * Elements that do not support scaling via {@link PoseStack#translate(float, float, float)} need to use this value to manually scale themselves.<br>
@@ -144,7 +142,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	@Override
 	public abstract void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
 
-	//TODO übernehmen
 	/**
 	 * This is the internal render method that should only get overridden if there's really no other way around it.<br>
 	 * The normal element rendering logic should be in {@link AbstractElement#render(GuiGraphics, int, int, float)}.
@@ -178,23 +175,18 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	}
 
-	//TODO übernehmen
 	public void renderTick_Head() {
 	}
 
-	//TODO übernehmen
 	public void renderTick_Inner_Stage_1() {
 	}
 
-	//TODO übernehmen
 	public void renderTick_Inner_Stage_2() {
 	}
 
-	//TODO übernehmen
 	public void renderTick_Tail() {
 	}
 
-	//TODO übernehmen
 	public void tickBaseOpacity() {
 
 		//Don't update opacity while fade-in/out is active
@@ -209,7 +201,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	}
 
-	//TODO übernehmen
 	public void tickVisibleInvisible() {
 
 		if (!this._shouldRender()) {
@@ -228,7 +219,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	}
 
-	//TODO übernehmen
 	public void tickAppearanceDelay(boolean shouldRender) {
 
 		if (!shouldRender) return;
@@ -241,7 +231,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	}
 
-	//TODO übernehmen
 	public void tickFadeInOut(boolean shouldRender) {
 
 		if (shouldRender) {
@@ -303,7 +292,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	}
 
-	//TODO übernehmen
 	public void onBecomeVisible() {
 
 		this.applyAppearanceDelay();
@@ -318,7 +306,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	}
 
-	//TODO übernehmen
 	public void onBecomeInvisible() {
 
 		this.updateOpacity();
@@ -337,7 +324,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	}
 
-	//TODO übernehmen
 	public void applyAppearanceDelay() {
 		boolean isResize = !this.isNewMenu && this.appearanceDelayElementJustCreated;
 		this.appearanceDelayElementJustCreated = false;
@@ -359,12 +345,10 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		this.lastTickAppearanceDelayed = this.isAppearanceDelayed();
 	}
 
-	//TODO übernehmen
 	public void updateOpacity() {
 		this.opacity = this.getBaseOpacity();
 	}
 
-	//TODO übernehmen
 	public float getBaseOpacity() {
 		long now = System.currentTimeMillis();
 		if ((this.lastBaseOpacityParse + 30L) > now) return this.cachedBaseOpacity;
@@ -521,7 +505,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		return y;
 	}
 
-	//TODO übernehmen
 	public void setAutoSizingBaseWidthAndHeight() {
 		Window window = Minecraft.getInstance().getWindow();
 		double guiWidth = getScreenWidth() * window.getGuiScale();
@@ -530,7 +513,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		this.autoSizingBaseScreenHeight = (int)guiHeight;
 	}
 
-	//TODO übernehmen
 	public void updateAutoSizing(boolean ignoreLastTickScreenSize) {
 
 		Window window = Minecraft.getInstance().getWindow();
@@ -579,12 +561,10 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		if (this.stretchX) {
 			return getScreenWidth();
 		}
-		//TODO übernehmen
 		this.updateAutoSizing(false);
 		if (this.autoSizing && (this.autoSizingWidth > 0)) {
 			return this.autoSizingWidth;
 		}
-		//--------------------
 		return this.baseWidth;
 	}
 
@@ -609,12 +589,10 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		if (this.stretchY) {
 			return getScreenHeight();
 		}
-		//TODO übernehmen
 		this.updateAutoSizing(false);
 		if (this.autoSizing && (this.autoSizingHeight > 0)) {
 			return this.autoSizingHeight;
 		}
-		//--------------------
 		return this.baseHeight;
 	}
 
@@ -651,12 +629,10 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		return this.getAbsoluteY();
 	}
 
-	//TODO übernehmen
 	public boolean isAppearanceDelayed() {
 		return (System.currentTimeMillis() < this.appearanceDelayEndTime);
 	}
 
-	//TODO übernehmen
 	public boolean shouldRender() {
 		if (this.isAppearanceDelayed() && !isEditor()) return false;
 		boolean b = this._shouldRender();
@@ -666,7 +642,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		return b;
 	}
 
-	//TODO übernehmen
 	protected boolean _shouldRender() {
 		if (!this.loadingRequirementsMet()) return false;
 		return this.visible;
@@ -852,7 +827,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	}
 
-	//TODO übernehmen
 	public enum Fading {
 
 		NO_FADING("no_fading"),

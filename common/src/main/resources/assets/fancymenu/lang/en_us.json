@@ -1420,5 +1420,11 @@
   "fancymenu.actions.audio.set_audio_element_volume.value.desc": "Element Identifier + Volume [ Separated by : ]",
   "fancymenu.placeholders.categories.audio": "Audio",
   "fancymenu.placeholders.audio_element_volume": "Audio Element Volume",
-  "fancymenu.placeholders.audio_element_volume.desc": "Returns the volume of an Audio element\nas a value between 0.0 (0%%) and 1.0 (100%%).\nTakes the element identifier of the target Audio element."
+  "fancymenu.placeholders.audio_element_volume.desc": "Returns the volume of an Audio element\nas a value between 0.0 (0%%) and 1.0 (100%%).\nTakes the element identifier of the target Audio element.",
+  "fancymenu.requirements.is_key_pressed": "Is Key Pressed",
+  "fancymenu.requirements.is_key_pressed.desc": "Checks if a keyboard key is pressed.",
+  "fancymenu.requirements.is_key_pressed.screen.title": "Key Selection",
+  "fancymenu.requirements.is_key_pressed.screen.selected_key": "Selected Key: %s",
+  "fancymenu.requirements.is_key_pressed.screen.change_key": "Change Key",
+  "fancymenu.requirements.is_key_pressed.screen.change_key.press_now": "Press any key now to select it.."
 }
