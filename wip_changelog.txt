@@ -13,6 +13,7 @@ CHANGELOG | FANCYMENU v3.4.0 [ W I P !! Not public yet !! ]
 - Fixed typo in tooltip of Layout Index (#968)
 - Fixed FM's menu bar not being clickable in the Create World screen until resizing the window in some cases (#1004)
 - Fixed game crashing when resetting the "base color" of a Text element (#1003)
+- Fixed text input field in Resource Chooser screen breaks when pressing CTRL + BACKSPACE (#1006)
 - 
  
 %changelog:end%
