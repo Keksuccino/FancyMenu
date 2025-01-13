@@ -28,6 +28,7 @@ CHANGELOG | FANCYMENU v3.4.0 [ W I P !! Not public yet !! ]
   - The widgets now have custom identifiers
   - You need to open the layout and save it again for this fix to work
 - Fixed Appearance Delay ignoring decimal values (#1010)
+- Fixed background blur not working for some background types in MC 1.21.4
 - FancyMenu does not cancel the call to super.render() in the TitleScreen anymore to make mods who inject into this method work again (#857)
 - 
  
