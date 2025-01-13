@@ -45,6 +45,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     protected String inputPrefix;
     @Nullable
     protected String inputSuffix;
+    protected boolean deleteAllAllowed = true;
 
     public ExtendedEditBox(Font font, int x, int y, int width, int height, Component hint) {
         super(font, x, y, width, height, hint);
@@ -173,6 +174,16 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     public ExtendedEditBox setCharacterFilter(@Nullable CharacterFilter characterFilter) {
         this.characterFilter = characterFilter;
         return this;
+    }
+
+    @NotNull
+    public ExtendedEditBox setDeleteAllAllowed(boolean allowed) {
+        this.deleteAllAllowed = allowed;
+        return this;
+    }
+
+    public boolean isDeleteAllAllowed() {
+        return this.deleteAllAllowed;
     }
 
     public boolean hasTextShadow() {
@@ -369,6 +380,15 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         String v = containsPrefix ? value.substring(this.inputPrefix.length()) : value;
         if (containsSuffix) v = v.substring(0, Math.max(0, v.length() - this.inputSuffix.length()));
         return v;
+    }
+
+    @Override
+    public void deleteText(int i) {
+        if (this.deleteAllAllowed) {
+            super.deleteText(i);
+        } else {
+            this.deleteChars(i);
+        }
     }
 
     @Override

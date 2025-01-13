@@ -124,8 +124,10 @@ public class Placeholders {
     public static final PlayerAttackStrengthPercentagePlaceholder PLAYER_ATTACK_STRENGTH_PERCENTAGE = new PlayerAttackStrengthPercentagePlaceholder();
     public static final PlayerGamemodePlaceholder PLAYER_GAMEMODE = new PlayerGamemodePlaceholder();
     public static final PlayerViewDirectionPlaceholder PLAYER_VIEW_DIRECTION = new PlayerViewDirectionPlaceholder();
-    //TODO übernehmen
     public static final AudioElementVolumePlaceholder AUDIO_ELEMENT_VOLUME = new AudioElementVolumePlaceholder();
+    public static final SplitTextPlaceholder SPLIT_TEXT = new SplitTextPlaceholder();
+    public static final TrimTextPlaceholder TRIM_TEXT = new TrimTextPlaceholder();
+    public static final CropTextPlaceholder CROP_TEXT = new CropTextPlaceholder();
 
     public static void registerAll() {
 
@@ -156,7 +158,6 @@ public class Placeholders {
         PlaceholderRegistry.register(PLAYER_NAME);
         PlaceholderRegistry.register(PLAYER_UUID);
 
-        //TODO übernehmen
         //World
         PlaceholderRegistry.register(ACTIVE_HOTBAR_SLOT);
         PlaceholderRegistry.register(CURRENT_PLAYER_HEALTH);
@@ -197,7 +198,6 @@ public class Placeholders {
         PlaceholderRegistry.register(PLAYER_ATTACK_STRENGTH_PERCENTAGE);
         PlaceholderRegistry.register(PLAYER_GAMEMODE);
         PlaceholderRegistry.register(PLAYER_VIEW_DIRECTION);
-        //----------------------------
 
         //Server
         PlaceholderRegistry.register(SERVER_MOTD);
@@ -233,11 +233,12 @@ public class Placeholders {
         PlaceholderRegistry.register(MATH_COSH);
         PlaceholderRegistry.register(MATH_TAN);
         PlaceholderRegistry.register(MATH_TANH);
+        PlaceholderRegistry.register(SPLIT_TEXT);
+        PlaceholderRegistry.register(TRIM_TEXT);
+        PlaceholderRegistry.register(CROP_TEXT);
 
-        //TODO übernehmen
         //Audio
         PlaceholderRegistry.register(AUDIO_ELEMENT_VOLUME);
-        //----------------------
 
         //Other
         PlaceholderRegistry.register(PERCENT_RAM);

@@ -272,7 +272,7 @@ public class IsNumberRequirement extends LoadingRequirement {
 
         EQUALS("equals"),
         BIGGER_THAN("bigger-than"),
-        SMALLER_THAN("smaller-than-or-equals"),
+        SMALLER_THAN("smaller-than"),
         BIGGER_THAN_OR_EQUALS("bigger-than-or-equals"),
         SMALLER_THAN_OR_EQUALS("smaller-than-or-equals");
 

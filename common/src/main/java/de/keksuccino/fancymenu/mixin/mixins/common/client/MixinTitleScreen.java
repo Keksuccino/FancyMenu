@@ -80,14 +80,14 @@ public abstract class MixinTitleScreen extends Screen {
         EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, graphics));
     }
 
-    /**
-     * @reason Makes FancyMenu not fire its {@link RenderedScreenBackgroundEvent} in {@link TitleScreen} when calling {@link Screen#render(GuiGraphics, int, int, float)}, because it would get fired too late.
-     */
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
-    private boolean wrap_super_render_in_render_FancyMenu(Screen instance, GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        ((IMixinScreen)this).getRenderablesFancyMenu().forEach(renderable -> renderable.render(graphics, mouseX, mouseY, partial));
-        return false;
-    }
+//    /**
+//     * @reason Makes FancyMenu not fire its {@link RenderedScreenBackgroundEvent} in {@link TitleScreen} when calling {@link Screen#render(GuiGraphics, int, int, float)}, because it would get fired too late.
+//     */
+//    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
+//    private boolean wrap_super_render_in_render_FancyMenu(Screen instance, GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+//        ((IMixinScreen)this).getRenderablesFancyMenu().forEach(renderable -> renderable.render(graphics, mouseX, mouseY, partial));
+//        return false;
+//    }
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/LogoRenderer;renderLogo(Lnet/minecraft/client/gui/GuiGraphics;IF)V"))
     private boolean cancelVanillaLogoRenderingFancyMenu(LogoRenderer instance, GuiGraphics $$0, int $$1, float $$2) {

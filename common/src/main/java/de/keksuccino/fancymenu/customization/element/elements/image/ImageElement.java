@@ -49,7 +49,7 @@ public class ImageElement extends AbstractElement {
                     if (this.repeat) {
                         RenderingUtils.blitRepeat(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight(),  DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
                     } else if (this.nineSlice) {
-                        RenderingUtils.blitNineSliced(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.nineSliceBorderX, this.nineSliceBorderY, this.nineSliceBorderX, this.nineSliceBorderY, t.getWidth(), t.getHeight(), 0, 0, t.getWidth(), t.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
+                        RenderingUtils.blitNineSlicedTexture(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight(), this.nineSliceBorderY, this.nineSliceBorderX, this.nineSliceBorderY, this.nineSliceBorderX, ARGB.white(this.opacity));
                     } else {
                         graphics.blit(RenderType::guiTextured, loc, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
                     }

@@ -330,6 +330,8 @@ public class ScreenCustomization {
 		addScreenBlacklistRule((screen) -> screen.equals(VideoSettingsScreen.class.getName()) && Compat.isOptiFineLoaded());
 		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.fancymenu.") && !screen.equals(CustomGuiBaseScreen.class.getName()));
 		addScreenBlacklistRule((screen) -> screen.startsWith("blusunrize.immersiveengineering."));
+		addScreenBlacklistRule((screen) -> screen.startsWith("net.dungeonz."));
+		addScreenBlacklistRule((screen) -> screen.startsWith("net.spellcraftgaming.rpghud."));
 
 	}
 

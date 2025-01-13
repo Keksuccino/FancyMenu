@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.customization.deep.layers.titlescreen.forge.copyright;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import net.minecraft.client.gui.GuiGraphics;

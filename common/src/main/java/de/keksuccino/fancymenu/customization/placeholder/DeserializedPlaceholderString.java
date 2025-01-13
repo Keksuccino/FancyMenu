@@ -8,6 +8,7 @@ package de.keksuccino.fancymenu.customization.placeholder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -19,7 +20,7 @@ public class DeserializedPlaceholderString {
      * This map should never be NULL, but can be EMPTY, especially if the placeholder has no values.
      */
     @NotNull
-    public HashMap<String, String> values = new HashMap<>();
+    public HashMap<String, String> values = new LinkedHashMap<>();
     @NotNull
     public String placeholderString;
 

@@ -1000,7 +1000,7 @@
   "fancymenu.editor.actions.paste_to_chat.append": "Append Text: %s",
   "fancymenu.editor.actions.paste_to_chat.append.desc": "If the action should append the text to existing\ntext that is already typed in the input field.\nThe action will override existing text if this is disabled.",
   "fancymenu.editor.layout.index": "Layout Index [Multi-Layout Ordering]",
-  "fancymenu.editor.layout.index.desc": "The layout index is useful when you have\nmultiple layouts active for the same screen.\nIf these layouts need get loaded\nin a specific order, use the layout index.\nThe bigger the index, the later the layout\ngets loaded, which means it is ON TOP OF\nlayouts with a smaller index.\n\nFor example: A layout with index 1 will\nbe under a layout with index 2.",
+  "fancymenu.editor.layout.index.desc": "The layout index is useful when you have\nmultiple layouts active for the same screen.\nIf these layouts need to get loaded\nin a specific order, use the layout index.\nThe bigger the index, the later the layout\ngets loaded, which means it is ON TOP OF\nlayouts with a smaller index.\n\nFor example: A layout with index 1 will\nbe under a layout with index 2.",
   "fancymenu.overlay.menu_bar.leave_current_menu.desc": "Force-closes the current screen and brings\nyou back to the Title Screen.\nUseful for when you're stuck in a screen\nwithout an option to leave it.",
   "fancymenu.editor.elements.vanilla_widget.button": "Vanilla/Mod Button",
   "fancymenu.editor.elements.vanilla_widget.slider": "Vanilla/Mod Slider",
@@ -1426,5 +1426,11 @@
   "fancymenu.requirements.is_key_pressed.screen.title": "Key Selection",
   "fancymenu.requirements.is_key_pressed.screen.selected_key": "Selected Key: %s",
   "fancymenu.requirements.is_key_pressed.screen.change_key": "Change Key",
-  "fancymenu.requirements.is_key_pressed.screen.change_key.press_now": "Press any key now to select it.."
+  "fancymenu.requirements.is_key_pressed.screen.change_key.press_now": "Press any key now to select it..",
+  "fancymenu.placeholders.split_text": "Split Text",
+  "fancymenu.placeholders.split_text.desc": "Splits a text at a specific character or regex.\n\ninput = The text to split.\nregex = The character or regex for where to split the text.\nmax_parts = The max parts the text should get split into. Setting this to -1 disables the limit.\nsplit_index = The part that should get returned after splitting. Starts at 0.",
+  "fancymenu.placeholders.trim_text": "Trim Text",
+  "fancymenu.placeholders.trim_text.desc": "Removes all leading and trailing spaces of the\ngiven text, but not spaces within the text.",
+  "fancymenu.placeholders.crop_text": "Crop Text",
+  "fancymenu.placeholders.crop_text.desc": "Removes a specific amount of characters from the\nbeginning and end of the given text.\n\ntext = The text to crop.\nremove_from_start = Characters to remove from the beginning.\nremove_from_end = Characters to remove from the end."
 }

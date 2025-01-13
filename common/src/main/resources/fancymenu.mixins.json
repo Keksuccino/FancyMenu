@@ -38,6 +38,7 @@
     "client.MixinCreateWorldScreen_MoreTab",
     "client.MixinCreateWorldScreen_WorldTab",
     "client.MixinCycleButton",
+    "client.MixinDisconnectedScreen",
     "client.MixinEntityRenderDispatcher",
     "client.MixinGameLoadCookie",
     "client.MixinGenericMessageScreen",

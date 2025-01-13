@@ -78,7 +78,7 @@ public interface CustomizableSlider {
         if (location != null) {
             RenderSystem.enableBlend();
             if (this.isNineSliceCustomSliderBackground_FancyMenu()) {
-                RenderingUtils.blitNineSliced(graphics, location, widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight(), this.getNineSliceSliderBackgroundBorderX_FancyMenu(), this.getNineSliceSliderBackgroundBorderY_FancyMenu(), this.getNineSliceSliderBackgroundBorderX_FancyMenu(), this.getNineSliceSliderBackgroundBorderY_FancyMenu(), texture.getWidth(), texture.getHeight(), 0, 0, texture.getWidth(), texture.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(((IMixinAbstractWidget)this).getAlphaFancyMenu()));
+                RenderingUtils.blitNineSlicedTexture(graphics, location, widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight(), texture.getWidth(), texture.getHeight(), this.getNineSliceSliderBackgroundBorderY_FancyMenu(), this.getNineSliceSliderBackgroundBorderX_FancyMenu(), this.getNineSliceSliderBackgroundBorderY_FancyMenu(), this.getNineSliceSliderBackgroundBorderX_FancyMenu(), ARGB.white(((IMixinAbstractWidget)this).getAlphaFancyMenu()));
             } else {
                 graphics.blit(RenderType::guiTextured, location, widget.getX(), widget.getY(), 0.0F, 0.0F, widget.getWidth(), widget.getHeight(), widget.getWidth(), widget.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(((IMixinAbstractWidget)this).getAlphaFancyMenu()));
             }

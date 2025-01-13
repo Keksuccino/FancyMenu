@@ -107,75 +107,75 @@ public class RenderingUtils {
     }
 
     /**
-     * Renders a nine-sliced portion of a texture.<br><br>
+     * Renders a texture using nine-slice scaling with tiled edges and center.
      *
-     * Nine-slicing cuts a texture into 9 slices (4 corners, 4 edges and a middle part).<br>
-     * This is useful when a texture should keep its proportions no matter what size it gets rendered with.<br><br>
-     *
-     * Only works with textures that have a tileable (seamless) middle part and tileable edges that can get tiled horizontally and/or vertically without looking bad.
-     *
-     * @param graphics The {@link GuiGraphics} instance.
-     * @param location The {@link ResourceLocation} of the texture.
-     * @param x The X position the texture should get rendered at.
-     * @param y The Y position the texture should get rendered at.
-     * @param renderWidth The width (in pixels) the texture should get rendered with.
-     * @param renderHeight The height (in pixels) the texture should get rendered with.
-     * @param borderLeft The size (in pixels) of the left border of the texture.
-     * @param borderTop The size (in pixels) of the top border of the texture.
-     * @param borderRight The size (in pixels) of the right border of the texture.
-     * @param borderBottom The size (in pixels) of the bottom border of the texture.
-     * @param texPartWidth The width (in pixels) of the part of the texture that should get rendered.
-     * @param texPartHeight The height (in pixels) of the part of the texture that should get rendered.
-     * @param texOffsetX The top-left X start coordinate (in pixels) of the part of the full texture that should get rendered.
-     * @param texOffsetY The top-left Y start coordinate (in pixels) of the part of the full texture that should get rendered.
-     * @param texWidth The FULL width (in pixels) of the texture. NOT the width of the part that should get rendered, but the FULL width!
-     * @param texHeight The FULL height (in pixels) of the texture. NOT the height of the part that should get rendered, but the FULL height!
+     * @param graphics The GuiGraphics instance to use for rendering
+     * @param texture The texture ResourceLocation to render
+     * @param x The x position to render at
+     * @param y The y position to render at
+     * @param width The desired width to render
+     * @param height The desired height to render
+     * @param textureWidth The actual width of the texture
+     * @param textureHeight The actual height of the texture
+     * @param borderTop The size of the top border
+     * @param borderRight The size of the right border
+     * @param borderBottom The size of the bottom border
+     * @param borderLeft The size of the left border
+     * @param color The color to tint the texture with
      */
-    public static void blitNineSliced(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, int x, int y, int renderWidth, int renderHeight, int borderLeft, int borderTop, int borderRight, int borderBottom, int texPartWidth, int texPartHeight, int texOffsetX, int texOffsetY, int texWidth, int texHeight, int color) {
+    public static void blitNineSlicedTexture(GuiGraphics graphics, ResourceLocation texture, int x, int y, int width, int height,
+                               int textureWidth, int textureHeight,
+                               int borderTop, int borderRight, int borderBottom, int borderLeft, int color) {
 
-        Objects.requireNonNull(graphics);
-        Objects.requireNonNull(location);
-        if ((renderWidth <= 0) || (renderHeight <= 0) || (texPartWidth <= 0) || (texPartHeight <= 0) || (texWidth <= 0) || (texHeight <= 0)) return;
+        // Corner pieces
+        // Top left
+        graphics.blit(RenderType::guiTextured, texture, x, y, 0, 0, borderLeft, borderTop, textureWidth, textureHeight, color);
+        // Top right
+        graphics.blit(RenderType::guiTextured, texture, x + width - borderRight, y, textureWidth - borderRight, 0, borderRight, borderTop, textureWidth, textureHeight, color);
+        // Bottom left
+        graphics.blit(RenderType::guiTextured, texture, x, y + height - borderBottom, 0, textureHeight - borderBottom, borderLeft, borderBottom, textureWidth, textureHeight, color);
+        // Bottom right
+        graphics.blit(RenderType::guiTextured, texture, x + width - borderRight, y + height - borderBottom, textureWidth - borderRight, textureHeight - borderBottom, borderRight, borderBottom, textureWidth, textureHeight, color);
 
-        if ((renderWidth == texWidth) && (renderHeight == texHeight) && (texOffsetX == 0) && (texOffsetY == 0)) {
-            graphics.blit(RenderType::guiTextured, location, x, y, 0.0F, 0.0F, renderWidth, renderHeight, renderWidth, renderHeight, color);
-            return;
+        // Edges - Tiled
+        int centerWidth = textureWidth - borderLeft - borderRight;
+        int centerHeight = textureHeight - borderTop - borderBottom;
+
+        // Top edge
+        for (int i = borderLeft; i < width - borderRight; i += centerWidth) {
+            int pieceWidth = Math.min(centerWidth, width - borderRight - i);
+            graphics.blit(RenderType::guiTextured, texture, x + i, y, borderLeft, 0, pieceWidth, borderTop, textureWidth, textureHeight, color);
         }
 
-        graphics.enableScissor(x, y, x + renderWidth, y + renderHeight);
-
-        //Top-left corner
-        if ((borderLeft > 0) && (borderTop > 0)) {
-            graphics.blit(RenderType::guiTextured, location, x, y, borderLeft, borderTop, texOffsetX, texOffsetY, borderLeft, borderTop, texWidth, texHeight, color);
-        }
-        //Top-right corner
-        if ((borderRight > 0) && (borderTop > 0)) {
-            graphics.blit(RenderType::guiTextured, location, (x + renderWidth - borderRight), y, borderRight, borderTop, (texOffsetX + texPartWidth - borderRight), texOffsetY, borderRight, borderTop, texWidth, texHeight, color);
-        }
-        //Bottom-left corner
-        if ((borderLeft > 0) && (borderBottom > 0)) {
-            graphics.blit(RenderType::guiTextured, location, x, (y + renderHeight - borderBottom), borderLeft, borderBottom, texOffsetX, (texOffsetY + texPartHeight - borderBottom), borderLeft, borderBottom, texWidth, texHeight, color);
-        }
-        //Bottom-right corner
-        if ((borderRight > 0) && (borderBottom > 0)) {
-            graphics.blit(RenderType::guiTextured, location, (x + renderWidth - borderRight), (y + renderHeight - borderBottom), borderRight, borderBottom, (texOffsetX + texPartWidth - borderRight), (texOffsetY + texPartHeight - borderBottom), borderRight, borderBottom, texWidth, texHeight, color);
+        // Bottom edge
+        for (int i = borderLeft; i < width - borderRight; i += centerWidth) {
+            int pieceWidth = Math.min(centerWidth, width - borderRight - i);
+            graphics.blit(RenderType::guiTextured, texture, x + i, y + height - borderBottom, borderLeft, textureHeight - borderBottom, pieceWidth, borderBottom, textureWidth, textureHeight, color);
         }
 
-        graphics.disableScissor();
+        // Left edge
+        for (int j = borderTop; j < height - borderBottom; j += centerHeight) {
+            int pieceHeight = Math.min(centerHeight, height - borderBottom - j);
+            graphics.blit(RenderType::guiTextured, texture, x, y + j, 0, borderTop, borderLeft, pieceHeight, textureWidth, textureHeight, color);
+        }
 
-        //Top edge
-        if (borderTop > 0) blitRepeat(graphics, location, (x + borderLeft), y, (renderWidth - borderLeft - borderRight), borderTop, (texPartWidth - borderLeft - borderRight), borderTop, (texOffsetX + borderLeft), texOffsetY, (texPartWidth - borderLeft - borderRight), borderTop, texWidth, texHeight, color);
-        //Bottom edge
-        if (borderBottom > 0) blitRepeat(graphics, location, (x + borderLeft), (y + renderHeight - borderBottom), (renderWidth - borderLeft - borderRight), borderBottom, (texPartWidth - borderLeft - borderRight), borderBottom, (texOffsetX + borderLeft), (texOffsetY + texPartHeight - borderBottom), (texPartWidth - borderLeft - borderRight), borderBottom, texWidth, texHeight, color);
-        //Left edge
-        if (borderLeft > 0) blitRepeat(graphics, location, x, (y + borderTop), borderLeft, (renderHeight - borderTop - borderBottom), borderLeft, (texPartHeight - borderTop - borderBottom), texOffsetX, (texOffsetY + borderTop), borderLeft, (texPartHeight - borderTop - borderBottom), texWidth, texHeight, color);
-        //Right edge
-        if (borderRight > 0) blitRepeat(graphics, location, (x + renderWidth - borderRight), (y + borderTop), borderRight, (renderHeight - borderTop - borderBottom), borderRight, (texPartHeight - borderTop - borderBottom), (texOffsetX + texPartWidth - borderRight), (texOffsetY + borderTop), borderRight, (texPartHeight - borderTop - borderBottom), texWidth, texHeight, color);
+        // Right edge
+        for (int j = borderTop; j < height - borderBottom; j += centerHeight) {
+            int pieceHeight = Math.min(centerHeight, height - borderBottom - j);
+            graphics.blit(RenderType::guiTextured, texture, x + width - borderRight, y + j, textureWidth - borderRight, borderTop, borderRight, pieceHeight, textureWidth, textureHeight, color);
+        }
 
-        //Middle part
-        blitRepeat(graphics, location, (x + borderLeft), (y + borderTop), (renderWidth - borderLeft - borderRight), (renderHeight - borderTop - borderBottom), (texPartWidth - borderLeft - borderRight), (texPartHeight - borderTop - borderBottom), (texOffsetX + borderLeft), (texOffsetY + borderTop), (texPartWidth - borderLeft - borderRight), (texPartHeight - borderTop - borderBottom), texWidth, texHeight, color);
+        // Center - Tiled
+        for (int i = borderLeft; i < width - borderRight; i += centerWidth) {
+            int pieceWidth = Math.min(centerWidth, width - borderRight - i);
+            for (int j = borderTop; j < height - borderBottom; j += centerHeight) {
+                int pieceHeight = Math.min(centerHeight, height - borderBottom - j);
+                graphics.blit(RenderType::guiTextured, texture, x + i, y + j, borderLeft, borderTop, pieceWidth, pieceHeight, textureWidth, textureHeight, color);
+            }
+        }
 
     }
+
 
     public static float getPartialTick() {
         return Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false);
@@ -193,24 +193,6 @@ public class RenderingUtils {
         Window m = Minecraft.getInstance().getWindow();
         m.setGuiScale(m.calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().options.forceUnicodeFont().get()));
     }
-
-//    public static void resetShaderColor(GuiGraphics graphics) {
-//        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-//    }
-//
-//    public static void setShaderColor(GuiGraphics graphics, DrawableColor color) {
-//        Color c = color.getColor();
-//        float a = Math.min(1F, Math.max(0F, (float)c.getAlpha() / 255.0F));
-//        setShaderColor(graphics, color, a);
-//    }
-//
-//    public static void setShaderColor(GuiGraphics graphics, DrawableColor color, float alpha) {
-//        Color c = color.getColor();
-//        float r = Math.min(1F, Math.max(0F, (float)c.getRed() / 255.0F));
-//        float g = Math.min(1F, Math.max(0F, (float)c.getGreen() / 255.0F));
-//        float b = Math.min(1F, Math.max(0F, (float)c.getBlue() / 255.0F));
-//        RenderSystem.setShaderColor(r, g, b, alpha);
-//    }
 
     /**
      * @param color The color.

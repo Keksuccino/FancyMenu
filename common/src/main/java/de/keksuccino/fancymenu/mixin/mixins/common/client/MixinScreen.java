@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.renderer.RenderType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -40,6 +41,11 @@ public abstract class MixinScreen implements CustomizableScreen {
 
 	@WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderBackground(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
 	private void wrap_renderBackground_in_render_FancyMenu(Screen instance, GuiGraphics graphics, int mouseX, int mouseY, float partial, Operation<Void> original) {
+		//Don't fire the event in the TitleScreen, because it gets handled differently there
+		if (instance instanceof TitleScreen) {
+			original.call(instance, graphics, mouseX, mouseY, partial);
+			return;
+		}
 		ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen((Screen)((Object)this));
 		if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this.getScreen_FancyMenu())) {
 			if (l.layoutBase.menuBackground != null) {
