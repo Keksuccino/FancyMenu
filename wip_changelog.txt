@@ -22,6 +22,7 @@ CHANGELOG | FANCYMENU v3.4.0 [ W I P !! Not public yet !! ]
 - Fixed incompatibility with "DungeonZ" mod (#755)
 - Fixed incompatibility with "RPG HUD" mod (#739)
 - Fixed "Back to Server List" button in Disconnected screen resetting itself in some cases (you need to open the layout and save it again for this fix to work) (#988)
+- Fixed Appearance Delay ignoring decimal values (#1010)
 - FancyMenu does not cancel the call to super.render() in the TitleScreen anymore to make mods who inject into this method work again (#857)
 - 
  
