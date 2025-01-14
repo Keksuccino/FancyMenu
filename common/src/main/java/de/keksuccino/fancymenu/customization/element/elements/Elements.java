@@ -2,13 +2,13 @@ package de.keksuccino.fancymenu.customization.element.elements;
 
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
 import de.keksuccino.fancymenu.customization.element.elements.audio.AudioElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.browser.BrowserElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.cursor.CursorElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.dragger.DraggerElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.image.ImageElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.inputfield.InputFieldElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.musiccontroller.MusicControllerElementBuilder;
-//import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.PlayerEntityElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.v2.PlayerEntityElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.progressbar.ProgressBarElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.shape.ShapeElementBuilder;
@@ -39,6 +39,7 @@ public class Elements {
     public static final AudioElementBuilder AUDIO_V2 = new AudioElementBuilder();
     public static final MusicControllerElementBuilder MUSIC_CONTROLLER = new MusicControllerElementBuilder();
     public static final DraggerElementBuilder DRAGGER = new DraggerElementBuilder();
+    public static final BrowserElementBuilder BROWSER = new BrowserElementBuilder();
 
     public static void registerAll() {
 
@@ -52,16 +53,14 @@ public class Elements {
         ElementRegistry.register(PLAYER_ENTITY);
         ElementRegistry.register(IMAGE);
         ElementRegistry.register(SPLASH_TEXT);
-        //TODO übernehmen
-        //ElementRegistry.register(ANIMATION);
         ElementRegistry.register(SLIDESHOW);
         ElementRegistry.register(SHAPE);
         ElementRegistry.register(CURSOR);
         ElementRegistry.register(PROGRESS_BAR);
         ElementRegistry.register(AUDIO_V2);
         ElementRegistry.register(MUSIC_CONTROLLER);
-        //TODO übernehmen
         ElementRegistry.register(DRAGGER);
+        ElementRegistry.register(BROWSER);
 
     }
 

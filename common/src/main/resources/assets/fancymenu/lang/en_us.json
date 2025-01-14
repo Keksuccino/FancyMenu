@@ -1432,5 +1432,9 @@
   "fancymenu.placeholders.trim_text": "Trim Text",
   "fancymenu.placeholders.trim_text.desc": "Removes all leading and trailing spaces of the\ngiven text, but not spaces within the text.",
   "fancymenu.placeholders.crop_text": "Crop Text",
-  "fancymenu.placeholders.crop_text.desc": "Removes a specific amount of characters from the\nbeginning and end of the given text.\n\ntext = The text to crop.\nremove_from_start = Characters to remove from the beginning.\nremove_from_end = Characters to remove from the end."
+  "fancymenu.placeholders.crop_text.desc": "Removes a specific amount of characters from the\nbeginning and end of the given text.\n\ntext = The text to crop.\nremove_from_start = Characters to remove from the beginning.\nremove_from_end = Characters to remove from the end.",
+  "fancymenu.elements.browser": "Browser",
+  "fancymenu.elements.browser.desc": "A browser where you can load a URL (website) in.",
+  "fancymenu.elements.browser.mcef_not_loaded.line_1": "MCEF is not loaded!",
+  "fancymenu.elements.browser.mcef_not_loaded.line_2": "You need to install MCEF (mod) to use this element!"
 }

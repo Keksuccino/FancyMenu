@@ -575,28 +575,37 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		if (!this.shouldCustomize(screen)) return;
 
 		if (this.layoutBase.menuBackground != null) {
+
 			this.layoutBase.menuBackground.keepBackgroundAspectRatio = this.layoutBase.preserveBackgroundAspectRatio;
 			this.layoutBase.menuBackground.opacity = this.backgroundOpacity;
 			this.layoutBase.menuBackground.render(graphics, mouseX, mouseY, partial);
-			//TODO übernehmen
+			this.layoutBase.menuBackground.opacity = 1.0F;
+
+			//Restore render defaults
+			RenderSystem.colorMask(true, true, true, true);
+			RenderSystem.depthMask(true);
+			RenderSystem.enableCull();
+			RenderSystem.enableDepthTest();
+			RenderSystem.enableBlend();
+			graphics.flush();
+
 			if (this.layoutBase.applyVanillaBackgroundBlur) {
 				Minecraft.getInstance().gameRenderer.processBlurEffect();
 				Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 			}
-			//------------------
-			this.layoutBase.menuBackground.opacity = 1.0F;
+
 			if (this.layoutBase.showScreenBackgroundOverlayOnCustomBackground) {
 				int overlayY = 0;
 				if (this.cachedTabNavigationBar != null) overlayY = this.cachedTabNavigationBar.getRectangle().bottom();
 				this._renderBackgroundOverlay(graphics, 0, overlayY, screen.width, screen.height);
 			}
+
 		}
 
 		if (PopupHandler.isPopupActive()) return;
 
 		//Render background elements
 		for (AbstractElement elements : new ArrayList<>(this.normalElements.backgroundElements)) {
-			//TODO übernehmen
 			elements.renderInternal(graphics, mouseX, mouseY, partial);
 		}
 

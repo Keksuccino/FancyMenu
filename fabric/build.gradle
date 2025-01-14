@@ -30,13 +30,7 @@ dependencies {
     modImplementation "maven.modrinth:melody:1.0.10-1.21-fabric"
     modImplementation "maven.modrinth:konkrete:1.9.9-1.21.4-fabric"
     modImplementation "maven.modrinth:modmenu:13.0.0-beta.1"
-//    modImplementation "maven.modrinth:modernfix:T8GvLNSz"
-//    modImplementation "maven.modrinth:ukulib:1.1.1+1.20.3"
-//    modImplementation "maven.modrinth:sodium:mc1.20.4-0.5.8"
-//    modImplementation "maven.modrinth:lithium:mc1.20.4-0.12.1"
-//    modImplementation "maven.modrinth:ferrite-core:pguEMpy9"
-//    modImplementation "curse.maven:rrls-833233:5127595"
-//    modImplementation "curse.maven:cloth-config-348521:4973455"
+    modCompileOnly 'com.cinemamod:mcef:2.1.6-1.21.1'
 }
 
 loom {

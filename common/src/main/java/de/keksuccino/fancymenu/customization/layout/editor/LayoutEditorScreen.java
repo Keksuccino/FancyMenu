@@ -316,18 +316,28 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
 		if (this.layout.menuBackground != null) {
+
 			this.layout.menuBackground.keepBackgroundAspectRatio = this.layout.preserveBackgroundAspectRatio;
 			this.layout.menuBackground.opacity = 1.0F;
 			this.layout.menuBackground.render(graphics, mouseX, mouseY, partial);
-			//TODO übernehmen
+
+			//Restore render defaults
+			RenderSystem.colorMask(true, true, true, true);
+			RenderSystem.depthMask(true);
+			RenderSystem.enableCull();
+			RenderSystem.enableDepthTest();
+			RenderSystem.enableBlend();
+			graphics.flush();
+
 			if (this.layout.applyVanillaBackgroundBlur) {
 				Minecraft.getInstance().gameRenderer.processBlurEffect();
 				Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 			}
-			//------------------
+
 			if (this.layout.showScreenBackgroundOverlayOnCustomBackground) {
 				ScreenCustomizationLayer.renderBackgroundOverlay(graphics, 0, 0, this.width, this.height);
 			}
+
 		} else {
 			graphics.fill(RenderType.guiOverlay(), 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
 		}

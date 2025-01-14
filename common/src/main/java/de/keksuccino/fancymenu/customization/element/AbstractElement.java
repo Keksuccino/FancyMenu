@@ -336,10 +336,9 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			if ((this.appearanceDelay == AppearanceDelay.FIRST_TIME) && applied) {
 				this.appearanceDelayEndTime = -1;
 			} else {
-				this.appearanceDelayEndTime = System.currentTimeMillis() + ((long)this.appearanceDelayInSeconds * 1000L);
+				this.appearanceDelayEndTime = System.currentTimeMillis() + ((long)(this.appearanceDelayInSeconds * 1000.0F));
 			}
 		} else {
-			//this.getMemory().putProperty("appearance_delay_applied", false);
 			this.appearanceDelayEndTime = -1;
 		}
 		this.lastTickAppearanceDelayed = this.isAppearanceDelayed();
