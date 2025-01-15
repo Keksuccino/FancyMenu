@@ -139,6 +139,13 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		return this.parentLayout;
 	}
 
+	/**
+	 * This method gets called after the element's {@link ElementBuilder} has finished constructing the instance,
+	 * which means at this point everything should be ready to use, like the element's identifier.
+	 */
+	public void afterConstruction() {
+	}
+
 	@Override
 	public abstract void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
 

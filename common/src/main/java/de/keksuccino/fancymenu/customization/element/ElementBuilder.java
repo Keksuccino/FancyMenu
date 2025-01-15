@@ -63,8 +63,6 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
         try {
 
-            //TODO übernehmen ( alles bis X Y )
-
             E element = deserializeElement(serialized);
 
             String id = serialized.getValue("instance_identifier");
@@ -144,8 +142,6 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             element.autoSizingBaseScreenHeight = deserializeNumber(Integer.class, element.autoSizingBaseScreenHeight, serialized.getValue("auto_sizing_base_screen_height"));
 
             element.stickyAnchor = deserializeBoolean(element.stickyAnchor, serialized.getValue("sticky_anchor"));
-
-            //----------------------------------
 
             String x = serialized.getValue("x");
             String y = serialized.getValue("y");
@@ -241,6 +237,8 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                 element.loadingRequirementContainer = LoadingRequirementContainer.deserializeToSingleContainer(serialized);
             }
 
+            element.afterConstruction();
+
             return element;
 
         } catch (Exception ex) {
@@ -314,7 +312,6 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
             sec.putProperty("appearance_delay", element.appearanceDelay.name);
             sec.putProperty("appearance_delay_seconds", "" + element.appearanceDelayInSeconds);
-            //TODO übernehmen
             sec.putProperty("fade_in_v2", element.fadeIn.getName());
             sec.putProperty("fade_in_speed", "" + element.fadeInSpeed);
             sec.putProperty("fade_out", element.fadeOut.getName());
@@ -324,7 +321,6 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             sec.putProperty("auto_sizing_base_screen_width", "" + element.autoSizingBaseScreenWidth);
             sec.putProperty("auto_sizing_base_screen_height", "" + element.autoSizingBaseScreenHeight);
             sec.putProperty("sticky_anchor", "" + element.stickyAnchor);
-            //------------------------
 
             sec.putProperty("anchor_point", (element.anchorPoint != null) ? element.anchorPoint.getName() : ElementAnchorPoints.TOP_LEFT.getName());
             if ((element.anchorPoint == ElementAnchorPoints.ELEMENT) && (element.anchorPointElementIdentifier != null)) {

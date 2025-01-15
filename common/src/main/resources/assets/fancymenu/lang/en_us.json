@@ -1436,5 +1436,9 @@
   "fancymenu.elements.browser": "Browser",
   "fancymenu.elements.browser.desc": "A browser where you can load a URL (website) in.",
   "fancymenu.elements.browser.mcef_not_loaded.line_1": "MCEF is not loaded!",
-  "fancymenu.elements.browser.mcef_not_loaded.line_2": "You need to install MCEF (mod) to use this element!"
+  "fancymenu.elements.browser.mcef_not_loaded.line_2": "You need to install MCEF (mod) to use this element!",
+  "fancymenu.elements.browser.url": "Set URL",
+  "fancymenu.elements.browser.url.desc": "The URL the browser should load.",
+  "fancymenu.elements.browser.interactable": "Interactable: %s",
+  "fancymenu.elements.browser.interactable.desc": "If the user should be able ot interact with the browser."
 }

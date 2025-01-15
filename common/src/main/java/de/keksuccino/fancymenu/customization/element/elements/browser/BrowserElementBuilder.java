@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.util.Objects;
 
 public class BrowserElementBuilder extends ElementBuilder<BrowserElement, BrowserEditorElement> {
 
@@ -22,8 +23,8 @@ public class BrowserElementBuilder extends ElementBuilder<BrowserElement, Browse
     @Override
     public @NotNull BrowserElement buildDefaultInstance() {
         BrowserElement i = new BrowserElement(this);
-        i.baseWidth = 100;
-        i.baseHeight = 100;
+        i.baseWidth = 250;
+        i.baseHeight = 250;
         return i;
     }
 
@@ -32,11 +33,8 @@ public class BrowserElementBuilder extends ElementBuilder<BrowserElement, Browse
 
         BrowserElement element = this.buildDefaultInstance();
 
-        element.textureSupplier = deserializeImageResourceSupplier(serialized.getValue("source"));
-        element.repeat = deserializeBoolean(element.repeat, serialized.getValue("repeat_texture"));
-        element.nineSlice = deserializeBoolean(element.nineSlice, serialized.getValue("nine_slice_texture"));
-        element.nineSliceBorderX = deserializeNumber(Integer.class, element.nineSliceBorderX, serialized.getValue("nine_slice_texture_border_x"));
-        element.nineSliceBorderY = deserializeNumber(Integer.class, element.nineSliceBorderY, serialized.getValue("nine_slice_texture_border_y"));
+        element.url = Objects.requireNonNullElse(serialized.getValue("url"), element.url);
+        element.interactable = deserializeBoolean(element.interactable, serialized.getValue("interactable"));
 
         return element;
 
@@ -45,13 +43,8 @@ public class BrowserElementBuilder extends ElementBuilder<BrowserElement, Browse
     @Override
     protected SerializedElement serializeElement(@NotNull BrowserElement element, @NotNull SerializedElement serializeTo) {
 
-        if (element.textureSupplier != null) {
-            serializeTo.putProperty("source", element.textureSupplier.getSourceWithPrefix());
-        }
-        serializeTo.putProperty("repeat_texture", "" + element.repeat);
-        serializeTo.putProperty("nine_slice_texture", "" + element.nineSlice);
-        serializeTo.putProperty("nine_slice_texture_border_x", "" + element.nineSliceBorderX);
-        serializeTo.putProperty("nine_slice_texture_border_y", "" + element.nineSliceBorderY);
+        serializeTo.putProperty("url", element.url);
+        serializeTo.putProperty("interactable", "" + element.interactable);
 
         return serializeTo;
 

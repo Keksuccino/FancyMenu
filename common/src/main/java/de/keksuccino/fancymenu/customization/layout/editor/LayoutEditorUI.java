@@ -703,6 +703,7 @@ public class LayoutEditorUI {
 				ContextMenu.ClickableContextMenuEntry<?> entry = menu.addClickableEntry("element_" + i, builder.getDisplayName(null), (menu1, entry1) -> {
 					AbstractEditorElement editorElement = builder.wrapIntoEditorElementInternal(builder.buildDefaultInstance(), editor);
 					if (editorElement != null) {
+						editorElement.element.afterConstruction();
 						editor.history.saveSnapshot();
 						editor.normalEditorElements.add(editorElement);
 						if ((editor.rightClickMenuOpenPosX != -1000) && (editor.rightClickMenuOpenPosY != -1000)) {

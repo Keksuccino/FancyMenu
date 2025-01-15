@@ -6,6 +6,8 @@ import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.*;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
+import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
+import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.preload.ResourcePreLoader;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
@@ -52,6 +54,9 @@ public class MixinMinecraft {
 
 	@Inject(method = "tick", at = @At("HEAD"))
 	private void beforeGameTickFancyMenu(CallbackInfo info) {
+
+		if (MCEFUtil.isMCEFLoaded()) BrowserHandler.tick();
+
 		for (Runnable r : MainThreadTaskExecutor.getAndClearQueue(MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK)) {
 			try {
 				r.run();
@@ -59,7 +64,9 @@ public class MixinMinecraft {
 				LOGGER_FANCYMENU.error("[FANCYMENU] Error while executing PRE_CLIENT_TICK MainThread task!", e);
 			}
 		}
+
 		EventHandler.INSTANCE.postEvent(new ClientTickEvent.Pre());
+
 	}
 
 	@Inject(method = "tick", at = @At("RETURN"))

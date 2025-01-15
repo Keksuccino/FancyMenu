@@ -15,10 +15,7 @@ import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.LogoRenderer;
-import net.minecraft.client.gui.components.PlainTextButton;
-import net.minecraft.client.gui.components.SplashRenderer;
+import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.renderer.RenderType;
@@ -57,6 +54,10 @@ public abstract class MixinTitleScreen extends Screen {
                 if (b.getMessage() == COPYRIGHT_TEXT) ((UniqueWidget)b).setWidgetIdentifierFancyMenu("title_screen_copyright_button");
             }
         });
+
+//        this.addRenderableWidget(Button.builder(Component.literal("Open Example Screen"), button -> {
+//            Minecraft.getInstance().setScreen(new ExampleScreen(Component.literal("Example Screen")));
+//        }).size(100, 20).pos(20, 20).build());
 
     }
 

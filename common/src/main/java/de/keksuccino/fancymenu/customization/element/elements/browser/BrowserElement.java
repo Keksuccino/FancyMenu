@@ -3,13 +3,11 @@ package de.keksuccino.fancymenu.customization.element.elements.browser;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.util.CloseableUtils;
+import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
-import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
-import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -20,7 +18,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.awt.*;
 import java.util.List;
 
@@ -29,14 +26,11 @@ public class BrowserElement extends AbstractElement {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final DrawableColor BACKGROUND_COLOR = DrawableColor.of(Color.RED);
 
+    @NotNull
+    public String url = "https://docs.fancymenu.net";
+    public boolean interactable = true;
     @Nullable
-    public ResourceSupplier<ITexture> textureSupplier;
-    public boolean repeat = false;
-    public boolean nineSlice = false;
-    public int nineSliceBorderX = 5;
-    public int nineSliceBorderY = 5;
-    @Nullable
-    public WrappedMCEFBrowser browser = MCEFUtil.isMCEFLoaded() ? WrappedMCEFBrowser.build("https://google.de", true) : null;
+    public WrappedMCEFBrowser browser = null;
     public int lastTickWidth = -1;
     public int lastTickHeight = -1;
 
@@ -45,9 +39,12 @@ public class BrowserElement extends AbstractElement {
     }
 
     @Override
-    public void onDestroyElement() {
-        CloseableUtils.closeQuietly(this.browser);
-        super.onDestroyElement();
+    public void afterConstruction() {
+        if (MCEFUtil.isMCEFLoaded()) {
+            this.browser = BrowserHandler.get(this.getInstanceIdentifier());
+            if (this.browser == null) this.browser = WrappedMCEFBrowser.build(PlaceholderParser.replacePlaceholders(this.url), true, false);
+            BrowserHandler.notifyHandler(this.getInstanceIdentifier(), this.browser);
+        }
     }
 
     @Override
@@ -68,6 +65,8 @@ public class BrowserElement extends AbstractElement {
 
             if (this.browser != null) {
 
+                BrowserHandler.notifyHandler(this.getInstanceIdentifier(), this.browser);
+
                 this.browser.setPosition(x, y);
 
                 if ((this.lastTickWidth != w) || (this.lastTickHeight != h)) {
@@ -75,6 +74,14 @@ public class BrowserElement extends AbstractElement {
                 }
                 this.lastTickWidth = w;
                 this.lastTickHeight = h;
+
+                String finalUrl = PlaceholderParser.replacePlaceholders(this.url);
+                if (!finalUrl.equals(this.getLastTickUrl())) {
+                    this.browser.setUrl(finalUrl);
+                    this.setLastTickUrl(finalUrl);
+                }
+
+                this.browser.setInteractable(this.interactable);
 
                 RenderSystem.enableBlend();
 
@@ -94,15 +101,12 @@ public class BrowserElement extends AbstractElement {
     }
 
     @Nullable
-    public ITexture getTextureResource() {
-        if (this.textureSupplier != null) return this.textureSupplier.get();
-        return null;
+    public String getLastTickUrl() {
+        return this.getMemory().getStringProperty("last_tick_url");
     }
 
-    public void restoreAspectRatio() {
-        ITexture t = this.getTextureResource();
-        AspectRatio ratio = (t != null) ? t.getAspectRatio() : new AspectRatio(10, 10);
-        this.baseWidth = ratio.getAspectRatioWidth(this.getAbsoluteHeight());
+    public void setLastTickUrl(@Nullable String url) {
+        this.getMemory().putProperty("last_tick_url", url);
     }
 
 }
