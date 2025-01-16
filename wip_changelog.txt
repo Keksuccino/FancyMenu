@@ -12,6 +12,7 @@ CHANGELOG | FANCYMENU v3.4.0 [ W I P !! Not public yet !! ]
 - Added "Color" background type, which is basically the one from Drippy, but ported to the base mod (#985)
 - Elements will now always stay at the same position when their anchor point gets changed (this was previously only the case when changing their anchor via hovering)
 - The Title screen Copyright button's opacity is now capped at 0.4, so people can't make it invisible via the opacity setting anymore (#984)
+- It is now possible to set the tint of "Image" elements (#873)
 - Fixed being able to delete the Copyright button in the Title screen (#997)
 - Fixed conflict with "Immersive Engineering" by disabling FancyMenu in all screens related to this mod (#965)
 - Fixed "Smaller Than" being forcibly replaced with "Smaller Than or Equals" in the "Is Number" requirement (#954)
