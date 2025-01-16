@@ -115,7 +115,7 @@ public class BrowserElement extends AbstractElement {
 
                 //Render warning when trying to click browser in editor
                 if (isEditor()) {
-                    if (MouseInput.isLeftMouseDown() && this.isMouseOver(mouseX, mouseY)) {
+                    if (MouseInput.isLeftMouseDown() && this.browser.isMouseOver(mouseX, mouseY)) {
                         this.lastLeftClickTime = System.currentTimeMillis();
                     }
                     if ((this.lastLeftClickTime + 5000) > System.currentTimeMillis()) {

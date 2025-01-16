@@ -22,13 +22,10 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO Vanilla elemente in screens können plötzlich nicht mehr geklickt werden ?!?!? FIXEN !
-	//TODO Vanilla elemente in screens können plötzlich nicht mehr geklickt werden ?!?!? FIXEN !
-	//TODO Vanilla elemente in screens können plötzlich nicht mehr geklickt werden ?!?!? FIXEN !
-	//TODO Vanilla elemente in screens können plötzlich nicht mehr geklickt werden ?!?!? FIXEN !
-	//TODO Vanilla elemente in screens können plötzlich nicht mehr geklickt werden ?!?!? FIXEN !
-	//TODO Vanilla elemente in screens können plötzlich nicht mehr geklickt werden ?!?!? FIXEN !
-
+	//TODO screen close methode in AbstractElement nicht callen, wenn in loading screen screen gesetzt wird
+	//TODO screen close methode in AbstractElement nicht callen, wenn in loading screen screen gesetzt wird
+	//TODO screen close methode in AbstractElement nicht callen, wenn in loading screen screen gesetzt wird
+	//TODO screen close methode in AbstractElement nicht callen, wenn in loading screen screen gesetzt wird
 	//TODO screen close methode in AbstractElement nicht callen, wenn in loading screen screen gesetzt wird
 
 	private static final Logger LOGGER = LogManager.getLogger();

@@ -787,9 +787,12 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		throw new RuntimeException("AbstractElements are not navigatable!");
 	}
 
+	/**
+	 * This method always needs to return FALSE, otherwise menus will BREAK!
+	 */
 	@Override
 	public boolean isMouseOver(double mouseX, double mouseY) {
-		return UIBase.isXYInArea(mouseX, mouseY, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+		return false;
 	}
 
 	public enum Alignment {
