@@ -6,6 +6,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -25,7 +26,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 @SuppressWarnings("unused")
-public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, FancyMenuUiComponent {
+public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, FancyMenuUiComponent, NavigatableWidget {
 
     protected static final Logger LOGGER = LogManager.getLogger();
 
@@ -392,6 +393,24 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Fan
     @NotNull
     public MCEFBrowser getBrowser() {
         return this.browser;
+    }
+
+    @Override
+    public boolean isFocusable() {
+        return false;
+    }
+
+    @Override
+    public void setFocusable(boolean focusable) {
+    }
+
+    @Override
+    public boolean isNavigatable() {
+        return false;
+    }
+
+    @Override
+    public void setNavigatable(boolean navigatable) {
     }
 
     @Override
