@@ -1440,5 +1440,14 @@
   "fancymenu.elements.browser.url": "Set URL",
   "fancymenu.elements.browser.url.desc": "The URL the browser should load.",
   "fancymenu.elements.browser.interactable": "Interactable: %s",
-  "fancymenu.elements.browser.interactable.desc": "If the user should be able ot interact with the browser."
+  "fancymenu.elements.browser.interactable.desc": "If the user should be able ot interact with the browser.",
+  "fancymenu.elements.browser.hide_video_controls": "Hide Video Controls: %s",
+  "fancymenu.elements.browser.hide_video_controls.desc": "If the controls of all videos should be hidden.\nThis will probably not work in some cases.",
+  "fancymenu.elements.browser.loop_videos": "Loop Videos: %s",
+  "fancymenu.elements.browser.loop_videos.desc": "If all videos should loop.\nThis will probably not work in some cases.",
+  "fancymenu.elements.browser.mute_media": "Mute Audios/Videos On Load: %s",
+  "fancymenu.elements.browser.mute_media.desc": "If all audios and videos should get muted on load.\nThis will probably not work in some cases.",
+  "fancymenu.elements.browser.media_volume": "Set Audio/Video Volume",
+  "fancymenu.elements.browser.media_volume.desc": "Set the base volume of media elements like audios and videos.\nShould be a value between 0.0 (0%) and 1.0 (100%).\nThis will probably not work in some cases.",
+  "fancymenu.elements.browser.disabled_in_editor": "The browser is not interactive while in the editor!"
 }

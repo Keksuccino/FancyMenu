@@ -5,29 +5,27 @@ import com.cinemamod.mcef.MCEFBrowser;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.renderer.CoreShaders;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cef.browser.CefBrowser;
+import org.cef.browser.CefFrame;
+import org.cef.handler.CefLoadHandlerAdapter;
 import org.jetbrains.annotations.NotNull;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.UUID;
 
+@SuppressWarnings("unused")
 public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, FancyMenuUiComponent {
-
-    //TODO interactable überall implementieren + eigenes focus handling !!!!!!!!!!!
-    //TODO interactable überall implementieren + eigenes focus handling !!!!!!!!!!!
-    //TODO interactable überall implementieren + eigenes focus handling !!!!!!!!!!!
-    //TODO interactable überall implementieren + eigenes focus handling !!!!!!!!!!!
-    //TODO interactable überall implementieren + eigenes focus handling !!!!!!!!!!!
-    //TODO interactable überall implementieren + eigenes focus handling !!!!!!!!!!!
-    //TODO interactable überall implementieren + eigenes focus handling !!!!!!!!!!!
 
     protected static final Logger LOGGER = LogManager.getLogger();
 
@@ -37,6 +35,12 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Fan
     protected boolean interactable = true;
     protected float opacity = 1.0F;
     protected boolean autoHandle = true;
+    protected volatile float volume = 1.0F;
+    protected volatile boolean fullscreenAllVideos = false;
+    protected volatile boolean autoPlayAllVideosOnLoad = true;
+    protected volatile boolean muteAllMediaOnLoad = false;
+    protected volatile boolean loopAllVideos = false;
+    protected volatile boolean hideVideoControls = false;
     protected UUID genericIdentifier = UUID.randomUUID();
 
     @NotNull
@@ -55,10 +59,29 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Fan
     }
 
     protected WrappedMCEFBrowser(@NotNull String url, boolean transparent) {
+
         super(0, 0, 0, 0, Component.empty());
+
         this.browser = MCEF.createBrowser(url, transparent);
+
+        this.setVolume(this.volume);
         this.setSize(200, 200);
         this.setPosition(0, 0);
+
+        MCEF.getClient().addLoadHandler(new CefLoadHandlerAdapter() {
+            @Override
+            public void onLoadEnd(CefBrowser browser, CefFrame frame, int httpStatusCode) {
+                //Update video/audio stuff after loading completed
+                WrappedMCEFBrowser.this.setVolume(WrappedMCEFBrowser.this.volume);
+                WrappedMCEFBrowser.this.setFullscreenAllVideos(WrappedMCEFBrowser.this.fullscreenAllVideos);
+                WrappedMCEFBrowser.this.setAutoPlayAllVideosOnLoad(WrappedMCEFBrowser.this.autoPlayAllVideosOnLoad);
+                WrappedMCEFBrowser.this.setMuteAllMediaOnLoad(WrappedMCEFBrowser.this.muteAllMediaOnLoad);
+                WrappedMCEFBrowser.this.setLoopAllVideos(WrappedMCEFBrowser.this.loopAllVideos);
+                WrappedMCEFBrowser.this.setHideVideoControls(WrappedMCEFBrowser.this.hideVideoControls);
+                super.onLoadEnd(browser, frame, httpStatusCode);
+            }
+        });
+
     }
 
     @Override
@@ -109,25 +132,35 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Fan
 
     }
 
+    public void onVolumeUpdated(@NotNull SoundSource soundSource, float newVolume) {
+        this.setVolume(this.volume);
+    }
+
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (this.isMouseOver(mouseX, mouseY) && this.interactable) {
+            this.browserFocused = true;
             this.browser.sendMousePress(this.convertMouseX(mouseX), this.convertMouseY(mouseY), button);
             this.browser.setFocus(true);
             return true;
+        } else {
+            this.browserFocused = false;
         }
         return false;
     }
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        this.browser.sendMouseRelease(this.convertMouseX(mouseX), this.convertMouseY(mouseY), button);
-        this.browser.setFocus(true);
+        if (this.interactable) {
+            this.browser.sendMouseRelease(this.convertMouseX(mouseX), this.convertMouseY(mouseY), button);
+            this.browser.setFocus(true);
+        }
         return false;
     }
 
     @Override
     public void mouseMoved(double mouseX, double mouseY) {
+        if (!this.interactable) return;
         this.browser.sendMouseMove(this.convertMouseX(mouseX), this.convertMouseY(mouseY));
     }
 
@@ -135,6 +168,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Fan
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (this.isMouseOver(mouseX, mouseY) && this.interactable) {
             this.browser.sendMouseWheel(this.convertMouseX(mouseX), this.convertMouseY(mouseY), scrollY, 0);
+            this.browser.setFocus(true);
             return true;
         }
         return false;
@@ -142,7 +176,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Fan
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (this.interactable) {
+        if (this.interactable && this.browserFocused) {
             this.browser.sendKeyPress(keyCode, scanCode, modifiers);
             this.browser.setFocus(true);
             return true;
@@ -152,7 +186,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Fan
 
     @Override
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        if (this.interactable) {
+        if (this.interactable && this.browserFocused) {
             this.browser.sendKeyRelease(keyCode, scanCode, modifiers);
             this.browser.setFocus(true);
             return true;
@@ -162,13 +196,18 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Fan
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
-        if (this.interactable) {
+        if (this.interactable && this.browserFocused) {
             if (codePoint == (char) 0) return true;
             this.browser.sendKeyTyped(codePoint, modifiers);
             this.browser.setFocus(true);
             return true;
         }
         return false;
+    }
+
+    @Override
+    public boolean isMouseOver(double mouseX, double mouseY) {
+        return UIBase.isXYInArea(mouseX, mouseY, this.getX(), this.getY(), this.getWidth(), this.getHeight());
     }
 
     @Override
@@ -197,17 +236,31 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Fan
         return (int) (height * this.minecraft.getWindow().getGuiScale());
     }
 
-//    protected void setBrowserFocus(boolean focused) {
-//        if (!this.interactable) return;
-//        this.browserFocused = focused;
-//        this.browser.setFocus(focused);
-//    }
+    /**
+     * @param volume Value between 0.0 and 1.0
+     */
+    public void setVolume(float volume) {
+        this.volume = volume;
+        String code = "document.querySelectorAll('audio, video').forEach(el => el.volume = " + this.getActualVolume() + ");";
+        this.browser.executeJavaScript(code, this.browser.getURL(), 0);
+    }
+
+    public float getVolume() {
+        return this.volume;
+    }
+
+    public float getActualVolume() {
+        float actualVolume = this.volume;
+        float soundSourceVolume = Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MASTER);
+        actualVolume *= soundSourceVolume;
+        return actualVolume;
+    }
 
     public void setInteractable(boolean interactable) {
         this.interactable = interactable;
         if (!this.interactable) {
-            this.browserFocused = false;
             this.browser.setFocus(false);
+            this.browserFocused = false;
         }
     }
 
@@ -223,12 +276,97 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Fan
         return this.autoHandle;
     }
 
+    public void setFullscreenAllVideos(boolean fullscreenAllVideos) {
+        this.fullscreenAllVideos = fullscreenAllVideos;
+        String code = """
+                document.querySelectorAll('video').forEach(video => {
+                    if (video.requestFullscreen) {
+                        video.requestFullscreen().catch(err => console.error('Fullscreen error:', err));
+                    } else if (video.webkitRequestFullscreen) { // Safari compatibility
+                        video.webkitRequestFullscreen().catch(err => console.error('Fullscreen error (webkit):', err));
+                    } else if (video.msRequestFullscreen) { // IE/Edge compatibility
+                        video.msRequestFullscreen().catch(err => console.error('Fullscreen error (ms):', err));
+                    }
+                });
+                """;
+        if (this.fullscreenAllVideos) this.browser.executeJavaScript(code, this.browser.getURL(), 0);
+    }
+
+    public boolean isFullscreenAllVideos() {
+        return fullscreenAllVideos;
+    }
+
+    public void setAutoPlayAllVideosOnLoad(boolean autoPlayAllVideosOnLoad) {
+        this.autoPlayAllVideosOnLoad = autoPlayAllVideosOnLoad;
+        String code = """
+                document.querySelectorAll('video').forEach(video => {
+                    video.play(); // Start playing the video
+                });
+                """;
+        if (this.autoPlayAllVideosOnLoad) this.browser.executeJavaScript(code, this.browser.getURL(), 0);
+    }
+
+    public boolean isAutoPlayAllVideosOnLoad() {
+        return autoPlayAllVideosOnLoad;
+    }
+
+    public void setMuteAllMediaOnLoad(boolean muteAllMediaOnLoad) {
+        this.muteAllMediaOnLoad = muteAllMediaOnLoad;
+        String code = """
+                document.querySelectorAll('audio, video').forEach(media => {
+                    media.muted = %muted%; // Mute media
+                });
+                """.replace("%muted%", "" + this.muteAllMediaOnLoad);
+        this.browser.executeJavaScript(code, this.browser.getURL(), 0);
+    }
+
+    public boolean isMuteAllMediaOnLoad() {
+        return muteAllMediaOnLoad;
+    }
+
+    public void setLoopAllVideos(boolean loopAllVideos) {
+        this.loopAllVideos = loopAllVideos;
+        String code = """
+                document.querySelectorAll('video').forEach(video => {
+                    video.loop = %loop%; // Set video to loop
+                });
+                """.replace("%loop%", "" + this.loopAllVideos);
+        this.browser.executeJavaScript(code, this.browser.getURL(), 0);
+    }
+
+    public boolean isLoopAllVideos() {
+        return loopAllVideos;
+    }
+
+    public void setHideVideoControls(boolean hideVideoControls) {
+        this.hideVideoControls = hideVideoControls;
+        String codeRemove = """
+                document.querySelectorAll('video').forEach(video => {
+                    video.removeAttribute('controls'); // Hide video controls
+                });
+                """;
+        String codeAdd = """
+                document.querySelectorAll('video').forEach(video => {
+                    if (!video.hasAttribute('controls')) {
+                        video.setAttribute('controls', 'controls'); // Add controls
+                    }
+                });
+                """;
+        this.browser.executeJavaScript(this.hideVideoControls ? codeRemove : codeAdd, this.browser.getURL(), 0);
+    }
+
+    public boolean isHideVideoControls() {
+        return hideVideoControls;
+    }
+
     public void goBack() {
         if (this.browser.canGoBack()) this.browser.goBack();
+        this.setVolume(this.volume);
     }
 
     public void goForward() {
         if (this.browser.canGoForward()) this.browser.goForward();
+        this.setVolume(this.volume);
     }
 
     public String getUrl() {
@@ -241,6 +379,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Fan
 
     public void reload() {
         this.browser.reload();
+        this.setVolume(this.volume);
     }
 
     /**

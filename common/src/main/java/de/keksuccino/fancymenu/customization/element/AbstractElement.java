@@ -16,6 +16,7 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.internal.Loading
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
@@ -784,6 +785,11 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	@Override
 	public void setNavigatable(boolean navigatable) {
 		throw new RuntimeException("AbstractElements are not navigatable!");
+	}
+
+	@Override
+	public boolean isMouseOver(double mouseX, double mouseY) {
+		return UIBase.isXYInArea(mouseX, mouseY, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
 	}
 
 	public enum Alignment {

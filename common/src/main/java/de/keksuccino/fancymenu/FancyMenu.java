@@ -7,6 +7,8 @@ import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
+import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
+import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.rendering.text.color.colors.TextColorFormatters;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
@@ -19,6 +21,15 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
+
+	//TODO Vanilla elemente in screens können plötzlich nicht mehr geklickt werden ?!?!? FIXEN !
+	//TODO Vanilla elemente in screens können plötzlich nicht mehr geklickt werden ?!?!? FIXEN !
+	//TODO Vanilla elemente in screens können plötzlich nicht mehr geklickt werden ?!?!? FIXEN !
+	//TODO Vanilla elemente in screens können plötzlich nicht mehr geklickt werden ?!?!? FIXEN !
+	//TODO Vanilla elemente in screens können plötzlich nicht mehr geklickt werden ?!?!? FIXEN !
+	//TODO Vanilla elemente in screens können plötzlich nicht mehr geklickt werden ?!?!? FIXEN !
+
+	//TODO screen close methode in AbstractElement nicht callen, wenn in loading screen screen gesetzt wird
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -48,6 +59,8 @@ public class FancyMenu {
 		FileTypes.registerAll();
 
 		if (Services.PLATFORM.isOnClient()) {
+
+			if (MCEFUtil.isMCEFLoaded()) BrowserHandler.init();
 
 			UIColorThemes.registerAll();
 
