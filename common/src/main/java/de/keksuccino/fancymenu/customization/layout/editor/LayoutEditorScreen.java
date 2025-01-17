@@ -217,6 +217,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public void removed() {
 
 		for (AbstractEditorElement e : this.getAllElements()) {
+			e.element.onCloseScreen(null, null);
 			e.element.onCloseScreen();
 		}
 

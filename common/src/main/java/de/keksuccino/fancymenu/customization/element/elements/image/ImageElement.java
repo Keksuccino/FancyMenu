@@ -11,7 +11,6 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -23,6 +22,8 @@ public class ImageElement extends AbstractElement {
 
     @Nullable
     public ResourceSupplier<ITexture> textureSupplier;
+    @NotNull
+    public DrawableColor imageTint = DrawableColor.of("#FFFFFF");
     public boolean repeat = false;
     public boolean nineSlice = false;
     public int nineSliceBorderX = 5;
@@ -47,11 +48,11 @@ public class ImageElement extends AbstractElement {
                 ResourceLocation loc = t.getResourceLocation();
                 if (loc != null) {
                     if (this.repeat) {
-                        RenderingUtils.blitRepeat(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight(),  DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
+                        RenderingUtils.blitRepeat(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight(),  this.imageTint.getColorIntWithAlpha(this.opacity));
                     } else if (this.nineSlice) {
-                        RenderingUtils.blitNineSlicedTexture(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight(), this.nineSliceBorderY, this.nineSliceBorderX, this.nineSliceBorderY, this.nineSliceBorderX, ARGB.white(this.opacity));
+                        RenderingUtils.blitNineSlicedTexture(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight(), this.nineSliceBorderY, this.nineSliceBorderX, this.nineSliceBorderY, this.nineSliceBorderX, this.imageTint.getColorIntWithAlpha(this.opacity));
                     } else {
-                        graphics.blit(RenderType::guiTextured, loc, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
+                        graphics.blit(RenderType::guiTextured, loc, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.imageTint.getColorIntWithAlpha(this.opacity));
                     }
                 }
             } else if (isEditor()) {

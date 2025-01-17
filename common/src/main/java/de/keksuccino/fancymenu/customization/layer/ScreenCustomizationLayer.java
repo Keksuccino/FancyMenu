@@ -138,6 +138,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		if (!this.shouldCustomize(e.getScreen())) return;
 
 		this.allElements.forEach(element -> {
+			element.onCloseScreen(e.getClosedScreen(), e.getNewScreen());
 			element.onCloseScreen();
 			element.onDestroyElement();
 		});

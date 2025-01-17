@@ -1449,5 +1449,9 @@
   "fancymenu.elements.browser.mute_media.desc": "If all audios and videos should get muted on load.\nThis will probably not work in some cases.",
   "fancymenu.elements.browser.media_volume": "Set Audio/Video Volume",
   "fancymenu.elements.browser.media_volume.desc": "Set the base volume of media elements like audios and videos.\nShould be a value between 0.0 (0%) and 1.0 (100%).\nThis will probably not work in some cases.",
-  "fancymenu.elements.browser.disabled_in_editor": "The browser is not interactive while in the editor!"
+  "fancymenu.elements.browser.disabled_in_editor": "The browser is not interactive while in the editor!",
+  "fancymenu.backgrounds.color": "Color [FancyMenu]",
+  "fancymenu.backgrounds.color.desc": "A simple color background.\n\nThis type is PART OF THE BASE MOD unlike\nthe other similar type you might see in the types list.",
+  "fancymenu.backgrounds.color.hex": "HEX Color",
+  "fancymenu.elements.image.tint": "Set Image Tint [HEX]"
 }

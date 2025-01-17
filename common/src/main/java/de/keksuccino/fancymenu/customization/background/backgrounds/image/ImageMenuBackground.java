@@ -34,6 +34,27 @@ public class ImageMenuBackground extends MenuBackground {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
+        // Variables for the parallax effect
+        float parallaxFactor = 0.05f; // Adjust the intensity of the effect
+        float scaleFactor = calculateMinimumScaleFactor(parallaxFactor);
+        int backgroundWidth = (int) (getScreenWidth() * scaleFactor); // Background image larger than the screen
+        int backgroundHeight = (int) (getScreenHeight() * scaleFactor);
+        // Get screen dimensions
+        int screenWidth = getScreenWidth();
+        int screenHeight = getScreenHeight();
+        // Calculate the center of the screen
+        int centerX = screenWidth / 2;
+        int centerY = screenHeight / 2;
+        // Calculate offsets for parallax effect
+        float offsetX = (mouseX - centerX) * parallaxFactor;
+        float offsetY = (mouseY - centerY) * parallaxFactor;
+        // Clamp offsets to ensure the image doesn't move outside its bounds
+        offsetX = Math.max(Math.min(offsetX, (backgroundWidth - screenWidth) / 2.0f), -(backgroundWidth - screenWidth) / 2.0f);
+        offsetY = Math.max(Math.min(offsetY, (backgroundHeight - screenHeight) / 2.0f), -(backgroundHeight - screenHeight) / 2.0f);
+        // Calculate rendering position based on offsets
+        float renderPosX = -offsetX; // Move the image left/right based on the offset
+        float renderPosY = -offsetY; // Move the image up/down based on the offset
+
         RenderSystem.enableBlend();
         graphics.fill(RenderType.gui(), 0, 0, getScreenWidth(), getScreenHeight(), BACKGROUND_COLOR.getColorIntWithAlpha(this.opacity));
 
@@ -117,7 +138,21 @@ public class ImageMenuBackground extends MenuBackground {
             } else if (this.keepBackgroundAspectRatio) {
                 this.renderKeepAspectRatio(graphics, ratio, resourceLocation);
             } else {
-                graphics.blit(RenderType::guiTextured, resourceLocation, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight(), ARGB.white(this.opacity));
+                //graphics.blit(RenderType::guiTextured, resourceLocation, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight(), ARGB.white(this.opacity));
+                // Render the background image
+                graphics.blit(
+                        RenderType::guiTextured,    // Render type
+                        resourceLocation,                   // Texture resource
+                        (int) renderPosX,          // Render position X
+                        (int) renderPosY,          // Render position Y
+                        0.0F,                      // needsToBe0_1 (normalized texture X offset, 0-1)
+                        0.0F,                      // needsToBe0_2 (normalized texture Y offset, 0-1)
+                        screenWidth,               // Render width
+                        screenHeight,              // Render height
+                        screenWidth,               // Render width again (used for texture scaling)
+                        screenHeight,              // Render height again (used for texture scaling)
+                        ARGB.white(this.opacity)   // Tint color with opacity
+                );
             }
 
         }
@@ -135,6 +170,21 @@ public class ImageMenuBackground extends MenuBackground {
             y = -((size[1] - getScreenHeight()) / 2);
         }
         graphics.blit(RenderType::guiTextured, resourceLocation, x, y, 0.0F, 0.0F, size[0], size[1], size[0], size[1], ARGB.white(this.opacity));
+    }
+
+    // Calculate the minimum scaling factor for the background
+    private float calculateMinimumScaleFactor(float parallaxFactor) {
+
+        float maxOffsetX = getScreenWidth() / 2.0f * parallaxFactor;
+        float maxOffsetY = getScreenHeight() / 2.0f * parallaxFactor;
+
+        // The background needs to cover the screen plus the maximum offsets
+        float scaleFactorX = (getScreenWidth() + 2 * maxOffsetX) / getScreenWidth();
+        float scaleFactorY = (getScreenHeight() + 2 * maxOffsetY) / getScreenHeight();
+
+        // Use the larger of the two scaling factors to ensure no black borders
+        return Math.max(scaleFactorX, scaleFactorY);
+
     }
 
 }

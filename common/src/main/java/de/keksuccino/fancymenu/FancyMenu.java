@@ -22,11 +22,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO screen close methode in AbstractElement nicht callen, wenn in loading screen screen gesetzt wird
-	//TODO screen close methode in AbstractElement nicht callen, wenn in loading screen screen gesetzt wird
-	//TODO screen close methode in AbstractElement nicht callen, wenn in loading screen screen gesetzt wird
-	//TODO screen close methode in AbstractElement nicht callen, wenn in loading screen screen gesetzt wird
-	//TODO screen close methode in AbstractElement nicht callen, wenn in loading screen screen gesetzt wird
+	//TODO Parallax Image Menu Background
+	//TODO Fixen: Button sound cut off
+	//TODO Item element
 
 	private static final Logger LOGGER = LogManager.getLogger();
 

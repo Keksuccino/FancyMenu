@@ -386,8 +386,21 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 * so this method will only get called for the VERY LAST {@link AbstractElement} instance that got built for the {@link Screen} while it was active.
 	 * It does not get called for instances that got built earlier (by resizing the {@link Screen} multiple times for example).
 	 */
+	public void onCloseScreen(@Nullable Screen closedScreen, @Nullable Screen newScreen) {
+	}
+
+	/**
+	 * Gets called before a {@link Screen} gets closed.<br>
+	 * A screen gets closed when a new active {@link Screen} gets set via {@link Minecraft#setScreen(Screen)}.<br><br>
+	 *
+	 * Keep in mind that, just like most Vanilla GUI stuff, {@link AbstractElement}s get rebuilt every time the {@link Screen} gets resized,
+	 * so this method will only get called for the VERY LAST {@link AbstractElement} instance that got built for the {@link Screen} while it was active.
+	 * It does not get called for instances that got built earlier (by resizing the {@link Screen} multiple times for example).
+	 */
+	@Deprecated
 	public void onCloseScreen() {
 	}
+
 
 	/**
 	 * Gets called after a {@link Screen} got opened via {@link Minecraft#setScreen(Screen)}.<br>

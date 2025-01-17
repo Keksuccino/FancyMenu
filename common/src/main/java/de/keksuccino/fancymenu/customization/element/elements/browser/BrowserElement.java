@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.element.elements.browser;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
@@ -12,6 +13,7 @@ import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -54,7 +56,13 @@ public class BrowserElement extends AbstractElement {
     }
 
     @Override
-    public void onCloseScreen() {
+    public void onCloseScreen(@Nullable Screen closedScreen, @Nullable Screen newScreen) {
+        LOGGER.info("Screen closed! Closed Screen: " + closedScreen + " | New Screen: " + newScreen, new Exception());
+        if ((closedScreen != null) && (newScreen != null)) {
+            boolean bothCustomGuis = (closedScreen instanceof CustomGuiBaseScreen) && (newScreen instanceof CustomGuiBaseScreen);
+            if ((closedScreen instanceof CustomGuiBaseScreen c1) && (newScreen instanceof CustomGuiBaseScreen c2) && c1.getIdentifier().equals(c2.getIdentifier())) return;
+            if (!bothCustomGuis && (closedScreen.getClass() == newScreen.getClass())) return;
+        }
         if (this.browser != null) BrowserHandler.remove(this.getInstanceIdentifier(), true);
     }
 
