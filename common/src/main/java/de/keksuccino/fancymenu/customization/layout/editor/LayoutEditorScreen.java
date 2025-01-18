@@ -1,19 +1,10 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
-import java.util.*;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetEditorElement;
-import de.keksuccino.fancymenu.customization.layer.ElementFactory;
-import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
-import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
-import de.keksuccino.fancymenu.customization.layout.editor.widget.LayoutEditorWidgetRegistry;
-import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
-import de.keksuccino.fancymenu.customization.widget.ScreenWidgetDiscoverer;
-import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
@@ -21,11 +12,23 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.HideableElement;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElementBuilder;
+import de.keksuccino.fancymenu.customization.layer.ElementFactory;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.Layout;
+import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
+import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
+import de.keksuccino.fancymenu.customization.layout.editor.widget.LayoutEditorWidgetRegistry;
+import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
+import de.keksuccino.fancymenu.customization.widget.ScreenWidgetDiscoverer;
+import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
+import de.keksuccino.fancymenu.util.ListUtils;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.ObjectUtils;
+import de.keksuccino.fancymenu.util.ScreenTitleUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
@@ -34,7 +37,6 @@ import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.*;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.SaveFileScreen;
@@ -55,6 +57,8 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
+
+import java.util.*;
 
 @SuppressWarnings("all")
 public class LayoutEditorScreen extends Screen implements ElementFactory {
@@ -497,7 +501,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		this.cachedVanillaWidgetMetas.clear();
 		if (this.layoutTargetScreen != null) {
-			//TODO übernehmen
 			this.cachedVanillaWidgetMetas.addAll(ScreenWidgetDiscoverer.getWidgetsOfScreen(this.layoutTargetScreen, true));
 		}
 		for (WidgetMeta m : this.cachedVanillaWidgetMetas) {
@@ -1271,7 +1274,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	}
 
-	//TODO übernehmen
 	public void closeEditor() {
 		this.saveWidgetSettings();
 		currentInstance = null;

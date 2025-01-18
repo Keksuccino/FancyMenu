@@ -57,7 +57,6 @@ public class BrowserElement extends AbstractElement {
 
     @Override
     public void onCloseScreen(@Nullable Screen closedScreen, @Nullable Screen newScreen) {
-        LOGGER.info("Screen closed! Closed Screen: " + closedScreen + " | New Screen: " + newScreen, new Exception());
         if ((closedScreen != null) && (newScreen != null)) {
             boolean bothCustomGuis = (closedScreen instanceof CustomGuiBaseScreen) && (newScreen instanceof CustomGuiBaseScreen);
             if ((closedScreen instanceof CustomGuiBaseScreen c1) && (newScreen instanceof CustomGuiBaseScreen c2) && c1.getIdentifier().equals(c2.getIdentifier())) return;

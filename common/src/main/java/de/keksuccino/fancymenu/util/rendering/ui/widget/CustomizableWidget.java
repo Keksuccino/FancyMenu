@@ -158,10 +158,20 @@ public interface CustomizableWidget {
     @Nullable
     IAudio getCustomClickSoundFancyMenu();
 
+    default void stopCustomClickSoundFancyMenu() {
+        IAudio a = this.getCustomClickSoundFancyMenu();
+        if (a != null) a.stop();
+    }
+
     void setHoverSoundFancyMenu(@Nullable IAudio sound);
 
     @Nullable
     IAudio getHoverSoundFancyMenu();
+
+    default void stopHoverSoundFancyMenu() {
+        IAudio a = this.getHoverSoundFancyMenu();
+        if (a != null) a.stop();
+    }
 
     void setHiddenFancyMenu(boolean hidden);
 

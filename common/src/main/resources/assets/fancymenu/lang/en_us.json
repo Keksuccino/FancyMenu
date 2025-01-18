@@ -642,6 +642,9 @@
   "fancymenu.background.image.configure.choose_image.local": "Choose Image",
   "fancymenu.background.image.configure.slide": "Slide Wide Images From Left To Right: %s",
   "fancymenu.background.image.configure.repeat": "Repeat Texture: %s",
+  "fancymenu.background.image.configure.parallax": "Parallax Effect: %s",
+  "fancymenu.background.image.configure.parallax_intensity": "Set Parallax Effect Intensity",
+  "fancymenu.background.image.configure.parallax_intensity.desc": "The intensity of the parallax effect.\nNeeds to be a value between 0.0 (no movement) and 1.0 (maximum movement).",
   "fancymenu.background.image.configure.no_image_chosen": "§xYou need to choose an image or set an image URL first!",
   "fancymenu.background.image.type.web.fallback": "Choose Fallback Image",
   "fancymenu.background.image.type.web.fallback.desc": "Set an (optional) fallback image that gets\ndisplayed in case the main image fails to load.",
@@ -1453,5 +1456,7 @@
   "fancymenu.backgrounds.color": "Color [FancyMenu]",
   "fancymenu.backgrounds.color.desc": "A simple color background.\n\nThis type is PART OF THE BASE MOD unlike\nthe other similar type you might see in the types list.",
   "fancymenu.backgrounds.color.hex": "HEX Color",
-  "fancymenu.elements.image.tint": "Set Image Tint [HEX]"
+  "fancymenu.elements.image.tint": "Set Image Tint [HEX]",
+  "fancymenu.elements.item": "Item",
+  "fancymenu.elements.item.desc": "An item like a sword, apple or grass block.\nFor the extra bit of battle pass menu flair!"
 }

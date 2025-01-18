@@ -22,6 +22,10 @@ public class ImageMenuBackground extends MenuBackground {
     public ResourceSupplier<ITexture> fallbackTextureSupplier;
     public boolean slideLeftRight = false;
     public boolean repeat = false;
+    public boolean parallaxEnabled = true;
+    /** Value between 0.0 and 1.0, where 0.0 is no movement and 1.0 is maximum movement **/
+    public float parallaxIntensity = 0.02F;
+
     protected double slidePos = 0.0D;
     protected boolean slideMoveBack = false;
     protected boolean slideStop = false;
@@ -34,28 +38,8 @@ public class ImageMenuBackground extends MenuBackground {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        // Variables for the parallax effect
-        float parallaxFactor = 0.05f; // Adjust the intensity of the effect
-        float scaleFactor = calculateMinimumScaleFactor(parallaxFactor);
-        int backgroundWidth = (int) (getScreenWidth() * scaleFactor); // Background image larger than the screen
-        int backgroundHeight = (int) (getScreenHeight() * scaleFactor);
-        // Get screen dimensions
-        int screenWidth = getScreenWidth();
-        int screenHeight = getScreenHeight();
-        // Calculate the center of the screen
-        int centerX = screenWidth / 2;
-        int centerY = screenHeight / 2;
-        // Calculate offsets for parallax effect
-        float offsetX = (mouseX - centerX) * parallaxFactor;
-        float offsetY = (mouseY - centerY) * parallaxFactor;
-        // Clamp offsets to ensure the image doesn't move outside its bounds
-        offsetX = Math.max(Math.min(offsetX, (backgroundWidth - screenWidth) / 2.0f), -(backgroundWidth - screenWidth) / 2.0f);
-        offsetY = Math.max(Math.min(offsetY, (backgroundHeight - screenHeight) / 2.0f), -(backgroundHeight - screenHeight) / 2.0f);
-        // Calculate rendering position based on offsets
-        float renderPosX = -offsetX; // Move the image left/right based on the offset
-        float renderPosY = -offsetY; // Move the image up/down based on the offset
-
         RenderSystem.enableBlend();
+
         graphics.fill(RenderType.gui(), 0, 0, getScreenWidth(), getScreenHeight(), BACKGROUND_COLOR.getColorIntWithAlpha(this.opacity));
 
         ResourceLocation resourceLocation = null;
@@ -79,112 +63,156 @@ public class ImageMenuBackground extends MenuBackground {
         }
 
         if (resourceLocation != null) {
-
-            RenderSystem.enableBlend();
-
+            // Calculate parallax offsets if enabled
+            float[] parallaxOffset = calculateParallaxOffset(mouseX, mouseY);
             if (this.repeat) {
-                RenderingUtils.blitRepeat(graphics, resourceLocation, 0, 0, getScreenWidth(), getScreenHeight(), tex.getWidth(), tex.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
-            } else if (this.slideLeftRight) {
-                int w = ratio.getAspectRatioWidth(getScreenHeight());
-                //Check if background should move to the left or the right side
-                if ((slidePos + (w - getScreenWidth())) <= 0) {
-                    slideMoveBack = true;
-                }
-                if (slidePos >= 0) {
-                    slideMoveBack = false;
-                }
-                //Fix pos after resizing
-                if (slidePos + (w - getScreenWidth()) < 0) {
-                    slidePos = -(w - getScreenWidth());
-                }
-                if (slidePos > 0) {
-                    slidePos = 0;
-                }
-                if (!slideStop) {
-                    if (slideTick >= 1) {
-                        slideTick = 0;
-                        if (slideMoveBack) {
-                            slidePos = slidePos + 0.5;
-                        } else {
-                            slidePos = slidePos - 0.5;
-                        }
-
-                        if (slidePos + (w - getScreenWidth()) == 0) {
-                            slideStop = true;
-                        }
-                        if (slidePos == 0) {
-                            slideStop = true;
-                        }
-                    } else {
-                        slideTick++;
-                    }
-                } else {
-                    if (slideTick >= 300) {
-                        slideStop = false;
-                        slideTick = 0;
-                    } else {
-                        slideTick++;
-                    }
-                }
-                if (w <= getScreenWidth()) {
-                    if (this.keepBackgroundAspectRatio) {
-                        this.renderKeepAspectRatio(graphics, ratio, resourceLocation);
-                    } else {
-                        graphics.blit(RenderType::guiTextured, resourceLocation, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight(), ARGB.white(this.opacity));
-                    }
-                } else {
-                    RenderingUtils.blitF(graphics, RenderType::guiTextured, resourceLocation, (float)slidePos, 0.0F, 0.0F, 0.0F, w, getScreenHeight(), w, getScreenHeight(), ARGB.white(this.opacity));
-                }
+                renderRepeatBackground(graphics, resourceLocation, tex, parallaxOffset);
+            } else if (this.slideLeftRight && !this.parallaxEnabled) {
+                renderSlideBackground(graphics, ratio, resourceLocation, parallaxOffset);
             } else if (this.keepBackgroundAspectRatio) {
-                this.renderKeepAspectRatio(graphics, ratio, resourceLocation);
+                renderKeepAspectRatio(graphics, ratio, resourceLocation, parallaxOffset);
             } else {
-                //graphics.blit(RenderType::guiTextured, resourceLocation, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight(), ARGB.white(this.opacity));
-                // Render the background image
-                graphics.blit(
-                        RenderType::guiTextured,    // Render type
-                        resourceLocation,                   // Texture resource
-                        (int) renderPosX,          // Render position X
-                        (int) renderPosY,          // Render position Y
-                        0.0F,                      // needsToBe0_1 (normalized texture X offset, 0-1)
-                        0.0F,                      // needsToBe0_2 (normalized texture Y offset, 0-1)
-                        screenWidth,               // Render width
-                        screenHeight,              // Render height
-                        screenWidth,               // Render width again (used for texture scaling)
-                        screenHeight,              // Render height again (used for texture scaling)
-                        ARGB.white(this.opacity)   // Tint color with opacity
-                );
+                renderFullScreen(graphics, resourceLocation, parallaxOffset);
             }
-
         }
 
     }
 
-    protected void renderKeepAspectRatio(@NotNull GuiGraphics graphics, @NotNull AspectRatio ratio, @NotNull ResourceLocation resourceLocation) {
-        int[] size = ratio.getAspectRatioSizeByMinimumSize(getScreenWidth(), getScreenHeight());
-        int x = 0;
-        if (size[0] > getScreenWidth()) {
-            x = -((size[0] - getScreenWidth()) / 2);
+    protected float[] calculateParallaxOffset(int mouseX, int mouseY) {
+
+        if (!parallaxEnabled) {
+            return new float[]{0, 0};
         }
-        int y = 0;
-        if (size[1] > getScreenHeight()) {
-            y = -((size[1] - getScreenHeight()) / 2);
-        }
-        graphics.blit(RenderType::guiTextured, resourceLocation, x, y, 0.0F, 0.0F, size[0], size[1], size[0], size[1], ARGB.white(this.opacity));
+
+        float mouseXPercent = (float)mouseX / getScreenWidth();
+        float mouseYPercent = (float)mouseY / getScreenHeight();
+
+        float xOffset = -parallaxIntensity * mouseXPercent * getScreenWidth();
+        float yOffset = -parallaxIntensity * mouseYPercent * getScreenHeight();
+
+        return new float[]{xOffset, yOffset};
+
     }
 
-    // Calculate the minimum scaling factor for the background
-    private float calculateMinimumScaleFactor(float parallaxFactor) {
+    protected void renderRepeatBackground(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation, ITexture tex, float[] parallaxOffset) {
+        if (parallaxEnabled) {
+            // For parallax with repeat, we'll create a slightly larger area and offset it
+            int expandedWidth = (int)(getScreenWidth() * (1 + parallaxIntensity * 2));
+            int expandedHeight = (int)(getScreenHeight() * (1 + parallaxIntensity * 2));
 
-        float maxOffsetX = getScreenWidth() / 2.0f * parallaxFactor;
-        float maxOffsetY = getScreenHeight() / 2.0f * parallaxFactor;
+            // Center the expanded area
+            int baseX = (int)((expandedWidth - getScreenWidth()) / -2.0f + parallaxOffset[0]);
+            int baseY = (int)((expandedHeight - getScreenHeight()) / -2.0f + parallaxOffset[1]);
 
-        // The background needs to cover the screen plus the maximum offsets
-        float scaleFactorX = (getScreenWidth() + 2 * maxOffsetX) / getScreenWidth();
-        float scaleFactorY = (getScreenHeight() + 2 * maxOffsetY) / getScreenHeight();
+            RenderingUtils.blitRepeat(graphics, resourceLocation, baseX, baseY,
+                    expandedWidth, expandedHeight,
+                    tex.getWidth(), tex.getHeight(),
+                    DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
+        } else {
+            RenderingUtils.blitRepeat(graphics, resourceLocation, 0, 0,
+                    getScreenWidth(), getScreenHeight(),
+                    tex.getWidth(), tex.getHeight(),
+                    DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
+        }
+    }
 
-        // Use the larger of the two scaling factors to ensure no black borders
-        return Math.max(scaleFactorX, scaleFactorY);
+    protected void renderSlideBackground(@NotNull GuiGraphics graphics, @NotNull AspectRatio ratio, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset) {
+        int w = ratio.getAspectRatioWidth(getScreenHeight());
+        handleSlideAnimation(w);
+        if (w <= getScreenWidth()) {
+            if (this.keepBackgroundAspectRatio) {
+                renderKeepAspectRatio(graphics, ratio, resourceLocation, parallaxOffset);
+            } else {
+                renderFullScreen(graphics, resourceLocation, parallaxOffset);
+            }
+        } else {
+            float finalX = (float)slidePos;
+            RenderingUtils.blitF(graphics, RenderType::guiTextured, resourceLocation,
+                    finalX, parallaxOffset[1], 0.0F, 0.0F,
+                    w, getScreenHeight(), w, getScreenHeight(),
+                    ARGB.white(this.opacity));
+        }
+    }
 
+    protected void renderKeepAspectRatio(@NotNull GuiGraphics graphics, @NotNull AspectRatio ratio, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset) {
+
+        // Calculate base size with extra space for parallax movement
+        float parallaxScale = parallaxEnabled ? (1 + parallaxIntensity * 2) : 1;
+        int[] baseSize = ratio.getAspectRatioSizeByMinimumSize(
+                (int)(getScreenWidth() * parallaxScale),
+                (int)(getScreenHeight() * parallaxScale)
+        );
+
+        // Calculate centered position
+        int x = -((baseSize[0] - getScreenWidth()) / 2);
+        int y = -((baseSize[1] - getScreenHeight()) / 2);
+
+        // Apply parallax offset
+        x += (int)parallaxOffset[0];
+        y += (int)parallaxOffset[1];
+
+        graphics.blit(RenderType::guiTextured, resourceLocation,
+                x, y, 0.0F, 0.0F,
+                baseSize[0], baseSize[1],
+                baseSize[0], baseSize[1],
+                ARGB.white(this.opacity));
+
+    }
+
+    protected void renderFullScreen(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset) {
+        if (parallaxEnabled) {
+            int expandedWidth = (int)(getScreenWidth() * (1 + parallaxIntensity * 2));
+            int expandedHeight = (int)(getScreenHeight() * (1 + parallaxIntensity * 2));
+            int x = (int)((expandedWidth - getScreenWidth()) / -2.0f + parallaxOffset[0]);
+            int y = (int)((expandedHeight - getScreenHeight()) / -2.0f + parallaxOffset[1]);
+            graphics.blit(RenderType::guiTextured, resourceLocation,
+                    x, y, 0.0F, 0.0F,
+                    expandedWidth, expandedHeight,
+                    expandedWidth, expandedHeight,
+                    ARGB.white(this.opacity));
+        } else {
+            graphics.blit(RenderType::guiTextured, resourceLocation,
+                    0, 0, 0.0F, 0.0F,
+                    getScreenWidth(), getScreenHeight(),
+                    getScreenWidth(), getScreenHeight(),
+                    ARGB.white(this.opacity));
+        }
+    }
+
+    protected void handleSlideAnimation(int backgroundWidth) {
+        if ((slidePos + (backgroundWidth - getScreenWidth())) <= 0) {
+            slideMoveBack = true;
+        }
+        if (slidePos >= 0) {
+            slideMoveBack = false;
+        }
+
+        if (slidePos + (backgroundWidth - getScreenWidth()) < 0) {
+            slidePos = -(backgroundWidth - getScreenWidth());
+        }
+        if (slidePos > 0) {
+            slidePos = 0;
+        }
+
+        if (!slideStop) {
+            if (slideTick >= 1) {
+                slideTick = 0;
+                slidePos += slideMoveBack ? 0.5 : -0.5;
+
+                if (slidePos + (backgroundWidth - getScreenWidth()) == 0 || slidePos == 0) {
+                    slideStop = true;
+                }
+            } else {
+                slideTick++;
+            }
+        } else {
+            if (slideTick >= 300) {
+                slideStop = false;
+                slideTick = 0;
+            } else {
+                slideTick++;
+            }
+        }
     }
 
 }

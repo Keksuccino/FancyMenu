@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.customization.element.elements.cursor.CursorEleme
 import de.keksuccino.fancymenu.customization.element.elements.dragger.DraggerElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.image.ImageElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.inputfield.InputFieldElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.item.ItemElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.musiccontroller.MusicControllerElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.v2.PlayerEntityElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.progressbar.ProgressBarElementBuilder;
@@ -40,6 +41,7 @@ public class Elements {
     public static final MusicControllerElementBuilder MUSIC_CONTROLLER = new MusicControllerElementBuilder();
     public static final DraggerElementBuilder DRAGGER = new DraggerElementBuilder();
     public static final BrowserElementBuilder BROWSER = new BrowserElementBuilder();
+    public static final ItemElementBuilder ITEM = new ItemElementBuilder();
 
     public static void registerAll() {
 
@@ -61,6 +63,7 @@ public class Elements {
         ElementRegistry.register(MUSIC_CONTROLLER);
         ElementRegistry.register(DRAGGER);
         ElementRegistry.register(BROWSER);
+        ElementRegistry.register(ITEM);
 
     }
 

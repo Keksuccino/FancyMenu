@@ -1,10 +1,5 @@
 package de.keksuccino.fancymenu.customization.element.editor;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.function.Supplier;
-import javax.annotation.Nonnull;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
@@ -54,6 +49,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 @SuppressWarnings("deprecation")
 public abstract class AbstractEditorElement implements Renderable, GuiEventListener {
@@ -573,7 +574,6 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		}
 
-		//TODO sticky anchor
 		this.addToggleContextMenuEntryTo(this.rightClickMenu, "auto_sizing", AbstractEditorElement.class,
 						consumes -> consumes.element.autoSizing,
 						(abstractEditorElement, aBoolean) -> {
@@ -586,7 +586,6 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.auto_sizing.desc")))
 				.setIcon(ContextMenu.IconFactory.getIcon("measure"));
 
-		//TODO sticky anchor
 		if (this.settings.isAnchorPointChangeable()) {
 
 			this.addToggleContextMenuEntryTo(this.rightClickMenu, "sticky_anchor", AbstractEditorElement.class,
