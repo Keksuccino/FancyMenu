@@ -10,6 +10,7 @@ CHANGELOG | FANCYMENU v3.4.0 [ W I P !! Not public yet !! ]
 - Added "Plain Text" Markdown formatting code that ignores all formatting codes inside (similar to code block, but without the visible block) (#983)
 - Added "Browser" element to _browse the web_ (#850)
 - Added "Color" background type, which is basically the one from Drippy, but ported to the base mod (#985)
+- Added "Item" element to render items (sword, potato, etc.) in menus
 - Added a parallax effect to the "Image" menu background type (can be toggled on/off) (#735)
 - Elements will now always stay at the same position when their anchor point gets changed (this was previously only the case when changing their anchor via hovering)
 - The Title screen Copyright button's opacity is now capped at 0.4, so people can't make it invisible via the opacity setting anymore (#984)
