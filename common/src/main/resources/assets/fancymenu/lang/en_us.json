@@ -1458,5 +1458,14 @@
   "fancymenu.backgrounds.color.hex": "HEX Color",
   "fancymenu.elements.image.tint": "Set Image Tint [HEX]",
   "fancymenu.elements.item": "Item",
-  "fancymenu.elements.item.desc": "An item like a sword, apple or grass block.\nFor the extra bit of battle pass menu flair!"
+  "fancymenu.elements.item.desc": "An item like a sword, apple or grass block.\nFor the extra bit of battle pass menu flair!",
+  "fancymenu.elements.item.enchanted": "Enchanted: %s",
+  "fancymenu.elements.item.item_count": "Set Item Count",
+  "fancymenu.elements.item.show_tooltip": "Show Item Tooltip: %s",
+  "fancymenu.elements.item.name": "Set Item Name",
+  "fancymenu.elements.item.lore": "Set Item Lore",
+  "fancymenu.elements.item.lore.desc": "Set the lore of the item.\nThis input supports multiline and you\ncan even use 'Minecraft Text Components'.\nUse one component (JSON) per line.\n\nTo learn more about text components, check this:\nhttps://docs.fancymenu.net/en/text-formatting",
+  "fancymenu.elements.item.key": "Set Item Key",
+  "fancymenu.elements.item.key.desc": "The registry key of the item.\nUsed to identify the item you want to display.",
+  "fancymenu.elements.item.key.screen.key": "Item Key:"
 }

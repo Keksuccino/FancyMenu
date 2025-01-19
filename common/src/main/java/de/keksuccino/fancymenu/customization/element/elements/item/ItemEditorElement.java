@@ -3,17 +3,17 @@ package de.keksuccino.fancymenu.customization.element.elements.item;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.ListUtils;
-import de.keksuccino.fancymenu.util.input.TextValidators;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
-import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
+import java.util.function.BiConsumer;
 
 public class ItemEditorElement extends AbstractEditorElement {
 
@@ -26,69 +26,71 @@ public class ItemEditorElement extends AbstractEditorElement {
 
         super.init();
 
-        this.rightClickMenu.addClickableEntry("set_source", Component.translatable("fancymenu.elements.image.set_source"), (menu, entry) -> {
-            Minecraft.getInstance().setScreen(ResourceChooserScreen.image(null, source -> {
-                if (source != null) {
-                    this.editor.history.saveSnapshot();
-                    this.getElement().textureSupplier = ResourceSupplier.image(source);
+        ConsumingSupplier<ItemEditorElement, String> itemKeyTargetFieldGetter = consumes -> consumes.getElement().itemKey;
+        BiConsumer<ItemEditorElement, String> itemKeyTargetFieldSetter = (itemEditorElement, s) -> itemEditorElement.getElement().itemKey = s;
+
+        ContextMenu.ClickableContextMenuEntry<?> itemKeyEntry = this.addStringInputContextMenuEntryTo(this.rightClickMenu, "item_key", ItemEditorElement.class,
+                        itemKeyTargetFieldGetter,
+                        itemKeyTargetFieldSetter,
+                        null, false, true, Component.translatable("fancymenu.elements.item.key"),
+                        true, "" + BuiltInRegistries.ITEM.getKey(Items.BARRIER), null, null)
+                .setStackable(false);
+
+        if (itemKeyEntry instanceof ContextMenu.SubMenuContextMenuEntry subMenuEntry) {
+
+            subMenuEntry.getSubContextMenu().removeEntry("input_value");
+
+            subMenuEntry.getSubContextMenu().addClickableEntryAt(0, "input_value", Component.translatable("fancymenu.guicomponents.set"), (menu, entry) ->
+            {
+                if (entry.getStackMeta().isFirstInStack()) {
+                    Screen inputScreen = new ItemKeyScreen(itemKeyTargetFieldGetter.get(this), callback -> {
+                        if (callback != null) {
+                            this.editor.history.saveSnapshot();
+                            itemKeyTargetFieldSetter.accept(this, callback);
+                        }
+                        menu.closeMenu();
+                        Minecraft.getInstance().setScreen(this.editor);
+                    });
+                    Minecraft.getInstance().setScreen(inputScreen);
                 }
-                Minecraft.getInstance().setScreen(this.editor);
-            }).setSource((this.getElement().textureSupplier != null) ? this.getElement().textureSupplier.getSourceWithPrefix() : null, false));
-        }).setIcon(ContextMenu.IconFactory.getIcon("image"));
+            }).setStackable(false);
 
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "image_tint", ItemEditorElement.class,
-                        consumes -> consumes.getElement().imageTint.getHex(),
-                        (itemEditorElement, s) -> itemEditorElement.getElement().imageTint = DrawableColor.of((s != null) ? s : "#FFFFFF"),
-                        null, false, false, Component.translatable("fancymenu.elements.image.tint"),
-                        true, "#FFFFFF", TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
-                .setStackable(true);
+        }
 
-        this.rightClickMenu.addSeparatorEntry("separator_before_repeat_texture");
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "item_name", ItemEditorElement.class,
+                consumes -> consumes.getElement().itemName,
+                (itemEditorElement, s) -> itemEditorElement.getElement().itemName = s,
+                null, false, true, Component.translatable("fancymenu.elements.item.name"),
+                true, null, null, null);
 
-        this.addToggleContextMenuEntryTo(this.rightClickMenu, "repeat_texture",
-                        ItemEditorElement.class,
-                        consumes -> consumes.getElement().repeat,
-                        (itemEditorElement, aBoolean) -> itemEditorElement.getElement().repeat = aBoolean,
-                        "fancymenu.elements.image.repeat")
-                .setIsActiveSupplier((menu, entry) -> !this.getElement().nineSlice)
-                .setStackable(false);
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "item_count", ItemEditorElement.class,
+                consumes -> consumes.getElement().itemCount,
+                (itemEditorElement, s) -> itemEditorElement.getElement().itemCount = s,
+                null, false, true, Component.translatable("fancymenu.elements.item.item_count"),
+                true, "1", null, null);
 
-        this.rightClickMenu.addSeparatorEntry("separator_before_nine_slice_settings");
-
-        this.addToggleContextMenuEntryTo(this.rightClickMenu, "nine_slice_texture",
-                        ItemEditorElement.class,
-                        consumes -> consumes.getElement().nineSlice,
-                        (itemEditorElement, aBoolean) -> itemEditorElement.getElement().nineSlice = aBoolean,
-                        "fancymenu.elements.image.nine_slice")
-                .setIsActiveSupplier((menu, entry) -> !this.getElement().repeat)
-                .setStackable(false);
-
-        this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "nine_slice_border_x",
-                        ItemEditorElement.class,
-                        consumes -> consumes.getElement().nineSliceBorderX,
-                        (itemEditorElement, integer) -> itemEditorElement.getElement().nineSliceBorderX = integer,
-                        Component.translatable("fancymenu.elements.image.nine_slice.border_x"), true, 5, null, null)
-                .setStackable(false)
-                .setIsActiveSupplier((menu, entry) -> !this.getElement().repeat);
-
-        this.addIntegerInputContextMenuEntryTo(this.rightClickMenu, "nine_slice_border_y",
-                        ItemEditorElement.class,
-                        consumes -> consumes.getElement().nineSliceBorderY,
-                        (itemEditorElement, integer) -> itemEditorElement.getElement().nineSliceBorderY = integer,
-                        Component.translatable("fancymenu.elements.image.nine_slice.border_y"), true, 5, null, null)
-                .setStackable(false)
-                .setIsActiveSupplier((menu, entry) -> !this.getElement().repeat);
-
-        this.rightClickMenu.addSeparatorEntry("image_separator_1");
-
-        this.rightClickMenu.addClickableEntry("restore_aspect_ratio", Component.translatable("fancymenu.elements.image.restore_aspect_ratio"), (menu, entry) -> {
-                    List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof ItemEditorElement));
-                    this.editor.history.saveSnapshot();
-                    for (AbstractEditorElement e : selectedElements) {
-                        ((ItemElement)e.element).restoreAspectRatio();
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "item_lore", ItemEditorElement.class, consumes -> {
+                    if (consumes.getElement().lore != null) return consumes.getElement().lore.replace("%n%", "\n");
+                    return "";
+                }, (itemEditorElement, s) -> {
+                    if (s != null) {
+                        itemEditorElement.getElement().lore = s.replace("\n", "%n%");
+                        if (itemEditorElement.getElement().lore.isBlank()) itemEditorElement.getElement().lore = null;
+                    } else {
+                        itemEditorElement.getElement().lore = null;
                     }
-                }).setStackable(true)
-                .setIcon(ContextMenu.IconFactory.getIcon("aspect_ratio"));
+                }, null, true, true, Component.translatable("fancymenu.elements.item.lore"), true, null, null, null)
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.item.lore.desc")));
+
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "enchanted", ItemEditorElement.class,
+                consumes -> consumes.getElement().enchanted,
+                (itemEditorElement, aBoolean) -> itemEditorElement.getElement().enchanted = aBoolean,
+                "fancymenu.elements.item.enchanted");
+
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "show_tooltip", ItemEditorElement.class,
+                consumes -> consumes.getElement().showTooltip,
+                (itemEditorElement, aBoolean) -> itemEditorElement.getElement().showTooltip = aBoolean,
+                "fancymenu.elements.item.show_tooltip");
 
     }
 

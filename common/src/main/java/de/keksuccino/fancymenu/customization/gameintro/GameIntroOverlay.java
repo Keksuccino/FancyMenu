@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenRenderUtils;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.Minecraft;
@@ -76,9 +77,11 @@ public class GameIntroOverlay extends Overlay {
         }
 
         if (this.endOfIntroReached()) {
+            ScreenRenderUtils.executeAllPreRenderTasks(graphics, mouseX, mouseY, partial);
             EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(this.fadeTo, graphics, mouseX, mouseY, partial));
             this.fadeTo.render(graphics, mouseX, mouseY, partial);
             EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(this.fadeTo, graphics, mouseX, mouseY, partial));
+            ScreenRenderUtils.executeAllPostRenderTasks(graphics, mouseX, mouseY, partial);
         } else {
             graphics.fill(RenderType.guiOverlay(), 0, 0, this.width, this.height, DrawableColor.BLACK.getColorInt());
         }

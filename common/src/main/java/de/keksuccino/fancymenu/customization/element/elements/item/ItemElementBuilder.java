@@ -5,12 +5,15 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Objects;
 
 public class ItemElementBuilder extends ElementBuilder<ItemElement, ItemEditorElement> {
 
@@ -33,14 +36,12 @@ public class ItemElementBuilder extends ElementBuilder<ItemElement, ItemEditorEl
 
         ItemElement element = this.buildDefaultInstance();
 
-        element.textureSupplier = deserializeImageResourceSupplier(serialized.getValue("source"));
-        element.repeat = deserializeBoolean(element.repeat, serialized.getValue("repeat_texture"));
-        element.nineSlice = deserializeBoolean(element.nineSlice, serialized.getValue("nine_slice_texture"));
-        element.nineSliceBorderX = deserializeNumber(Integer.class, element.nineSliceBorderX, serialized.getValue("nine_slice_texture_border_x"));
-        element.nineSliceBorderY = deserializeNumber(Integer.class, element.nineSliceBorderY, serialized.getValue("nine_slice_texture_border_y"));
-
-        String tint = serialized.getValue("image_tint");
-        if (tint != null) element.imageTint = DrawableColor.of(tint);
+        element.itemKey = Objects.requireNonNullElse(serialized.getValue("item_key"), element.itemKey);
+        element.itemCount = Objects.requireNonNullElse(serialized.getValue("item_count"), element.itemCount);
+        element.enchanted = SerializationUtils.deserializeBoolean(element.enchanted, serialized.getValue("enchanted"));
+        element.itemName = serialized.getValue("item_name");
+        element.lore = serialized.getValue("lore");
+        element.showTooltip = SerializationUtils.deserializeBoolean(element.showTooltip, serialized.getValue("show_tooltip"));
 
         return element;
 
@@ -49,14 +50,12 @@ public class ItemElementBuilder extends ElementBuilder<ItemElement, ItemEditorEl
     @Override
     protected SerializedElement serializeElement(@NotNull ItemElement element, @NotNull SerializedElement serializeTo) {
 
-        if (element.textureSupplier != null) {
-            serializeTo.putProperty("source", element.textureSupplier.getSourceWithPrefix());
-        }
-        serializeTo.putProperty("repeat_texture", "" + element.repeat);
-        serializeTo.putProperty("nine_slice_texture", "" + element.nineSlice);
-        serializeTo.putProperty("nine_slice_texture_border_x", "" + element.nineSliceBorderX);
-        serializeTo.putProperty("nine_slice_texture_border_y", "" + element.nineSliceBorderY);
-        serializeTo.putProperty("image_tint", element.imageTint.getHex());
+        serializeTo.putProperty("item_key", element.itemKey);
+        serializeTo.putProperty("item_count", element.itemCount);
+        serializeTo.putProperty("enchanted", "" + element.enchanted);
+        if (element.itemName != null) serializeTo.putProperty("item_name", element.itemName);
+        if (element.lore != null) serializeTo.putProperty("lore", element.lore);
+        serializeTo.putProperty("show_tooltip", "" + element.showTooltip);
 
         return serializeTo;
 
