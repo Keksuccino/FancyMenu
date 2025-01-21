@@ -36,6 +36,7 @@ CHANGELOG | FANCYMENU v3.4.0 [ W I P !! Not public yet !! ]
 - Fixed background blur not working for some background types in MC 1.21.4
 - Fixed button click sounds being cut off (#671)
 - Fixed hover label not working for Vanilla buttons when a normal label is also set (#945)
+- Fixed menu bar not clickable in Creative Inventory screen until the user resizes the window (#978)
 - FancyMenu does not cancel the call to super.render() in the TitleScreen anymore to make mods who inject into this method work again (#857)
 - For devs: Added method "afterConstruction()" to the "AbstractElement" class, which gets called after the element's builder has finished constructing the instance
 - 
