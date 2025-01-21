@@ -11,7 +11,8 @@ CHANGELOG | FANCYMENU v3.4.0 [ W I P !! Not public yet !! ]
 - Added "Browser" element to _browse the web_ (#850)
 - Added "Color" background type, which is basically the one from Drippy, but ported to the base mod (#985)
 - Added "Item" element to render items (sword, potato, etc.) in menus (#521)
-- Added a parallax effect to the "Image" menu background type (can be toggled on/off) (#735)
+- Added a parallax effect feature to the "Image" menu background type (supports inverted movement and customizable intensity) (#735)
+- Added a parallax effect feature to all elements (supports inverted movement and customizable intensity)
 - Menu backgrounds are stackable now, which means if you have multiple layouts with a background defined for the same menu, all backgrounds will get rendered now
   - Combining this with the new Parallax feature for Image backgrounds makes it possible to render layered parallax backgrounds
 - Elements will now always stay at the same position when their anchor point gets changed (this was previously only the case when changing their anchor via hovering)
