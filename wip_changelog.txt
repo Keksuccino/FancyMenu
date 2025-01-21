@@ -12,6 +12,8 @@ CHANGELOG | FANCYMENU v3.4.0 [ W I P !! Not public yet !! ]
 - Added "Color" background type, which is basically the one from Drippy, but ported to the base mod (#985)
 - Added "Item" element to render items (sword, potato, etc.) in menus (#521)
 - Added a parallax effect to the "Image" menu background type (can be toggled on/off) (#735)
+- Menu backgrounds are stackable now, which means if you have multiple layouts with a background defined for the same menu, all backgrounds will get rendered now
+  - Combining this with the new Parallax feature for Image backgrounds makes it possible to render layered parallax backgrounds
 - Elements will now always stay at the same position when their anchor point gets changed (this was previously only the case when changing their anchor via hovering)
 - The Title screen Copyright button's opacity is now capped at 0.4, so people can't make it invisible via the opacity setting anymore (#984)
 - It is now possible to set the tint of "Image" elements (#873)
