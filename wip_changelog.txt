@@ -15,6 +15,9 @@ CHANGELOG | FANCYMENU v3.4.0 [ W I P !! Not public yet !! ]
 - Elements will now always stay at the same position when their anchor point gets changed (this was previously only the case when changing their anchor via hovering)
 - The Title screen Copyright button's opacity is now capped at 0.4, so people can't make it invisible via the opacity setting anymore (#984)
 - It is now possible to set the tint of "Image" elements (#873)
+- FancyMenu does not cancel the call to super.render() in the TitleScreen anymore to make mods who inject into this method work again (#857)
+- For devs: Added method "afterConstruction()" to the "AbstractElement" class, which gets called after the element's builder has finished constructing the instance
+- Improved the logic behind layout indexes, so ordering happens earlier to catch more edge cases where it could apply parts of layouts in the wrong order
 - Fixed being able to delete the Copyright button in the Title screen (#997)
 - Fixed conflict with "Immersive Engineering" by disabling FancyMenu in all screens related to this mod (#965)
 - Fixed "Smaller Than" being forcibly replaced with "Smaller Than or Equals" in the "Is Number" requirement (#954)
@@ -41,9 +44,6 @@ CHANGELOG | FANCYMENU v3.4.0 [ W I P !! Not public yet !! ]
   - The widgets now have custom identifiers
   - You will probably need to make a new layout for that fix to work (old layouts will ignore the fix)
 - Fixed interacting with a slider and then interacting with FM's menu bar makes the menu bar control the slider (#1007)
-- FancyMenu does not cancel the call to super.render() in the TitleScreen anymore to make mods who inject into this method work again (#857)
-- For devs: Added method "afterConstruction()" to the "AbstractElement" class, which gets called after the element's builder has finished constructing the instance
-- 
  
 %changelog:end%
 
