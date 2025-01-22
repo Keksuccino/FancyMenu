@@ -8,6 +8,8 @@ import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import org.jetbrains.annotations.NotNull;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -15,7 +17,8 @@ import java.util.Map;
  */
 public class LayoutBase {
 
-    public MenuBackground menuBackground;
+    @NotNull
+    public final List<MenuBackground> menuBackgrounds = new ArrayList<>();
     public boolean preserveBackgroundAspectRatio = false;
     public ResourceSupplier<IAudio> openAudio;
     public ResourceSupplier<IAudio> closeAudio;
@@ -32,74 +35,72 @@ public class LayoutBase {
     public boolean renderScrollListFooterShadow = true;
     public boolean showScrollListHeaderFooterPreviewInEditor = false;
     public boolean showScreenBackgroundOverlayOnCustomBackground = false;
-    //TODO übernehmen
     public boolean applyVanillaBackgroundBlur = false;
 
     @NotNull
     public static LayoutBase stackLayoutBases(LayoutBase... layouts) {
-        LayoutBase layout = new LayoutBase();
+        LayoutBase stacked = new LayoutBase();
         if (layouts != null) {
-            for (LayoutBase l : layouts) {
+            for (LayoutBase layout : layouts) {
 
-                if (l.menuBackground != null) {
-                    layout.menuBackground = l.menuBackground;
+                if (!layout.menuBackgrounds.isEmpty()) {
+                    stacked.menuBackgrounds.addAll(layout.menuBackgrounds);
                 }
-                if (l.preserveBackgroundAspectRatio) {
-                    layout.preserveBackgroundAspectRatio = true;
+                if (layout.preserveBackgroundAspectRatio) {
+                    stacked.preserveBackgroundAspectRatio = true;
                 }
-                if (l.openAudio != null) {
-                    layout.openAudio = l.openAudio;
+                if (layout.openAudio != null) {
+                    stacked.openAudio = layout.openAudio;
                 }
-                if (l.closeAudio != null) {
-                    layout.closeAudio = l.closeAudio;
+                if (layout.closeAudio != null) {
+                    stacked.closeAudio = layout.closeAudio;
                 }
-                if (l.forcedScale != 0) {
-                    layout.forcedScale = l.forcedScale;
+                if (layout.forcedScale != 0) {
+                    stacked.forcedScale = layout.forcedScale;
                 }
-                if (l.autoScalingWidth != 0) {
-                    layout.autoScalingWidth = l.autoScalingWidth;
+                if (layout.autoScalingWidth != 0) {
+                    stacked.autoScalingWidth = layout.autoScalingWidth;
                 }
-                if (l.autoScalingHeight != 0) {
-                    layout.autoScalingHeight = l.autoScalingHeight;
+                if (layout.autoScalingHeight != 0) {
+                    stacked.autoScalingHeight = layout.autoScalingHeight;
                 }
-                if (l.customMenuTitle != null) {
-                    layout.customMenuTitle = l.customMenuTitle;
+                if (layout.customMenuTitle != null) {
+                    stacked.customMenuTitle = layout.customMenuTitle;
                 }
-                if (l.scrollListHeaderTexture != null) {
-                    layout.scrollListHeaderTexture = l.scrollListHeaderTexture;
+                if (layout.scrollListHeaderTexture != null) {
+                    stacked.scrollListHeaderTexture = layout.scrollListHeaderTexture;
                 }
-                if (l.scrollListFooterTexture != null) {
-                    layout.scrollListFooterTexture = l.scrollListFooterTexture;
+                if (layout.scrollListFooterTexture != null) {
+                    stacked.scrollListFooterTexture = layout.scrollListFooterTexture;
                 }
-                if (!l.renderScrollListHeaderShadow) {
-                    layout.renderScrollListHeaderShadow = false;
+                if (!layout.renderScrollListHeaderShadow) {
+                    stacked.renderScrollListHeaderShadow = false;
                 }
-                if (!l.renderScrollListFooterShadow) {
-                    layout.renderScrollListFooterShadow = false;
+                if (!layout.renderScrollListFooterShadow) {
+                    stacked.renderScrollListFooterShadow = false;
                 }
-                if (!l.preserveScrollListHeaderFooterAspectRatio) {
-                    layout.preserveScrollListHeaderFooterAspectRatio = false;
+                if (!layout.preserveScrollListHeaderFooterAspectRatio) {
+                    stacked.preserveScrollListHeaderFooterAspectRatio = false;
                 }
-                if (l.repeatScrollListHeaderTexture) {
-                    layout.repeatScrollListHeaderTexture = true;
+                if (layout.repeatScrollListHeaderTexture) {
+                    stacked.repeatScrollListHeaderTexture = true;
                 }
-                if (l.repeatScrollListFooterTexture) {
-                    layout.repeatScrollListFooterTexture = true;
+                if (layout.repeatScrollListFooterTexture) {
+                    stacked.repeatScrollListFooterTexture = true;
                 }
-                if (l.showScrollListHeaderFooterPreviewInEditor) {
-                    layout.showScrollListHeaderFooterPreviewInEditor = true;
+                if (layout.showScrollListHeaderFooterPreviewInEditor) {
+                    stacked.showScrollListHeaderFooterPreviewInEditor = true;
                 }
-                if (l.showScreenBackgroundOverlayOnCustomBackground) {
-                    layout.showScreenBackgroundOverlayOnCustomBackground = true;
+                if (layout.showScreenBackgroundOverlayOnCustomBackground) {
+                    stacked.showScreenBackgroundOverlayOnCustomBackground = true;
                 }
-                //TODO übernehmen
-                if (l.applyVanillaBackgroundBlur) {
-                    layout.applyVanillaBackgroundBlur = true;
+                if (layout.applyVanillaBackgroundBlur) {
+                    stacked.applyVanillaBackgroundBlur = true;
                 }
 
             }
         }
-        return layout;
+        return stacked;
     }
 
     protected static SerializedElement convertContainerToSerializedElement(PropertyContainer sec) {

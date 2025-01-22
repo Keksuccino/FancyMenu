@@ -55,6 +55,7 @@ public class ImageMenuBackgroundBuilder extends MenuBackgroundBuilder<ImageMenuB
 
         b.parallaxEnabled = SerializationUtils.deserializeBoolean(b.parallaxEnabled, serializedMenuBackground.getValue("parallax"));
         b.parallaxIntensity = SerializationUtils.deserializeNumber(Float.class, b.parallaxIntensity, serializedMenuBackground.getValue("parallax_intensity"));
+        b.invertParallax = SerializationUtils.deserializeBoolean(b.invertParallax, serializedMenuBackground.getValue("invert_parallax"));
 
         return b;
 
@@ -79,6 +80,7 @@ public class ImageMenuBackgroundBuilder extends MenuBackgroundBuilder<ImageMenuB
 
         serialized.putProperty("parallax", "" + background.parallaxEnabled);
         serialized.putProperty("parallax_intensity", "" + background.parallaxIntensity);
+        serialized.putProperty("invert_parallax", "" + background.invertParallax);
 
         return serialized;
 

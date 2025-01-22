@@ -16,7 +16,6 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.internal.Loading
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
-import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
@@ -119,11 +118,33 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public LoadingRequirementContainer loadingRequirementContainer = new LoadingRequirementContainer();
 	@Nullable
 	public String customElementLayerName = null;
+	/**
+	 * Controls whether the element should enable parallax movement in response to mouse position.
+	 * When true, the element will move slightly opposite to mouse movement (or with it if invertParallax is true)
+	 * to create a depth effect.
+	 */
+	public boolean enableParallax = false;
+	/**
+	 * Controls the direction of parallax movement.
+	 * When false (default), elements move opposite to mouse movement.
+	 * When true, elements move with mouse movement.
+	 */
+	public boolean invertParallax = false;
+	/**
+	 * Controls the intensity of the parallax effect.
+	 * Range is 0.0 to 1.0 where:
+	 * - 0.0 means no movement
+	 * - 1.0 means maximum movement
+	 * Default is 0.5 for medium intensity.
+	 */
+	public float parallaxIntensity = 0.5f;
 	private String instanceIdentifier;
 	@Nullable
 	protected Layout parentLayout;
 	@Nullable
 	protected RuntimePropertyContainer cachedMemory;
+	protected int cachedMouseX = 0;
+	protected int cachedMouseY = 0;
 
 	@SuppressWarnings("all")
 	public AbstractElement(@NotNull ElementBuilder<?,?> builder) {
@@ -155,6 +176,9 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 * The normal element rendering logic should be in {@link AbstractElement#render(GuiGraphics, int, int, float)}.
 	 */
 	public void renderInternal(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+		this.cachedMouseX = mouseX;
+		this.cachedMouseY = mouseY;
 
 		this.tickBaseOpacity();
 
@@ -463,9 +487,9 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		if (this.anchorPoint != null) {
 			x = this.anchorPoint.getElementPositionX(this);
 		}
+
 		if (this.advancedX != null) {
 			long now = System.currentTimeMillis();
-			//Cache advancedX for 30ms to save performance (thanks to danorris for the idea!)
 			if (((this.lastAdvancedXParse + 30) > now) && (this.cachedAdvancedX != null)) {
 				x = this.cachedAdvancedX;
 			} else {
@@ -477,9 +501,23 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 				}
 			}
 		}
+
+		boolean applyParallax = this.enableParallax && !isEditor();
+
+		// Apply parallax effect if enabled and not in editor
+		if (applyParallax) {
+			// Calculate parallax offset using cached mouse position
+			float centerX = getScreenWidth() / 2f;
+			float offsetX = this.cachedMouseX - centerX;
+			float parallaxOffset = offsetX * parallaxIntensity * 0.1f; // Scale factor to control maximum movement
+
+			// Apply offset based on direction
+			x += (int) (invertParallax ? parallaxOffset : -parallaxOffset);
+		}
+
 		if (this.stretchX) {
 			x = 0;
-		} else if (this.stayOnScreen && !this.stickyAnchor) {
+		} else if (this.stayOnScreen && !this.stickyAnchor && !applyParallax) {
 			if (x < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
 				x = STAY_ON_SCREEN_EDGE_ZONE_SIZE;
 			}
@@ -498,9 +536,9 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		if (this.anchorPoint != null) {
 			y = this.anchorPoint.getElementPositionY(this);
 		}
+
 		if (this.advancedY != null) {
 			long now = System.currentTimeMillis();
-			//Cache advancedY for 30ms to save performance (thanks to danorris for the idea!)
 			if (((this.lastAdvancedYParse + 30) > now) && (this.cachedAdvancedY != null)) {
 				y = this.cachedAdvancedY;
 			} else {
@@ -512,9 +550,23 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 				}
 			}
 		}
+
+		boolean applyParallax = this.enableParallax && !isEditor();
+
+		// Apply parallax effect if enabled and not in editor
+		if (applyParallax) {
+			// Calculate parallax offset using cached mouse position
+			float centerY = getScreenHeight() / 2f;
+			float offsetY = this.cachedMouseY - centerY;
+			float parallaxOffset = offsetY * parallaxIntensity * 0.1f; // Scale factor to control maximum movement
+
+			// Apply offset based on direction
+			y += (int) (invertParallax ? parallaxOffset : -parallaxOffset);
+		}
+
 		if (this.stretchY) {
 			y = 0;
-		} else if (this.stayOnScreen && !this.stickyAnchor) {
+		} else if (this.stayOnScreen && !this.stickyAnchor && !applyParallax) {
 			if (y < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
 				y = STAY_ON_SCREEN_EDGE_ZONE_SIZE;
 			}
@@ -667,7 +719,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		return this.visible;
 	}
 
-	protected boolean loadingRequirementsMet() {
+	public boolean loadingRequirementsMet() {
 		if (isEditor()) return true;
 		return this.loadingRequirementContainer.requirementsMet();
 	}

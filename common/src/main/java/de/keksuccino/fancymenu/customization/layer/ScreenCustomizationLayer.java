@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.events.widget.RenderedGuiListHeaderFooterEvent;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
@@ -19,7 +20,6 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventPriority;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.events.screen.*;
-import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
@@ -48,7 +48,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -128,7 +127,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		this.allElements.forEach(AbstractElement::onOpenScreen);
 
-		if (this.layoutBase.menuBackground != null) this.layoutBase.menuBackground.onOpenScreen();
+		this.layoutBase.menuBackgrounds.forEach(MenuBackground::onOpenScreen);
 
 	}
 
@@ -143,7 +142,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			element.onDestroyElement();
 		});
 
-		if (this.layoutBase.menuBackground != null) this.layoutBase.menuBackground.onCloseScreen();
+		this.layoutBase.menuBackgrounds.forEach(MenuBackground::onCloseScreen);
 
 		if (this.layoutBase.closeAudio != null) {
 			IAudio audio = this.layoutBase.closeAudio.get();
@@ -177,7 +176,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		});
 
 		if (e.getInitializationPhase() == InitOrResizeScreenEvent.InitializationPhase.RESIZE) {
-			if (this.layoutBase.menuBackground != null) this.layoutBase.menuBackground.onBeforeResizeScreen();
+			this.layoutBase.menuBackgrounds.forEach(MenuBackground::onBeforeResizeScreen);
 		}
 
 		List<Layout> rawLayouts = LayoutHandler.getEnabledLayoutsForScreenIdentifier(this.getScreenIdentifier(), true);
@@ -235,8 +234,11 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		this.activeLayouts = new ArrayList<>(normalLayouts);
 		this.randomLayoutGroups.values().forEach((container) -> this.activeLayouts.add(container.getRandomLayout()));
 
+		//Sort layouts by its index, so the layout with the smallest index is first in the list
+		this.activeLayouts.sort(Comparator.comparingInt(l -> l.layoutIndex));
+
 		//Stack active layouts
-		this.layoutBase = LayoutBase.stackLayoutBases(activeLayouts.toArray(new LayoutBase[]{}));
+		this.layoutBase = LayoutBase.stackLayoutBases(this.activeLayouts.toArray(new LayoutBase[]{}));
 
 		Window window = Minecraft.getInstance().getWindow();
 
@@ -289,7 +291,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			}
 		}
 
-		//TODO übernehmen
 		this.cachedScreenWidgetMetas = ScreenWidgetDiscoverer.getWidgetsOfScreen(e.getScreen());
 
 		this.constructElementInstances(this.getScreenIdentifier(), this.cachedScreenWidgetMetas, this.activeLayouts, this.normalElements, this.vanillaWidgetElements, this.deepElements);
@@ -299,11 +300,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		this.allElements.addAll(this.vanillaWidgetElements);
 
 		for (AbstractElement ae : this.allElements) {
-			//TODO übernehmen
-//			//Handle appearance delay
-//			if (ScreenCustomization.isNewMenu()) {
-//				this.handleAppearanceDelayFor(ae);
-//			}
 			//Add widgets of element to screen
 			List<GuiEventListener> widgetsToRegister = ae.getWidgetsToRegister();
 			if (widgetsToRegister != null) {
@@ -311,7 +307,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 				widgetsToRegister = Lists.reverse(widgetsToRegister);
 				for (GuiEventListener w : widgetsToRegister) {
 					if ((w instanceof NarratableEntry) && !((IMixinScreen)e.getScreen()).getChildrenFancyMenu().contains(w)) {
-						((IMixinScreen)e.getScreen()).getChildrenFancyMenu().add(0, w);
+						((IMixinScreen)e.getScreen()).getChildrenFancyMenu().addFirst(w);
 						if (e.getScreen() instanceof CustomizableScreen c) c.removeOnInitChildrenFancyMenu().add(w);
 					}
 				}
@@ -324,75 +320,21 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		//Add all elements to the screen's widget list
 		for (AbstractElement ae : Lists.reverse(this.allElements)) {
-			((IMixinScreen)e.getScreen()).getChildrenFancyMenu().add(0, ae);
+			((IMixinScreen)e.getScreen()).getChildrenFancyMenu().addFirst(ae);
 			if (e.getScreen() instanceof CustomizableScreen c) c.removeOnInitChildrenFancyMenu().add(ae);
 		}
 
 		//Add menu background to screen's widget list
-		if (this.layoutBase.menuBackground != null) {
-			((IMixinScreen)e.getScreen()).getChildrenFancyMenu().add(0, this.layoutBase.menuBackground);
-			if (e.getScreen() instanceof CustomizableScreen c) c.removeOnInitChildrenFancyMenu().add(this.layoutBase.menuBackground);
-		}
+		this.layoutBase.menuBackgrounds.forEach(menuBackground -> {
+			((IMixinScreen)e.getScreen()).getChildrenFancyMenu().addFirst(menuBackground);
+			if (e.getScreen() instanceof CustomizableScreen c) c.removeOnInitChildrenFancyMenu().add(menuBackground);
+		});
 
 		if (e.getInitializationPhase() == InitOrResizeScreenEvent.InitializationPhase.RESIZE) {
-			if (this.layoutBase.menuBackground != null) this.layoutBase.menuBackground.onAfterResizeScreen();
+			this.layoutBase.menuBackgrounds.forEach(MenuBackground::onAfterResizeScreen);
 		}
 
 	}
-
-	//TODO übernehmen
-//	@SuppressWarnings("all")
-//	protected void handleAppearanceDelayFor(AbstractElement element) {
-//		if ((element.appearanceDelay != null) && (element.appearanceDelay != AbstractElement.AppearanceDelay.NO_DELAY)) {
-//			if ((element.appearanceDelay == AbstractElement.AppearanceDelay.FIRST_TIME) && delayAppearanceFirstTime.contains(element.getInstanceIdentifier())) {
-//				return;
-//			}
-//			if (element.appearanceDelay == AbstractElement.AppearanceDelay.FIRST_TIME) {
-//				if (!this.delayAppearanceFirstTime.contains(element.getInstanceIdentifier())) {
-//					delayAppearanceFirstTime.add(element.getInstanceIdentifier());
-//				}
-//			}
-//			element.visible = false;
-//			if (element.fadeIn) {
-//				element.opacity = 0.1F;
-//			}
-//			ThreadCaller c = new ThreadCaller();
-//			this.delayThreads.add(c);
-//			new Thread(() -> {
-//				long start = System.currentTimeMillis();
-//				float delay = (float) (1000.0 * element.appearanceDelayInSeconds);
-//				boolean fade = false;
-//				while (c.running.get()) {
-//					try {
-//						long now = System.currentTimeMillis();
-//						if (!fade) {
-//							if (now >= start + (int)delay) {
-//								element.visible = true;
-//								if (!element.fadeIn) {
-//									return;
-//								} else {
-//									fade = true;
-//								}
-//							}
-//						} else {
-//							float o = element.opacity + (0.03F * element.fadeInSpeed);
-//							if (o > 1.0F) {
-//								o = 1.0F;
-//							}
-//							if (element.opacity < 1.0F) {
-//								element.opacity = o;
-//							} else {
-//								return;
-//							}
-//						}
-//						Thread.sleep(50);
-//					} catch (Exception e) {
-//						e.printStackTrace();
-//					}
-//				}
-//			}).start();
-//		}
-//	}
 
 	@EventListener
 	public void onScreenTickPre(ScreenTickEvent.Post e) {
@@ -400,7 +342,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		if (PopupHandler.isPopupActive()) return;
 		if (!this.shouldCustomize(e.getScreen())) return;
 
-		if (this.layoutBase.menuBackground != null) this.layoutBase.menuBackground.tick();
+		this.layoutBase.menuBackgrounds.forEach(MenuBackground::tick);
 
 		for (AbstractElement element : this.allElements) {
 			element.tick();
@@ -427,12 +369,10 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			ScreenTitleUtils.setScreenTitle(e.getScreen(), Component.literal(PlaceholderParser.replacePlaceholders(this.layoutBase.customMenuTitle)));
 		}
 
-		//TODO übernehmen
 		//Render vanilla button elements (render in pre, because Vanilla Widget elements don't actually render the widget, they just manage it, so it's important to call their render logic before everything else)
 		for (AbstractElement element : new ArrayList<>(this.vanillaWidgetElements)) {
 			element.renderInternal(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 		}
-		//-----------------------------------
 
 	}
 
@@ -445,23 +385,15 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		//Render background elements in foreground if it wasn't possible to render to the menu background
 		if (!this.backgroundDrawable) {
 			for (AbstractElement element : new ArrayList<>(this.normalElements.backgroundElements)) {
-				//TODO übernehmen
 				element.renderInternal(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 			}
 		}
-		//TODO übernehmen
-//		//Render vanilla button elements
-//		for (AbstractElement element : new ArrayList<>(this.vanillaWidgetElements)) {
-//			element.render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
-//		}
 		//Render deep elements
 		for (AbstractElement element : new ArrayList<>(this.deepElements)) {
-			//TODO übernehmen
 			element.renderInternal(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 		}
 		//Render foreground elements
 		for (AbstractElement element : new ArrayList<>(this.normalElements.foregroundElements)) {
-			//TODO übernehmen
 			element.renderInternal(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 		}
 
@@ -575,12 +507,14 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		if (!this.shouldCustomize(screen)) return;
 
-		if (this.layoutBase.menuBackground != null) {
+		this.layoutBase.menuBackgrounds.forEach(menuBackground -> {
 
-			this.layoutBase.menuBackground.keepBackgroundAspectRatio = this.layoutBase.preserveBackgroundAspectRatio;
-			this.layoutBase.menuBackground.opacity = this.backgroundOpacity;
-			this.layoutBase.menuBackground.render(graphics, mouseX, mouseY, partial);
-			this.layoutBase.menuBackground.opacity = 1.0F;
+			RenderSystem.enableBlend();
+
+			menuBackground.keepBackgroundAspectRatio = this.layoutBase.preserveBackgroundAspectRatio;
+			menuBackground.opacity = this.backgroundOpacity;
+			menuBackground.render(graphics, mouseX, mouseY, partial);
+			menuBackground.opacity = 1.0F;
 
 			//Restore render defaults
 			RenderSystem.colorMask(true, true, true, true);
@@ -589,6 +523,10 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			RenderSystem.enableDepthTest();
 			RenderSystem.enableBlend();
 			graphics.flush();
+
+		});
+
+		if (!this.layoutBase.menuBackgrounds.isEmpty()) {
 
 			if (this.layoutBase.applyVanillaBackgroundBlur) {
 				Minecraft.getInstance().gameRenderer.processBlurEffect();
@@ -701,11 +639,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 								return layout;
 							}
 						}
-					} else {
-						//TODO übernehmen
-//						AnimationHandler.resetAnimations();
-//						AnimationHandler.resetAnimationSounds();
-//						AnimationHandler.stopAnimationSounds();
 					}
 				}
 				int i = MathUtils.getRandomNumberInRange(0, this.layouts.size()-1);

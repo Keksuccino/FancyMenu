@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.element.elements;
 
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
+import de.keksuccino.fancymenu.customization.element.elements.animationcontroller.AnimationControllerElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.audio.AudioElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.browser.BrowserElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElementBuilder;
@@ -42,6 +43,7 @@ public class Elements {
     public static final DraggerElementBuilder DRAGGER = new DraggerElementBuilder();
     public static final BrowserElementBuilder BROWSER = new BrowserElementBuilder();
     public static final ItemElementBuilder ITEM = new ItemElementBuilder();
+    public static final AnimationControllerElementBuilder ANIMATION_CONTROLLER = new AnimationControllerElementBuilder();
 
     public static void registerAll() {
 
@@ -64,6 +66,7 @@ public class Elements {
         ElementRegistry.register(DRAGGER);
         ElementRegistry.register(BROWSER);
         ElementRegistry.register(ITEM);
+        ElementRegistry.register(ANIMATION_CONTROLLER);
 
     }
 

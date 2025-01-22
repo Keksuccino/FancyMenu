@@ -25,6 +25,8 @@ public class ImageMenuBackground extends MenuBackground {
     public boolean parallaxEnabled = true;
     /** Value between 0.0 and 1.0, where 0.0 is no movement and 1.0 is maximum movement **/
     public float parallaxIntensity = 0.02F;
+    /** When TRUE, the parallax effect will move in the SAME direction as the mouse, otherwise it moves in the opposite direction **/
+    public boolean invertParallax = false;
 
     protected double slidePos = 0.0D;
     protected boolean slideMoveBack = false;
@@ -37,10 +39,7 @@ public class ImageMenuBackground extends MenuBackground {
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-
         RenderSystem.enableBlend();
-
-        graphics.fill(RenderType.gui(), 0, 0, getScreenWidth(), getScreenHeight(), BACKGROUND_COLOR.getColorIntWithAlpha(this.opacity));
 
         ResourceLocation resourceLocation = null;
         ITexture tex = null;
@@ -63,7 +62,6 @@ public class ImageMenuBackground extends MenuBackground {
         }
 
         if (resourceLocation != null) {
-            // Calculate parallax offsets if enabled
             float[] parallaxOffset = calculateParallaxOffset(mouseX, mouseY);
             if (this.repeat) {
                 renderRepeatBackground(graphics, resourceLocation, tex, parallaxOffset);
@@ -75,34 +73,36 @@ public class ImageMenuBackground extends MenuBackground {
                 renderFullScreen(graphics, resourceLocation, parallaxOffset);
             }
         }
-
     }
 
     protected float[] calculateParallaxOffset(int mouseX, int mouseY) {
-
         if (!parallaxEnabled) {
             return new float[]{0, 0};
         }
 
-        float mouseXPercent = (float)mouseX / getScreenWidth();
-        float mouseYPercent = (float)mouseY / getScreenHeight();
+        // Calculate mouse position as a percentage from the center of the screen
+        float mouseXPercent = (2.0f * mouseX / getScreenWidth()) - 1.0f;
+        float mouseYPercent = (2.0f * mouseY / getScreenHeight()) - 1.0f;
 
-        float xOffset = -parallaxIntensity * mouseXPercent * getScreenWidth();
-        float yOffset = -parallaxIntensity * mouseYPercent * getScreenHeight();
+        // Apply inversion if enabled
+        float directionMultiplier = invertParallax ? 1.0f : -1.0f;
+
+        // Calculate offset based on screen dimensions and center-adjusted mouse position
+        float xOffset = directionMultiplier * parallaxIntensity * mouseXPercent * getScreenWidth() * 0.5f;
+        float yOffset = directionMultiplier * parallaxIntensity * mouseYPercent * getScreenHeight() * 0.5f;
 
         return new float[]{xOffset, yOffset};
-
     }
 
     protected void renderRepeatBackground(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation, ITexture tex, float[] parallaxOffset) {
         if (parallaxEnabled) {
-            // For parallax with repeat, we'll create a slightly larger area and offset it
-            int expandedWidth = (int)(getScreenWidth() * (1 + parallaxIntensity * 2));
-            int expandedHeight = (int)(getScreenHeight() * (1 + parallaxIntensity * 2));
+            // Create expanded area for parallax movement
+            int expandedWidth = (int)(getScreenWidth() * (1.0F + parallaxIntensity));
+            int expandedHeight = (int)(getScreenHeight() * (1.0F + parallaxIntensity));
 
-            // Center the expanded area
-            int baseX = (int)((expandedWidth - getScreenWidth()) / -2.0f + parallaxOffset[0]);
-            int baseY = (int)((expandedHeight - getScreenHeight()) / -2.0f + parallaxOffset[1]);
+            // Center the expanded area and apply parallax offset
+            int baseX = -((expandedWidth - getScreenWidth()) / 2) + (int)parallaxOffset[0];
+            int baseY = -((expandedHeight - getScreenHeight()) / 2) + (int)parallaxOffset[1];
 
             RenderingUtils.blitRepeat(graphics, resourceLocation, baseX, baseY,
                     expandedWidth, expandedHeight,
@@ -135,36 +135,34 @@ public class ImageMenuBackground extends MenuBackground {
     }
 
     protected void renderKeepAspectRatio(@NotNull GuiGraphics graphics, @NotNull AspectRatio ratio, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset) {
-
-        // Calculate base size with extra space for parallax movement
-        float parallaxScale = parallaxEnabled ? (1 + parallaxIntensity * 2) : 1;
+        // Calculate base size with reduced parallax expansion
+        float parallaxScale = parallaxEnabled ? (1.0F + parallaxIntensity) : 1.0F;
         int[] baseSize = ratio.getAspectRatioSizeByMinimumSize(
                 (int)(getScreenWidth() * parallaxScale),
                 (int)(getScreenHeight() * parallaxScale)
         );
 
-        // Calculate centered position
-        int x = -((baseSize[0] - getScreenWidth()) / 2);
-        int y = -((baseSize[1] - getScreenHeight()) / 2);
-
-        // Apply parallax offset
-        x += (int)parallaxOffset[0];
-        y += (int)parallaxOffset[1];
+        // Calculate centered position with adjusted parallax offset
+        int x = (getScreenWidth() - baseSize[0]) / 2 + (int)parallaxOffset[0];
+        int y = (getScreenHeight() - baseSize[1]) / 2 + (int)parallaxOffset[1];
 
         graphics.blit(RenderType::guiTextured, resourceLocation,
                 x, y, 0.0F, 0.0F,
                 baseSize[0], baseSize[1],
                 baseSize[0], baseSize[1],
                 ARGB.white(this.opacity));
-
     }
 
     protected void renderFullScreen(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset) {
         if (parallaxEnabled) {
-            int expandedWidth = (int)(getScreenWidth() * (1 + parallaxIntensity * 2));
-            int expandedHeight = (int)(getScreenHeight() * (1 + parallaxIntensity * 2));
-            int x = (int)((expandedWidth - getScreenWidth()) / -2.0f + parallaxOffset[0]);
-            int y = (int)((expandedHeight - getScreenHeight()) / -2.0f + parallaxOffset[1]);
+            // Reduce the expansion amount for parallax
+            int expandedWidth = (int)(getScreenWidth() * (1.0F + parallaxIntensity));
+            int expandedHeight = (int)(getScreenHeight() * (1.0F + parallaxIntensity));
+
+            // Center the expanded area and apply parallax offset
+            int x = -((expandedWidth - getScreenWidth()) / 2) + (int)parallaxOffset[0];
+            int y = -((expandedHeight - getScreenHeight()) / 2) + (int)parallaxOffset[1];
+
             graphics.blit(RenderType::guiTextured, resourceLocation,
                     x, y, 0.0F, 0.0F,
                     expandedWidth, expandedHeight,
@@ -214,5 +212,4 @@ public class ImageMenuBackground extends MenuBackground {
             }
         }
     }
-
 }

@@ -237,6 +237,10 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                 element.loadingRequirementContainer = LoadingRequirementContainer.deserializeToSingleContainer(serialized);
             }
 
+            element.enableParallax = SerializationUtils.deserializeBoolean(element.enableParallax, serialized.getValue("enable_parallax"));
+            element.parallaxIntensity = SerializationUtils.deserializeNumber(Float.class, element.parallaxIntensity, serialized.getValue("parallax_intensity"));
+            element.invertParallax = SerializationUtils.deserializeBoolean(element.invertParallax, serialized.getValue("invert_parallax"));
+
             element.afterConstruction();
 
             return element;
@@ -353,6 +357,10 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
             sec.putProperty("element_loading_requirement_container_identifier", element.loadingRequirementContainer.identifier);
             element.loadingRequirementContainer.serializeToExistingPropertyContainer(sec);
+
+            sec.putProperty("enable_parallax", "" + element.enableParallax);
+            sec.putProperty("parallax_intensity", "" + element.parallaxIntensity);
+            sec.putProperty("invert_parallax", "" + element.invertParallax);
 
             return sec;
 

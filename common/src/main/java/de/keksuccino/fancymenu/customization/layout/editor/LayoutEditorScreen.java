@@ -5,6 +5,7 @@ import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
@@ -213,7 +214,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			e.element.tick();
 		}
 
-		if (this.layout.menuBackground != null) this.layout.menuBackground.tick();
+		this.layout.menuBackgrounds.forEach(MenuBackground::tick);
 
 	}
 
@@ -225,7 +226,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			e.element.onCloseScreen();
 		}
 
-		if (this.layout.menuBackground != null) this.layout.menuBackground.onCloseScreen();
+		this.layout.menuBackgrounds.forEach(MenuBackground::onCloseScreen);
 
 	}
 
@@ -236,7 +237,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			e.element.onOpenScreen();
 		}
 
-		if (this.layout.menuBackground != null) this.layout.menuBackground.onOpenScreen();
+		this.layout.menuBackgrounds.forEach(MenuBackground::onOpenScreen);
 
 	}
 
@@ -320,11 +321,15 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	@Override
 	public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-		if (this.layout.menuBackground != null) {
+		graphics.fill(RenderType.guiOverlay(), 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
 
-			this.layout.menuBackground.keepBackgroundAspectRatio = this.layout.preserveBackgroundAspectRatio;
-			this.layout.menuBackground.opacity = 1.0F;
-			this.layout.menuBackground.render(graphics, mouseX, mouseY, partial);
+		this.layout.menuBackgrounds.forEach(menuBackground -> {
+
+			RenderSystem.enableBlend();
+
+			menuBackground.keepBackgroundAspectRatio = this.layout.preserveBackgroundAspectRatio;
+			menuBackground.opacity = 1.0F;
+			menuBackground.render(graphics, mouseX, mouseY, partial);
 
 			//Restore render defaults
 			RenderSystem.colorMask(true, true, true, true);
@@ -333,6 +338,10 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			RenderSystem.enableDepthTest();
 			RenderSystem.enableBlend();
 			graphics.flush();
+
+		});
+
+		if (!this.layout.menuBackgrounds.isEmpty()) {
 
 			if (this.layout.applyVanillaBackgroundBlur) {
 				Minecraft.getInstance().gameRenderer.processBlurEffect();
@@ -343,8 +352,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				ScreenCustomizationLayer.renderBackgroundOverlay(graphics, 0, 0, this.width, this.height);
 			}
 
-		} else {
-			graphics.fill(RenderType.guiOverlay(), 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
 		}
 
 		this.renderScrollListHeaderFooterPreview(graphics, mouseX, mouseY, partial);
@@ -1180,6 +1187,10 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		if (super.keyPressed(keycode, scancode, modifiers)) return true;
 
+		for (AbstractEditorElement abstractEditorElement : this.getAllElements()) {
+			if (abstractEditorElement.keyPressed(keycode, scancode, modifiers)) return true;
+		}
+
 		String key = GLFW.glfwGetKeyName(keycode, scancode);
 		if (key == null) key = "";
 
@@ -1269,6 +1280,10 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public boolean keyReleased(int keycode, int scancode, int modifiers) {
 
 		this.anchorPointOverlay.keyReleased(keycode, scancode, modifiers);
+
+		for (AbstractEditorElement abstractEditorElement : this.getAllElements()) {
+			if (abstractEditorElement.keyReleased(keycode, scancode, modifiers)) return true;
+		}
 
 		return super.keyReleased(keycode, scancode, modifiers);
 

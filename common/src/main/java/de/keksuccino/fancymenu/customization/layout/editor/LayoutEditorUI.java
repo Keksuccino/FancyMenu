@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.layout.editor;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.background.ChooseMenuBackgroundScreen;
+import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
@@ -413,10 +414,14 @@ public class LayoutEditorUI {
 		menu.addSeparatorEntry("separator_after_universal_layout_menu");
 
 		menu.addClickableEntry("menu_background_settings", Component.translatable("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground"), (menu1, entry) -> {
-					ChooseMenuBackgroundScreen s = new ChooseMenuBackgroundScreen(editor.layout.menuBackground, true, (call) -> {
+					ChooseMenuBackgroundScreen s = new ChooseMenuBackgroundScreen(editor.layout.menuBackgrounds.isEmpty() ? null : editor.layout.menuBackgrounds.getFirst(), true, (call) -> {
 						if (call != null) {
 							editor.history.saveSnapshot();
-							editor.layout.menuBackground = (call != ChooseMenuBackgroundScreen.NO_BACKGROUND) ? call : null;
+							MenuBackground b = (call != ChooseMenuBackgroundScreen.NO_BACKGROUND) ? call : null;
+							editor.layout.menuBackgrounds.clear();
+							if (b != null) {
+								editor.layout.menuBackgrounds.add(b);
+							}
 						}
 						Minecraft.getInstance().setScreen(editor);
 					});
@@ -434,7 +439,6 @@ public class LayoutEditorUI {
 			editor.layout.showScreenBackgroundOverlayOnCustomBackground = cycle.getAsBoolean();
 		})).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.background.show_overlay_on_custom_background.desc")));
 
-		//TODO übernehmen
 		menu.addValueCycleEntry("apply_vanilla_background_blur", CommonCycles.cycleEnabledDisabled("fancymenu.editor.background.blur_background", editor.layout.applyVanillaBackgroundBlur).addCycleListener(cycle -> {
 			editor.history.saveSnapshot();
 			editor.layout.applyVanillaBackgroundBlur = cycle.getAsBoolean();

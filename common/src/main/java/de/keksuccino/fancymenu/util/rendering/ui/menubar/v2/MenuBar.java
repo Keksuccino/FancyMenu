@@ -23,6 +23,7 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
@@ -488,8 +489,13 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         } else {
             if (this.collapseOrExpandEntry.mouseClicked(scaledMouseX, scaledMouseY, button)) entryClick = true;
         }
-        if (this.isUserNavigatingInMenuBar()) return true;
-        if (entryClick) return true;
+        if (this.isUserNavigatingInMenuBar() || entryClick) {
+            Screen current = Minecraft.getInstance().screen;
+            if (current != null) {
+                current.clearFocus();
+            }
+            return true;
+        }
         return false;
     }
 

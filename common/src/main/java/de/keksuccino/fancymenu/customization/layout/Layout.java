@@ -161,8 +161,9 @@ public class Layout extends LayoutBase {
             set.putContainer(ps);
         }
 
-        if (this.menuBackground != null) {
-            SerializedMenuBackground serializedMenuBackground = this.menuBackground.builder.serializedBackgroundInternal(this.menuBackground);
+        //Normal layouts always have at max 1 background in the list, so we just get the first one from the list
+        if (!this.menuBackgrounds.isEmpty()) {
+            SerializedMenuBackground serializedMenuBackground = this.menuBackgrounds.getFirst().builder.serializedBackgroundInternal(this.menuBackgrounds.getFirst());
             if (serializedMenuBackground != null) {
                 set.putContainer(serializedMenuBackground);
             }
@@ -384,21 +385,20 @@ public class Layout extends LayoutBase {
             //Handle menu backgrounds
             List<PropertyContainer> menuBackgroundSections = serialized.getContainersOfType("menu_background");
             if (!menuBackgroundSections.isEmpty()) {
-                PropertyContainer menuBack = menuBackgroundSections.get(0);
+                PropertyContainer menuBack = menuBackgroundSections.getFirst();
                 String backgroundIdentifier = menuBack.getValue("background_type");
                 if (backgroundIdentifier != null) {
                     MenuBackgroundBuilder<?> builder = MenuBackgroundRegistry.getBuilder(backgroundIdentifier);
                     if (builder != null) {
-                        layout.menuBackground = builder.deserializeBackgroundInternal(convertSectionToBackground(menuBack));
+                        MenuBackground back = builder.deserializeBackgroundInternal(convertSectionToBackground(menuBack));
+                        if ((back != null) && layout.menuBackgrounds.isEmpty()) layout.menuBackgrounds.add(back);
                     }
                 }
             }
             //Convert legacy backgrounds
             if (layout.legacyLayout) {
                 MenuBackground legacyBackground = convertLegacyMenuBackground(serialized);
-                if (legacyBackground != null) {
-                    layout.menuBackground = legacyBackground;
-                }
+                if ((legacyBackground != null) && layout.menuBackgrounds.isEmpty()) layout.menuBackgrounds.add(legacyBackground);
             }
 
             //Handle Scroll List Customizations

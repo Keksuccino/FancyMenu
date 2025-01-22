@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -100,6 +101,13 @@ public class ImageMenuBackgroundConfigScreen extends CellScreen {
             s.setText("" + this.background.parallaxIntensity);
             Minecraft.getInstance().setScreen(s);
         }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.background.image.configure.parallax_intensity.desc"))), true);
+
+        WidgetCell invertParallaxCell = this.addCycleButtonCell(CommonCycles.cycleEnabledDisabled("fancymenu.background.image.configure.invert_parallax", this.background.invertParallax), true, (value, button) -> {
+            this.background.invertParallax = value.getAsBoolean();
+        });
+        if (invertParallaxCell.widget instanceof ExtendedButton b) {
+            b.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.background.image.configure.invert_parallax.desc")));
+        }
 
         this.addStartEndSpacerCell();
 

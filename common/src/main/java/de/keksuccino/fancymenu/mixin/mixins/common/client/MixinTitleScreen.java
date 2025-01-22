@@ -55,10 +55,6 @@ public abstract class MixinTitleScreen extends Screen {
             }
         });
 
-//        this.addRenderableWidget(Button.builder(Component.literal("Open Example Screen"), button -> {
-//            Minecraft.getInstance().setScreen(new ExampleScreen(Component.literal("Example Screen")));
-//        }).size(100, 20).pos(20, 20).build());
-
     }
 
     /**
@@ -68,7 +64,7 @@ public abstract class MixinTitleScreen extends Screen {
     private void wrap_renderPanorama_in_render_FancyMenu(TitleScreen instance, GuiGraphics graphics, float f, Operation<Void> original) {
         ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen(this);
         if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this)) {
-            if (l.layoutBase.menuBackground != null) {
+            if (!l.layoutBase.menuBackgrounds.isEmpty()) {
                 RenderSystem.enableBlend();
                 //Render a black background before the custom background gets rendered
                 graphics.fill(RenderType.guiOverlay(), 0, 0, this.width, this.height, 0);
@@ -80,15 +76,6 @@ public abstract class MixinTitleScreen extends Screen {
         }
         EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, graphics));
     }
-
-//    /**
-//     * @reason Makes FancyMenu not fire its {@link RenderedScreenBackgroundEvent} in {@link TitleScreen} when calling {@link Screen#render(GuiGraphics, int, int, float)}, because it would get fired too late.
-//     */
-//    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
-//    private boolean wrap_super_render_in_render_FancyMenu(Screen instance, GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-//        ((IMixinScreen)this).getRenderablesFancyMenu().forEach(renderable -> renderable.render(graphics, mouseX, mouseY, partial));
-//        return false;
-//    }
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/LogoRenderer;renderLogo(Lnet/minecraft/client/gui/GuiGraphics;IF)V"))
     private boolean cancelVanillaLogoRenderingFancyMenu(LogoRenderer instance, GuiGraphics $$0, int $$1, float $$2) {
