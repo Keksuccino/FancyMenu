@@ -4,13 +4,13 @@ import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 
 public class AnimationKeyframe {
 
-    public final long timestamp;
-    public final int posOffsetX;
-    public final int posOffsetY;
-    public final int baseWidth;
-    public final int baseHeight;
+    public long timestamp;
+    public int posOffsetX;
+    public int posOffsetY;
+    public int baseWidth;
+    public int baseHeight;
     public ElementAnchorPoint anchorPoint;
-    public final boolean stickyAnchor;
+    public boolean stickyAnchor;
 
     public AnimationKeyframe(long timestamp, int posOffsetX, int posOffsetY, int baseWidth, int baseHeight, ElementAnchorPoint anchorPoint, boolean stickyAnchor) {
         this.timestamp = timestamp;

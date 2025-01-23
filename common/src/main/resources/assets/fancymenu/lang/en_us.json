@@ -1491,13 +1491,10 @@
   "fancymenu.elements.animation_controller.manage_keyframes": "Manage Keyframes",
   "fancymenu.elements.animation_controller.manage_keyframes.desc": "Edit, add, or remove animation keyframes.",
   "fancymenu.elements.animation_controller.keyframe_manager": "Keyframe Manager",
-  "fancymenu.elements.animation_controller.keyframe_manager.add": "Add Keyframe",
-  "fancymenu.elements.animation_controller.keyframe_manager.edit": "Edit Keyframe",
-  "fancymenu.elements.animation_controller.keyframe_manager.remove": "Remove Keyframe",
-  "fancymenu.elements.animation_controller.keyframe_manager.edit_keyframe": "Edit Keyframe",
-  "fancymenu.elements.animation_controller.keyframe_manager.timestamp": "Set Timestamp",
-  "fancymenu.elements.animation_controller.keyframe_manager.position": "Set Position",
-  "fancymenu.elements.animation_controller.keyframe_manager.size": "Set Size",
-  "fancymenu.elements.animation_controller.keyframe_manager.anchor_point": "Set Anchor Point",
-  "fancymenu.elements.animation_controller.keyframe_manager.sticky": "Sticky Anchor: %s"
+  "fancymenu.elements.animation_controller.keyframe_manager.sticky": "Sticky Anchor: %s",
+  "fancymenu.elements.animation_controller.keyframe_manager.anchor_point_cycle": "Anchor Point: %s",
+  "fancymenu.elements.animation_controller.keyframe_manager.play": "Play",
+  "fancymenu.elements.animation_controller.keyframe_manager.pause": "Pause",
+  "fancymenu.elements.animation_controller.keyframe_manager.add_keyframe": "Add Keyframe",
+  "fancymenu.elements.animation_controller.keyframe_manager.delete_keyframe": "Delete Keyframe"
 }

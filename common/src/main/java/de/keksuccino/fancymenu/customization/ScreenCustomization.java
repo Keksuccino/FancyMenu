@@ -5,6 +5,7 @@ import java.util.*;
 import de.keksuccino.fancymenu.Compat;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.ElementMemories;
+import de.keksuccino.fancymenu.customization.element.elements.animationcontroller.AnimationControllerHandler;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.widgets.LayoutEditorWidgets;
 import de.keksuccino.fancymenu.customization.screen.dummyscreen.DummyScreens;
@@ -96,10 +97,6 @@ public class ScreenCustomization {
 		WidgetIdentificationContexts.registerAll();
 
 		DummyScreens.registerAll();
-
-		//TODO übernehmen
-//		AnimationHandler.init();
-//		AnimationHandler.discoverAndRegisterExternalAnimations();
 
 		PanoramaHandler.init();
 
@@ -271,16 +268,12 @@ public class ScreenCustomization {
 		FancyMenu.reloadOptions();
 		ResourceHandlers.reloadAll();
 		UIColorThemes.reloadThemes();
-		//TODO übernehmen
-//		AnimationHandler.resetAnimations();
-//		AnimationHandler.resetAnimationSounds();
-//		AnimationHandler.stopAnimationSounds();
 		LayoutHandler.reloadLayouts();
+		AnimationControllerHandler.stopAllAnimations();
 		EventHandler.INSTANCE.postEvent(new ModReloadEvent(Minecraft.getInstance().screen));
 		reInitCurrentScreen();
 	}
 
-	//TODO übernehmen
 	public static void reInitCurrentScreen() {
 		if (Minecraft.getInstance().screen != null) {
 			RenderingUtils.resetGuiScale();

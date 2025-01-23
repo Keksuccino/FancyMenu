@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
+import de.keksuccino.fancymenu.customization.element.elements.animationcontroller.AnimationControllerHandler;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.events.widget.RenderedGuiListHeaderFooterEvent;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
@@ -156,6 +157,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 	@EventListener
 	public void onInitOrResizeScreenPre(InitOrResizeScreenEvent.Pre e) {
+
+		AnimationControllerHandler.stopAllAnimations();
 
 		this.cachedTabNavigationBar = null;
 

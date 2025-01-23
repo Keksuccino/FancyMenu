@@ -83,10 +83,30 @@ public class AnimationControllerEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("separator_after_stop_recording");
 
+//        this.rightClickMenu.addClickableEntry("manage_keyframes",
+//                        Component.translatable("fancymenu.elements.animation_controller.manage_keyframes"),
+//                        (menu, entry) -> {
+//                            KeyframeManagerScreen managerScreen = new KeyframeManagerScreen(
+//                                    this.getElement(),
+//                                    keyframes -> {
+//                                        if (keyframes != null) {
+//                                            this.editor.history.saveSnapshot();
+//                                            this.getElement().keyframes = keyframes;
+//                                        }
+//                                        Minecraft.getInstance().setScreen(this.editor);
+//                                    }
+//                            );
+//                            Minecraft.getInstance().setScreen(managerScreen);
+//                        })
+//                .setTooltipSupplier((menu, entry) -> Tooltip.of(
+//                        Component.translatable("fancymenu.elements.animation_controller.manage_keyframes.desc")))
+//                .setIcon(ContextMenu.IconFactory.getIcon("list"))
+//                .setStackable(false);
+
         this.rightClickMenu.addClickableEntry("manage_keyframes",
                         Component.translatable("fancymenu.elements.animation_controller.manage_keyframes"),
                         (menu, entry) -> {
-                            KeyframeManagerScreen managerScreen = new KeyframeManagerScreen(
+                            KeyframeManagerScreenNew managerScreen = new KeyframeManagerScreenNew(
                                     this.getElement(),
                                     keyframes -> {
                                         if (keyframes != null) {

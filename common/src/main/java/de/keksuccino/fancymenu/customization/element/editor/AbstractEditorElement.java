@@ -96,6 +96,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	public long renderMovingNotAllowedTime = -1;
 	public boolean recentlyMovedByDragging = false;
 	public boolean recentlyLeftClickSelected = false;
+	public boolean recentlyResized = false;
 	public boolean movingCrumpleZonePassed = false;
 
 	private final List<AbstractEditorElement> cachedHoveredElementsOnRightClickMenuOpen = new ArrayList<>();
@@ -862,6 +863,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			this.activeResizeGrabber = null;
 			this.element.updateAutoSizing(true);
 			this.recentlyMovedByDragging = false;
+			this.recentlyResized = false;
 			this.movingCrumpleZonePassed = false;
 		}
 		return false;
@@ -898,6 +900,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			if (this.leftMouseDown && this.isGettingResized()) { // RESIZE ELEMENT
 				int diffX = (int)-(this.resizingStartPosX - mouseX);
 				int diffY = (int)-(this.resizingStartPosY - mouseY);
+				if ((diffX > 0) || (diffY > 0)) this.recentlyResized = true;
 				if ((this.activeResizeGrabber.type == ResizeGrabberType.LEFT) || (this.activeResizeGrabber.type == ResizeGrabberType.RIGHT)) {
 					int newWidth = (this.activeResizeGrabber.type == ResizeGrabberType.LEFT) ? (this.leftMouseDownBaseWidth - diffX) : (this.leftMouseDownBaseWidth + diffX);
 					if (newWidth >= 2) {
