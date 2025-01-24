@@ -1496,5 +1496,8 @@
   "fancymenu.elements.animation_controller.keyframe_manager.play": "Play",
   "fancymenu.elements.animation_controller.keyframe_manager.pause": "Pause",
   "fancymenu.elements.animation_controller.keyframe_manager.add_keyframe": "Add Keyframe",
-  "fancymenu.elements.animation_controller.keyframe_manager.delete_keyframe": "Delete Keyframe"
+  "fancymenu.elements.animation_controller.keyframe_manager.delete_keyframe": "Delete Keyframe",
+  "fancymenu.elements.animation_controller.keyframe_manager.start_recording": "Start Recording",
+  "fancymenu.elements.animation_controller.keyframe_manager.stop_recording": "Stop Recording",
+  "fancymenu.elements.animation_controller.keyframe_manager.keyframe_added": "Keyframe added!"
 }
