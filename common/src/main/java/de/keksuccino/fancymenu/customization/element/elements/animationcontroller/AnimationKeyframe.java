@@ -1,8 +1,10 @@
 package de.keksuccino.fancymenu.customization.element.elements.animationcontroller;
 
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
+import org.jetbrains.annotations.NotNull;
 
-public class AnimationKeyframe {
+public class AnimationKeyframe implements Cloneable {
 
     public long timestamp;
     public int posOffsetX;
@@ -11,6 +13,8 @@ public class AnimationKeyframe {
     public int baseHeight;
     public ElementAnchorPoint anchorPoint;
     public boolean stickyAnchor;
+    @NotNull
+    public String uniqueIdentifier = ScreenCustomization.generateUniqueIdentifier();
 
     public AnimationKeyframe(long timestamp, int posOffsetX, int posOffsetY, int baseWidth, int baseHeight, ElementAnchorPoint anchorPoint, boolean stickyAnchor) {
         this.timestamp = timestamp;
@@ -30,9 +34,19 @@ public class AnimationKeyframe {
                 ", posOffsetY=" + posOffsetY +
                 ", baseWidth=" + baseWidth +
                 ", baseHeight=" + baseHeight +
-                ", anchorPoint=" + anchorPoint +
+                ", anchorPoint=" + anchorPoint.getName() +
                 ", stickyAnchor=" + stickyAnchor +
+                ", uniqueIdentifier='" + uniqueIdentifier + '\'' +
                 '}';
+    }
+
+    @SuppressWarnings("all")
+    @NotNull
+    @Override
+    protected AnimationKeyframe clone() {
+        AnimationKeyframe clone = new AnimationKeyframe(this.timestamp, this.posOffsetX, this.posOffsetY, this.baseWidth, this.baseHeight, this.anchorPoint, this.stickyAnchor);
+        clone.uniqueIdentifier = this.uniqueIdentifier;
+        return clone;
     }
 
 }

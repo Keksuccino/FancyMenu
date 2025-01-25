@@ -1499,5 +1499,12 @@
   "fancymenu.elements.animation_controller.keyframe_manager.delete_keyframe": "Delete Keyframe",
   "fancymenu.elements.animation_controller.keyframe_manager.start_recording": "Start Recording",
   "fancymenu.elements.animation_controller.keyframe_manager.stop_recording": "Stop Recording",
-  "fancymenu.elements.animation_controller.keyframe_manager.keyframe_added": "Keyframe added!"
+  "fancymenu.elements.animation_controller.keyframe_manager.keyframe_added": "Keyframe added!",
+  "fancymenu.elements.animation_controller.keyframe_manager.keyframe_deleted": "Keyframe deleted!",
+  "fancymenu.elements.animation_controller.keyframe_manager.playing_started": "Now playing!",
+  "fancymenu.elements.animation_controller.keyframe_manager.playing_stopped": "Stopped playing!",
+  "fancymenu.elements.animation_controller.keyframe_manager.recording": "Recording",
+  "fancymenu.elements.animation_controller.keyframe_manager.recording_speed": "Recording Speed: %s",
+  "fancymenu.elements.animation_controller.keyframe_manager.recording_speed.manual_mode": "Progress Dragging Mode",
+  "fancymenu.elements.animation_controller.keyframe_manager.pause_recording_to_drag_progress": "Set the recording speed to 0% to manually move the progress bar!"
 }
