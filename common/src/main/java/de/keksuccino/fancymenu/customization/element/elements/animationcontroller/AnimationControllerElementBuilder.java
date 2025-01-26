@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.SerializationUtils;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -32,8 +33,6 @@ public class AnimationControllerElementBuilder extends ElementBuilder<AnimationC
         AnimationControllerElement element = new AnimationControllerElement(this);
         element.baseWidth = 100;
         element.baseHeight = 100;
-        element.isPaused = false;
-        element.pauseStartTime = -1;
         return element;
     }
 
@@ -65,6 +64,8 @@ public class AnimationControllerElementBuilder extends ElementBuilder<AnimationC
             }
         }
 
+        element.loop = SerializationUtils.deserializeBoolean(element.loop, serialized.getValue("loop"));
+
         return element;
 
     }
@@ -83,6 +84,8 @@ public class AnimationControllerElementBuilder extends ElementBuilder<AnimationC
             serializeTo.putProperty("keyframes", keyframesJson);
         }
 
+        serializeTo.putProperty("loop", "" + element.loop);
+
         return serializeTo;
 
     }
@@ -94,12 +97,12 @@ public class AnimationControllerElementBuilder extends ElementBuilder<AnimationC
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Component.translatable("fancymenu.editor.add.animation_controller");
+        return Component.translatable("fancymenu.elements.animation_controller");
     }
 
     @Override
     public @Nullable Component[] getDescription(@Nullable AbstractElement element) {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.editor.add.animation_controller.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.desc");
     }
 
 }

@@ -2,8 +2,10 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.WelcomeScreen;
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.element.elements.animationcontroller.AnimationControllerHandler;
+import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.*;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
@@ -42,6 +44,7 @@ public class MixinMinecraft {
 
 	@Unique private static boolean reloadListenerRegisteredFancyMenu = false;
 	@Unique private boolean lateClientInitDoneFancyMenu = false;
+	@Unique private Screen lastScreen_FancyMenu = null;
 
 	@Shadow @Nullable public Screen screen;
 
@@ -57,8 +60,6 @@ public class MixinMinecraft {
 	private void beforeGameTickFancyMenu(CallbackInfo info) {
 
 		if (MCEFUtil.isMCEFLoaded()) BrowserHandler.tick();
-
-		AnimationControllerHandler.tick();
 
 		for (Runnable r : MainThreadTaskExecutor.getAndClearQueue(MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK)) {
 			try {
@@ -107,6 +108,8 @@ public class MixinMinecraft {
 	@Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
 	private void headSetScreenFancyMenu(Screen screen, CallbackInfo info) {
 
+		this.lastScreen_FancyMenu = this.screen;
+
 		//Reset GUI scale in case some layout changed it
 		RenderingUtils.resetGuiScale();
 
@@ -122,6 +125,26 @@ public class MixinMinecraft {
 			info.cancel();
 			Minecraft.getInstance().setScreen(overrideWith);
 		}
+
+	}
+
+	@Inject(method = "setScreen", at = @At("RETURN"))
+	private void after_setScreen_FancyMenu(Screen screen, CallbackInfo info) {
+
+		boolean newScreenType = false;
+		if ((this.lastScreen_FancyMenu == null) && (this.screen != null)) {
+			newScreenType = true;
+		} else if ((this.lastScreen_FancyMenu != null) && (this.screen == null)) {
+			newScreenType = true;
+		} else if ((this.lastScreen_FancyMenu != null) && (this.screen != null)) {
+			String lastId = ScreenIdentifierHandler.getIdentifierOfScreen(this.lastScreen_FancyMenu);
+			String newId = ScreenIdentifierHandler.getIdentifierOfScreen(this.screen);
+			if (!lastId.equals(newId)) {
+				newScreenType = true;
+			}
+		}
+
+		if (newScreenType) ScreenCustomization.onSwitchingToNewScreenType(this.screen);
 
 	}
 

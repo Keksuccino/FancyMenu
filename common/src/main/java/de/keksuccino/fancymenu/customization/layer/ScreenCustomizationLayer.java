@@ -158,8 +158,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	@EventListener
 	public void onInitOrResizeScreenPre(InitOrResizeScreenEvent.Pre e) {
 
-		AnimationControllerHandler.stopAllAnimations();
-
 		this.cachedTabNavigationBar = null;
 
 		for (ThreadCaller t : this.delayThreads) {

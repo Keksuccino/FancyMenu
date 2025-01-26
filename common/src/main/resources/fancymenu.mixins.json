@@ -42,6 +42,7 @@
     "client.MixinDisconnectedScreen",
     "client.MixinEntityRenderDispatcher",
     "client.MixinGameLoadCookie",
+    "client.MixinGameRenderer",
     "client.MixinGenericMessageScreen",
     "client.MixinImageButton",
     "client.MixinLevelLoadingScreen",

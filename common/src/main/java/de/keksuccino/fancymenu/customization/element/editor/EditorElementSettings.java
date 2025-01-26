@@ -22,10 +22,49 @@ public class EditorElementSettings {
     private boolean allowVanillaAnchorPoint = false;
     private boolean enableLoadingRequirements = true;
     private boolean identifierCopyable = true;
-    //TODO übernehmen
     private boolean opacityChangeable = true;
+    private boolean parallaxAllowed = true;
+    private boolean autoSizingAllowed = true;
+    private boolean stayOnScreenAllowed = true;
+    private boolean stickyAnchorAllowed = true;
 
     private boolean skipReInit = false;
+
+    public boolean isParallaxAllowed() {
+        return parallaxAllowed;
+    }
+
+    public void setParallaxAllowed(boolean parallaxAllowed) {
+        this.parallaxAllowed = parallaxAllowed;
+        this.settingsChanged();
+    }
+
+    public boolean isAutoSizingAllowed() {
+        return autoSizingAllowed;
+    }
+
+    public void setAutoSizingAllowed(boolean autoSizingAllowed) {
+        this.autoSizingAllowed = autoSizingAllowed;
+        this.settingsChanged();
+    }
+
+    public boolean isStayOnScreenAllowed() {
+        return stayOnScreenAllowed;
+    }
+
+    public void setStayOnScreenAllowed(boolean stayOnScreenAllowed) {
+        this.stayOnScreenAllowed = stayOnScreenAllowed;
+        this.settingsChanged();
+    }
+
+    public boolean isStickyAnchorAllowed() {
+        return stickyAnchorAllowed;
+    }
+
+    public void setStickyAnchorAllowed(boolean stickyAnchorAllowed) {
+        this.stickyAnchorAllowed = stickyAnchorAllowed;
+        this.settingsChanged();
+    }
 
     public boolean isDestroyable() {
         return destroyable;

@@ -241,14 +241,18 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		}
 
-		this.addToggleContextMenuEntryTo(this.rightClickMenu, "stay_on_screen", AbstractEditorElement.class,
-						consumes -> consumes.element.stayOnScreen,
-						(element1, aBoolean) -> element1.element.stayOnScreen = aBoolean,
-						"fancymenu.elements.element.stay_on_screen")
-				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines(!this.element.stickyAnchor ? "fancymenu.elements.element.stay_on_screen.tooltip" : "fancymenu.elements.element.stay_on_screen.tooltip.disable_sticky")))
-				.setIcon(ContextMenu.IconFactory.getIcon("screen"))
-				.setStackable(false)
-				.addIsActiveSupplier((menu, entry) -> !this.element.stickyAnchor);
+		if (this.settings.isStayOnScreenAllowed()) {
+
+			this.addToggleContextMenuEntryTo(this.rightClickMenu, "stay_on_screen", AbstractEditorElement.class,
+							consumes -> consumes.element.stayOnScreen,
+							(element1, aBoolean) -> element1.element.stayOnScreen = aBoolean,
+							"fancymenu.elements.element.stay_on_screen")
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines(!this.element.stickyAnchor ? "fancymenu.elements.element.stay_on_screen.tooltip" : "fancymenu.elements.element.stay_on_screen.tooltip.disable_sticky")))
+					.setIcon(ContextMenu.IconFactory.getIcon("screen"))
+					.setStackable(false)
+					.addIsActiveSupplier((menu, entry) -> !this.element.stickyAnchor);
+
+		}
 
 		if (this.settings.isAdvancedPositioningSupported()) {
 
@@ -575,19 +579,23 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		}
 
-		this.addToggleContextMenuEntryTo(this.rightClickMenu, "auto_sizing", AbstractEditorElement.class,
-						consumes -> consumes.element.autoSizing,
-						(abstractEditorElement, aBoolean) -> {
-							abstractEditorElement.element.setAutoSizingBaseWidthAndHeight();
-							abstractEditorElement.element.autoSizing = aBoolean;
-							abstractEditorElement.element.updateAutoSizing(true);
-						},
-						"fancymenu.element.auto_sizing")
-				.setStackable(true)
-				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.auto_sizing.desc")))
-				.setIcon(ContextMenu.IconFactory.getIcon("measure"));
+		if (this.settings.isAutoSizingAllowed()) {
 
-		if (this.settings.isAnchorPointChangeable()) {
+			this.addToggleContextMenuEntryTo(this.rightClickMenu, "auto_sizing", AbstractEditorElement.class,
+							consumes -> consumes.element.autoSizing,
+							(abstractEditorElement, aBoolean) -> {
+								abstractEditorElement.element.setAutoSizingBaseWidthAndHeight();
+								abstractEditorElement.element.autoSizing = aBoolean;
+								abstractEditorElement.element.updateAutoSizing(true);
+							},
+							"fancymenu.element.auto_sizing")
+					.setStackable(true)
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.auto_sizing.desc")))
+					.setIcon(ContextMenu.IconFactory.getIcon("measure"));
+
+		}
+
+		if (this.settings.isStickyAnchorAllowed()) {
 
 			this.addToggleContextMenuEntryTo(this.rightClickMenu, "sticky_anchor", AbstractEditorElement.class,
 							consumes -> consumes.element.stickyAnchor,
@@ -613,44 +621,48 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		}
 
-		this.rightClickMenu.addSeparatorEntry("separator_before_parallax").setStackable(true);
+		if (this.settings.isParallaxAllowed()) {
 
-		this.addToggleContextMenuEntryTo(this.rightClickMenu, "enable_parallax", AbstractEditorElement.class,
-						consumes -> consumes.element.enableParallax,
-						(abstractEditorElement, aBoolean) -> abstractEditorElement.element.enableParallax = aBoolean,
-						"fancymenu.elements.parallax")
-				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.parallax.desc")));
+			this.rightClickMenu.addSeparatorEntry("separator_before_parallax").setStackable(true);
 
-		this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "parallax_intensity", AbstractEditorElement.class,
-						consumes -> consumes.element.parallaxIntensity,
-						(abstractEditorElement, aFloat) -> abstractEditorElement.element.parallaxIntensity = aFloat,
-						Component.translatable("fancymenu.elements.parallax.intensity"), true, 0.5F,
-						consumes -> {
-							if (de.keksuccino.fancymenu.util.MathUtils.isFloat(consumes)) {
-								float f = Float.parseFloat(consumes);
-								if (f < 0.0F) return false;
-								if (f > 1.0F) return false;
-								return true;
-							}
-							return false;
-						}, consumes -> {
-			                boolean valid = true;
-							if (de.keksuccino.fancymenu.util.MathUtils.isFloat(consumes)) {
-								float f = Float.parseFloat(consumes);
-								if (f < 0.0F) valid = false;
-								if (f > 1.0F) valid = false;
-							} else {
-								valid = false;
-							}
-							return !valid ? Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.parallax.intensity.invalid_value")) : null;
-						})
-				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.parallax.intensity.desc")));
+			this.addToggleContextMenuEntryTo(this.rightClickMenu, "enable_parallax", AbstractEditorElement.class,
+							consumes -> consumes.element.enableParallax,
+							(abstractEditorElement, aBoolean) -> abstractEditorElement.element.enableParallax = aBoolean,
+							"fancymenu.elements.parallax")
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.parallax.desc")));
 
-		this.addToggleContextMenuEntryTo(this.rightClickMenu, "invert_parallax", AbstractEditorElement.class,
-						consumes -> consumes.element.invertParallax,
-						(abstractEditorElement, aBoolean) -> abstractEditorElement.element.invertParallax = aBoolean,
-						"fancymenu.elements.parallax.invert")
-				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.parallax.invert.desc")));
+			this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "parallax_intensity", AbstractEditorElement.class,
+							consumes -> consumes.element.parallaxIntensity,
+							(abstractEditorElement, aFloat) -> abstractEditorElement.element.parallaxIntensity = aFloat,
+							Component.translatable("fancymenu.elements.parallax.intensity"), true, 0.5F,
+							consumes -> {
+								if (de.keksuccino.fancymenu.util.MathUtils.isFloat(consumes)) {
+									float f = Float.parseFloat(consumes);
+									if (f < 0.0F) return false;
+									if (f > 1.0F) return false;
+									return true;
+								}
+								return false;
+							}, consumes -> {
+								boolean valid = true;
+								if (de.keksuccino.fancymenu.util.MathUtils.isFloat(consumes)) {
+									float f = Float.parseFloat(consumes);
+									if (f < 0.0F) valid = false;
+									if (f > 1.0F) valid = false;
+								} else {
+									valid = false;
+								}
+								return !valid ? Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.parallax.intensity.invalid_value")) : null;
+							})
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.parallax.intensity.desc")));
+
+			this.addToggleContextMenuEntryTo(this.rightClickMenu, "invert_parallax", AbstractEditorElement.class,
+							consumes -> consumes.element.invertParallax,
+							(abstractEditorElement, aBoolean) -> abstractEditorElement.element.invertParallax = aBoolean,
+							"fancymenu.elements.parallax.invert")
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.parallax.invert.desc")));
+
+		}
 
 		this.rightClickMenu.addSeparatorEntry("separator_8").setStackable(true);
 

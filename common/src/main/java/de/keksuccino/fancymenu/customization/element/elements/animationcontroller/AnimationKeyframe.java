@@ -16,6 +16,9 @@ public class AnimationKeyframe implements Cloneable {
     @NotNull
     public String uniqueIdentifier = ScreenCustomization.generateUniqueIdentifier();
 
+    public AnimationKeyframe() {
+    }
+
     public AnimationKeyframe(long timestamp, int posOffsetX, int posOffsetY, int baseWidth, int baseHeight, ElementAnchorPoint anchorPoint, boolean stickyAnchor) {
         this.timestamp = timestamp;
         this.posOffsetX = posOffsetX;

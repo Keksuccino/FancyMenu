@@ -47,6 +47,7 @@ import net.minecraft.client.gui.screens.options.VideoSettingsScreen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
 public class ScreenCustomization {
@@ -270,6 +271,7 @@ public class ScreenCustomization {
 		UIColorThemes.reloadThemes();
 		LayoutHandler.reloadLayouts();
 		AnimationControllerHandler.stopAllAnimations();
+		AnimationControllerHandler.eraseAnimatedMemory();
 		EventHandler.INSTANCE.postEvent(new ModReloadEvent(Minecraft.getInstance().screen));
 		reInitCurrentScreen();
 	}
@@ -287,6 +289,30 @@ public class ScreenCustomization {
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(Minecraft.getInstance().screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(Minecraft.getInstance().screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
 		}
+	}
+
+	/**
+	 * This gets called when switching from one type of screen to a new one (e.g. Title screen -> Options screen).<br>
+	 * It will NOT get called when switching to the same screen type (e.g. Title screen -> Title screen).<br>
+	 * This will also get called when switching from a screen to NO SCREEN (newScreen argument will be NULL then)
+	 * This will also get called when switching from NO SCREEN to a screen.
+	 *
+	 * @param newScreen The new screen OR NULL when switching to no screen
+	 */
+	public static void onSwitchingToNewScreenType(@Nullable Screen newScreen) {
+
+		AnimationControllerHandler.stopAllAnimations();
+		AnimationControllerHandler.eraseAnimatedMemory();
+
+	}
+
+	/**
+	 * This gets called every render tick before starting to render the game.
+	 */
+	public static void onPreGameRenderTick() {
+
+		AnimationControllerHandler.tick();
+
 	}
 
 	public static void addScreenBlacklistRule(ScreenBlacklistRule rule) {

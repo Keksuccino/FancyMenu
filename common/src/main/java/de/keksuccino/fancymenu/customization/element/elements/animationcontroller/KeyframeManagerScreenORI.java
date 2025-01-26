@@ -29,6 +29,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
+
 import java.awt.*;
 import java.util.List;
 import java.util.*;
@@ -36,19 +37,9 @@ import java.util.function.Consumer;
 
 import static de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen.ELEMENT_DRAG_CRUMPLE_ZONE;
 
-public class KeyframeManagerScreen extends Screen {
-
-    //TODO FIXEN: Wenn multi-select und frames werden nach links bewegt, können frames einen negativen timestamp bekommen, wenn man nicht den aller-ersten frame draggt
-
-    //TODO FIXEN: Wenn multi-select und recording, frames werden alle übereinander geschoben, wenn nach rechts geschoben, weil Timeline nicht expanden kann
+public class KeyframeManagerScreenORI extends Screen {
 
     //TODO FIXEN: Speed slider kann nicht gezogen/gedraggt werden
-
-    //TODO Smoothing feature adden, mit dem man den Abstand zwischen allen ausgewählten frames auf den gleichen wert setzen kann (wert kann in MS gesetzt werden)
-
-    //TODO wenn man auf leeren Bereich in Timeline klickt, werden selected frames gecleart
-
-    //TODO wenn man in multi-select einen frame ein zweites Mal anklickt (nicht draggt, nur klickt), wird er wieder de-selected
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -95,7 +86,7 @@ public class KeyframeManagerScreen extends Screen {
     protected boolean isPlaying = false;
     protected long playStartTime = -1;
     protected long currentPlayOrRecordPosition = 0;
-    protected final List<AnimationKeyframe> selectedKeyframes = new ArrayList<>();
+    protected AnimationKeyframe selectedKeyframe = null;
     protected int draggingKeyframeIndex = -1;
     protected int timelineX;
     protected int timelineWidth;
@@ -125,7 +116,7 @@ public class KeyframeManagerScreen extends Screen {
     protected ExtendedButton startStopRecordingButton;
     protected RangeSlider recordingSpeedSlider;
 
-    public KeyframeManagerScreen(AnimationControllerElement controller, Consumer<List<AnimationKeyframe>> resultCallback) {
+    public KeyframeManagerScreenORI(AnimationControllerElement controller, Consumer<List<AnimationKeyframe>> resultCallback) {
         super(Component.translatable("fancymenu.elements.animation_controller.keyframe_manager"));
         this.controller = controller;
         this.resultCallback = resultCallback;
@@ -225,14 +216,14 @@ public class KeyframeManagerScreen extends Screen {
         ExtendedButton addKeyframeButton = UIBase.applyDefaultWidgetSkinTo(new ExtendedButton(0, 0, buttonBaseWidth, 0,
                 Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.add_keyframe"),
                 button -> addKeyframeAtProgress()));
-        addKeyframeButton.setIsActiveSupplier(consumes -> this.isRecording && this.selectedKeyframes.isEmpty());
+        addKeyframeButton.setIsActiveSupplier(consumes -> this.isRecording && (this.selectedKeyframe == null));
         this.addBottomWidget(1, 0, addKeyframeButton);
 
         // Delete keyframe button
         this.deleteKeyframeButton = UIBase.applyDefaultWidgetSkinTo(new ExtendedButton(0, 0, buttonBaseWidth, 0,
                 Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.delete_keyframe"),
-                button -> deleteSelectedKeyframes()));
-        this.deleteKeyframeButton.setIsActiveSupplier(consumes -> !this.selectedKeyframes.isEmpty());
+                button -> deleteSelectedKeyframe()));
+        this.deleteKeyframeButton.setIsActiveSupplier(consumes -> (this.selectedKeyframe != null));
         this.addBottomWidget(1, 0, this.deleteKeyframeButton);
 
         // BOTTOM BUTTON ROW 2 ------------------------------------>
@@ -260,14 +251,14 @@ public class KeyframeManagerScreen extends Screen {
                         .setValueNameSupplier(ElementAnchorPoint::getName)
                         .setValueComponentStyleSupplier(consumes -> Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())),
                 (value, button) -> this.setAnchorPoint(value));
-        this.anchorButton.setIsActiveSupplier(consumes -> (this.selectedKeyframes.size() == 1) || this.isRecording);
+        this.anchorButton.setIsActiveSupplier(consumes -> (this.selectedKeyframe != null) || this.isRecording);
         this.addBottomWidget(2, 0, this.anchorButton);
 
         // Sticky anchor toggle
         this.stickyButton = new CycleButton<>(0, 0, buttonBaseWidth + 65, 0,
                 CommonCycles.cycleEnabledDisabled("fancymenu.elements.animation_controller.keyframe_manager.sticky"),
                 (value, button) -> this.setStickyAnchor(value.getAsBoolean()));
-        this.stickyButton.setIsActiveSupplier(consumes -> (this.selectedKeyframes.size() == 1) || this.isRecording);
+        this.stickyButton.setIsActiveSupplier(consumes -> (this.selectedKeyframe != null) || this.isRecording);
         this.addBottomWidget(2, 0, this.stickyButton);
 
         // ---------------------------------------------------------
@@ -418,6 +409,7 @@ public class KeyframeManagerScreen extends Screen {
     }
 
     protected void renderKeyframeLines(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial, long actualDuration) {
+
         // Draw keyframe lines
         for (int i = 0; i < workingKeyframes.size(); i++) {
             AnimationKeyframe keyframe = workingKeyframes.get(i);
@@ -427,7 +419,7 @@ public class KeyframeManagerScreen extends Screen {
             int lineX = timelineX + (int)(timelineWidth * progress);
 
             // Draw keyframe line
-            DrawableColor color = selectedKeyframes.contains(keyframe) ?
+            DrawableColor color = (keyframe == selectedKeyframe) ?
                     KEYFRAME_COLOR_SELECTED : KEYFRAME_COLOR;
 
             graphics.fill(RenderType.gui(),
@@ -444,47 +436,39 @@ public class KeyframeManagerScreen extends Screen {
                 if (!hasMovedFromClickPosition) {
                     hasMovedFromClickPosition = Math.abs(dragDeltaX) >= KEYFRAME_DRAG_CRUMPLE_ZONE;
                     if (!hasMovedFromClickPosition) {
-                        continue;
+                        continue; // Skip movement until we've moved past threshold
                     }
                     //Save state right before keyframe moving starts
                     saveState();
                 }
-
                 // Calculate mouse position relative to timeline
                 float newProgress = (float)(mouseX - timelineX) / timelineWidth;
                 long newDuration = this.timelineDuration;
-
-                // If dragging past timeline end, extend timeline
+                // If dragging past timeline end, extend timeline and set keyframe timestamp
                 if (!this.isRecording && (mouseX > (timelineX + timelineWidth - 10))) {
                     newDuration = timelineDuration + TIMELINE_EXTENSION_STEP;
+                    // Calculate new progress based on extended duration
                     newProgress = (float)(mouseX - timelineX) / timelineWidth;
                 }
-
-                // Clamp progress
+                // Clamp progress to valid range (0-1)
                 newProgress = Math.max(0, Math.min(1, newProgress));
-
-                // Calculate time difference for the dragged keyframe
-                long timeDelta = (long)(newDuration * newProgress) - keyframe.timestamp;
-
-                // Apply the same time delta to all selected keyframes
-                for (AnimationKeyframe selectedFrame : selectedKeyframes) {
-                    long newTimestamp = selectedFrame.timestamp + timeDelta;
-                    if (this.isRecording && (newTimestamp > actualDuration)) {
-                        newTimestamp = actualDuration;
-                    }
-                    selectedFrame.timestamp = newTimestamp;
+                // Set keyframe timestamp based on progress
+                keyframe.timestamp = (long)(newDuration * newProgress);
+                if (this.isRecording && (keyframe.timestamp > actualDuration)) {
+                    keyframe.timestamp = actualDuration;
                 }
-
                 // Update timeline duration to ensure padding
                 updateTimelineDurationToMaxTimestamp();
             }
+
         }
+
     }
 
     protected void renderPreview(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         // Render preview
-        if (!isPlaying && ((this.selectedKeyframes.size() == 1) || isRecording)) {
+        if (!isPlaying && ((selectedKeyframe != null) || isRecording)) {
             // Render full preview element for resizing and moving when recording or when a keyframe is selected
             previewEditorElement.render(graphics, mouseX, mouseY, partial);
         } else {
@@ -549,9 +533,7 @@ public class KeyframeManagerScreen extends Screen {
 
     protected void renderKeyframeInfo(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        if (this.selectedKeyframes.size() == 1) {
-
-            AnimationKeyframe selectedKeyframe = this.selectedKeyframes.getFirst();
+        if (selectedKeyframe != null) {
 
             String yes = I18n.get("fancymenu.elements.animation_controller.keyframe_manager.keyframe_info.yes");
             String no = I18n.get("fancymenu.elements.animation_controller.keyframe_manager.keyframe_info.no");
@@ -696,8 +678,7 @@ public class KeyframeManagerScreen extends Screen {
             return true;
         }
         if (isOverProgressLine((int)mouseX, (int)mouseY) && this.isRecording && !this.isRecordingPaused) {
-            this.displayNotification(Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.pause_recording_to_drag_progress")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), 6000);
+            this.displayNotification(Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.pause_recording_to_drag_progress").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), 6000);
             return true;
         }
 
@@ -705,15 +686,13 @@ public class KeyframeManagerScreen extends Screen {
         int clickedIndex = getKeyframeIndexAtPosition((int)mouseX, (int)mouseY);
         if (this.isRecording && !this.isRecordingPaused && (clickedIndex >= 0)) {
             clickedIndex = -1;
-            this.displayNotification(Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.pause_recording_to_edit_keyframe")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), 6000);
+            this.displayNotification(Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.pause_recording_to_edit_keyframe").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), 6000);
         }
         if (clickedIndex >= 0) {
             initialDragClickX = (int)mouseX;
             hasMovedFromClickPosition = false;
             draggingKeyframeIndex = clickedIndex;
-            // Handle CTRL-click for multi-select
-            this.setSelectedKeyframe(workingKeyframes.get(clickedIndex), Screen.hasControlDown());
+            this.setSelectedKeyframe(workingKeyframes.get(clickedIndex));
             return true;
         }
 
@@ -729,9 +708,9 @@ public class KeyframeManagerScreen extends Screen {
         boolean previewGotResized = this.previewEditorElement.recentlyResized;
         boolean previewGotMoved = this.previewEditorElement.recentlyMovedByDragging;
         this.previewEditorElement.mouseReleased(mouseX, mouseY, button);
-        if (this.previewEditorElement.isSelected() && (previewGotResized || previewGotMoved) && (this.selectedKeyframes.size() == 1) && (!this.isRecording || this.isRecordingPaused) && !this.isPlaying) {
+        if (this.previewEditorElement.isSelected() && (previewGotResized || previewGotMoved) && (this.selectedKeyframe != null) && (!this.isRecording || this.isRecordingPaused) && !this.isPlaying) {
             saveState();
-            this.applyElementValuesToKeyframe(this.previewElement, this.selectedKeyframes.getFirst());
+            this.applyElementValuesToKeyframe(this.previewElement, this.selectedKeyframe);
         }
         return super.mouseReleased(mouseX, mouseY, button);
     }
@@ -754,25 +733,15 @@ public class KeyframeManagerScreen extends Screen {
             }
         }
 
-        //Select all keyframes
-        if (!this.isRecording || this.isRecordingPaused) {
-            if (Screen.hasControlDown() && (keyCode == InputConstants.KEY_A)) {
-                this.setSelectedKeyframe(null);
-                this.workingKeyframes.forEach(keyframe -> this.setSelectedKeyframe(keyframe, true));
-            }
-        }
-
         // Handle arrow keys for selected keyframe
-        if (!this.selectedKeyframes.isEmpty()) {
+        if (selectedKeyframe != null) {
             if (keyCode == KEY_MOVE_KEYFRAME_LEFT || keyCode == KEY_MOVE_KEYFRAME_RIGHT) {
                 saveState(); // Save state before modifying timestamp
-                this.selectedKeyframes.forEach(selectedKeyframe -> {
-                    if (keyCode == KEY_MOVE_KEYFRAME_LEFT) {
-                        selectedKeyframe.timestamp = Math.max(0, selectedKeyframe.timestamp - 100);
-                    } else { // RIGHT
-                        selectedKeyframe.timestamp = Math.min(timelineDuration, selectedKeyframe.timestamp + 100);
-                    }
-                });
+                if (keyCode == KEY_MOVE_KEYFRAME_LEFT) {
+                    selectedKeyframe.timestamp = Math.max(0, selectedKeyframe.timestamp - 100);
+                } else { // RIGHT
+                    selectedKeyframe.timestamp = Math.min(timelineDuration, selectedKeyframe.timestamp + 100);
+                }
                 updateTimelineDurationToMaxTimestamp();
                 return true;
             }
@@ -780,8 +749,8 @@ public class KeyframeManagerScreen extends Screen {
 
         // Handle DELETE key
         if (keyCode == KEY_DELETE_KEYFRAME) {
-            if (!this.selectedKeyframes.isEmpty()) {
-                this.deleteSelectedKeyframes();
+            if (selectedKeyframe != null) {
+                this.deleteSelectedKeyframe();
                 return true;
             }
         }
@@ -940,15 +909,13 @@ public class KeyframeManagerScreen extends Screen {
 
     }
 
-    protected void deleteSelectedKeyframes() {
-        if (!this.selectedKeyframes.isEmpty()) {
+    protected void deleteSelectedKeyframe() {
+        if (selectedKeyframe != null) {
             saveState();
-            this.selectedKeyframes.forEach(selectedKeyframe -> {
-                workingKeyframes.remove(selectedKeyframe);
-                this.setSelectedKeyframe(null);
-                updateTimelineDurationToMaxTimestamp();
-                this.displayNotification(KEYFRAME_DELETED_TEXT, 2000);
-            });
+            workingKeyframes.remove(selectedKeyframe);
+            this.setSelectedKeyframe(null);
+            updateTimelineDurationToMaxTimestamp();
+            this.displayNotification(KEYFRAME_DELETED_TEXT, 2000);
         }
     }
 
@@ -962,8 +929,7 @@ public class KeyframeManagerScreen extends Screen {
     }
 
     protected void undo() {
-        List<String> selected = new ArrayList<>();
-        this.selectedKeyframes.forEach(keyframe -> selected.add(keyframe.uniqueIdentifier));
+        String selected = (this.selectedKeyframe != null) ? this.selectedKeyframe.uniqueIdentifier : null;
         if (this.isPlaying) return;
         if (!undoStack.isEmpty()) {
             // Save current state to redo stack before undoing
@@ -974,23 +940,20 @@ public class KeyframeManagerScreen extends Screen {
             this.setSelectedKeyframe(null);
             updateTimelineDurationToMaxTimestamp();
         }
-        if (!selected.isEmpty() && !this.isRecording) {
-            selected.forEach(s -> {
-                AnimationKeyframe frame = null;
-                for (AnimationKeyframe f : this.workingKeyframes) {
-                    if (f.uniqueIdentifier.equals(s)) {
-                        frame = f;
-                        break;
-                    }
+        if ((selected != null) && !this.isRecording) {
+            AnimationKeyframe frame = null;
+            for (AnimationKeyframe f : this.workingKeyframes) {
+                if (f.uniqueIdentifier.equals(selected)) {
+                    frame = f;
+                    break;
                 }
-                this.setSelectedKeyframe(frame, true);
-            });
+            }
+            this.setSelectedKeyframe(frame);
         }
     }
 
     protected void redo() {
-        List<String> selected = new ArrayList<>();
-        this.selectedKeyframes.forEach(keyframe -> selected.add(keyframe.uniqueIdentifier));
+        String selected = (this.selectedKeyframe != null) ? this.selectedKeyframe.uniqueIdentifier : null;
         if (this.isPlaying) return;
         if (!redoStack.isEmpty()) {
             // Save current state to undo stack before redoing
@@ -1001,65 +964,32 @@ public class KeyframeManagerScreen extends Screen {
             this.setSelectedKeyframe(null);
             updateTimelineDurationToMaxTimestamp();
         }
-        if (!selected.isEmpty() && !this.isRecording) {
-            selected.forEach(s -> {
-                AnimationKeyframe frame = null;
-                for (AnimationKeyframe f : this.workingKeyframes) {
-                    if (f.uniqueIdentifier.equals(s)) {
-                        frame = f;
-                        break;
-                    }
+        if ((selected != null) && !this.isRecording) {
+            AnimationKeyframe frame = null;
+            for (AnimationKeyframe f : this.workingKeyframes) {
+                if (f.uniqueIdentifier.equals(selected)) {
+                    frame = f;
+                    break;
                 }
-                this.setSelectedKeyframe(frame, true);
-            });
-        }
-    }
-
-    protected void setSelectedKeyframe(@Nullable AnimationKeyframe selected, boolean addToSelection) {
-
-        if (!addToSelection) {
-            // Clear previous selection if not adding to it
-            selectedKeyframes.clear();
-        }
-
-        if (selected != null) {
-
-            if (!this.selectedKeyframes.contains(selected)) {
-
-                // Add new keyframe to selection
-                selectedKeyframes.add(selected);
-
-                if (selectedKeyframes.size() == 1) {
-                    // Set preview to clicked keyframe to show it
-                    this.applyKeyframeValuesToElement(selected, previewElement);
-                    previewEditorElement.setSelected(true);
-
-                    // Pause when selecting a keyframe
-                    if (this.isPlaying) this.togglePlayback();
-
-                    // Update buttons to match selected keyframe
-                    this.anchorButton.setSelectedValue(selected.anchorPoint);
-                    this.stickyButton.setSelectedValue(CommonCycles.CycleEnabledDisabled.getByBoolean(selected.stickyAnchor));
-
-                } else {
-
-                    if (!this.isRecording) this.previewEditorElement.setSelected(false);
-
-                }
-
             }
-
-        } else {
-
-            selectedKeyframes.clear();
-            if (!this.isRecording) this.previewEditorElement.setSelected(false);
-
+            this.setSelectedKeyframe(frame);
         }
-
     }
 
     protected void setSelectedKeyframe(@Nullable AnimationKeyframe selected) {
-        setSelectedKeyframe(selected, false);
+        this.selectedKeyframe = selected;
+        if (this.selectedKeyframe != null) {
+            // Set preview to clicked keyframe to show it
+            this.applyKeyframeValuesToElement(selectedKeyframe, previewElement);
+            previewEditorElement.setSelected(true);
+            // Pause when selecting a keyframe
+            if (this.isPlaying) this.togglePlayback();
+            // Update buttons to match selected keyframe
+            this.anchorButton.setSelectedValue(selectedKeyframe.anchorPoint);
+            this.stickyButton.setSelectedValue(CommonCycles.CycleEnabledDisabled.getByBoolean(selectedKeyframe.stickyAnchor));
+        } else {
+            if (!this.isRecording) this.previewEditorElement.setSelected(false);
+        }
     }
 
     protected boolean isOverProgressLine(int mouseX, int mouseY) {
@@ -1114,9 +1044,8 @@ public class KeyframeManagerScreen extends Screen {
                 previewElement.posOffsetY = this.height - endY;
             }
         }
-        if (this.selectedKeyframes.size() == 1) {
+        if (selectedKeyframe != null) {
             saveState();
-            AnimationKeyframe selectedKeyframe = this.selectedKeyframes.getFirst();
             selectedKeyframe.anchorPoint = previewElement.anchorPoint;
             selectedKeyframe.posOffsetX = previewElement.posOffsetX;
             selectedKeyframe.posOffsetY = previewElement.posOffsetY;
@@ -1124,9 +1053,9 @@ public class KeyframeManagerScreen extends Screen {
     }
 
     protected void setStickyAnchor(boolean sticky) {
-        if (this.selectedKeyframes.size() == 1) {
+        if (selectedKeyframe != null) {
             saveState();
-            this.selectedKeyframes.getFirst().stickyAnchor = sticky;
+            selectedKeyframe.stickyAnchor = sticky;
         }
         previewElement.stickyAnchor = sticky;
     }
@@ -1199,8 +1128,8 @@ public class KeyframeManagerScreen extends Screen {
 
         public void renderPreviewBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             DrawableColor c = PREVIEW_COLOR_NORMAL;
-            if (KeyframeManagerScreen.this.isRecording) c = RECORDING_COLOR;
-            if (KeyframeManagerScreen.this.selectedKeyframes.size() == 1) c = KEYFRAME_COLOR_SELECTED;
+            if (KeyframeManagerScreenORI.this.isRecording) c = RECORDING_COLOR;
+            if (KeyframeManagerScreenORI.this.selectedKeyframe != null) c = KEYFRAME_COLOR_SELECTED;
             graphics.fill(RenderType.gui(),
                     this.element.getAbsoluteX(),
                     this.element.getAbsoluteY(),
