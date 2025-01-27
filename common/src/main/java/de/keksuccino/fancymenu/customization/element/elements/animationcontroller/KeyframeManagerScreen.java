@@ -8,12 +8,16 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
+import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -38,17 +42,11 @@ import static de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorSc
 
 public class KeyframeManagerScreen extends Screen {
 
-    //TODO FIXEN: Wenn multi-select und frames werden nach links bewegt, können frames einen negativen timestamp bekommen, wenn man nicht den aller-ersten frame draggt
-
-    //TODO FIXEN: Wenn multi-select und recording, frames werden alle übereinander geschoben, wenn nach rechts geschoben, weil Timeline nicht expanden kann
-
     //TODO FIXEN: Speed slider kann nicht gezogen/gedraggt werden
 
-    //TODO Smoothing feature adden, mit dem man den Abstand zwischen allen ausgewählten frames auf den gleichen wert setzen kann (wert kann in MS gesetzt werden)
+    //TODO Adden, dass mehrere Elemente als Animation Target gesetzt werden können
 
-    //TODO wenn man auf leeren Bereich in Timeline klickt, werden selected frames gecleart
-
-    //TODO wenn man in multi-select einen frame ein zweites Mal anklickt (nicht draggt, nur klickt), wird er wieder de-selected
+    //TODO Alternativer Modus: offset mode: Target element behält seine grund position und wird durch Animator nur off-settet (dafür eventuell alternative values in Keyframe speichern??)
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -97,6 +95,8 @@ public class KeyframeManagerScreen extends Screen {
     protected long currentPlayOrRecordPosition = 0;
     protected final List<AnimationKeyframe> selectedKeyframes = new ArrayList<>();
     protected int draggingKeyframeIndex = -1;
+    protected AnimationKeyframe lastCtrlClickedFrameForDeselect = null;
+    protected boolean framesGotMoved = false;
     protected int timelineX;
     protected int timelineWidth;
     protected int timelineY;
@@ -112,6 +112,8 @@ public class KeyframeManagerScreen extends Screen {
     protected long lastRecordingBlinkTime = -1;
     protected boolean recordingBlinkState = true;
     protected final List<Notification> activeNotifications = new ArrayList<>();
+    protected boolean isShowingSmoothingInput = false;
+    protected String lastSmoothingInputValue = null;
 
     protected final Stack<List<AnimationKeyframe>> undoStack = new Stack<>();
     protected final Stack<List<AnimationKeyframe>> redoStack = new Stack<>();
@@ -124,6 +126,8 @@ public class KeyframeManagerScreen extends Screen {
     protected ExtendedButton playButton;
     protected ExtendedButton startStopRecordingButton;
     protected RangeSlider recordingSpeedSlider;
+    protected ExtendedButton smoothingButton;
+    protected ExtendedEditBox smoothingDistanceInput;
 
     public KeyframeManagerScreen(AnimationControllerElement controller, Consumer<List<AnimationKeyframe>> resultCallback) {
         super(Component.translatable("fancymenu.elements.animation_controller.keyframe_manager"));
@@ -235,6 +239,14 @@ public class KeyframeManagerScreen extends Screen {
         this.deleteKeyframeButton.setIsActiveSupplier(consumes -> !this.selectedKeyframes.isEmpty());
         this.addBottomWidget(1, 0, this.deleteKeyframeButton);
 
+        // Smoothing button
+        this.smoothingButton = UIBase.applyDefaultWidgetSkinTo(new ExtendedButton(0, 0, buttonBaseWidth, 0,
+                Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.smoothing"),
+                button -> toggleSmoothingInput()));
+        this.smoothingButton.setIsActiveSupplier(consumes -> !this.isPlaying && !this.isRecording && this.selectedKeyframes.size() > 1);
+        this.smoothingButton.setTooltipSupplier(consumes -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.keyframe_manager.smoothing.desc")));
+        this.addBottomWidget(1, 0, this.smoothingButton);
+
         // BOTTOM BUTTON ROW 2 ------------------------------------>
 
         // Undo button
@@ -269,6 +281,25 @@ public class KeyframeManagerScreen extends Screen {
                 (value, button) -> this.setStickyAnchor(value.getAsBoolean()));
         this.stickyButton.setIsActiveSupplier(consumes -> (this.selectedKeyframes.size() == 1) || this.isRecording);
         this.addBottomWidget(2, 0, this.stickyButton);
+
+        // ---------------------------------------------------------
+
+        // Smoothing input box
+        this.smoothingDistanceInput = new ExtendedEditBox(Minecraft.getInstance().font, (this.width / 2) - 50, this.stickyButton.getY() - 40, 100, 20, Component.empty()) {
+            @Override
+            public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+                MutableComponent c = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.smoothing.input");
+                int cW = Minecraft.getInstance().font.width(c);
+                graphics.drawString(Minecraft.getInstance().font, c,
+                        this.getX() + (this.getWidth() / 2) - (cW / 2), this.getY() - Minecraft.getInstance().font.lineHeight - 5, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+                super.renderWidget(graphics, mouseX, mouseY, partial);
+            }
+        };
+        this.smoothingDistanceInput.setCharacterFilter(CharacterFilter.buildIntegerFiler());
+        this.smoothingDistanceInput.setIsVisibleSupplier(consumes -> this.isShowingSmoothingInput);
+        this.smoothingDistanceInput.setMaxLength(6); // Reasonable limit for ms value
+        UIBase.applyDefaultWidgetSkinTo(this.smoothingDistanceInput);
+        this.addRenderableWidget(this.smoothingDistanceInput);
 
         // ---------------------------------------------------------
 
@@ -307,6 +338,15 @@ public class KeyframeManagerScreen extends Screen {
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+        if (this.isShowingSmoothingInput) {
+            if (!this.smoothingDistanceInput.isFocused()) {
+                this.smoothingDistanceInput.setFocusable(true);
+                this.setFocused(this.smoothingDistanceInput);
+            }
+        } else {
+            if (this.smoothingDistanceInput == this.getFocused()) this.clearFocus();
+        }
 
         long actualEndTime = timelineDuration - TIMELINE_PADDING_DURATION;
 
@@ -446,6 +486,7 @@ public class KeyframeManagerScreen extends Screen {
                     if (!hasMovedFromClickPosition) {
                         continue;
                     }
+                    this.framesGotMoved = true;
                     //Save state right before keyframe moving starts
                     saveState();
                 }
@@ -454,7 +495,7 @@ public class KeyframeManagerScreen extends Screen {
                 float newProgress = (float)(mouseX - timelineX) / timelineWidth;
                 long newDuration = this.timelineDuration;
 
-                // If dragging past timeline end, extend timeline
+                // If dragging past timeline end and not recording, extend timeline
                 if (!this.isRecording && (mouseX > (timelineX + timelineWidth - 10))) {
                     newDuration = timelineDuration + TIMELINE_EXTENSION_STEP;
                     newProgress = (float)(mouseX - timelineX) / timelineWidth;
@@ -466,11 +507,39 @@ public class KeyframeManagerScreen extends Screen {
                 // Calculate time difference for the dragged keyframe
                 long timeDelta = (long)(newDuration * newProgress) - keyframe.timestamp;
 
-                // Apply the same time delta to all selected keyframes
+                // Find the minimum and maximum timestamps among selected frames
+                long minSelectedTimestamp = Long.MAX_VALUE;
+                long maxSelectedTimestamp = Long.MIN_VALUE;
+                long deltaToLastFrame = 0;
+                for (AnimationKeyframe selectedFrame : selectedKeyframes) {
+                    minSelectedTimestamp = Math.min(minSelectedTimestamp, selectedFrame.timestamp);
+                    maxSelectedTimestamp = Math.max(maxSelectedTimestamp, selectedFrame.timestamp);
+                    if (selectedFrame.timestamp > keyframe.timestamp) {
+                        deltaToLastFrame = Math.max(deltaToLastFrame, selectedFrame.timestamp - keyframe.timestamp);
+                    }
+                }
+
+                // Calculate how much we can shift based on the leftmost selected frame
+                long maxLeftShift = -minSelectedTimestamp;  // Maximum we can shift left without going negative
+                if (timeDelta < maxLeftShift) {
+                    timeDelta = maxLeftShift;  // Limit the shift to prevent negative timestamps
+                }
+
+                // When recording, ensure we don't exceed actual duration while preserving spacing
+                if (this.isRecording) {
+                    long maxRightPosition = actualDuration - deltaToLastFrame;
+                    if ((keyframe.timestamp + timeDelta) > maxRightPosition) {
+                        timeDelta = maxRightPosition - keyframe.timestamp;
+                    }
+                }
+
+                // Apply the adjusted time delta to all selected keyframes
                 for (AnimationKeyframe selectedFrame : selectedKeyframes) {
                     long newTimestamp = selectedFrame.timestamp + timeDelta;
-                    if (this.isRecording && (newTimestamp > actualDuration)) {
-                        newTimestamp = actualDuration;
+                    newTimestamp = Math.max(0, newTimestamp); // Ensure timestamp never goes negative
+
+                    if (this.isRecording) {
+                        newTimestamp = Math.min(newTimestamp, actualDuration); // Ensure no frame exceeds actual duration
                     }
                     selectedFrame.timestamp = newTimestamp;
                 }
@@ -686,7 +755,18 @@ public class KeyframeManagerScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
 
+        this.lastCtrlClickedFrameForDeselect = null;
+        this.framesGotMoved = false;
+
         if (super.mouseClicked(mouseX, mouseY, button)) return true;
+
+        if (this.isShowingSmoothingInput) {
+            // Check if click is outside the input box
+            if (!this.smoothingDistanceInput.isMouseOver(mouseX, mouseY)) {
+                this.lastSmoothingInputValue = this.smoothingDistanceInput.getValue();
+                this.isShowingSmoothingInput = false;
+            }
+        }
 
         if (this.previewEditorElement.mouseClicked(mouseX, mouseY, button)) return true;
 
@@ -703,17 +783,27 @@ public class KeyframeManagerScreen extends Screen {
 
         // Handle clicking keyframe lines
         int clickedIndex = getKeyframeIndexAtPosition((int)mouseX, (int)mouseY);
+        // Handle clicking empty timeline area to deselect frames
+        if (!Screen.hasControlDown() && isInTimelineArea((int)mouseX, (int)mouseY) && (clickedIndex == -1)) {
+            this.setSelectedKeyframe(null);
+            return true;
+        }
         if (this.isRecording && !this.isRecordingPaused && (clickedIndex >= 0)) {
-            clickedIndex = -1;
             this.displayNotification(Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.pause_recording_to_edit_keyframe")
                     .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), 6000);
+            return true;
         }
         if (clickedIndex >= 0) {
             initialDragClickX = (int)mouseX;
             hasMovedFromClickPosition = false;
             draggingKeyframeIndex = clickedIndex;
-            // Handle CTRL-click for multi-select
-            this.setSelectedKeyframe(workingKeyframes.get(clickedIndex), Screen.hasControlDown());
+            AnimationKeyframe keyframe = this.workingKeyframes.get(draggingKeyframeIndex);
+            if (Screen.hasControlDown() && this.selectedKeyframes.contains(keyframe)) {
+                this.lastCtrlClickedFrameForDeselect = keyframe;
+            } else {
+                // Handle CTRL-click for multi-select
+                this.setSelectedKeyframe(workingKeyframes.get(clickedIndex), Screen.hasControlDown());
+            }
             return true;
         }
 
@@ -733,6 +823,20 @@ public class KeyframeManagerScreen extends Screen {
             saveState();
             this.applyElementValuesToKeyframe(this.previewElement, this.selectedKeyframes.getFirst());
         }
+        if ((this.lastCtrlClickedFrameForDeselect != null) && !this.framesGotMoved) {
+            if (this.selectedKeyframes.size() > 1) {
+                this.selectedKeyframes.remove(this.lastCtrlClickedFrameForDeselect);
+                if (this.selectedKeyframes.size() == 1) {
+                    AnimationKeyframe lastSelected = this.selectedKeyframes.getFirst();
+                    this.setSelectedKeyframe(null); // first clear all
+                    this.setSelectedKeyframe(lastSelected); // then properly single-select the frame again
+                }
+            } else {
+                this.setSelectedKeyframe(null);
+            }
+        }
+        this.lastCtrlClickedFrameForDeselect = null;
+        this.framesGotMoved = false;
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
@@ -754,7 +858,19 @@ public class KeyframeManagerScreen extends Screen {
             }
         }
 
-        //Select all keyframes
+        // Handle smoothing input shortcuts
+        if (this.isShowingSmoothingInput && this.smoothingDistanceInput.isFocused()) {
+            this.lastSmoothingInputValue = this.smoothingDistanceInput.getValue();
+            if (keyCode == InputConstants.KEY_ENTER) {
+                applySmoothingDistance();
+                return true;
+            } else if (keyCode == InputConstants.KEY_ESCAPE) {
+                this.isShowingSmoothingInput = false;
+                return true;
+            }
+        }
+
+        // Select all keyframes
         if (!this.isRecording || this.isRecordingPaused) {
             if (Screen.hasControlDown() && (keyCode == InputConstants.KEY_A)) {
                 this.setSelectedKeyframe(null);
@@ -762,18 +878,43 @@ public class KeyframeManagerScreen extends Screen {
             }
         }
 
-        // Handle arrow keys for selected keyframe
+        // Handle arrow keys for selected keyframes
         if (!this.selectedKeyframes.isEmpty()) {
             if (keyCode == KEY_MOVE_KEYFRAME_LEFT || keyCode == KEY_MOVE_KEYFRAME_RIGHT) {
                 saveState(); // Save state before modifying timestamp
-                this.selectedKeyframes.forEach(selectedKeyframe -> {
-                    if (keyCode == KEY_MOVE_KEYFRAME_LEFT) {
-                        selectedKeyframe.timestamp = Math.max(0, selectedKeyframe.timestamp - 100);
-                    } else { // RIGHT
-                        selectedKeyframe.timestamp = Math.min(timelineDuration, selectedKeyframe.timestamp + 100);
+
+                // Find the minimum and maximum timestamps among selected frames
+                long minSelectedTimestamp = Long.MAX_VALUE;
+                long maxSelectedTimestamp = Long.MIN_VALUE;
+                for (AnimationKeyframe selectedFrame : selectedKeyframes) {
+                    minSelectedTimestamp = Math.min(minSelectedTimestamp, selectedFrame.timestamp);
+                    maxSelectedTimestamp = Math.max(maxSelectedTimestamp, selectedFrame.timestamp);
+                }
+
+                // Calculate the time shift
+                long timeShift = keyCode == KEY_MOVE_KEYFRAME_LEFT ? -100 : 100;
+
+                // Check boundaries
+                if (keyCode == KEY_MOVE_KEYFRAME_LEFT) {
+                    // Don't move left if leftmost frame would go negative
+                    if (minSelectedTimestamp + timeShift < 0) {
+                        timeShift = -minSelectedTimestamp; // Adjust shift to exactly reach 0
                     }
-                });
-                updateTimelineDurationToMaxTimestamp();
+                } else {
+                    // Don't move right if rightmost frame would exceed timeline
+                    if (maxSelectedTimestamp + timeShift > timelineDuration) {
+                        timeShift = timelineDuration - maxSelectedTimestamp; // Adjust shift to exactly reach end
+                    }
+                }
+
+                // Apply the adjusted time shift to all selected keyframes
+                if (timeShift != 0) {
+                    final long finalTimeShift = timeShift;
+                    this.selectedKeyframes.forEach(selectedKeyframe -> {
+                        selectedKeyframe.timestamp += finalTimeShift;
+                    });
+                    updateTimelineDurationToMaxTimestamp();
+                }
                 return true;
             }
         }
@@ -1060,6 +1201,52 @@ public class KeyframeManagerScreen extends Screen {
 
     protected void setSelectedKeyframe(@Nullable AnimationKeyframe selected) {
         setSelectedKeyframe(selected, false);
+    }
+
+    protected void toggleSmoothingInput() {
+        this.lastSmoothingInputValue = this.smoothingDistanceInput.getValue();
+        this.isShowingSmoothingInput = !this.isShowingSmoothingInput;
+        if (this.isShowingSmoothingInput) {
+            this.smoothingDistanceInput.setValue(this.lastSmoothingInputValue);
+            if (this.smoothingDistanceInput.getValue().isBlank()) {
+                this.smoothingDistanceInput.setValue("100"); //Default value
+            }
+        }
+    }
+
+    protected void applySmoothingDistance() {
+        if (this.selectedKeyframes.size() > 1) {
+            String value = this.smoothingDistanceInput.getValue();
+            if (MathUtils.isLong(value) && !value.isEmpty()) {
+                try {
+                    long distanceMs = Long.parseLong(value);
+                    if (distanceMs > 0) {
+                        saveState();
+
+                        // Sort selected keyframes by timestamp
+                        List<AnimationKeyframe> sortedFrames = new ArrayList<>(this.selectedKeyframes);
+                        sortedFrames.sort(Comparator.comparingLong(k -> k.timestamp));
+
+                        // Keep first frame's position, space others evenly
+                        long startTime = sortedFrames.get(0).timestamp;
+                        for (int i = 1; i < sortedFrames.size(); i++) {
+                            sortedFrames.get(i).timestamp = startTime + (distanceMs * i);
+                        }
+
+                        updateTimelineDurationToMaxTimestamp();
+                    }
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+        // Hide input after applying
+        this.isShowingSmoothingInput = false;
+    }
+
+    protected boolean isInTimelineArea(int mouseX, int mouseY) {
+        return mouseX >= timelineX &&
+                mouseX <= timelineX + timelineWidth &&
+                mouseY >= timelineY &&
+                mouseY <= timelineY + TIMELINE_HEIGHT;
     }
 
     protected boolean isOverProgressLine(int mouseX, int mouseY) {

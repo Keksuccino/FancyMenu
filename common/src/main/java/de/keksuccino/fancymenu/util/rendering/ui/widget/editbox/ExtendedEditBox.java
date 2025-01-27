@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.editbox;
 
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
+import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -46,6 +47,10 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     @Nullable
     protected String inputSuffix;
     protected boolean deleteAllAllowed = true;
+    @Nullable
+    protected ConsumingSupplier<ExtendedEditBox, Boolean> isActiveSupplier = null;
+    @Nullable
+    protected ConsumingSupplier<ExtendedEditBox, Boolean> isVisibleSupplier = null;
 
     public ExtendedEditBox(Font font, int x, int y, int width, int height, Component hint) {
         super(font, x, y, width, height, hint);
@@ -148,6 +153,17 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             }
 
         }
+
+    }
+
+    @Override
+    public void render(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {
+
+        if (this.isActiveSupplier != null) this.active = this.isActiveSupplier.get(this);
+
+        if (this.isVisibleSupplier != null) this.visible = this.isVisibleSupplier.get(this);
+
+        super.render($$0, $$1, $$2, $$3);
 
     }
 
@@ -308,6 +324,14 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             return component;
         });
         return this;
+    }
+
+    public void setIsActiveSupplier(@Nullable ConsumingSupplier<ExtendedEditBox, Boolean> isActiveSupplier) {
+        this.isActiveSupplier = isActiveSupplier;
+    }
+
+    public void setIsVisibleSupplier(@Nullable ConsumingSupplier<ExtendedEditBox, Boolean> isVisibleSupplier) {
+        this.isVisibleSupplier = isVisibleSupplier;
     }
 
     @Deprecated

@@ -1505,5 +1505,8 @@
   "fancymenu.elements.animation_controller.keyframe_manager.time": "Time: %s / %s",
   "fancymenu.elements.animation_controller.keyframe_manager.keyframe_info": "§lSelected Keyframe:\nTime: %s\nPosition: (%s, %s)\nSize: %sx%s\nAnchor: %s\nSticky: %s",
   "fancymenu.elements.animation_controller.keyframe_manager.keyframe_info.yes": "Yes",
-  "fancymenu.elements.animation_controller.keyframe_manager.keyframe_info.no": "No"
+  "fancymenu.elements.animation_controller.keyframe_manager.keyframe_info.no": "No",
+  "fancymenu.elements.animation_controller.keyframe_manager.smoothing": "Distance Smoothing",
+  "fancymenu.elements.animation_controller.keyframe_manager.smoothing.desc": "Lets you set the same distance between\nkeyframes for all selected keyframes.",
+  "fancymenu.elements.animation_controller.keyframe_manager.smoothing.input": "New Keyframe Distance in Milliseconds:"
 }
