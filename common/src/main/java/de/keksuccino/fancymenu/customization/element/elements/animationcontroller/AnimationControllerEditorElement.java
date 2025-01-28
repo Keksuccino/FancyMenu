@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 
 public class AnimationControllerEditorElement extends AbstractEditorElement {
@@ -42,10 +43,13 @@ public class AnimationControllerEditorElement extends AbstractEditorElement {
                         (menu, entry) -> {
                             KeyframeManagerScreen managerScreen = new KeyframeManagerScreen(
                                     this.getElement(),
-                                    keyframes -> {
-                                        if (keyframes != null) {
+                                    callback -> {
+                                        if (callback != null) {
                                             this.editor.history.saveSnapshot();
-                                            this.getElement().keyframes = keyframes;
+                                            this.getElement().keyframes = callback.keyframes();
+                                            this.getElement().offsetMode = callback.isOffsetMode();
+                                            //TODO remove debug
+                                            LogManager.getLogger().info("############# IS OFFSET MODE 2: " + this.getElement().offsetMode);
                                         }
                                         Minecraft.getInstance().setScreen(this.editor);
                                     }

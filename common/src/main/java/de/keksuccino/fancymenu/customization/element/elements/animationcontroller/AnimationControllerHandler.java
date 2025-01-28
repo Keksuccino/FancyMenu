@@ -76,12 +76,19 @@ public class AnimationControllerHandler {
                     float progress = (float)timeIntoLoop / firstKeyframe.timestamp;
 
                     // Apply interpolated values
-                    state.targetElement.posOffsetX = (int)lerp(current.posOffsetX, next.posOffsetX, progress);
-                    state.targetElement.posOffsetY = (int)lerp(current.posOffsetY, next.posOffsetY, progress);
+                    if (state.controller.offsetMode) {
+                        state.targetElement.animatedOffsetX = (int)lerp(current.posOffsetX, next.posOffsetX, progress);
+                        state.targetElement.animatedOffsetY = (int)lerp(current.posOffsetY, next.posOffsetY, progress);
+                    } else {
+                        state.targetElement.posOffsetX = (int)lerp(current.posOffsetX, next.posOffsetX, progress);
+                        state.targetElement.posOffsetY = (int)lerp(current.posOffsetY, next.posOffsetY, progress);
+                    }
                     state.targetElement.baseWidth = (int)lerp(current.baseWidth, next.baseWidth, progress);
                     state.targetElement.baseHeight = (int)lerp(current.baseHeight, next.baseHeight, progress);
-                    state.targetElement.anchorPoint = next.anchorPoint;
-                    state.targetElement.stickyAnchor = next.stickyAnchor;
+                    if (!state.controller.offsetMode) {
+                        state.targetElement.anchorPoint = next.anchorPoint;
+                        state.targetElement.stickyAnchor = next.stickyAnchor;
+                    }
                     continue;
                 }
 

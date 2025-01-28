@@ -21,6 +21,7 @@ public class AnimationControllerElement extends AbstractElement {
     public List<AnimationKeyframe> keyframes = new ArrayList<>();
     public String targetElementId = null;
     public boolean loop = false;
+    public boolean offsetMode = false;
     public boolean animationApplied = false;
 
     public AnimationControllerElement(@NotNull ElementBuilder<?, ?> builder) {

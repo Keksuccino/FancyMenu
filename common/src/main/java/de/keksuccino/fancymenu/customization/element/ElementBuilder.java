@@ -241,6 +241,9 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             element.parallaxIntensity = SerializationUtils.deserializeNumber(Float.class, element.parallaxIntensity, serialized.getValue("parallax_intensity"));
             element.invertParallax = SerializationUtils.deserializeBoolean(element.invertParallax, serialized.getValue("invert_parallax"));
 
+            element.animatedOffsetX = SerializationUtils.deserializeNumber(Integer.class, element.animatedOffsetX, serialized.getValue("animated_offset_x"));
+            element.animatedOffsetY = SerializationUtils.deserializeNumber(Integer.class, element.animatedOffsetY, serialized.getValue("animated_offset_y"));
+
             element.afterConstruction();
 
             return element;
@@ -361,6 +364,9 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             sec.putProperty("enable_parallax", "" + element.enableParallax);
             sec.putProperty("parallax_intensity", "" + element.parallaxIntensity);
             sec.putProperty("invert_parallax", "" + element.invertParallax);
+
+            sec.putProperty("animated_offset_x", "" + element.animatedOffsetX);
+            sec.putProperty("animated_offset_y", "" + element.animatedOffsetY);
 
             return sec;
 

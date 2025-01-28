@@ -109,6 +109,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public int autoSizingWidth = 0;
 	public int autoSizingHeight = 0;
 	public boolean stickyAnchor = false;
+	public int animatedOffsetX = 0;
+	public int animatedOffsetY = 0;
 	/**
 	 * This is for when the render scale was changed in a non-system-wide way like via {@link PoseStack#translate(float, float, float)}.<br>
 	 * Elements that do not support scaling via {@link PoseStack#translate(float, float, float)} need to use this value to manually scale themselves.<br>
@@ -502,6 +504,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			}
 		}
 
+		x += this.animatedOffsetX;
+
 		boolean applyParallax = this.enableParallax && !isEditor();
 
 		// Apply parallax effect if enabled and not in editor
@@ -550,6 +554,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 				}
 			}
 		}
+
+		y += this.animatedOffsetY;
 
 		boolean applyParallax = this.enableParallax && !isEditor();
 

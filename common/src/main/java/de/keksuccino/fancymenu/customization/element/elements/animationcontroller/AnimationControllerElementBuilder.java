@@ -66,6 +66,8 @@ public class AnimationControllerElementBuilder extends ElementBuilder<AnimationC
 
         element.loop = SerializationUtils.deserializeBoolean(element.loop, serialized.getValue("loop"));
 
+        element.offsetMode = SerializationUtils.deserializeBoolean(element.offsetMode, serialized.getValue("offset_mode"));
+
         return element;
 
     }
@@ -85,6 +87,8 @@ public class AnimationControllerElementBuilder extends ElementBuilder<AnimationC
         }
 
         serializeTo.putProperty("loop", "" + element.loop);
+
+        serializeTo.putProperty("offset_mode", "" + element.offsetMode);
 
         return serializeTo;
 

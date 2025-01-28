@@ -42,11 +42,10 @@ import static de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorSc
 
 public class KeyframeManagerScreen extends Screen {
 
-    //TODO FIXEN: Speed slider kann nicht gezogen/gedraggt werden
-
     //TODO Adden, dass mehrere Elemente als Animation Target gesetzt werden können
 
-    //TODO Alternativer Modus: offset mode: Target element behält seine grund position und wird durch Animator nur off-settet (dafür eventuell alternative values in Keyframe speichern??)
+    //TODO Offset Mode weiter ausbauen
+    // - Offset wird komisch auf target element angewendet (gefühlt nicht richtiges offset von normaler position??)
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -66,6 +65,7 @@ public class KeyframeManagerScreen extends Screen {
     protected static final DrawableColor PREVIEW_COLOR_NORMAL = DrawableColor.of(new Color(33, 176, 58));
     protected static final DrawableColor RECORDING_COLOR = DrawableColor.of(new Color(196, 37, 37));
     protected static final DrawableColor RECORDING_PAUSED_COLOR = DrawableColor.of(new Color(219, 108, 4));
+    protected static final DrawableColor OFFSET_MODE_CROSSHAIR_COLOR = DrawableColor.of(new Color(219, 108, 4));
 
     protected static final int TIMELINE_HEIGHT = 50;
     protected static final int TIMELINE_Y_PADDING = 20;
@@ -85,7 +85,7 @@ public class KeyframeManagerScreen extends Screen {
     protected static final Component PLAYING_STOPPED_TEXT = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.playing_stopped").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()));
 
     protected final AnimationControllerElement controller;
-    protected final Consumer<List<AnimationKeyframe>> resultCallback;
+    protected final Consumer<AnimationControllerMetadata> resultCallback;
     protected final List<AnimationKeyframe> workingKeyframes;
     protected final PreviewElement previewElement;
     protected final PreviewEditorElement previewEditorElement;
@@ -114,6 +114,7 @@ public class KeyframeManagerScreen extends Screen {
     protected final List<Notification> activeNotifications = new ArrayList<>();
     protected boolean isShowingSmoothingInput = false;
     protected String lastSmoothingInputValue = null;
+    protected boolean isOffsetMode = false;
 
     protected final Stack<List<AnimationKeyframe>> undoStack = new Stack<>();
     protected final Stack<List<AnimationKeyframe>> redoStack = new Stack<>();
@@ -129,9 +130,12 @@ public class KeyframeManagerScreen extends Screen {
     protected ExtendedButton smoothingButton;
     protected ExtendedEditBox smoothingDistanceInput;
 
-    public KeyframeManagerScreen(AnimationControllerElement controller, Consumer<List<AnimationKeyframe>> resultCallback) {
+    public KeyframeManagerScreen(AnimationControllerElement controller, Consumer<AnimationControllerMetadata> resultCallback) {
         super(Component.translatable("fancymenu.elements.animation_controller.keyframe_manager"));
         this.controller = controller;
+        this.isOffsetMode = this.controller.offsetMode;
+        //TODO remove debug
+        LOGGER.info("############# IS OFFSET MODE 1: " + this.isOffsetMode);
         this.resultCallback = resultCallback;
         this.workingKeyframes = new ArrayList<>(controller.keyframes.stream()
                 .map(AnimationKeyframe::clone)
@@ -149,6 +153,8 @@ public class KeyframeManagerScreen extends Screen {
         this.previewElement = new PreviewElement(controller.builder);
         this.previewElement.baseWidth = 50;
         this.previewElement.baseHeight = 50;
+        this.previewElement.posOffsetX = 0;
+        this.previewElement.posOffsetY = 0;
         this.previewElement.stayOnScreen = false;
         this.previewElement.stickyAnchor = true;
         this.previewElement.anchorPoint = ElementAnchorPoints.MID_CENTERED;
@@ -185,7 +191,7 @@ public class KeyframeManagerScreen extends Screen {
         // Done button
         ExtendedButton doneButton = UIBase.applyDefaultWidgetSkinTo(new ExtendedButton(80, 10, buttonBaseWidth, 20,
                 Component.translatable("gui.done"),
-                button -> this.resultCallback.accept(this.workingKeyframes)));
+                button -> this.resultCallback.accept(new AnimationControllerMetadata(this.workingKeyframes, this.isOffsetMode))));
         this.addRenderableWidget(doneButton);
 
         // BOTTOM BUTTON ROW 1 ------------------------------------>
@@ -247,6 +253,12 @@ public class KeyframeManagerScreen extends Screen {
         this.smoothingButton.setTooltipSupplier(consumes -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.keyframe_manager.smoothing.desc")));
         this.addBottomWidget(1, 0, this.smoothingButton);
 
+        // Offset Mode button
+        CycleButton<?> offsetModeButton = new CycleButton<>(0, 0, buttonBaseWidth, 0,
+                CommonCycles.cycleEnabledDisabled("fancymenu.elements.animation_controller.keyframe_manager.offset_mode", this.isOffsetMode),
+                (value, button) -> this.setOffsetMode(value.getAsBoolean()));
+        this.addBottomWidget(1, 0, offsetModeButton);
+
         // BOTTOM BUTTON ROW 2 ------------------------------------>
 
         // Undo button
@@ -272,14 +284,14 @@ public class KeyframeManagerScreen extends Screen {
                         .setValueNameSupplier(ElementAnchorPoint::getName)
                         .setValueComponentStyleSupplier(consumes -> Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())),
                 (value, button) -> this.setAnchorPoint(value));
-        this.anchorButton.setIsActiveSupplier(consumes -> (this.selectedKeyframes.size() == 1) || this.isRecording);
+        this.anchorButton.setIsActiveSupplier(consumes -> ((this.selectedKeyframes.size() == 1) || this.isRecording) && !this.isOffsetMode);
         this.addBottomWidget(2, 0, this.anchorButton);
 
         // Sticky anchor toggle
         this.stickyButton = new CycleButton<>(0, 0, buttonBaseWidth + 65, 0,
                 CommonCycles.cycleEnabledDisabled("fancymenu.elements.animation_controller.keyframe_manager.sticky"),
                 (value, button) -> this.setStickyAnchor(value.getAsBoolean()));
-        this.stickyButton.setIsActiveSupplier(consumes -> (this.selectedKeyframes.size() == 1) || this.isRecording);
+        this.stickyButton.setIsActiveSupplier(consumes -> ((this.selectedKeyframes.size() == 1) || this.isRecording) && !this.isOffsetMode);
         this.addBottomWidget(2, 0, this.stickyButton);
 
         // ---------------------------------------------------------
@@ -396,6 +408,8 @@ public class KeyframeManagerScreen extends Screen {
 
         this.renderRecordingIndicator(graphics, mouseX, mouseY, partial);
 
+        this.renderOffsetModeCrosshair(graphics);
+
         this.renderNotifications(graphics, mouseX, mouseY, partial);
 
         super.render(graphics, mouseX, mouseY, partial);
@@ -403,7 +417,6 @@ public class KeyframeManagerScreen extends Screen {
     }
 
     protected void tickAnimation() {
-
         if (this.isRecording && !this.isRecordingPaused) return;
 
         // Update preview element based on current time
@@ -425,14 +438,32 @@ public class KeyframeManagerScreen extends Screen {
         if ((this.isPlaying || this.isDraggingProgress) && (currentFrame != null) && (nextFrame != null)) {
             this.setSelectedKeyframe(null);
             float progress = (float)(currentPlayOrRecordPosition - currentFrame.timestamp) / (float)(nextFrame.timestamp - currentFrame.timestamp);
-            previewElement.posOffsetX = (int)lerp(currentFrame.posOffsetX, nextFrame.posOffsetX, progress);
-            previewElement.posOffsetY = (int)lerp(currentFrame.posOffsetY, nextFrame.posOffsetY, progress);
+
+            if (this.isOffsetMode) {
+                previewElement.animatedOffsetX = (int)lerp(currentFrame.posOffsetX, nextFrame.posOffsetX, progress);
+                previewElement.animatedOffsetY = (int)lerp(currentFrame.posOffsetY, nextFrame.posOffsetY, progress);
+                previewElement.posOffsetX = 0;
+                previewElement.posOffsetY = 0;
+            } else {
+                previewElement.posOffsetX = (int)lerp(currentFrame.posOffsetX, nextFrame.posOffsetX, progress);
+                previewElement.posOffsetY = (int)lerp(currentFrame.posOffsetY, nextFrame.posOffsetY, progress);
+            }
+
             previewElement.baseWidth = (int)lerp(currentFrame.baseWidth, nextFrame.baseWidth, progress);
             previewElement.baseHeight = (int)lerp(currentFrame.baseHeight, nextFrame.baseHeight, progress);
-            previewElement.anchorPoint = nextFrame.anchorPoint;
+            previewElement.anchorPoint = this.isOffsetMode ? ElementAnchorPoints.MID_CENTERED : nextFrame.anchorPoint;
             previewElement.stickyAnchor = nextFrame.stickyAnchor;
         }
+    }
 
+    protected void renderOffsetModeCrosshair(@NotNull GuiGraphics graphics) {
+        if (!this.isOffsetMode) return;
+        int centerX = this.width / 2;
+        int centerY = this.height / 2;
+        // Horizontal line
+        graphics.fill(centerX - 10, centerY - 1, centerX + 10, centerY + 1, OFFSET_MODE_CROSSHAIR_COLOR.getColorInt());
+        // Vertical line
+        graphics.fill(centerX - 1, centerY - 10, centerX + 1, centerY + 10, OFFSET_MODE_CROSSHAIR_COLOR.getColorInt());
     }
 
     protected void renderTimelineBackground(@NotNull GuiGraphics graphics, long actualEndTime) {
@@ -943,7 +974,7 @@ public class KeyframeManagerScreen extends Screen {
         }
 
         if (keyCode == KEY_TOGGLE_PAUSE_RECORDING) {
-            this.togglePauseRecording();
+            this.togglePauseRecording(true);
             return true;
         }
 
@@ -953,24 +984,44 @@ public class KeyframeManagerScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (super.mouseDragged(mouseX, mouseY, button, dragX, dragY)) return true;
         return this.previewEditorElement.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
 
     protected void applyElementValuesToKeyframe(@NotNull PreviewElement element, @NotNull AnimationKeyframe keyframe) {
-        keyframe.posOffsetX = element.posOffsetX;
-        keyframe.posOffsetY = element.posOffsetY;
+        if (this.isOffsetMode) {
+            // Calculate center points
+            int screenCenterX = this.width / 2;
+            int screenCenterY = this.height / 2;
+            int elementCenterX = element.getAbsoluteX() + (element.getAbsoluteWidth() / 2);
+            int elementCenterY = element.getAbsoluteY() + (element.getAbsoluteHeight() / 2);
+
+            // Store offset from screen center
+            keyframe.posOffsetX = elementCenterX - screenCenterX;
+            keyframe.posOffsetY = elementCenterY - screenCenterY;
+        } else {
+            keyframe.posOffsetX = element.posOffsetX;
+            keyframe.posOffsetY = element.posOffsetY;
+        }
         keyframe.baseWidth = element.baseWidth;
         keyframe.baseHeight = element.baseHeight;
-        keyframe.anchorPoint = element.anchorPoint;
+        keyframe.anchorPoint = this.isOffsetMode ? ElementAnchorPoints.MID_CENTERED : element.anchorPoint;
         keyframe.stickyAnchor = element.stickyAnchor;
     }
 
     protected void applyKeyframeValuesToElement(@NotNull AnimationKeyframe keyframe, @NotNull PreviewElement element) {
-        element.posOffsetX = keyframe.posOffsetX;
-        element.posOffsetY = keyframe.posOffsetY;
+        if (this.isOffsetMode) {
+            element.animatedOffsetX = keyframe.posOffsetX;
+            element.animatedOffsetY = keyframe.posOffsetY;
+            element.posOffsetX = 0;
+            element.posOffsetY = 0;
+        } else {
+            element.posOffsetX = keyframe.posOffsetX;
+            element.posOffsetY = keyframe.posOffsetY;
+        }
         element.baseWidth = keyframe.baseWidth;
         element.baseHeight = keyframe.baseHeight;
-        element.anchorPoint = keyframe.anchorPoint;
+        element.anchorPoint = this.isOffsetMode ? ElementAnchorPoints.MID_CENTERED : keyframe.anchorPoint;
         element.stickyAnchor = keyframe.stickyAnchor;
     }
 
@@ -1019,7 +1070,7 @@ public class KeyframeManagerScreen extends Screen {
         updateTimelineDurationToMaxTimestamp();
     }
 
-    protected void togglePauseRecording() {
+    protected void togglePauseRecording(boolean updateSlider) {
         if (!this.isRecording) return;
         if (!this.isRecordingPaused) {
             this.cachedRecordingSpeed = this.recordingSpeed;
@@ -1027,7 +1078,7 @@ public class KeyframeManagerScreen extends Screen {
         } else {
             this.setRecordingSpeed(this.cachedRecordingSpeed);
         }
-        if (this.recordingSpeedSlider != null) {
+        if (updateSlider && (this.recordingSpeedSlider != null)) {
             this.recordingSpeedSlider.setValue(this.recordingSpeed);
         }
     }
@@ -1054,21 +1105,54 @@ public class KeyframeManagerScreen extends Screen {
         this.recordingSpeed = newSpeed;
     }
 
-    protected void addKeyframeAtProgress() {
+    protected void toggleOffsetMode() {
+        this.setOffsetMode(!this.isOffsetMode);
+    }
 
+    protected void setOffsetMode(boolean offsetMode) {
+        this.isOffsetMode = offsetMode;
+        if (offsetMode) {
+            this.previewElement.anchorPoint = ElementAnchorPoints.MID_CENTERED;
+            this.anchorButton.setSelectedValue(ElementAnchorPoints.MID_CENTERED);
+        }
+    }
+
+    protected void addKeyframeAtProgress() {
         if (!isRecording) return;
 
         saveState();
 
-        AnimationKeyframe newKeyframe = new AnimationKeyframe(
-                currentPlayOrRecordPosition,
-                previewElement.posOffsetX,
-                previewElement.posOffsetY,
-                previewElement.baseWidth,
-                previewElement.baseHeight,
-                previewElement.anchorPoint,
-                previewElement.stickyAnchor
-        );
+        AnimationKeyframe newKeyframe;
+
+        if (this.isOffsetMode) {
+            // Calculate center points
+            int screenCenterX = this.width / 2;
+            int screenCenterY = this.height / 2;
+            int elementCenterX = previewElement.getAbsoluteX() + (previewElement.getAbsoluteWidth() / 2);
+            int elementCenterY = previewElement.getAbsoluteY() + (previewElement.getAbsoluteHeight() / 2);
+
+            // Create keyframe with offset from screen center
+            newKeyframe = new AnimationKeyframe(
+                    currentPlayOrRecordPosition,
+                    elementCenterX - screenCenterX,  // Store offset X from screen center
+                    elementCenterY - screenCenterY,  // Store offset Y from screen center
+                    previewElement.baseWidth,
+                    previewElement.baseHeight,
+                    ElementAnchorPoints.MID_CENTERED,
+                    previewElement.stickyAnchor
+            );
+        } else {
+            // Create keyframe with absolute position
+            newKeyframe = new AnimationKeyframe(
+                    currentPlayOrRecordPosition,
+                    previewElement.posOffsetX,
+                    previewElement.posOffsetY,
+                    previewElement.baseWidth,
+                    previewElement.baseHeight,
+                    previewElement.anchorPoint,
+                    previewElement.stickyAnchor
+            );
+        }
 
         workingKeyframes.add(newKeyframe);
 
@@ -1454,6 +1538,9 @@ public class KeyframeManagerScreen extends Screen {
             return Minecraft.getInstance().font.lineHeight + 2; // Line height plus small padding
         }
 
+    }
+
+    public static record AnimationControllerMetadata(@NotNull List<AnimationKeyframe> keyframes, boolean isOffsetMode) {
     }
 
 }
