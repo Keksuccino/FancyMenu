@@ -1,7 +1,7 @@
 
 CHANGELOG | FANCYMENU v3.4.0 [ W I P !! Not public yet !! ]
 
-- Added "Element Animator" element that allows you to animate the position and size of other elements by using keyframes
+- Added "Element Animator" element that allows you to animate the position and size of other elements by using keyframes (#412)
 - Added "Is Key Pressed" requirement to check for keyboard key presses (#966)
 - Added "Split Text" placeholder to split text at a specific character or regex (#1011)
 - Added "Trim Text" placeholder that removes all leading and trailing spaces of the given text, but not spaces within the text (#989)
