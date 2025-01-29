@@ -21,7 +21,7 @@ CHANGELOG | FANCYMENU v3.4.0 [ W I P !! Not public yet !! ]
 - Added a parallax effect feature to the "Image" menu background type (supports inverted movement and customizable intensity) (#735)
 - Added a parallax effect feature to all elements (supports inverted movement and customizable intensity)
 - Added WHILE loop feature to the action script system (#1023)
-- Added "Load Once Per Session" mode for all element types
+- Added "Load Once Per Session" mode for all element types (#1019)
   - Enabling this will make the element only load once per game session (game restart = new game session)
   - The element stays active/visible until the user opens a new screen
 - You can now execute action scripts when opening and closing a screen (#1018)
