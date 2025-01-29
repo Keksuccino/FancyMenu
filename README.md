@@ -8,7 +8,7 @@ Check the branches to see the **source code** for all versions of FancyMenu.
 
 ## Copyright
 
-FancyMenu © Copyright 2020-2024 Keksuccino.<br>
+FancyMenu © Copyright 2020-2025 Keksuccino.<br>
 FancyMenu is licensed under DSMSLv2 (DON'T SNATCH MA STUFF LICENSE V2.0).<br>
 See `LICENSE.md` for more information.
 
