@@ -11,6 +11,8 @@ import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+
 public class AnimationControllerEditorElement extends AbstractEditorElement {
 
     public AnimationControllerEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
@@ -34,11 +36,6 @@ public class AnimationControllerEditorElement extends AbstractEditorElement {
 
         super.init();
 
-        this.addToggleContextMenuEntryTo(this.rightClickMenu, "loop", AnimationControllerEditorElement.class,
-                consumes -> consumes.getElement().loop,
-                (element, aBoolean) -> element.getElement().loop = aBoolean,
-                "fancymenu.elements.animation_controller.loop");
-
         this.rightClickMenu.addClickableEntry("manage_keyframes", Component.translatable("fancymenu.elements.animation_controller.manage_keyframes"),
                         (menu, entry) -> {
                             KeyframeManagerScreen managerScreen = new KeyframeManagerScreen(
@@ -48,8 +45,6 @@ public class AnimationControllerEditorElement extends AbstractEditorElement {
                                             this.editor.history.saveSnapshot();
                                             this.getElement().keyframes = callback.keyframes();
                                             this.getElement().offsetMode = callback.isOffsetMode();
-                                            //TODO remove debug
-                                            LogManager.getLogger().info("############# IS OFFSET MODE 2: " + this.getElement().offsetMode);
                                         }
                                         Minecraft.getInstance().setScreen(this.editor);
                                     }
@@ -57,18 +52,44 @@ public class AnimationControllerEditorElement extends AbstractEditorElement {
                             Minecraft.getInstance().setScreen(managerScreen);
                         })
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.manage_keyframes.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("list"))
+                .setStackable(false);
+
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "loop", AnimationControllerEditorElement.class,
+                consumes -> consumes.getElement().loop,
+                (element, aBoolean) -> element.getElement().loop = aBoolean,
+                "fancymenu.elements.animation_controller.loop");
+
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "ignore_size", AnimationControllerEditorElement.class,
+                        consumes -> consumes.getElement().ignoreSize,
+                        (element, aBoolean) -> element.getElement().ignoreSize = aBoolean,
+                        "fancymenu.elements.animation_controller.ignore_size")
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.ignore_size.desc")))
+                .setStackable(false);
+
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "ignore_position", AnimationControllerEditorElement.class,
+                        consumes -> consumes.getElement().ignorePosition,
+                        (element, aBoolean) -> element.getElement().ignorePosition = aBoolean,
+                        "fancymenu.elements.animation_controller.ignore_position")
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.ignore_position.desc")))
                 .setStackable(false);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_manage");
 
-        // Add target element selection
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_target_element", AnimationControllerEditorElement.class,
-                        element -> element.getElement().getTargetElementId(),
-                        (element, value) -> element.getElement().setTargetElementId(value),
-                        null, false, false, Component.translatable("fancymenu.elements.animation_controller.target_element"),
-                        true, null, null, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.target_element.desc")))
+        this.rightClickMenu.addClickableEntry("manage_targets", Component.translatable("fancymenu.elements.animation_controller.manage_targets"),
+                        (menu, entry) -> {
+                            TargetElementManagerScreen managerScreen = new TargetElementManagerScreen(
+                                    this,
+                                    callback -> {
+                                        if (callback != null) {
+                                            this.editor.history.saveSnapshot();
+                                            this.getElement().targetElements = new ArrayList<>(callback);
+                                        }
+                                        Minecraft.getInstance().setScreen(this.editor);
+                                    }
+                            );
+                            Minecraft.getInstance().setScreen(managerScreen);
+                        })
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.manage_targets.desc")))
                 .setStackable(false);
 
     }

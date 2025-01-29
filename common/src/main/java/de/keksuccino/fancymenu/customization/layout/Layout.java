@@ -1,5 +1,8 @@
 package de.keksuccino.fancymenu.customization.layout;
 
+import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.ExecutableBlockDeserializer;
+import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.util.SerializationUtils;
@@ -204,9 +207,19 @@ public class Layout extends LayoutBase {
         scrollListContainer.putProperty("repeat_scroll_list_header_texture", "" + this.repeatScrollListHeaderTexture);
         scrollListContainer.putProperty("repeat_scroll_list_footer_texture", "" + this.repeatScrollListFooterTexture);
         scrollListContainer.putProperty("show_screen_background_overlay_on_custom_background", "" + this.showScreenBackgroundOverlayOnCustomBackground);
-        //TODO übernehmen
         scrollListContainer.putProperty("apply_vanilla_background_blur", "" + this.applyVanillaBackgroundBlur);
         set.putContainer(scrollListContainer);
+
+        PropertyContainer executableBlocks = new PropertyContainer("layout_action_executable_blocks");
+        if (!this.openScreenExecutableBlocks.isEmpty()) {
+            executableBlocks.putProperty("open_screen_executable_block_identifier", this.openScreenExecutableBlocks.getFirst().identifier);
+            this.openScreenExecutableBlocks.getFirst().serializeToExistingPropertyContainer(executableBlocks);
+        }
+        if (!this.closeScreenExecutableBlocks.isEmpty()) {
+            executableBlocks.putProperty("close_screen_executable_block_identifier", this.closeScreenExecutableBlocks.getFirst().identifier);
+            this.closeScreenExecutableBlocks.getFirst().serializeToExistingPropertyContainer(executableBlocks);
+        }
+        set.putContainer(executableBlocks);
 
         this.layoutWideLoadingRequirementContainer.serializeToExistingPropertyContainer(meta);
 
@@ -429,8 +442,30 @@ public class Layout extends LayoutBase {
                 layout.showScreenBackgroundOverlayOnCustomBackground = SerializationUtils.deserializeBoolean(layout.showScreenBackgroundOverlayOnCustomBackground, scrollListCustomizations.getValue("show_screen_background_overlay_on_custom_background"));
                 layout.repeatScrollListHeaderTexture = SerializationUtils.deserializeBoolean(layout.repeatScrollListHeaderTexture, scrollListCustomizations.getValue("repeat_scroll_list_header_texture"));
                 layout.repeatScrollListFooterTexture = SerializationUtils.deserializeBoolean(layout.repeatScrollListFooterTexture, scrollListCustomizations.getValue("repeat_scroll_list_footer_texture"));
-                //TODO übernehmen
                 layout.applyVanillaBackgroundBlur = SerializationUtils.deserializeBoolean(layout.applyVanillaBackgroundBlur, scrollListCustomizations.getValue("apply_vanilla_background_blur"));
+            }
+
+            PropertyContainer executableBlocks = serialized.getFirstContainerOfType("layout_action_executable_blocks");
+            if (executableBlocks != null) {
+
+                String openScreenExecutableBlockId = executableBlocks.getValue("open_screen_executable_block_identifier");
+                if (openScreenExecutableBlockId != null) {
+                    AbstractExecutableBlock b = ExecutableBlockDeserializer.deserializeWithIdentifier(executableBlocks, openScreenExecutableBlockId);
+                    if (b instanceof GenericExecutableBlock g) {
+                        layout.openScreenExecutableBlocks.clear();
+                        layout.openScreenExecutableBlocks.add(g);
+                    }
+                }
+
+                String closeScreenExecutableBlockId = executableBlocks.getValue("close_screen_executable_block_identifier");
+                if (closeScreenExecutableBlockId != null) {
+                    AbstractExecutableBlock b = ExecutableBlockDeserializer.deserializeWithIdentifier(executableBlocks, closeScreenExecutableBlockId);
+                    if (b instanceof GenericExecutableBlock g) {
+                        layout.closeScreenExecutableBlocks.clear();
+                        layout.closeScreenExecutableBlocks.add(g);
+                    }
+                }
+
             }
 
             //Handle everything else

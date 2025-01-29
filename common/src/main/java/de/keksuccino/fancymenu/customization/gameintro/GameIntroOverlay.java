@@ -157,7 +157,6 @@ public class GameIntroOverlay extends Overlay {
         ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(this.fadeTo);
         if (layer != null) layer.resetLayer();
 
-        EventHandler.INSTANCE.postEvent(new OpenScreenEvent(this.fadeTo));
         EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(this.fadeTo, InitOrResizeScreenEvent.InitializationPhase.INIT));
         EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(this.fadeTo, InitOrResizeScreenEvent.InitializationPhase.INIT));
 
@@ -165,7 +164,6 @@ public class GameIntroOverlay extends Overlay {
 
         EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(this.fadeTo, InitOrResizeScreenEvent.InitializationPhase.INIT));
         EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(this.fadeTo, InitOrResizeScreenEvent.InitializationPhase.INIT));
-        EventHandler.INSTANCE.postEvent(new OpenScreenPostInitEvent(this.fadeTo));
 
         this.fadeToInitialized = true;
 

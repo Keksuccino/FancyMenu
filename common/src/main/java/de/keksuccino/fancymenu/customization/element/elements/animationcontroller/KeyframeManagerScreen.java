@@ -46,6 +46,8 @@ public class KeyframeManagerScreen extends Screen {
 
     //TODO Offset Mode weiter ausbauen
     // - Offset wird komisch auf target element angewendet (gefühlt nicht richtiges offset von normaler position??)
+    // - "Ignore Size" toggle
+    // - "Ignore Pos" toggle
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -134,8 +136,6 @@ public class KeyframeManagerScreen extends Screen {
         super(Component.translatable("fancymenu.elements.animation_controller.keyframe_manager"));
         this.controller = controller;
         this.isOffsetMode = this.controller.offsetMode;
-        //TODO remove debug
-        LOGGER.info("############# IS OFFSET MODE 1: " + this.isOffsetMode);
         this.resultCallback = resultCallback;
         this.workingKeyframes = new ArrayList<>(controller.keyframes.stream()
                 .map(AnimationKeyframe::clone)
@@ -257,6 +257,7 @@ public class KeyframeManagerScreen extends Screen {
         CycleButton<?> offsetModeButton = new CycleButton<>(0, 0, buttonBaseWidth, 0,
                 CommonCycles.cycleEnabledDisabled("fancymenu.elements.animation_controller.keyframe_manager.offset_mode", this.isOffsetMode),
                 (value, button) -> this.setOffsetMode(value.getAsBoolean()));
+        offsetModeButton.setTooltipSupplier(consumes -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.keyframe_manager.offset_mode.desc")));
         this.addBottomWidget(1, 0, offsetModeButton);
 
         // BOTTOM BUTTON ROW 2 ------------------------------------>
@@ -1006,7 +1007,7 @@ public class KeyframeManagerScreen extends Screen {
         keyframe.baseWidth = element.baseWidth;
         keyframe.baseHeight = element.baseHeight;
         keyframe.anchorPoint = this.isOffsetMode ? ElementAnchorPoints.MID_CENTERED : element.anchorPoint;
-        keyframe.stickyAnchor = element.stickyAnchor;
+        keyframe.stickyAnchor = this.isOffsetMode ? true : element.stickyAnchor;
     }
 
     protected void applyKeyframeValuesToElement(@NotNull AnimationKeyframe keyframe, @NotNull PreviewElement element) {
@@ -1022,7 +1023,7 @@ public class KeyframeManagerScreen extends Screen {
         element.baseWidth = keyframe.baseWidth;
         element.baseHeight = keyframe.baseHeight;
         element.anchorPoint = this.isOffsetMode ? ElementAnchorPoints.MID_CENTERED : keyframe.anchorPoint;
-        element.stickyAnchor = keyframe.stickyAnchor;
+        element.stickyAnchor = this.isOffsetMode ? true : keyframe.stickyAnchor;
     }
 
     protected void togglePlayback() {
@@ -1139,7 +1140,7 @@ public class KeyframeManagerScreen extends Screen {
                     previewElement.baseWidth,
                     previewElement.baseHeight,
                     ElementAnchorPoints.MID_CENTERED,
-                    previewElement.stickyAnchor
+                    true
             );
         } else {
             // Create keyframe with absolute position

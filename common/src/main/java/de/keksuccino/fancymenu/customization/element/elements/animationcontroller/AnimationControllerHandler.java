@@ -76,16 +76,20 @@ public class AnimationControllerHandler {
                     float progress = (float)timeIntoLoop / firstKeyframe.timestamp;
 
                     // Apply interpolated values
-                    if (state.controller.offsetMode) {
-                        state.targetElement.animatedOffsetX = (int)lerp(current.posOffsetX, next.posOffsetX, progress);
-                        state.targetElement.animatedOffsetY = (int)lerp(current.posOffsetY, next.posOffsetY, progress);
-                    } else {
-                        state.targetElement.posOffsetX = (int)lerp(current.posOffsetX, next.posOffsetX, progress);
-                        state.targetElement.posOffsetY = (int)lerp(current.posOffsetY, next.posOffsetY, progress);
+                    if (!state.controller.ignorePosition) {
+                        if (!state.controller.offsetMode) {
+                            state.targetElement.posOffsetX = (int)lerp(current.posOffsetX, next.posOffsetX, progress);
+                            state.targetElement.posOffsetY = (int)lerp(current.posOffsetY, next.posOffsetY, progress);
+                        } else {
+                            state.targetElement.animatedOffsetX = (int)lerp(current.posOffsetX, next.posOffsetX, progress);
+                            state.targetElement.animatedOffsetY = (int)lerp(current.posOffsetY, next.posOffsetY, progress);
+                        }
                     }
-                    state.targetElement.baseWidth = (int)lerp(current.baseWidth, next.baseWidth, progress);
-                    state.targetElement.baseHeight = (int)lerp(current.baseHeight, next.baseHeight, progress);
-                    if (!state.controller.offsetMode) {
+                    if (!state.controller.ignoreSize) {
+                        state.targetElement.baseWidth = (int)lerp(current.baseWidth, next.baseWidth, progress);
+                        state.targetElement.baseHeight = (int)lerp(current.baseHeight, next.baseHeight, progress);
+                    }
+                    if (!state.controller.offsetMode && !state.controller.ignorePosition) {
                         state.targetElement.anchorPoint = next.anchorPoint;
                         state.targetElement.stickyAnchor = next.stickyAnchor;
                     }
@@ -112,23 +116,38 @@ public class AnimationControllerHandler {
                 float progress = (float)(elapsedTime - current.timestamp) / (next.timestamp - current.timestamp);
 
                 // Interpolate and apply element properties
-                state.targetElement.posOffsetX = (int)lerp(current.posOffsetX, next.posOffsetX, progress);
-                state.targetElement.posOffsetY = (int)lerp(current.posOffsetY, next.posOffsetY, progress);
-                state.targetElement.baseWidth = (int)lerp(current.baseWidth, next.baseWidth, progress);
-                state.targetElement.baseHeight = (int)lerp(current.baseHeight, next.baseHeight, progress);
-                state.targetElement.anchorPoint = next.anchorPoint;
-                state.targetElement.stickyAnchor = next.stickyAnchor;
+                if (!state.controller.ignorePosition) {
+                    if (!state.controller.offsetMode) {
+                        state.targetElement.posOffsetX = (int) lerp(current.posOffsetX, next.posOffsetX, progress);
+                        state.targetElement.posOffsetY = (int) lerp(current.posOffsetY, next.posOffsetY, progress);
+                    } else {
+                        state.targetElement.animatedOffsetX = (int) lerp(current.posOffsetX, next.posOffsetX, progress);
+                        state.targetElement.animatedOffsetY = (int) lerp(current.posOffsetY, next.posOffsetY, progress);
+                    }
+                }
+                if (!state.controller.ignoreSize) {
+                    state.targetElement.baseWidth = (int)lerp(current.baseWidth, next.baseWidth, progress);
+                    state.targetElement.baseHeight = (int)lerp(current.baseHeight, next.baseHeight, progress);
+                }
+                if (!state.controller.offsetMode && !state.controller.ignorePosition) {
+                    state.targetElement.anchorPoint = next.anchorPoint;
+                    state.targetElement.stickyAnchor = next.stickyAnchor;
+                }
             }
 
             // Remove non-looping animations once they finish
             if (!state.controller.loop && elapsedTime > lastKeyframe.timestamp) {
                 // Restore original properties
-                state.targetElement.posOffsetX = state.originalPosOffsetX;
-                state.targetElement.posOffsetY = state.originalPosOffsetY;
-                state.targetElement.baseWidth = state.originalBaseWidth;
-                state.targetElement.baseHeight = state.originalBaseHeight;
-                state.targetElement.anchorPoint = state.originalAnchorPoint;
-                state.targetElement.stickyAnchor = state.originalStickyAnchor;
+                if (!state.controller.offsetMode) {
+                    state.targetElement.posOffsetX = state.originalPosOffsetX;
+                    state.targetElement.posOffsetY = state.originalPosOffsetY;
+                    state.targetElement.baseWidth = state.originalBaseWidth;
+                    state.targetElement.baseHeight = state.originalBaseHeight;
+                    state.targetElement.anchorPoint = state.originalAnchorPoint;
+                    state.targetElement.stickyAnchor = state.originalStickyAnchor;
+                }
+                state.targetElement.animatedOffsetX = 0;
+                state.targetElement.animatedOffsetY = 0;
                 it.remove();
             }
 

@@ -16,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class AnimationControllerElementBuilder extends ElementBuilder<AnimationControllerElement, AnimationControllerEditorElement> {
@@ -23,6 +24,7 @@ public class AnimationControllerElementBuilder extends ElementBuilder<AnimationC
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson GSON = new Gson();
     private static final Type KEYFRAME_LIST_TYPE = new TypeToken<ArrayList<AnimationKeyframe>>(){}.getType();
+    private static final Type IDS_LIST_TYPE = new TypeToken<ArrayList<String>>(){}.getType();
 
     public AnimationControllerElementBuilder() {
         super("animation_controller");
@@ -41,10 +43,15 @@ public class AnimationControllerElementBuilder extends ElementBuilder<AnimationC
 
         AnimationControllerElement element = buildDefaultInstance();
 
-        // Deserialize target element ID
-        String targetId = serialized.getValue("target_element_id");
-        if (targetId != null) {
-            element.setTargetElementId(targetId);
+        try {
+            // Deserialize target element IDs
+            String targetIds = serialized.getValue("target_element_ids");
+            if (targetIds != null) {
+                ArrayList<String> ids = Objects.requireNonNullElse(GSON.fromJson(targetIds, IDS_LIST_TYPE), new ArrayList<>());
+                ids.forEach(s -> element.targetElements.add(new AnimationControllerElement.TargetElement(s)));
+            }
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to deserialize target element IDs of AnimationControllerElement!", ex);
         }
 
         // Deserialize keyframes
@@ -68,6 +75,10 @@ public class AnimationControllerElementBuilder extends ElementBuilder<AnimationC
 
         element.offsetMode = SerializationUtils.deserializeBoolean(element.offsetMode, serialized.getValue("offset_mode"));
 
+        element.ignoreSize = SerializationUtils.deserializeBoolean(element.ignoreSize, serialized.getValue("ignore_size"));
+
+        element.ignorePosition = SerializationUtils.deserializeBoolean(element.ignorePosition, serialized.getValue("ignore_position"));
+
         return element;
 
     }
@@ -75,9 +86,11 @@ public class AnimationControllerElementBuilder extends ElementBuilder<AnimationC
     @Override
     protected SerializedElement serializeElement(@NotNull AnimationControllerElement element, @NotNull SerializedElement serializeTo) {
 
-        // Serialize target element ID
-        if (element.getTargetElementId() != null) {
-            serializeTo.putProperty("target_element_id", element.getTargetElementId());
+        // Serialize target element IDs
+        if (!element.targetElements.isEmpty()) {
+            ArrayList<String> ids = new ArrayList<>();
+            element.targetElements.forEach(targetElement -> ids.add(targetElement.targetElementId));
+            serializeTo.putProperty("target_element_ids", GSON.toJson(ids, IDS_LIST_TYPE));
         }
 
         // Serialize keyframes 
@@ -89,6 +102,10 @@ public class AnimationControllerElementBuilder extends ElementBuilder<AnimationC
         serializeTo.putProperty("loop", "" + element.loop);
 
         serializeTo.putProperty("offset_mode", "" + element.offsetMode);
+
+        serializeTo.putProperty("ignore_size", "" + element.ignoreSize);
+
+        serializeTo.putProperty("ignore_position", "" + element.ignorePosition);
 
         return serializeTo;
 

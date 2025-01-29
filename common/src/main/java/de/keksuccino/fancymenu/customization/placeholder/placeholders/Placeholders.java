@@ -128,6 +128,11 @@ public class Placeholders {
     public static final SplitTextPlaceholder SPLIT_TEXT = new SplitTextPlaceholder();
     public static final TrimTextPlaceholder TRIM_TEXT = new TrimTextPlaceholder();
     public static final CropTextPlaceholder CROP_TEXT = new CropTextPlaceholder();
+    public static final MathCeilPlaceholder MATH_CEIL = new MathCeilPlaceholder();
+    public static final MathFloorPlaceholder MATH_FLOOR = new MathFloorPlaceholder();
+    public static final MathRoundPlaceholder MATH_ROUND = new MathRoundPlaceholder();
+    public static final MathSignPlaceholder MATH_SIGN = new MathSignPlaceholder();
+    public static final SwitchCasePlaceholder SWITCH_CASE = new SwitchCasePlaceholder();
 
     public static void registerAll() {
 
@@ -236,6 +241,11 @@ public class Placeholders {
         PlaceholderRegistry.register(SPLIT_TEXT);
         PlaceholderRegistry.register(TRIM_TEXT);
         PlaceholderRegistry.register(CROP_TEXT);
+        PlaceholderRegistry.register(MATH_CEIL);
+        PlaceholderRegistry.register(MATH_FLOOR);
+        PlaceholderRegistry.register(MATH_ROUND);
+        PlaceholderRegistry.register(MATH_SIGN);
+        PlaceholderRegistry.register(SWITCH_CASE);
 
         //Audio
         PlaceholderRegistry.register(AUDIO_ELEMENT_VOLUME);

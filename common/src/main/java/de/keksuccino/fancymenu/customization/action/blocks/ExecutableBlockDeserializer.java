@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.action.Executable;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseIfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.WhileExecutableBlock;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.konkrete.input.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -104,6 +105,7 @@ public class ExecutableBlockDeserializer {
         if (type.equals("if")) return IfExecutableBlock.deserializeEmptyWithIdentifier(serialized, identifier);
         if (type.equals("else-if")) return ElseIfExecutableBlock.deserializeEmptyWithIdentifier(serialized, identifier);
         if (type.equals("else")) return ElseExecutableBlock.deserializeEmptyWithIdentifier(serialized, identifier);
+        if (type.equals("while")) return WhileExecutableBlock.deserializeEmptyWithIdentifier(serialized, identifier);
         return null;
     }
 

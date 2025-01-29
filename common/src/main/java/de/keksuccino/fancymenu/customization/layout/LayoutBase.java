@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.layout;
 
+import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.SerializedMenuBackground;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
@@ -36,6 +37,10 @@ public class LayoutBase {
     public boolean showScrollListHeaderFooterPreviewInEditor = false;
     public boolean showScreenBackgroundOverlayOnCustomBackground = false;
     public boolean applyVanillaBackgroundBlur = false;
+    @NotNull
+    public final List<GenericExecutableBlock> openScreenExecutableBlocks = new ArrayList<>();
+    @NotNull
+    public final List<GenericExecutableBlock> closeScreenExecutableBlocks = new ArrayList<>();
 
     @NotNull
     public static LayoutBase stackLayoutBases(LayoutBase... layouts) {
@@ -96,6 +101,12 @@ public class LayoutBase {
                 }
                 if (layout.applyVanillaBackgroundBlur) {
                     stacked.applyVanillaBackgroundBlur = true;
+                }
+                if (!layout.openScreenExecutableBlocks.isEmpty()) {
+                    stacked.openScreenExecutableBlocks.addAll(layout.openScreenExecutableBlocks);
+                }
+                if (!layout.closeScreenExecutableBlocks.isEmpty()) {
+                    stacked.closeScreenExecutableBlocks.addAll(layout.closeScreenExecutableBlocks);
                 }
 
             }

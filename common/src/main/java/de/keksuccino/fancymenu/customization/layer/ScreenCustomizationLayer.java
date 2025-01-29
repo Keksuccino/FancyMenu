@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.element.elements.animationcontroller.AnimationControllerHandler;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
@@ -130,6 +131,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		this.layoutBase.menuBackgrounds.forEach(MenuBackground::onOpenScreen);
 
+		this.layoutBase.openScreenExecutableBlocks.forEach(AbstractExecutableBlock::execute);
+
 	}
 
 	@EventListener
@@ -152,6 +155,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 				audio.play();
 			}
 		}
+
+		this.layoutBase.closeScreenExecutableBlocks.forEach(AbstractExecutableBlock::execute);
 
 	}
 

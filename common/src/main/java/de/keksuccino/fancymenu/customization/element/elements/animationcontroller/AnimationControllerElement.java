@@ -17,12 +17,15 @@ import java.util.List;
 public class AnimationControllerElement extends AbstractElement {
 
     private static final DrawableColor BACKGROUND_COLOR = DrawableColor.of(new Color(0, 255, 0, 100));
-    
+
+    @NotNull
     public List<AnimationKeyframe> keyframes = new ArrayList<>();
-    public String targetElementId = null;
+    @NotNull
+    public List<TargetElement> targetElements = new ArrayList<>();
     public boolean loop = false;
     public boolean offsetMode = false;
-    public boolean animationApplied = false;
+    public boolean ignoreSize = false;
+    public boolean ignorePosition = false;
 
     public AnimationControllerElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -47,34 +50,38 @@ public class AnimationControllerElement extends AbstractElement {
 
         } else {
 
-            if ((this.targetElementId != null) && !this.animationApplied) {
-
-                if (AnimationControllerHandler.wasAnimatedInThePast(this.targetElementId) && !AnimationControllerHandler.isAnimating(this.targetElementId)) {
-                    this.animationApplied = true;
+            this.targetElements.forEach(targetElement -> {
+                if (AnimationControllerHandler.wasAnimatedInThePast(targetElement.targetElementId) && !AnimationControllerHandler.isAnimating(targetElement.targetElementId)) {
+                    targetElement.animationApplied = true;
                 } else {
                     ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getActiveLayer();
                     if (layer != null) {
-                        AbstractElement target = layer.getElementByInstanceIdentifier(this.targetElementId);
-                        if (target != null) this.animationApplied = AnimationControllerHandler.applyAnimation(this, target);
+                        AbstractElement target = layer.getElementByInstanceIdentifier(targetElement.targetElementId);
+                        if (target != null) targetElement.animationApplied = AnimationControllerHandler.applyAnimation(this, target);
                     }
                 }
-
-            }
+            });
 
         }
 
     }
 
-    public void setTargetElementId(String elementId) {
-        this.targetElementId = elementId;
-    }
-
-    public String getTargetElementId() {
-        return targetElementId;
-    }
-
     public List<AnimationKeyframe> getKeyframes() {
         return new ArrayList<>(keyframes);
+    }
+
+    public static class TargetElement {
+
+        public String targetElementId;
+        public boolean animationApplied = false;
+
+        public TargetElement() {
+        }
+
+        public TargetElement(String targetElementId) {
+            this.targetElementId = targetElementId;
+        }
+
     }
 
 }
