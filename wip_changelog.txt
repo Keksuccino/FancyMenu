@@ -19,6 +19,7 @@ CHANGELOG | FANCYMENU v3.4.0 [ W I P !! Not public yet !! ]
 - Added "Item" element to render items (sword, potato, etc.) in menus (#521)
 - Added a parallax effect feature to the "Image" menu background type (supports inverted movement and customizable intensity) (#735)
 - Added a parallax effect feature to all elements (supports inverted movement and customizable intensity)
+- Added WHILE loop feature to the action script system (#1023)
 - You can now execute action scripts when opening and closing a screen (#1018)
 - Menu backgrounds are stackable now, which means if you have multiple layouts with a background defined for the same menu, all backgrounds will get rendered now
   - Combining this with the new Parallax feature for Image backgrounds makes it possible to render layered parallax backgrounds
