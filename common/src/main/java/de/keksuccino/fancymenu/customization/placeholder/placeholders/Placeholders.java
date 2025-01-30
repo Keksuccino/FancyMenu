@@ -1,8 +1,7 @@
 package de.keksuccino.fancymenu.customization.placeholder.placeholders;
 
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.advanced.*;
-import de.keksuccino.fancymenu.customization.placeholder.placeholders.audio.AudioElementVolumePlaceholder;
-import de.keksuccino.fancymenu.customization.placeholder.placeholders.audio.AudioTrackPlaceholder;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.audio.*;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.client.*;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.gui.*;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderRegistry;
@@ -135,6 +134,9 @@ public class Placeholders {
     public static final MathSignPlaceholder MATH_SIGN = new MathSignPlaceholder();
     public static final SwitchCasePlaceholder SWITCH_CASE = new SwitchCasePlaceholder();
     public static final AudioTrackPlaceholder AUDIO_ELEMENT_TRACK = new AudioTrackPlaceholder();
+    public static final AudioDurationPlaceholder AUDIO_ELEMENT_DURATION = new AudioDurationPlaceholder();
+    public static final AudioPlaytimePlaceholder AUDIO_ELEMENT_PLAYTIME = new AudioPlaytimePlaceholder();
+    public static final AudioPlayingStatePlaceholder AUDIO_ELEMENT_PLAYING_STATE = new AudioPlayingStatePlaceholder();
 
     public static void registerAll() {
 
@@ -252,6 +254,9 @@ public class Placeholders {
         //Audio
         PlaceholderRegistry.register(AUDIO_ELEMENT_VOLUME);
         PlaceholderRegistry.register(AUDIO_ELEMENT_TRACK);
+        PlaceholderRegistry.register(AUDIO_ELEMENT_DURATION);
+        PlaceholderRegistry.register(AUDIO_ELEMENT_PLAYTIME);
+        PlaceholderRegistry.register(AUDIO_ELEMENT_PLAYING_STATE);
 
         //Other
         PlaceholderRegistry.register(PERCENT_RAM);

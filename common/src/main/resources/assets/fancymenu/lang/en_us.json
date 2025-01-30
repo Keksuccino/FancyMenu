@@ -1551,5 +1551,20 @@
   "fancymenu.elements.audio.manage_audios.weight.high": "Weight above 1.0: Track is more likely to be selected",
   "fancymenu.elements.audio.manage_audios.weight_display": " (Weight: %s)",
   "fancymenu.placeholders.audio_element_current_track": "Current Audio Track",
-  "fancymenu.placeholders.audio_element_current_track.desc": "Gets the filename or display name of the currently playing track in an Audio element.\nReturns \"---\" when no track is playing.\nTakes the element identifier of the target Audio element.\nOptionally takes display name mappings to show custom names for tracks.\nMapping format: track1.ogg=>Cool Name$:$track2.wav=>Another Name"
+  "fancymenu.placeholders.audio_element_current_track.desc": "Gets the filename or display name of the currently playing track in an Audio element.\nReturns \"---\" when no track is playing.\nTakes the element identifier of the target Audio element.\nOptionally takes display name mappings to show custom names for tracks.\nMapping format: track1.ogg=>Cool Name%:%track2.wav=>Another Name",
+  "fancymenu.placeholders.audio_duration": "Audio Duration",
+  "fancymenu.placeholders.audio_duration.desc": "Returns the total duration of the current track\nplaying in an Audio element in MM:SS format (e.g. '03:45').\nReturns '00:00' if no audio is playing.\n\nRequired values:\n- element_identifier: The ID of the audio element to get the duration from",
+  "fancymenu.placeholders.audio_playtime": "Audio Play Time",
+  "fancymenu.placeholders.audio_playtime.desc": "Returns either the current play time of an Audio element\n(MM:SS format) or the play progress percentage (0-100).\nReturns '00:00' or '0' if no audio is playing.\n\nRequired values:\n- element_identifier: The ID of the audio element\n- show_percentage: Set to 'true' to show percentage instead of time",
+  "fancymenu.actions.audio.next_track": "Next Track",
+  "fancymenu.actions.audio.next_track.desc": "Skips to the next track in an Audio element's playlist.",
+  "fancymenu.actions.audio.next_track.value.desc": "The identifier of the Audio element to control",
+  "fancymenu.actions.audio.previous_track": "Previous Track",
+  "fancymenu.actions.audio.previous_track.desc": "Returns to the previous track in an Audio element's playlist.",
+  "fancymenu.actions.audio.previous_track.value.desc": "The identifier of the Audio element to control",
+  "fancymenu.actions.audio.toggle_play": "Toggle Play/Pause",
+  "fancymenu.actions.audio.toggle_play.desc": "Toggles between playing and pausing an Audio element.\nIf paused, resumes playback. If playing, pauses playback.",
+  "fancymenu.actions.audio.toggle_play.value.desc": "The identifier of the audio element to control",
+  "fancymenu.placeholders.audio_playing_state": "Audio Playing State",
+  "fancymenu.placeholders.audio_playing_state.desc": "Returns the current playing state of an Audio element.\nUse 'element_identifier' to specify the Audio element.\nReturns 'true' if the audio is playing, 'false' if paused or stopped."
 }

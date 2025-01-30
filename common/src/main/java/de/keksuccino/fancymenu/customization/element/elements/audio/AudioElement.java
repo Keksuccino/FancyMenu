@@ -25,19 +25,6 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
-
-
-
-
-//TODO add "Total Audio Track Duration" placeholder !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-//TODO add "Current Audio Track Play Time" placeholder !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
-
-
-
-
 public class AudioElement extends AbstractElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -52,10 +39,10 @@ public class AudioElement extends AbstractElement {
     protected SoundSource soundSource = SoundSource.MASTER;
     /** Call {@link AudioElement#resetAudioElementKeepAudios()} after adding or removing audios. **/
     public List<AudioInstance> audios = new ArrayList<>();
-    protected int currentAudioIndex = -1;
+    public int currentAudioIndex = -1;
     @Nullable
     public AudioInstance currentAudioInstance;
-    protected IAudio currentAudio;
+    public IAudio currentAudio;
     protected boolean currentAudioStarted = false;
     protected long lastAudioStart = -1L;
     protected boolean cacheChecked = false;
@@ -110,7 +97,7 @@ public class AudioElement extends AbstractElement {
         }
 
         if (this.shouldRender()) {
-            if (!loadedFromCache) this.pickNextAudio();
+            if (!loadedFromCache) this.pickNextAudio(false);
         } else if (loadedFromCache) {
             AudioElementBuilder.CURRENT_AUDIO_CACHE.get(this.getInstanceIdentifier()).getSecond().stop();
             AudioElementBuilder.CURRENT_AUDIO_CACHE.remove(this.getInstanceIdentifier());
@@ -154,7 +141,7 @@ public class AudioElement extends AbstractElement {
 
             //Update current volume, channel if loaded from cache + update lastAudioStart in case current loaded from cache is still playing
             if (loadedFromCache) {
-                if (this.currentAudio.isReady() && this.currentAudio.isPlaying()) {
+                if (this.currentAudio.isReady() && (this.currentAudio.isPlaying() || this.currentAudio.isPaused())) {
                     this.lastAudioStart = now;
                     this.currentAudioStarted = true;
                 }
@@ -185,7 +172,7 @@ public class AudioElement extends AbstractElement {
 
     }
 
-    protected void pickNextAudio() {
+    public void pickNextAudio(boolean ignorePaused) {
 
         //Return if no audios to play
         if (this.audios.isEmpty()) return;
@@ -196,7 +183,7 @@ public class AudioElement extends AbstractElement {
             if (this.currentAudio != null) {
                 long now = System.currentTimeMillis();
                 boolean isOnCooldown = ((this.lastAudioStart + AUDIO_START_COOLDOWN_MS) > now);
-                if (!isOnCooldown && this.currentAudioStarted && (!this.currentAudio.isReady() || !this.currentAudio.isPlaying())) {
+                if (!isOnCooldown && this.currentAudioStarted && (!this.currentAudio.isReady() || (!this.currentAudio.isPlaying() && (!this.currentAudio.isPaused() || ignorePaused)))) {
                     this.skipToNextAudio(false);
                 }
             } else {
@@ -244,6 +231,117 @@ public class AudioElement extends AbstractElement {
         this.currentAudioStarted = false;
         if ((this.currentAudioIndex == -2) && forceRestartIfEndReached) {
             this.resetAudioElementKeepAudios();
+        }
+    }
+
+    public void goToPreviousAudio() {
+        if (this.audios.isEmpty()) return;
+
+        if (this.playMode == PlayMode.NORMAL) {
+            handleNormalModePrevious();
+        } else if (this.playMode == PlayMode.SHUFFLE) {
+            handleShuffleModePrevious();
+        }
+
+        resetAudioStateAndUpdateCache();
+    }
+
+    private void handleNormalModePrevious() {
+        int newIndex = this.currentAudioIndex - 1;
+        if (newIndex < 0) {
+            newIndex = this.loop ? this.audios.size() - 1 : -2;
+        }
+
+        if (newIndex >= 0 && newIndex < this.audios.size()) {
+            this.currentAudioIndex = newIndex;
+        } else {
+            this.currentAudioIndex = newIndex;
+            if (newIndex == -2) this.clearCacheForElement();
+        }
+    }
+
+    private void handleShuffleModePrevious() {
+        List<Integer> alreadyPlayed = this.getAlreadyPlayedShuffleAudios();
+        if (alreadyPlayed.isEmpty()) return;
+
+        // Remove current index from history
+        int currentIndex = alreadyPlayed.remove(alreadyPlayed.size() - 1);
+
+        // Update loop tracking if needed
+        if (this.loop) {
+            this.setLastPlayedLoopShuffleAudio(
+                    alreadyPlayed.isEmpty() ? -10000 : alreadyPlayed.get(alreadyPlayed.size() - 1)
+            );
+        }
+
+        // Determine new current index
+        this.currentAudioIndex = alreadyPlayed.isEmpty() ? -1 : alreadyPlayed.get(alreadyPlayed.size() - 1);
+    }
+
+    public void goToNextAudio() {
+        if (this.audios.isEmpty()) return;
+
+        if (this.playMode == PlayMode.NORMAL) {
+            handleNormalModeNext();
+        } else if (this.playMode == PlayMode.SHUFFLE) {
+            handleShuffleModeNext();
+        }
+
+        resetAudioStateAndUpdateCache();
+    }
+
+    private void handleNormalModeNext() {
+        this.currentAudioIndex++;
+        if (this.currentAudioIndex >= this.audios.size()) {
+            this.currentAudioIndex = this.loop ? 0 : -2;
+        }
+    }
+
+    private void handleShuffleModeNext() {
+        List<Integer> indexes = this.buildShuffleIndexesList();
+
+        // Reset playback history if looping and no tracks available
+        if (indexes.isEmpty() && this.loop && !this.audios.isEmpty()) {
+            this.getAlreadyPlayedShuffleAudios().clear();
+            if (this.audios.size() == 1) this.setLastPlayedLoopShuffleAudio(-10000);
+            indexes = this.buildShuffleIndexesList();
+        }
+
+        if (!indexes.isEmpty()) {
+            int pickedIndex = (indexes.size() == 1) ? 0 : MathUtils.getRandomNumberInRange(0, indexes.size()-1);
+            this.currentAudioIndex = indexes.get(pickedIndex);
+            this.getAlreadyPlayedShuffleAudios().add(this.currentAudioIndex);
+            if (this.loop) this.setLastPlayedLoopShuffleAudio(this.currentAudioIndex);
+        } else {
+            this.currentAudioIndex = -2;
+        }
+    }
+
+    private void resetAudioStateAndUpdateCache() {
+        // Stop current audio and reset state
+        if (this.currentAudio != null && this.currentAudio.isReady()) {
+            this.currentAudio.stop();
+        }
+        this.currentAudioInstance = null;
+        this.currentAudio = null;
+        this.currentAudioStarted = false;
+        this.lastAudioStart = -1L;
+
+        // Update cache with new index or clear if invalid
+        if (this.currentAudioIndex >= 0 && this.currentAudioIndex < this.audios.size()) {
+            AudioInstance instance = this.audios.get(this.currentAudioIndex);
+            if (instance != null) {
+                this.currentAudioInstance = instance;
+                this.currentAudio = instance.supplier.get();
+                if (this.currentAudio != null) {
+                    AudioElementBuilder.CURRENT_AUDIO_CACHE.put(
+                            this.getInstanceIdentifier(),
+                            Trio.of(instance.supplier, this.currentAudio, this.currentAudioIndex)
+                    );
+                }
+            }
+        } else {
+            this.clearCacheForElement();
         }
     }
 

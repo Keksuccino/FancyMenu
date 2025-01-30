@@ -4,6 +4,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.resource.resources.audio.ALAudio;
+import de.keksuccino.fancymenu.util.resource.resources.audio.AudioPlayTimeTracker;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.melody.resources.audio.openal.ALAudioBuffer;
 import de.keksuccino.melody.resources.audio.openal.ALAudioClip;
@@ -18,13 +20,14 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.*;
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
-public class OggAudio implements IAudio {
+public class OggAudio implements IAudio, ALAudio {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -35,6 +38,8 @@ public class OggAudio implements IAudio {
     protected ResourceLocation sourceLocation;
     protected File sourceFile;
     protected String sourceURL;
+    protected volatile float duration = 0.0f;
+    protected final AudioPlayTimeTracker playTimeTracker = new AudioPlayTimeTracker();
     protected volatile boolean decoded = false;
     protected volatile boolean loadingCompleted = false;
     protected volatile boolean loadingFailed = false;
@@ -207,11 +212,10 @@ public class OggAudio implements IAudio {
 
     @NotNull
     public static OggAudio of(@NotNull InputStream in, @Nullable String oggAudioName, @Nullable OggAudio writeTo, @Nullable ALAudioClip clip) {
-
         String name = (oggAudioName != null) ? oggAudioName : "[Generic InputStream Source]";
         OggAudio audio = (writeTo != null) ? writeTo : new OggAudio();
 
-        //Clips need to get created on the main thread, so make sure we're in the correct thread
+        // Clips need to get created on the main thread, so make sure we're in the correct thread
         if (clip == null) RenderSystem.assertOnRenderThread();
 
         if (!ALUtils.isOpenAlReady()) {
@@ -238,7 +242,30 @@ public class OggAudio implements IAudio {
         new Thread(() -> {
             JOrbisAudioStream stream = null;
             try {
-                stream = new JOrbisAudioStream(in);
+                byte[] fullData = in.readAllBytes();
+                ByteArrayInputStream byteIn = new ByteArrayInputStream(fullData);
+
+                try {
+                    stream = new JOrbisAudioStream(byteIn);
+
+                    // Get total PCM data length by reading the full stream
+                    ByteBuffer pcmData = stream.readAll();
+
+                    // Calculate duration from PCM data:
+                    // PCM bytes / (2 bytes per sample * channels) = samples per channel
+                    // Then divide by sample rate to get seconds
+                    audio.duration = (float) (pcmData.remaining() / (2 * stream.getFormat().getChannels())) / stream.getFormat().getSampleRate();
+
+                } catch (Exception ex) {
+                    LOGGER.warn("[FANCYMENU] Failed to read OGG duration metadata, duration will be approximate: " + name, ex);
+                }
+
+                // Reset stream for actual audio loading
+                byteIn.reset();
+                CloseableUtils.closeQuietly(stream);
+                stream = new JOrbisAudioStream(byteIn);
+
+                // Continue with normal audio loading
                 ByteBuffer byteBuffer = stream.readAll();
                 ALAudioBuffer audioBuffer = new ALAudioBuffer(byteBuffer, stream.getFormat());
                 audio.audioBuffer = audioBuffer;
@@ -254,7 +281,6 @@ public class OggAudio implements IAudio {
         }).start();
 
         return audio;
-
     }
 
     @NotNull
@@ -280,6 +306,7 @@ public class OggAudio implements IAudio {
         this.forClip(oggAudioClip -> {
             try {
                 oggAudioClip.play();
+                this.playTimeTracker.onPlay();
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -302,6 +329,7 @@ public class OggAudio implements IAudio {
         this.forClip(oggAudioClip -> {
             try {
                 oggAudioClip.pause();
+                this.playTimeTracker.onPause();
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -324,6 +352,7 @@ public class OggAudio implements IAudio {
         this.forClip(oggAudioClip -> {
             try {
                 oggAudioClip.stop();
+                this.playTimeTracker.onStop();
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -358,6 +387,16 @@ public class OggAudio implements IAudio {
     }
 
     @Override
+    public float getDuration() {
+        return this.duration;
+    }
+
+    @Override
+    public float getPlayTime() {
+        return this.playTimeTracker.getCurrentPlayTime();
+    }
+
+    @Override
     public @Nullable InputStream open() throws IOException {
         if (this.sourceURL != null) return WebUtils.openResourceStream(this.sourceURL);
         if (this.sourceFile != null) return new FileInputStream(this.sourceFile);
@@ -389,6 +428,18 @@ public class OggAudio implements IAudio {
     public boolean isValidOpenAlSource() {
         ALAudioClip cached = this.clip;
         return (cached != null) && cached.isValidOpenAlSource();
+    }
+
+    public int getALSource() {
+        if (this.clip == null) return 0;
+        try {
+            Field f = ALAudioClip.class.getDeclaredField("source");
+            f.setAccessible(true);
+            return f.getInt(this.clip);
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to get AL source in OggAudio!", ex);
+        }
+        return 0;
     }
 
     @Override
