@@ -12,7 +12,7 @@ CHANGELOG | FANCYMENU v3.4.0 [ W I P !! Not public yet !! ]
 - Added "Round (Math)" placeholder that returns the closest integer to the given number (#1014)
 - Added "Sign (Math)" placeholder that returns 1 if the number is positive, -1 if the number is negative, 0 if the number is zero (#1014)
 - Added "Switch Case" placeholder that matches a value against multiple cases and returns the corresponding result (#1014)
-- Added "Current Audio Track" placeholder to get the current track played by an Audio element
+- Added "Current Audio Track" placeholder to get the current track played by an Audio element (#758)
   - Has a track name mapping feature that allows you to return fancy display names for track file names (like "audio.ogg" becomes "Cool Audio" when returned by the placeholder)
 - Added "Sticky Anchor" mode for elements that makes them always keep the same distance to their anchor, no matter the element's size
 - Added "Auto Sizing" mode for elements that makes them adjust their size automatically when the screen size changes (#838)
