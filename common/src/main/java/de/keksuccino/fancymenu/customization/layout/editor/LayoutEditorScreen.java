@@ -234,7 +234,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public void added() {
 
 		for (AbstractEditorElement e : this.getAllElements()) {
-			e.element.onOpenScreen();
+			e.element._onOpenScreen();
 		}
 
 		this.layout.menuBackgrounds.forEach(MenuBackground::onOpenScreen);

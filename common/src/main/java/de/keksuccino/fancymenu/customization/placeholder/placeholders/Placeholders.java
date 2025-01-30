@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders;
 
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.advanced.*;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.audio.AudioElementVolumePlaceholder;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.audio.AudioTrackPlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.client.*;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.gui.*;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderRegistry;
@@ -133,6 +134,7 @@ public class Placeholders {
     public static final MathRoundPlaceholder MATH_ROUND = new MathRoundPlaceholder();
     public static final MathSignPlaceholder MATH_SIGN = new MathSignPlaceholder();
     public static final SwitchCasePlaceholder SWITCH_CASE = new SwitchCasePlaceholder();
+    public static final AudioTrackPlaceholder AUDIO_ELEMENT_TRACK = new AudioTrackPlaceholder();
 
     public static void registerAll() {
 
@@ -249,6 +251,7 @@ public class Placeholders {
 
         //Audio
         PlaceholderRegistry.register(AUDIO_ELEMENT_VOLUME);
+        PlaceholderRegistry.register(AUDIO_ELEMENT_TRACK);
 
         //Other
         PlaceholderRegistry.register(PERCENT_RAM);

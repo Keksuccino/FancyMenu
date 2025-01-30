@@ -299,10 +299,22 @@ public class ScreenCustomization {
 	 *
 	 * @param newScreen The new screen OR NULL when switching to no screen
 	 */
-	public static void onSwitchingToNewScreenType(@Nullable Screen newScreen) {
+	public static void onSwitchingToNewScreenType(@Nullable Screen newScreen, @Nullable Screen lastScreen) {
 
 		AnimationControllerHandler.stopAllAnimations();
 		AnimationControllerHandler.eraseAnimatedMemory();
+
+		//Handle "Once Per Session" elements
+		if (lastScreen != null) {
+			ScreenCustomizationLayer lastLayer = ScreenCustomizationLayerHandler.getLayerOfScreen(lastScreen);
+			if (lastLayer != null) {
+				lastLayer.allElements.forEach(element -> {
+					if (element.loadOncePerSession) {
+						element.setHideOncePerSessionElement();
+					}
+				});
+			}
+		}
 
 	}
 

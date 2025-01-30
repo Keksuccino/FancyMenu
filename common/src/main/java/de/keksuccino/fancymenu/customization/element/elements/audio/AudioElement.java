@@ -25,6 +25,19 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
+
+
+
+
+//TODO add "Total Audio Track Duration" placeholder !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+//TODO add "Current Audio Track Play Time" placeholder !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
+
+
+
 public class AudioElement extends AbstractElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -41,12 +54,11 @@ public class AudioElement extends AbstractElement {
     public List<AudioInstance> audios = new ArrayList<>();
     protected int currentAudioIndex = -1;
     @Nullable
-    protected AudioInstance currentAudioInstance;
+    public AudioInstance currentAudioInstance;
     protected IAudio currentAudio;
     protected boolean currentAudioStarted = false;
     protected long lastAudioStart = -1L;
     protected boolean cacheChecked = false;
-    //TODO übernehmen
     protected float lastControllerVolume = 1.0F;
 
     public AudioElement(@NotNull ElementBuilder<?, ?> builder) {
@@ -72,6 +84,11 @@ public class AudioElement extends AbstractElement {
      */
     protected void setLastPlayedLoopShuffleAudio(int lastPlayedLoopShuffleAudio) {
         this.getMemory().putProperty("last_played_loop_shuffle_audio", lastPlayedLoopShuffleAudio);
+    }
+
+    @Override
+    public void afterConstruction() {
+        if (!AudioElementController.hasMetaFor(this.getInstanceIdentifier())) AudioElementController.putMeta(this.getInstanceIdentifier(), new AudioElementController.AudioElementMeta(this.getInstanceIdentifier(), 1.0F));
     }
 
     public void renderTick() {
@@ -141,7 +158,6 @@ public class AudioElement extends AbstractElement {
                     this.lastAudioStart = now;
                     this.currentAudioStarted = true;
                 }
-                //TODO übernehmen
                 this.updateVolume();
                 this.currentAudio.setSoundChannel(this.soundSource);
             }
@@ -152,7 +168,6 @@ public class AudioElement extends AbstractElement {
             if (!isOnCooldown && (this.currentAudioInstance != null)) {
                 if (!this.currentAudioStarted && this.currentAudio.isReady() && !this.currentAudio.isPlaying()) {
                     this.lastAudioStart = now;
-                    //TODO übernehmen
                     this.updateVolume();
                     this.currentAudio.setSoundChannel(this.soundSource);
                     this.currentAudio.play();
@@ -161,12 +176,10 @@ public class AudioElement extends AbstractElement {
                 }
             }
 
-            //TODO übernehmen
             if (this.lastControllerVolume != this.getControllerVolume()) {
                 this.updateVolume();
                 this.lastControllerVolume = this.getControllerVolume();
             }
-            //--------------
 
         }
 
@@ -238,16 +251,30 @@ public class AudioElement extends AbstractElement {
     protected List<Integer> buildShuffleIndexesList() {
         List<Integer> indexes = new ArrayList<>();
         if (this.playMode != PlayMode.SHUFFLE) return indexes;
+
+        // Create weighted pool of indices
+        List<Integer> weightedPool = new ArrayList<>();
         int i = 0;
-        for (AudioInstance ignored : this.audios) {
-            indexes.add(i);
+        for (AudioInstance audio : this.audios) {
+            // Add index multiple times based on weight
+            int occurrences = Math.max(1, Math.round(audio.weight * 10)); // Scale weight by 10 for more granular control
+            for (int j = 0; j < occurrences; j++) {
+                weightedPool.add(i);
+            }
             i++;
         }
-        indexes.removeIf(integer -> this.getAlreadyPlayedShuffleAudios().contains(integer));
-        if (this.loop && (this.getLastPlayedLoopShuffleAudio() != -10000) && (indexes.contains(this.getLastPlayedLoopShuffleAudio()))) {
-            indexes.remove(this.getLastPlayedLoopShuffleAudio());
+
+        // Remove already played tracks
+        weightedPool.removeIf(integer -> this.getAlreadyPlayedShuffleAudios().contains(integer));
+
+        // Remove last played track if looping (to avoid repeats)
+        if (this.loop && (this.getLastPlayedLoopShuffleAudio() != -10000)) {
+            weightedPool.removeIf(integer -> integer == this.getLastPlayedLoopShuffleAudio());
         }
-        return indexes;
+
+        // Convert weighted pool to unique indices
+        Set<Integer> uniqueIndexes = new LinkedHashSet<>(weightedPool);
+        return new ArrayList<>(uniqueIndexes);
     }
 
     public void resetAudioElementKeepAudios() {
@@ -292,7 +319,6 @@ public class AudioElement extends AbstractElement {
         return this.playMode;
     }
 
-    //TODO übernehmen
     public void updateVolume() {
         float v = Math.max(0.0F, Math.min(1.0F, this.getControllerVolume() * this.volume));
         if (this.currentAudio != null) {
@@ -307,7 +333,6 @@ public class AudioElement extends AbstractElement {
         if (volume > 1.0F) volume = 1.0F;
         if (volume < 0.0F) volume = 0.0F;
         this.volume = volume;
-        //TODO übernehmen
         this.updateVolume();
     }
 
@@ -318,18 +343,17 @@ public class AudioElement extends AbstractElement {
         return this.volume;
     }
 
-    //TODO übernehmen
     /**
      * Returns the volume of this element that is set in the {@link AudioElementController}.<br>
      * The controller volume is set by actions and similar things that are user-controlled in most cases.
      */
     public float getControllerVolume() {
+        if (!AudioElementController.hasMetaFor(this.getInstanceIdentifier())) AudioElementController.putMeta(this.getInstanceIdentifier(), new AudioElementController.AudioElementMeta(this.getInstanceIdentifier(), 1.0F));
         AudioElementController.AudioElementMeta meta = AudioElementController.getMeta(this.getInstanceIdentifier());
         if (meta != null) return Math.max(0.0F, Math.min(1.0F, meta.volume));
         return 1.0F;
     }
 
-    //TODO übernehmen
     public void setControllerVolume(float volume) {
         AudioElementController.AudioElementMeta meta = AudioElementController.getMeta(this.getInstanceIdentifier());
         if (meta == null) {
@@ -355,12 +379,6 @@ public class AudioElement extends AbstractElement {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        //TODO übernehmen
-        //this.renderTick();
-
-        //TODO übernehmen
-        //if (!this.shouldRender()) return;
-
         if (isEditor()) {
             int x = this.getAbsoluteX();
             int y = this.getAbsoluteY();
@@ -375,7 +393,6 @@ public class AudioElement extends AbstractElement {
 
     }
 
-    //TODO übernehmen
     @Override
     public void renderTick_Inner_Stage_1() {
         this.renderTick();
@@ -430,16 +447,23 @@ public class AudioElement extends AbstractElement {
     public static class AudioInstance {
 
         @NotNull
-        ResourceSupplier<IAudio> supplier;
+        public ResourceSupplier<IAudio> supplier;
+        float weight = 1.0f; // Default weight of 1.0
 
         public AudioInstance(@NotNull ResourceSupplier<IAudio> supplier) {
             this.supplier = Objects.requireNonNull(supplier);
+        }
+
+        public AudioInstance(@NotNull ResourceSupplier<IAudio> supplier, float weight) {
+            this.supplier = Objects.requireNonNull(supplier);
+            this.weight = Math.max(0.0f, weight); // Ensure non-negative weight
         }
 
         public static void serializeAllToExistingContainer(@NotNull List<AudioInstance> instances, @NotNull PropertyContainer container) {
             int i = 0;
             for (AudioInstance instance : instances) {
                 container.putProperty("audio_instance_" + i, instance.supplier.getSourceWithPrefix());
+                container.putProperty("audio_instance_weight_" + i, String.valueOf(instance.weight));
                 i++;
             }
         }
@@ -448,8 +472,14 @@ public class AudioElement extends AbstractElement {
         public static List<AudioInstance> deserializeAllOfContainer(@NotNull PropertyContainer container) {
             List<AudioInstance> instances = new ArrayList<>();
             container.getProperties().forEach((key, value) -> {
-                if (StringUtils.startsWith(key, "audio_instance_")) {
-                    instances.add(new AudioInstance(ResourceSupplier.audio(value)));
+                if (StringUtils.startsWith(key, "audio_instance_") && !key.contains("weight")) {
+                    float weight = 1.0f;
+                    String weightKey = "audio_instance_weight_" + key.substring("audio_instance_".length());
+                    String weightValue = container.getValue(weightKey);
+                    if (weightValue != null && MathUtils.isFloat(weightValue)) {
+                        weight = Float.parseFloat(weightValue);
+                    }
+                    instances.add(new AudioInstance(ResourceSupplier.audio(value), weight));
                 }
             });
             return instances;

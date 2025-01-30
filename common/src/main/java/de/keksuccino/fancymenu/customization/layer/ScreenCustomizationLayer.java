@@ -127,7 +127,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		if (!this.shouldCustomize(e.getScreen())) return;
 
-		this.allElements.forEach(AbstractElement::onOpenScreen);
+		this.allElements.forEach(AbstractElement::_onOpenScreen);
 
 		this.layoutBase.menuBackgrounds.forEach(MenuBackground::onOpenScreen);
 

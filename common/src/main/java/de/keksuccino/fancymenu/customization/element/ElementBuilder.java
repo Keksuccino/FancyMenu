@@ -244,6 +244,8 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             element.animatedOffsetX = SerializationUtils.deserializeNumber(Integer.class, element.animatedOffsetX, serialized.getValue("animated_offset_x"));
             element.animatedOffsetY = SerializationUtils.deserializeNumber(Integer.class, element.animatedOffsetY, serialized.getValue("animated_offset_y"));
 
+            element.loadOncePerSession = SerializationUtils.deserializeBoolean(element.loadOncePerSession, serialized.getValue("load_once_per_session"));
+
             element.afterConstruction();
 
             return element;
@@ -367,6 +369,8 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
             sec.putProperty("animated_offset_x", "" + element.animatedOffsetX);
             sec.putProperty("animated_offset_y", "" + element.animatedOffsetY);
+
+            sec.putProperty("load_once_per_session", "" + element.loadOncePerSession);
 
             return sec;
 

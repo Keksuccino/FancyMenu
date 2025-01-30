@@ -22,7 +22,7 @@ public class ImageMenuBackground extends MenuBackground {
     public ResourceSupplier<ITexture> fallbackTextureSupplier;
     public boolean slideLeftRight = false;
     public boolean repeat = false;
-    public boolean parallaxEnabled = true;
+    public boolean parallaxEnabled = false;
     /** Value between 0.0 and 1.0, where 0.0 is no movement and 1.0 is maximum movement **/
     public float parallaxIntensity = 0.02F;
     /** When TRUE, the parallax effect will move in the SAME direction as the mouse, otherwise it moves in the opposite direction **/

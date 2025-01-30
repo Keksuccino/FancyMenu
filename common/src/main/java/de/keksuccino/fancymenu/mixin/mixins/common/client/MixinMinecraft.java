@@ -144,7 +144,7 @@ public class MixinMinecraft {
 			}
 		}
 
-		if (newScreenType) ScreenCustomization.onSwitchingToNewScreenType(this.screen);
+		if (newScreenType) ScreenCustomization.onSwitchingToNewScreenType(this.screen, this.lastScreen_FancyMenu);
 
 	}
 

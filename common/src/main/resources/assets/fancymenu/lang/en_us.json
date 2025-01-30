@@ -1536,5 +1536,20 @@
   "fancymenu.layout.editor.edit_close_screen_action_script": "Edit 'Close Screen' Action Script",
   "fancymenu.layout.editor.edit_close_screen_action_script.desc": "This action script gets executed when closing the screen.",
   "fancymenu.editor.actions.blocks.add.while": "Add WHILE Loop",
-  "fancymenu.editor.actions.blocks.while": "WHILE (%s)"
+  "fancymenu.editor.actions.blocks.while": "WHILE (%s)",
+  "fancymenu.requirements.once_per_session": "Only Once Per Session",
+  "fancymenu.requirements.once_per_session.desc": "Returns true only once per game session.\nAfter returning true once, it will return false\nuntil the game is restarted.",
+  "fancymenu.elements.element.load_once_per_session": "Load Once Per Session: %s",
+  "fancymenu.elements.element.load_once_per_session.desc": "Enabling this will make the element only load once per game session.\nIt stays active/visible until the user opens a new screen.\nThe 'game session' ends when restarting the game.",
+  "fancymenu.elements.audio.manage_audios.set_weight": "Set Weight Of Selected",
+  "fancymenu.elements.audio.set_weight": "Track Weight",
+  "fancymenu.elements.audio.set_weight.weight": "Track Weight: %s",
+  "fancymenu.elements.audio.manage_audios.weight_info": "Track weights affect how likely each track is to be selected in shuffle mode.\nDefault weight is 1.0. Range is 0.0 to 5.0.",
+  "fancymenu.elements.audio.manage_audios.weight.zero": "Weight 0.0: Track will never be selected in shuffle mode",
+  "fancymenu.elements.audio.manage_audios.weight.low": "Weight below 1.0: Track is less likely to be selected",
+  "fancymenu.elements.audio.manage_audios.weight.normal": "Weight 1.0: Normal selection chance (default)",
+  "fancymenu.elements.audio.manage_audios.weight.high": "Weight above 1.0: Track is more likely to be selected",
+  "fancymenu.elements.audio.manage_audios.weight_display": " (Weight: %s)",
+  "fancymenu.placeholders.audio_element_current_track": "Current Audio Track",
+  "fancymenu.placeholders.audio_element_current_track.desc": "Gets the filename or display name of the currently playing track in an Audio element.\nReturns \"---\" when no track is playing.\nTakes the element identifier of the target Audio element.\nOptionally takes display name mappings to show custom names for tracks.\nMapping format: track1.ogg=>Cool Name$:$track2.wav=>Another Name"
 }

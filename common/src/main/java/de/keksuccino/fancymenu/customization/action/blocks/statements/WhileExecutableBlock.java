@@ -4,6 +4,8 @@ import de.keksuccino.fancymenu.customization.action.Executable;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import java.util.Map;
 import java.util.Objects;
@@ -11,8 +13,14 @@ import java.util.function.Supplier;
 
 public class WhileExecutableBlock extends AbstractExecutableBlock {
 
+    private static final Logger LOGGER = LogManager.getLogger();
+    private static final long TIMEOUT_MILLIS = 3000; // 3 seconds timeout
+
     @NotNull
     public LoadingRequirementContainer condition = new LoadingRequirementContainer().forceRequirementsMet(true);
+
+    private long loopStartTime = 0;
+    private boolean hasTimedOut = false;
 
     public WhileExecutableBlock() {
     }
@@ -28,10 +36,40 @@ public class WhileExecutableBlock extends AbstractExecutableBlock {
 
     @Override
     public void execute() {
-        // Keep executing block contents while condition is met
-        while (this.check()) {
+
+        // If we previously timed out, prevent execution
+        if (this.hasTimedOut) {
+            LOGGER.warn("[FANCYMENU] WhileExecutableBlock execution prevented - still in timeout state from previous timeout");
+            return;
+        }
+
+        // Initialize loop start time
+        this.loopStartTime = System.currentTimeMillis();
+
+        // Keep executing block contents while condition is met and timeout hasn't occurred
+        while (this.check() && !this.checkTimeout()) {
             super.execute();
         }
+
+        // If the loop ended due to timeout
+        if (this.checkTimeout()) {
+            this.hasTimedOut = true;
+            LOGGER.warn("[FANCYMENU] WhileExecutableBlock loop timed out after {} milliseconds!", TIMEOUT_MILLIS);
+        } else {
+            // Loop completed successfully - reset timeout state
+            this.hasTimedOut = false;
+        }
+
+        // Reset loop start time
+        this.loopStartTime = 0;
+
+    }
+
+    private boolean checkTimeout() {
+        if (this.loopStartTime == 0) {
+            return false;
+        }
+        return System.currentTimeMillis() - this.loopStartTime >= TIMEOUT_MILLIS;
     }
 
     @Override

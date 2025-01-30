@@ -119,11 +119,9 @@ public class AudioElementBuilder extends ElementBuilder<AudioElement, AudioEdito
 
         element.setLooping(deserializeBoolean(element.loop, serialized.getValue("looping")), false);
 
-        //TODO übernehmen
         element.lastControllerVolume = element.getControllerVolume();
         element.volume = deserializeNumber(Float.class, element.volume, serialized.getValue("volume"));
         element.updateVolume();
-        //---------------
 
         String soundSource = serialized.getValue("sound_source");
         if (soundSource != null) element.setSoundSource(Objects.requireNonNullElse(getSoundSourceByName(soundSource), SoundSource.MASTER));

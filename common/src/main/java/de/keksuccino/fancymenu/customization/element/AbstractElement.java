@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -30,6 +31,7 @@ import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.chat.MutableComponent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
@@ -42,7 +44,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	/** The {@link AbstractElement#builder} field is NULL for this element! Keep that in mind when using it as placeholder! **/
 	@SuppressWarnings("all")
 	public static final AbstractElement EMPTY_ELEMENT = new AbstractElement(null){public void render(@NotNull GuiGraphics g, int i1, int i2, float f){}};
-
 	public static final int STAY_ON_SCREEN_EDGE_ZONE_SIZE = 2;
 
 	public final ElementBuilder<?,?> builder;
@@ -140,6 +141,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 * Default is 0.5 for medium intensity.
 	 */
 	public float parallaxIntensity = 0.5f;
+	public boolean loadOncePerSession = false;
 	private String instanceIdentifier;
 	@Nullable
 	protected Layout parentLayout;
@@ -439,6 +441,13 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public void onOpenScreen() {
 	}
 
+	@ApiStatus.Internal
+	public void _onOpenScreen() {
+
+		this.onOpenScreen();
+
+	}
+
 	/**
 	 * Gets called before the current {@link Screen} gets resized.<br>
 	 * Does NOT get called on initial resize (when opening the screen). Use {@link AbstractElement#onOpenScreen()} for that instead.<br><br>
@@ -712,12 +721,18 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	}
 
 	public boolean shouldRender() {
+
+		if (!isEditor() && this.loadOncePerSession && this.shouldHideOncePerSessionElement()) return false;
+
 		if (this.isAppearanceDelayed() && !isEditor()) return false;
+
 		boolean b = this._shouldRender();
 		if (!isEditor()) {
 			if (!b && this.fadeOutStarted && !this.fadeOutFinished) return true;
 		}
+
 		return b;
+
 	}
 
 	protected boolean _shouldRender() {
@@ -728,6 +743,14 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public boolean loadingRequirementsMet() {
 		if (isEditor()) return true;
 		return this.loadingRequirementContainer.requirementsMet();
+	}
+
+	public boolean shouldHideOncePerSessionElement() {
+		return Objects.requireNonNullElse(this.getMemory().getBooleanProperty("hide_once_per_session_element"), false);
+	}
+
+	public void setHideOncePerSessionElement() {
+		this.getMemory().putPropertyIfAbsent("hide_once_per_session_element", true);
 	}
 
 	@NotNull
