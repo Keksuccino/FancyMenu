@@ -8,10 +8,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+
+import java.util.*;
 
 public class SwitchCasePlaceholder extends Placeholder {
 
@@ -76,7 +74,7 @@ public class SwitchCasePlaceholder extends Placeholder {
 
     @Override
     public @NotNull DeserializedPlaceholderString getDefaultPlaceholderString() {
-        HashMap<String, String> values = new HashMap<>();
+        LinkedHashMap<String, String> values = new LinkedHashMap<>();
         values.put("value", "1");
         values.put("cases", "1:first case,2:second case,3:third case");
         values.put("default", "default case");

@@ -10,10 +10,8 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 
 public class AudioPlayingStatePlaceholder extends Placeholder {
 
@@ -62,7 +60,7 @@ public class AudioPlayingStatePlaceholder extends Placeholder {
 
     @Override
     public @NotNull DeserializedPlaceholderString getDefaultPlaceholderString() {
-        Map<String, String> m = new HashMap<>();
+        LinkedHashMap<String, String> m = new LinkedHashMap<>();
         m.put("element_identifier", "put_identifier_of_audio_element_here");
         return DeserializedPlaceholderString.build(this.getIdentifier(), m);
     }

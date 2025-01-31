@@ -9,10 +9,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+
+import java.util.*;
 
 public class MathCeilPlaceholder extends Placeholder {
 
@@ -63,7 +61,7 @@ public class MathCeilPlaceholder extends Placeholder {
 
     @Override
     public @NotNull DeserializedPlaceholderString getDefaultPlaceholderString() {
-        HashMap<String, String> values = new HashMap<>();
+        LinkedHashMap<String, String> values = new LinkedHashMap<>();
         values.put("num", "3.14");
         return new DeserializedPlaceholderString(this.getIdentifier(), values, "");
     }

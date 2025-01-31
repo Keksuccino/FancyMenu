@@ -102,7 +102,7 @@ public class AudioTrackPlaceholder extends Placeholder {
 
     @Override
     public @NotNull DeserializedPlaceholderString getDefaultPlaceholderString() {
-        Map<String, String> m = new HashMap<>();
+        LinkedHashMap<String, String> m = new LinkedHashMap<>();
         m.put("element_identifier", "put_identifier_of_audio_element_here");
         m.put("display_name_mappings", "track1.ogg=>Cool Track Name%:%track2.wav=>Another Name");
         return DeserializedPlaceholderString.build(this.getIdentifier(), m);

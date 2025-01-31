@@ -56,7 +56,7 @@ public class AudioElementVolumePlaceholder extends Placeholder {
 
     @Override
     public @NotNull DeserializedPlaceholderString getDefaultPlaceholderString() {
-        Map<String, String> m = new HashMap<>();
+        LinkedHashMap<String, String> m = new LinkedHashMap<>();
         m.put("element_identifier", "put_identifier_of_audio_element_here");
         return DeserializedPlaceholderString.build(this.getIdentifier(), m);
     }
