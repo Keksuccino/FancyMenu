@@ -34,6 +34,8 @@ CHANGELOG | FANCYMENU v3.4.0 [ W I P !! Not public yet !! ]
   - Enabling this will make the element only load once per game session (game restart = new game session)
   - The element stays active/visible until the user opens a new screen
 - Added ability to set the weight of audio tracks in the Audio element to control how likely each track is to be selected in shuffle mode (#1020)
+- It is now possible to recolor the Ticker element for better organization while in the editor (#902)
+- It is now possible to set an element's in-editor display name in its right-click menu (was only possible via the layer widget before) (#902)
 - Markdown bullet point lists now support up to 10 levels of indentation
 - You can now execute action scripts when opening and closing a screen (#1018)
 - Menu backgrounds are stackable now, which means if you have multiple layouts with a background defined for the same menu, all backgrounds will get rendered now
