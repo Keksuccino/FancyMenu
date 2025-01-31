@@ -55,8 +55,7 @@ public class MarkdownParser {
     private static final String FORMATTING_CODE_QUOTE_PREFIX = "> ";
     private static final String SPACE = " ";
     private static final char SPACE_CHAR = ' ';
-    private static final String FORMATTING_CODE_BULLET_LIST_LEVEL_1_PREFIX = "- ";
-    private static final String FORMATTING_CODE_BULLET_LIST_LEVEL_2_PREFIX = "  - ";
+    private static final String FORMATTING_CODE_BULLET_LIST_PREFIX = "- ";
     private static final String MINUS = "-";
     private static final char MINUS_CHAR = '-';
     private static final String FORMATTING_CODE_SEPARATION_LINE_PREFIX = "---";
@@ -397,19 +396,27 @@ public class MarkdownParser {
                     }
                 }
 
-                //Handle Bullet List Level 1
-                if (isStartOfLine && (c == MINUS_CHAR) && StringUtils.startsWith(subLine, FORMATTING_CODE_BULLET_LIST_LEVEL_1_PREFIX) && !removeFromString(subLine, MINUS, SPACE, NEWLINE).isEmpty() && (builder.codeBlockContext == null) && !builder.plainText) {
-                    builder.bulletListLevel = 1;
-                    builder.bulletListItemStart = true;
-                    charsToSkip = 1;
-                    continue;
-                }
-                //Handle Bullet List Level 2
-                if (isStartOfLine && (c == SPACE_CHAR) && StringUtils.startsWith(subLine, FORMATTING_CODE_BULLET_LIST_LEVEL_2_PREFIX) && !removeFromString(subLine, MINUS, SPACE, NEWLINE).isEmpty() && (builder.codeBlockContext == null) && !builder.plainText) {
-                    builder.bulletListLevel = 2;
-                    builder.bulletListItemStart = true;
-                    charsToSkip = 3;
-                    continue;
+                // Handle Bullet List (up to 10 levels)
+                if (isStartOfLine && (c == MINUS_CHAR || c == SPACE_CHAR) && (builder.codeBlockContext == null) && !builder.plainText) {
+                    int spaces = 0;
+                    String line = getLine(subText);
+                    // Count leading spaces
+                    while (line.startsWith(SPACE)) {
+                        spaces++;
+                        line = line.substring(1);
+                    }
+                    if (line.startsWith(FORMATTING_CODE_BULLET_LIST_PREFIX)) {
+                        int level = (spaces / 2) + 1;
+                        if (level >= 1 && level <= 10) {
+                            String remaining = line.substring(2).trim();
+                            if (!remaining.isEmpty()) {
+                                builder.bulletListLevel = level;
+                                builder.bulletListItemStart = true;
+                                charsToSkip = spaces + 2; // Skip spaces and "- "
+                                continue;
+                            }
+                        }
+                    }
                 }
 
                 //Handle Separation Line

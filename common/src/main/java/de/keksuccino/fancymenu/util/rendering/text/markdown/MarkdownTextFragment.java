@@ -18,7 +18,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.ARGB;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -161,8 +160,30 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
     protected void renderBulletListDot(GuiGraphics graphics) {
         if ((this.bulletListLevel > 0) && this.bulletListItemStart) {
             RenderSystem.enableBlend();
-            float yStart = this.getTextRenderY() + (this.getTextRenderHeight() / 2) - 2;
-            RenderingUtils.fillF(graphics, this.getTextRenderX() - BULLET_LIST_SPACE_AFTER_INDENT - 3, yStart, this.getTextRenderX() - BULLET_LIST_SPACE_AFTER_INDENT, yStart+3, this.parent.bulletListDotColor.getColorIntWithAlpha(this.parent.textOpacity));
+            final float scale = this.getScale();
+
+            // Calculate dimensions using scale
+            final float bulletSize = 3 * scale;
+            final float bulletSpace = BULLET_LIST_SPACE_AFTER_INDENT * scale;
+
+            // Horizontal positioning
+            final float bulletX = this.x +
+                    (this.parent.bulletListIndent * this.bulletListLevel * scale) -
+                    bulletSpace -
+                    bulletSize;
+
+            // Vertical centering using text baseline
+            final float textBaselineY = this.getTextY() +
+                    (Minecraft.getInstance().font.lineHeight * scale * 0.5f) -
+                    (bulletSize * 0.5f);
+
+            RenderingUtils.fillF(graphics,
+                    bulletX,
+                    textBaselineY,
+                    bulletX + bulletSize,
+                    textBaselineY + bulletSize,
+                    this.parent.bulletListDotColor.getColorIntWithAlpha(this.parent.textOpacity)
+            );
         }
     }
 
@@ -230,20 +251,22 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
     }
 
     public float getTextRenderX() {
-        float f = this.x / this.getScale();
+        float baseX = this.x / this.getScale();
         if ((this.quoteContext != null) && this.startOfRenderLine && (this.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT)) {
-            f += this.parent.quoteIndent;
+            baseX += this.parent.quoteIndent;
         }
-        if ((this.bulletListLevel > 0) && this.startOfRenderLine) {
-            f += (this.parent.bulletListIndent * this.bulletListLevel) + BULLET_LIST_SPACE_AFTER_INDENT;
+        if (this.bulletListLevel > 0 && this.startOfRenderLine) {
+            // Calculate scaled bullet list indent
+            float bulletIndent = (this.parent.bulletListIndent * this.bulletListLevel) + BULLET_LIST_SPACE_AFTER_INDENT;
+            baseX += bulletIndent;
         }
         if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.startOfRenderLine) {
-            f += 10;
+            baseX += 10;
         }
         if ((this.codeBlockContext != null) && this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockStart() == this)) {
-            f += 1;
+            baseX += 1;
         }
-        return (int)f;
+        return (int)baseX;
     }
 
     public float getTextRenderY() {
@@ -275,8 +298,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
         if ((this.quoteContext != null) && (this.naturalLineBreakAfter || this.autoLineBreakAfter) && (this.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT)) {
             f += this.parent.quoteIndent;
         }
-        if ((this.bulletListLevel > 0) && this.startOfRenderLine) {
-            f += (this.parent.bulletListIndent * this.bulletListLevel) + BULLET_LIST_SPACE_AFTER_INDENT;
+        if (this.bulletListLevel > 0 && this.startOfRenderLine) {
+            float bulletSpace = (this.parent.bulletListIndent * this.bulletListLevel * this.getScale()) + (BULLET_LIST_SPACE_AFTER_INDENT * this.getScale());
+            f += bulletSpace;
         }
         if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.startOfRenderLine) {
             f += 10;
