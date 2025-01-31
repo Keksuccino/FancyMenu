@@ -74,6 +74,7 @@ CHANGELOG | FANCYMENU v3.4.0 [ W I P !! Not public yet !! ]
 - Fixed interacting with a slider and then interacting with FM's menu bar makes the menu bar control the slider (#1007)
 - Fixed "Audio Element Volume" placeholder returning "0.0" when the volume was never updated using the "Set Audio Element Volume" action
 - Fixed scaling a Text element breaks positioning of Markdown bullet points (bullet point list) (#905)
+- Fixed Markdown text spacing wrong when the start of the line was shifted to the right by a bullet point or quote block and the text scale was bigger or smaller than 1.0 (#906)
  
 %changelog:end%
 
