@@ -4,13 +4,10 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.ArrayList;
 
 public class AnimationControllerEditorElement extends AbstractEditorElement {
@@ -29,6 +26,7 @@ public class AnimationControllerEditorElement extends AbstractEditorElement {
         this.settings.setAutoSizingAllowed(false);
         this.settings.setStayOnScreenAllowed(false);
         this.settings.setStickyAnchorAllowed(false);
+        this.settings.setInEditorColorSupported(true);
     }
 
     @Override 

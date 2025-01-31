@@ -17,6 +17,7 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
@@ -34,6 +35,8 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.awt.*;
 import java.util.List;
 import java.util.Objects;
 
@@ -142,6 +145,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 */
 	public float parallaxIntensity = 0.5f;
 	public boolean loadOncePerSession = false;
+	@NotNull
+	public DrawableColor inEditorColor = DrawableColor.of(Color.ORANGE);
 	private String instanceIdentifier;
 	@Nullable
 	protected Layout parentLayout;

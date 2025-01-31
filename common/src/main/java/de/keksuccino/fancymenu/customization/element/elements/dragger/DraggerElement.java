@@ -3,8 +3,6 @@ package de.keksuccino.fancymenu.customization.element.elements.dragger;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -16,11 +14,9 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 import java.util.List;
 
-//TODO übernehmen
 public class DraggerElement extends AbstractElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final DrawableColor ELEMENT_COLOR = DrawableColor.of(new Color(227, 14, 35));
 
     public final DraggerWidget widget;
     public int userDragOffsetX = 0;
@@ -116,7 +112,7 @@ public class DraggerElement extends AbstractElement {
 
             if (isEditor()) {
                 RenderSystem.enableBlend();
-                graphics.fill(RenderType.guiOverlay(), x, y, x + w, y + h, ELEMENT_COLOR.getColorInt());
+                graphics.fill(RenderType.guiOverlay(), x, y, x + w, y + h, this.inEditorColor.getColorInt());
                 graphics.enableScissor(x, y, x + w, y + h);
                 graphics.drawCenteredString(Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
                 graphics.disableScissor();

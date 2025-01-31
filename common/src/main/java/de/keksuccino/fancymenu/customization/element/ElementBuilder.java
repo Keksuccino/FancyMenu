@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.file.ResourceFile;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
@@ -246,6 +247,11 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
             element.loadOncePerSession = SerializationUtils.deserializeBoolean(element.loadOncePerSession, serialized.getValue("load_once_per_session"));
 
+            String inEditorColor = serialized.getValue("in_editor_color");
+            if (inEditorColor != null) {
+                element.inEditorColor = DrawableColor.of(inEditorColor);
+            }
+
             element.afterConstruction();
 
             return element;
@@ -371,6 +377,8 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             sec.putProperty("animated_offset_y", "" + element.animatedOffsetY);
 
             sec.putProperty("load_once_per_session", "" + element.loadOncePerSession);
+
+            sec.putProperty("in_editor_color", element.inEditorColor.getHex());
 
             return sec;
 

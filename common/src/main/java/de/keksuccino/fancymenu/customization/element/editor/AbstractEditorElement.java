@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
+import de.keksuccino.fancymenu.customization.element.elements.ticker.TickerEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.AnchorPointOverlay;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
@@ -19,6 +20,7 @@ import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroups;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
@@ -51,6 +53,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -172,6 +175,25 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		}
 
 		this.rightClickMenu.addSeparatorEntry("separator_2");
+
+		this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_in_editor_display_name", AbstractEditorElement.class,
+						consumes -> consumes.element.customElementLayerName,
+						(abstractEditorElement, s) -> abstractEditorElement.element.customElementLayerName = s,
+						null, false, false, Component.translatable("fancymenu.elements.in_editor_display_name"), true, null, null, null)
+				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.in_editor_display_name.desc")));
+
+		if (this.settings.isInEditorColorSupported()) {
+
+			this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_in_editor_color", AbstractEditorElement.class,
+							consumes -> consumes.element.inEditorColor.getHex(),
+							(element, s) -> element.element.inEditorColor = DrawableColor.of(s),
+							null, false, false, Component.translatable("fancymenu.editor.elements.in_editor_color"),
+							false, null, TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.elements.in_editor_color.desc")));
+
+		}
+
+		this.rightClickMenu.addSeparatorEntry("separator_after_set_in_editor_stuff");
 
 		if (this.settings.isAnchorPointChangeable()) {
 

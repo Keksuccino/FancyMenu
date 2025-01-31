@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.Trio;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import net.minecraft.client.Minecraft;
@@ -24,7 +25,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 public class AudioElementBuilder extends ElementBuilder<AudioElement, AudioEditorElement> {
 
@@ -104,6 +108,7 @@ public class AudioElementBuilder extends ElementBuilder<AudioElement, AudioEdito
         AudioElement i = new AudioElement(this);
         i.baseWidth = 100;
         i.baseHeight = 100;
+        i.inEditorColor = DrawableColor.of(new Color(92, 166, 239));
         return i;
     }
 

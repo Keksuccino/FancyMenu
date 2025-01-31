@@ -9,14 +9,15 @@ import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.SerializationUtils;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.awt.*;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 public class AnimationControllerElementBuilder extends ElementBuilder<AnimationControllerElement, AnimationControllerEditorElement> {
@@ -35,6 +36,7 @@ public class AnimationControllerElementBuilder extends ElementBuilder<AnimationC
         AnimationControllerElement element = new AnimationControllerElement(this);
         element.baseWidth = 100;
         element.baseHeight = 100;
+        element.inEditorColor = DrawableColor.of(new Color(0, 255, 0, 100));
         return element;
     }
 

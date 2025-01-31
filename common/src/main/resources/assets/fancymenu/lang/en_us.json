@@ -1566,5 +1566,9 @@
   "fancymenu.actions.audio.toggle_play.desc": "Toggles between playing and pausing an Audio element.\nIf paused, resumes playback. If playing, pauses playback.",
   "fancymenu.actions.audio.toggle_play.value.desc": "The identifier of the audio element to control",
   "fancymenu.placeholders.audio_playing_state": "Audio Playing State",
-  "fancymenu.placeholders.audio_playing_state.desc": "Returns the current playing state of an Audio element.\nUse 'element_identifier' to specify the Audio element.\nReturns 'true' if the audio is playing, 'false' if paused or stopped."
+  "fancymenu.placeholders.audio_playing_state.desc": "Returns the current playing state of an Audio element.\nUse 'element_identifier' to specify the Audio element.\nReturns 'true' if the audio is playing, 'false' if paused or stopped.",
+  "fancymenu.editor.elements.in_editor_color": "Set In-Editor Color",
+  "fancymenu.editor.elements.in_editor_color.desc": "Set a custom in-editor color to help with organization.",
+  "fancymenu.elements.in_editor_display_name": "Set In-Editor Display Name",
+  "fancymenu.elements.in_editor_display_name.desc": "The in-editor display name helps with organization.\nIt is shown in the layers widget and when\nyou pick an element using the right-click menu."
 }

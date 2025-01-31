@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -22,7 +23,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 public class TickerElementBuilder extends ElementBuilder<TickerElement, TickerEditorElement> {
 
@@ -77,6 +81,7 @@ public class TickerElementBuilder extends ElementBuilder<TickerElement, TickerEd
         TickerElement i = new TickerElement(this);
         i.baseWidth = 70;
         i.baseHeight = 70;
+        i.inEditorColor = DrawableColor.of(Color.ORANGE);
         return i;
     }
 
@@ -125,7 +130,7 @@ public class TickerElementBuilder extends ElementBuilder<TickerElement, TickerEd
 
         serializeTo.putProperty("is_async", "" + element.isAsync);
         serializeTo.putProperty("tick_delay", "" + element.tickDelayMs);
-        serializeTo.putProperty("tick_mode", "" + element.tickMode.name);
+        serializeTo.putProperty("tick_mode", element.tickMode.name);
 
         serializeTo.putProperty("ticker_element_executable_block_identifier", element.actionExecutor.identifier);
         element.actionExecutor.serializeToExistingPropertyContainer(serializeTo);

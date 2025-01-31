@@ -27,8 +27,18 @@ public class EditorElementSettings {
     private boolean autoSizingAllowed = true;
     private boolean stayOnScreenAllowed = true;
     private boolean stickyAnchorAllowed = true;
+    private boolean inEditorColorSupported = false;
 
     private boolean skipReInit = false;
+
+    public boolean isInEditorColorSupported() {
+        return inEditorColorSupported;
+    }
+
+    public void setInEditorColorSupported(boolean inEditorColorSupported) {
+        this.inEditorColorSupported = inEditorColorSupported;
+        this.settingsChanged();
+    }
 
     public boolean isParallaxAllowed() {
         return parallaxAllowed;
