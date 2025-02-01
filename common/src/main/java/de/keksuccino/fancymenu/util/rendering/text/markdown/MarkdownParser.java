@@ -19,6 +19,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MarkdownParser {
 
@@ -55,8 +57,7 @@ public class MarkdownParser {
     private static final String FORMATTING_CODE_QUOTE_PREFIX = "> ";
     private static final String SPACE = " ";
     private static final char SPACE_CHAR = ' ';
-    private static final String FORMATTING_CODE_BULLET_LIST_PREFIX = "- ";
-    private static final String MINUS = "-";
+    private static final String BULLET_LIST_PATTERN = "^( *)- ";
     private static final char MINUS_CHAR = '-';
     private static final String FORMATTING_CODE_SEPARATION_LINE_PREFIX = "---";
     private static final char GRAVE_ACCENT_CHAR = '`';
@@ -396,25 +397,23 @@ public class MarkdownParser {
                     }
                 }
 
-                // Handle Bullet List (up to 10 levels)
-                if (isStartOfLine && (c == MINUS_CHAR || c == SPACE_CHAR) && (builder.codeBlockContext == null) && !builder.plainText) {
-                    int spaces = 0;
-                    String line = getLine(subText);
-                    // Count leading spaces
-                    while (line.startsWith(SPACE)) {
-                        spaces++;
-                        line = line.substring(1);
-                    }
-                    if (line.startsWith(FORMATTING_CODE_BULLET_LIST_PREFIX)) {
-                        int level = (spaces / 2) + 1;
-                        if (level >= 1 && level <= 10) {
-                            String remaining = line.substring(2).trim();
-                            if (!remaining.isEmpty()) {
-                                builder.bulletListLevel = level;
-                                builder.bulletListItemStart = true;
-                                charsToSkip = spaces + 2; // Skip spaces and "- "
-                                continue;
-                            }
+                // Handle Bullet Lists (all levels)
+                if (isStartOfLine && (builder.codeBlockContext == null) && !builder.plainText) {
+                    // Match any bullet list pattern (supports 2 spaces per level)
+                    Matcher bulletMatcher = Pattern.compile(BULLET_LIST_PATTERN).matcher(currentLine);
+                    if (bulletMatcher.find()) {
+                        int indentSpaces = bulletMatcher.group(1).length();
+                        int level = (indentSpaces / 2) + 1;
+
+                        if ((level >= 1) && (level <= 10)) {
+                            // Calculate characters to skip (indent + "- "), subtract one because the current char is already consumed
+                            charsToSkip = indentSpaces + 1;
+
+                            // Configure builder
+                            builder.bulletListLevel = level;
+                            builder.bulletListItemStart = true;
+
+                            continue;
                         }
                     }
                 }

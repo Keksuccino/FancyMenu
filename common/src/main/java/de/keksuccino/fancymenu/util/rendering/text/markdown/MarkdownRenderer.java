@@ -543,7 +543,6 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
         return this;
     }
 
-    //TODO übernehmen
     public void resetHovered() {
         this.fragments.forEach(markdownTextFragment -> markdownTextFragment.hovered = false);
     }

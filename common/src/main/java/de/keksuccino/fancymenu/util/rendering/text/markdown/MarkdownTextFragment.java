@@ -164,24 +164,14 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
 
             // Calculate dimensions using scale
             final float bulletSize = 3 * scale;
-            final float bulletSpace = BULLET_LIST_SPACE_AFTER_INDENT * scale;
 
-            // Horizontal positioning
-            final float bulletX = this.x +
-                    (this.parent.bulletListIndent * this.bulletListLevel * scale) -
-                    bulletSpace -
-                    bulletSize;
+            // Shift bullet dot one level to the right:
+            final float bulletX = this.x - (5 * scale) + (this.parent.bulletListIndent * (this.bulletListLevel) * scale);
 
             // Vertical centering using text baseline
-            final float textBaselineY = this.getTextY() +
-                    (Minecraft.getInstance().font.lineHeight * scale * 0.5f) -
-                    (bulletSize * 0.5f);
+            final float textBaselineY = this.getTextY() + (Minecraft.getInstance().font.lineHeight * scale * 0.5f) - (bulletSize * 0.5f);
 
-            RenderingUtils.fillF(graphics,
-                    bulletX,
-                    textBaselineY,
-                    bulletX + bulletSize,
-                    textBaselineY + bulletSize,
+            RenderingUtils.fillF(graphics, bulletX, textBaselineY, bulletX + bulletSize, textBaselineY + bulletSize,
                     this.parent.bulletListDotColor.getColorIntWithAlpha(this.parent.textOpacity)
             );
         }
@@ -252,20 +242,25 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
 
     public float getTextRenderX() {
         float baseX = this.x / this.getScale();
+
         if ((this.quoteContext != null) && this.startOfRenderLine && (this.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT)) {
             baseX += this.parent.quoteIndent;
         }
+
         if (this.bulletListLevel > 0 && this.startOfRenderLine) {
-            // Calculate scaled bullet list indent
+            // Now apply the full bullet indent for the first fragment.
             float bulletIndent = (this.parent.bulletListIndent * this.bulletListLevel) + BULLET_LIST_SPACE_AFTER_INDENT;
             baseX += bulletIndent;
         }
+
         if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.startOfRenderLine) {
             baseX += 10;
         }
+
         if ((this.codeBlockContext != null) && this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockStart() == this)) {
             baseX += 1;
         }
+
         return (int)baseX;
     }
 
@@ -293,7 +288,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
 
         float f = this.getTextRenderWidth();
         if ((this.quoteContext != null) && this.startOfRenderLine && (this.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT)) {
-            f += this.parent.quoteIndent;
+            f += this.parent.quoteIndent * this.getScale();
         }
         if ((this.quoteContext != null) && (this.naturalLineBreakAfter || this.autoLineBreakAfter) && (this.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT)) {
             f += this.parent.quoteIndent;
