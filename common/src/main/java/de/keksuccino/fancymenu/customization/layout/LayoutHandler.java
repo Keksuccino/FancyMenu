@@ -247,7 +247,6 @@ public class LayoutHandler {
 		}
 	}
 
-	//TODO übernehmen
 	public static void openLayoutEditor(@NotNull Layout layout, @Nullable Screen layoutTargetScreen) {
 		try {
 			for (IAnimationRenderer r : AnimationHandler.getAnimations()) {

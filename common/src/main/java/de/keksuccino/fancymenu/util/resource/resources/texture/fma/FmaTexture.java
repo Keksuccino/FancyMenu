@@ -409,7 +409,6 @@ public class FmaTexture implements ITexture, PlayableResource {
     }
 
     public void reset() {
-        //TODO übernehmen
         this.maxLoopsReached = false;
         this.introFinishedPlaying = false;
         this.skipToFirstNormalAfterIntro = false;

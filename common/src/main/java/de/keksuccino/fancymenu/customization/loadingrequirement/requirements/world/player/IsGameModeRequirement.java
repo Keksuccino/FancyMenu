@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-//TODO übernehmen
 public class IsGameModeRequirement extends LoadingRequirement {
 
     private static final Logger LOGGER = LogManager.getLogger();

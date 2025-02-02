@@ -51,15 +51,12 @@ public interface IPlatformHelper {
     /** Get the key of a {@link KeyMapping}. **/
     InputConstants.Key getKeyMappingKey(KeyMapping keyMapping);
 
-    //TODO übernehmen
     @Nullable
     ResourceLocation getItemKey(@NotNull Item item);
 
-    //TODO übernehmen
     @Nullable
     ResourceLocation getEffectKey(@NotNull MobEffect effect);
 
-    //TODO übernehmen
     @Nullable
     ResourceLocation getEntityKey(@NotNull EntityType<?> type);
 

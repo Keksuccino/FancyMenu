@@ -42,13 +42,6 @@ import static de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorSc
 
 public class KeyframeManagerScreen extends Screen {
 
-    //TODO Adden, dass mehrere Elemente als Animation Target gesetzt werden können
-
-    //TODO Offset Mode weiter ausbauen
-    // - Offset wird komisch auf target element angewendet (gefühlt nicht richtiges offset von normaler position??)
-    // - "Ignore Size" toggle
-    // - "Ignore Pos" toggle
-
     private static final Logger LOGGER = LogManager.getLogger();
 
     protected static final int KEY_MOVE_KEYFRAME_LEFT = InputConstants.KEY_LEFT;

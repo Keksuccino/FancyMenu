@@ -26,7 +26,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-//TODO übernehmen
 public class IsPlayerInBiomeRequirement extends LoadingRequirement {
 
     private static final Logger LOGGER = LogManager.getLogger();

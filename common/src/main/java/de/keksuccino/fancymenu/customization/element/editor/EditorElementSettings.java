@@ -139,12 +139,10 @@ public class EditorElementSettings {
         this.settingsChanged();
     }
 
-    //TODO übernehmen
     public boolean isOpacityChangeable() {
         return this.opacityChangeable;
     }
 
-    //TODO übernehmen
     public void setOpacityChangeable(boolean changeable) {
         this.opacityChangeable = changeable;
         this.settingsChanged();

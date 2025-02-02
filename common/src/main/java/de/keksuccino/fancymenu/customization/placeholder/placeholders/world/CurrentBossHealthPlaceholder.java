@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-//TODO übernehmen
 public class CurrentBossHealthPlaceholder extends Placeholder {
 
     public CurrentBossHealthPlaceholder() {

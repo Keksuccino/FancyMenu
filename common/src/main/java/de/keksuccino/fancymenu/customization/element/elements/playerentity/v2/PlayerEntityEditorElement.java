@@ -53,10 +53,8 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                 .setIsActiveSupplier((menu, entry) -> !((PlayerEntityElement) this.element).copyClientPlayer)
                 .setTooltipSupplier((menu, entry) -> {
                     if (entry.isActive()) {
-                        //TODO übernehmen
                         return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.set_player_name.desc"));
                     }
-                    //TODO übernehmen
                     return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.copy_client_player.blocked_until_disabled"));
                 });
 

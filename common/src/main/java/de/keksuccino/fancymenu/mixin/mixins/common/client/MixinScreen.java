@@ -106,7 +106,6 @@ public abstract class MixinScreen implements CustomizableScreen {
 		return this.removeOnInitChildrenFancyMenu;
 	}
 
-	//TODO übernehmen
 	@Unique
 	private Screen getScreen_FancyMenu() {
 		return (Screen)((Object)this);

@@ -42,6 +42,7 @@ public class ItemElementBuilder extends ElementBuilder<ItemElement, ItemEditorEl
         element.itemName = serialized.getValue("item_name");
         element.lore = serialized.getValue("lore");
         element.showTooltip = SerializationUtils.deserializeBoolean(element.showTooltip, serialized.getValue("show_tooltip"));
+        element.nbtData = serialized.getValue("custom_nbt_data");
 
         return element;
 
@@ -56,6 +57,7 @@ public class ItemElementBuilder extends ElementBuilder<ItemElement, ItemEditorEl
         if (element.itemName != null) serializeTo.putProperty("item_name", element.itemName);
         if (element.lore != null) serializeTo.putProperty("lore", element.lore);
         serializeTo.putProperty("show_tooltip", "" + element.showTooltip);
+        if (element.nbtData != null) serializeTo.putProperty("custom_nbt_data", element.nbtData);
 
         return serializeTo;
 

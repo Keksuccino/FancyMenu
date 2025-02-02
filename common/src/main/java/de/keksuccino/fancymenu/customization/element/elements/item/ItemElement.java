@@ -18,6 +18,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -51,10 +52,13 @@ public class ItemElement extends AbstractElement {
     @Nullable
     public String itemName = null;
     public boolean showTooltip = true;
+    @Nullable
+    public String nbtData = null;
     protected String lastItemKey = null;
     protected boolean lastEnchanted = false;
     protected String lastLore = null;
     protected String lastItemName = null;
+    protected String lastNbtData = null;
     protected final Font font = Minecraft.getInstance().font;
 
     public ItemElement(@NotNull ElementBuilder<?, ?> builder) {
@@ -66,10 +70,11 @@ public class ItemElement extends AbstractElement {
         String keyFinal = PlaceholderParser.replacePlaceholders(this.itemKey);
         String loreFinal = (this.lore == null) ? null : PlaceholderParser.replacePlaceholders(this.lore);
         String nameFinal = (this.itemName == null) ? null : PlaceholderParser.replacePlaceholders(this.itemName);
+        String nbtFinal = (this.nbtData == null) ? null : PlaceholderParser.replacePlaceholders(this.nbtData);
 
         try {
 
-            if ((this.cachedStack == null) || !keyFinal.equals(this.lastItemKey) || (this.enchanted != this.lastEnchanted) || !Objects.equals(loreFinal, this.lore) || !Objects.equals(nameFinal, this.itemName)) {
+            if ((this.cachedStack == null) || !keyFinal.equals(this.lastItemKey) || (this.enchanted != this.lastEnchanted) || !Objects.equals(loreFinal, this.lastLore) || !Objects.equals(nameFinal, this.lastItemName) || !Objects.equals(nbtFinal, this.lastNbtData)) {
 
                 Item item = BuiltInRegistries.ITEM.getValue(ResourceLocation.parse(keyFinal));
                 this.cachedStack = new ItemStack(item);
@@ -87,6 +92,13 @@ public class ItemElement extends AbstractElement {
                     this.cachedStack.set(DataComponents.ITEM_NAME, buildComponent(nameFinal));
                 }
 
+                if (nbtFinal != null) {
+                    DataComponentPatch nbt = NBTBuilder.buildNbtFromString(this.cachedStack, nbtFinal);
+                    if (nbt != null) {
+                        this.cachedStack.applyComponentsAndValidate(nbt);
+                    }
+                }
+
             }
 
         } catch (Exception ex) {
@@ -98,6 +110,7 @@ public class ItemElement extends AbstractElement {
         this.lastEnchanted = this.enchanted;
         this.lastLore = loreFinal;
         this.lastItemName = nameFinal;
+        this.lastNbtData = nbtFinal;
 
     }
 

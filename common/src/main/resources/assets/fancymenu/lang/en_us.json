@@ -1469,6 +1469,8 @@
   "fancymenu.elements.item.lore.desc": "Set the lore of the item.\nThis input supports multiline and you\ncan even use 'Minecraft Text Components'.\nUse one component (JSON) per line.\n\nTo learn more about text components, check this:\nhttps://docs.fancymenu.net/en/text-formatting",
   "fancymenu.elements.item.key": "Set Item Key",
   "fancymenu.elements.item.key.desc": "The registry key of the item.\nUsed to identify the item you want to display.",
+  "fancymenu.elements.item.nbt": "Set Custom NBT Data",
+  "fancymenu.elements.item.nbt.desc": "This allows you to set custom NBT data to the item.\nIt is basically the part the /give command that follows\nafter the item name in square brackets [].\n\n§lFull example command:\n/give @a netherite_sword[custom_name='[\"\",{\"text\":\"Kinabra\",\"italic\":false}]']\n\n§lSet this as value for NBT:\n[custom_name='[\"\",{\"text\":\"Kinabra\",\"italic\":false}]']\n\nThere are lots of Give Command Generators available online,\nso just ask Google about it and you will find something.",
   "fancymenu.elements.item.key.screen.key": "Item Key:",
   "fancymenu.elements.parallax": "Parallax Effect: %s",
   "fancymenu.elements.parallax.desc": "If a parallax effect should get added to the element's position.\n\nThe parallax effect only works while not in the editor!",

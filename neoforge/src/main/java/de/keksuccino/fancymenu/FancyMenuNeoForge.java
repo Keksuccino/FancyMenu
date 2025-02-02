@@ -8,8 +8,6 @@ import org.jetbrains.annotations.NotNull;
 
 @Mod(FancyMenu.MOD_ID)
 public class FancyMenuNeoForge {
-
-    //TODO übernehmen (add rrls to mods.toml)
     
     public FancyMenuNeoForge(@NotNull IEventBus eventBus) {
 

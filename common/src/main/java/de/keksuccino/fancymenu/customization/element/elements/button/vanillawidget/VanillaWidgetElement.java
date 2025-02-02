@@ -78,7 +78,6 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
         //do nothing
     }
 
-    //TODO übernehmen
     @Override
     public void updateWidgetTexture() {
 

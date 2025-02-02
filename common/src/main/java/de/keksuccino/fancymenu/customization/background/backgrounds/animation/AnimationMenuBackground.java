@@ -2,14 +2,12 @@ package de.keksuccino.fancymenu.customization.background.backgrounds.animation;
 
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
-import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
-//TODO übernehmen (whole class)
 @Deprecated(forRemoval = true)
 public class AnimationMenuBackground extends MenuBackground {
 

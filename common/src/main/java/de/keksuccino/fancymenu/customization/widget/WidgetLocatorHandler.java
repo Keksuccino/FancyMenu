@@ -52,7 +52,6 @@ public class WidgetLocatorHandler {
                 }
             } else {
                 ScreenWidgetCollection collection = new ScreenWidgetCollection();
-                //TODO übernehmen
                 collection.setWidgets(ScreenWidgetDiscoverer.getWidgetsOfScreen(screen));
                 CACHED_WIDGETS.put(screenIdentifier, collection);
             }

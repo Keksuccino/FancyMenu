@@ -60,14 +60,12 @@ public class TextFormattingUtils {
         return in;
     }
 
-    //TODO übernehmen
     public static String textComponentToString(@NotNull Component textComponent) {
         StringBuilder sb = new StringBuilder();
         appendComponent(sb, textComponent, textComponent.getStyle());
         return sb.toString();
     }
 
-    //TODO übernehmen
     private static void appendComponent(@NotNull StringBuilder sb, @NotNull Component component, @NotNull Style parentStyle) {
 
         Style style = component.getStyle().applyTo(parentStyle);

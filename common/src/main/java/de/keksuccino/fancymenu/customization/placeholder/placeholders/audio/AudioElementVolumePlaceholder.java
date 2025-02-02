@@ -11,7 +11,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
-//TODO übernehmen
 public class AudioElementVolumePlaceholder extends Placeholder {
 
     private static final Logger LOGGER = LogManager.getLogger();

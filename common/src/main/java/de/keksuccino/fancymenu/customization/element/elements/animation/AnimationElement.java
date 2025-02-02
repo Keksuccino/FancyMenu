@@ -11,7 +11,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-//TODO übernehmen (whole class)
 @Deprecated(forRemoval = true)
 public class AnimationElement extends AbstractElement {
 

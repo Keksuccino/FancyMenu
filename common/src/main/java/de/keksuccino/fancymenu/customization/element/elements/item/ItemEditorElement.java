@@ -92,6 +92,15 @@ public class ItemEditorElement extends AbstractEditorElement {
                 (itemEditorElement, aBoolean) -> itemEditorElement.getElement().showTooltip = aBoolean,
                 "fancymenu.elements.item.show_tooltip");
 
+        this.rightClickMenu.addSeparatorEntry("separator_before_nbt");
+
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "nbt_data", ItemEditorElement.class,
+                        consumes -> consumes.getElement().nbtData,
+                        (itemEditorElement, s) -> itemEditorElement.getElement().nbtData = s,
+                        null, false, true, Component.translatable("fancymenu.elements.item.nbt"),
+                        true, null, null, null)
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.item.nbt.desc")));
+
     }
 
     public ItemElement getElement() {
