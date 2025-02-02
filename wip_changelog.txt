@@ -1,6 +1,8 @@
 
 CHANGELOG | FANCYMENU v3.4.0 [ W I P !! Not public yet !! ]
 
+- This update is available for MC 1.18.2, 1.19.2, 1.20.1, 1.21.1, 1.21.4 (all other versions get dropped)
+
 - Added "Element Animator" element that allows you to animate the position and size of other elements by using keyframes (#412)
 - Added "Is Key Pressed" requirement to check for keyboard key presses (#966)
 - Added "Only Once Per Session" requirement that returns true only once per game session (#1024)
