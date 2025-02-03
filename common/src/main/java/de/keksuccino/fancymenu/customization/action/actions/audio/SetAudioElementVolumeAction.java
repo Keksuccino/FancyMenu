@@ -10,7 +10,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-//TODO übernehmen
 public class SetAudioElementVolumeAction extends Action {
 
     private static final Logger LOGGER = LogManager.getLogger();

@@ -1,5 +1,8 @@
 package de.keksuccino.fancymenu.customization.layout;
 
+import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.ExecutableBlockDeserializer;
+import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.util.SerializationUtils;
@@ -161,8 +164,9 @@ public class Layout extends LayoutBase {
             set.putContainer(ps);
         }
 
-        if (this.menuBackground != null) {
-            SerializedMenuBackground serializedMenuBackground = this.menuBackground.builder.serializedBackgroundInternal(this.menuBackground);
+        //Normal layouts always have at max 1 background in the list, so we just get the first one from the list
+        if (!this.menuBackgrounds.isEmpty()) {
+            SerializedMenuBackground serializedMenuBackground = this.menuBackgrounds.getFirst().builder.serializedBackgroundInternal(this.menuBackgrounds.getFirst());
             if (serializedMenuBackground != null) {
                 set.putContainer(serializedMenuBackground);
             }
@@ -203,9 +207,19 @@ public class Layout extends LayoutBase {
         scrollListContainer.putProperty("repeat_scroll_list_header_texture", "" + this.repeatScrollListHeaderTexture);
         scrollListContainer.putProperty("repeat_scroll_list_footer_texture", "" + this.repeatScrollListFooterTexture);
         scrollListContainer.putProperty("show_screen_background_overlay_on_custom_background", "" + this.showScreenBackgroundOverlayOnCustomBackground);
-        //TODO übernehmen
         scrollListContainer.putProperty("apply_vanilla_background_blur", "" + this.applyVanillaBackgroundBlur);
         set.putContainer(scrollListContainer);
+
+        PropertyContainer executableBlocks = new PropertyContainer("layout_action_executable_blocks");
+        if (!this.openScreenExecutableBlocks.isEmpty()) {
+            executableBlocks.putProperty("open_screen_executable_block_identifier", this.openScreenExecutableBlocks.getFirst().identifier);
+            this.openScreenExecutableBlocks.getFirst().serializeToExistingPropertyContainer(executableBlocks);
+        }
+        if (!this.closeScreenExecutableBlocks.isEmpty()) {
+            executableBlocks.putProperty("close_screen_executable_block_identifier", this.closeScreenExecutableBlocks.getFirst().identifier);
+            this.closeScreenExecutableBlocks.getFirst().serializeToExistingPropertyContainer(executableBlocks);
+        }
+        set.putContainer(executableBlocks);
 
         this.layoutWideLoadingRequirementContainer.serializeToExistingPropertyContainer(meta);
 
@@ -384,21 +398,20 @@ public class Layout extends LayoutBase {
             //Handle menu backgrounds
             List<PropertyContainer> menuBackgroundSections = serialized.getContainersOfType("menu_background");
             if (!menuBackgroundSections.isEmpty()) {
-                PropertyContainer menuBack = menuBackgroundSections.get(0);
+                PropertyContainer menuBack = menuBackgroundSections.getFirst();
                 String backgroundIdentifier = menuBack.getValue("background_type");
                 if (backgroundIdentifier != null) {
                     MenuBackgroundBuilder<?> builder = MenuBackgroundRegistry.getBuilder(backgroundIdentifier);
                     if (builder != null) {
-                        layout.menuBackground = builder.deserializeBackgroundInternal(convertSectionToBackground(menuBack));
+                        MenuBackground back = builder.deserializeBackgroundInternal(convertSectionToBackground(menuBack));
+                        if ((back != null) && layout.menuBackgrounds.isEmpty()) layout.menuBackgrounds.add(back);
                     }
                 }
             }
             //Convert legacy backgrounds
             if (layout.legacyLayout) {
                 MenuBackground legacyBackground = convertLegacyMenuBackground(serialized);
-                if (legacyBackground != null) {
-                    layout.menuBackground = legacyBackground;
-                }
+                if ((legacyBackground != null) && layout.menuBackgrounds.isEmpty()) layout.menuBackgrounds.add(legacyBackground);
             }
 
             //Handle Scroll List Customizations
@@ -429,8 +442,30 @@ public class Layout extends LayoutBase {
                 layout.showScreenBackgroundOverlayOnCustomBackground = SerializationUtils.deserializeBoolean(layout.showScreenBackgroundOverlayOnCustomBackground, scrollListCustomizations.getValue("show_screen_background_overlay_on_custom_background"));
                 layout.repeatScrollListHeaderTexture = SerializationUtils.deserializeBoolean(layout.repeatScrollListHeaderTexture, scrollListCustomizations.getValue("repeat_scroll_list_header_texture"));
                 layout.repeatScrollListFooterTexture = SerializationUtils.deserializeBoolean(layout.repeatScrollListFooterTexture, scrollListCustomizations.getValue("repeat_scroll_list_footer_texture"));
-                //TODO übernehmen
                 layout.applyVanillaBackgroundBlur = SerializationUtils.deserializeBoolean(layout.applyVanillaBackgroundBlur, scrollListCustomizations.getValue("apply_vanilla_background_blur"));
+            }
+
+            PropertyContainer executableBlocks = serialized.getFirstContainerOfType("layout_action_executable_blocks");
+            if (executableBlocks != null) {
+
+                String openScreenExecutableBlockId = executableBlocks.getValue("open_screen_executable_block_identifier");
+                if (openScreenExecutableBlockId != null) {
+                    AbstractExecutableBlock b = ExecutableBlockDeserializer.deserializeWithIdentifier(executableBlocks, openScreenExecutableBlockId);
+                    if (b instanceof GenericExecutableBlock g) {
+                        layout.openScreenExecutableBlocks.clear();
+                        layout.openScreenExecutableBlocks.add(g);
+                    }
+                }
+
+                String closeScreenExecutableBlockId = executableBlocks.getValue("close_screen_executable_block_identifier");
+                if (closeScreenExecutableBlockId != null) {
+                    AbstractExecutableBlock b = ExecutableBlockDeserializer.deserializeWithIdentifier(executableBlocks, closeScreenExecutableBlockId);
+                    if (b instanceof GenericExecutableBlock g) {
+                        layout.closeScreenExecutableBlocks.clear();
+                        layout.closeScreenExecutableBlocks.add(g);
+                    }
+                }
+
             }
 
             //Handle everything else
@@ -646,17 +681,6 @@ public class Layout extends LayoutBase {
                         elementOrder.add(e.getInstanceIdentifier());
                     }
                 }
-
-                //TODO übernehmen
-//                if (action.equalsIgnoreCase("addanimation")) {
-//                    AnimationElement e = Elements.ANIMATION.deserializeElementInternal(convertContainerToSerializedElement(sec));
-//                    if (e != null) {
-//                        e.stayOnScreen = false;
-//                        e.animationName = sec.getValue("name");
-//                        elements.add(Elements.ANIMATION.serializeElementInternal(e));
-//                        elementOrder.add(e.getInstanceIdentifier());
-//                    }
-//                }
 
                 if (action.equalsIgnoreCase("addshape")) {
                     ShapeElement e = Elements.SHAPE.deserializeElementInternal(convertContainerToSerializedElement(sec));
@@ -905,13 +929,11 @@ public class Layout extends LayoutBase {
                     }
                     if ((fadeIn != null) && fadeIn.equalsIgnoreCase("true")) {
                         if ((fadeInSpeed != null) && MathUtils.isFloat(fadeInSpeed)) {
-                            //TODO übernehmen
                             if (element.appearanceDelay == AbstractElement.AppearanceDelay.FIRST_TIME) {
                                 element.fadeIn = AbstractElement.Fading.FIRST_TIME;
                             } else if (element.appearanceDelay == AbstractElement.AppearanceDelay.EVERY_TIME) {
                                 element.fadeIn = AbstractElement.Fading.EVERY_TIME;
                             }
-                            //-----------------------
                             element.fadeInSpeed = Float.parseFloat(fadeInSpeed);
                         }
                     }

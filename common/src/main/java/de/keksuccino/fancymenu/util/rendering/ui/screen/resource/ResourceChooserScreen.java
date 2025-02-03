@@ -183,6 +183,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
         this.editBox.setHighlightPos(0);
         this.editBox.applyInputPrefixSuffixCharacterRenderFormatter();
         this.editBox.setEditable(!isLegacyLocal);
+        this.editBox.setDeleteAllAllowed(false);
         this.editBox.setResponder(s -> this.resourceSource = s);
         sourceInputCell.setEditorCallback((s, textInputCell) -> {
             if (isLocal && !isLegacyLocal && !s.startsWith("/config/fancymenu/assets/")) {

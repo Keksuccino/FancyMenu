@@ -20,6 +20,12 @@ public class ImageMenuBackground extends MenuBackground {
     public ResourceSupplier<ITexture> fallbackTextureSupplier;
     public boolean slideLeftRight = false;
     public boolean repeat = false;
+    public boolean parallaxEnabled = false;
+    /** Value between 0.0 and 1.0, where 0.0 is no movement and 1.0 is maximum movement **/
+    public float parallaxIntensity = 0.02F;
+    /** When TRUE, the parallax effect will move in the SAME direction as the mouse, otherwise it moves in the opposite direction **/
+    public boolean invertParallax = false;
+
     protected double slidePos = 0.0D;
     protected boolean slideMoveBack = false;
     protected boolean slideStop = false;
@@ -33,9 +39,6 @@ public class ImageMenuBackground extends MenuBackground {
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         RenderSystem.enableBlend();
-        graphics.fill(0, 0, getScreenWidth(), getScreenHeight(), BACKGROUND_COLOR.getColorIntWithAlpha(this.opacity));
-
-        RenderingUtils.resetShaderColor(graphics);
 
         ResourceLocation resourceLocation = null;
         ITexture tex = null;
@@ -58,86 +61,166 @@ public class ImageMenuBackground extends MenuBackground {
         }
 
         if (resourceLocation != null) {
-
-            RenderSystem.enableBlend();
-            graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
-
+            float[] parallaxOffset = calculateParallaxOffset(mouseX, mouseY);
             if (this.repeat) {
-                RenderingUtils.blitRepeat(graphics, resourceLocation, 0, 0, getScreenWidth(), getScreenHeight(), tex.getWidth(), tex.getHeight());
-            } else if (this.slideLeftRight) {
-                int w = ratio.getAspectRatioWidth(getScreenHeight());
-                //Check if background should move to the left or the right side
-                if ((slidePos + (w - getScreenWidth())) <= 0) {
-                    slideMoveBack = true;
-                }
-                if (slidePos >= 0) {
-                    slideMoveBack = false;
-                }
-                //Fix pos after resizing
-                if (slidePos + (w - getScreenWidth()) < 0) {
-                    slidePos = -(w - getScreenWidth());
-                }
-                if (slidePos > 0) {
-                    slidePos = 0;
-                }
-                if (!slideStop) {
-                    if (slideTick >= 1) {
-                        slideTick = 0;
-                        if (slideMoveBack) {
-                            slidePos = slidePos + 0.5;
-                        } else {
-                            slidePos = slidePos - 0.5;
-                        }
-
-                        if (slidePos + (w - getScreenWidth()) == 0) {
-                            slideStop = true;
-                        }
-                        if (slidePos == 0) {
-                            slideStop = true;
-                        }
-                    } else {
-                        slideTick++;
-                    }
-                } else {
-                    if (slideTick >= 300) {
-                        slideStop = false;
-                        slideTick = 0;
-                    } else {
-                        slideTick++;
-                    }
-                }
-                if (w <= getScreenWidth()) {
-                    if (this.keepBackgroundAspectRatio) {
-                        this.renderKeepAspectRatio(graphics, ratio, resourceLocation);
-                    } else {
-                        graphics.blit(resourceLocation, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
-                    }
-                } else {
-                    RenderingUtils.blitF(graphics, resourceLocation, (float)slidePos, 0.0F, 0.0F, 0.0F, w, getScreenHeight(), w, getScreenHeight());
-                }
+                renderRepeatBackground(graphics, resourceLocation, tex, parallaxOffset);
+            } else if (this.slideLeftRight && !this.parallaxEnabled) {
+                renderSlideBackground(graphics, ratio, resourceLocation, parallaxOffset);
             } else if (this.keepBackgroundAspectRatio) {
-                this.renderKeepAspectRatio(graphics, ratio, resourceLocation);
+                renderKeepAspectRatio(graphics, ratio, resourceLocation, parallaxOffset);
             } else {
-                graphics.blit(resourceLocation, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
+                renderFullScreen(graphics, resourceLocation, parallaxOffset);
             }
-
         }
 
         RenderingUtils.resetShaderColor(graphics);
 
     }
 
-    protected void renderKeepAspectRatio(@NotNull GuiGraphics graphics, @NotNull AspectRatio ratio, @NotNull ResourceLocation resourceLocation) {
-        int[] size = ratio.getAspectRatioSizeByMinimumSize(getScreenWidth(), getScreenHeight());
-        int x = 0;
-        if (size[0] > getScreenWidth()) {
-            x = -((size[0] - getScreenWidth()) / 2);
+    protected float[] calculateParallaxOffset(int mouseX, int mouseY) {
+        if (!parallaxEnabled) {
+            return new float[]{0, 0};
         }
-        int y = 0;
-        if (size[1] > getScreenHeight()) {
-            y = -((size[1] - getScreenHeight()) / 2);
-        }
-        graphics.blit(resourceLocation, x, y, 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
+
+        // Calculate mouse position as a percentage from the center of the screen
+        float mouseXPercent = (2.0f * mouseX / getScreenWidth()) - 1.0f;
+        float mouseYPercent = (2.0f * mouseY / getScreenHeight()) - 1.0f;
+
+        // Apply inversion if enabled
+        float directionMultiplier = invertParallax ? 1.0f : -1.0f;
+
+        // Calculate offset based on screen dimensions and center-adjusted mouse position
+        float xOffset = directionMultiplier * parallaxIntensity * mouseXPercent * getScreenWidth() * 0.5f;
+        float yOffset = directionMultiplier * parallaxIntensity * mouseYPercent * getScreenHeight() * 0.5f;
+
+        return new float[]{xOffset, yOffset};
+
     }
 
+    protected void renderRepeatBackground(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation, ITexture tex, float[] parallaxOffset) {
+
+        graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
+
+        if (parallaxEnabled) {
+            // Create expanded area for parallax movement
+            int expandedWidth = (int)(getScreenWidth() * (1.0F + parallaxIntensity));
+            int expandedHeight = (int)(getScreenHeight() * (1.0F + parallaxIntensity));
+
+            // Center the expanded area and apply parallax offset
+            int baseX = -((expandedWidth - getScreenWidth()) / 2) + (int)parallaxOffset[0];
+            int baseY = -((expandedHeight - getScreenHeight()) / 2) + (int)parallaxOffset[1];
+
+            RenderingUtils.blitRepeat(graphics, resourceLocation, baseX, baseY,
+                    expandedWidth, expandedHeight,
+                    tex.getWidth(), tex.getHeight());
+        } else {
+            RenderingUtils.blitRepeat(graphics, resourceLocation, 0, 0,
+                    getScreenWidth(), getScreenHeight(),
+                    tex.getWidth(), tex.getHeight());
+        }
+
+        RenderingUtils.resetShaderColor(graphics);
+
+    }
+
+    protected void renderSlideBackground(@NotNull GuiGraphics graphics, @NotNull AspectRatio ratio, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset) {
+        int w = ratio.getAspectRatioWidth(getScreenHeight());
+        handleSlideAnimation(w);
+        graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
+        if (w <= getScreenWidth()) {
+            if (this.keepBackgroundAspectRatio) {
+                renderKeepAspectRatio(graphics, ratio, resourceLocation, parallaxOffset);
+            } else {
+                renderFullScreen(graphics, resourceLocation, parallaxOffset);
+            }
+        } else {
+            float finalX = (float)slidePos;
+            RenderingUtils.blitF(graphics, resourceLocation,
+                    finalX, parallaxOffset[1], 0.0F, 0.0F,
+                    w, getScreenHeight(), w, getScreenHeight());
+        }
+        RenderingUtils.resetShaderColor(graphics);
+    }
+
+    protected void renderKeepAspectRatio(@NotNull GuiGraphics graphics, @NotNull AspectRatio ratio, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset) {
+        // Calculate base size with reduced parallax expansion
+        float parallaxScale = parallaxEnabled ? (1.0F + parallaxIntensity) : 1.0F;
+        int[] baseSize = ratio.getAspectRatioSizeByMinimumSize(
+                (int)(getScreenWidth() * parallaxScale),
+                (int)(getScreenHeight() * parallaxScale)
+        );
+
+        // Calculate centered position with adjusted parallax offset
+        int x = (getScreenWidth() - baseSize[0]) / 2 + (int)parallaxOffset[0];
+        int y = (getScreenHeight() - baseSize[1]) / 2 + (int)parallaxOffset[1];
+
+        graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
+
+        graphics.blit(resourceLocation,
+                x, y, 0.0F, 0.0F,
+                baseSize[0], baseSize[1],
+                baseSize[0], baseSize[1]);
+
+        RenderingUtils.resetShaderColor(graphics);
+    }
+
+    protected void renderFullScreen(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset) {
+        graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
+        if (parallaxEnabled) {
+            // Reduce the expansion amount for parallax
+            int expandedWidth = (int)(getScreenWidth() * (1.0F + parallaxIntensity));
+            int expandedHeight = (int)(getScreenHeight() * (1.0F + parallaxIntensity));
+
+            // Center the expanded area and apply parallax offset
+            int x = -((expandedWidth - getScreenWidth()) / 2) + (int)parallaxOffset[0];
+            int y = -((expandedHeight - getScreenHeight()) / 2) + (int)parallaxOffset[1];
+
+            graphics.blit(resourceLocation,
+                    x, y, 0.0F, 0.0F,
+                    expandedWidth, expandedHeight,
+                    expandedWidth, expandedHeight);
+        } else {
+            graphics.blit(resourceLocation,
+                    0, 0, 0.0F, 0.0F,
+                    getScreenWidth(), getScreenHeight(),
+                    getScreenWidth(), getScreenHeight());
+        }
+        RenderingUtils.resetShaderColor(graphics);
+    }
+
+    protected void handleSlideAnimation(int backgroundWidth) {
+        if ((slidePos + (backgroundWidth - getScreenWidth())) <= 0) {
+            slideMoveBack = true;
+        }
+        if (slidePos >= 0) {
+            slideMoveBack = false;
+        }
+
+        if (slidePos + (backgroundWidth - getScreenWidth()) < 0) {
+            slidePos = -(backgroundWidth - getScreenWidth());
+        }
+        if (slidePos > 0) {
+            slidePos = 0;
+        }
+
+        if (!slideStop) {
+            if (slideTick >= 1) {
+                slideTick = 0;
+                slidePos += slideMoveBack ? 0.5 : -0.5;
+
+                if (slidePos + (backgroundWidth - getScreenWidth()) == 0 || slidePos == 0) {
+                    slideStop = true;
+                }
+            } else {
+                slideTick++;
+            }
+        } else {
+            if (slideTick >= 300) {
+                slideStop = false;
+                slideTick = 0;
+            } else {
+                slideTick++;
+            }
+        }
+    }
 }

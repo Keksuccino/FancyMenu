@@ -1,4 +1,3 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -57,10 +56,8 @@ public class WelcomeScreen extends Screen {
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to open FancyMenu docs in WelcomeScreen!", ex);
             }
-            //TODO übernehmen 3.3.2
             FancyMenu.getOptions().showWelcomeScreen.setValue(false);
             this.onClose();
-            //TODO übernehmen 3.3.2
         })).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.welcome.screen.open_docs.tooltip")));
 
     }

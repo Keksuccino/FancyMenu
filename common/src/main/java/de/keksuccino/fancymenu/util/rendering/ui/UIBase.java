@@ -108,10 +108,10 @@ public class UIBase extends RenderingUtils {
 
 	public static float getUIScale() {
 		float uiScale = FancyMenu.getOptions().uiScale.getValue();
-		//Handle "Auto" scale (set scale to 2 if window bigger than 1920x1080)
+		//Handle "Auto" scale (set scale to 2 if window bigger than 3000x1700 to show 1080p and 2K screens on scale 1 and 4K on scale 2)
 		if (uiScale == 4) {
 			uiScale = 1;
-			if ((Minecraft.getInstance().getWindow().getWidth() > 1920) || (Minecraft.getInstance().getWindow().getHeight() > 1080)) {
+			if ((Minecraft.getInstance().getWindow().getWidth() > 3000) || (Minecraft.getInstance().getWindow().getHeight() > 1700)) {
 				uiScale = 2;
 			}
 		}

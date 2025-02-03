@@ -219,55 +219,55 @@ public class TextEditorScreen extends Screen {
         this.rightClickContextMenu = new ContextMenu();
 
         this.rightClickContextMenu.addClickableEntry("copy", Component.translatable("fancymenu.ui.text_editor.copy"), (menu, entry) -> {
-            Minecraft.getInstance().keyboardHandler.setClipboard(this.getHighlightedText());
-            menu.closeMenu();
-        }).setIsActiveSupplier((menu, entry) -> {
-            if (!menu.isOpen()) return false;
-            return this.selectedHoveredOnRightClickMenuOpen;
-        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.copy"))
+                    Minecraft.getInstance().keyboardHandler.setClipboard(this.getHighlightedText());
+                    menu.closeMenu();
+                }).setIsActiveSupplier((menu, entry) -> {
+                    if (!menu.isOpen()) return false;
+                    return this.selectedHoveredOnRightClickMenuOpen;
+                }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.copy"))
                 .setIcon(ContextMenu.IconFactory.getIcon("copy"));
 
         this.rightClickContextMenu.addClickableEntry("paste", Component.translatable("fancymenu.ui.text_editor.paste"), (menu, entry) -> {
-            this.pasteText(Minecraft.getInstance().keyboardHandler.getClipboard());
-            menu.closeMenu();
-        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.paste"))
+                    this.pasteText(Minecraft.getInstance().keyboardHandler.getClipboard());
+                    menu.closeMenu();
+                }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.paste"))
                 .setIcon(ContextMenu.IconFactory.getIcon("paste"));
 
         this.rightClickContextMenu.addSeparatorEntry("separator_after_paste");
 
         this.rightClickContextMenu.addClickableEntry("cut", Component.translatable("fancymenu.ui.text_editor.cut"), (menu, entry) -> {
-            Minecraft.getInstance().keyboardHandler.setClipboard(this.cutHighlightedText());
-            menu.closeMenu();
-        }).setIsActiveSupplier((menu, entry) -> {
-            if (!menu.isOpen()) return false;
-            return this.selectedHoveredOnRightClickMenuOpen;
-        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.cut"))
+                    Minecraft.getInstance().keyboardHandler.setClipboard(this.cutHighlightedText());
+                    menu.closeMenu();
+                }).setIsActiveSupplier((menu, entry) -> {
+                    if (!menu.isOpen()) return false;
+                    return this.selectedHoveredOnRightClickMenuOpen;
+                }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.cut"))
                 .setIcon(ContextMenu.IconFactory.getIcon("cut"));
 
         this.rightClickContextMenu.addSeparatorEntry("separator_after_cut");
 
         this.rightClickContextMenu.addClickableEntry("select_all", Component.translatable("fancymenu.ui.text_editor.select_all"), (menu, entry) -> {
-            for (TextEditorLine t : this.textFieldLines) {
-                t.setHighlightPos(0);
-                t.setCursorPosition(t.getValue().length());
-            }
-            this.setFocusedLine(this.getLineCount()-1);
-            this.startHighlightLineIndex = 0;
-            this.endHighlightLineIndex = this.getLineCount()-1;
-            menu.closeMenu();
-        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.select_all"))
+                    for (TextEditorLine t : this.textFieldLines) {
+                        t.setHighlightPos(0);
+                        t.setCursorPosition(t.getValue().length());
+                    }
+                    this.setFocusedLine(this.getLineCount()-1);
+                    this.startHighlightLineIndex = 0;
+                    this.endHighlightLineIndex = this.getLineCount()-1;
+                    menu.closeMenu();
+                }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.select_all"))
                 .setIcon(ContextMenu.IconFactory.getIcon("select"));
 
         this.rightClickContextMenu.addSeparatorEntry("separator_after_select_all");
 
         this.rightClickContextMenu.addClickableEntry("undo", Component.translatable("fancymenu.editor.edit.undo"), (menu, entry) -> {
-            this.history.stepBack();
-        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.undo"))
+                    this.history.stepBack();
+                }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.undo"))
                 .setIcon(ContextMenu.IconFactory.getIcon("undo"));
 
         this.rightClickContextMenu.addClickableEntry("redo", Component.translatable("fancymenu.editor.edit.redo"), (menu, entry) -> {
-            this.history.stepForward();
-        }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.redo"))
+                    this.history.stepForward();
+                }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.redo"))
                 .setIcon(ContextMenu.IconFactory.getIcon("redo"));
 
     }

@@ -190,7 +190,6 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 		RenderSystem.enableBlend();
 		RenderSystem.disableCull();
 		RenderSystem.depthMask(false);
-		//TODO übernehmen
 		RenderSystem.disableDepthTest();
 
 		for(int $$8 = 0; $$8 < 4; ++$$8) {
@@ -199,8 +198,6 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 			float $$10 = ((float)($$8 / 2) / 2.0F - 0.5F) / 256.0F;
 			float $$11 = 0.0F;
 			modelViewStack.translate($$9, $$10, 0.0F);
-//			modelViewStack.rotateX($$1 * 0.017453292F);
-//			modelViewStack.rotateY($$2 * 0.017453292F);
 			modelViewStack.rotateX(pitch * (float) (Math.PI / 180.0));
 			modelViewStack.rotateY(yaw * (float) (Math.PI / 180.0));
 			RenderSystem.applyModelViewMatrix();

@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.file.ResourceFile;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
@@ -62,8 +63,6 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
     public E deserializeElementInternal(@NotNull SerializedElement serialized) {
 
         try {
-
-            //TODO übernehmen ( alles bis X Y )
 
             E element = deserializeElement(serialized);
 
@@ -144,8 +143,6 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             element.autoSizingBaseScreenHeight = deserializeNumber(Integer.class, element.autoSizingBaseScreenHeight, serialized.getValue("auto_sizing_base_screen_height"));
 
             element.stickyAnchor = deserializeBoolean(element.stickyAnchor, serialized.getValue("sticky_anchor"));
-
-            //----------------------------------
 
             String x = serialized.getValue("x");
             String y = serialized.getValue("y");
@@ -241,6 +238,22 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                 element.loadingRequirementContainer = LoadingRequirementContainer.deserializeToSingleContainer(serialized);
             }
 
+            element.enableParallax = SerializationUtils.deserializeBoolean(element.enableParallax, serialized.getValue("enable_parallax"));
+            element.parallaxIntensity = SerializationUtils.deserializeNumber(Float.class, element.parallaxIntensity, serialized.getValue("parallax_intensity"));
+            element.invertParallax = SerializationUtils.deserializeBoolean(element.invertParallax, serialized.getValue("invert_parallax"));
+
+            element.animatedOffsetX = SerializationUtils.deserializeNumber(Integer.class, element.animatedOffsetX, serialized.getValue("animated_offset_x"));
+            element.animatedOffsetY = SerializationUtils.deserializeNumber(Integer.class, element.animatedOffsetY, serialized.getValue("animated_offset_y"));
+
+            element.loadOncePerSession = SerializationUtils.deserializeBoolean(element.loadOncePerSession, serialized.getValue("load_once_per_session"));
+
+            String inEditorColor = serialized.getValue("in_editor_color");
+            if (inEditorColor != null) {
+                element.inEditorColor = DrawableColor.of(inEditorColor);
+            }
+
+            element.afterConstruction();
+
             return element;
 
         } catch (Exception ex) {
@@ -314,7 +327,6 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
             sec.putProperty("appearance_delay", element.appearanceDelay.name);
             sec.putProperty("appearance_delay_seconds", "" + element.appearanceDelayInSeconds);
-            //TODO übernehmen
             sec.putProperty("fade_in_v2", element.fadeIn.getName());
             sec.putProperty("fade_in_speed", "" + element.fadeInSpeed);
             sec.putProperty("fade_out", element.fadeOut.getName());
@@ -324,7 +336,6 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             sec.putProperty("auto_sizing_base_screen_width", "" + element.autoSizingBaseScreenWidth);
             sec.putProperty("auto_sizing_base_screen_height", "" + element.autoSizingBaseScreenHeight);
             sec.putProperty("sticky_anchor", "" + element.stickyAnchor);
-            //------------------------
 
             sec.putProperty("anchor_point", (element.anchorPoint != null) ? element.anchorPoint.getName() : ElementAnchorPoints.TOP_LEFT.getName());
             if ((element.anchorPoint == ElementAnchorPoints.ELEMENT) && (element.anchorPointElementIdentifier != null)) {
@@ -357,6 +368,17 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
 
             sec.putProperty("element_loading_requirement_container_identifier", element.loadingRequirementContainer.identifier);
             element.loadingRequirementContainer.serializeToExistingPropertyContainer(sec);
+
+            sec.putProperty("enable_parallax", "" + element.enableParallax);
+            sec.putProperty("parallax_intensity", "" + element.parallaxIntensity);
+            sec.putProperty("invert_parallax", "" + element.invertParallax);
+
+            sec.putProperty("animated_offset_x", "" + element.animatedOffsetX);
+            sec.putProperty("animated_offset_y", "" + element.animatedOffsetY);
+
+            sec.putProperty("load_once_per_session", "" + element.loadOncePerSession);
+
+            sec.putProperty("in_editor_color", element.inEditorColor.getHex());
 
             return sec;
 

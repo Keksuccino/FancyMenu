@@ -124,8 +124,6 @@ public class PlayerEntityElementRenderer extends PlayerRenderer {
         if (rendertype != null) {
             VertexConsumer vertexconsumer = bufferSource.getBuffer(rendertype);
             int i = OverlayTexture.pack(OverlayTexture.u(this.getWhiteOverlayProgress(null, f12)), OverlayTexture.v(false));
-//            this.playerModel.renderToBuffer(matrix, vertexconsumer, i11, i, 1.0F, 1.0F, 1.0F, flag1 ? 0.15F : 1.0F);
-            //TODO EXPERIMENTAL
             this.playerModel.renderToBuffer(pose, vertexconsumer, i11, i);
         }
 

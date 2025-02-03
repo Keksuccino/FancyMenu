@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-//TODO übernehmen
 public class DraggerElementHandler {
 
     public static final File DRAGGER_METAS_FILE = new File(FancyMenu.MOD_DIR, "/dragger_metas.json");

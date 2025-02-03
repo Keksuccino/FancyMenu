@@ -262,6 +262,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
 
     public ExtendedButton setLabelSupplier(@NotNull ConsumingSupplier<ExtendedButton, Component> labelSupplier) {
         this.labelSupplier = labelSupplier;
+        this.updateLabel();
         return this;
     }
 

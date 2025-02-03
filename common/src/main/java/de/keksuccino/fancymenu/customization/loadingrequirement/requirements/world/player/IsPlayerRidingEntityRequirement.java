@@ -10,11 +10,9 @@ import net.minecraft.client.resources.language.I18n;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
 import javax.annotation.Nullable;
 import java.util.List;
 
-//TODO übernehmen
 public class IsPlayerRidingEntityRequirement extends LoadingRequirement {
 
     private static final Logger LOGGER = LogManager.getLogger();

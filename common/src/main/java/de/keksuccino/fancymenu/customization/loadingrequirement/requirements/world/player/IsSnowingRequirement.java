@@ -8,7 +8,6 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.BlockPos;
-import net.minecraft.data.worldgen.DimensionTypes;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import org.apache.logging.log4j.LogManager;
@@ -17,7 +16,6 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.util.List;
 
-//TODO übernehmen
 public class IsSnowingRequirement extends LoadingRequirement {
 
     private static final Logger LOGGER = LogManager.getLogger();

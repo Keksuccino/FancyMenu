@@ -16,7 +16,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
-//TODO übernehmen
 public class ActiveEffectPlaceholder extends Placeholder {
 
     public ActiveEffectPlaceholder() {

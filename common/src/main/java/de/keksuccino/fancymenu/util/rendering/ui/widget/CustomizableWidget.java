@@ -66,10 +66,11 @@ public interface CustomizableWidget {
                 renderVanilla = false;
                 graphics.setColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)widget).getAlphaFancyMenu());
                 RenderSystem.enableBlend();
+                graphics.setColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)widget).getAlphaFancyMenu());
                 if ((widget instanceof CustomizableSlider s) && s.isNineSliceCustomSliderHandle_FancyMenu()) {
-                    RenderingUtils.blitNineSliced(graphics, location, x, y, width, height, s.getNineSliceSliderHandleBorderX_FancyMenu(), s.getNineSliceSliderHandleBorderY_FancyMenu(), s.getNineSliceSliderHandleBorderX_FancyMenu(), s.getNineSliceSliderHandleBorderY_FancyMenu(), customBackground.getWidth(), customBackground.getHeight(), 0, 0, customBackground.getWidth(), customBackground.getHeight());
+                    RenderingUtils.blitNineSlicedTexture(graphics, location, x, y, width, height, customBackground.getWidth(), customBackground.getHeight(), s.getNineSliceSliderHandleBorderY_FancyMenu(), s.getNineSliceSliderHandleBorderX_FancyMenu(), s.getNineSliceSliderHandleBorderY_FancyMenu(), s.getNineSliceSliderHandleBorderX_FancyMenu());
                 } else if (!(widget instanceof CustomizableSlider) && this.isNineSliceCustomBackgroundTexture_FancyMenu()) {
-                    RenderingUtils.blitNineSliced(graphics, location, x, y, width, height, getNineSliceCustomBackgroundBorderX_FancyMenu(), getNineSliceCustomBackgroundBorderY_FancyMenu(), getNineSliceCustomBackgroundBorderX_FancyMenu(), getNineSliceCustomBackgroundBorderY_FancyMenu(), customBackground.getWidth(), customBackground.getHeight(), 0, 0, customBackground.getWidth(), customBackground.getHeight());
+                    RenderingUtils.blitNineSlicedTexture(graphics, location, x, y, width, height, customBackground.getWidth(), customBackground.getHeight(), getNineSliceCustomBackgroundBorderY_FancyMenu(), getNineSliceCustomBackgroundBorderX_FancyMenu(), getNineSliceCustomBackgroundBorderY_FancyMenu(), getNineSliceCustomBackgroundBorderX_FancyMenu());
                 } else {
                     graphics.blit(location, x, y, 0.0F, 0.0F, width, height, width, height);
                 }
@@ -157,10 +158,20 @@ public interface CustomizableWidget {
     @Nullable
     IAudio getCustomClickSoundFancyMenu();
 
+    default void stopCustomClickSoundFancyMenu() {
+        IAudio a = this.getCustomClickSoundFancyMenu();
+        if (a != null) a.stop();
+    }
+
     void setHoverSoundFancyMenu(@Nullable IAudio sound);
 
     @Nullable
     IAudio getHoverSoundFancyMenu();
+
+    default void stopHoverSoundFancyMenu() {
+        IAudio a = this.getHoverSoundFancyMenu();
+        if (a != null) a.stop();
+    }
 
     void setHiddenFancyMenu(boolean hidden);
 

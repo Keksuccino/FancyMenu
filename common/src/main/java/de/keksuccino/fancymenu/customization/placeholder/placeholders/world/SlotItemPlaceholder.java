@@ -17,7 +17,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashMap;
 import java.util.List;
 
-//TODO übernehmen
 public class SlotItemPlaceholder extends Placeholder {
 
     private static final Logger LOGGER = LogManager.getLogger();

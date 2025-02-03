@@ -7,11 +7,11 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import org.jetbrains.annotations.NotNull;
 
-//TODO übernehmen
 public class DraggerEditorElement extends AbstractEditorElement {
 
     public DraggerEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
+        this.settings.setInEditorColorSupported(true);
     }
 
     @Override

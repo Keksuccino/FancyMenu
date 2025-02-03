@@ -13,13 +13,14 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandl
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.LogoRenderer;
-import net.minecraft.client.gui.components.SplashRenderer;
+import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.network.chat.Component;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -31,6 +32,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(TitleScreen.class)
 public abstract class MixinTitleScreen extends Screen {
 
+    @Shadow @Final private static Component COPYRIGHT_TEXT;
     @Shadow public boolean fading;
 
     @Unique boolean handleRealmsNotificationFancyMenu = false;
@@ -42,13 +44,27 @@ public abstract class MixinTitleScreen extends Screen {
     }
 
     /**
+     * @reason Add an identifier to the Copyright button.
+     */
+    @Inject(method = "init", at = @At("RETURN"))
+    private void at_return_of_screen_init_FancyMenu(CallbackInfo info) {
+
+        this.children().forEach(guiEventListener -> {
+            if (guiEventListener instanceof PlainTextButton b) {
+                if (b.getMessage() == COPYRIGHT_TEXT) ((UniqueWidget)b).setWidgetIdentifierFancyMenu("title_screen_copyright_button");
+            }
+        });
+
+    }
+
+    /**
      * @reason Manually fire FancyMenu's {@link RenderedScreenBackgroundEvent} in {@link TitleScreen}, because normal event doesn't work correctly here.
      */
     @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/TitleScreen;renderPanorama(Lnet/minecraft/client/gui/GuiGraphics;F)V"))
     private void wrap_renderPanorama_in_render_FancyMenu(TitleScreen instance, GuiGraphics graphics, float f, Operation<Void> original) {
         ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen(this);
         if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this)) {
-            if (l.layoutBase.menuBackground != null) {
+            if (!l.layoutBase.menuBackgrounds.isEmpty()) {
                 RenderSystem.enableBlend();
                 //Render a black background before the custom background gets rendered
                 graphics.fill(0, 0, this.width, this.height, 0);
@@ -60,15 +76,6 @@ public abstract class MixinTitleScreen extends Screen {
             original.call(instance, graphics, f);
         }
         EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, graphics));
-    }
-
-    /**
-     * @reason Makes FancyMenu not fire its {@link RenderedScreenBackgroundEvent} in {@link TitleScreen} when calling {@link Screen#render(GuiGraphics, int, int, float)}, because it would get fired too late.
-     */
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
-    private boolean wrap_super_render_in_render_FancyMenu(Screen instance, GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        ((IMixinScreen)this).getRenderablesFancyMenu().forEach(renderable -> renderable.render(graphics, mouseX, mouseY, partial));
-        return false;
     }
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/LogoRenderer;renderLogo(Lnet/minecraft/client/gui/GuiGraphics;IF)V"))

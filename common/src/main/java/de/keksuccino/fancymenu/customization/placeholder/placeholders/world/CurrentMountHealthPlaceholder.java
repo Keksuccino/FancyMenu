@@ -6,7 +6,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.NotNull;
 
-//TODO übernehmen
 public class CurrentMountHealthPlaceholder extends AbstractWorldFloatPlaceholder {
 
     public CurrentMountHealthPlaceholder() {

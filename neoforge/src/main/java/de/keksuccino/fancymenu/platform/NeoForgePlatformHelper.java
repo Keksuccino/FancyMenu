@@ -82,7 +82,6 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
         return keyMapping.getKey();
     }
 
-    //TODO übernehmen
     @Override
     public @Nullable ResourceLocation getItemKey(@NotNull Item item) {
         try {
@@ -93,7 +92,6 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
         return null;
     }
 
-    //TODO übernehmen
     @Override
     public @Nullable ResourceLocation getEffectKey(@NotNull MobEffect effect) {
         try {
@@ -104,7 +102,6 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
         return null;
     }
 
-    //TODO übernehmen
     @Override
     public @Nullable ResourceLocation getEntityKey(@NotNull EntityType<?> type) {
         try {

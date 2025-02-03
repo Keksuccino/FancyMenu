@@ -43,14 +43,6 @@ public class ElementAnchorPoint {
         return 0;
     }
 
-    public int getDefaultElementBaseX(@NotNull AbstractElement element) {
-        return 0;
-    }
-
-    public int getDefaultElementBaseY(@NotNull AbstractElement element) {
-        return 0;
-    }
-
     public int getResizePositionOffsetX(@NotNull AbstractElement element, int mouseTravelX, @NotNull AbstractEditorElement.ResizeGrabberType resizeGrabberType) {
         if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.RIGHT) {
             return 0;
@@ -71,23 +63,31 @@ public class ElementAnchorPoint {
         return 0;
     }
 
-    //TODO übernehmen
-    public int getStickyResizePositionCorrectionX(@NotNull AbstractElement element, int mouseTravelX, int oldOffsetX, int newOffsetX, int oldPosX, int newPosX, int oldWidth, int newWidth, @NotNull AbstractEditorElement.ResizeGrabberType resizeGrabberType) {
+    public int getStickyResizePositionCorrectionX(@NotNull AbstractElement element, int mouseTravelX, int oldOffsetX, int newOffsetX, int oldPosX, int newPosX, int oldWidth, int newWidth, AbstractEditorElement.@NotNull ResizeGrabberType resizeGrabberType) {
+        // When using LEFT grabber: Keep right edge in place
+        if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.LEFT) {
+            int newPosXRight = newPosX + newWidth;
+            int oldPosXRight = oldPosX + oldWidth;
+            return oldPosXRight - newPosXRight;
+        }
+        // When using RIGHT grabber: Keep left edge in place
+        if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.RIGHT) {
+            return oldPosX - newPosX;
+        }
         return 0;
     }
 
-    //TODO übernehmen
-    public int getStickyResizePositionCorrectionY(@NotNull AbstractElement element, int mouseTravelY, int oldOffsetY, int newOffsetY, int oldPosY, int newPosY, int oldHeight, int newHeight, @NotNull AbstractEditorElement.ResizeGrabberType resizeGrabberType) {
-        return 0;
-    }
-
-    //TODO übernehmen
-    public int getStickyOffsetXCorrection(@NotNull AbstractElement element) {
-        return 0;
-    }
-
-    //TODO übernehmen
-    public int getStickyOffsetYCorrection(@NotNull AbstractElement element) {
+    public int getStickyResizePositionCorrectionY(@NotNull AbstractElement element, int mouseTravelY, int oldOffsetY, int newOffsetY, int oldPosY, int newPosY, int oldHeight, int newHeight, AbstractEditorElement.@NotNull ResizeGrabberType resizeGrabberType) {
+        // When using TOP grabber: Keep bottom edge in place
+        if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.TOP) {
+            int newPosYBottom = newPosY + newHeight;
+            int oldPosYBottom = oldPosY + oldHeight;
+            return oldPosYBottom - newPosYBottom;
+        }
+        // When using BOTTOM grabber: Keep top edge in place
+        if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.BOTTOM) {
+            return oldPosY - newPosY;
+        }
         return 0;
     }
 
@@ -125,8 +125,11 @@ public class ElementAnchorPoint {
         }
 
         @Override
-        public int getDefaultElementBaseY(@NotNull AbstractElement element) {
-            return -(element.getAbsoluteHeight() / 2);
+        public int getElementPositionY(@NotNull AbstractElement element) {
+            if (element.stickyAnchor) {
+                return (this.getOriginY(element) - (element.getAbsoluteHeight() / 2)) + element.posOffsetY;
+            }
+            return super.getElementPositionY(element);
         }
 
     }
@@ -143,8 +146,11 @@ public class ElementAnchorPoint {
         }
 
         @Override
-        public int getDefaultElementBaseY(@NotNull AbstractElement element) {
-            return -element.getAbsoluteHeight();
+        public int getElementPositionY(@NotNull AbstractElement element) {
+            if (element.stickyAnchor) {
+                return (this.getOriginY(element) - element.getAbsoluteHeight()) + element.posOffsetY;
+            }
+            return super.getElementPositionY(element);
         }
 
     }
@@ -161,8 +167,11 @@ public class ElementAnchorPoint {
         }
 
         @Override
-        public int getDefaultElementBaseX(@NotNull AbstractElement element) {
-            return -(element.getAbsoluteWidth() / 2);
+        public int getElementPositionX(@NotNull AbstractElement element) {
+            if (element.stickyAnchor) {
+                return (this.getOriginX(element) - (element.getAbsoluteWidth() / 2)) + element.posOffsetX;
+            }
+            return super.getElementPositionX(element);
         }
 
     }
@@ -184,13 +193,19 @@ public class ElementAnchorPoint {
         }
 
         @Override
-        public int getDefaultElementBaseX(@NotNull AbstractElement element) {
-            return -(element.getAbsoluteWidth() / 2);
+        public int getElementPositionX(@NotNull AbstractElement element) {
+            if (element.stickyAnchor) {
+                return (this.getOriginX(element) - (element.getAbsoluteWidth() / 2)) + element.posOffsetX;
+            }
+            return super.getElementPositionX(element);
         }
 
         @Override
-        public int getDefaultElementBaseY(@NotNull AbstractElement element) {
-            return -(element.getAbsoluteHeight() / 2);
+        public int getElementPositionY(@NotNull AbstractElement element) {
+            if (element.stickyAnchor) {
+                return (this.getOriginY(element) - (element.getAbsoluteHeight() / 2)) + element.posOffsetY;
+            }
+            return super.getElementPositionY(element);
         }
 
     }
@@ -212,13 +227,19 @@ public class ElementAnchorPoint {
         }
 
         @Override
-        public int getDefaultElementBaseX(@NotNull AbstractElement element) {
-            return -(element.getAbsoluteWidth() / 2);
+        public int getElementPositionX(@NotNull AbstractElement element) {
+            if (element.stickyAnchor) {
+                return (this.getOriginX(element) - (element.getAbsoluteWidth() / 2)) + element.posOffsetX;
+            }
+            return super.getElementPositionX(element);
         }
 
         @Override
-        public int getDefaultElementBaseY(@NotNull AbstractElement element) {
-            return -element.getAbsoluteHeight();
+        public int getElementPositionY(@NotNull AbstractElement element) {
+            if (element.stickyAnchor) {
+                return (this.getOriginY(element) - element.getAbsoluteHeight()) + element.posOffsetY;
+            }
+            return super.getElementPositionY(element);
         }
 
     }
@@ -235,8 +256,11 @@ public class ElementAnchorPoint {
         }
 
         @Override
-        public int getDefaultElementBaseX(@NotNull AbstractElement element) {
-            return -element.getAbsoluteWidth();
+        public int getElementPositionX(@NotNull AbstractElement element) {
+            if (element.stickyAnchor) {
+                return (this.getOriginX(element) - element.getAbsoluteWidth()) + element.posOffsetX;
+            }
+            return super.getElementPositionX(element);
         }
 
     }
@@ -258,29 +282,6 @@ public class ElementAnchorPoint {
         }
 
         @Override
-        public int getDefaultElementBaseX(@NotNull AbstractElement element) {
-            return -element.getAbsoluteWidth();
-        }
-
-        @Override
-        public int getDefaultElementBaseY(@NotNull AbstractElement element) {
-            return -(element.getAbsoluteHeight() / 2);
-        }
-
-        //TODO übernehmen
-        @Override
-        public int getStickyOffsetXCorrection(@NotNull AbstractElement element) {
-            return element.getAbsoluteWidth();
-        }
-
-        //TODO übernehmen
-        @Override
-        public int getStickyOffsetYCorrection(@NotNull AbstractElement element) {
-            return (element.getAbsoluteHeight() / 2);
-        }
-
-        //TODO übernehmen
-        @Override
         public int getElementPositionX(@NotNull AbstractElement element) {
             if (element.stickyAnchor) {
                 return (this.getOriginX(element) - element.getAbsoluteWidth()) + element.posOffsetX;
@@ -288,7 +289,6 @@ public class ElementAnchorPoint {
             return super.getElementPositionX(element);
         }
 
-        //TODO übernehmen
         @Override
         public int getElementPositionY(@NotNull AbstractElement element) {
             if (element.stickyAnchor) {
@@ -296,69 +296,6 @@ public class ElementAnchorPoint {
             }
             return super.getElementPositionY(element);
         }
-
-        //TODO übernehmen
-        @Override
-        public int getStickyResizePositionCorrectionX(@NotNull AbstractElement element, int mouseTravelX, int oldOffsetX, int newOffsetX, int oldPosX, int newPosX, int oldWidth, int newWidth, AbstractEditorElement.@NotNull ResizeGrabberType resizeGrabberType) {
-            if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.RIGHT) {
-                return mouseTravelX;
-            }
-            if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.LEFT) {
-                return -mouseTravelX;
-            }
-            return 0;
-        }
-
-        //TODO übernehmen
-        @Override
-        public int getStickyResizePositionCorrectionY(@NotNull AbstractElement element, int mouseTravelY, int oldOffsetY, int newOffsetY, int oldPosY, int newPosY, int oldHeight, int newHeight, AbstractEditorElement.@NotNull ResizeGrabberType resizeGrabberType) {
-            int diffPos = Math.max(oldPosY, newPosY) - Math.min(oldPosY, newPosY);
-            int diffHeight = Math.max(oldHeight, newHeight) - Math.min(oldHeight, newHeight);
-            //TODO remove debug
-            LOGGER.info("############# OLD POS Y: " + oldPosY + " | NEW POS Y: " + newPosY + " | DIFF POS: " + diffPos + " | OLD OFF: " + oldOffsetY + " | NEW OFF: " + newOffsetY + " | OLD H: " + oldHeight + " | NEW H: " + newHeight + " | DIFF H: " + diffHeight);
-            if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.TOP) {
-                if (newHeight > oldHeight) return diffHeight;
-                if (newHeight < oldHeight) return -diffHeight;
-            }
-            if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.BOTTOM) {
-                if (newPosY > oldPosY) return -diffPos;
-                if (newPosY < oldPosY) return diffPos;
-            }
-            return 0;
-        }
-
-//        @Override
-//        public int getResizePositionOffsetX(@NotNull AbstractElement element, int mouseTravelX, @NotNull AbstractEditorElement.ResizeGrabberType resizeGrabberType) {
-//            if (element.stickyAnchor) {
-//                if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.RIGHT) {
-//                    return mouseTravelX;
-//                }
-//                if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.LEFT) {
-//                    return 0;
-//                }
-//                return 0;
-//            }
-//            return super.getResizePositionOffsetX(element, mouseTravelX, resizeGrabberType);
-//        }
-//
-//        @Override
-//        public int getResizePositionOffsetY(@NotNull AbstractElement element, int mouseTravelY, @NotNull AbstractEditorElement.ResizeGrabberType resizeGrabberType) {
-//            if (element.stickyAnchor) {
-//                if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.TOP) {
-//                    return 0;
-//                }
-//                if (resizeGrabberType == AbstractEditorElement.ResizeGrabberType.BOTTOM) {
-//                    double d = (double)mouseTravelY / 2.0D;
-//                    if ((d >= 0) && (d % 1 == 0)) { //is positive and is whole number
-//                        d += 1;
-//                    }
-//                    LOGGER.info("################# RESIZE OFFSET Y: " + d);
-//                    return (int)d;
-//                }
-//                return 0;
-//            }
-//            return super.getResizePositionOffsetY(element, mouseTravelY, resizeGrabberType);
-//        }
 
     }
 
@@ -379,13 +316,19 @@ public class ElementAnchorPoint {
         }
 
         @Override
-        public int getDefaultElementBaseX(@NotNull AbstractElement element) {
-            return -element.getAbsoluteWidth();
+        public int getElementPositionX(@NotNull AbstractElement element) {
+            if (element.stickyAnchor) {
+                return (this.getOriginX(element) - element.getAbsoluteWidth()) + element.posOffsetX;
+            }
+            return super.getElementPositionX(element);
         }
 
         @Override
-        public int getDefaultElementBaseY(@NotNull AbstractElement element) {
-            return -element.getAbsoluteHeight();
+        public int getElementPositionY(@NotNull AbstractElement element) {
+            if (element.stickyAnchor) {
+                return (this.getOriginY(element) - element.getAbsoluteHeight()) + element.posOffsetY;
+            }
+            return super.getElementPositionY(element);
         }
 
     }
@@ -420,15 +363,6 @@ public class ElementAnchorPoint {
                 return anchor.getChildElementAnchorPointY();
             }
             return super.getOriginY(element);
-        }
-
-        @Override
-        public int getDefaultElementBaseY(@NotNull AbstractElement element) {
-            AbstractElement anchor = element.getElementAnchorPointParent();
-            if (anchor != null) {
-                return anchor.getAbsoluteHeight();
-            }
-            return super.getDefaultElementBaseY(element);
         }
 
     }

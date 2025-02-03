@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -20,6 +21,8 @@ public class ImageElement extends AbstractElement {
 
     @Nullable
     public ResourceSupplier<ITexture> textureSupplier;
+    @NotNull
+    public DrawableColor imageTint = DrawableColor.of("#FFFFFF");
     public boolean repeat = false;
     public boolean nineSlice = false;
     public int nineSliceBorderX = 5;
@@ -38,7 +41,8 @@ public class ImageElement extends AbstractElement {
             int y = this.getAbsoluteY();
 
             RenderSystem.enableBlend();
-            graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
+
+            this.imageTint.setAsShaderColor(graphics, this.opacity);
 
             ITexture t = this.getTextureResource();
             if ((t != null) && t.isReady()) {
@@ -47,7 +51,7 @@ public class ImageElement extends AbstractElement {
                     if (this.repeat) {
                         RenderingUtils.blitRepeat(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight());
                     } else if (this.nineSlice) {
-                        RenderingUtils.blitNineSliced(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.nineSliceBorderX, this.nineSliceBorderY, this.nineSliceBorderX, this.nineSliceBorderY, t.getWidth(), t.getHeight(), 0, 0, t.getWidth(), t.getHeight());
+                        RenderingUtils.blitNineSlicedTexture(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight(), this.nineSliceBorderY, this.nineSliceBorderX, this.nineSliceBorderY, this.nineSliceBorderX);
                     } else {
                         graphics.blit(loc, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
                     }
@@ -56,7 +60,7 @@ public class ImageElement extends AbstractElement {
                 RenderingUtils.renderMissing(graphics, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
             }
 
-            RenderingUtils.resetShaderColor(graphics);
+            this.imageTint.resetShaderColor(graphics);
             RenderSystem.disableBlend();
 
         }

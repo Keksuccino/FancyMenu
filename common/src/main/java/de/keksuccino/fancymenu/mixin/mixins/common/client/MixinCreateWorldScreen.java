@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.layouts.LayoutElement;
@@ -18,10 +19,16 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import java.util.function.Function;
 
 @Mixin(CreateWorldScreen.class)
 public class MixinCreateWorldScreen extends Screen {
+
+    @Unique private boolean reInitialized_FancyMenu = false;
 
     protected MixinCreateWorldScreen(Component $$0) {
         super($$0);
@@ -63,6 +70,18 @@ public class MixinCreateWorldScreen extends Screen {
             }
         }
         return true;
+    }
+
+    /**
+     * @reason This fixes FM's menu bar not being clickable until you resize the window in this screen. Yes, it's hacky af, but works.
+     */
+    @Inject(method = "render", at = @At("HEAD"), cancellable = true)
+    private void head_render_FancyMenu(CallbackInfo info) {
+        if (!this.reInitialized_FancyMenu) {
+            this.reInitialized_FancyMenu = true;
+            Minecraft.getInstance().resizeDisplay();
+            info.cancel();
+        }
     }
 
 }

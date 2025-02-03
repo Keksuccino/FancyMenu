@@ -163,7 +163,10 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Inject(method = "getMessage", at = @At("RETURN"), cancellable = true)
 	private void onGetMessageFancyMenu(CallbackInfoReturnable<Component> info) {
 		AbstractWidget w = this.getWidgetFancyMenu();
-		if (w.isHoveredOrFocused() && w.visible && w.active && (this.hoverLabelFancyMenu != null)) info.setReturnValue(this.hoverLabelFancyMenu);
+		if (w.isHoveredOrFocused() && w.visible && w.active && (this.hoverLabelFancyMenu != null)) {
+			info.setReturnValue(this.hoverLabelFancyMenu);
+			return;
+		}
 		if (this.customLabelFancyMenu != null) info.setReturnValue(this.customLabelFancyMenu);
 	}
 
@@ -425,7 +428,6 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Unique
 	@Override
 	public void setCustomClickSoundFancyMenu(@Nullable IAudio sound) {
-		if ((this.customClickSoundFancyMenu != null) && !Objects.equals(sound, this.customClickSoundFancyMenu)) this.customClickSoundFancyMenu.stop();
 		this.customClickSoundFancyMenu = sound;
 	}
 
@@ -439,7 +441,6 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Unique
 	@Override
 	public void setHoverSoundFancyMenu(@Nullable IAudio sound) {
-		if ((this.hoverSoundFancyMenu != null) && !Objects.equals(sound, this.hoverSoundFancyMenu)) this.hoverSoundFancyMenu.stop();
 		this.hoverSoundFancyMenu = sound;
 	}
 

@@ -56,7 +56,6 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public boolean navigatable = true;
     @NotNull
     public GenericExecutableBlock actionExecutor = new GenericExecutableBlock();
-    //TODO übernehmen
     @NotNull
     public LoadingRequirementContainer activeStateSupplier = new LoadingRequirementContainer();
 
@@ -83,19 +82,6 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
         if (!this.shouldRender()) return;
 
-        //TODO übernehmen
-//        if (isEditor()) {
-//            if (this.getWidget() instanceof ExtendedButton e) {
-//                e.setPressAction((button) -> {});
-//            } else if (this.getWidget() instanceof Button b) {
-//                ((IMixinButton)b).setPressActionFancyMenu((button) -> {});
-//            }
-//            this.getWidget().visible = true;
-//            this.getWidget().active = true;
-//            this.getWidget().setTooltip(null);
-//        }
-
-        //TODO übernehmen
         if (isEditor()) {
             net.minecraft.client.gui.components.Tooltip cachedVanillaTooltip = this.getWidget().getTooltip();
             boolean cachedVisible = this.getWidget().visible;
@@ -109,7 +95,6 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
                 this.getWidget().setTooltip(cachedVanillaTooltip);
             }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
         }
-        //----------------
 
         this.renderElementWidget(graphics, mouseX, mouseY, partial);
 
@@ -117,7 +102,6 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
     }
 
-    //TODO übernehmen
     @Override
     public void tickVisibleInvisible() {
         super.tickVisibleInvisible();
@@ -140,7 +124,6 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     }
 
     public void updateWidget() {
-        //TODO übernehmen
         this.updateWidgetActiveState();
         this.updateWidgetVisibility();
         this.updateWidgetAlpha();
@@ -154,7 +137,6 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         this.updateWidgetNavigatable();
     }
 
-    //TODO übernehmen
     public void updateWidgetActiveState() {
         if (this.getWidget() == null) return;
         this.getWidget().active = this.activeStateSupplier.requirementsMet();
@@ -220,7 +202,6 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         }
     }
 
-    //TODO übernehmen
     public void updateWidgetTexture() {
 
         RenderableResource backNormal = null;
