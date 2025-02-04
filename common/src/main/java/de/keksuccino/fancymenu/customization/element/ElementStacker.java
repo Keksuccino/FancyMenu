@@ -61,7 +61,6 @@ public interface ElementStacker<E extends AbstractElement> {
         if (e.appearanceDelayInSeconds != 1.0F) {
             stack.appearanceDelayInSeconds = e.appearanceDelayInSeconds;
         }
-        //TODO übernehmen
         if (e.fadeIn != AbstractElement.Fading.NO_FADING) {
             stack.fadeIn = e.fadeIn;
         }

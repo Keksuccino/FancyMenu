@@ -1,6 +1,9 @@
 package de.keksuccino.fancymenu.customization.action.actions;
 
+import de.keksuccino.fancymenu.customization.action.actions.audio.NextTrackAction;
+import de.keksuccino.fancymenu.customization.action.actions.audio.PreviousTrackAction;
 import de.keksuccino.fancymenu.customization.action.actions.audio.SetAudioElementVolumeAction;
+import de.keksuccino.fancymenu.customization.action.actions.audio.TogglePlayTrackAction;
 import de.keksuccino.fancymenu.customization.action.actions.layout.DisableLayoutAction;
 import de.keksuccino.fancymenu.customization.action.actions.layout.EnableLayoutAction;
 import de.keksuccino.fancymenu.customization.action.actions.layout.ToggleLayoutAction;
@@ -49,8 +52,10 @@ public class Actions {
     public static final CopyToClipboardAction COPY_TO_CLIPBOARD = new CopyToClipboardAction();
     public static final MimicButtonAction MIMIC_BUTTON = new MimicButtonAction();
     public static final EditMinecraftOptionAction EDIT_MINECRAFT_OPTION = new EditMinecraftOptionAction();
-    //TODO übernehmen
     public static final SetAudioElementVolumeAction SET_AUDIO_ELEMENT_VOLUME = new SetAudioElementVolumeAction();
+    public static final NextTrackAction NEXT_AUDIO_ELEMENT_TRACK = new NextTrackAction();
+    public static final PreviousTrackAction PREVIOUS_AUDIO_ELEMENT_TRACK = new PreviousTrackAction();
+    public static final TogglePlayTrackAction TOGGLE_PLAY_AUDIO_ELEMENT_TRACK = new TogglePlayTrackAction();
 
     public static void registerAll() {
 
@@ -85,8 +90,10 @@ public class Actions {
         ActionRegistry.register(COPY_TO_CLIPBOARD);
         ActionRegistry.register(MIMIC_BUTTON);
         ActionRegistry.register(EDIT_MINECRAFT_OPTION);
-        //TODO übernehmen
         ActionRegistry.register(SET_AUDIO_ELEMENT_VOLUME);
+        ActionRegistry.register(NEXT_AUDIO_ELEMENT_TRACK);
+        ActionRegistry.register(PREVIOUS_AUDIO_ELEMENT_TRACK);
+        ActionRegistry.register(TOGGLE_PLAY_AUDIO_ELEMENT_TRACK);
 
     }
 

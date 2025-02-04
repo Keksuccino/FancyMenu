@@ -12,7 +12,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
-//TODO übernehmen
 public class PlayerGamemodePlaceholder extends Placeholder {
 
     public PlayerGamemodePlaceholder() {

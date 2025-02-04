@@ -18,6 +18,7 @@ public class CycleButton<T> extends ExtendedButton {
         this.setPressAction(var1 -> {
             this.click();
         });
+        this.setLabel(this.cycle.getCycleComponent());
     }
 
     public void click() {

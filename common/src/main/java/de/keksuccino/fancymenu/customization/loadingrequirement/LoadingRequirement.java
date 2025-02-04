@@ -22,6 +22,7 @@ import java.util.Objects;
 public abstract class LoadingRequirement {
 
     protected final String identifier;
+    private LoadingRequirementInstance currentInstance;
 
     /**
      * The identifier needs to be unique! It is not possible to register two requirements with the same identifier.
@@ -143,6 +144,15 @@ public abstract class LoadingRequirement {
      */
     public boolean shouldShowUpInEditorRequirementMenu(@NotNull LayoutEditorScreen editor) {
         return true;
+    }
+
+    public void setCurrentInstance(@NotNull LoadingRequirementInstance instance) {
+        this.currentInstance = instance;
+    }
+
+    @NotNull
+    public LoadingRequirementInstance getCurrentInstance() {
+        return this.currentInstance;
     }
 
 }

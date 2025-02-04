@@ -104,7 +104,7 @@ public class TextEditorElement extends AbstractEditorElement {
                         consumes -> (consumes instanceof TextEditorElement),
                         consumes -> ((TextElement)consumes.element).markdownRenderer.getTextBaseColor().getHex(),
                         (element, colorHex) -> ((TextElement)element.element).markdownRenderer.setTextBaseColor(DrawableColor.of(colorHex)), null, false, false, Component.translatable("fancymenu.customization.items.text.base_color"),
-                        true, null, TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
+                        true, DrawableColor.WHITE.getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.base_color.desc")));
 

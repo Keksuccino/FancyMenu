@@ -7,7 +7,6 @@ import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
-//TODO übernehmen
 public class DraggerWidget extends AbstractWidget {
 
     @NotNull

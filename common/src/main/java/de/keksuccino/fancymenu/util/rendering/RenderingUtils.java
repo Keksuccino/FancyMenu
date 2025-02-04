@@ -14,13 +14,13 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import java.awt.*;
-import java.util.Objects;
 
 public class RenderingUtils {
 
     private static final Logger LOGGER = LogManager.getLogger();
     public static final DrawableColor MISSING_TEXTURE_COLOR_MAGENTA = DrawableColor.of(Color.MAGENTA);
     public static final DrawableColor MISSING_TEXTURE_COLOR_BLACK = DrawableColor.BLACK;
+    public static final ResourceLocation FULLY_TRANSPARENT_TEXTURE = new ResourceLocation("fancymenu", "textures/fully_transparent.png");
 
     public static void renderMissing(@NotNull GuiGraphics graphics, int x, int y, int width, int height) {
         int partW = width / 2;
@@ -48,122 +48,78 @@ public class RenderingUtils {
      * @param texHeight The full height (in pixels) of the texture.
      */
     public static void blitRepeat(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, int x, int y, int areaRenderWidth, int areaRenderHeight, int texWidth, int texHeight) {
-        blitRepeat(graphics, location, x, y, areaRenderWidth, areaRenderHeight, texWidth, texHeight, 0, 0, texWidth, texHeight, texWidth, texHeight);
+        graphics.blit(location, x, y, 0.0F, 0.0F, areaRenderWidth, areaRenderHeight, texWidth, texHeight);
     }
 
     /**
-     * Repeatedly renders a tileable (seamless) portion of a texture inside an area. Fills the area with the texture.
+     * Renders a texture using nine-slice scaling with tiled edges and center.
      *
-     * @param graphics The {@link GuiGraphics} instance.
-     * @param location The {@link ResourceLocation} of the texture.
-     * @param x The X position the area should get rendered at.
-     * @param y The Y position the area should get rendered at.
-     * @param areaRenderWidth The width (in pixels) of the area.
-     * @param areaRenderHeight The height (in pixels) of the area.
-     * @param texRenderWidth The width (in pixels) each repeated texture should render rendered with.
-     * @param texRenderHeight The height (in pixels) each repeated texture should render rendered with.
-     * @param texOffsetX The top-left X start coordinate (in pixels) of the part of the full texture that should get rendered.
-     * @param texOffsetY The top-left Y start coordinate (in pixels) of the part of the full texture that should get rendered.
-     * @param texPartWidth The width (in pixels) of the part of the texture that should get rendered.
-     * @param texPartHeight The height (in pixels) of the part of the texture that should get rendered.
-     * @param texWidth The FULL width (in pixels) of the texture. NOT the width of the part that should get rendered, but the FULL width!
-     * @param texHeight The FULL height (in pixels) of the texture. NOT the height of the part that should get rendered, but the FULL height!
+     * @param graphics The GuiGraphics instance to use for rendering
+     * @param texture The texture ResourceLocation to render
+     * @param x The x position to render at
+     * @param y The y position to render at
+     * @param width The desired width to render
+     * @param height The desired height to render
+     * @param textureWidth The actual width of the texture
+     * @param textureHeight The actual height of the texture
+     * @param borderTop The size of the top border
+     * @param borderRight The size of the right border
+     * @param borderBottom The size of the bottom border
+     * @param borderLeft The size of the left border
      */
-    public static void blitRepeat(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, int x, int y, int areaRenderWidth, int areaRenderHeight, int texRenderWidth, int texRenderHeight, int texOffsetX, int texOffsetY, int texPartWidth, int texPartHeight, int texWidth, int texHeight) {
+    public static void blitNineSlicedTexture(@NotNull GuiGraphics graphics, @NotNull ResourceLocation texture, int x, int y, int width, int height,
+                               int textureWidth, int textureHeight,
+                               int borderTop, int borderRight, int borderBottom, int borderLeft) {
 
-        Objects.requireNonNull(graphics);
-        Objects.requireNonNull(location);
-        if ((areaRenderWidth <= 0) || (areaRenderHeight <= 0) || (texRenderWidth <= 0) || (texRenderHeight <= 0) || (texPartWidth <= 0) || (texPartHeight <= 0)) return;
+        // Corner pieces
+        // Top left
+        graphics.blit(texture, x, y, 0, 0, borderLeft, borderTop, textureWidth, textureHeight);
+        // Top right
+        graphics.blit(texture, x + width - borderRight, y, textureWidth - borderRight, 0, borderRight, borderTop, textureWidth, textureHeight);
+        // Bottom left
+        graphics.blit(texture, x, y + height - borderBottom, 0, textureHeight - borderBottom, borderLeft, borderBottom, textureWidth, textureHeight);
+        // Bottom right
+        graphics.blit(texture, x + width - borderRight, y + height - borderBottom, textureWidth - borderRight, textureHeight - borderBottom, borderRight, borderBottom, textureWidth, textureHeight);
 
-        int repeatsHorizontal = Math.max(1, (areaRenderWidth / texPartWidth));
-        if ((texPartWidth * repeatsHorizontal) < areaRenderWidth) repeatsHorizontal++;
-        int repeatsVertical = Math.max(1, (areaRenderHeight / texPartHeight));
-        if ((texPartHeight * repeatsVertical) < areaRenderHeight) repeatsVertical++;
+        // Edges - Tiled
+        int centerWidth = textureWidth - borderLeft - borderRight;
+        int centerHeight = textureHeight - borderTop - borderBottom;
 
-        graphics.enableScissor(x, y, x + areaRenderWidth, y + areaRenderHeight);
+        // Top edge
+        for (int i = borderLeft; i < width - borderRight; i += centerWidth) {
+            int pieceWidth = Math.min(centerWidth, width - borderRight - i);
+            graphics.blit(texture, x + i, y, borderLeft, 0, pieceWidth, borderTop, textureWidth, textureHeight);
+        }
 
-        for (int horizontal = 0; horizontal < repeatsHorizontal; horizontal++) {
-            for (int vertical = 0; vertical < repeatsVertical; vertical++) {
-                int renderX = x + (texPartWidth * horizontal);
-                int renderY = y + (texPartHeight * vertical);
-                graphics.blit(location, renderX, renderY, texRenderWidth, texRenderHeight, (float)texOffsetX, (float)texOffsetY, texPartWidth, texPartHeight, texWidth, texHeight);
+        // Bottom edge
+        for (int i = borderLeft; i < width - borderRight; i += centerWidth) {
+            int pieceWidth = Math.min(centerWidth, width - borderRight - i);
+            graphics.blit(texture, x + i, y + height - borderBottom, borderLeft, textureHeight - borderBottom, pieceWidth, borderBottom, textureWidth, textureHeight);
+        }
+
+        // Left edge
+        for (int j = borderTop; j < height - borderBottom; j += centerHeight) {
+            int pieceHeight = Math.min(centerHeight, height - borderBottom - j);
+            graphics.blit(texture, x, y + j, 0, borderTop, borderLeft, pieceHeight, textureWidth, textureHeight);
+        }
+
+        // Right edge
+        for (int j = borderTop; j < height - borderBottom; j += centerHeight) {
+            int pieceHeight = Math.min(centerHeight, height - borderBottom - j);
+            graphics.blit(texture, x + width - borderRight, y + j, textureWidth - borderRight, borderTop, borderRight, pieceHeight, textureWidth, textureHeight);
+        }
+
+        // Center - Tiled
+        for (int i = borderLeft; i < width - borderRight; i += centerWidth) {
+            int pieceWidth = Math.min(centerWidth, width - borderRight - i);
+            for (int j = borderTop; j < height - borderBottom; j += centerHeight) {
+                int pieceHeight = Math.min(centerHeight, height - borderBottom - j);
+                graphics.blit(texture, x + i, y + j, borderLeft, borderTop, pieceWidth, pieceHeight, textureWidth, textureHeight);
             }
         }
 
-        graphics.disableScissor();
-
     }
 
-    /**
-     * Renders a nine-sliced portion of a texture.<br><br>
-     *
-     * Nine-slicing cuts a texture into 9 slices (4 corners, 4 edges and a middle part).<br>
-     * This is useful when a texture should keep its proportions no matter what size it gets rendered with.<br><br>
-     *
-     * Only works with textures that have a tileable (seamless) middle part and tileable edges that can get tiled horizontally and/or vertically without looking bad.
-     *
-     * @param graphics The {@link GuiGraphics} instance.
-     * @param location The {@link ResourceLocation} of the texture.
-     * @param x The X position the texture should get rendered at.
-     * @param y The Y position the texture should get rendered at.
-     * @param renderWidth The width (in pixels) the texture should get rendered with.
-     * @param renderHeight The height (in pixels) the texture should get rendered with.
-     * @param borderLeft The size (in pixels) of the left border of the texture.
-     * @param borderTop The size (in pixels) of the top border of the texture.
-     * @param borderRight The size (in pixels) of the right border of the texture.
-     * @param borderBottom The size (in pixels) of the bottom border of the texture.
-     * @param texPartWidth The width (in pixels) of the part of the texture that should get rendered.
-     * @param texPartHeight The height (in pixels) of the part of the texture that should get rendered.
-     * @param texOffsetX The top-left X start coordinate (in pixels) of the part of the full texture that should get rendered.
-     * @param texOffsetY The top-left Y start coordinate (in pixels) of the part of the full texture that should get rendered.
-     * @param texWidth The FULL width (in pixels) of the texture. NOT the width of the part that should get rendered, but the FULL width!
-     * @param texHeight The FULL height (in pixels) of the texture. NOT the height of the part that should get rendered, but the FULL height!
-     */
-    public static void blitNineSliced(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, int x, int y, int renderWidth, int renderHeight, int borderLeft, int borderTop, int borderRight, int borderBottom, int texPartWidth, int texPartHeight, int texOffsetX, int texOffsetY, int texWidth, int texHeight) {
-
-        Objects.requireNonNull(graphics);
-        Objects.requireNonNull(location);
-        if ((renderWidth <= 0) || (renderHeight <= 0) || (texPartWidth <= 0) || (texPartHeight <= 0) || (texWidth <= 0) || (texHeight <= 0)) return;
-
-        if ((renderWidth == texWidth) && (renderHeight == texHeight) && (texOffsetX == 0) && (texOffsetY == 0)) {
-            graphics.blit(location, x, y, 0.0F, 0.0F, renderWidth, renderHeight, renderWidth, renderHeight);
-            return;
-        }
-
-        graphics.enableScissor(x, y, x + renderWidth, y + renderHeight);
-
-        //Top-left corner
-        if ((borderLeft > 0) && (borderTop > 0)) {
-            graphics.blit(location, x, y, borderLeft, borderTop, (float)texOffsetX, (float)texOffsetY, borderLeft, borderTop, texWidth, texHeight);
-        }
-        //Top-right corner
-        if ((borderRight > 0) && (borderTop > 0)) {
-            graphics.blit(location, (x + renderWidth - borderRight), y, borderRight, borderTop, (float)(texOffsetX + texPartWidth - borderRight), (float)texOffsetY, borderRight, borderTop, texWidth, texHeight);
-        }
-        //Bottom-left corner
-        if ((borderLeft > 0) && (borderBottom > 0)) {
-            graphics.blit(location, x, (y + renderHeight - borderBottom), borderLeft, borderBottom, (float)texOffsetX, (float)(texOffsetY + texPartHeight - borderBottom), borderLeft, borderBottom, texWidth, texHeight);
-        }
-        //Bottom-right corner
-        if ((borderRight > 0) && (borderBottom > 0)) {
-            graphics.blit(location, (x + renderWidth - borderRight), (y + renderHeight - borderBottom), borderRight, borderBottom, (float)(texOffsetX + texPartWidth - borderRight), (float)(texOffsetY + texPartHeight - borderBottom), borderRight, borderBottom, texWidth, texHeight);
-        }
-
-        graphics.disableScissor();
-
-        //Top edge
-        if (borderTop > 0) blitRepeat(graphics, location, (x + borderLeft), y, (renderWidth - borderLeft - borderRight), borderTop, (texPartWidth - borderLeft - borderRight), borderTop, (texOffsetX + borderLeft), texOffsetY, (texPartWidth - borderLeft - borderRight), borderTop, texWidth, texHeight);
-        //Bottom edge
-        if (borderBottom > 0) blitRepeat(graphics, location, (x + borderLeft), (y + renderHeight - borderBottom), (renderWidth - borderLeft - borderRight), borderBottom, (texPartWidth - borderLeft - borderRight), borderBottom, (texOffsetX + borderLeft), (texOffsetY + texPartHeight - borderBottom), (texPartWidth - borderLeft - borderRight), borderBottom, texWidth, texHeight);
-        //Left edge
-        if (borderLeft > 0) blitRepeat(graphics, location, x, (y + borderTop), borderLeft, (renderHeight - borderTop - borderBottom), borderLeft, (texPartHeight - borderTop - borderBottom), texOffsetX, (texOffsetY + borderTop), borderLeft, (texPartHeight - borderTop - borderBottom), texWidth, texHeight);
-        //Right edge
-        if (borderRight > 0) blitRepeat(graphics, location, (x + renderWidth - borderRight), (y + borderTop), borderRight, (renderHeight - borderTop - borderBottom), borderRight, (texPartHeight - borderTop - borderBottom), (texOffsetX + texPartWidth - borderRight), (texOffsetY + borderTop), borderRight, (texPartHeight - borderTop - borderBottom), texWidth, texHeight);;
-
-        //Middle part
-        blitRepeat(graphics, location, (x + borderLeft), (y + borderTop), (renderWidth - borderLeft - borderRight), (renderHeight - borderTop - borderBottom), (texPartWidth - borderLeft - borderRight), (texPartHeight - borderTop - borderBottom), (texOffsetX + borderLeft), (texOffsetY + borderTop), (texPartWidth - borderLeft - borderRight), (texPartHeight - borderTop - borderBottom), texWidth, texHeight);
-
-    }
 
     public static float getPartialTick() {
         return Minecraft.getInstance().isPaused() ? ((IMixinMinecraft)Minecraft.getInstance()).getPausePartialTickFancyMenu() : Minecraft.getInstance().getFrameTime();

@@ -20,6 +20,7 @@ import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
+import java.util.function.BiConsumer;
 
 @SuppressWarnings("unused")
 public abstract class AbstractExtendedSlider extends AbstractSliderButton implements IExtendedWidget, NavigatableWidget {
@@ -51,6 +52,8 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     protected ConsumingSupplier<AbstractExtendedSlider, Component> labelSupplier = slider -> Component.literal(slider.getValueDisplayText());
     protected boolean focusable = true;
     protected boolean navigatable = true;
+    @Nullable
+    protected ConsumingSupplier<AbstractExtendedSlider, Boolean> isActiveSupplier = null;
 
     public AbstractExtendedSlider(int x, int y, int width, int height, Component label, double value) {
         super(x, y, width, height, label, value);
@@ -68,6 +71,12 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
         this.renderLabel(graphics, mouseX, mouseY, partial);
         RenderingUtils.resetShaderColor(graphics);
 
+    }
+
+    @Override
+    public void render(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {
+        if (this.isActiveSupplier != null) this.active = this.isActiveSupplier.get(this);
+        super.render($$0, $$1, $$2, $$3);
     }
 
     protected void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
@@ -205,6 +214,11 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
 
     public double getValue() {
         return this.value;
+    }
+
+    public AbstractExtendedSlider setIsActiveSupplier(@Nullable ConsumingSupplier<AbstractExtendedSlider, Boolean> supplier) {
+        this.isActiveSupplier = supplier;
+        return this;
     }
 
     @Nullable

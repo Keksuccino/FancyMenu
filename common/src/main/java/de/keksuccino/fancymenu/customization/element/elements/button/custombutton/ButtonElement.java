@@ -56,7 +56,6 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public boolean navigatable = true;
     @NotNull
     public GenericExecutableBlock actionExecutor = new GenericExecutableBlock();
-    //TODO übernehmen
     @NotNull
     public LoadingRequirementContainer activeStateSupplier = new LoadingRequirementContainer();
 
@@ -103,7 +102,6 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
     }
 
-    //TODO übernehmen
     @Override
     public void tickVisibleInvisible() {
         super.tickVisibleInvisible();
@@ -126,7 +124,6 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     }
 
     public void updateWidget() {
-        //TODO übernehmen
         this.updateWidgetActiveState();
         this.updateWidgetVisibility();
         this.updateWidgetAlpha();
@@ -140,7 +137,6 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         this.updateWidgetNavigatable();
     }
 
-    //TODO übernehmen
     public void updateWidgetActiveState() {
         if (this.getWidget() == null) return;
         this.getWidget().active = this.activeStateSupplier.requirementsMet();
@@ -206,7 +202,6 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         }
     }
 
-    //TODO übernehmen
     public void updateWidgetTexture() {
 
         RenderableResource backNormal = null;

@@ -13,7 +13,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
 
-//TODO übernehmen (ganze klasse)
 public class ChooseAnimationScreen extends Screen {
 
     protected Consumer<String> callback;

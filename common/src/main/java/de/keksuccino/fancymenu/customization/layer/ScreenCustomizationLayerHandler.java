@@ -57,11 +57,6 @@ public class ScreenCustomizationLayerHandler {
 			//Reset isNewMenu, so first-time stuff and on-load stuff works correctly
 			ScreenCustomization.setIsNewMenu(true);
 
-			//TODO übernehmen
-//			//Update resource pack animation sizes after reloading textures
-//			LOGGER.info("[FANCYMENU] Updating animation sizes..");
-//			AnimationHandler.updateAnimationSizes();
-
 			LOGGER.info("[FANCYMENU] Minecraft resource reload: FINISHED");
 
 		}

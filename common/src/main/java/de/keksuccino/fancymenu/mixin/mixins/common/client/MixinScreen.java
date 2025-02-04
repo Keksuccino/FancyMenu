@@ -14,6 +14,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -46,7 +48,7 @@ public abstract class MixinScreen implements CustomizableScreen {
 	private void wrap_fillGradient_in_renderBackground_FancyMenu(GuiGraphics graphics, int x1, int y1, int x2, int y2, int colorFrom, int colorTo, Operation<Void> original) {
 		ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen((Screen)((Object)this));
 		if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this.getScreen_FancyMenu())) {
-			if (l.layoutBase.menuBackground != null) {
+			if (!l.layoutBase.menuBackgrounds.isEmpty()) {
 				RenderSystem.enableBlend();
 				//Render a black background before the custom background gets rendered
 				graphics.fill(0, 0, this.getScreen_FancyMenu().width, this.getScreen_FancyMenu().height, 0);
@@ -61,21 +63,22 @@ public abstract class MixinScreen implements CustomizableScreen {
 	}
 
 	@WrapOperation(method = "renderDirtBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lnet/minecraft/resources/ResourceLocation;IIIFFIIII)V"))
-	private void wrap_blit_in_renderDirtBackground_FancyMenu(GuiGraphics instance, ResourceLocation atlasLocation, int x, int y, int blitOffset, float uOffset, float vOffset, int uWidth, int vHeight, int textureWidth, int textureHeight, Operation<Void> original) {
+	private void wrap_blit_in_renderDirtBackground_FancyMenu(GuiGraphics graphics, ResourceLocation atlasLocation, int x, int y, int blitOffset, float uOffset, float vOffset, int uWidth, int vHeight, int textureWidth, int textureHeight, Operation<Void> original) {
 		ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen((Screen)((Object)this));
 		if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this.getScreen_FancyMenu())) {
-			if (l.layoutBase.menuBackground != null) {
+			if (!l.layoutBase.menuBackgrounds.isEmpty()) {
 				RenderSystem.enableBlend();
 				//Render a black background before the custom background gets rendered
-				instance.fill(0, 0, this.getScreen_FancyMenu().width, this.getScreen_FancyMenu().height, 0);
-				RenderingUtils.resetShaderColor(instance);
+				graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+				graphics.fill(0, 0, this.getScreen_FancyMenu().width, this.getScreen_FancyMenu().height, 0);
+				RenderingUtils.resetShaderColor(graphics);
 			} else {
-				original.call(instance, atlasLocation, x, y, blitOffset, uOffset, vOffset, uWidth, vHeight, textureWidth, textureHeight);
+				original.call(graphics, atlasLocation, x, y, blitOffset, uOffset, vOffset, uWidth, vHeight, textureWidth, textureHeight);
 			}
 		} else {
-			original.call(instance, atlasLocation, x, y, blitOffset, uOffset, vOffset, uWidth, vHeight, textureWidth, textureHeight);
+			original.call(graphics, atlasLocation, x, y, blitOffset, uOffset, vOffset, uWidth, vHeight, textureWidth, textureHeight);
 		}
-		EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this.getScreen_FancyMenu(), instance));
+		EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this.getScreen_FancyMenu(), graphics));
 	}
 
 	@Inject(method = "keyPressed", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/events/AbstractContainerEventHandler;nextFocusPath(Lnet/minecraft/client/gui/navigation/FocusNavigationEvent;)Lnet/minecraft/client/gui/ComponentPath;"))

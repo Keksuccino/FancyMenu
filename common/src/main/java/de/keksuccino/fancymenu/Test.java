@@ -1,26 +1,20 @@
 package de.keksuccino.fancymenu;
 
+import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import de.keksuccino.fancymenu.util.event.acara.EventPriority;
 
 public class Test {
 
-    private static final Logger LOGGER = LogManager.getLogger();
-
-//    @EventListener
-//    public void onClientTickPost(ClientTickEvent.Post e) {
-//
-//        LOGGER.info("################## CLIENT TICK");
+//    @EventListener(priority = EventPriority.VERY_LOW)
+//    public void onRenderPost(RenderScreenEvent.Post e) {
 //
 //    }
 //
-//    @EventListener
-//    public void onRenderTick(RenderScreenEvent.Pre e) {
-//
-//        LOGGER.info("################## RENDER TICK");
+//    @EventListener()
+//    public void onInitScreen(InitOrResizeScreenCompletedEvent e) {
 //
 //    }
 

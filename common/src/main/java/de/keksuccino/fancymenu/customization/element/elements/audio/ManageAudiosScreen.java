@@ -40,13 +40,13 @@ public class ManageAudiosScreen extends CellScreen {
 
     @Override
     protected void initCells() {
-
         this.addSpacerCell(10);
 
         for (AudioElement.AudioInstance instance : this.tempAudios) {
             MutableComponent sourceName = Component.literal("[").append(instance.supplier.getSourceType().getValueComponent().setStyle(Style.EMPTY)).append("] ").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()));
             MutableComponent name = Component.literal(instance.supplier.getSourceWithoutPrefix()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
-            RenderCell cell = this.addLabelCell(sourceName.append(name))
+            MutableComponent weight = Component.translatable("fancymenu.elements.audio.manage_audios.weight_display", String.format("%.1f", instance.weight)).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
+            RenderCell cell = this.addLabelCell(sourceName.append(name).append(weight))
                     .putMemoryValue("source", instance.supplier.getSourceWithPrefix())
                     .setHeight(80)
                     .setSelectable(true);
@@ -57,7 +57,6 @@ public class ManageAudiosScreen extends CellScreen {
         }
 
         this.addStartEndSpacerCell();
-
     }
 
     @Override
@@ -116,6 +115,24 @@ public class ManageAudiosScreen extends CellScreen {
             if (selected != null) {
                 String source = selected.getMemoryValue("source");
                 if (source != null) this.moveAudioDown(source);
+            }
+        }).setIsActiveSupplier(consumes -> (this.getSelectedCell() != null));
+
+        this.addRightSideButton(20, Component.translatable("fancymenu.elements.audio.manage_audios.set_weight"), button -> {
+            RenderCell selected = this.getSelectedCell();
+            if (selected != null) {
+                String source = selected.getMemoryValue("source");
+                if (source != null) {
+                    AudioElement.AudioInstance instance = this.findAudio(source);
+                    if (instance != null) {
+                        Minecraft.getInstance().setScreen(new SetAudioWeightScreen(instance.weight, weight -> {
+                            if (weight != null) {
+                                instance.weight = weight;
+                            }
+                            Minecraft.getInstance().setScreen(this);
+                        }));
+                    }
+                }
             }
         }).setIsActiveSupplier(consumes -> (this.getSelectedCell() != null));
 

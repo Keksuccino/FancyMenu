@@ -12,7 +12,9 @@ import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
@@ -24,8 +26,13 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.awt.*;
 import java.util.List;
 import java.util.Objects;
 
@@ -34,7 +41,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	/** The {@link AbstractElement#builder} field is NULL for this element! Keep that in mind when using it as placeholder! **/
 	@SuppressWarnings("all")
 	public static final AbstractElement EMPTY_ELEMENT = new AbstractElement(null){public void render(@NotNull GuiGraphics g, int i1, int i2, float f){}};
-
 	public static final int STAY_ON_SCREEN_EDGE_ZONE_SIZE = 2;
 
 	public final ElementBuilder<?,?> builder;
@@ -65,7 +71,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public volatile boolean visible = true;
 	public volatile AppearanceDelay appearanceDelay = AppearanceDelay.NO_DELAY;
 	public volatile float appearanceDelayInSeconds = 1.0F;
-	//TODO übernehmen
 	public long appearanceDelayEndTime = -1;
 	@NotNull
 	public Fading fadeIn = Fading.NO_FADING;
@@ -102,7 +107,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public int autoSizingWidth = 0;
 	public int autoSizingHeight = 0;
 	public boolean stickyAnchor = false;
-	//-------------------
+	public int animatedOffsetX = 0;
+	public int animatedOffsetY = 0;
 	/**
 	 * This is for when the render scale was changed in a non-system-wide way like via {@link PoseStack#translate(float, float, float)}.<br>
 	 * Elements that do not support scaling via {@link PoseStack#translate(float, float, float)} need to use this value to manually scale themselves.<br>
@@ -112,11 +118,36 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public LoadingRequirementContainer loadingRequirementContainer = new LoadingRequirementContainer();
 	@Nullable
 	public String customElementLayerName = null;
+	/**
+	 * Controls whether the element should enable parallax movement in response to mouse position.
+	 * When true, the element will move slightly opposite to mouse movement (or with it if invertParallax is true)
+	 * to create a depth effect.
+	 */
+	public boolean enableParallax = false;
+	/**
+	 * Controls the direction of parallax movement.
+	 * When false (default), elements move opposite to mouse movement.
+	 * When true, elements move with mouse movement.
+	 */
+	public boolean invertParallax = false;
+	/**
+	 * Controls the intensity of the parallax effect.
+	 * Range is 0.0 to 1.0 where:
+	 * - 0.0 means no movement
+	 * - 1.0 means maximum movement
+	 * Default is 0.5 for medium intensity.
+	 */
+	public float parallaxIntensity = 0.5f;
+	public boolean loadOncePerSession = false;
+	@NotNull
+	public DrawableColor inEditorColor = DrawableColor.of(Color.ORANGE);
 	private String instanceIdentifier;
 	@Nullable
 	protected Layout parentLayout;
 	@Nullable
 	protected RuntimePropertyContainer cachedMemory;
+	protected int cachedMouseX = 0;
+	protected int cachedMouseY = 0;
 
 	@SuppressWarnings("all")
 	public AbstractElement(@NotNull ElementBuilder<?,?> builder) {
@@ -133,15 +164,24 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		return this.parentLayout;
 	}
 
+	/**
+	 * This method gets called after the element's {@link ElementBuilder} has finished constructing the instance,
+	 * which means at this point everything should be ready to use, like the element's identifier.
+	 */
+	public void afterConstruction() {
+	}
+
 	@Override
 	public abstract void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
 
-	//TODO übernehmen
 	/**
 	 * This is the internal render method that should only get overridden if there's really no other way around it.<br>
 	 * The normal element rendering logic should be in {@link AbstractElement#render(GuiGraphics, int, int, float)}.
 	 */
 	public void renderInternal(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+		this.cachedMouseX = mouseX;
+		this.cachedMouseY = mouseY;
 
 		this.tickBaseOpacity();
 
@@ -170,23 +210,18 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	}
 
-	//TODO übernehmen
 	public void renderTick_Head() {
 	}
 
-	//TODO übernehmen
 	public void renderTick_Inner_Stage_1() {
 	}
 
-	//TODO übernehmen
 	public void renderTick_Inner_Stage_2() {
 	}
 
-	//TODO übernehmen
 	public void renderTick_Tail() {
 	}
 
-	//TODO übernehmen
 	public void tickBaseOpacity() {
 
 		//Don't update opacity while fade-in/out is active
@@ -201,7 +236,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	}
 
-	//TODO übernehmen
 	public void tickVisibleInvisible() {
 
 		if (!this._shouldRender()) {
@@ -220,7 +254,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	}
 
-	//TODO übernehmen
 	public void tickAppearanceDelay(boolean shouldRender) {
 
 		if (!shouldRender) return;
@@ -233,7 +266,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	}
 
-	//TODO übernehmen
 	public void tickFadeInOut(boolean shouldRender) {
 
 		if (shouldRender) {
@@ -295,7 +327,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	}
 
-	//TODO übernehmen
 	public void onBecomeVisible() {
 
 		this.applyAppearanceDelay();
@@ -310,7 +341,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	}
 
-	//TODO übernehmen
 	public void onBecomeInvisible() {
 
 		this.updateOpacity();
@@ -329,7 +359,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	}
 
-	//TODO übernehmen
 	public void applyAppearanceDelay() {
 		boolean isResize = !this.isNewMenu && this.appearanceDelayElementJustCreated;
 		this.appearanceDelayElementJustCreated = false;
@@ -342,21 +371,18 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			if ((this.appearanceDelay == AppearanceDelay.FIRST_TIME) && applied) {
 				this.appearanceDelayEndTime = -1;
 			} else {
-				this.appearanceDelayEndTime = System.currentTimeMillis() + ((long)this.appearanceDelayInSeconds * 1000L);
+				this.appearanceDelayEndTime = System.currentTimeMillis() + ((long)(this.appearanceDelayInSeconds * 1000.0F));
 			}
 		} else {
-			//this.getMemory().putProperty("appearance_delay_applied", false);
 			this.appearanceDelayEndTime = -1;
 		}
 		this.lastTickAppearanceDelayed = this.isAppearanceDelayed();
 	}
 
-	//TODO übernehmen
 	public void updateOpacity() {
 		this.opacity = this.getBaseOpacity();
 	}
 
-	//TODO übernehmen
 	public float getBaseOpacity() {
 		long now = System.currentTimeMillis();
 		if ((this.lastBaseOpacityParse + 30L) > now) return this.cachedBaseOpacity;
@@ -387,8 +413,21 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 * so this method will only get called for the VERY LAST {@link AbstractElement} instance that got built for the {@link Screen} while it was active.
 	 * It does not get called for instances that got built earlier (by resizing the {@link Screen} multiple times for example).
 	 */
+	public void onCloseScreen(@Nullable Screen closedScreen, @Nullable Screen newScreen) {
+	}
+
+	/**
+	 * Gets called before a {@link Screen} gets closed.<br>
+	 * A screen gets closed when a new active {@link Screen} gets set via {@link Minecraft#setScreen(Screen)}.<br><br>
+	 *
+	 * Keep in mind that, just like most Vanilla GUI stuff, {@link AbstractElement}s get rebuilt every time the {@link Screen} gets resized,
+	 * so this method will only get called for the VERY LAST {@link AbstractElement} instance that got built for the {@link Screen} while it was active.
+	 * It does not get called for instances that got built earlier (by resizing the {@link Screen} multiple times for example).
+	 */
+	@Deprecated
 	public void onCloseScreen() {
 	}
+
 
 	/**
 	 * Gets called after a {@link Screen} got opened via {@link Minecraft#setScreen(Screen)}.<br>
@@ -399,6 +438,13 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 * It does not get called for instances that get build because of resizing the {@link Screen}.
 	 */
 	public void onOpenScreen() {
+	}
+
+	@ApiStatus.Internal
+	public void _onOpenScreen() {
+
+		this.onOpenScreen();
+
 	}
 
 	/**
@@ -451,9 +497,9 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		if (this.anchorPoint != null) {
 			x = this.anchorPoint.getElementPositionX(this);
 		}
+
 		if (this.advancedX != null) {
 			long now = System.currentTimeMillis();
-			//Cache advancedX for 30ms to save performance (thanks to danorris for the idea!)
 			if (((this.lastAdvancedXParse + 30) > now) && (this.cachedAdvancedX != null)) {
 				x = this.cachedAdvancedX;
 			} else {
@@ -465,9 +511,25 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 				}
 			}
 		}
+
+		x += this.animatedOffsetX;
+
+		boolean applyParallax = this.enableParallax && !isEditor();
+
+		// Apply parallax effect if enabled and not in editor
+		if (applyParallax) {
+			// Calculate parallax offset using cached mouse position
+			float centerX = getScreenWidth() / 2f;
+			float offsetX = this.cachedMouseX - centerX;
+			float parallaxOffset = offsetX * parallaxIntensity * 0.1f; // Scale factor to control maximum movement
+
+			// Apply offset based on direction
+			x += (int) (invertParallax ? parallaxOffset : -parallaxOffset);
+		}
+
 		if (this.stretchX) {
 			x = 0;
-		} else if (this.stayOnScreen) {
+		} else if (this.stayOnScreen && !this.stickyAnchor && !applyParallax) {
 			if (x < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
 				x = STAY_ON_SCREEN_EDGE_ZONE_SIZE;
 			}
@@ -486,9 +548,9 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		if (this.anchorPoint != null) {
 			y = this.anchorPoint.getElementPositionY(this);
 		}
+
 		if (this.advancedY != null) {
 			long now = System.currentTimeMillis();
-			//Cache advancedY for 30ms to save performance (thanks to danorris for the idea!)
 			if (((this.lastAdvancedYParse + 30) > now) && (this.cachedAdvancedY != null)) {
 				y = this.cachedAdvancedY;
 			} else {
@@ -500,9 +562,25 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 				}
 			}
 		}
+
+		y += this.animatedOffsetY;
+
+		boolean applyParallax = this.enableParallax && !isEditor();
+
+		// Apply parallax effect if enabled and not in editor
+		if (applyParallax) {
+			// Calculate parallax offset using cached mouse position
+			float centerY = getScreenHeight() / 2f;
+			float offsetY = this.cachedMouseY - centerY;
+			float parallaxOffset = offsetY * parallaxIntensity * 0.1f; // Scale factor to control maximum movement
+
+			// Apply offset based on direction
+			y += (int) (invertParallax ? parallaxOffset : -parallaxOffset);
+		}
+
 		if (this.stretchY) {
 			y = 0;
-		} else if (this.stayOnScreen) {
+		} else if (this.stayOnScreen && !this.stickyAnchor && !applyParallax) {
 			if (y < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
 				y = STAY_ON_SCREEN_EDGE_ZONE_SIZE;
 			}
@@ -513,7 +591,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		return y;
 	}
 
-	//TODO übernehmen
 	public void setAutoSizingBaseWidthAndHeight() {
 		Window window = Minecraft.getInstance().getWindow();
 		double guiWidth = getScreenWidth() * window.getGuiScale();
@@ -522,7 +599,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		this.autoSizingBaseScreenHeight = (int)guiHeight;
 	}
 
-	//TODO übernehmen
 	public void updateAutoSizing(boolean ignoreLastTickScreenSize) {
 
 		Window window = Minecraft.getInstance().getWindow();
@@ -571,12 +647,10 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		if (this.stretchX) {
 			return getScreenWidth();
 		}
-		//TODO übernehmen
 		this.updateAutoSizing(false);
 		if (this.autoSizing && (this.autoSizingWidth > 0)) {
 			return this.autoSizingWidth;
 		}
-		//--------------------
 		return this.baseWidth;
 	}
 
@@ -601,12 +675,10 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		if (this.stretchY) {
 			return getScreenHeight();
 		}
-		//TODO übernehmen
 		this.updateAutoSizing(false);
 		if (this.autoSizing && (this.autoSizingHeight > 0)) {
 			return this.autoSizingHeight;
 		}
-		//--------------------
 		return this.baseHeight;
 	}
 
@@ -643,30 +715,41 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		return this.getAbsoluteY();
 	}
 
-	//TODO übernehmen
 	public boolean isAppearanceDelayed() {
 		return (System.currentTimeMillis() < this.appearanceDelayEndTime);
 	}
 
-	//TODO übernehmen
 	public boolean shouldRender() {
+
+		if (!isEditor() && this.loadOncePerSession && this.shouldHideOncePerSessionElement()) return false;
+
 		if (this.isAppearanceDelayed() && !isEditor()) return false;
+
 		boolean b = this._shouldRender();
 		if (!isEditor()) {
 			if (!b && this.fadeOutStarted && !this.fadeOutFinished) return true;
 		}
+
 		return b;
+
 	}
 
-	//TODO übernehmen
 	protected boolean _shouldRender() {
 		if (!this.loadingRequirementsMet()) return false;
 		return this.visible;
 	}
 
-	protected boolean loadingRequirementsMet() {
+	public boolean loadingRequirementsMet() {
 		if (isEditor()) return true;
 		return this.loadingRequirementContainer.requirementsMet();
+	}
+
+	public boolean shouldHideOncePerSessionElement() {
+		return Objects.requireNonNullElse(this.getMemory().getBooleanProperty("hide_once_per_session_element"), false);
+	}
+
+	public void setHideOncePerSessionElement() {
+		this.getMemory().putPropertyIfAbsent("hide_once_per_session_element", true);
 	}
 
 	@NotNull
@@ -779,6 +862,14 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		throw new RuntimeException("AbstractElements are not navigatable!");
 	}
 
+	/**
+	 * This method always needs to return FALSE, otherwise menus will BREAK!
+	 */
+	@Override
+	public boolean isMouseOver(double mouseX, double mouseY) {
+		return false;
+	}
+
 	public enum Alignment {
 		
 		LEFT("left"),
@@ -826,7 +917,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	}
 
-	//TODO übernehmen
 	public enum Fading {
 
 		NO_FADING("no_fading"),

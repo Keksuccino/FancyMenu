@@ -18,4 +18,19 @@ public interface IAudio extends PlayableResourceWithAudio {
     @NotNull
     SoundSource getSoundChannel();
 
+    /**
+     * Returns the duration of the audio in seconds.
+     *
+     * @return Duration in seconds
+     */
+    float getDuration();
+
+    /**
+     * Returns the current play time position in seconds.<br>
+     * This takes into account pauses and resumes.
+     *
+     * @return Current play time in seconds
+     */
+    float getPlayTime();
+
 }

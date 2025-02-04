@@ -5,7 +5,6 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import org.jetbrains.annotations.NotNull;
 
-//TODO übernehmen
 public class MaxPlayerAbsorptionHealthPlaceholder extends AbstractWorldFloatPlaceholder {
 
     public MaxPlayerAbsorptionHealthPlaceholder() {

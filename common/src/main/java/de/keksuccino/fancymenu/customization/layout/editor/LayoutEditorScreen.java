@@ -1,18 +1,11 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
-import java.util.*;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetEditorElement;
-import de.keksuccino.fancymenu.customization.layer.ElementFactory;
-import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
-import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
-import de.keksuccino.fancymenu.customization.layout.editor.widget.LayoutEditorWidgetRegistry;
-import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
-import de.keksuccino.fancymenu.customization.widget.ScreenWidgetDiscoverer;
-import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
+import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
@@ -20,11 +13,23 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.HideableElement;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElementBuilder;
+import de.keksuccino.fancymenu.customization.layer.ElementFactory;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.Layout;
+import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
+import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
+import de.keksuccino.fancymenu.customization.layout.editor.widget.LayoutEditorWidgetRegistry;
+import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
+import de.keksuccino.fancymenu.customization.widget.ScreenWidgetDiscoverer;
+import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
+import de.keksuccino.fancymenu.util.ListUtils;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.ObjectUtils;
+import de.keksuccino.fancymenu.util.ScreenTitleUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
@@ -33,7 +38,6 @@ import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.*;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.SaveFileScreen;
@@ -45,8 +49,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.TitleScreen;
-import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -55,6 +57,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.*;
+
+@SuppressWarnings("all")
 public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	private static final Logger LOGGER = LogManager.getLogger();
@@ -207,7 +212,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			e.element.tick();
 		}
 
-		if (this.layout.menuBackground != null) this.layout.menuBackground.tick();
+		this.layout.menuBackgrounds.forEach(MenuBackground::tick);
 
 	}
 
@@ -215,10 +220,11 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public void removed() {
 
 		for (AbstractEditorElement e : this.getAllElements()) {
+			e.element.onCloseScreen(null, null);
 			e.element.onCloseScreen();
 		}
 
-		if (this.layout.menuBackground != null) this.layout.menuBackground.onCloseScreen();
+		this.layout.menuBackgrounds.forEach(MenuBackground::onCloseScreen);
 
 	}
 
@@ -226,10 +232,10 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public void added() {
 
 		for (AbstractEditorElement e : this.getAllElements()) {
-			e.element.onOpenScreen();
+			e.element._onOpenScreen();
 		}
 
-		if (this.layout.menuBackground != null) this.layout.menuBackground.onOpenScreen();
+		this.layout.menuBackgrounds.forEach(MenuBackground::onOpenScreen);
 
 	}
 
@@ -313,13 +319,39 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	protected void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-		if (this.layout.menuBackground != null) {
-			this.layout.menuBackground.keepBackgroundAspectRatio = this.layout.preserveBackgroundAspectRatio;
-			this.layout.menuBackground.opacity = 1.0F;
-			this.layout.menuBackground.render(graphics, mouseX, mouseY, partial);
-		} else {
-			graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
+		graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
+
+		this.layout.menuBackgrounds.forEach(menuBackground -> {
+
+			RenderSystem.enableBlend();
+
+			menuBackground.keepBackgroundAspectRatio = this.layout.preserveBackgroundAspectRatio;
+			menuBackground.opacity = 1.0F;
+			menuBackground.render(graphics, mouseX, mouseY, partial);
+
+			//Restore render defaults
+			RenderSystem.colorMask(true, true, true, true);
+			RenderSystem.depthMask(true);
+			RenderSystem.enableCull();
+			RenderSystem.enableDepthTest();
+			RenderSystem.enableBlend();
+			graphics.flush();
+
+		});
+
+		if (!this.layout.menuBackgrounds.isEmpty()) {
+
+			if (this.layout.applyVanillaBackgroundBlur) {
+//				Minecraft.getInstance().gameRenderer.processBlurEffect(partial);
+//				Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
+			}
+
+			if (this.layout.showScreenBackgroundOverlayOnCustomBackground) {
+//				ScreenCustomizationLayer.renderBackgroundOverlay(graphics, 0, 0, this.width, this.height);
+			}
+
 		}
+
 		RenderingUtils.resetShaderColor(graphics);
 
 		this.renderScrollListHeaderFooterPreview(graphics, mouseX, mouseY, partial);
@@ -1172,6 +1204,10 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		if (super.keyPressed(keycode, scancode, modifiers)) return true;
 
+		for (AbstractEditorElement abstractEditorElement : this.getAllElements()) {
+			if (abstractEditorElement.keyPressed(keycode, scancode, modifiers)) return true;
+		}
+
 		String key = GLFW.glfwGetKeyName(keycode, scancode);
 		if (key == null) key = "";
 
@@ -1261,6 +1297,10 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public boolean keyReleased(int keycode, int scancode, int modifiers) {
 
 		this.anchorPointOverlay.keyReleased(keycode, scancode, modifiers);
+
+		for (AbstractEditorElement abstractEditorElement : this.getAllElements()) {
+			if (abstractEditorElement.keyReleased(keycode, scancode, modifiers)) return true;
+		}
 
 		return super.keyReleased(keycode, scancode, modifiers);
 

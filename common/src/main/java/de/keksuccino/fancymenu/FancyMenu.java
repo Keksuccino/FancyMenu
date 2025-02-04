@@ -8,6 +8,8 @@ import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
+import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
+import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.rendering.text.color.colors.TextColorFormatters;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
@@ -21,14 +23,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class FancyMenu {
 
-	//TODO re-implement auto-sizing and sticky anchor in later update (needs more work first) (uncomment options in AbstractEditorElement)
-
-	//TODO übernehmen (locals)
-
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	//TODO übernehmen
-	public static final String VERSION = "3.3.2";
+	public static final String VERSION = "3.4.0";
 	public static final String MOD_LOADER = Services.PLATFORM.getPlatformName();
 	public static final String MOD_ID = "fancymenu";
 
@@ -54,6 +51,8 @@ public class FancyMenu {
 		FileTypes.registerAll();
 
 		if (Services.PLATFORM.isOnClient()) {
+
+			if (MCEFUtil.isMCEFLoaded()) BrowserHandler.init();
 
 			UIColorThemes.registerAll();
 

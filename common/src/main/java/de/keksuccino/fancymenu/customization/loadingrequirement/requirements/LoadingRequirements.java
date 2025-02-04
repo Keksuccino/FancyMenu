@@ -91,6 +91,8 @@ public class LoadingRequirements {
     public static final IsInventorySlotFilledRequirement IS_INVENTORY_SLOT_FILLED = new IsInventorySlotFilledRequirement();
     public static final IsHotbarSlotActiveRequirement IS_HOTBAR_SLOT_ACTIVE = new IsHotbarSlotActiveRequirement();
     public static final IsAttackStrengthWeakenedRequirement IS_ATTACK_STRENGTH_WEAKENED = new IsAttackStrengthWeakenedRequirement();
+    public static final IsKeyPressedRequirement IS_KEY_PRESSED = new IsKeyPressedRequirement();
+    public static final OncePerSessionRequirement ONLY_ONCE_PER_SESSION = new OncePerSessionRequirement();
 
     public static void registerAll() {
 
@@ -101,6 +103,7 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(IS_GUI_SCALE);
         LoadingRequirementRegistry.register(IS_BUTTON_ACTIVE);
         LoadingRequirementRegistry.register(IS_MENU_TITLE);
+        LoadingRequirementRegistry.register(IS_KEY_PRESSED);
 
         LoadingRequirementRegistry.register(IS_REAL_TIME_DAY);
         LoadingRequirementRegistry.register(IS_REAL_TIME_HOUR);
@@ -130,7 +133,6 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(IS_SINGLEPLAYER);
         LoadingRequirementRegistry.register(IS_WORLD_LOADED);
 
-        //TODO übernehmen
         LoadingRequirementRegistry.register(IS_PLAYER_RUNNING);
         LoadingRequirementRegistry.register(IS_PLAYER_SNEAKING);
         LoadingRequirementRegistry.register(IS_PLAYER_SWIMMING);
@@ -166,7 +168,6 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(IS_INVENTORY_SLOT_FILLED);
         LoadingRequirementRegistry.register(IS_HOTBAR_SLOT_ACTIVE);
         LoadingRequirementRegistry.register(IS_ATTACK_STRENGTH_WEAKENED);
-        //-------------------------
 
         LoadingRequirementRegistry.register(IS_LANGUAGE);
         LoadingRequirementRegistry.register(IS_MOD_LOADED);
@@ -175,6 +176,7 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(IS_SERVER_IP);
         LoadingRequirementRegistry.register(IS_SERVER_ONLINE);
         LoadingRequirementRegistry.register(IS_VARIABLE_VALUE);
+        LoadingRequirementRegistry.register(ONLY_ONCE_PER_SESSION);
 
     }
 

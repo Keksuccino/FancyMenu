@@ -3,7 +3,7 @@ plugins {
     id 'java'
     id 'idea'
     id 'maven-publish'
-    id 'fabric-loom' version '1.6-SNAPSHOT'
+    id 'fabric-loom' version '1.9-SNAPSHOT'
 }
 
 base {
@@ -32,6 +32,7 @@ dependencies {
     modImplementation "maven.modrinth:modmenu:7.2.2"
     modImplementation "maven.modrinth:rrls:4.0.6.1+mc1.20.1-fabric"
     modImplementation "maven.modrinth:cloth-config:11.1.136+fabric"
+    modCompileOnly "curse.maven:mcef-636236:5828196"
 }
 
 loom {

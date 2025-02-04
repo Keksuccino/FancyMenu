@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBloc
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseIfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.WhileExecutableBlock;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementGroup;
@@ -59,6 +60,7 @@ public class ManageActionsScreen extends Screen {
     protected ExtendedButton addIfButton;
     protected ExtendedButton appendElseIfButton;
     protected ExtendedButton appendElseButton;
+    protected ExtendedButton addWhileButton;
     @Nullable
     protected ExecutableEntry renderTickDragHoveredEntry = null;
     @Nullable
@@ -132,6 +134,20 @@ public class ManageActionsScreen extends Screen {
         });
         this.addWidget(this.appendElseButton);
         UIBase.applyDefaultWidgetSkinTo(this.appendElseButton);
+
+        this.addWhileButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.editor.actions.blocks.add.while"), button -> {
+            ManageRequirementsScreen s = new ManageRequirementsScreen(new LoadingRequirementContainer(), container -> {
+                if (container != null) {
+                    this.executableBlock.addExecutable(new WhileExecutableBlock(container));
+                    this.updateActionInstanceScrollArea(false);
+                    this.actionsScrollArea.verticalScrollBar.setScroll(1.0F);
+                }
+                Minecraft.getInstance().setScreen(this);
+            });
+            Minecraft.getInstance().setScreen(s);
+        });
+        this.addWidget(this.addWhileButton);
+        UIBase.applyDefaultWidgetSkinTo(this.addWhileButton);
 
         this.addActionButton = new ExtendedButton(0, 0, 150, 20, I18n.get("fancymenu.editor.action.screens.add_action"), (button) -> {
             BuildActionScreen s = new BuildActionScreen(null, (call) -> {
@@ -222,6 +238,15 @@ public class ManageActionsScreen extends Screen {
                         Minecraft.getInstance().setScreen(this);
                     });
                     Minecraft.getInstance().setScreen(s);
+                } else if (selected.executable instanceof WhileExecutableBlock b) {
+                    ManageRequirementsScreen s = new ManageRequirementsScreen(b.condition.copy(false), container -> {
+                        if (container != null) {
+                            b.condition = container;
+                            this.updateActionInstanceScrollArea(true);
+                        }
+                        Minecraft.getInstance().setScreen(this);
+                    });
+                    Minecraft.getInstance().setScreen(s);
                 }
             }
         }).setIsActiveSupplier(consumes -> {
@@ -297,8 +322,10 @@ public class ManageActionsScreen extends Screen {
         this.appendElseIfButton.setY(this.appendElseButton.getY() - 5 - 20);
         this.addIfButton.setX(this.width - 20 - this.addIfButton.getWidth());
         this.addIfButton.setY(this.appendElseIfButton.getY() - 5 - 20);
+        this.addWhileButton.setX(this.width - 20 - this.addWhileButton.getWidth());
+        this.addWhileButton.setY(this.addIfButton.getY() - 5 - 20);
         this.addActionButton.setX(this.width - 20 - this.addActionButton.getWidth());
-        this.addActionButton.setY(this.addIfButton.getY() - 5 - 20);
+        this.addActionButton.setY(this.addWhileButton.getY() - 5 - 20);
 
         AbstractWidget topRightSideWidget = this.addActionButton;
         Window window = Minecraft.getInstance().getWindow();
@@ -379,6 +406,7 @@ public class ManageActionsScreen extends Screen {
         this.appendElseButton.render(graphics, mouseX, mouseY, partial);
         this.appendElseIfButton.render(graphics, mouseX, mouseY, partial);
         this.addIfButton.render(graphics, mouseX, mouseY, partial);
+        this.addWhileButton.render(graphics, mouseX, mouseY, partial);
         this.addActionButton.render(graphics, mouseX, mouseY, partial);
 
         super.render(graphics, mouseX, mouseY, partial);
@@ -851,6 +879,19 @@ public class ManageActionsScreen extends Screen {
                 this.valueComponent = Component.empty();
             } else if (this.executable instanceof ElseExecutableBlock b) {
                 this.displayNameComponent = Component.translatable("fancymenu.editor.actions.blocks.else").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
+                this.valueComponent = Component.empty();
+            } else if (this.executable instanceof WhileExecutableBlock b) {
+                String requirements = "";
+                for (LoadingRequirementGroup g : b.condition.getGroups()) {
+                    if (!requirements.isEmpty()) requirements += ", ";
+                    requirements += g.identifier;
+                }
+                for (LoadingRequirementInstance i : b.condition.getInstances()) {
+                    if (!requirements.isEmpty()) requirements += ", ";
+                    requirements += i.requirement.getDisplayName();
+                }
+                this.displayNameComponent = Component.translatable("fancymenu.editor.actions.blocks.while", Component.literal(requirements))
+                        .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
                 this.valueComponent = Component.empty();
             } else {
                 this.displayNameComponent = Component.literal("[UNKNOWN EXECUTABLE]").withStyle(ChatFormatting.RED);

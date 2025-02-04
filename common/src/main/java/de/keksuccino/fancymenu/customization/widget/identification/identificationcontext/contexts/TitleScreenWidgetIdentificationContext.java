@@ -49,11 +49,6 @@ public class TitleScreenWidgetIdentificationContext extends WidgetIdentification
                         return "modmenu_titlescreen_mods_button";
                     }
                 }
-            } else if (c.getContents() instanceof LiteralContents) {
-                String label = ((LiteralContents) c.getContents()).text();
-                if (label.equals("Copyright Mojang AB. Do not distribute!")) {
-                    return "mc_titlescreen_copyright_button";
-                }
             }
             return null;
         });

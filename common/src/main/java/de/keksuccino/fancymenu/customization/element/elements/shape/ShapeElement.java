@@ -17,11 +17,9 @@ public class ShapeElement extends AbstractElement {
     private static final Logger LOGGER = LogManager.getLogger();
 
     public Shape shape = Shape.RECTANGLE;
-    //TODO übernehmen
     @NotNull
     public String colorRaw = "#FFFFFF";
     protected String lastColor = null;
-    //-----------------
     public DrawableColor color = DrawableColor.of(255, 255, 255);
 
     public ShapeElement(@NotNull ElementBuilder<?, ?> builder) {
@@ -33,16 +31,13 @@ public class ShapeElement extends AbstractElement {
 
         if (!this.shouldRender()) return;
 
-        //TODO übernehmen (if)
         if (this.shape != null) {
 
-            //TODO übernehmen
             String colorFinal = PlaceholderParser.replacePlaceholders(this.colorRaw);
             if (!colorFinal.equals(this.lastColor) || (this.color == null)) {
                 this.color = DrawableColor.of(colorFinal);
             }
             this.lastColor = colorFinal;
-            //-------------------------
 
             int alpha = this.color.getColor().getAlpha();
             int i = Mth.ceil(this.opacity * 255.0F);

@@ -1,14 +1,10 @@
 package de.keksuccino.fancymenu.customization.element.editor;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.function.Supplier;
-import javax.annotation.Nonnull;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
+import de.keksuccino.fancymenu.customization.element.elements.ticker.TickerEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.AnchorPointOverlay;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
@@ -24,6 +20,7 @@ import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroups;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -55,7 +52,14 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-@SuppressWarnings("unused")
+import javax.annotation.Nonnull;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
+
+@SuppressWarnings("deprecation")
 public abstract class AbstractEditorElement implements Renderable, GuiEventListener {
 
 	private static final Logger LOGGER = LogManager.getLogger();
@@ -95,6 +99,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	public long renderMovingNotAllowedTime = -1;
 	public boolean recentlyMovedByDragging = false;
 	public boolean recentlyLeftClickSelected = false;
+	public boolean recentlyResized = false;
 	public boolean movingCrumpleZonePassed = false;
 
 	private final List<AbstractEditorElement> cachedHoveredElementsOnRightClickMenuOpen = new ArrayList<>();
@@ -171,6 +176,25 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		this.rightClickMenu.addSeparatorEntry("separator_2");
 
+		this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_in_editor_display_name", AbstractEditorElement.class,
+						consumes -> consumes.element.customElementLayerName,
+						(abstractEditorElement, s) -> abstractEditorElement.element.customElementLayerName = s,
+						null, false, false, Component.translatable("fancymenu.elements.in_editor_display_name"), true, null, null, null)
+				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.in_editor_display_name.desc")));
+
+		if (this.settings.isInEditorColorSupported()) {
+
+			this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_in_editor_color", AbstractEditorElement.class,
+							consumes -> consumes.element.inEditorColor.getHex(),
+							(element, s) -> element.element.inEditorColor = DrawableColor.of(s),
+							null, false, false, Component.translatable("fancymenu.editor.elements.in_editor_color"),
+							false, null, TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.elements.in_editor_color.desc")));
+
+		}
+
+		this.rightClickMenu.addSeparatorEntry("separator_after_set_in_editor_stuff");
+
 		if (this.settings.isAnchorPointChangeable()) {
 
 			ContextMenu anchorPointMenu = new ContextMenu();
@@ -193,7 +217,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 														if (e.settings.isAnchorPointChangeable() && e.settings.isElementAnchorPointAllowed()) {
 															e.element.anchorPointElementIdentifier = editorElement.element.getInstanceIdentifier();
 															e.element.setElementAnchorPointParent(editorElement.element);
-															e.setAnchorPoint(ElementAnchorPoints.ELEMENT, false, e.getX(), e.getY(), true);
+															e.setAnchorPoint(ElementAnchorPoints.ELEMENT, e.getX(), e.getY(), true);
 														}
 													}
 													Minecraft.getInstance().setScreen(this.editor);
@@ -227,7 +251,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 							this.editor.history.saveSnapshot();
 							for (AbstractEditorElement e : this.editor.getSelectedElements()) {
 								if (e.settings.isAnchorPointChangeable()) {
-									e.setAnchorPoint(p, false, e.getX(), e.getY(), true);
+									e.setAnchorPoint(p, e.getX(), e.getY(), true);
 								}
 							}
 							menu.closeMenu();
@@ -239,12 +263,24 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		}
 
-		this.addToggleContextMenuEntryTo(this.rightClickMenu, "stay_on_screen", AbstractEditorElement.class,
-						consumes -> consumes.element.stayOnScreen,
-						(element1, aBoolean) -> element1.element.stayOnScreen = aBoolean,
-						"fancymenu.elements.element.stay_on_screen")
-				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.element.stay_on_screen.tooltip")))
-				.setIcon(ContextMenu.IconFactory.getIcon("screen"))
+		if (this.settings.isStayOnScreenAllowed()) {
+
+			this.addToggleContextMenuEntryTo(this.rightClickMenu, "stay_on_screen", AbstractEditorElement.class,
+							consumes -> consumes.element.stayOnScreen,
+							(element1, aBoolean) -> element1.element.stayOnScreen = aBoolean,
+							"fancymenu.elements.element.stay_on_screen")
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines(!this.element.stickyAnchor ? "fancymenu.elements.element.stay_on_screen.tooltip" : "fancymenu.elements.element.stay_on_screen.tooltip.disable_sticky")))
+					.setIcon(ContextMenu.IconFactory.getIcon("screen"))
+					.setStackable(false)
+					.addIsActiveSupplier((menu, entry) -> !this.element.stickyAnchor);
+
+		}
+
+		this.addToggleContextMenuEntryTo(this.rightClickMenu, "load_once_per_session", AbstractEditorElement.class,
+						consumes -> consumes.element.loadOncePerSession,
+						(element1, aBoolean) -> element1.element.loadOncePerSession = aBoolean,
+						"fancymenu.elements.element.load_once_per_session")
+				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.element.load_once_per_session.desc")))
 				.setStackable(true);
 
 		if (this.settings.isAdvancedPositioningSupported()) {
@@ -438,7 +474,6 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		this.rightClickMenu.addSeparatorEntry("separator_7").setStackable(true);
 
-		//TODO übernehmen
 		if (this.settings.isDelayable()) {
 
 			ContextMenu appearanceDelayMenu = new ContextMenu();
@@ -477,7 +512,6 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		}
 
-		//TODO übernehmen
 		if (this.settings.isFadeable()) {
 
 			ContextMenu fadingMenu = new ContextMenu();
@@ -561,7 +595,6 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		}
 
-		//TODO übernehmen
 		if (this.settings.isOpacityChangeable()) {
 
 			this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "base_opacity",
@@ -575,49 +608,90 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		}
 
-		//TODO re-implement auto-sizing and sticky anchor in later update (needs more work first)
-		//TODO re-implement auto-sizing and sticky anchor in later update (needs more work first)
-		//TODO re-implement auto-sizing and sticky anchor in later update (needs more work first)
-		//TODO re-implement auto-sizing and sticky anchor in later update (needs more work first)
-		//TODO re-implement auto-sizing and sticky anchor in later update (needs more work first)
+		if (this.settings.isAutoSizingAllowed()) {
 
-//		//TODO übernehmen
-//		this.addToggleContextMenuEntryTo(this.rightClickMenu, "auto_sizing", AbstractEditorElement.class,
-//						consumes -> consumes.element.autoSizing,
-//						(abstractEditorElement, aBoolean) -> {
-//							abstractEditorElement.element.setAutoSizingBaseWidthAndHeight();
-//							abstractEditorElement.element.autoSizing = aBoolean;
-//							abstractEditorElement.element.updateAutoSizing(true);
-//						},
-//						"fancymenu.element.auto_sizing")
-//				.setStackable(true)
-//				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.auto_sizing.desc")))
-//				.setIcon(ContextMenu.IconFactory.getIcon("measure"));
-//
-//		//TODO übernehmen
-//		if (this.settings.isAnchorPointChangeable()) {
-//
-//			this.addToggleContextMenuEntryTo(this.rightClickMenu, "sticky_anchor", AbstractEditorElement.class,
-//							consumes -> consumes.element.stickyAnchor,
-//							(abstractEditorElement, aBoolean) -> {
-//								abstractEditorElement.element.stickyAnchor = aBoolean;
-//								//Fix element position on sticky anchor toggle, so it stays at the same position
-//								if (abstractEditorElement.element.anchorPoint != null) {
-//									if (aBoolean) {
-//										abstractEditorElement.element.posOffsetX += abstractEditorElement.element.anchorPoint.getStickyOffsetXCorrection(abstractEditorElement.element);
-//										abstractEditorElement.element.posOffsetY += abstractEditorElement.element.anchorPoint.getStickyOffsetYCorrection(abstractEditorElement.element);
-//									} else {
-//										abstractEditorElement.element.posOffsetX -= abstractEditorElement.element.anchorPoint.getStickyOffsetXCorrection(abstractEditorElement.element);
-//										abstractEditorElement.element.posOffsetY -= abstractEditorElement.element.anchorPoint.getStickyOffsetYCorrection(abstractEditorElement.element);
-//									}
-//								}
-//							},
-//							"fancymenu.element.sticky_anchor")
-//					.setStackable(true)
-//					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.sticky_anchor.desc")))
-//					.setIcon(ContextMenu.IconFactory.getIcon("anchor"));
-//
-//		}
+			this.addToggleContextMenuEntryTo(this.rightClickMenu, "auto_sizing", AbstractEditorElement.class,
+							consumes -> consumes.element.autoSizing,
+							(abstractEditorElement, aBoolean) -> {
+								abstractEditorElement.element.setAutoSizingBaseWidthAndHeight();
+								abstractEditorElement.element.autoSizing = aBoolean;
+								abstractEditorElement.element.updateAutoSizing(true);
+							},
+							"fancymenu.element.auto_sizing")
+					.setStackable(true)
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.element.auto_sizing.desc")))
+					.setIcon(ContextMenu.IconFactory.getIcon("measure"));
+
+		}
+
+		if (this.settings.isStickyAnchorAllowed()) {
+
+			this.addToggleContextMenuEntryTo(this.rightClickMenu, "sticky_anchor", AbstractEditorElement.class,
+							consumes -> consumes.element.stickyAnchor,
+							(abstractEditorElement, aBoolean) -> {
+
+				                int oldPosX = abstractEditorElement.element.getAbsoluteX();
+								int oldPosY = abstractEditorElement.element.getAbsoluteY();
+
+								abstractEditorElement.element.stickyAnchor = aBoolean;
+
+								int newPosX = abstractEditorElement.element.getAbsoluteX();
+								int newPosY = abstractEditorElement.element.getAbsoluteY();
+
+								abstractEditorElement.element.posOffsetX += oldPosX - newPosX;
+								abstractEditorElement.element.posOffsetY += oldPosY - newPosY;
+
+							},
+							"fancymenu.element.sticky_anchor")
+					.setStackable(false)
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines(!this.element.stayOnScreen ? "fancymenu.element.sticky_anchor.desc" : "fancymenu.element.sticky_anchor.desc.disable_stay_on_screen")))
+					.setIcon(ContextMenu.IconFactory.getIcon("anchor"))
+					.addIsActiveSupplier((menu, entry) -> !this.element.stayOnScreen);
+
+		}
+
+		if (this.settings.isParallaxAllowed()) {
+
+			this.rightClickMenu.addSeparatorEntry("separator_before_parallax").setStackable(true);
+
+			this.addToggleContextMenuEntryTo(this.rightClickMenu, "enable_parallax", AbstractEditorElement.class,
+							consumes -> consumes.element.enableParallax,
+							(abstractEditorElement, aBoolean) -> abstractEditorElement.element.enableParallax = aBoolean,
+							"fancymenu.elements.parallax")
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.parallax.desc")));
+
+			this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "parallax_intensity", AbstractEditorElement.class,
+							consumes -> consumes.element.parallaxIntensity,
+							(abstractEditorElement, aFloat) -> abstractEditorElement.element.parallaxIntensity = aFloat,
+							Component.translatable("fancymenu.elements.parallax.intensity"), true, 0.5F,
+							consumes -> {
+								if (de.keksuccino.fancymenu.util.MathUtils.isFloat(consumes)) {
+									float f = Float.parseFloat(consumes);
+									if (f < 0.0F) return false;
+									if (f > 1.0F) return false;
+									return true;
+								}
+								return false;
+							}, consumes -> {
+								boolean valid = true;
+								if (de.keksuccino.fancymenu.util.MathUtils.isFloat(consumes)) {
+									float f = Float.parseFloat(consumes);
+									if (f < 0.0F) valid = false;
+									if (f > 1.0F) valid = false;
+								} else {
+									valid = false;
+								}
+								return !valid ? Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.parallax.intensity.invalid_value")) : null;
+							})
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.parallax.intensity.desc")));
+
+			this.addToggleContextMenuEntryTo(this.rightClickMenu, "invert_parallax", AbstractEditorElement.class,
+							consumes -> consumes.element.invertParallax,
+							(abstractEditorElement, aBoolean) -> abstractEditorElement.element.invertParallax = aBoolean,
+							"fancymenu.elements.parallax.invert")
+					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.parallax.invert.desc")));
+
+		}
 
 		this.rightClickMenu.addSeparatorEntry("separator_8").setStackable(true);
 
@@ -630,7 +704,6 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		this.hovered = this.isMouseOver(mouseX, mouseY);
 
-		//TODO übernehmen
 		this.element.renderInternal(graphics, mouseX, mouseY, partial);
 
 		this.renderDraggingNotAllowedOverlay(graphics);
@@ -715,23 +788,27 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 	}
 
-	public void setAnchorPoint(ElementAnchorPoint p, boolean keepAbsolutePosition, int oldAbsoluteX, int oldAbsoluteY, boolean resetElementStates) {
+	public void setAnchorPoint(ElementAnchorPoint anchor, int oldAbsoluteX, int oldAbsoluteY, boolean resetElementStates) {
+
 		if (resetElementStates) this.resetElementStates();
-		if (p == null) {
-			p = ElementAnchorPoints.MID_CENTERED;
+
+		if (anchor == null) {
+			anchor = ElementAnchorPoints.MID_CENTERED;
 		}
-		if (p != ElementAnchorPoints.ELEMENT) {
+
+		if (anchor != ElementAnchorPoints.ELEMENT) {
 			this.element.anchorPointElementIdentifier = null;
 			this.element.setElementAnchorPointParent(null);
 		}
-		if (keepAbsolutePosition) {
-			this.element.posOffsetX = this.calcNewBaseX(p, oldAbsoluteX);
-			this.element.posOffsetY = this.calcNewBaseY(p, oldAbsoluteY);
-		} else {
-			this.element.posOffsetX = p.getDefaultElementBaseX(this.element);
-			this.element.posOffsetY = p.getDefaultElementBaseY(this.element);
-		}
-		this.element.anchorPoint = p;
+
+		this.element.anchorPoint = anchor;
+
+		int newAbsoluteX = this.element.getAbsoluteX();
+		int newAbsoluteY = this.element.getAbsoluteY();
+
+		this.element.posOffsetX += oldAbsoluteX - newAbsoluteX;
+		this.element.posOffsetY += oldAbsoluteY - newAbsoluteY;
+
 	}
 
 	public void setAnchorPointViaOverlay(AnchorPointOverlay.AnchorPointArea anchor, int mouseX, int mouseY) {
@@ -749,19 +826,9 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				LOGGER.error("[FANCYMENU] Failed to get parent element for ELEMENT anchor! Element was NULL!", new NullPointerException());
 			}
 		}
-		this.setAnchorPoint(anchor.anchorPoint, true, oldAbsoluteX, oldAbsoluteY, false);
+		this.setAnchorPoint(anchor.anchorPoint, oldAbsoluteX, oldAbsoluteY, false);
 		this.updateLeftMouseDownCachedValues(mouseX, mouseY);
 		this.updateMovingStartPos(mouseX, mouseY);
-	}
-
-	protected int calcNewBaseX(ElementAnchorPoint newAnchor, int oldAbsoluteX) {
-		int originX = newAnchor.getOriginX(this.element);
-		return oldAbsoluteX - originX;
-	}
-
-	protected int calcNewBaseY(ElementAnchorPoint newAnchor, int oldAbsoluteY) {
-		int originY = newAnchor.getOriginY(this.element);
-		return oldAbsoluteY - originY;
 	}
 
 	public void resetElementStates() {
@@ -820,14 +887,12 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 					this.leftMouseDown = true;
 					this.updateLeftMouseDownCachedValues((int) mouseX, (int) mouseY);
 					this.resizeAspectRatio = new AspectRatio(this.getWidth(), this.getHeight());
-					//TODO übernehmen
 					if (this.element.autoSizingWidth > 0) this.element.baseWidth = this.element.autoSizingWidth;
 					if (this.element.autoSizingHeight > 0) this.element.baseHeight = this.element.autoSizingHeight;
 					this.element.setAutoSizingBaseWidthAndHeight();
 					this.element.updateAutoSizing(true);
 					this.element.autoSizingWidth = 0;
 					this.element.autoSizingHeight = 0;
-					//----------------
 				}
 			}
 		}
@@ -839,17 +904,23 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		if (button == 0) {
 			this.leftMouseDown = false;
 			this.activeResizeGrabber = null;
-			//TODO übernehmen
 			this.element.updateAutoSizing(true);
-			//------------------
 			this.recentlyMovedByDragging = false;
+			this.recentlyResized = false;
 			this.movingCrumpleZonePassed = false;
 		}
 		return false;
 	}
 
+	/**
+	 * @param mouseX The X coordinate of the mouse.
+	 * @param mouseY The Y coordinate of the mouse.
+	 * @param button The button that is being dragged.
+	 * @param dragX The X distance of the drag (distance per tick + mouse move, mostly values between 0.3 and 5).
+	 * @param dragY The Y distance of the drag (distance per tick + mouse move, mostly values between 0.3 and 5).
+	 */
 	@Override
-	public boolean mouseDragged(double mouseX, double mouseY, int button, double $$3, double $$4) {
+	public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
 		if (!this.isSelected()) {
 			return false;
 		}
@@ -872,16 +943,16 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			if (this.leftMouseDown && this.isGettingResized()) { // RESIZE ELEMENT
 				int diffX = (int)-(this.resizingStartPosX - mouseX);
 				int diffY = (int)-(this.resizingStartPosY - mouseY);
+				if ((diffX > 0) || (diffY > 0)) this.recentlyResized = true;
 				if ((this.activeResizeGrabber.type == ResizeGrabberType.LEFT) || (this.activeResizeGrabber.type == ResizeGrabberType.RIGHT)) {
-					int i = (this.activeResizeGrabber.type == ResizeGrabberType.LEFT) ? (this.leftMouseDownBaseWidth - diffX) : (this.leftMouseDownBaseWidth + diffX);
-					if (i >= 2) {
-						//TODO übernehmen
+					int newWidth = (this.activeResizeGrabber.type == ResizeGrabberType.LEFT) ? (this.leftMouseDownBaseWidth - diffX) : (this.leftMouseDownBaseWidth + diffX);
+					if (newWidth >= 2) {
 						this.element.autoSizingWidth = 0;
 						this.element.autoSizingHeight = 0;
 						int cachedOldOffsetX = this.element.posOffsetX;
 						int cachedOldPosX = this.element.getAbsoluteX();
 						int cachedOldWidth = this.element.getAbsoluteWidth();
-						this.element.baseWidth = i;
+						this.element.baseWidth = newWidth;
 						this.element.posOffsetX = this.leftMouseDownBaseX + this.element.anchorPoint.getResizePositionOffsetX(this.element, diffX, this.activeResizeGrabber.type);
 						if (this.element.stickyAnchor) {
 							this.element.posOffsetX += this.element.anchorPoint.getStickyResizePositionCorrectionX(this.element, diffX, cachedOldOffsetX, this.element.posOffsetX, cachedOldPosX, this.element.getAbsoluteX(), cachedOldWidth, this.element.getAbsoluteWidth(), this.activeResizeGrabber.type);
@@ -889,19 +960,17 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 						if (Screen.hasShiftDown()) {
 							this.element.baseHeight = this.resizeAspectRatio.getAspectRatioHeight(this.element.baseWidth);
 						}
-						//---------------------------
 					}
 				}
 				if ((this.activeResizeGrabber.type == ResizeGrabberType.TOP) || (this.activeResizeGrabber.type == ResizeGrabberType.BOTTOM)) {
-					int i = (this.activeResizeGrabber.type == ResizeGrabberType.TOP) ? (this.leftMouseDownBaseHeight - diffY) : (this.leftMouseDownBaseHeight + diffY);
-					if (i >= 2) {
-						//TODO übernehmen
+					int newHeight = (this.activeResizeGrabber.type == ResizeGrabberType.TOP) ? (this.leftMouseDownBaseHeight - diffY) : (this.leftMouseDownBaseHeight + diffY);
+					if (newHeight >= 2) {
 						this.element.autoSizingWidth = 0;
 						this.element.autoSizingHeight = 0;
 						int cachedOldOffsetY = this.element.posOffsetY;
 						int cachedOldPosY = this.element.getAbsoluteY();
 						int cachedOldHeight = this.element.baseHeight;
-						this.element.baseHeight = i;
+						this.element.baseHeight = newHeight;
 						this.element.posOffsetY = this.leftMouseDownBaseY + this.element.anchorPoint.getResizePositionOffsetY(this.element, diffY, this.activeResizeGrabber.type);
 						if (this.element.stickyAnchor) {
 							this.element.posOffsetY += this.element.anchorPoint.getStickyResizePositionCorrectionY(this.element, diffY, cachedOldOffsetY, this.element.posOffsetY, cachedOldPosY, this.element.getAbsoluteY(), cachedOldHeight, this.element.baseHeight, this.activeResizeGrabber.type);
@@ -909,7 +978,6 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 						if (Screen.hasShiftDown()) {
 							this.element.baseWidth = this.resizeAspectRatio.getAspectRatioWidth(this.element.baseHeight);
 						}
-						//----------------------------
 					}
 				}
 			}

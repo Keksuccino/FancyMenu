@@ -52,10 +52,8 @@ public class PropertiesParser {
             PropertyContainer currentContainer = null;
             boolean insideData = false;
             for (String line : lines) {
-                //TODO übernehmen
                 //Remove all types of spaces from line
                 String compactLine = RegExUtils.replacePattern(line, "[\\p{Z}\\s]+", "");
-                //-------------------
                 //Set type of container set
                 if (compactLine.startsWith("type=") && !insideData) {
                     propertiesType = compactLine.split("=", 2)[1];

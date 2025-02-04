@@ -1,10 +1,13 @@
 package de.keksuccino.fancymenu.customization.background.backgrounds.image;
 
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
+import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
@@ -12,6 +15,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
@@ -73,7 +78,35 @@ public class ImageMenuBackgroundConfigScreen extends CellScreen {
            this.background.slideLeftRight = value.getAsBoolean();
         });
         if (slideButton.widget instanceof CycleButton<?> b) {
-            b.setIsActiveSupplier(consumes -> !this.background.repeat);
+            b.setIsActiveSupplier(consumes -> !this.background.repeat && !this.background.parallaxEnabled);
+        }
+
+        WidgetCell parallaxButton = this.addCycleButtonCell(CommonCycles.cycleEnabledDisabled("fancymenu.background.image.configure.parallax", this.background.parallaxEnabled), true, (value, button) -> {
+            this.background.parallaxEnabled = value.getAsBoolean();
+        });
+        if (parallaxButton.widget instanceof CycleButton<?> b) {
+            b.setIsActiveSupplier(consumes -> !this.background.slideLeftRight);
+        }
+
+        this.addWidgetCell(new ExtendedButton(0, 0, 0, 20, Component.translatable("fancymenu.background.image.configure.parallax_intensity"), var1 -> {
+            final Screen currentScreen = Minecraft.getInstance().screen;
+            TextInputScreen s = TextInputScreen.build(Component.translatable("fancymenu.background.image.configure.parallax_intensity"), CharacterFilter.buildDecimalFiler(), callback -> {
+                if (callback != null) {
+                    this.background.parallaxIntensity = SerializationUtils.deserializeNumber(Float.class, this.background.parallaxIntensity, callback);
+                    if (this.background.parallaxIntensity > 1.0F) this.background.parallaxIntensity = 1.0F;
+                    if (this.background.parallaxIntensity < 0.0F) this.background.parallaxIntensity = 0.0F;
+                }
+                Minecraft.getInstance().setScreen(currentScreen);
+            });
+            s.setText("" + this.background.parallaxIntensity);
+            Minecraft.getInstance().setScreen(s);
+        }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.background.image.configure.parallax_intensity.desc"))), true);
+
+        WidgetCell invertParallaxCell = this.addCycleButtonCell(CommonCycles.cycleEnabledDisabled("fancymenu.background.image.configure.invert_parallax", this.background.invertParallax), true, (value, button) -> {
+            this.background.invertParallax = value.getAsBoolean();
+        });
+        if (invertParallaxCell.widget instanceof ExtendedButton b) {
+            b.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.background.image.configure.invert_parallax.desc")));
         }
 
         this.addStartEndSpacerCell();

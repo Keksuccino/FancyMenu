@@ -67,7 +67,6 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     public boolean navigatable = true;
     @NotNull
     public GenericExecutableBlock executableBlock = new GenericExecutableBlock();
-    //TODO übernehmen
     @NotNull
     public LoadingRequirementContainer activeStateSupplier = new LoadingRequirementContainer();
 
@@ -174,14 +173,12 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
 
     public void updateWidget() {
         if (this.slider == null) return;
-        //TODO übernehmen
         this.updateWidgetActiveState();
         this.updateWidgetTooltip();
         this.updateWidgetTexture();
         this.slider.updateMessage();
     }
 
-    //TODO übernehmen
     public void updateWidgetActiveState() {
         if (this.slider == null) return;
         this.slider.active = this.activeStateSupplier.requirementsMet();
@@ -194,7 +191,6 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         }
     }
 
-    //TODO übernehmen
     public void updateWidgetTexture() {
 
         RenderableResource sliderBackNormal = null;

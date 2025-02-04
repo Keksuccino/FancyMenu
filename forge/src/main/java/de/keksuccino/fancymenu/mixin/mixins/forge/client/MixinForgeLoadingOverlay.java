@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenRenderUtils;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -32,6 +33,7 @@ public class MixinForgeLoadingOverlay {
     private void beforeRenderScreenFancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
         //Fire RenderPre event for current screen in loading overlay
         if (ScreenUtils.getScreen() != null) {
+            ScreenRenderUtils.executeAllPreRenderTasks(graphics, mouseX, mouseY, partial);
             EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(ScreenUtils.getScreen(), graphics, mouseX, mouseY, partial));
         }
     }
@@ -41,6 +43,7 @@ public class MixinForgeLoadingOverlay {
         //Fire RenderPost event for current screen in loading overlay
         if (ScreenUtils.getScreen() != null) {
             EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(ScreenUtils.getScreen(), graphics, mouseX, mouseY, partial));
+            ScreenRenderUtils.executeAllPostRenderTasks(graphics, mouseX, mouseY, partial);
         }
     }
 

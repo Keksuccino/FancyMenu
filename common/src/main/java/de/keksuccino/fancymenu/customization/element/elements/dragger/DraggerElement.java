@@ -16,11 +16,9 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 import java.util.List;
 
-//TODO übernehmen
 public class DraggerElement extends AbstractElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final DrawableColor ELEMENT_COLOR = DrawableColor.of(new Color(227, 14, 35));
 
     public final DraggerWidget widget;
     public int userDragOffsetX = 0;
@@ -116,7 +114,7 @@ public class DraggerElement extends AbstractElement {
 
             if (isEditor()) {
                 RenderSystem.enableBlend();
-                graphics.fill(x, y, x + w, y + h, ELEMENT_COLOR.getColorInt());
+                graphics.fill(x, y, x + w, y + h, this.inEditorColor.getColorInt());
                 graphics.enableScissor(x, y, x + w, y + h);
                 graphics.drawCenteredString(Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
                 graphics.disableScissor();

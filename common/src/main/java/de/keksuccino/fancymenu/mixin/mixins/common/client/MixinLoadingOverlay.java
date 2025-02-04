@@ -14,35 +14,26 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderScreenEvent;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenRenderUtils;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.LoadingOverlay;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.server.packs.resources.ReloadInstance;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Objects;
-import java.util.function.Consumer;
 
 @Mixin(LoadingOverlay.class)
 public abstract class MixinLoadingOverlay {
-
-	@Inject(method = "<init>", at = @At(value = "RETURN"))
-	private void onConstructFancyMenu(Minecraft mc, ReloadInstance reloadInstance, Consumer<?> consumer, boolean b, CallbackInfo info) {
-		//TODO übernehmen
-//		//Preload animation frames to avoid lagging when rendering them for the first time
-//		if (FancyMenu.getOptions().preLoadAnimations.getValue() && !AnimationHandler.preloadingCompleted()) {
-//			AnimationHandler.preloadAnimations(false);
-//		}
-	}
 
 	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
 	private void beforeRenderScreenFancyMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo info) {
 		//Fire RenderPre event for current screen in loading overlay
 		if (ScreenUtils.getScreen() != null) {
+			ScreenRenderUtils.executeAllPreRenderTasks(graphics, mouseX, mouseY, partial);
 			EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(ScreenUtils.getScreen(), graphics, mouseX, mouseY, partial));
 		}
 	}
@@ -52,6 +43,7 @@ public abstract class MixinLoadingOverlay {
 		//Fire RenderPost event for current screen in loading overlay
 		if (ScreenUtils.getScreen() != null) {
 			EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(ScreenUtils.getScreen(), graphics, mouseX, mouseY, partial));
+			ScreenRenderUtils.executeAllPostRenderTasks(graphics, mouseX, mouseY, partial);
 		}
 	}
 

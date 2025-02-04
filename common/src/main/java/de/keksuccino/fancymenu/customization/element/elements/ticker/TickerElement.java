@@ -15,8 +15,6 @@ import java.awt.*;
 
 public class TickerElement extends AbstractElement implements ExecutableElement {
 
-    private static final DrawableColor BACKGROUND_COLOR = DrawableColor.of(Color.ORANGE);
-
     @NotNull
     public volatile GenericExecutableBlock actionExecutor = new GenericExecutableBlock();
     public volatile long tickDelayMs = 0;
@@ -64,7 +62,7 @@ public class TickerElement extends AbstractElement implements ExecutableElement 
             int w = this.getAbsoluteWidth();
             int h = this.getAbsoluteHeight();
             RenderSystem.enableBlend();
-            graphics.fill(x, y, x + w, y + h, BACKGROUND_COLOR.getColorInt());
+            graphics.fill(x, y, x + w, y + h, this.inEditorColor.getColorInt());
             graphics.enableScissor(x, y, x + w, y + h);
             graphics.drawCenteredString(Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
             graphics.disableScissor();

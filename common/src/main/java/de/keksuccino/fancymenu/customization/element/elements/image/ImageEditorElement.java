@@ -3,6 +3,8 @@ package de.keksuccino.fancymenu.customization.element.elements.image;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
@@ -32,6 +34,13 @@ public class ImageEditorElement extends AbstractEditorElement {
                 Minecraft.getInstance().setScreen(this.editor);
             }).setSource((this.getElement().textureSupplier != null) ? this.getElement().textureSupplier.getSourceWithPrefix() : null, false));
         }).setIcon(ContextMenu.IconFactory.getIcon("image"));
+
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "image_tint", ImageEditorElement.class,
+                        consumes -> consumes.getElement().imageTint.getHex(),
+                        (imageEditorElement, s) -> imageEditorElement.getElement().imageTint = DrawableColor.of((s != null) ? s : "#FFFFFF"),
+                        null, false, false, Component.translatable("fancymenu.elements.image.tint"),
+                        true, "#FFFFFF", TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
+                .setStackable(true);
 
         this.rightClickMenu.addSeparatorEntry("separator_before_repeat_texture");
 

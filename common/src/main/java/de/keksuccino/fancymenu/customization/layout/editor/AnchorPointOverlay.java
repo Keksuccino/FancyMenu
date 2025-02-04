@@ -327,13 +327,11 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
         Objects.requireNonNull(area);
         if (this.isAttachedToAnchor(element, area)) return false;
         //Check if area is ElementAnchorPointArea and if so, check if area's element is child of the given element parameter
-        //TODO übernehmen
         if (area instanceof ElementAnchorPointArea) {
             AbstractEditorElement areaElement = this.editor.getElementByInstanceIdentifier(((ElementAnchorPointArea) area).elementIdentifier);
             AbstractElement parentOfAreaElement = (areaElement != null) ? areaElement.element.getElementAnchorPointParent() : null;
             if ((parentOfAreaElement != null) && parentOfAreaElement.getInstanceIdentifier().equals(element.element.getInstanceIdentifier())) return false;
         }
-        //------------------
         return true;
     }
 
@@ -401,7 +399,6 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
                 if (a.isMouseOver(mouseX, mouseY)) return a;
             }
         }
-        //TODO übernehmen
         if (FancyMenu.getOptions().anchorOverlayChangeAnchorOnElementHover.getValue()) {
             AbstractEditorElement e = this.getTopHoveredNotDraggedElement();
             if (e != null) {
@@ -414,7 +411,6 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
                 if (!e.isSelected() && !e.isMultiSelected()) return new ElementAnchorPointArea(e.element.getInstanceIdentifier());
             }
         }
-        //---------------------
         return null;
     }
 
