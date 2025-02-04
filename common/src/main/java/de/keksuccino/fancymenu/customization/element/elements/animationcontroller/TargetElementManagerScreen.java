@@ -49,7 +49,7 @@ public class TargetElementManagerScreen extends CellScreen {
         } else {
             for (AnimationControllerElement.TargetElement target : this.targets) {
                 AbstractEditorElement e = this.parentLayoutEditor.getElementByInstanceIdentifier(target.targetElementId);
-                MutableComponent label = (e != null) ? e.element.getDisplayName().copy() : Component.empty();
+                MutableComponent label = (e != null) ? e.element.getDisplayName().copy() : Component.literal("---");
                 label = label.setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()));
                 label = label.append(Component.literal(" [" + target.targetElementId + "]").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().generic_text_base_color.getColorInt())));
                 this.addLabelCell(label);
@@ -66,6 +66,7 @@ public class TargetElementManagerScreen extends CellScreen {
             ElementSelectorScreen selector = new ElementSelectorScreen(
                     this.parentLayoutEditor,
                     this,
+                    this.getElementIds(),
                     selectedElement -> {
                         if (selectedElement != null) {
                             String elementId = selectedElement.element.getInstanceIdentifier();
@@ -91,6 +92,7 @@ public class TargetElementManagerScreen extends CellScreen {
             ElementSelectorScreen selector = new ElementSelectorScreen(
                     this.parentLayoutEditor,
                     this,
+                    this.getElementIds(),
                     selectedElement -> {
                         if (selectedElement != null) {
                             String elementId = selectedElement.element.getInstanceIdentifier();
@@ -105,6 +107,12 @@ public class TargetElementManagerScreen extends CellScreen {
         });
 
         this.addRightSideDefaultSpacer();
+    }
+
+    protected List<String> getElementIds() {
+        List<String> ids = new ArrayList<>();
+        this.targets.forEach(targetElement -> ids.add(targetElement.targetElementId));
+        return ids;
     }
 
     @Override
