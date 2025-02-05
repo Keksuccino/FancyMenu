@@ -36,6 +36,7 @@ CHANGELOG | FANCYMENU v3.4.0 [ W I P !! Not public yet !! ]
   - Enabling this will make the element only load once per game session (game restart = new game session)
   - The element stays active/visible until the user opens a new screen
 - Added ability to set the weight of audio tracks in the Audio element to control how likely each track is to be selected in shuffle mode (#1020)
+- Renamed the "Random Line of TXT File" placeholder to "Random Text"
 - Improved the UI "Auto" scale to choose a more fitting UI scale for 1080p, 2K and 4K monitors (scales FancyMenu's menu bar and context menus)
   - The UI will now show at scale 2 when the window width is bigger than 3000 pixels OR the height is bigger than 1700 pixels
   - The changes make FM's UI show at scale 1 for 1080p and 2K monitors and at scale 2 for 4K monitors
