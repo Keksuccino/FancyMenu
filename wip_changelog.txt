@@ -26,7 +26,7 @@ CHANGELOG | FANCYMENU v3.4.0 [ W I P !! Not public yet !! ]
 - Added "Sticky Anchor" mode for elements that makes them always keep the same distance to their anchor, no matter the element's size
 - Added "Auto Sizing" mode for elements that makes them adjust their size automatically when the screen size changes (#838)
 - Added "Plain Text" Markdown formatting code that ignores all formatting codes inside (similar to code block, but without the visible block) (#983)
-- Added "Browser" element to _browse the web_ (#850)
+- Added "Browser" element to _browse the web_ (for MC 1.20.1+) (#850)
 - Added "Color" background type, which is basically the one from Drippy, but ported to the base mod (#985)
 - Added "Item" element to render items (sword, potato, etc.) in menus (#521)
 - Added a parallax effect feature to the "Image" menu background type (supports inverted movement and customizable intensity) (#735)
