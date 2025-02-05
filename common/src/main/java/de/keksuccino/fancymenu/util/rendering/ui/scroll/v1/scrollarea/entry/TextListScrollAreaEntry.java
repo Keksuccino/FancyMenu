@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -25,15 +25,15 @@ public class TextListScrollAreaEntry extends ScrollAreaEntry {
     }
 
     @Override
-    public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        super.render(matrix, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
 
         int centerY = this.getY() + (this.getHeight() / 2);
 
-        renderListingDot(matrix, this.getX() + 5, centerY - 2, this.listDotColor);
+        renderListingDot(graphics, this.getX() + 5, centerY - 2, this.listDotColor);
 
-        this.font.draw(matrix, this.text, (float)(this.getX() + 5 + 4 + 3), (float)(centerY - (this.font.lineHeight / 2)), -1);
+        graphics.drawString(this.font, this.text, (this.getX() + 5 + 4 + 3), (centerY - (this.font.lineHeight / 2)), -1, false);
 
     }
 

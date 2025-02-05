@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen.resource;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
@@ -16,7 +15,7 @@ import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
 import de.keksuccino.fancymenu.util.file.type.types.TextFileType;
 import de.keksuccino.fancymenu.util.file.type.types.VideoFileType;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseFileScreen;
@@ -72,7 +71,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
     @NotNull
     public static ResourceChooserScreen<Resource, FileType<Resource>> generic(@Nullable FileTypeGroup<FileType<Resource>> fileTypes, @Nullable FileFilter fileFilter, @NotNull Consumer<String> resourceSourceCallback) {
-        return new ResourceChooserScreen<>(Components.translatable("fancymenu.resources.chooser_screen.choose.generic"), fileTypes, fileFilter, resourceSourceCallback);
+        return new ResourceChooserScreen<>(Component.translatable("fancymenu.resources.chooser_screen.choose.generic"), fileTypes, fileFilter, resourceSourceCallback);
     }
 
     @NotNull
@@ -87,7 +86,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
     @NotNull
     public static ResourceChooserScreen<ITexture, ImageFileType> image(@Nullable FileFilter fileFilter, @NotNull Consumer<String> resourceSourceCallback) {
-        return image(Components.translatable("fancymenu.resources.chooser_screen.choose.image"), fileFilter, resourceSourceCallback);
+        return image(Component.translatable("fancymenu.resources.chooser_screen.choose.image"), fileFilter, resourceSourceCallback);
     }
 
     @NotNull
@@ -97,7 +96,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
     @NotNull
     public static ResourceChooserScreen<IAudio, AudioFileType> audio(@Nullable FileFilter fileFilter, @NotNull Consumer<String> resourceSourceCallback) {
-        return audio(Components.translatable("fancymenu.resources.chooser_screen.choose.audio"), fileFilter, resourceSourceCallback);
+        return audio(Component.translatable("fancymenu.resources.chooser_screen.choose.audio"), fileFilter, resourceSourceCallback);
     }
 
     @NotNull
@@ -107,7 +106,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
     @NotNull
     public static ResourceChooserScreen<IVideo, VideoFileType> video(@Nullable FileFilter fileFilter, @NotNull Consumer<String> resourceSourceCallback) {
-        return video(Components.translatable("fancymenu.resources.chooser_screen.choose.video"), fileFilter, resourceSourceCallback);
+        return video(Component.translatable("fancymenu.resources.chooser_screen.choose.video"), fileFilter, resourceSourceCallback);
     }
 
     @NotNull
@@ -117,7 +116,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
     @NotNull
     public static ResourceChooserScreen<IText, TextFileType> text(@Nullable FileFilter fileFilter, @NotNull Consumer<String> resourceSourceCallback) {
-        return text(Components.translatable("fancymenu.resources.chooser_screen.choose.text"), fileFilter, resourceSourceCallback);
+        return text(Component.translatable("fancymenu.resources.chooser_screen.choose.text"), fileFilter, resourceSourceCallback);
     }
 
     public ResourceChooserScreen(@NotNull Component title, @Nullable FileTypeGroup<F> allowedFileTypes, @Nullable FileFilter fileFilter, @NotNull Consumer<String> resourceSourceCallback) {
@@ -126,7 +125,6 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
         this.fileFilter = fileFilter;
         this.resourceSourceCallback = resourceSourceCallback;
     }
-
 
     @Override
     protected void initCells() {
@@ -174,7 +172,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
         this.addCellGroupEndSpacerCell();
 
-        this.addLabelCell(Components.translatable("fancymenu.resources.chooser_screen.source"));
+        this.addLabelCell(Component.translatable("fancymenu.resources.chooser_screen.source"));
 
         TextInputCell sourceInputCell = this.addTextInputCell(null, !isLegacyLocal, !isLegacyLocal);
         this.editBox = sourceInputCell.editBox;
@@ -185,6 +183,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
         this.editBox.setHighlightPos(0);
         this.editBox.applyInputPrefixSuffixCharacterRenderFormatter();
         this.editBox.setEditable(!isLegacyLocal);
+        this.editBox.setDeleteAllAllowed(false);
         this.editBox.setResponder(s -> this.resourceSource = s);
         sourceInputCell.setEditorCallback((s, textInputCell) -> {
             if (isLocal && !isLegacyLocal && !s.startsWith("/config/fancymenu/assets/")) {
@@ -195,7 +194,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
         sourceInputCell.setEditorPresetTextSupplier(consumes -> consumes.editBox.getValueWithoutPrefixSuffix());
 
         if (isLocal) {
-            this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Components.translatable("fancymenu.resources.chooser_screen.choose_local"), var1 -> {
+            this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.resources.chooser_screen.choose_local"), var1 -> {
                 File startDir = LayoutHandler.ASSETS_DIR;
                 String path = this.resourceSource;
                 if (path != null) {
@@ -221,9 +220,9 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
 
         this.addCellGroupEndSpacerCell();
 
-        this.addLabelCell(Components.translatable("fancymenu.resources.chooser_screen.allowed_file_types"));
+        this.addLabelCell(Component.translatable("fancymenu.resources.chooser_screen.allowed_file_types"));
 
-        MutableComponent typesComponent = Components.translatable("fancymenu.file_browser.file_type.types.all").append(" (*)");
+        MutableComponent typesComponent = Component.translatable("fancymenu.file_browser.file_type.types.all").append(" (*)");
         if (this.allowedFileTypes != null) {
             String types = "";
             for (FileType<?> type : this.allowedFileTypes.getFileTypes()) {
@@ -233,8 +232,8 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
                 }
             }
             Component fileTypeDisplayName = this.allowedFileTypes.getDisplayName();
-            if (fileTypeDisplayName == null) fileTypeDisplayName = Components.empty();
-            typesComponent = Components.empty().append(fileTypeDisplayName).append(Components.literal(" (")).append(Components.literal(types)).append(Components.literal(")"));
+            if (fileTypeDisplayName == null) fileTypeDisplayName = Component.empty();
+            typesComponent = Component.empty().append(fileTypeDisplayName).append(Component.literal(" (")).append(Component.literal(types)).append(Component.literal(")"));
         }
         this.addLabelCell(typesComponent.setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
 
@@ -245,14 +244,14 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
     }
 
     @Override
-    public void render(PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.updateLegacyLocalWarning();
         this.updateNoExtensionWarning();
 
-        super.render(pose, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
 
-        this.renderWarning(pose, mouseX, mouseY, partial);
+        this.renderWarning(graphics, mouseX, mouseY, partial);
 
         this.updateInputFieldTooltips();
 
@@ -279,7 +278,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
         }
     }
 
-    protected void renderWarning(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    protected void renderWarning(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         if ((this.showWarningLegacyLocal || this.showWarningNoExtension) && (this.editBox != null)) {
             ResourceLocation loc = WARNING_TEXTURE.getResourceLocation();
             if (loc != null) {
@@ -288,10 +287,9 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
                 int x = this.editBox.x - w - 2;
                 int y = this.editBox.y + 2;
                 this.warningHovered = UIBase.isXYInArea(mouseX, mouseY, x, y, w, h);
-                RenderingUtils.setShaderColor(UIBase.getUIColorTheme().warning_text_color, 1.0F);
-                RenderingUtils.bindTexture(loc);
-                blit(pose, x, y, 0.0F, 0.0F, w, h, w, h);
-                RenderingUtils.resetShaderColor();
+                RenderingUtils.setShaderColor(graphics, UIBase.getUIColorTheme().warning_text_color, 1.0F);
+                graphics.blit(loc, x, y, 0.0F, 0.0F, w, h, w, h);
+                RenderingUtils.resetShaderColor(graphics);
             }
         }
     }

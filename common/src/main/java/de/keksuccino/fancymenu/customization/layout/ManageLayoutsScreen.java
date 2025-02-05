@@ -1,11 +1,11 @@
 package de.keksuccino.fancymenu.customization.layout;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.cycle.ValueCycle;
 import de.keksuccino.fancymenu.util.file.FileUtils;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
@@ -24,7 +24,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ManageLayoutsScreen extends Screen {
+public class ManageLayoutsScreen extends ModernScreen {
 
     protected Consumer<List<Layout>> callback;
     protected List<Layout> layouts;
@@ -42,7 +42,7 @@ public class ManageLayoutsScreen extends Screen {
 
     public ManageLayoutsScreen(@NotNull List<Layout> layouts, @Nullable Screen layoutTargetScreen, @NotNull Consumer<List<Layout>> callback) {
 
-        super(Components.translatable("fancymenu.layout.manage"));
+        super(Component.translatable("fancymenu.layout.manage"));
 
         this.layouts = layouts;
         this.layoutTargetScreen = layoutTargetScreen;
@@ -56,20 +56,20 @@ public class ManageLayoutsScreen extends Screen {
 
         super.init();
 
-        this.sortingButton = new ExtendedButton(0, 0, 150, this.font.lineHeight + 4, Components.literal(""), (button) -> {
+        this.sortingButton = new ExtendedButton(0, 0, 150, this.font.lineHeight + 4, Component.literal(""), (button) -> {
             this.sortBy.next();
             this.updateLayoutScrollArea();
         }).setLabelSupplier(consumes -> this.sortBy.current().getCycleComponent());
         this.addWidget(this.sortingButton);
         UIBase.applyDefaultWidgetSkinTo(this.sortingButton);
 
-        this.doneButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.guicomponents.done"), (button) -> {
+        this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
             this.callback.accept(this.layouts);
         });
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
-        this.editButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.layout.manage.edit"), (button) -> {
+        this.editButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.layout.manage.edit"), (button) -> {
             LayoutScrollEntry e = this.getSelectedEntry();
             if (e != null) {
                 LayoutHandler.openLayoutEditor(e.layout, e.layout.isUniversalLayout() ? null : this.layoutTargetScreen);
@@ -78,7 +78,7 @@ public class ManageLayoutsScreen extends Screen {
         this.addWidget(this.editButton);
         UIBase.applyDefaultWidgetSkinTo(this.editButton);
 
-        this.deleteButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.layout.manage.delete"), (button) -> {
+        this.deleteButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.layout.manage.delete"), (button) -> {
             LayoutScrollEntry e = this.getSelectedEntry();
             if (e != null) {
                 Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings(call -> {
@@ -94,7 +94,7 @@ public class ManageLayoutsScreen extends Screen {
         this.addWidget(this.deleteButton);
         UIBase.applyDefaultWidgetSkinTo(this.deleteButton);
 
-        this.openInTextEditorButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.layout.manage.open_in_text_editor"), (button) -> {
+        this.openInTextEditorButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.layout.manage.open_in_text_editor"), (button) -> {
             LayoutScrollEntry e = this.getSelectedEntry();
             if ((e != null) && (e.layout.layoutFile != null)) {
                 FileUtils.openFile(e.layout.layoutFile);
@@ -103,7 +103,7 @@ public class ManageLayoutsScreen extends Screen {
         this.addWidget(this.openInTextEditorButton);
         UIBase.applyDefaultWidgetSkinTo(this.openInTextEditorButton);
 
-        this.toggleStatusButton = new ExtendedButton(0, 0, 150, 20, Components.literal(""), (button) -> {
+        this.toggleStatusButton = new ExtendedButton(0, 0, 150, 20, Component.literal(""), (button) -> {
             LayoutScrollEntry e = this.getSelectedEntry();
             if (e != null) {
                 e.layout.setEnabled(!e.layout.isEnabled(), false);
@@ -126,49 +126,49 @@ public class ManageLayoutsScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         RenderSystem.enableBlend();
 
-        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(pose, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        this.font.draw(pose, Components.translatable("fancymenu.layout.manage.layouts"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, Component.translatable("fancymenu.layout.manage.layouts"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
         this.layoutListScrollArea.setWidth((this.width / 2) - 40, true);
         this.layoutListScrollArea.setHeight(this.height - 85, true);
         this.layoutListScrollArea.setX(20, true);
         this.layoutListScrollArea.setY(50 + 15, true);
-        this.layoutListScrollArea.render(pose, mouseX, mouseY, partial);
+        this.layoutListScrollArea.render(graphics, mouseX, mouseY, partial);
 
         this.sortingButton.setWidth(this.font.width(this.sortingButton.getMessage()) + 10);
         this.sortingButton.x = (this.layoutListScrollArea.getXWithBorder() + this.layoutListScrollArea.getWidthWithBorder() - this.sortingButton.getWidth());
         this.sortingButton.y = (this.layoutListScrollArea.getYWithBorder() - 5 - this.sortingButton.getHeight());
-        this.sortingButton.render(pose, mouseX, mouseY, partial);
+        this.sortingButton.render(graphics.pose(), mouseX, mouseY, partial);
 
         this.doneButton.x = (this.width - 20 - this.doneButton.getWidth());
         this.doneButton.y = (this.height - 20 - 20);
-        this.doneButton.render(pose, mouseX, mouseY, partial);
+        this.doneButton.render(graphics.pose(), mouseX, mouseY, partial);
 
         this.openInTextEditorButton.x = (this.width - 20 - this.openInTextEditorButton.getWidth());
         this.openInTextEditorButton.y = (this.doneButton.y - 15 - 20);
-        this.openInTextEditorButton.render(pose, mouseX, mouseY, partial);
+        this.openInTextEditorButton.render(graphics.pose(), mouseX, mouseY, partial);
 
         this.deleteButton.x = (this.width - 20 - this.deleteButton.getWidth());
         this.deleteButton.y = (this.openInTextEditorButton.y - 5 - 20);
-        this.deleteButton.render(pose, mouseX, mouseY, partial);
+        this.deleteButton.render(graphics.pose(), mouseX, mouseY, partial);
 
         this.editButton.x = (this.width - 20 - this.editButton.getWidth());
         this.editButton.y = (this.deleteButton.y - 5 - 20);
-        this.editButton.render(pose, mouseX, mouseY, partial);
+        this.editButton.render(graphics.pose(), mouseX, mouseY, partial);
 
         this.toggleStatusButton.x = (this.width - 20 - this.toggleStatusButton.getWidth());
         this.toggleStatusButton.y = (this.editButton.y - 5 - 20);
-        this.toggleStatusButton.render(pose, mouseX, mouseY, partial);
+        this.toggleStatusButton.render(graphics.pose(), mouseX, mouseY, partial);
 
-        super.render(pose, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
 
     }
 
@@ -197,7 +197,7 @@ public class ManageLayoutsScreen extends Screen {
             this.layoutListScrollArea.addEntry(e);
         }
         if (this.layoutListScrollArea.getEntries().isEmpty()) {
-            this.layoutListScrollArea.addEntry(new TextScrollAreaEntry(this.layoutListScrollArea, Components.translatable("fancymenu.layout.manage.no_layouts_found").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())), (entry) -> {}));
+            this.layoutListScrollArea.addEntry(new TextScrollAreaEntry(this.layoutListScrollArea, Component.translatable("fancymenu.layout.manage.no_layouts_found").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())), (entry) -> {}));
         }
     }
 
@@ -206,17 +206,17 @@ public class ManageLayoutsScreen extends Screen {
         public Layout layout;
 
         public LayoutScrollEntry(ScrollArea parent, @NotNull Layout layout, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Components.literal(""), UIBase.getUIColorTheme().listing_dot_color_1.getColor(), onClick);
+            super(parent, Component.literal(""), UIBase.getUIColorTheme().listing_dot_color_1.getColor(), onClick);
             this.layout = layout;
             this.updateName();
         }
 
         protected void updateName() {
             Style style = this.layout.getStatus().getValueComponentStyle();
-            MutableComponent c = Components.literal(layout.getLayoutName()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
-            c.append(Components.literal(" (").setStyle(style));
+            MutableComponent c = Component.literal(layout.getLayoutName()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
+            c.append(Component.literal(" (").setStyle(style));
             c.append(this.layout.getStatus().getValueComponent());
-            c.append(Components.literal(")").setStyle(style));
+            c.append(Component.literal(")").setStyle(style));
             this.setText(c);
         }
 

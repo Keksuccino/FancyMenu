@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.customization.element.elements.playerentity.model
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.textures.*;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
@@ -94,7 +95,7 @@ public class PlayerEntityElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (this.shouldRender()) {
 
@@ -119,7 +120,7 @@ public class PlayerEntityElement extends AbstractElement {
             if (props.isBaby) mouseOffsetY += (this.baseHeight / 2) - mouseOffsetY; //not exactly the same eye pos as for adult size, but good enough
             this.renderPlayerEntity(x, y, (int)scale, (float)x - mouseX + mouseOffsetX, (float)y - mouseY + mouseOffsetY, props);
 
-            RenderingUtils.resetShaderColor();
+            RenderingUtils.resetShaderColor(graphics);
 
         }
 

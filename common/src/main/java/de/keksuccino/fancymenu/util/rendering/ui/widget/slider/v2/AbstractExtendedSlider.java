@@ -5,7 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
@@ -23,8 +23,6 @@ import java.awt.*;
 
 @SuppressWarnings("unused")
 public abstract class AbstractExtendedSlider extends AbstractSliderButton implements IExtendedWidget, NavigatableWidget {
-
-    protected static final ResourceLocation SLIDER_LOCATION = new ResourceLocation("textures/gui/widgets.png");
 
     @Nullable
     protected DrawableColor sliderBackgroundColorNormal;
@@ -48,104 +46,149 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     @Nullable
     protected SliderValueUpdateListener sliderValueUpdateListener;
     @NotNull
-    protected ConsumingSupplier<AbstractExtendedSlider, Component> labelSupplier = slider -> Components.literal(slider.getValueDisplayText());
+    protected ConsumingSupplier<AbstractExtendedSlider, Component> labelSupplier = slider -> Component.literal(slider.getValueDisplayText());
     protected boolean focusable = true;
     protected boolean navigatable = true;
+    @Nullable
+    protected ConsumingSupplier<AbstractExtendedSlider, Boolean> isActiveSupplier = null;
 
     public AbstractExtendedSlider(int x, int y, int width, int height, Component label, double value) {
         super(x, y, width, height, label, value);
     }
 
+    public int getX() {
+        return this.x;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public int getY() {
+        return this.y;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
+
+    public int getWidth() {
+        return this.width;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public int getHeight() {
+        return this.height;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
     @Override
     public void renderButton(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
-        this.renderBackground(pose, mouseX, mouseY, partial);
-        RenderingUtils.resetShaderColor();
+        GuiGraphics graphics = GuiGraphics.currentGraphics();
+        
+        this.renderBackground(graphics, mouseX, mouseY, partial);
+        RenderingUtils.resetShaderColor(graphics);
 
-        this.renderHandle(pose, mouseX, mouseY, partial);
-        RenderingUtils.resetShaderColor();
+        this.renderHandle(graphics, mouseX, mouseY, partial);
+        RenderingUtils.resetShaderColor(graphics);
 
-        this.renderLabel(pose, mouseX, mouseY, partial);
-        RenderingUtils.resetShaderColor();
+        this.renderLabel(graphics, mouseX, mouseY, partial);
+        RenderingUtils.resetShaderColor(graphics);
 
     }
 
-    protected void renderBackground(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-        boolean renderVanilla = this.renderColorBackground(pose, mouseX, mouseY, partial);
-        if (renderVanilla) renderVanilla = this.getAsCustomizableSlider().renderSliderBackgroundFancyMenu(pose, this, true);
-        if (renderVanilla) this.renderVanillaBackground(pose, mouseX, mouseY, partial);
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        if (this.isActiveSupplier != null) this.active = this.isActiveSupplier.get(this);
+        super.render(graphics.pose(), mouseX, mouseY, partial);
+    }
+
+    @Deprecated
+    @Override
+    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        this.render(GuiGraphics.currentGraphics(), mouseX, mouseY, partial);
+    }
+
+    protected void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        boolean renderVanilla = this.renderColorBackground(graphics, mouseX, mouseY, partial);
+        if (renderVanilla) renderVanilla = this.getAsCustomizableSlider().renderSliderBackgroundFancyMenu(graphics, this, true);
+        if (renderVanilla) this.renderVanillaBackground(graphics, mouseX, mouseY, partial);
     }
 
     /**
      * Returns if the slider should render its Vanilla background (true) or not (false).
      */
-    protected boolean renderColorBackground(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    protected boolean renderColorBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         RenderSystem.enableBlend();
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
         if (this.sliderBackgroundColorNormal != null) {
-            fill(pose, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), this.sliderBackgroundColorNormal.getColorInt());
+            graphics.fill(this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), this.sliderBackgroundColorNormal.getColorInt());
             if (this.sliderBorderColorNormal != null) {
-                UIBase.renderBorder(pose, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), 1, this.sliderBorderColorNormal.getColorInt(), true, true, true, true);
+                UIBase.renderBorder(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), 1, this.sliderBorderColorNormal.getColorInt(), true, true, true, true);
             }
             return false;
         }
         return true;
     }
 
-    protected void renderVanillaBackground(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-        RenderSystem.setShaderTexture(0, WIDGETS_LOCATION);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
+    protected void renderVanillaBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
         RenderSystem.enableBlend();
         RenderSystem.enableDepthTest();
-        RenderingUtils.blitNineSliced_Vanilla(pose, this.x, this.y, this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getBackgroundTextureY());
-        RenderingUtils.resetShaderColor();
+        graphics.blitNineSliced(WIDGETS_LOCATION, this.x, this.y, this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getBackgroundTextureY());
+        RenderingUtils.resetShaderColor(graphics);
     }
 
     protected int getBackgroundTextureY() {
         return 46;
     }
 
-    protected void renderHandle(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-        boolean renderVanilla = this.renderColorHandle(pose, mouseX, mouseY, partial);
-        if (renderVanilla) renderVanilla = this.getAsCustomizableWidget().renderCustomBackgroundFancyMenu(this, pose, this.getHandleX(), this.y, this.getHandleWidth(), this.getHeight());
-        if (renderVanilla) this.renderVanillaHandle(pose, mouseX, mouseY, partial);
+    protected void renderHandle(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        boolean renderVanilla = this.renderColorHandle(graphics, mouseX, mouseY, partial);
+        if (renderVanilla) renderVanilla = this.getAsCustomizableWidget().renderCustomBackgroundFancyMenu(this, graphics, this.getHandleX(), this.y, this.getHandleWidth(), this.getHeight());
+        if (renderVanilla) this.renderVanillaHandle(graphics, mouseX, mouseY, partial);
     }
 
     /**
      * Returns if the slider should render its Vanilla handle (true) or not (false).
      */
-    protected boolean renderColorHandle(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    protected boolean renderColorHandle(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         RenderSystem.enableBlend();
         int handleX = this.getHandleX();
         int handleWidth = this.getHandleWidth();
         if (this.active) {
             if (this.isHoveredOrFocused()) {
                 if (this.sliderHandleColorHover != null) {
-                    fill(pose, handleX, this.y, handleX + handleWidth, this.y + this.getHeight(), this.sliderHandleColorHover.getColorInt());
+                    graphics.fill(handleX, this.y, handleX + handleWidth, this.y + this.getHeight(), this.sliderHandleColorHover.getColorInt());
                     return false;
                 }
             } else {
                 if (this.sliderHandleColorNormal != null) {
-                    fill(pose, handleX, this.y, handleX + handleWidth, this.y + this.getHeight(), this.sliderHandleColorNormal.getColorInt());
+                    graphics.fill(handleX, this.y, handleX + handleWidth, this.y + this.getHeight(), this.sliderHandleColorNormal.getColorInt());
                     return false;
                 }
             }
         } else {
             if (this.sliderHandleColorInactive != null) {
-                fill(pose, handleX, this.y, handleX + handleWidth, this.y + this.getHeight(), this.sliderHandleColorInactive.getColorInt());
+                graphics.fill(handleX, this.y, handleX + handleWidth, this.y + this.getHeight(), this.sliderHandleColorInactive.getColorInt());
                 return false;
             }
         }
         return true;
     }
 
-    protected void renderVanillaHandle(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-        RenderSystem.setShaderTexture(0, WIDGETS_LOCATION);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
+    protected void renderVanillaHandle(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
         RenderSystem.enableBlend();
         RenderSystem.enableDepthTest();
-        RenderingUtils.blitNineSliced_Vanilla(pose, this.getSliderHandleX(), this.y, this.getHandleWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getHandleTextureY());
-        RenderingUtils.resetShaderColor();
+        graphics.blitNineSliced(WIDGETS_LOCATION, this.getSliderHandleX(), this.y, this.getHandleWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getHandleTextureY());
+        RenderingUtils.resetShaderColor(graphics);
     }
 
     protected int getSliderHandleX() {
@@ -160,9 +203,9 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
         return 46 + i * 20;
     }
 
-    protected void renderLabel(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    protected void renderLabel(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         int textColor = this.active ? this.labelColorNormal.getColorInt() : this.labelColorInactive.getColorInt();
-        this.renderScrollingLabel(this, pose, Minecraft.getInstance().font, 2, this.labelShadow, RenderingUtils.replaceAlphaInColor(textColor, this.alpha));
+        this.renderScrollingLabel(this, graphics, Minecraft.getInstance().font, 2, this.labelShadow, RenderingUtils.replaceAlphaInColor(textColor, this.alpha));
     }
 
     public int getHandleX() {
@@ -176,7 +219,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     @Override
     public void updateMessage() {
         Component label = this.labelSupplier.get(this);
-        if (label == null) label = Components.empty();
+        if (label == null) label = Component.empty();
         this.setMessage(label);
     }
 
@@ -207,6 +250,11 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
 
     public double getValue() {
         return this.value;
+    }
+
+    public AbstractExtendedSlider setIsActiveSupplier(@Nullable ConsumingSupplier<AbstractExtendedSlider, Boolean> supplier) {
+        this.isActiveSupplier = supplier;
+        return this;
     }
 
     @Nullable

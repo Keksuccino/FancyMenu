@@ -1,14 +1,13 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.ClassExtender;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
-import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -40,7 +39,7 @@ public interface CustomizableWidget {
     /**
      * Returns if the widget should render its Vanilla background (true) or not (false).
      */
-    default boolean renderCustomBackgroundFancyMenu(@NotNull AbstractWidget widget, @NotNull PoseStack pose, int x, int y, int width, int height) {
+    default boolean renderCustomBackgroundFancyMenu(@NotNull AbstractWidget widget, @NotNull GuiGraphics graphics, int x, int y, int width, int height) {
         RenderableResource customBackground;
         RenderableResource customBackgroundNormal = this.getCustomBackgroundNormalFancyMenu();
         RenderableResource customBackgroundHover = this.getCustomBackgroundHoverFancyMenu();
@@ -65,17 +64,17 @@ public interface CustomizableWidget {
             ResourceLocation location = customBackground.getResourceLocation();
             if (location != null) {
                 renderVanilla = false;
-                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)widget).getAlphaFancyMenu());
+                graphics.setColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)widget).getAlphaFancyMenu());
                 RenderSystem.enableBlend();
-                RenderingUtils.bindTexture(location);
+                graphics.setColor(1.0F, 1.0F, 1.0F, ((IMixinAbstractWidget)widget).getAlphaFancyMenu());
                 if ((widget instanceof CustomizableSlider s) && s.isNineSliceCustomSliderHandle_FancyMenu()) {
-                    RenderingUtils.blitNineSliced(pose, x, y, width, height, s.getNineSliceSliderHandleBorderX_FancyMenu(), s.getNineSliceSliderHandleBorderY_FancyMenu(), s.getNineSliceSliderHandleBorderX_FancyMenu(), s.getNineSliceSliderHandleBorderY_FancyMenu(), customBackground.getWidth(), customBackground.getHeight(), 0, 0, customBackground.getWidth(), customBackground.getHeight());
+                    RenderingUtils.blitNineSlicedTexture(graphics, location, x, y, width, height, customBackground.getWidth(), customBackground.getHeight(), s.getNineSliceSliderHandleBorderY_FancyMenu(), s.getNineSliceSliderHandleBorderX_FancyMenu(), s.getNineSliceSliderHandleBorderY_FancyMenu(), s.getNineSliceSliderHandleBorderX_FancyMenu());
                 } else if (!(widget instanceof CustomizableSlider) && this.isNineSliceCustomBackgroundTexture_FancyMenu()) {
-                    RenderingUtils.blitNineSliced(pose, x, y, width, height, getNineSliceCustomBackgroundBorderX_FancyMenu(), getNineSliceCustomBackgroundBorderY_FancyMenu(), getNineSliceCustomBackgroundBorderX_FancyMenu(), getNineSliceCustomBackgroundBorderY_FancyMenu(), customBackground.getWidth(), customBackground.getHeight(), 0, 0, customBackground.getWidth(), customBackground.getHeight());
+                    RenderingUtils.blitNineSlicedTexture(graphics, location, x, y, width, height, customBackground.getWidth(), customBackground.getHeight(), getNineSliceCustomBackgroundBorderY_FancyMenu(), getNineSliceCustomBackgroundBorderX_FancyMenu(), getNineSliceCustomBackgroundBorderY_FancyMenu(), getNineSliceCustomBackgroundBorderX_FancyMenu());
                 } else {
-                    GuiComponent.blit(pose, x, y, 0.0F, 0.0F, width, height, width, height);
+                    graphics.blit(location, x, y, 0.0F, 0.0F, width, height, width, height);
                 }
-                RenderingUtils.resetShaderColor();
+                RenderingUtils.resetShaderColor(graphics);
             }
         }
         return renderVanilla;
@@ -159,10 +158,20 @@ public interface CustomizableWidget {
     @Nullable
     IAudio getCustomClickSoundFancyMenu();
 
+    default void stopCustomClickSoundFancyMenu() {
+        IAudio a = this.getCustomClickSoundFancyMenu();
+        if (a != null) a.stop();
+    }
+
     void setHoverSoundFancyMenu(@Nullable IAudio sound);
 
     @Nullable
     IAudio getHoverSoundFancyMenu();
+
+    default void stopHoverSoundFancyMenu() {
+        IAudio a = this.getHoverSoundFancyMenu();
+        if (a != null) a.stop();
+    }
 
     void setHiddenFancyMenu(boolean hidden);
 

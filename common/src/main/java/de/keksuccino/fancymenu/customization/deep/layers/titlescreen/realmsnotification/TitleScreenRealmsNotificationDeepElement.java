@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.Util;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -22,7 +23,7 @@ public class TitleScreenRealmsNotificationDeepElement extends AbstractDeepElemen
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (!this.shouldRender()) return;
 
@@ -36,14 +37,14 @@ public class TitleScreenRealmsNotificationDeepElement extends AbstractDeepElemen
         this.posOffsetY = realmsButtonY + 4;
 
         if (isEditor()) {
-            this.drawIcons(pose, mouseX, mouseY);
+            this.drawIcons(graphics, mouseX, mouseY);
         }
 
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
 
     }
 
-    private void drawIcons(PoseStack pose, int mouseX, int mouseY) {
+    private void drawIcons(GuiGraphics graphics, int mouseX, int mouseY) {
 
         int $$5 = getScreenHeight() / 4 + 48;
         int $$6 = getScreenWidth() / 2 + 80;
@@ -56,14 +57,14 @@ public class TitleScreenRealmsNotificationDeepElement extends AbstractDeepElemen
 //        $$8 += 14;
 
         RenderSystem.setShaderTexture(0, NEWS_ICON_LOCATION);
-        pose.pushPose();
-        pose.scale(0.4F, 0.4F, 0.4F);
-        GuiComponent.blit(pose, (int)((double)($$6 + 2 - $$8) * 2.5D), (int)((double)$$7 * 2.5D), 0.0F, 0.0F, 40, 40, 40, 40);
-        pose.popPose();
+        graphics.pose().pushPose();
+        graphics.pose().scale(0.4F, 0.4F, 0.4F);
+        GuiComponent.blit(graphics.pose(), (int)((double)($$6 + 2 - $$8) * 2.5D), (int)((double)$$7 * 2.5D), 0.0F, 0.0F, 40, 40, 40, 40);
+        graphics.pose().popPose();
         $$8 += 14;
 
         RenderSystem.setShaderTexture(0, INVITE_ICON_LOCATION);
-        GuiComponent.blit(pose, $$6 - $$8, $$7 - 6, 0.0F, 0.0F, 15, 25, 31, 25);
+        GuiComponent.blit(graphics.pose(), $$6 - $$8, $$7 - 6, 0.0F, 0.0F, 15, 25, 31, 25);
         $$8 += 16;
 
         RenderSystem.setShaderTexture(0, TRIAL_ICON_LOCATION);
@@ -71,7 +72,7 @@ public class TitleScreenRealmsNotificationDeepElement extends AbstractDeepElemen
         if ((Util.getMillis() / 800L & 1L) == 1L) {
             $$9 = 8;
         }
-        GuiComponent.blit(pose, $$6 + 4 - $$8, $$7 + 4, 0.0F, (float)$$9, 8, 8, 8, 16);
+        GuiComponent.blit(graphics.pose(), $$6 + 4 - $$8, $$7 + 4, 0.0F, (float)$$9, 8, 8, 8, 16);
 
     }
 

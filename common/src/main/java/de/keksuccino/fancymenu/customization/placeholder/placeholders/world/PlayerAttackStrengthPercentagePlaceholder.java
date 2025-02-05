@@ -4,7 +4,6 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import org.jetbrains.annotations.NotNull;
 
-//TODO übernehmen
 public class PlayerAttackStrengthPercentagePlaceholder extends AbstractWorldIntegerPlaceholder {
 
     public PlayerAttackStrengthPercentagePlaceholder() {

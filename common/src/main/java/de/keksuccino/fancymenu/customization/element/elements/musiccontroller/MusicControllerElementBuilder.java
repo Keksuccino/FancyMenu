@@ -5,11 +5,13 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.awt.*;
 
 //TODO übernehmen
 public class MusicControllerElementBuilder extends ElementBuilder<MusicControllerElement, MusicControllerEditorElement> {
@@ -26,6 +28,7 @@ public class MusicControllerElementBuilder extends ElementBuilder<MusicControlle
         MusicControllerElement i = new MusicControllerElement(this);
         i.baseWidth = 100;
         i.baseHeight = 100;
+        i.inEditorColor = DrawableColor.of(new Color(124, 217, 2));
         return i;
     }
 

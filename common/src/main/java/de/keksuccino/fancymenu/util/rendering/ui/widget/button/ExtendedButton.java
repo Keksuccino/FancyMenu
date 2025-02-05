@@ -7,7 +7,7 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinButton;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
@@ -25,7 +25,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class ExtendedButton extends Button implements IExtendedWidget, UniqueWidget, NavigatableWidget {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -36,7 +36,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     protected DrawableColor labelBaseColorInactive = DrawableColor.of(new Color(0xA0A0A0));
     protected boolean labelShadow = true;
     @NotNull
-    protected ConsumingSupplier<ExtendedButton, Component> labelSupplier = consumes -> Components.empty();
+    protected ConsumingSupplier<ExtendedButton, Component> labelSupplier = consumes -> Component.empty();
     protected ConsumingSupplier<ExtendedButton, Tooltip> tooltipSupplier = null;
     protected boolean forceDefaultTooltipStyle = false;
     @Nullable
@@ -59,88 +59,114 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     protected String identifier;
 
     public ExtendedButton(int x, int y, int width, int height, @NotNull String label, @NotNull OnPress onPress) {
-        super(x, y, width, height, Components.literal(""), onPress, NO_TOOLTIP);
-        this.setLabel(Components.literal(label));
-    }
-
-    public ExtendedButton(int x, int y, int width, int height, @NotNull String label, @NotNull OnPress onPress, OnTooltip onTooltip) {
-        super(x, y, width, height, Components.literal(""), onPress, onTooltip);
-        this.setLabel(Components.literal(label));
+        super(x, y, width, height, Component.literal(""), onPress);
+        this.setLabel(Component.literal(label));
     }
 
     public ExtendedButton(int x, int y, int width, int height, @NotNull Component label, @NotNull OnPress onPress) {
-        super(x, y, width, height, Components.literal(""), onPress, NO_TOOLTIP);
+        super(x, y, width, height, Component.literal(""), onPress);
         this.setLabel(label);
     }
 
-    public ExtendedButton(int x, int y, int width, int height, @NotNull Component label, @NotNull OnPress onPress, OnTooltip onTooltip) {
-        super(x, y, width, height, Components.literal(""), onPress, onTooltip);
-        this.setLabel(label);
+    public int getX() {
+        return this.x;
     }
 
-    @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public int getY() {
+        return this.y;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
+
+    public int getWidth() {
+        return this.width;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public int getHeight() {
+        return this.height;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.updateIsActive();
         this.updateLabel();
-        Tooltip tooltip = this.getTooltip();
-        if ((tooltip != null) && this.isHovered && this.visible) {
+        Tooltip tooltip = this.getTooltipFancyMenu();
+        if ((tooltip != null) && ((IMixinAbstractWidget)this).getIsHoveredFancyMenu() && this.visible) {
             if (this.forceDefaultTooltipStyle) {
                 tooltip.setDefaultStyle();
             }
             TooltipHandler.INSTANCE.addTooltip(tooltip, () -> true, false, true);
         }
-        super.render(pose, mouseX, mouseY, partial);
+        super.render(graphics.pose(), mouseX, mouseY, partial);
+    }
+
+    @Deprecated
+    @Override
+    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        this.render(GuiGraphics.currentGraphics(), mouseX, mouseY, partial);
     }
 
     @Override
-    public void renderButton(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-        this.renderBackground(pose);
-        this.renderLabelText(pose);
+    public void renderButton(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {
+        this.renderBackground(GuiGraphics.currentGraphics());
+        this.renderLabelText(GuiGraphics.currentGraphics());
     }
 
-    protected void renderBackground(@NotNull PoseStack pose) {
+    protected void renderBackground(@NotNull GuiGraphics graphics) {
         //Renders the custom widget background if one is present or the Vanilla background if no custom background is present
-        if (this.getExtendedAsCustomizableWidget().renderCustomBackgroundFancyMenu(this, pose, this.x, this.y, this.getWidth(), this.getHeight())) {
-            if (this.renderColorBackground(pose)) {
-                RenderSystem.setShaderTexture(0, WIDGETS_LOCATION);
-                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
+        if (this.getExtendedAsCustomizableWidget().renderCustomBackgroundFancyMenu(this, graphics, this.x, this.y, this.getWidth(), this.getHeight())) {
+            if (this.renderColorBackground(graphics)) {
+                graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
                 RenderSystem.enableBlend();
                 RenderSystem.enableDepthTest();
-                RenderingUtils.blitNineSliced_Vanilla(pose, this.x, this.y, this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureY());
-                RenderingUtils.resetShaderColor();
+                graphics.blitNineSliced(WIDGETS_LOCATION, this.x, this.y, this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureY());
+                RenderingUtils.resetShaderColor(graphics);
             }
-            RenderingUtils.resetShaderColor();
+            RenderingUtils.resetShaderColor(graphics);
         }
     }
 
     /**
      * Returns if the button should render its Vanilla background (true) or not (false).
      */
-    protected boolean renderColorBackground(@NotNull PoseStack pose) {
+    protected boolean renderColorBackground(@NotNull GuiGraphics graphics) {
         RenderSystem.enableBlend();
         if (this.active) {
             if (this.isHoveredOrFocused()) {
                 if (this.backgroundColorHover != null) {
-                    fill(pose, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), this.backgroundColorHover.getColorInt());
+                    graphics.fill(this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), this.backgroundColorHover.getColorInt());
                     if (this.borderColorHover != null) {
-                        UIBase.renderBorder(pose, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), 1, this.borderColorHover.getColorInt(), true, true, true, true);
+                        UIBase.renderBorder(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), 1, this.borderColorHover.getColorInt(), true, true, true, true);
                     }
                     return false;
                 }
             } else {
                 if (this.backgroundColorNormal != null) {
-                    fill(pose, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), this.backgroundColorNormal.getColorInt());
+                    graphics.fill(this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), this.backgroundColorNormal.getColorInt());
                     if (this.borderColorNormal != null) {
-                        UIBase.renderBorder(pose, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), 1, this.borderColorNormal.getColorInt(), true, true, true, true);
+                        UIBase.renderBorder(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), 1, this.borderColorNormal.getColorInt(), true, true, true, true);
                     }
                     return false;
                 }
             }
         } else {
             if (this.backgroundColorInactive != null) {
-                fill(pose, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), this.backgroundColorInactive.getColorInt());
+                graphics.fill(this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), this.backgroundColorInactive.getColorInt());
                 if (this.borderColorInactive != null) {
-                    UIBase.renderBorder(pose, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), 1, this.borderColorInactive.getColorInt(), true, true, true, true);
+                    UIBase.renderBorder(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), 1, this.borderColorInactive.getColorInt(), true, true, true, true);
                 }
                 return false;
             }
@@ -148,16 +174,16 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
         return true;
     }
 
-    protected void renderLabelText(@NotNull PoseStack pose) {
+    protected void renderLabelText(@NotNull GuiGraphics graphics) {
         if (this.enableLabel) {
             int k = this.active ? this.labelBaseColorNormal.getColorIntWithAlpha(this.alpha) : this.labelBaseColorInactive.getColorIntWithAlpha(this.alpha);
-            this.renderScrollingLabel(this, pose, mc.font, 2, this.labelShadow, k);
+            this.renderScrollingLabel(this, graphics, mc.font, 2, this.labelShadow, k);
         }
     }
 
     protected void updateLabel() {
         Component c = this.labelSupplier.get(this);
-        if (c == null) c = Components.literal("");
+        if (c == null) c = Component.literal("");
         ((IMixinAbstractWidget)this).setMessageFieldFancyMenu(c);
     }
 
@@ -166,10 +192,6 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
             Boolean b = this.activeSupplier.get(this);
             if (b != null) this.active = b;
         }
-    }
-
-    public void setHeight(int height) {
-        this.height = height;
     }
 
     protected int getHoverState() {
@@ -216,7 +238,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     }
 
     @Nullable
-    public Tooltip getTooltip() {
+    public Tooltip getTooltipFancyMenu() {
         if (this.tooltipSupplier != null) {
             return this.tooltipSupplier.get(this);
         }
@@ -260,12 +282,13 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     }
 
     public ExtendedButton setLabel(@NotNull String label) {
-        this.labelSupplier = (btn) -> Components.literal(label);
+        this.labelSupplier = (btn) -> Component.literal(label);
         return this;
     }
 
     public ExtendedButton setLabelSupplier(@NotNull ConsumingSupplier<ExtendedButton, Component> labelSupplier) {
         this.labelSupplier = labelSupplier;
+        this.updateLabel();
         return this;
     }
 
@@ -277,7 +300,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
     @NotNull
     public Component getLabel() {
         Component c = this.getLabelSupplier().get(this);
-        if (c == null) c = Components.empty();
+        if (c == null) c = Component.empty();
         return c;
     }
 
@@ -429,22 +452,6 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
 
     public CustomizableWidget getExtendedAsCustomizableWidget() {
         return (CustomizableWidget) this;
-    }
-
-    public void setX(int x) {
-        this.x = x;
-    }
-
-    public int getX() {
-        return this.x;
-    }
-
-    public void setY(int y) {
-        this.y = y;
-    }
-
-    public int getY() {
-        return this.y;
     }
 
     //This is to make the button work in FocuslessEventHandlers

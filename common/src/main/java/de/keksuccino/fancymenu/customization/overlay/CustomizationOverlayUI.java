@@ -635,7 +635,6 @@ public class CustomizationOverlayUI {
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.debug.toggle.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("script"));
 
-        //TODO übernehmen
         debugOverlayMenu.addValueCycleEntry("toggle_debug_overlay", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.debug.toggle", FancyMenu.getOptions().showDebugOverlay.getValue())
                         .addCycleListener(cycleEnabledDisabled -> {
                             FancyMenu.getOptions().showDebugOverlay.setValue(cycleEnabledDisabled.getAsBoolean());
@@ -643,7 +642,6 @@ public class CustomizationOverlayUI {
                             forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("debug_overlay")));
                         }))
                 .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.overlay.debug.toggle.shortcut"));
-        //-------------------
 
         debugOverlayMenu.addSeparatorEntry("separator_after_toggle_debug_overlay");
 
@@ -889,7 +887,6 @@ public class CustomizationOverlayUI {
             }, LocalizationUtils.splitLocalizedStringLines("fancymenu.layout.manage.delete.confirm")));
         }).setIcon(ContextMenu.IconFactory.getIcon("delete"));
 
-        //TODO übernehmen
         menu.addClickableEntry("rename_layout", Component.translatable("fancymenu.layout.manage.rename"), (menu1, entry) -> {
             if (layout.layoutFile == null) return;
             menu1.closeMenu();

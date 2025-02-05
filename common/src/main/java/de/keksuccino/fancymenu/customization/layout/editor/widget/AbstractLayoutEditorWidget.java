@@ -1,13 +1,12 @@
 package de.keksuccino.fancymenu.customization.layout.editor.widget;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.UIComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
@@ -37,7 +36,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     protected final AbstractLayoutEditorWidgetBuilder<?> builder;
     protected final LayoutEditorScreen editor;
     @NotNull
-    protected Component displayLabel = Components.literal("Widget");
+    protected Component displayLabel = Component.literal("Widget");
     private float unscaledWidgetOffsetX = 0;
     private float unscaledWidgetOffsetY = 0;
     private float bodyWidth = 100;
@@ -92,7 +91,7 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
     }
 
     @Override
-    public void renderComponent(@NotNull PoseStack pose, double mouseX, double mouseY, float partial) {
+    public void renderComponent(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial) {
 
         float x = this.getRealX();
         float y = this.getRealY();
@@ -109,49 +108,49 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
 
         this.updateCursor();
 
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
         if (this.isExpanded()) {
-            this.renderBody(pose, mouseX, mouseY, partial);
+            this.renderBody(graphics, mouseX, mouseY, partial);
         }
-        this.renderFrame(pose, mouseX, mouseY, partial, x, y, this.getWidth(), this.getHeight());
-        RenderingUtils.resetShaderColor();
+        this.renderFrame(graphics, mouseX, mouseY, partial, x, y, this.getWidth(), this.getHeight());
+        RenderingUtils.resetShaderColor(graphics);
 
     }
 
-    protected abstract void renderBody(@NotNull PoseStack pose, double mouseX, double mouseY, float partial);
+    protected abstract void renderBody(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial);
 
-    protected void renderFrame(@NotNull PoseStack pose, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
+    protected void renderFrame(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
 
-        this.renderHeader(pose, mouseX, mouseY, partial, x, y, width, height);
+        this.renderHeader(graphics, mouseX, mouseY, partial, x, y, width, height);
 
         //Separator between header and body
         if (this.isExpanded()) {
-            RenderingUtils.resetShaderColor();
+            RenderingUtils.resetShaderColor(graphics);
             float separatorXMin = x + this.getBorderThickness();
             float separatorYMin =  y + this.getBorderThickness() + this.getHeaderHeight();
             float separatorXMax = separatorXMin + this.getBodyWidth();
             float separatorYMax = separatorYMin + this.getBorderThickness();
-            fillF(pose, separatorXMin, separatorYMin, separatorXMax, separatorYMax, UIBase.getUIColorTheme().element_border_color_normal.getColorInt());
+            fillF(graphics, separatorXMin, separatorYMin, separatorXMax, separatorYMax, UIBase.getUIColorTheme().element_border_color_normal.getColorInt());
         }
 
         //Widget border
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
         if (this.isExpanded()) {
-            UIBase.renderBorder(pose, x, y, x + width, y + height, this.getBorderThickness(), UIBase.getUIColorTheme().element_border_color_normal.getColorInt(), true, true, true, true);
+            UIBase.renderBorder(graphics, x, y, x + width, y + height, this.getBorderThickness(), UIBase.getUIColorTheme().element_border_color_normal.getColorInt(), true, true, true, true);
         } else {
-            UIBase.renderBorder(pose, x, y, x + width, y + this.getBorderThickness() + this.getHeaderHeight() + this.getBorderThickness(), this.getBorderThickness(), UIBase.getUIColorTheme().element_border_color_normal.getColorInt(), true, true, true, true);
+            UIBase.renderBorder(graphics, x, y, x + width, y + this.getBorderThickness() + this.getHeaderHeight() + this.getBorderThickness(), this.getBorderThickness(), UIBase.getUIColorTheme().element_border_color_normal.getColorInt(), true, true, true, true);
         }
 
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
 
     }
 
-    protected void renderHeader(@NotNull PoseStack pose, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
+    protected void renderHeader(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
 
         //Background
-        RenderingUtils.resetShaderColor();
-        fillF(pose, x + this.getBorderThickness(), y + this.getBorderThickness(), x + this.getBorderThickness() + this.getBodyWidth(), y + this.getBorderThickness() + this.getHeaderHeight(), UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
+        fillF(graphics, x + this.getBorderThickness(), y + this.getBorderThickness(), x + this.getBorderThickness() + this.getBodyWidth(), y + this.getBorderThickness() + this.getHeaderHeight(), UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
+        RenderingUtils.resetShaderColor(graphics);
 
         //Buttons
         float buttonX = x + this.getBorderThickness() + this.getBodyWidth();
@@ -159,27 +158,27 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
             buttonX -= b.width;
             b.x = buttonX;
             b.y = y + this.getBorderThickness();
-            b.render(pose, partial);
+            b.render(graphics, partial);
         }
 
-        this.renderLabel(pose, mouseX, mouseY, partial, x, y, width, height);
+        this.renderLabel(graphics, mouseX, mouseY, partial, x, y, width, height);
 
     }
 
-    protected void renderLabel(@NotNull PoseStack pose, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
+    protected void renderLabel(@NotNull GuiGraphics graphics, double mouseX, double mouseY, float partial, float x, float y, float width, float height) {
         float headerX = x + this.getBorderThickness();
         float headerY = y + this.getBorderThickness();
         float labelDisplayWidth = Math.max(1, this.getBodyWidth() - this.getCombinedHeaderButtonWidth() - 3);
         float scissorX = x + this.getBorderThickness() - 1;
         float scissorY = y + this.getBorderThickness() - 1;
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
         RenderSystem.enableBlend();
-        pose.pushPose();
-        this.enableComponentScissor((int) scissorX, (int) scissorY, (int) labelDisplayWidth + 1, (int) this.getHeaderHeight() + 2, true);
-        UIBase.drawElementLabelF(pose, Minecraft.getInstance().font, this.displayLabel, (int)(headerX + 3), (int)(headerY + (this.getHeaderHeight() / 2f) - (Minecraft.getInstance().font.lineHeight / 2f)));
-        this.disableComponentScissor();
-        pose.popPose();
-        RenderingUtils.resetShaderColor();
+        graphics.pose().pushPose();
+        this.enableComponentScissor(graphics, (int) scissorX, (int) scissorY, (int) labelDisplayWidth + 1, (int) this.getHeaderHeight() + 2, true);
+        UIBase.drawElementLabel(graphics, Minecraft.getInstance().font, this.displayLabel, (int)(headerX + 3), (int)(headerY + (this.getHeaderHeight() / 2f) - (Minecraft.getInstance().font.lineHeight / 2f)));
+        this.disableComponentScissor(graphics);
+        graphics.pose().popPose();
+        RenderingUtils.resetShaderColor(graphics);
     }
 
     protected void addHeaderButton(@NotNull HeaderButton button) {
@@ -492,31 +491,30 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
             this.clickAction = clickAction;
         }
 
-        public void render(@NotNull PoseStack pose, float partial) {
+        public void render(@NotNull GuiGraphics graphics, float partial) {
 
             this.hovered = this.isMouseOver();
 
-            this.renderHoverBackground(pose);
+            this.renderHoverBackground(graphics);
 
             ITexture icon = this.iconSupplier.get(this);
             if (icon != null) {
                 ResourceLocation location = icon.getResourceLocation();
                 if (location != null) {
-                    UIBase.getUIColorTheme().setUITextureShaderColor(1.0F);
+                    UIBase.getUIColorTheme().setUITextureShaderColor(graphics, 1.0F);
                     RenderSystem.enableBlend();
-                    RenderingUtils.bindTexture(location);
-                    blitF(pose, this.x, this.y, 0.0F, 0.0F, (int) this.width, (int) this.parent.getHeaderHeight(), (int) this.width, (int) this.parent.getHeaderHeight());
-                    RenderingUtils.resetShaderColor();
+                    blitF(graphics, location, this.x, this.y, 0.0F, 0.0F, (int) this.width, (int) this.parent.getHeaderHeight(), (int) this.width, (int) this.parent.getHeaderHeight());
+                    RenderingUtils.resetShaderColor(graphics);
                 }
             }
 
         }
 
-        protected void renderHoverBackground(PoseStack pose) {
+        protected void renderHoverBackground(GuiGraphics graphics) {
             if (this.isMouseOver()) {
-                RenderingUtils.resetShaderColor();
-                fillF(pose, this.x, this.y, this.x + this.width, this.y + this.parent.getHeaderHeight(), UIBase.getUIColorTheme().element_background_color_hover.getColorInt());
-                RenderingUtils.resetShaderColor();
+                RenderingUtils.resetShaderColor(graphics);
+                fillF(graphics, this.x, this.y, this.x + this.width, this.y + this.parent.getHeaderHeight(), UIBase.getUIColorTheme().element_background_color_hover.getColorInt());
+                RenderingUtils.resetShaderColor(graphics);
             }
         }
 

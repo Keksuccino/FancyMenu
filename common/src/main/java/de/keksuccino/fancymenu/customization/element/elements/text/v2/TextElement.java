@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
@@ -50,7 +51,6 @@ public class TextElement extends AbstractElement {
     public volatile ScrollArea scrollArea;
     protected List<String> lastLines;
     protected IText lastIText;
-    //TODO übernehmen
     protected boolean lastTickShouldRender = false;
 
     public TextElement(@NotNull ElementBuilder<?, ?> builder) {
@@ -108,7 +108,7 @@ public class TextElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (this.shouldRender()) {
 
@@ -123,23 +123,22 @@ public class TextElement extends AbstractElement {
                 this.scrollArea.setY(this.getAbsoluteY(), true);
                 this.scrollArea.setWidth(this.getAbsoluteWidth(), true);
                 this.scrollArea.setHeight(this.getAbsoluteHeight(), true);
-                this.scrollArea.render(pose, mouseX, mouseY, partial);
+                this.scrollArea.render(graphics.pose(), mouseX, mouseY, partial);
 
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
-            RenderingUtils.resetShaderColor();
+            RenderingUtils.resetShaderColor(graphics);
 
         }
 
     }
 
-    //TODO übernehmen
     @Override
-    public void renderInternal(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void renderInternal(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        super.renderInternal(pose, mouseX, mouseY, partial);
+        super.renderInternal(graphics, mouseX, mouseY, partial);
 
         if (!this.shouldRender() && this.lastTickShouldRender) {
             this.markdownRenderer.resetHovered();
@@ -359,13 +358,13 @@ public class TextElement extends AbstractElement {
         }
 
         @Override
-        public void renderEntry(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             this.markdownRenderer.setOptimalWidth(this.parent.getInnerWidth());
             this.markdownRenderer.setX(this.x);
             this.markdownRenderer.setY(this.y);
             this.setWidth(this.markdownRenderer.getRealWidth());
             this.setHeight(this.markdownRenderer.getRealHeight());
-            this.markdownRenderer.render(pose, mouseX, mouseY, partial);
+            this.markdownRenderer.render(graphics, mouseX, mouseY, partial);
         }
 
         @Override

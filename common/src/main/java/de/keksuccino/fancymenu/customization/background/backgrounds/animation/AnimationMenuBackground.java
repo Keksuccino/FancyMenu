@@ -3,11 +3,12 @@ package de.keksuccino.fancymenu.customization.background.backgrounds.animation;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
-//TODO übernehmen (whole class)
 @Deprecated(forRemoval = true)
 public class AnimationMenuBackground extends MenuBackground {
 
@@ -25,6 +26,6 @@ public class AnimationMenuBackground extends MenuBackground {
     }
 
     @Override
-    public void render(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {}
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {}
 
 }

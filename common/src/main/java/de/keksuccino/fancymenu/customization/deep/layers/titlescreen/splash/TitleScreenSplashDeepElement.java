@@ -6,10 +6,10 @@ import com.mojang.math.Vector3f;
 import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import java.awt.*;
@@ -25,7 +25,7 @@ public class TitleScreenSplashDeepElement extends AbstractDeepElement {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (!this.shouldRender()) return;
 
@@ -33,13 +33,13 @@ public class TitleScreenSplashDeepElement extends AbstractDeepElement {
         this.baseHeight = 30;
 
         RenderSystem.enableBlend();
-        this.renderSplash(pose, Minecraft.getInstance().font);
+        this.renderSplash(graphics, Minecraft.getInstance().font);
 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
     }
 
-    protected void renderSplash(PoseStack pose, Font font) {
+    protected void renderSplash(GuiGraphics graphics, Font font) {
 
         if (cachedSplashText == null) {
             cachedSplashText = Minecraft.getInstance().getSplashManager().getSplash();
@@ -48,17 +48,17 @@ public class TitleScreenSplashDeepElement extends AbstractDeepElement {
             cachedSplashText = "§c< ERROR! UNABLE TO GET SPLASH TEXT! >";
         }
 
-        pose.pushPose();
-        pose.translate(this.getAbsoluteX() + 50, this.getAbsoluteY() + 15, 0.0F);
-        pose.mulPose(Vector3f.ZP.rotationDegrees(-20));
+        graphics.pose().pushPose();
+        graphics.pose().translate(this.getAbsoluteX() + 50, this.getAbsoluteY() + 15, 0.0F);
+        graphics.pose().mulPose(Vector3f.ZP.rotationDegrees(-20));
         float f = 1.8F - Mth.abs(Mth.sin((float) (System.currentTimeMillis() % 1000L) / 1000.0F * ((float) Math.PI * 2F)) * 0.1F);
         f = f * 100.0F / (float) (font.width(cachedSplashText) + 32);
-        pose.scale(f, f, f);
+        graphics.pose().scale(f, f, f);
 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
-        drawCenteredString(pose, font, Components.literal(cachedSplashText), 0, -8, DEFAULT_COLOR.getColorIntWithAlpha(this.opacity));
+        graphics.drawCenteredString(font, Components.literal(cachedSplashText), 0, -8, DEFAULT_COLOR.getColorIntWithAlpha(this.opacity));
 
-        pose.popPose();
+        graphics.pose().popPose();
 
     }
 

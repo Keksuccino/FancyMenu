@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.function.Consumer;
 
+@Deprecated
 public class ListSliderButton extends ExtendedSliderButton {
 
     private static final Logger LOGGER = LogManager.getLogger("fancymenu/ListSliderButton");

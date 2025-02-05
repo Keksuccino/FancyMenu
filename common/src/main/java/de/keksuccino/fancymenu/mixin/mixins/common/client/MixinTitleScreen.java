@@ -14,12 +14,15 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandl
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.renderer.PanoramaRenderer;
 import net.minecraft.network.chat.Component;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -32,10 +35,10 @@ import java.util.function.BiConsumer;
 @Mixin(TitleScreen.class)
 public abstract class MixinTitleScreen extends Screen {
 
+    @Shadow @Final public static Component COPYRIGHT_TEXT;
     @Shadow public boolean fading;
 
     @Unique boolean handleRealmsNotificationFancyMenu = false;
-    @Unique PoseStack cachedGraphics_FancyMenu = null;
     @Unique boolean shouldRenderVanillaBackground_FancyMenu = true;
 
     //unused dummy constructor
@@ -43,13 +46,23 @@ public abstract class MixinTitleScreen extends Screen {
         super(Component.empty());
     }
 
-    /**
-     * @reason Cache {@link PoseStack} instance for later use.
-     */
     @Inject(method = "render", at = @At("HEAD"))
     private void head_render_FancyMenu(PoseStack pose, int $$1, int $$2, float $$3, CallbackInfo info) {
         this.shouldRenderVanillaBackground_FancyMenu = true;
-        this.cachedGraphics_FancyMenu = pose;
+    }
+
+    /**
+     * @reason Add an identifier to the Copyright button.
+     */
+    @Inject(method = "init", at = @At("RETURN"))
+    private void at_return_of_screen_init_FancyMenu(CallbackInfo info) {
+
+        this.children().forEach(guiEventListener -> {
+            if (guiEventListener instanceof PlainTextButton b) {
+                if (b.getMessage() == COPYRIGHT_TEXT) ((UniqueWidget)b).setWidgetIdentifierFancyMenu("title_screen_copyright_button");
+            }
+        });
+
     }
 
     /**
@@ -58,12 +71,12 @@ public abstract class MixinTitleScreen extends Screen {
     @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/PanoramaRenderer;render(FF)V"))
     private void wrap_PanoramaRenderer_render_in_render_FancyMenu(PanoramaRenderer instance, float deltaT, float alpha, Operation<Void> original) {
         ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen(this);
-        if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this) && (this.cachedGraphics_FancyMenu != null)) {
-            if (l.layoutBase.menuBackground != null) {
+        if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this)) {
+            if (!l.layoutBase.menuBackgrounds.isEmpty()) {
                 RenderSystem.enableBlend();
                 //Render a black background before the custom background gets rendered
-                this.fill(this.cachedGraphics_FancyMenu, 0, 0, this.width, this.height, 0);
-                RenderingUtils.resetShaderColor();
+                GuiGraphics.currentGraphics().fill(0, 0, this.width, this.height, 0);
+                RenderingUtils.resetShaderColor(GuiGraphics.currentGraphics());
                 this.shouldRenderVanillaBackground_FancyMenu = false;
             } else {
                 original.call(instance, deltaT, alpha);
@@ -71,7 +84,7 @@ public abstract class MixinTitleScreen extends Screen {
         } else {
             original.call(instance, deltaT, alpha);
         }
-        EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, this.cachedGraphics_FancyMenu));
+        EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, GuiGraphics.currentGraphics().pose()));
     }
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/TitleScreen;blit(Lcom/mojang/blaze3d/vertex/PoseStack;IIIIFFIIII)V"))

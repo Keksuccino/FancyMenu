@@ -1,4 +1,3 @@
-
 package de.keksuccino.fancymenu.customization.layout.editor;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -7,7 +6,8 @@ import de.keksuccino.fancymenu.customization.slideshow.ExternalTextureSlideshowR
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
@@ -17,14 +17,13 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
 
-public class ChooseSlideshowScreen extends Screen {
+public class ChooseSlideshowScreen extends ModernScreen {
 
     protected Consumer<String> callback;
     protected String selectedSlideshowName = null;
@@ -36,7 +35,7 @@ public class ChooseSlideshowScreen extends Screen {
 
     public ChooseSlideshowScreen(@Nullable String preSelectedSlideshow, @NotNull Consumer<String> callback) {
 
-        super(Components.translatable("fancymenu.slideshow.choose"));
+        super(Component.translatable("fancymenu.slideshow.choose"));
 
         this.callback = callback;
         this.updateSlideshowScrollAreaContent();
@@ -58,24 +57,24 @@ public class ChooseSlideshowScreen extends Screen {
 
         super.init();
 
-        this.doneButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.guicomponents.done"), (button) -> {
+        this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
             this.callback.accept(this.selectedSlideshowName);
         }) {
             @Override
-            public void renderButton(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+            public void renderButton(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {
                 if (ChooseSlideshowScreen.this.selectedSlideshowName == null) {
                     TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.slideshow.choose.no_slideshow_selected")).setDefaultStyle(), false, true);
                     this.active = false;
                 } else {
                     this.active = true;
                 }
-                super.renderButton(pose, mouseX, mouseY, partial);
+                super.renderButton(graphics, mouseX, mouseY, partial);
             }
         };
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
-        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.guicomponents.cancel"), (button) -> {
+        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
             this.callback.accept(null);
         });
         this.addWidget(this.cancelButton);
@@ -89,26 +88,26 @@ public class ChooseSlideshowScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         RenderSystem.enableBlend();
 
-        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(pose, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        this.font.draw(pose, Components.translatable("fancymenu.slideshow.choose.available_slideshows"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, Component.translatable("fancymenu.slideshow.choose.available_slideshows"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
         this.slideshowListScrollArea.setWidth((this.width / 2) - 40, true);
         this.slideshowListScrollArea.setHeight(this.height - 85, true);
         this.slideshowListScrollArea.setX(20, true);
         this.slideshowListScrollArea.setY(50 + 15, true);
-        this.slideshowListScrollArea.render(pose, mouseX, mouseY, partial);
+        this.slideshowListScrollArea.render(graphics, mouseX, mouseY, partial);
 
-        Component previewLabel = Components.translatable("fancymenu.slideshow.choose.preview");
+        Component previewLabel = Component.translatable("fancymenu.slideshow.choose.preview");
         int previewLabelWidth = this.font.width(previewLabel);
-        this.font.draw(pose, previewLabel, this.width - 20 - previewLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, previewLabel, this.width - 20 - previewLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
         if (this.selectedSlideshow != null) {
             int slideW = (this.width / 2) - 40;
@@ -119,24 +118,24 @@ public class ChooseSlideshowScreen extends Screen {
             slideH = size[1];
             int slideX = this.width - 20 - slideW;
             int slideY = 50 + 15;
-            fill(pose, slideX, slideY, slideX + slideW, slideY + slideH, UIBase.getUIColorTheme().area_background_color.getColorInt());
+            graphics.fill(slideX, slideY, slideX + slideW, slideY + slideH, UIBase.getUIColorTheme().area_background_color.getColorInt());
             this.selectedSlideshow.x = slideX;
             this.selectedSlideshow.y = slideY;
             this.selectedSlideshow.width = slideW;
             this.selectedSlideshow.height = slideH;
-            this.selectedSlideshow.render(pose);
-            UIBase.renderBorder(pose, slideX, slideY, slideX + slideW, slideY + slideH, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUIColorTheme().element_border_color_normal.getColor(), true, true, true, true);
+            this.selectedSlideshow.render(graphics);
+            UIBase.renderBorder(graphics, slideX, slideY, slideX + slideW, slideY + slideH, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUIColorTheme().element_border_color_normal.getColor(), true, true, true, true);
         }
 
         this.doneButton.x = (this.width - 20 - this.doneButton.getWidth());
         this.doneButton.y = (this.height - 20 - 20);
-        this.doneButton.render(pose, mouseX, mouseY, partial);
+        this.doneButton.render(graphics.pose(), mouseX, mouseY, partial);
 
         this.cancelButton.x = (this.width - 20 - this.cancelButton.getWidth());
         this.cancelButton.y = (this.doneButton.y - 5 - 20);
-        this.cancelButton.render(pose, mouseX, mouseY, partial);
+        this.cancelButton.render(graphics.pose(), mouseX, mouseY, partial);
 
-        super.render(pose, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
 
     }
 
@@ -164,7 +163,7 @@ public class ChooseSlideshowScreen extends Screen {
             this.slideshowListScrollArea.addEntry(e);
         }
         if (this.slideshowListScrollArea.getEntries().isEmpty()) {
-            this.slideshowListScrollArea.addEntry(new TextScrollAreaEntry(this.slideshowListScrollArea, Components.translatable("fancymenu.slideshow.choose.no_slideshows"), (entry) -> {}));
+            this.slideshowListScrollArea.addEntry(new TextScrollAreaEntry(this.slideshowListScrollArea, Component.translatable("fancymenu.slideshow.choose.no_slideshows"), (entry) -> {}));
         }
         int totalWidth = this.slideshowListScrollArea.getTotalEntryWidth();
         for (ScrollAreaEntry e : this.slideshowListScrollArea.getEntries()) {
@@ -191,7 +190,7 @@ public class ChooseSlideshowScreen extends Screen {
         public String slideshow;
 
         public SlideshowScrollEntry(ScrollArea parent, @NotNull String slideshow, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Components.literal(slideshow).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), UIBase.getUIColorTheme().listing_dot_color_1.getColor(), onClick);
+            super(parent, Component.literal(slideshow).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), UIBase.getUIColorTheme().listing_dot_color_1.getColor(), onClick);
             this.slideshow = slideshow;
         }
 

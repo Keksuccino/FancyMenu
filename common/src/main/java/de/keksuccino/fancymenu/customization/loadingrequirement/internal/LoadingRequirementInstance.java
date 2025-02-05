@@ -46,6 +46,7 @@ public class LoadingRequirementInstance implements ValuePlaceholderHolder {
             }
             v = PlaceholderParser.replacePlaceholders(v);
         }
+        this.requirement.setCurrentInstance(this);
         boolean met = this.requirement.isRequirementMet(v);
         if (this.mode == RequirementMode.IF_NOT) {
             return !met;

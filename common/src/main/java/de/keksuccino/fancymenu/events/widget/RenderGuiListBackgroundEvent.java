@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.events.widget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.event.acara.EventBase;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 
 @SuppressWarnings("rawtypes")
@@ -22,6 +23,10 @@ public class RenderGuiListBackgroundEvent extends EventBase {
 	
 	public AbstractSelectionList getList() {
 		return this.list;
+	}
+
+	public GuiGraphics getGraphics() {
+		return GuiGraphics.currentGraphics();
 	}
 
 	public PoseStack getPoseStack() {

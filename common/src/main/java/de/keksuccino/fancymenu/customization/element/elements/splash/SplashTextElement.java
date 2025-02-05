@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -48,15 +49,15 @@ public class SplashTextElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (this.shouldRender()) {
 
             this.updateSplash();
 
-            this.renderSplash(pose);
+            this.renderSplash(graphics.pose());
 
-            RenderingUtils.resetShaderColor();
+            RenderingUtils.resetShaderColor(graphics);
 
         }
 

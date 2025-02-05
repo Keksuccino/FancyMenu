@@ -5,6 +5,7 @@ import java.util.*;
 import de.keksuccino.fancymenu.Compat;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.ElementMemories;
+import de.keksuccino.fancymenu.customization.element.elements.animationcontroller.AnimationControllerHandler;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.widgets.LayoutEditorWidgets;
 import de.keksuccino.fancymenu.customization.screen.dummyscreen.DummyScreens;
@@ -48,6 +49,7 @@ import net.minecraft.client.gui.screens.VideoSettingsScreen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
 public class ScreenCustomization {
@@ -101,10 +103,6 @@ public class ScreenCustomization {
 		WidgetIdentificationContexts.registerAll();
 
 		DummyScreens.registerAll();
-
-		//TODO übernehmen
-//		AnimationHandler.init();
-//		AnimationHandler.discoverAndRegisterExternalAnimations();
 
 		PanoramaHandler.init();
 
@@ -280,11 +278,9 @@ public class ScreenCustomization {
 		FancyMenu.reloadOptions();
 		ResourceHandlers.reloadAll();
 		UIColorThemes.reloadThemes();
-		//TODO übernehmen
-//		AnimationHandler.resetAnimations();
-//		AnimationHandler.resetAnimationSounds();
-//		AnimationHandler.stopAnimationSounds();
 		LayoutHandler.reloadLayouts();
+		AnimationControllerHandler.stopAllAnimations();
+		AnimationControllerHandler.eraseAnimatedMemory();
 		EventHandler.INSTANCE.postEvent(new ModReloadEvent(Minecraft.getInstance().screen));
 		reInitCurrentScreen();
 	}
@@ -306,6 +302,42 @@ public class ScreenCustomization {
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(Minecraft.getInstance().screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(Minecraft.getInstance().screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
 		}
+	}
+
+	/**
+	 * This gets called when switching from one type of screen to a new one (e.g. Title screen -> Options screen).<br>
+	 * It will NOT get called when switching to the same screen type (e.g. Title screen -> Title screen).<br>
+	 * This will also get called when switching from a screen to NO SCREEN (newScreen argument will be NULL then)
+	 * This will also get called when switching from NO SCREEN to a screen.
+	 *
+	 * @param newScreen The new screen OR NULL when switching to no screen
+	 */
+	public static void onSwitchingToNewScreenType(@Nullable Screen newScreen, @Nullable Screen lastScreen) {
+
+		AnimationControllerHandler.stopAllAnimations();
+		AnimationControllerHandler.eraseAnimatedMemory();
+
+		//Handle "Once Per Session" elements
+		if (lastScreen != null) {
+			ScreenCustomizationLayer lastLayer = ScreenCustomizationLayerHandler.getLayerOfScreen(lastScreen);
+			if (lastLayer != null) {
+				lastLayer.allElements.forEach(element -> {
+					if (element.loadOncePerSession) {
+						element.setHideOncePerSessionElement();
+					}
+				});
+			}
+		}
+
+	}
+
+	/**
+	 * This gets called every render tick before starting to render the game.
+	 */
+	public static void onPreGameRenderTick() {
+
+		AnimationControllerHandler.tick();
+
 	}
 
 	public static void addScreenBlacklistRule(ScreenBlacklistRule rule) {
@@ -341,6 +373,9 @@ public class ScreenCustomization {
 		addScreenBlacklistRule((screen) -> screen.startsWith("net.cobrasrock.skinswapper."));
 		addScreenBlacklistRule((screen) -> screen.equals(VideoSettingsScreen.class.getName()) && Compat.isOptiFineLoaded());
 		addScreenBlacklistRule((screen) -> screen.startsWith("de.keksuccino.fancymenu.") && !screen.equals(CustomGuiBaseScreen.class.getName()));
+		addScreenBlacklistRule((screen) -> screen.startsWith("blusunrize.immersiveengineering."));
+		addScreenBlacklistRule((screen) -> screen.startsWith("net.dungeonz."));
+		addScreenBlacklistRule((screen) -> screen.startsWith("net.spellcraftgaming.rpghud."));
 
 	}
 

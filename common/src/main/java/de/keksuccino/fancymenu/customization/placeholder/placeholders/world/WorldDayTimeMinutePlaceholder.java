@@ -12,7 +12,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
-//TODO übernehmen
 public class WorldDayTimeMinutePlaceholder extends Placeholder {
 
     private static final Logger LOGGER = LogManager.getLogger();

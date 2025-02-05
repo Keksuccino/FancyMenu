@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.IExtendedWidget;
@@ -187,11 +188,11 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 
 		AbstractWidget button = (AbstractWidget)((Object)this);
 		if ((button instanceof CustomizableSlider s) && ((Object)this instanceof AbstractSliderButton as)) {
-			this.cachedRenderCustomBackgroundFancyMenu = s.renderSliderBackgroundFancyMenu(pose, as, true);
+			this.cachedRenderCustomBackgroundFancyMenu = s.renderSliderBackgroundFancyMenu(GuiGraphics.currentGraphics(), as, true);
 			//Re-bind default texture after rendering custom
 			RenderSystem.setShaderTexture(0, WIDGETS_LOCATION);
 		} else {
-			this.cachedRenderCustomBackgroundFancyMenu = this.renderCustomBackgroundFancyMenu(button, pose, button.x, button.y, button.getWidth(), button.getHeight());
+			this.cachedRenderCustomBackgroundFancyMenu = this.renderCustomBackgroundFancyMenu(button, GuiGraphics.currentGraphics(), button.x, button.y, button.getWidth(), button.getHeight());
 		}
 
 		if (this.cachedRenderCustomBackgroundFancyMenu) this.render119VanillaBackgroundFancyMenu(pose);
@@ -205,12 +206,12 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	 */
 	@Unique
 	private void render119VanillaBackgroundFancyMenu(PoseStack pose) {
-		RenderSystem.setShaderTexture(0, WIDGETS_LOCATION);
-		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
+		GuiGraphics graphics = GuiGraphics.currentGraphics();
+		graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
 		RenderSystem.enableBlend();
 		RenderSystem.enableDepthTest();
-		RenderingUtils.blitNineSliced_Vanilla(pose, this.x, this.y, this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureYFancyMenu());
-		RenderingUtils.resetShaderColor();
+		graphics.blitNineSliced(WIDGETS_LOCATION, this.x, this.y, this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureYFancyMenu());
+		RenderingUtils.resetShaderColor(graphics);
 	}
 
 	@Unique
@@ -230,7 +231,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	 */
 	@WrapWithCondition(method = "renderButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractWidget;drawCenteredString(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)V"))
 	private boolean wrapLabelRenderingFancyMenu(PoseStack pose, Font font, Component component, int i1, int i2, int i3) {
-		this.renderScrollingLabel(this.getWidgetFancyMenu(), pose, font, 2, true, -1);
+		this.renderScrollingLabel(this.getWidgetFancyMenu(), GuiGraphics.currentGraphics(), font, 2, true, -1);
 		return false;
 	}
 	
@@ -246,7 +247,10 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Inject(method = "getMessage", at = @At("RETURN"), cancellable = true)
 	private void onGetMessageFancyMenu(CallbackInfoReturnable<Component> info) {
 		AbstractWidget w = this.getWidgetFancyMenu();
-		if (w.isHoveredOrFocused() && w.visible && w.active && (this.hoverLabelFancyMenu != null)) info.setReturnValue(this.hoverLabelFancyMenu);
+		if (w.isHoveredOrFocused() && w.visible && w.active && (this.hoverLabelFancyMenu != null)) {
+			info.setReturnValue(this.hoverLabelFancyMenu);
+			return;
+		}
 		if (this.customLabelFancyMenu != null) info.setReturnValue(this.customLabelFancyMenu);
 	}
 
@@ -497,7 +501,6 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Unique
 	@Override
 	public void setCustomClickSoundFancyMenu(@Nullable IAudio sound) {
-		if ((this.customClickSoundFancyMenu != null) && !Objects.equals(sound, this.customClickSoundFancyMenu)) this.customClickSoundFancyMenu.stop();
 		this.customClickSoundFancyMenu = sound;
 	}
 
@@ -511,7 +514,6 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Unique
 	@Override
 	public void setHoverSoundFancyMenu(@Nullable IAudio sound) {
-		if ((this.hoverSoundFancyMenu != null) && !Objects.equals(sound, this.hoverSoundFancyMenu)) this.hoverSoundFancyMenu.stop();
 		this.hoverSoundFancyMenu = sound;
 	}
 

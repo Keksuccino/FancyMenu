@@ -6,14 +6,13 @@ import com.mojang.math.Matrix4f;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
+import de.keksuccino.fancymenu.util.rendering.gui.TooltipRenderUtil;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
@@ -32,7 +31,7 @@ import java.util.List;
  * It is possible to set a custom X and Y position to not render it at the mouse position.
  **/
 @SuppressWarnings("unused")
-public class Tooltip extends GuiComponent implements Widget {
+public class Tooltip implements Renderable {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -80,7 +79,7 @@ public class Tooltip extends GuiComponent implements Widget {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         Screen s = Minecraft.getInstance().screen;
         if (!this.isEmpty() && (s != null)) {
 
@@ -91,29 +90,29 @@ public class Tooltip extends GuiComponent implements Widget {
 
             RenderSystem.enableBlend();
 
-            pose.pushPose();
+            graphics.pose().pushPose();
 
             float scale = 1.0F;
             if (this.scale != null) {
                 scale = UIBase.calculateFixedScale(this.scale);
-                pose.scale(scale, scale, scale);
+                graphics.pose().scale(scale, scale, scale);
             }
-            pose.translate(0.0F, 0.0F, 600.0F / scale);
+            graphics.pose().translate(0.0F, 0.0F, 600.0F / scale);
             RenderSystem.enableDepthTest();
-            RenderingUtils.resetShaderColor();
+            RenderingUtils.resetShaderColor(graphics);
 
-            this.renderBackground(pose, x, y);
-            this.renderTextLines(pose, x, y);
+            this.renderBackground(graphics, x, y);
+            this.renderTextLines(graphics, x, y);
 
             RenderSystem.disableDepthTest();
-            pose.popPose();
+            graphics.pose().popPose();
 
-            RenderingUtils.resetShaderColor();
+            RenderingUtils.resetShaderColor(graphics);
 
         }
     }
 
-    protected void renderTextLines(PoseStack pose, int x, int y) {
+    protected void renderTextLines(GuiGraphics graphics, int x, int y) {
         int yLine = y;
         for (Component c : this.textLines) {
             int w = this.font.width(c);
@@ -126,68 +125,63 @@ public class Tooltip extends GuiComponent implements Widget {
             if (this.textAlignment == TooltipTextAlignment.CENTERED) {
                 x2 = x + Math.max(0, (this.getWidth() / 2) - (w / 2));
             }
-            if (this.hasTextShadow()) {
-                this.font.drawShadow(pose, c, x2, y2, (this.textBaseColor != null) ? this.textBaseColor.getColorInt() : -1);
-            } else {
-                this.font.draw(pose, c, x2, y2, (this.textBaseColor != null) ? this.textBaseColor.getColorInt() : -1);
-            }
+            graphics.drawString(this.font, c, x2, y2, (this.textBaseColor != null) ? this.textBaseColor.getColorInt() : -1, this.hasTextShadow());
             yLine += this.font.lineHeight + 2;
         }
     }
 
-    protected void renderBackground(PoseStack pose, int x, int y) {
+    protected void renderBackground(GuiGraphics graphics, int x, int y) {
         if (this.vanillaLike || ((this.backgroundTexture == null) && (this.backgroundColor == null))) {
-            this.renderVanillaLikeBackground(pose, x, y, this.getWidth(), this.getHeight());
+            this.renderVanillaLikeBackground(graphics, x, y, this.getWidth(), this.getHeight());
         } else if (this.backgroundTexture != null) {
             ResourceLocation loc = this.backgroundTexture.getResourceLocation();
             if (loc != null) {
-                RenderUtils.bindTexture(loc);
-                blit(pose, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+                graphics.blit(loc, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
             }
         } else {
             if (this.borderColor != null) {
                 //BACKGROUND
-                fill(pose, x + 1, y + 1, x + this.getWidth() - 1, y + this.getHeight() - 1, this.backgroundColor.getColorInt());
+                graphics.fill(x + 1, y + 1, x + this.getWidth() - 1, y + this.getHeight() - 1, this.backgroundColor.getColorInt());
                 //TOP
-                fill(pose, x + 1, y, x + this.getWidth() - 1, y + 1, this.borderColor.getColorInt());
+                graphics.fill(x + 1, y, x + this.getWidth() - 1, y + 1, this.borderColor.getColorInt());
                 //BOTTOM
-                fill(pose, x + 1, y + this.getHeight() - 1, x + this.getWidth() - 1, y + this.getHeight(), this.borderColor.getColorInt());
+                graphics.fill(x + 1, y + this.getHeight() - 1, x + this.getWidth() - 1, y + this.getHeight(), this.borderColor.getColorInt());
                 //LEFT
-                fill(pose, x, y, x + 1, y + this.getHeight(), this.borderColor.getColorInt());
+                graphics.fill(x, y, x + 1, y + this.getHeight(), this.borderColor.getColorInt());
                 //RIGHT
-                fill(pose, x + this.getWidth() - 1, y, x + this.getWidth(), y + this.getHeight(), this.borderColor.getColorInt());
+                graphics.fill(x + this.getWidth() - 1, y, x + this.getWidth(), y + this.getHeight(), this.borderColor.getColorInt());
             } else {
-                fill(pose, x, y, x + this.getWidth(), y + this.getHeight(), this.backgroundColor.getColorInt());
+                graphics.fill(x, y, x + this.getWidth(), y + this.getHeight(), this.backgroundColor.getColorInt());
             }
         }
     }
 
-    protected void renderVanillaLikeBackground(PoseStack pose, int x, int y, int width, int height) {
+    protected void renderVanillaLikeBackground(GuiGraphics graphics, int x, int y, int width, int height) {
 
-        pose.pushPose();
+        graphics.pose().pushPose();
 
         ShaderInstance shaderInstance = RenderSystem.getShader();
         Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder builder = tesselator.getBuilder();
+        BufferBuilder bufferBuilder2 = tesselator.getBuilder();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-        Matrix4f matrix4f2 = pose.last().pose();
+        bufferBuilder2.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        Matrix4f matrix4f2 = graphics.pose().last().pose();
 
         //Set Z to 0, because Z level gets handled in parent method instead
         int z = 0;
-        TooltipBackgroundRenderer.render(GuiComponent::fillGradient, matrix4f2, builder, x, y, width, height, z);
+        TooltipRenderUtil.renderTooltipBackground(graphics, x, y, width, height, z);
 
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        BufferUploader.drawWithShader(builder.end());
+        BufferUploader.drawWithShader(bufferBuilder2.end());
         if (shaderInstance != null) {
             RenderSystem.setShader(() -> shaderInstance);
         }
 
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
 
-        pose.popPose();
+        graphics.pose().popPose();
 
     }
 
@@ -287,7 +281,7 @@ public class Tooltip extends GuiComponent implements Widget {
         List<Component> l = new ArrayList<>();
         if (lines != null) {
             for (String s : lines) {
-                l.add(Components.literal(s));
+                l.add(Component.literal(s));
             }
         }
         return this.setTooltipText(l);
@@ -469,57 +463,6 @@ public class Tooltip extends GuiComponent implements Widget {
         LEFT,
         RIGHT,
         CENTERED
-    }
-
-    public static class TooltipBackgroundRenderer {
-
-        public static void render(Painter painter, Matrix4f matrix4f, BufferBuilder builder, int $$3, int $$4, int $$5, int $$6, int $$7) {
-            int $$8 = $$3 - 3;
-            int $$9 = $$4 - 3;
-            int $$10 = $$5 + 3 + 3;
-            int $$11 = $$6 + 3 + 3;
-            renderHorizontalLine(painter, matrix4f, builder, $$8, $$9 - 1, $$10, $$7, -267386864);
-            renderHorizontalLine(painter, matrix4f, builder, $$8, $$9 + $$11, $$10, $$7, -267386864);
-            renderRectangle(painter, matrix4f, builder, $$8, $$9, $$10, $$11, $$7, -267386864);
-            renderVerticalLine(painter, matrix4f, builder, $$8 - 1, $$9, $$11, $$7, -267386864);
-            renderVerticalLine(painter, matrix4f, builder, $$8 + $$10, $$9, $$11, $$7, -267386864);
-            renderFrameGradient(painter, matrix4f, builder, $$8, $$9 + 1, $$10, $$11, $$7, 1347420415, 1344798847);
-        }
-
-        private static void renderFrameGradient(
-                Painter $$0, Matrix4f $$1, BufferBuilder $$2, int $$3, int $$4, int $$5, int $$6, int $$7, int $$8, int $$9
-        ) {
-            renderVerticalLineGradient($$0, $$1, $$2, $$3, $$4, $$6 - 2, $$7, $$8, $$9);
-            renderVerticalLineGradient($$0, $$1, $$2, $$3 + $$5 - 1, $$4, $$6 - 2, $$7, $$8, $$9);
-            renderHorizontalLine($$0, $$1, $$2, $$3, $$4 - 1, $$5, $$7, $$8);
-            renderHorizontalLine($$0, $$1, $$2, $$3, $$4 - 1 + $$6 - 1, $$5, $$7, $$9);
-        }
-
-        private static void renderVerticalLine(Painter $$0, Matrix4f $$1, BufferBuilder $$2, int $$3, int $$4, int $$5, int $$6, int $$7) {
-            $$0.blit($$1, $$2, $$3, $$4, $$3 + 1, $$4 + $$5, $$6, $$7, $$7);
-        }
-
-        private static void renderVerticalLineGradient(
-                Painter $$0, Matrix4f $$1, BufferBuilder $$2, int $$3, int $$4, int $$5, int $$6, int $$7, int $$8
-        ) {
-            $$0.blit($$1, $$2, $$3, $$4, $$3 + 1, $$4 + $$5, $$6, $$7, $$8);
-        }
-
-        private static void renderHorizontalLine(Painter $$0, Matrix4f $$1, BufferBuilder $$2, int $$3, int $$4, int $$5, int $$6, int $$7) {
-            $$0.blit($$1, $$2, $$3, $$4, $$3 + $$5, $$4 + 1, $$6, $$7, $$7);
-        }
-
-        private static void renderRectangle(
-                Painter $$0, Matrix4f $$1, BufferBuilder $$2, int $$3, int $$4, int $$5, int $$6, int $$7, int $$8
-        ) {
-            $$0.blit($$1, $$2, $$3, $$4, $$3 + $$5, $$4 + $$6, $$7, $$8, $$8);
-        }
-
-        @FunctionalInterface
-        public interface Painter {
-            void blit(Matrix4f var1, BufferBuilder var2, int var3, int var4, int var5, int var6, int var7, int var8, int var9);
-        }
-
     }
 
 }

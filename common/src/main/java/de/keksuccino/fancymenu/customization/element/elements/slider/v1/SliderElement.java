@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v1.ExtendedSliderButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v1.ListSliderButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v1.RangeSliderButton;
@@ -77,7 +78,7 @@ public class SliderElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (this.shouldRender()) {
 
@@ -92,7 +93,7 @@ public class SliderElement extends AbstractElement {
             this.slider.y = this.getAbsoluteY();
             this.slider.setWidth(this.getAbsoluteWidth());
             ((IMixinAbstractWidget)this.slider).setHeightFancyMenu(this.getAbsoluteHeight());
-            this.slider.render(pose, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime());
+            this.slider.render(graphics.pose(), MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime());
 
             //Update variable value on change
             if (this.linkedVariable != null) {

@@ -22,7 +22,6 @@ public class ShapeEditorElement extends AbstractEditorElement {
 
         super.init();
 
-        //TODO übernehmen
         this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_color", ShapeEditorElement.class,
                         consumes -> consumes.getElement().colorRaw,
                         (shapeEditorElement, s) -> shapeEditorElement.getElement().colorRaw = s,
@@ -30,11 +29,9 @@ public class ShapeEditorElement extends AbstractEditorElement {
                         true, "#FFFFFF", null, null)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.shape.color.btndesc")));
-        //-------------------------
 
     }
 
-    //TODO übernehmen
     public ShapeElement getElement() {
         return (ShapeElement) this.element;
     }

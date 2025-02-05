@@ -19,6 +19,7 @@ public class AudioEditorElement extends AbstractEditorElement {
 
     public AudioEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
+        this.settings.setInEditorColorSupported(true);
     }
 
     @Override

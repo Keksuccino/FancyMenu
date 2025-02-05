@@ -5,6 +5,8 @@ import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.resource.MinecraftResourceUtils;
+import de.keksuccino.fancymenu.util.resource.resources.audio.ALAudio;
+import de.keksuccino.fancymenu.util.resource.resources.audio.AudioPlayTimeTracker;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.melody.resources.audio.openal.ALAudioBuffer;
 import de.keksuccino.melody.resources.audio.openal.ALAudioClip;
@@ -20,13 +22,15 @@ import org.jetbrains.annotations.Nullable;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import java.io.*;
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
-public class WavAudio implements IAudio {
+public class WavAudio implements IAudio, ALAudio {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -37,6 +41,8 @@ public class WavAudio implements IAudio {
     protected ResourceLocation sourceLocation;
     protected File sourceFile;
     protected String sourceURL;
+    protected volatile float duration = 0.0f;
+    protected final AudioPlayTimeTracker playTimeTracker = new AudioPlayTimeTracker();
     protected volatile boolean decoded = false;
     protected volatile boolean loadingCompleted = false;
     protected volatile boolean loadingFailed = false;
@@ -206,11 +212,10 @@ public class WavAudio implements IAudio {
 
     @NotNull
     public static WavAudio of(@NotNull InputStream in, @Nullable String wavAudioName, @Nullable WavAudio writeTo, @Nullable ALAudioClip clip) {
-
         String name = (wavAudioName != null) ? wavAudioName : "[Generic InputStream Source]";
         WavAudio audio = (writeTo != null) ? writeTo : new WavAudio();
 
-        //Clips need to get created on the main thread, so make sure we're in the correct thread
+        // Clips need to get created on the main thread, so make sure we're in the correct thread
         if (clip == null) RenderSystem.assertOnRenderThread();
 
         if (!ALUtils.isOpenAlReady()) {
@@ -238,8 +243,38 @@ public class WavAudio implements IAudio {
             AudioInputStream stream = null;
             ByteArrayInputStream byteIn = null;
             try {
-                //Needed because otherwise getAudioInputStream() could fail due to issues like "in" not supporting mark/reset, etc.
-                byteIn = new ByteArrayInputStream(in.readAllBytes());
+                // Read the full stream into a byte array
+                byte[] fullData = in.readAllBytes();
+
+                // Read header first - WAV header is minimum 44 bytes
+                if (fullData.length >= 44) {
+                    try {
+                        // Create a new input stream that wraps your fullData
+                        WavHeader header = null;
+                        InputStream headerStream = null;
+                        try {
+                            headerStream = new ByteArrayInputStream(fullData);
+                            header = WavHeader.read(headerStream);
+                        } catch (IOException ex) {
+                            LOGGER.error("[FANCYMENU] Failed to read WAV header of WavAudio: " + name, ex);
+                        }
+                        CloseableUtils.closeQuietly(headerStream);
+                        float calculatedDuration = 0;
+                        if (header != null) calculatedDuration = header.getDurationInSeconds();
+                        if (calculatedDuration > 0) {
+                            audio.duration = calculatedDuration;
+                        } else {
+                            LOGGER.warn("[FANCYMENU] Invalid WAV header duration calculated for: " + name);
+                        }
+                    } catch (Exception ex) {
+                        LOGGER.warn("[FANCYMENU] Failed to read WAV header of WavAudio: " + name, ex);
+                    }
+                } else {
+                    LOGGER.warn("[FANCYMENU] WAV file too small, missing header data: " + name);
+                }
+
+                // Continue with normal audio loading
+                byteIn = new ByteArrayInputStream(fullData);
                 stream = AudioSystem.getAudioInputStream(byteIn);
                 ByteBuffer byteBuffer = ALUtils.readStreamIntoBuffer(stream);
                 ALAudioBuffer audioBuffer = new ALAudioBuffer(byteBuffer, stream.getFormat());
@@ -257,7 +292,6 @@ public class WavAudio implements IAudio {
         }).start();
 
         return audio;
-
     }
 
     @NotNull
@@ -278,6 +312,7 @@ public class WavAudio implements IAudio {
         this.forClip(alAudioClip -> {
             try {
                 alAudioClip.play();
+                this.playTimeTracker.onPlay();
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -300,6 +335,7 @@ public class WavAudio implements IAudio {
         this.forClip(alAudioClip -> {
             try {
                 alAudioClip.pause();
+                this.playTimeTracker.onPause();
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -322,6 +358,7 @@ public class WavAudio implements IAudio {
         this.forClip(alAudioClip -> {
             try {
                 alAudioClip.stop();
+                this.playTimeTracker.onStop();
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -353,6 +390,16 @@ public class WavAudio implements IAudio {
     public SoundSource getSoundChannel() {
         ALAudioClip cached = this.clip;
         return (cached != null) ? cached.getSoundChannel() : SoundSource.MASTER;
+    }
+
+    @Override
+    public float getDuration() {
+        return this.duration;
+    }
+
+    @Override
+    public float getPlayTime() {
+        return this.playTimeTracker.getCurrentPlayTime();
     }
 
     protected void forClip(@NotNull Consumer<ALAudioClip> clip) {
@@ -392,6 +439,18 @@ public class WavAudio implements IAudio {
     public boolean isValidOpenAlSource() {
         ALAudioClip cached = this.clip;
         return (cached != null) && cached.isValidOpenAlSource();
+    }
+
+    public int getALSource() {
+        if (this.clip == null) return 0;
+        try {
+            Field f = ALAudioClip.class.getDeclaredField("source");
+            f.setAccessible(true);
+            return f.getInt(this.clip);
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to get AL source in WavAudio!", ex);
+        }
+        return 0;
     }
 
     @Override

@@ -5,7 +5,6 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.PlayerRideableJumping;
 import org.jetbrains.annotations.NotNull;
 
-//TODO übernehmen
 public class CurrentMountJumpMeterPlaceholder extends AbstractWorldIntegerPlaceholder {
 
     public CurrentMountJumpMeterPlaceholder() {

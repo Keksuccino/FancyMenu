@@ -12,6 +12,7 @@ public class MusicControllerEditorElement extends AbstractEditorElement {
 
     public MusicControllerEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
+        this.settings.setInEditorColorSupported(true);
     }
 
     @Override

@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
@@ -242,15 +243,15 @@ public class PlayerEntityPoseScreen extends CellScreen {
     }
 
     @Override
-    public void render(PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        super.render(pose, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
 
         int entityX = this.width - 20 - (this.getRightSideWidgetWidth() / 2) - ((int)(this.element.getActiveEntityProperties().getDimensions().width * ENTITY_SCALE) / 2);
         int entityY = (int) this.scrollArea.getYWithBorder() + 30;
-        this.renderEntity(pose, mouseX, mouseY, partial, entityX, entityY);
+        this.renderEntity(graphics.pose(), mouseX, mouseY, partial, entityX, entityY);
 
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
 
     }
 
@@ -429,7 +430,7 @@ public class PlayerEntityPoseScreen extends CellScreen {
         }
 
         @Override
-        public void renderCell(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
             int toggleModeButtonWidth = Minecraft.getInstance().font.width(this.toggleModeButton.getLabelSupplier().get(this.toggleModeButton)) + 6;
 
@@ -437,8 +438,8 @@ public class PlayerEntityPoseScreen extends CellScreen {
             this.activeWidget.y = this.getY();
             this.activeWidget.setWidth(this.getWidth() - toggleModeButtonWidth - 5);
 
-            this.toggleModeButton.setX(this.getX() + this.getWidth() - toggleModeButtonWidth);
-            this.toggleModeButton.setY(this.getY());
+            this.toggleModeButton.x = (this.getX() + this.getWidth() - toggleModeButtonWidth);
+            this.toggleModeButton.y = (this.getY());
             this.toggleModeButton.setWidth(toggleModeButtonWidth);
 
         }

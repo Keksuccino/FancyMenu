@@ -5,7 +5,8 @@ import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionRegistry;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
@@ -23,7 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
 
-public class BuildActionScreen extends Screen {
+public class BuildActionScreen extends ModernScreen {
 
     protected final ActionInstance instance;
     protected Consumer<ActionInstance> callback;
@@ -38,7 +39,7 @@ public class BuildActionScreen extends Screen {
 
     public BuildActionScreen(@Nullable ActionInstance instanceToEdit, @NotNull Consumer<ActionInstance> callback) {
 
-        super((instanceToEdit != null) ? Components.translatable("fancymenu.editor.action.screens.edit_action") : Components.translatable("fancymenu.editor.action.screens.add_action"));
+        super((instanceToEdit != null) ? Component.translatable("fancymenu.editor.action.screens.edit_action") : Component.translatable("fancymenu.editor.action.screens.add_action"));
 
         if (instanceToEdit != null) {
             this.originalAction = instanceToEdit.action;
@@ -63,14 +64,14 @@ public class BuildActionScreen extends Screen {
     @Override
     protected void init() {
 
-        this.editValueButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.editor.action.screens.build_screen.edit_value"), (button) -> {
+        this.editValueButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.editor.action.screens.build_screen.edit_value"), (button) -> {
             if (this.instance.action == Action.EMPTY) return;
             this.originalAction = null;
             this.originalActionValue = null;
             this.instance.action.editValue(this, this.instance);
         }) {
             @Override
-            public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+            public void render(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {
                 Action b = BuildActionScreen.this.instance.action;
                 if ((b != Action.EMPTY) && !b.hasValue()) {
                     this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.build_screen.edit_value.desc.no_value")));
@@ -78,17 +79,17 @@ public class BuildActionScreen extends Screen {
                     this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.build_screen.edit_value.desc.normal")));
                 }
                 this.active = (b != Action.EMPTY) && b.hasValue();
-                super.render(pose, mouseX, mouseY, partial);
+                super.render(graphics, mouseX, mouseY, partial);
             }
         };
         this.addWidget(this.editValueButton);
         UIBase.applyDefaultWidgetSkinTo(this.editValueButton);
 
-        this.doneButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.guicomponents.done"), (button) -> {
+        this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
             this.callback.accept((this.instance.action != Action.EMPTY) ? this.instance : null);
         }) {
             @Override
-            public void renderButton(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+            public void renderButton(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {
                 if (BuildActionScreen.this.instance.action == Action.EMPTY) {
                     this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.finish.no_action_selected")));
                     this.active = false;
@@ -99,13 +100,13 @@ public class BuildActionScreen extends Screen {
                     this.setTooltip((Tooltip)null);
                     this.active = true;
                 }
-                super.renderButton(pose, mouseX, mouseY, partial);
+                super.renderButton(graphics, mouseX, mouseY, partial);
             }
         };
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
-        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.guicomponents.cancel"), (button) -> {
+        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
             this.callback.accept(null);
         });
         this.addWidget(this.cancelButton);
@@ -121,44 +122,44 @@ public class BuildActionScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull PoseStack matrix, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        fill(matrix, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(matrix, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        this.font.draw(matrix, I18n.get("fancymenu.editor.action.screens.build_screen.available_actions"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, I18n.get("fancymenu.editor.action.screens.build_screen.available_actions"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
         this.actionsListScrollArea.setWidth((this.width / 2) - 40, true);
         this.actionsListScrollArea.setHeight(this.height - 85, true);
         this.actionsListScrollArea.setX(20, true);
         this.actionsListScrollArea.setY(50 + 15, true);
-        this.actionsListScrollArea.render(matrix, mouseX, mouseY, partial);
+        this.actionsListScrollArea.render(graphics, mouseX, mouseY, partial);
 
         String descLabelString = I18n.get("fancymenu.editor.action.screens.build_screen.action_description");
         int descLabelWidth = this.font.width(descLabelString);
-        this.font.draw(matrix, descLabelString, this.width - 20 - descLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, descLabelString, this.width - 20 - descLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
         this.actionDescriptionScrollArea.setWidth((this.width / 2) - 40, true);
         this.actionDescriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
         this.actionDescriptionScrollArea.setX(this.width - 20 - this.actionDescriptionScrollArea.getWidthWithBorder(), true);
         this.actionDescriptionScrollArea.setY(50 + 15, true);
-        this.actionDescriptionScrollArea.render(matrix, mouseX, mouseY, partial);
+        this.actionDescriptionScrollArea.render(graphics, mouseX, mouseY, partial);
 
         this.doneButton.x = (this.width - 20 - this.doneButton.getWidth());
         this.doneButton.y = (this.height - 20 - 20);
-        this.doneButton.render(matrix, mouseX, mouseY, partial);
+        this.doneButton.render(graphics.pose(), mouseX, mouseY, partial);
 
         this.cancelButton.x = (this.width - 20 - this.cancelButton.getWidth());
         this.cancelButton.y = (this.doneButton.y - 5 - 20);
-        this.cancelButton.render(matrix, mouseX, mouseY, partial);
+        this.cancelButton.render(graphics.pose(), mouseX, mouseY, partial);
 
         this.editValueButton.x = (this.width - 20 - this.editValueButton.getWidth());
         this.editValueButton.y = (this.cancelButton.y - 15 - 20);
-        this.editValueButton.render(matrix, mouseX, mouseY, partial);
+        this.editValueButton.render(graphics.pose(), mouseX, mouseY, partial);
 
-        super.render(matrix, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
 
     }
 
@@ -206,8 +207,8 @@ public class BuildActionScreen extends Screen {
             MutableComponent c = action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
             if (action.isDeprecated()) {
                 c = c.withStyle(Style.EMPTY.withStrikethrough(true));
-                c = c.append(Components.literal(" ").setStyle(Style.EMPTY.withStrikethrough(false)));
-                c = c.append(Components.translatable("fancymenu.editor.actions.deprecated").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()).withStrikethrough(false)));
+                c = c.append(Component.literal(" ").setStyle(Style.EMPTY.withStrikethrough(false)));
+                c = c.append(Component.translatable("fancymenu.editor.actions.deprecated").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt()).withStrikethrough(false)));
             }
             return c;
         }

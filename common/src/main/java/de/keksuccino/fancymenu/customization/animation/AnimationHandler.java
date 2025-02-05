@@ -11,8 +11,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-//TODO übernehmen (whole class)
-
 /**
  * DOES _NOTHING_ ANYMORE! JUST HERE FOR BACKWARDS COMPAT! DON'T USE THIS CLASS ANYMORE!<br>
  * The old animation format does not exist anymore. It got replaced by FMA files.

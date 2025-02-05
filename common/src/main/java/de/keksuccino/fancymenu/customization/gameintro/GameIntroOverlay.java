@@ -12,7 +12,8 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.text.Components;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenRenderUtils;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.Minecraft;
@@ -51,6 +52,8 @@ public class GameIntroOverlay extends Overlay {
     @Override
     public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
+        GuiGraphics graphics = GuiGraphics.currentGraphics();
+
         this.width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
         this.height = Minecraft.getInstance().getWindow().getGuiScaledHeight();
 
@@ -75,22 +78,24 @@ public class GameIntroOverlay extends Overlay {
         }
 
         if (this.endOfIntroReached()) {
-            EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(this.fadeTo, pose, mouseX, mouseY, partial));
-            this.fadeTo.render(pose, mouseX, mouseY, partial);
-            EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(this.fadeTo, pose, mouseX, mouseY, partial));
+            ScreenRenderUtils.executeAllPreRenderTasks(graphics, mouseX, mouseY, partial);
+            EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(this.fadeTo, graphics.pose(), mouseX, mouseY, partial));
+            this.fadeTo.render(graphics.pose(), mouseX, mouseY, partial);
+            EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(this.fadeTo, graphics.pose(), mouseX, mouseY, partial));
+            ScreenRenderUtils.executeAllPostRenderTasks(graphics, mouseX, mouseY, partial);
         } else {
-            fill(pose, 0, 0, this.width, this.height, DrawableColor.BLACK.getColorInt());
+            graphics.fill(0, 0, this.width, this.height, DrawableColor.BLACK.getColorInt());
         }
 
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
 
-        this.renderIntro(pose, mouseX, mouseY, partial);
+        this.renderIntro(graphics, mouseX, mouseY, partial);
 
-        this.renderSkipText(pose, mouseX, mouseY, partial);
+        this.renderSkipText(graphics, mouseX, mouseY, partial);
 
     }
 
-    protected void renderIntro(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    protected void renderIntro(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (this.intro instanceof RenderableResource r) {
 
@@ -104,36 +109,35 @@ public class GameIntroOverlay extends Overlay {
             ResourceLocation location = r.getResourceLocation();
             if (location != null) {
                 RenderSystem.enableBlend();
-                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
-                RenderingUtils.bindTexture(location);
-                blit(pose, x, y, 0.0F, 0.0F, aspectWidth, aspectHeight, aspectWidth, aspectHeight);
+                graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
+                graphics.blit(location, x, y, 0.0F, 0.0F, aspectWidth, aspectHeight, aspectWidth, aspectHeight);
             }
 
-            RenderingUtils.resetShaderColor();
+            RenderingUtils.resetShaderColor(graphics);
 
         }
 
     }
 
-    protected void renderSkipText(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    protected void renderSkipText(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         if (FancyMenu.getOptions().gameIntroAllowSkip.getValue()) {
             float scale = 1.3F;
             String customSkipText = FancyMenu.getOptions().gameIntroCustomSkipText.getValue();
             if (!customSkipText.isEmpty() && LocalizationUtils.isLocalizationKey(customSkipText)) {
                 customSkipText = I18n.get(customSkipText);
             }
-            Component skipComp = customSkipText.isEmpty() ? Components.translatable("fancymenu.game_intro.press_any_key") : Components.literal(customSkipText);
-            pose.pushPose();
-            pose.scale(scale, scale, scale);
+            Component skipComp = customSkipText.isEmpty() ? Component.translatable("fancymenu.game_intro.press_any_key") : Component.literal(customSkipText);
+            graphics.pose().pushPose();
+            graphics.pose().scale(scale, scale, scale);
             RenderSystem.enableBlend();
-            RenderingUtils.resetShaderColor();
+            RenderingUtils.resetShaderColor(graphics);
             int normalizedWidth = (int)(this.width / scale);
             int normalizedHeight = (int)(this.height / scale);
             int textX = (normalizedWidth / 2) - (this.font.width(skipComp) / 2);
             int textY = normalizedHeight - 40;
-            this.font.draw(pose, skipComp, textX, textY, RenderingUtils.replaceAlphaInColor(DrawableColor.WHITE.getColorInt(), Math.max(0.1F, 0.6F * this.opacity)));
-            pose.popPose();
-            RenderingUtils.resetShaderColor();
+            graphics.drawString(this.font, skipComp, textX, textY, RenderingUtils.replaceAlphaInColor(DrawableColor.WHITE.getColorInt(), Math.max(0.1F, 0.6F * this.opacity)), false);
+            graphics.pose().popPose();
+            RenderingUtils.resetShaderColor(graphics);
         }
     }
 
@@ -161,7 +165,6 @@ public class GameIntroOverlay extends Overlay {
         ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(this.fadeTo);
         if (layer != null) layer.resetLayer();
 
-        EventHandler.INSTANCE.postEvent(new OpenScreenEvent(this.fadeTo));
         EventHandler.INSTANCE.postEvent(new InitOrResizeScreenStartingEvent(this.fadeTo, InitOrResizeScreenEvent.InitializationPhase.INIT));
         EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Pre(this.fadeTo, InitOrResizeScreenEvent.InitializationPhase.INIT));
 
@@ -169,7 +172,6 @@ public class GameIntroOverlay extends Overlay {
 
         EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(this.fadeTo, InitOrResizeScreenEvent.InitializationPhase.INIT));
         EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(this.fadeTo, InitOrResizeScreenEvent.InitializationPhase.INIT));
-        EventHandler.INSTANCE.postEvent(new OpenScreenPostInitEvent(this.fadeTo));
 
         this.fadeToInitialized = true;
 

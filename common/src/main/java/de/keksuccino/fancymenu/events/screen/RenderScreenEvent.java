@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.events.screen;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.event.acara.EventBase;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -27,6 +28,10 @@ public class RenderScreenEvent extends EventBase {
 
     public Screen getScreen() {
         return this.screen;
+    }
+
+    public GuiGraphics getGraphics() {
+        return GuiGraphics.currentGraphics();
     }
 
     public PoseStack getPoseStack() {

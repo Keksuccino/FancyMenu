@@ -19,6 +19,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MarkdownParser {
 
@@ -55,13 +57,15 @@ public class MarkdownParser {
     private static final String FORMATTING_CODE_QUOTE_PREFIX = "> ";
     private static final String SPACE = " ";
     private static final char SPACE_CHAR = ' ';
-    private static final String FORMATTING_CODE_BULLET_LIST_LEVEL_1_PREFIX = "- ";
-    private static final String FORMATTING_CODE_BULLET_LIST_LEVEL_2_PREFIX = "  - ";
-    private static final String MINUS = "-";
+    private static final String BULLET_LIST_PATTERN = "^( *)- ";
     private static final char MINUS_CHAR = '-';
     private static final String FORMATTING_CODE_SEPARATION_LINE_PREFIX = "---";
     private static final char GRAVE_ACCENT_CHAR = '`';
     private static final String FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX = "```";
+    private static final char SEMICOLON_CHAR = ';';
+    private static final String SEMICOLON = ";";
+    private static final String FORMATTING_CODE_PLAIN_TEXT_SINGLE_LINE_PREFIX_SUFFIX = ";;";
+    private static final String FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX = ";;;";
     private static final char CIRCUMFLEX_CHAR = '^';
     private static final String CIRCUMFLEX = "^";
     private static final String FORMATTING_CODE_ALIGNMENT_CENTERED_PREFIX_SUFFIX = "^^^";
@@ -141,7 +145,7 @@ public class MarkdownParser {
             if (parseMarkdown) {
 
                 //Handle Headline
-                if (isStartOfLine && (c == HASHTAG_CHAR) && (builder.codeBlockContext == null)) {
+                if (isStartOfLine && (c == HASHTAG_CHAR) && (builder.codeBlockContext == null) && !builder.plainText) {
                     if (builder.headlineType == HeadlineType.NONE) {
                         if (StringUtils.startsWith(subText, HEADLINE_PREFIX_BIGGEST)) {
                             builder.headlineType = HeadlineType.BIGGEST;
@@ -164,7 +168,7 @@ public class MarkdownParser {
 
                 //Handle Fonts
                 if (c == PERCENTAGE_CHAR) {
-                    if (StringUtils.startsWith(subLine, FORMATTING_CODE_FONT_PREFIX) && !StringUtils.startsWith(subLine, FORMATTING_CODE_FONT_SUFFIX) && (builder.font == null) && (builder.codeBlockContext == null)) {
+                    if (StringUtils.startsWith(subLine, FORMATTING_CODE_FONT_PREFIX) && !StringUtils.startsWith(subLine, FORMATTING_CODE_FONT_SUFFIX) && (builder.font == null) && (builder.codeBlockContext == null) && !builder.plainText) {
                         String afterPrefix = StringUtils.substring(subLine, 3);
                         if (StringUtils.contains(afterPrefix, PERCENTAGE_CHAR)) {
                             String fontName = StringUtils.split(afterPrefix, PERCENTAGE, 2)[0];
@@ -196,7 +200,7 @@ public class MarkdownParser {
 
                 //Handle HEX Coloring
                 if (c == PERCENTAGE_CHAR) {
-                    if (StringUtils.startsWith(subLine, FORMATTING_CODE_HEX_COLOR_PREFIX) && !StringUtils.startsWith(subLine, FORMATTING_CODE_HEX_COLOR_SUFFIX) && (builder.textColor == null) && (builder.codeBlockContext == null)) {
+                    if (StringUtils.startsWith(subLine, FORMATTING_CODE_HEX_COLOR_PREFIX) && !StringUtils.startsWith(subLine, FORMATTING_CODE_HEX_COLOR_SUFFIX) && (builder.textColor == null) && (builder.codeBlockContext == null) && !builder.plainText) {
                         String s = (subLine.length() >= 11) ? StringUtils.substring(subLine, 1, 11) : EMPTY_STRING;
                         if (!StringUtils.endsWith(s, PERCENTAGE)) {
                             s = (subLine.length() >= 9) ? StringUtils.substring(subLine, 1, 9) : EMPTY_STRING;
@@ -223,7 +227,7 @@ public class MarkdownParser {
 
                 //Handle Bold
                 if (c == ASTERISK_CHAR) {
-                    if (!builder.bold && (builder.codeBlockContext == null)) {
+                    if (!builder.bold && (builder.codeBlockContext == null) && !builder.plainText) {
                         String s2 = StringUtils.substring(markdownText, Math.min(markdownText.length(), index+2));
                         if (StringUtils.startsWith(subText, FORMATTING_CODE_BOLD_PREFIX_SUFFIX) && StringUtils.contains(s2, FORMATTING_CODE_BOLD_PREFIX_SUFFIX)) {
                             if (isStartOfLine || !builder.text.isEmpty()) {
@@ -248,7 +252,7 @@ public class MarkdownParser {
 
                 //Handle Italic Underscore
                 if (c == UNDERSCORE_CHAR) {
-                    if (!builder.italic && (builder.codeBlockContext == null)) {
+                    if (!builder.italic && (builder.codeBlockContext == null) && !builder.plainText) {
                         String s = StringUtils.substring(markdownText, indexPlusOne);
                         if (StringUtils.contains(s, UNDERSCORE_CHAR)) {
                             if (isStartOfLine || !builder.text.isEmpty()) {
@@ -269,7 +273,7 @@ public class MarkdownParser {
 
                 //Handle Italic Asterisk
                 if (c == ASTERISK_CHAR) {
-                    if (!builder.italic && (builder.codeBlockContext == null)) {
+                    if (!builder.italic && (builder.codeBlockContext == null) && !builder.plainText) {
                         String s2 = StringUtils.substring(markdownText, indexPlusOne);
                         if (!StringUtils.startsWith(subText, FORMATTING_CODE_BOLD_PREFIX_SUFFIX) && StringUtils.contains(s2, ASTERISK_CHAR)) {
                             boolean isEndSingleAsterisk = false;
@@ -304,7 +308,7 @@ public class MarkdownParser {
 
                 //Handle Strikethrough
                 if (c == TILDE_CHAR) {
-                    if (!builder.strikethrough && (builder.codeBlockContext == null)) {
+                    if (!builder.strikethrough && (builder.codeBlockContext == null) && !builder.plainText) {
                         String s = StringUtils.substring(markdownText, indexPlusOne);
                         if (StringUtils.contains(s, TILDE_CHAR)) {
                             if (isStartOfLine || !builder.text.isEmpty()) {
@@ -322,7 +326,7 @@ public class MarkdownParser {
                 }
 
                 //Handle Hyperlink Image
-                if (isStartOfLine && (c == OPEN_SQUARE_BRACKETS_CHAR) && (builder.codeBlockContext == null)) {
+                if (isStartOfLine && (c == OPEN_SQUARE_BRACKETS_CHAR) && (builder.codeBlockContext == null) && !builder.plainText) {
                     if (StringUtils.startsWith(currentLine, FORMATTING_CODE_HYPERLINK_IMAGE_PREFIX)) {
                         List<String> hyperlinkImage = getHyperlinkImageFromLine(currentLine);
                         if (hyperlinkImage != null) {
@@ -339,7 +343,7 @@ public class MarkdownParser {
                 }
 
                 //Handle Image
-                if (isStartOfLine && (c == EXCLAMATION_MARK_CHAR) && (builder.codeBlockContext == null)) {
+                if (isStartOfLine && (c == EXCLAMATION_MARK_CHAR) && (builder.codeBlockContext == null) && !builder.plainText) {
                     if (StringUtils.startsWith(currentLine, FORMATTING_CODE_IMAGE_PREFIX)) {
                         String imageLink = getImageFromLine(currentLine);
                         if (imageLink != null) {
@@ -353,7 +357,7 @@ public class MarkdownParser {
                 }
 
                 //Handle Hyperlink
-                if ((c == OPEN_SQUARE_BRACKETS_CHAR) && (builder.hyperlink == null) && (builder.codeBlockContext == null)) {
+                if ((c == OPEN_SQUARE_BRACKETS_CHAR) && (builder.hyperlink == null) && (builder.codeBlockContext == null) && !builder.plainText) {
                     String s2 = StringUtils.substring(markdownText, indexPlusOne);
                     if (StringUtils.contains(s2, FORMATTING_CODE_HYPERLINK_INNER_PREFIX) && StringUtils.contains(s2, CLOSE_ROUND_BRACKETS_CHAR)) {
                         String hyperlink = getHyperlinkFromLine(subText);
@@ -377,7 +381,7 @@ public class MarkdownParser {
                 }
 
                 //Handle Quote
-                if (isStartOfLine && (c == GREATER_THAN_CHAR) && (builder.quoteContext == null) && (builder.codeBlockContext == null)) {
+                if (isStartOfLine && (c == GREATER_THAN_CHAR) && (builder.quoteContext == null) && (builder.codeBlockContext == null) && !builder.plainText) {
                     if (StringUtils.startsWith(subText, FORMATTING_CODE_QUOTE_PREFIX)) {
                         builder.quoteContext = new QuoteContext();
                         charsToSkip = 1;
@@ -393,24 +397,30 @@ public class MarkdownParser {
                     }
                 }
 
-                //Handle Bullet List Level 1
-                if (isStartOfLine && (c == MINUS_CHAR) && StringUtils.startsWith(subLine, FORMATTING_CODE_BULLET_LIST_LEVEL_1_PREFIX) && !removeFromString(subLine, MINUS, SPACE, NEWLINE).isEmpty() && (builder.codeBlockContext == null)) {
-                    builder.bulletListLevel = 1;
-                    builder.bulletListItemStart = true;
-                    charsToSkip = 1;
-                    continue;
-                }
-                //Handle Bullet List Level 2
-                if (isStartOfLine && (c == SPACE_CHAR) && StringUtils.startsWith(subLine, FORMATTING_CODE_BULLET_LIST_LEVEL_2_PREFIX) && !removeFromString(subLine, MINUS, SPACE, NEWLINE).isEmpty() && (builder.codeBlockContext == null)) {
-                    builder.bulletListLevel = 2;
-                    builder.bulletListItemStart = true;
-                    charsToSkip = 3;
-                    continue;
+                // Handle Bullet Lists (all levels)
+                if (isStartOfLine && (builder.codeBlockContext == null) && !builder.plainText) {
+                    // Match any bullet list pattern (supports 2 spaces per level)
+                    Matcher bulletMatcher = Pattern.compile(BULLET_LIST_PATTERN).matcher(currentLine);
+                    if (bulletMatcher.find()) {
+                        int indentSpaces = bulletMatcher.group(1).length();
+                        int level = (indentSpaces / 2) + 1;
+
+                        if ((level >= 1) && (level <= 10)) {
+                            // Calculate characters to skip (indent + "- "), subtract one because the current char is already consumed
+                            charsToSkip = indentSpaces + 1;
+
+                            // Configure builder
+                            builder.bulletListLevel = level;
+                            builder.bulletListItemStart = true;
+
+                            continue;
+                        }
+                    }
                 }
                 //TODO add more bullet list levels (make better handling for infinite levels)
 
                 //Handle Separation Line
-                if (isStartOfLine && (c == MINUS_CHAR) && (builder.codeBlockContext == null)) {
+                if (isStartOfLine && (c == MINUS_CHAR) && (builder.codeBlockContext == null) && !builder.plainText) {
                     if (StringUtils.startsWith(currentLine, FORMATTING_CODE_SEPARATION_LINE_PREFIX) && MINUS_CHARACTER_FILTER.isAllowedText(StringUtils.replace(currentLine, SPACE, EMPTY_STRING))) {
                         builder.separationLine = true;
                         builder.text = new StringBuilder(FORMATTING_CODE_SEPARATION_LINE_PREFIX);
@@ -421,7 +431,7 @@ public class MarkdownParser {
                 }
 
                 //Handle Code Block Single Line
-                if (c == GRAVE_ACCENT_CHAR) {
+                if ((c == GRAVE_ACCENT_CHAR) && !builder.plainText) {
                     if (builder.codeBlockContext == null) {
                         if (!StringUtils.startsWith(subLine, FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX) && isFormattedBlock(subText, GRAVE_ACCENT_CHAR, true)) {
                             if (isStartOfLine || !builder.text.isEmpty()) {
@@ -442,7 +452,7 @@ public class MarkdownParser {
                 }
 
                 //Handle Code Block Multi Line
-                if (isStartOfLine && (c == GRAVE_ACCENT_CHAR) && (currentLine.length() == 3)) {
+                if (isStartOfLine && (c == GRAVE_ACCENT_CHAR) && (currentLine.length() == 3) && !builder.plainText) {
                     if (builder.codeBlockContext == null) {
                         if (StringUtils.startsWith(currentLine, FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX) && isFormattedBlock(subText, GRAVE_ACCENT_CHAR, false)) {
                             builder.codeBlockContext = new CodeBlockContext();
@@ -454,6 +464,45 @@ public class MarkdownParser {
                     if ((builder.codeBlockContext != null) && !builder.codeBlockContext.singleLine) {
                         if (StringUtils.startsWith(currentLine, FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX)) {
                             builder.codeBlockContext = null;
+                            skipLine = true;
+                            continue;
+                        }
+                    }
+                }
+
+                //Handle Plain Text Single Line
+                if ((c == SEMICOLON_CHAR) && !StringUtils.startsWith(subLine, FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX)) {
+                    if (!builder.plainText) {
+                        String s2 = StringUtils.substring(markdownText, Math.min(markdownText.length(), index+2));
+                        if (StringUtils.startsWith(subText, FORMATTING_CODE_PLAIN_TEXT_SINGLE_LINE_PREFIX_SUFFIX) && StringUtils.contains(s2, FORMATTING_CODE_PLAIN_TEXT_SINGLE_LINE_PREFIX_SUFFIX)) {
+                            if (isStartOfLine || !builder.text.isEmpty()) {
+                                lastBuiltFragment = addFragment(fragments, builder.build(false, false));
+                            }
+                            builder.plainText = true;
+                            charsToSkip = 1;
+                            continue;
+                        }
+                    }
+                    if (builder.plainText) {
+                        if (StringUtils.startsWith(subText, FORMATTING_CODE_PLAIN_TEXT_SINGLE_LINE_PREFIX_SUFFIX)) {
+                            lastBuiltFragment = addFragment(fragments, builder.build(false, false));
+                            builder.plainText = false;
+                            charsToSkip = 1;
+                            continue;
+                        }
+                    }
+                }
+
+                //Handle Plain Text Multi Line
+                if (isStartOfLine && (c == SEMICOLON_CHAR) && (currentLine.length() == 3)) {
+                    if (StringUtils.startsWith(subLine, FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX)) {
+                        if (!builder.plainText && isFormattedBlock(subText, SEMICOLON_CHAR, false)) {
+                            builder.plainText = true;
+                            skipLine = true;
+                            continue;
+                        }
+                        if (builder.plainText && removeFromString(subLine, SEMICOLON, SPACE, NEWLINE).isEmpty()) {
+                            builder.plainText = false;
                             skipLine = true;
                             continue;
                         }
@@ -748,6 +797,7 @@ public class MarkdownParser {
         protected QuoteContext quoteContext = null;
         protected CodeBlockContext codeBlockContext = null;
         protected ResourceLocation font = null;
+        protected boolean plainText = false;
 
         protected FragmentBuilder(MarkdownRenderer renderer) {
             this.renderer = renderer;
@@ -779,9 +829,12 @@ public class MarkdownParser {
             if (quoteContext != null) {
                 quoteContext.quoteFragments.add(frag);
             }
-            frag.codeBlockContext = codeBlockContext;
-            if (codeBlockContext != null) {
-                codeBlockContext.codeBlockFragments.add(frag);
+            frag.plainText = this.plainText;
+            if (!this.plainText) {
+                frag.codeBlockContext = codeBlockContext;
+                if (codeBlockContext != null) {
+                    codeBlockContext.codeBlockFragments.add(frag);
+                }
             }
             frag.naturalLineBreakAfter = naturalLineBreakAfter;
             frag.endOfWord = endOfWord;

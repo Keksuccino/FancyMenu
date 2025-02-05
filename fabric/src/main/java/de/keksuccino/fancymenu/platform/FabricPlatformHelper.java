@@ -78,7 +78,6 @@ public class FabricPlatformHelper implements IPlatformHelper {
         return KeyBindingHelper.getBoundKeyOf(keyMapping);
     }
 
-    //TODO übernehmen
     @Override
     public @Nullable ResourceLocation getItemKey(@NotNull Item item) {
         try {
@@ -89,7 +88,6 @@ public class FabricPlatformHelper implements IPlatformHelper {
         return null;
     }
 
-    //TODO übernehmen
     @Override
     public @Nullable ResourceLocation getEffectKey(@NotNull MobEffect effect) {
         try {
@@ -100,7 +98,6 @@ public class FabricPlatformHelper implements IPlatformHelper {
         return null;
     }
 
-    //TODO übernehmen
     @Override
     public @Nullable ResourceLocation getEntityKey(@NotNull EntityType<?> type) {
         try {
