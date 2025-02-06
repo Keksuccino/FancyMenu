@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.overlay;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.events.screen.ScreenKeyPressedEvent;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.auth.ModValidator;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventPriority;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
@@ -26,6 +27,7 @@ public class CustomizationOverlay {
 
 	private static CustomizationOverlayMenuBar overlayMenuBar;
 	private static DebugOverlay debugOverlay;
+	private static boolean isValidFancyMenu = ModValidator.isFancyMenuMetadataValid();
 	
 	public static void init() {
 		EventHandler.INSTANCE.registerListenersOf(new CustomizationOverlay());
@@ -97,6 +99,9 @@ public class CustomizationOverlay {
 
 	@EventListener(priority = EventPriority.LOW)
 	public void onRenderPost(RenderScreenEvent.Post e) {
+		if (!isValidFancyMenu) {
+			ModValidator.renderInvalidError(e.getGraphics());
+		}
 		if (!ScreenCustomization.isScreenBlacklisted(e.getScreen().getClass().getName()) && (overlayMenuBar != null) && (debugOverlay != null) && isOverlayVisible(e.getScreen())) {
 			if (FancyMenu.getOptions().showDebugOverlay.getValue()) {
 				debugOverlay.allowRender = true;

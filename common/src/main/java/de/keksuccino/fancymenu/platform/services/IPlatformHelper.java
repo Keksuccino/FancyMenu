@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.platform.services;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import de.keksuccino.fancymenu.util.mod.UniversalModContainer;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
@@ -59,6 +60,17 @@ public interface IPlatformHelper {
 
     @Nullable
     ResourceLocation getEntityKey(@NotNull EntityType<?> type);
+
+    @NotNull
+    List<UniversalModContainer> getLoadedMods();
+
+    @Nullable
+    default UniversalModContainer getLoadedMod(@NotNull String id) {
+        for (UniversalModContainer mod : this.getLoadedMods()) {
+            if (id.equals(mod.id())) return mod;
+        }
+        return null;
+    }
 
     /**
      * Gets the name of the environment type as a string.
