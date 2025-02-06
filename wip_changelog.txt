@@ -82,6 +82,7 @@ CHANGELOG | FANCYMENU v3.4.0 [ W I P !! Not public yet !! ]
 - Fixed scaling a Text element breaks positioning of Markdown bullet points (bullet point list) (#905)
 - Fixed Markdown text spacing wrong when the start of the line was shifted to the right by a bullet point or quote block and the text scale was bigger or smaller than 1.0 (#906)
 - Fixed custom menu backgrounds not rendering in Custom GUIs in MC 1.18.2 and MC 1.19.2 (#1027)
+- Fixed some screens not showing custom backgrounds (like the "Receiving Level Screen" and "Dirt Message Screen") in MC 1.18.2 and MC 1.19.2 (#896)
  
 %changelog:end%
 
