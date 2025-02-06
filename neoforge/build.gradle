@@ -61,7 +61,7 @@ dependencies {
         jarJar.ranged(it, "[1.7,)")
     }
     compileOnly "com.cinemamod:mcef:2.1.6-1.21.1"
-    runtimeOnly "com.cinemamod:mcef-neoforge:2.1.6-1.21.1"
+//    runtimeOnly "com.cinemamod:mcef-neoforge:2.1.6-1.21.1"
 }
 
 // NeoGradle compiles the game, but we don't want to add our common code to the game's code
