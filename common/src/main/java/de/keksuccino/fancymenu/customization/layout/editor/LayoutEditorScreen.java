@@ -1,21 +1,11 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
-import java.util.*;
-
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetEditorElement;
-import de.keksuccino.fancymenu.customization.layer.ElementFactory;
-import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
-import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
-import de.keksuccino.fancymenu.customization.layout.editor.widget.LayoutEditorWidgetRegistry;
-import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
-import de.keksuccino.fancymenu.customization.widget.ScreenWidgetDiscoverer;
-import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
+import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
@@ -23,35 +13,44 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.HideableElement;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElementBuilder;
+import de.keksuccino.fancymenu.customization.layer.ElementFactory;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.Layout;
+import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
+import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
+import de.keksuccino.fancymenu.customization.layout.editor.widget.LayoutEditorWidgetRegistry;
+import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
+import de.keksuccino.fancymenu.customization.widget.ScreenWidgetDiscoverer;
+import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
+import de.keksuccino.fancymenu.util.ListUtils;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.ObjectUtils;
+import de.keksuccino.fancymenu.util.ScreenTitleUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
-import de.keksuccino.fancymenu.util.*;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.SaveFileScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.TitleScreen;
-import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -60,7 +59,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
-public class LayoutEditorScreen extends Screen implements ElementFactory {
+import java.util.*;
+
+@SuppressWarnings("all")
+public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -216,7 +218,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			e.element.tick();
 		}
 
-		if (this.layout.menuBackground != null) this.layout.menuBackground.tick();
+		this.layout.menuBackgrounds.forEach(MenuBackground::tick);
 
 	}
 
@@ -224,119 +226,147 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public void removed() {
 
 		for (AbstractEditorElement e : this.getAllElements()) {
+			e.element.onCloseScreen(null, null);
 			e.element.onCloseScreen();
 		}
 
-		if (this.layout.menuBackground != null) this.layout.menuBackground.onCloseScreen();
+		this.layout.menuBackgrounds.forEach(MenuBackground::onCloseScreen);
 
 	}
 
 	public void added() {
 
 		for (AbstractEditorElement e : this.getAllElements()) {
-			e.element.onOpenScreen();
+			e.element._onOpenScreen();
 		}
 
-		if (this.layout.menuBackground != null) this.layout.menuBackground.onOpenScreen();
+		this.layout.menuBackgrounds.forEach(MenuBackground::onOpenScreen);
 
 	}
 
 	@Override
-	public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+	public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
 		//Clear active element context menu if not open
 		if ((this.activeElementContextMenu != null) && !this.activeElementContextMenu.isOpen()) {
 			this.activeElementContextMenu = null;
 		}
 
-		this.renderBackground(pose, mouseX, mouseY, partial);
+		this.renderBackground(graphics, mouseX, mouseY, partial);
 
-		this.renderElements(pose, mouseX, mouseY, partial);
+		this.renderElements(graphics, mouseX, mouseY, partial);
 
-		this.renderMouseSelectionRectangle(pose, mouseX, mouseY);
+		this.renderMouseSelectionRectangle(graphics, mouseX, mouseY);
 
-		this.anchorPointOverlay.render(pose, mouseX, mouseY, partial);
+		this.anchorPointOverlay.render(graphics, mouseX, mouseY, partial);
 
-		this.renderLayoutEditorWidgets(pose, mouseX, mouseY, partial);
+		this.renderLayoutEditorWidgets(graphics, mouseX, mouseY, partial);
 
-		this.menuBar.render(pose, mouseX, mouseY, partial);
+		this.menuBar.render(graphics, mouseX, mouseY, partial);
 
-		this.rightClickMenu.render(pose, mouseX, mouseY, partial);
+		this.rightClickMenu.render(graphics, mouseX, mouseY, partial);
 
 		//Render active element context menu
 		if (this.activeElementContextMenu != null) {
-			this.activeElementContextMenu.render(pose, mouseX, mouseY, partial);
+			this.activeElementContextMenu.render(graphics, mouseX, mouseY, partial);
 		}
 
 	}
 
-	protected void renderLayoutEditorWidgets(PoseStack pose, int mouseX, int mouseY, float partial) {
+	protected void renderLayoutEditorWidgets(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 		for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
-			if (w.isVisible()) w.render(pose, mouseX, mouseY, partial);
+			if (w.isVisible()) w.render(graphics, mouseX, mouseY, partial);
 		}
 	}
 
-	protected void renderMouseSelectionRectangle(PoseStack pose, int mouseX, int mouseY) {
+	protected void renderMouseSelectionRectangle(GuiGraphics graphics, int mouseX, int mouseY) {
 		if (this.isMouseSelection) {
 			int startX = Math.min(this.mouseSelectionStartX, mouseX);
 			int startY = Math.min(this.mouseSelectionStartY, mouseY);
 			int endX = Math.max(this.mouseSelectionStartX, mouseX);
 			int endY = Math.max(this.mouseSelectionStartY, mouseY);
-			fill(pose, startX, startY, endX, endY, RenderingUtils.replaceAlphaInColor(UIBase.getUIColorTheme().layout_editor_mouse_selection_rectangle_color.getColorInt(), 70));
-			UIBase.renderBorder(pose, startX, startY, endX, endY, 1, UIBase.getUIColorTheme().layout_editor_mouse_selection_rectangle_color.getColor(), true, true, true, true);
-			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+			graphics.fill(startX, startY, endX, endY, RenderingUtils.replaceAlphaInColor(UIBase.getUIColorTheme().layout_editor_mouse_selection_rectangle_color.getColorInt(), 70));
+			UIBase.renderBorder(graphics, startX, startY, endX, endY, 1, UIBase.getUIColorTheme().layout_editor_mouse_selection_rectangle_color.getColor(), true, true, true, true);
+			graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 		}
 	}
 
-	protected void renderElements(PoseStack pose, int mouseX, int mouseY, float partial) {
+	protected void renderElements(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
 		//Render normal elements behind vanilla if renderBehindVanilla
 		if (this.layout.renderElementsBehindVanilla) {
 			for (AbstractEditorElement e : new ArrayList<>(this.normalEditorElements)) {
-				if (!e.isSelected()) e.render(pose, mouseX, mouseY, partial);
+				if (!e.isSelected()) e.render(graphics, mouseX, mouseY, partial);
 			}
 		}
 		//Render vanilla button elements
 		for (VanillaWidgetEditorElement e : new ArrayList<>(this.vanillaWidgetEditorElements)) {
-			if (!e.isSelected() && !e.isHidden()) e.render(pose, mouseX, mouseY, partial);
+			if (!e.isSelected() && !e.isHidden()) e.render(graphics, mouseX, mouseY, partial);
 		}
 		//Render deep elements
 		for (AbstractDeepEditorElement e : new ArrayList<>(this.deepEditorElements)) {
-			if (!e.isSelected() && !e.isHidden()) e.render(pose, mouseX, mouseY, partial);
+			if (!e.isSelected() && !e.isHidden()) e.render(graphics, mouseX, mouseY, partial);
 		}
 		//Render normal elements before vanilla if NOT renderBehindVanilla
 		if (!this.layout.renderElementsBehindVanilla) {
 			for (AbstractEditorElement e : new ArrayList<>(this.normalEditorElements)) {
-				if (!e.isSelected()) e.render(pose, mouseX, mouseY, partial);
+				if (!e.isSelected()) e.render(graphics, mouseX, mouseY, partial);
 			}
 		}
 
 		//Render selected elements last, so they're always visible
 		List<AbstractEditorElement> selected = this.getSelectedElements();
 		for (AbstractEditorElement e : selected) {
-			e.render(pose, mouseX, mouseY, partial);
+			e.render(graphics, mouseX, mouseY, partial);
 		}
 
 	}
 
-	protected void renderBackground(PoseStack pose, int mouseX, int mouseY, float partial) {
+	protected void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-		fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
+		graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
 
-		if (this.layout.menuBackground != null) {
-			this.layout.menuBackground.keepBackgroundAspectRatio = this.layout.preserveBackgroundAspectRatio;
-			this.layout.menuBackground.opacity = 1.0F;
-			this.layout.menuBackground.render(pose, mouseX, mouseY, partial);
+		this.layout.menuBackgrounds.forEach(menuBackground -> {
+
+			RenderSystem.enableBlend();
+
+			menuBackground.keepBackgroundAspectRatio = this.layout.preserveBackgroundAspectRatio;
+			menuBackground.opacity = 1.0F;
+			menuBackground.render(graphics, mouseX, mouseY, partial);
+
+			//Restore render defaults
+			RenderSystem.colorMask(true, true, true, true);
+			RenderSystem.depthMask(true);
+			RenderSystem.enableCull();
+			RenderSystem.enableDepthTest();
+			RenderSystem.enableBlend();
+			graphics.flush();
+
+		});
+
+		if (!this.layout.menuBackgrounds.isEmpty()) {
+
+			if (this.layout.applyVanillaBackgroundBlur) {
+//				Minecraft.getInstance().gameRenderer.processBlurEffect(partial);
+//				Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
+			}
+
+			if (this.layout.showScreenBackgroundOverlayOnCustomBackground) {
+//				ScreenCustomizationLayer.renderBackgroundOverlay(graphics, 0, 0, this.width, this.height);
+			}
+
 		}
 
-		this.renderScrollListHeaderFooterPreview(pose, mouseX, mouseY, partial);
+		RenderingUtils.resetShaderColor(graphics);
 
-		this.renderGrid(pose);
+		this.renderScrollListHeaderFooterPreview(graphics, mouseX, mouseY, partial);
+
+		this.renderGrid(graphics);
 
 	}
 
 	@SuppressWarnings("unused")
-	protected void renderScrollListHeaderFooterPreview(PoseStack pose, int mouseX, int mouseY, float partial) {
+	protected void renderScrollListHeaderFooterPreview(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
 		if (this.layout.showScrollListHeaderFooterPreviewInEditor) {
 
@@ -352,34 +382,31 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			if (headerTexture != null) {
 				ResourceLocation loc = headerTexture.getResourceLocation();
 				if (loc != null) {
-					RenderingUtils.bindTexture(loc);
-					RenderingUtils.resetShaderColor();
+					RenderingUtils.resetShaderColor(graphics);
 					if (this.layout.preserveScrollListHeaderFooterAspectRatio) {
 						int[] headerSize = headerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(this.width, y0);
 						int headerWidth = headerSize[0];
 						int headerHeight = headerSize[1];
 						int headerX = x0 + (this.width / 2) - (headerWidth / 2);
 						int headerY = (y0 / 2) - (headerHeight / 2);
-						RenderingUtils.enableScissor(x0, 0, x0 + this.width, y0);
-						blit(pose, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
-						RenderingUtils.disableScissor();
+						graphics.enableScissor(x0, 0, x0 + this.width, y0);
+						graphics.blit(loc, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
+						graphics.disableScissor();
 					} else if (this.layout.repeatScrollListHeaderTexture) {
-						RenderingUtils.blitRepeat(pose, x0, 0, this.width, y0, headerTexture.getWidth(), headerTexture.getHeight());
+						RenderingUtils.blitRepeat(graphics, loc, x0, 0, this.width, y0, headerTexture.getWidth(), headerTexture.getHeight());
 					} else {
-						blit(pose, x0, 0, 0.0F, 0.0F, this.width, y0, this.width, y0);
+						graphics.blit(loc, x0, 0, 0.0F, 0.0F, this.width, y0, this.width, y0);
 					}
 				}
 			} else {
-				RenderSystem.setShaderTexture(0, GuiComponent.BACKGROUND_LOCATION);
-				RenderSystem.setShaderColor(0.25F, 0.25F, 0.25F, 1.0F);
-				blit(pose, x0, 0, 0.0F, 0.0F, this.width, y0, 32, 32);
+				graphics.setColor(0.25F, 0.25F, 0.25F, 1.0F);
+				graphics.blit(Screen.BACKGROUND_LOCATION, x0, 0, 0.0F, 0.0F, this.width, y0, 32, 32);
 			}
 			//Footer Texture
 			if (footerTexture != null) {
 				ResourceLocation loc = footerTexture.getResourceLocation();
 				if (loc != null) {
-					RenderingUtils.bindTexture(loc);
-					RenderingUtils.resetShaderColor();
+					RenderingUtils.resetShaderColor(graphics);
 					if (this.layout.preserveScrollListHeaderFooterAspectRatio) {
 						int footerOriginalHeight = this.height - y1;
 						int[] footerSize = footerTexture.getAspectRatio().getAspectRatioSizeByMinimumSize(this.width, footerOriginalHeight);
@@ -387,42 +414,41 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 						int footerHeight = footerSize[1];
 						int footerX = x0 + (this.width / 2) - (footerWidth / 2);
 						int footerY = y1 + (footerOriginalHeight / 2) - (footerHeight / 2);
-						RenderingUtils.enableScissor(x0, y1, x0 + this.width, y1 + footerOriginalHeight);
-						blit(pose, footerX, footerY, 0.0F, 0.0F, footerWidth, footerHeight, footerWidth, footerHeight);
-						RenderingUtils.disableScissor();
+						graphics.enableScissor(x0, y1, x0 + this.width, y1 + footerOriginalHeight);
+						graphics.blit(loc, footerX, footerY, 0.0F, 0.0F, footerWidth, footerHeight, footerWidth, footerHeight);
+						graphics.disableScissor();
 					} else if (this.layout.repeatScrollListFooterTexture) {
 						int footerHeight = this.height - y1;
-						RenderingUtils.blitRepeat(pose, x0, y1, this.width, footerHeight, footerTexture.getWidth(), footerTexture.getHeight());
+						RenderingUtils.blitRepeat(graphics, loc, x0, y1, this.width, footerHeight, footerTexture.getWidth(), footerTexture.getHeight());
 					} else {
 						int footerHeight = this.height - y1;
-						blit(pose, x0, y1, 0.0F, 0.0F, this.width, footerHeight, this.width, footerHeight);
+						graphics.blit(loc, x0, y1, 0.0F, 0.0F, this.width, footerHeight, this.width, footerHeight);
 					}
 				}
 			} else {
-				RenderSystem.setShaderTexture(0, GuiComponent.BACKGROUND_LOCATION);
-				RenderSystem.setShaderColor(0.25F, 0.25F, 0.25F, 1.0F);
-				blit(pose, x0, y1, 0.0F, (float) y1, this.width, this.height - y1, 32, 32);
+				graphics.setColor(0.25F, 0.25F, 0.25F, 1.0F);
+				graphics.blit(Screen.BACKGROUND_LOCATION, x0, y1, 0.0F, (float) y1, this.width, this.height - y1, 32, 32);
 			}
 
-			RenderingUtils.resetShaderColor();
+			RenderingUtils.resetShaderColor(graphics);
 
 			//Header Shadow
 			if (this.layout.renderScrollListHeaderShadow) {
-				fillGradient(pose, x0, y0, x1, y0 + 4, -16777216, 0);
+				graphics.fillGradient(x0, y0, x1, y0 + 4, -16777216, 0);
 			}
 			//Footer Shadow
 			if (this.layout.renderScrollListFooterShadow) {
-				fillGradient(pose, x0, y1 - 4, x1, y1, 0, -16777216);
+				graphics.fillGradient(x0, y1 - 4, x1, y1, 0, -16777216);
 			}
 
-			RenderingUtils.resetShaderColor();
+			RenderingUtils.resetShaderColor(graphics);
 
 		}
 
 	}
 
 	@SuppressWarnings("all")
-	protected void renderGrid(@NotNull PoseStack pose) {
+	protected void renderGrid(@NotNull GuiGraphics graphics) {
 
 		if (FancyMenu.getOptions().showLayoutEditorGrid.getValue()) {
 
@@ -430,14 +456,14 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			int scaledWidth = (int)((float)this.width / scale);
 			int scaledHeight = (int)((float)this.height / scale);
 
-			pose.pushPose();
-			pose.scale(scale, scale, scale);
+			graphics.pose().pushPose();
+			graphics.pose().scale(scale, scale, scale);
 
 			int gridSize = FancyMenu.getOptions().layoutEditorGridSize.getValue();
 			int lineThickness = 1;
 
 			//Draw centered vertical line
-			fill(pose, (scaledWidth / 2) - 1, 0, (scaledWidth / 2) + 1, scaledHeight, UIBase.getUIColorTheme().layout_editor_grid_color_center.getColorInt());
+			graphics.fill((scaledWidth / 2) - 1, 0, (scaledWidth / 2) + 1, scaledHeight, UIBase.getUIColorTheme().layout_editor_grid_color_center.getColorInt());
 
 			//Draw vertical lines center -> left
 			int linesVerticalToLeftPosX = (scaledWidth / 2) - gridSize - 1;
@@ -445,7 +471,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				int minY = 0;
 				int maxY = scaledHeight;
 				int maxX = linesVerticalToLeftPosX + lineThickness;
-				fill(pose, linesVerticalToLeftPosX, minY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
+				graphics.fill(linesVerticalToLeftPosX, minY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
 				linesVerticalToLeftPosX -= gridSize;
 			}
 
@@ -455,12 +481,12 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				int minY = 0;
 				int maxY = scaledHeight;
 				int maxX = linesVerticalToRightPosX + lineThickness;
-				fill(pose, linesVerticalToRightPosX, minY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
+				graphics.fill(linesVerticalToRightPosX, minY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
 				linesVerticalToRightPosX += gridSize;
 			}
 
 			//Draw centered horizontal line
-			fill(pose, 0, (scaledHeight / 2) - 1, scaledWidth, (scaledHeight / 2) + 1, UIBase.getUIColorTheme().layout_editor_grid_color_center.getColorInt());
+			graphics.fill(0, (scaledHeight / 2) - 1, scaledWidth, (scaledHeight / 2) + 1, UIBase.getUIColorTheme().layout_editor_grid_color_center.getColorInt());
 
 			//Draw horizontal lines center -> top
 			int linesHorizontalToTopPosY = (scaledHeight / 2) - gridSize - 1;
@@ -468,7 +494,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				int minX = 0;
 				int maxX = scaledWidth;
 				int maxY = linesHorizontalToTopPosY + lineThickness;
-				fill(pose, minX, linesHorizontalToTopPosY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
+				graphics.fill(minX, linesHorizontalToTopPosY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
 				linesHorizontalToTopPosY -= gridSize;
 			}
 
@@ -478,11 +504,11 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				int minX = 0;
 				int maxX = scaledWidth;
 				int maxY = linesHorizontalToBottomPosY + lineThickness;
-				fill(pose, minX, linesHorizontalToBottomPosY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
+				graphics.fill(minX, linesHorizontalToBottomPosY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
 				linesHorizontalToBottomPosY += gridSize;
 			}
 
-			pose.popPose();
+			graphics.pose().popPose();
 
 		}
 
@@ -612,7 +638,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	@Nullable
 	public AbstractEditorElement getTopHoveredElement() {
 		List<AbstractEditorElement> hoveredElements = this.getHoveredElements();
-		return (hoveredElements.size() > 0) ? hoveredElements.get(hoveredElements.size()-1) : null;
+		return !hoveredElements.isEmpty() ? hoveredElements.get(hoveredElements.size()-1) : null;
 	}
 
 	@NotNull
@@ -968,7 +994,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	protected void moveSelectedElementsByXYOffset(int offsetX, int offsetY) {
 		List<AbstractEditorElement> selected = this.getSelectedElements();
-		if ((selected.size() > 0) && this.allSelectedElementsMovable()) {
+		if (!selected.isEmpty() && this.allSelectedElementsMovable()) {
 			this.history.saveSnapshot();
 		}
 		boolean multiSelect = selected.size() > 1;
@@ -1093,7 +1119,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		}
 
 		List<AbstractEditorElement> hoveredElements = this.getHoveredElements();
-		AbstractEditorElement topHoverElement = (hoveredElements.size() > 0) ? hoveredElements.get(hoveredElements.size()-1) : null;
+		AbstractEditorElement topHoverElement = !hoveredElements.isEmpty() ? hoveredElements.get(hoveredElements.size()-1) : null;
 
 		//Deselect hovered element on left-click if CTRL pressed
 		if (!mouseWasInDraggingMode && !cachedMouseSelection && (button == 0) && (topHoverElement != null) && topHoverElement.isSelected() && !topHoverElement.recentlyMovedByDragging && !topHoverElement.recentlyLeftClickSelected && hasControlDown()) {
@@ -1132,7 +1158,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				if (!b && hasControlDown()) continue; //skip deselect if CTRL pressed
 				e.setSelected(b);
 			}
-			//TODO eventuell return hier bei isMouseSelection ??? sollte doch okay sein?
 		}
 
 		if (this.preDragElementSnapshot == null) {
@@ -1183,6 +1208,10 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		this.anchorPointOverlay.keyPressed(keycode, scancode, modifiers);
 
 		if (super.keyPressed(keycode, scancode, modifiers)) return true;
+
+		for (AbstractEditorElement abstractEditorElement : this.getAllElements()) {
+			if (abstractEditorElement.keyPressed(keycode, scancode, modifiers)) return true;
+		}
 
 		String key = GLFW.glfwGetKeyName(keycode, scancode);
 		if (key == null) key = "";
@@ -1274,6 +1303,10 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		this.anchorPointOverlay.keyReleased(keycode, scancode, modifiers);
 
+		for (AbstractEditorElement abstractEditorElement : this.getAllElements()) {
+			if (abstractEditorElement.keyReleased(keycode, scancode, modifiers)) return true;
+		}
+
 		return super.keyReleased(keycode, scancode, modifiers);
 
 	}
@@ -1282,17 +1315,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		this.saveWidgetSettings();
 		currentInstance = null;
 		if (this.layoutTargetScreen != null) {
-			if (this.layoutTargetScreen instanceof CustomizableScreen c) {
-				if (!c.isScreenInitialized_FancyMenu()) {
-					Minecraft.getInstance().setScreen(this.layoutTargetScreen);
-				} else {
-					Minecraft.getInstance().setScreen(new GenericDirtMessageScreen(Components.literal("Closing editor..")));
-					Minecraft.getInstance().screen = this.layoutTargetScreen;
-					ScreenCustomization.reInitCurrentScreen();
-				}
-			} else {
-				Minecraft.getInstance().setScreen(this.layoutTargetScreen);
-			}
+			Minecraft.getInstance().setScreen(new GenericDirtMessageScreen(Components.literal("Closing editor..")));
+			Minecraft.getInstance().setScreen(this.layoutTargetScreen);
+			ScreenCustomization.reInitCurrentScreen();
 		} else {
 			Minecraft.getInstance().setScreen(null);
 		}

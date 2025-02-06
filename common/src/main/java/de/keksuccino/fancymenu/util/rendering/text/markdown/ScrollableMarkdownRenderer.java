@@ -1,12 +1,12 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
-import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class ScrollableMarkdownRenderer implements Widget, ContainerEventHandler, NarratableEntry {
+public class ScrollableMarkdownRenderer implements Renderable, ContainerEventHandler, NarratableEntry {
 
     @NotNull
     protected ScrollArea scrollArea = new ScrollArea(0,0,0,0);
@@ -95,13 +95,13 @@ public class ScrollableMarkdownRenderer implements Widget, ContainerEventHandler
     }
 
     @Override
-    public void render(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.tick();
 
         RenderSystem.enableBlend();
         this.scrollArea.render(graphics, mouseX, mouseY, partial);
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
 
     }
 
@@ -190,7 +190,7 @@ public class ScrollableMarkdownRenderer implements Widget, ContainerEventHandler
         }
 
         @Override
-        public void renderEntry(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {
+        public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             this.markdownRenderer.setOptimalWidth(this.parent.getInnerWidth());
             this.markdownRenderer.setX(this.x);
             this.markdownRenderer.setY(this.y);

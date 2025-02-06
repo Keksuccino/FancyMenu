@@ -54,6 +54,10 @@ public class ImageMenuBackgroundBuilder extends MenuBackgroundBuilder<ImageMenuB
 
         b.repeat = SerializationUtils.deserializeBoolean(b.repeat, serializedMenuBackground.getValue("repeat_texture"));
 
+        b.parallaxEnabled = SerializationUtils.deserializeBoolean(b.parallaxEnabled, serializedMenuBackground.getValue("parallax"));
+        b.parallaxIntensity = SerializationUtils.deserializeNumber(Float.class, b.parallaxIntensity, serializedMenuBackground.getValue("parallax_intensity"));
+        b.invertParallax = SerializationUtils.deserializeBoolean(b.invertParallax, serializedMenuBackground.getValue("invert_parallax"));
+
         return b;
 
     }
@@ -74,6 +78,10 @@ public class ImageMenuBackgroundBuilder extends MenuBackgroundBuilder<ImageMenuB
         if (background.fallbackTextureSupplier != null) {
             serialized.putProperty("fallback_path", background.fallbackTextureSupplier.getSourceWithPrefix());
         }
+
+        serialized.putProperty("parallax", "" + background.parallaxEnabled);
+        serialized.putProperty("parallax_intensity", "" + background.parallaxIntensity);
+        serialized.putProperty("invert_parallax", "" + background.invertParallax);
 
         return serialized;
 

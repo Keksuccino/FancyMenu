@@ -21,6 +21,7 @@ public class TickerEditorElement extends AbstractEditorElement {
         this.settings.setAdvancedPositioningSupported(false);
         this.settings.setFadeable(false);
         this.settings.setStretchable(false);
+        this.settings.setInEditorColorSupported(true);
     }
 
     @Override
@@ -29,10 +30,10 @@ public class TickerEditorElement extends AbstractEditorElement {
         super.init();
 
         this.rightClickMenu.addClickableEntry("manage_actions", Components.translatable("fancymenu.editor.action.screens.manage_screen.manage"), (menu, entry) -> {
-            ManageActionsScreen s = new ManageActionsScreen(this.getTickerElement().actionExecutor, (call) -> {
+            ManageActionsScreen s = new ManageActionsScreen(this.getElement().actionExecutor, (call) -> {
                 if (call != null) {
                     this.editor.history.saveSnapshot();
-                    this.getTickerElement().actionExecutor = call;
+                    this.getElement().actionExecutor = call;
                 }
                 Minecraft.getInstance().setScreen(this.editor);
             });
@@ -44,8 +45,8 @@ public class TickerEditorElement extends AbstractEditorElement {
         this.rightClickMenu.addSeparatorEntry("ticker_separator_1");
 
         this.addLongInputContextMenuEntryTo(this.rightClickMenu, "tick_delay", TickerEditorElement.class,
-                        consumes -> consumes.getTickerElement().tickDelayMs,
-                        (tickerEditorElement, aLong) -> tickerEditorElement.getTickerElement().tickDelayMs = Math.max(0L, aLong),
+                        consumes -> consumes.getElement().tickDelayMs,
+                        (tickerEditorElement, aLong) -> tickerEditorElement.getElement().tickDelayMs = Math.max(0L, aLong),
                         Components.translatable("fancymenu.customization.items.ticker.tick_delay"), true, 0L, null, null)
                 .setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("timer"))
@@ -78,7 +79,7 @@ public class TickerEditorElement extends AbstractEditorElement {
 
     }
 
-    protected TickerElement getTickerElement() {
+    protected TickerElement getElement() {
         return (TickerElement) this.element;
     }
 

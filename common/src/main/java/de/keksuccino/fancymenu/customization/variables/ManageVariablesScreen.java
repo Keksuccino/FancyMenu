@@ -1,10 +1,11 @@
 package de.keksuccino.fancymenu.customization.variables;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
@@ -24,7 +25,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ManageVariablesScreen extends Screen {
+public class ManageVariablesScreen extends ModernScreen {
 
     protected Consumer<List<Variable>> callback;
 
@@ -128,22 +129,22 @@ public class ManageVariablesScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         RenderSystem.enableBlend();
 
-        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(pose, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        this.font.draw(pose, Components.translatable("fancymenu.overlay.menu_bar.variables.manage.variables"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, Components.translatable("fancymenu.overlay.menu_bar.variables.manage.variables"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
         this.variableListScrollArea.setWidth((this.width / 2) - 40, true);
         this.variableListScrollArea.setHeight(this.height - 85, true);
         this.variableListScrollArea.setX(20, true);
         this.variableListScrollArea.setY(50 + 15, true);
-        this.variableListScrollArea.render(pose, mouseX, mouseY, partial);
+        this.variableListScrollArea.render(graphics, mouseX, mouseY, partial);
 
         int buttonWidth = (this.width - 20) - ((this.variableListScrollArea.getXWithBorder() + (this.variableListScrollArea.getWidthWithBorder() + 20)));
         if (buttonWidth < 150) buttonWidth = 150;
@@ -152,29 +153,29 @@ public class ManageVariablesScreen extends Screen {
         this.doneButton.setWidth(buttonWidth);
         this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
         this.doneButton.setY(this.height - 20 - 20);
-        this.doneButton.render(pose, mouseX, mouseY, partial);
+        this.doneButton.render(graphics.pose(), mouseX, mouseY, partial);
 
         this.toggleResetOnLaunchButton.setWidth(buttonWidth);
         this.toggleResetOnLaunchButton.setX(this.width - 20 - this.toggleResetOnLaunchButton.getWidth());
         this.toggleResetOnLaunchButton.setY(this.doneButton.getY() - 15 - 20);
-        this.toggleResetOnLaunchButton.render(pose, mouseX, mouseY, partial);
+        this.toggleResetOnLaunchButton.render(graphics.pose(), mouseX, mouseY, partial);
 
         this.deleteVariableButton.setWidth(buttonWidth);
         this.deleteVariableButton.setX(this.width - 20 - this.deleteVariableButton.getWidth());
         this.deleteVariableButton.setY(this.toggleResetOnLaunchButton.getY() - 5 - 20);
-        this.deleteVariableButton.render(pose, mouseX, mouseY, partial);
+        this.deleteVariableButton.render(graphics.pose(), mouseX, mouseY, partial);
 
         this.setValueButton.setWidth(buttonWidth);
         this.setValueButton.setX(this.width - 20 - this.setValueButton.getWidth());
         this.setValueButton.setY(this.deleteVariableButton.getY() - 5 - 20);
-        this.setValueButton.render(pose, mouseX, mouseY, partial);
+        this.setValueButton.render(graphics.pose(), mouseX, mouseY, partial);
 
         this.addVariableButton.setWidth(buttonWidth);
         this.addVariableButton.setX(this.width - 20 - this.addVariableButton.getWidth());
         this.addVariableButton.setY(this.setValueButton.getY() - 15 - 20);
-        this.addVariableButton.render(pose, mouseX, mouseY, partial);
+        this.addVariableButton.render(graphics.pose(), mouseX, mouseY, partial);
 
-        super.render(pose, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
 
     }
 

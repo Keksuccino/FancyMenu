@@ -1,15 +1,14 @@
 package de.keksuccino.fancymenu.customization.element.elements.image;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.konkrete.rendering.RenderUtils;
-import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,10 +18,11 @@ import org.jetbrains.annotations.Nullable;
 public class ImageElement extends AbstractElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ResourceLocation MISSING = TextureManager.INTENTIONAL_MISSING_TEXTURE;
 
     @Nullable
     public ResourceSupplier<ITexture> textureSupplier;
+    @NotNull
+    public DrawableColor imageTint = DrawableColor.of("#FFFFFF");
     public boolean repeat = false;
     public boolean nineSlice = false;
     public int nineSliceBorderX = 5;
@@ -33,7 +33,7 @@ public class ImageElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (this.shouldRender()) {
 
@@ -41,26 +41,26 @@ public class ImageElement extends AbstractElement {
             int y = this.getAbsoluteY();
 
             RenderSystem.enableBlend();
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
+
+            this.imageTint.setAsShaderColor(graphics, this.opacity);
 
             ITexture t = this.getTextureResource();
             if ((t != null) && t.isReady()) {
                 ResourceLocation loc = t.getResourceLocation();
                 if (loc != null) {
-                    RenderUtils.bindTexture(loc);
                     if (this.repeat) {
-                        RenderingUtils.blitRepeat(pose, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight());
+                        RenderingUtils.blitRepeat(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight());
                     } else if (this.nineSlice) {
-                        RenderingUtils.blitNineSliced(pose, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.nineSliceBorderX, this.nineSliceBorderY, this.nineSliceBorderX, this.nineSliceBorderY, t.getWidth(), t.getHeight(), 0, 0, t.getWidth(), t.getHeight());
+                        RenderingUtils.blitNineSlicedTexture(graphics, loc, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight(), t.getWidth(), t.getHeight(), this.nineSliceBorderY, this.nineSliceBorderX, this.nineSliceBorderY, this.nineSliceBorderX);
                     } else {
-                        blit(pose, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+                        graphics.blit(loc, x, y, 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
                     }
                 }
             } else if (isEditor()) {
-                RenderingUtils.renderMissing(pose, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+                RenderingUtils.renderMissing(graphics, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
             }
 
-            RenderingUtils.resetShaderColor();
+            this.imageTint.resetShaderColor(graphics);
             RenderSystem.disableBlend();
 
         }

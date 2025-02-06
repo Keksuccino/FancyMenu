@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.loadingrequirement.requirements;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
@@ -143,9 +144,9 @@ public class IsModLoadedRequirement extends LoadingRequirement {
         }
 
         @Override
-        public void render(PoseStack pose, int mouseX, int mouseY, float partial) {
-            super.render(pose, mouseX, mouseY, partial);
-            this.modIdSuggestions.render(pose, mouseX, mouseY);
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            super.render(graphics, mouseX, mouseY, partial);
+            this.modIdSuggestions.render(graphics.pose(), mouseX, mouseY);
         }
 
         @Override

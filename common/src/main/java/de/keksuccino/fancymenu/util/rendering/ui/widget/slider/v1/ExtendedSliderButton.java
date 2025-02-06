@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
@@ -13,6 +14,7 @@ import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
@@ -21,7 +23,6 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 import java.util.function.Consumer;
 
-@SuppressWarnings("unused")
 @Deprecated
 public abstract class ExtendedSliderButton extends AbstractSliderButton implements UniqueWidget, NavigatableWidget {
 
@@ -64,29 +65,59 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
         this.applyValueCallback = applyValueCallback;
     }
 
-    @Override
-    public void renderButton(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-        this.renderBackground(pose);
-        this.renderHandle(pose);
-        int labelColorInt = this.active ? this.labelColorNormal.getColorInt() : this.labelColorInactive.getColorInt();
-        this.renderScrollingLabel(pose, Minecraft.getInstance().font, 2, labelColorInt | Mth.ceil(this.alpha * 255.0F) << 24);
-        RenderingUtils.resetShaderColor();
+    public int getX() {
+        return this.x;
     }
 
-    protected void renderHandle(@NotNull PoseStack pose) {
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public int getY() {
+        return this.y;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
+
+    public int getWidth() {
+        return this.width;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public int getHeight() {
+        return this.height;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
+    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        this.renderBackground(graphics);
+        this.renderHandle(graphics);
+        int labelColorInt = this.active ? this.labelColorNormal.getColorInt() : this.labelColorInactive.getColorInt();
+        this.renderScrollingLabel(graphics, Minecraft.getInstance().font, 2, labelColorInt | Mth.ceil(this.alpha * 255.0F) << 24);
+        RenderingUtils.resetShaderColor(graphics);
+    }
+
+    protected void renderHandle(@NotNull GuiGraphics graphics) {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();
         int handleX = this.x + (int)(this.value * (double)(this.width - 8));
         DrawableColor c = this.getHandleRenderColor();
         if (c == null) {
-            RenderSystem.setShaderTexture(0, SLIDER_LOCATION);
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
-            RenderingUtils.blitNineSliced_Vanilla(pose, handleX, this.y, 8, 20, 20, 4, 200, 20, 0, this.getHandleTextureY());
+            graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
+            graphics.blitNineSliced(SLIDER_LOCATION, handleX, this.y, 8, 20, 20, 4, 200, 20, 0, this.getHandleTextureY());
         } else {
-            fill(pose, handleX, this.y, handleX + 8, this.y + this.getHeight(), RenderingUtils.replaceAlphaInColor(c.getColorInt(), this.alpha));
+            graphics.fill(handleX, this.y, handleX + 8, this.y + this.getHeight(), RenderingUtils.replaceAlphaInColor(c.getColorInt(), this.alpha));
         }
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
     }
 
     @Nullable
@@ -95,26 +126,24 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
         return this.handleColorNormal;
     }
 
-    protected void renderBackground(@NotNull PoseStack pose) {
+    protected void renderBackground(@NotNull GuiGraphics graphics) {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();
         if (this.backgroundColor == null) {
-            RenderSystem.setShaderTexture(0, SLIDER_LOCATION);
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
-            RenderingUtils.blitNineSliced_Vanilla(pose, this.x, this.y, this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureY());
+            graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
+            graphics.blitNineSliced(SLIDER_LOCATION, this.x, this.y, this.getWidth(), this.getHeight(), 20, 4, 200, 20, 0, this.getTextureY());
         } else {
             int borderOffset = (this.borderColor != null) ? 1 : 0;
-            fill(pose, this.x + borderOffset, this.y + borderOffset, this.x + this.getWidth() - borderOffset, this.y + this.getHeight() - borderOffset, RenderingUtils.replaceAlphaInColor(this.backgroundColor.getColorInt(), this.alpha));
+            graphics.fill(this.x + borderOffset, this.y + borderOffset, this.x + this.getWidth() - borderOffset, this.y + this.getHeight() - borderOffset, RenderingUtils.replaceAlphaInColor(this.backgroundColor.getColorInt(), this.alpha));
             if (this.borderColor != null) {
-                UIBase.renderBorder(pose, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), 1, this.borderColor, true, true, true, true);
+                UIBase.renderBorder(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), 1, this.borderColor, true, true, true, true);
             }
         }
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
     }
 
-    @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (this.visible) {
 
@@ -149,17 +178,24 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
 
         }
 
-        super.render(pose, mouseX, mouseY, partial);
+        super.render(graphics.pose(), mouseX, mouseY, partial);
+        this.renderWidget(GuiGraphics.currentGraphics(), mouseX, mouseY, partial);
 
     }
 
-    protected void renderScrollingLabel(@NotNull PoseStack pose, @NotNull Font font, int spaceLeftRight, int textColor) {
+    @Deprecated
+    @Override
+    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        this.render(GuiGraphics.currentGraphics(), mouseX, mouseY, partial);
+    }
+
+    protected void renderScrollingLabel(@NotNull GuiGraphics graphics, @NotNull Font font, int spaceLeftRight, int textColor) {
         int xMin = this.x + spaceLeftRight;
         int xMax = this.x + this.getWidth() - spaceLeftRight;
-        this.renderScrollingLabelInternal(pose, font, this.getMessage(), xMin, this.y, xMax, this.y + this.getHeight(), textColor);
+        this.renderScrollingLabelInternal(graphics, font, this.getMessage(), xMin, this.y, xMax, this.y + this.getHeight(), textColor);
     }
 
-    protected void renderScrollingLabelInternal(@NotNull PoseStack pose, Font font, @NotNull Component text, int xMin, int yMin, int xMax, int yMax, int textColor) {
+    protected void renderScrollingLabelInternal(@NotNull GuiGraphics graphics, Font font, @NotNull Component text, int xMin, int yMin, int xMax, int yMax, int textColor) {
         int textWidth = font.width(text);
         int textPosY = (yMin + yMax - 9) / 2 + 1;
         int maxTextWidth = xMax - xMin;
@@ -169,19 +205,11 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
             double $$13 = Math.max((double)diffTextWidth * 0.5D, 3.0D);
             double $$14 = Math.sin((Math.PI / 2D) * Math.cos((Math.PI * 2D) * scrollTime / $$13)) / 2.0D + 0.5D;
             double textPosX = Mth.lerp($$14, 0.0D, diffTextWidth);
-            RenderingUtils.enableScissor(xMin, yMin, xMax, yMax);
-            if (!this.labelShadow) {
-                font.draw(pose, text, xMin - (int)textPosX, textPosY, textColor);
-            } else {
-                font.drawShadow(pose, text, xMin - (int)textPosX, textPosY, textColor);
-            }
-            RenderingUtils.disableScissor();
+            graphics.enableScissor(xMin, yMin, xMax, yMax);
+            graphics.drawString(font, text, xMin - (int)textPosX, textPosY, textColor, this.labelShadow);
+            graphics.disableScissor();
         } else {
-            if (!this.labelShadow) {
-                font.draw(pose, text, (int)(((xMin + xMax) / 2F) - (font.width(text) / 2F)), textPosY, textColor);
-            } else {
-                font.drawShadow(pose, text, (int)(((xMin + xMax) / 2F) - (font.width(text) / 2F)), textPosY, textColor);
-            }
+            graphics.drawString(font, text, (int)(((xMin + xMax) / 2F) - (font.width(text) / 2F)), textPosY, textColor, this.labelShadow);
         }
     }
 

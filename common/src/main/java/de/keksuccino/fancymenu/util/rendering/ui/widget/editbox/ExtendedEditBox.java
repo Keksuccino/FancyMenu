@@ -1,9 +1,13 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.editbox;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
+import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
@@ -11,6 +15,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -44,6 +49,11 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     protected String inputPrefix;
     @Nullable
     protected String inputSuffix;
+    protected boolean deleteAllAllowed = true;
+    @Nullable
+    protected ConsumingSupplier<ExtendedEditBox, Boolean> isActiveSupplier = null;
+    @Nullable
+    protected ConsumingSupplier<ExtendedEditBox, Boolean> isVisibleSupplier = null;
     protected Component hint;
 
     public ExtendedEditBox(Font font, int x, int y, int width, int height, Component hint) {
@@ -58,19 +68,43 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         this.hint = hint;
     }
 
+    public int getX() {
+        return this.x;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public int getY() {
+        return this.y;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
     @Override
     public void renderButton(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
+        GuiGraphics graphics = GuiGraphics.currentGraphics();
         IMixinEditBox access = ((IMixinEditBox)this);
         boolean bordered = access.getBorderedFancyMenu();
 
         if (this.isVisible()) {
 
-            fill(pose, this.x, this.y, this.x + this.width, this.y + this.height, this.backgroundColor.getColorInt());
+            graphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, this.backgroundColor.getColorInt());
             if (bordered) {
                 int borderColor = this.isFocused() ? this.borderFocusedColor.getColorInt() : this.borderNormalColor.getColorInt();
-//                fill(pose, this.x - 1, this.y - 1, this.x + this.width + 1, this.y + this.height + 1, borderColor);
-                UIBase.renderBorder(pose, this.x - 1, this.y - 1, this.x + this.width + 1, this.y + this.height + 1, 1, borderColor, true, true, true, true);
+                UIBase.renderBorder(graphics, this.getX() - 1, this.getY() - 1, this.getX() + this.width + 1, this.getY() + this.height + 1, 1, borderColor, true, true, true, true);
             }
 
             int textColor = access.getIsEditableFancyMenu() ? this.textColor.getColorInt() : this.textColorUneditable.getColorInt();
@@ -79,8 +113,8 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             String text = this.font.plainSubstrByWidth(this.getValue().substring(access.getDisplayPosFancyMenu()), this.getInnerWidth());
             boolean isCursorInsideVisibleText = cursorPos >= 0 && cursorPos <= text.length();
             boolean isCursorVisible = this.isFocused() && access.getFrameFancyMenu() / 6 % 2 == 0 && isCursorInsideVisibleText;
-            int textX = bordered ? this.x + 4 : this.x;
-            int textY = bordered ? this.y + (this.height - 8) / 2 : this.y;
+            int textX = bordered ? this.getX() + 4 : this.getX();
+            int textY = bordered ? this.getY() + (this.height - 8) / 2 : this.getY();
             int textXAfterCursor = textX;
             if (highlightPos > text.length()) {
                 highlightPos = text.length();
@@ -100,11 +134,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
                         textCharacterRenderIndex++;
                     }
                 }
-                if (this.textShadow) {
-                    textXAfterCursor = this.font.drawShadow(pose, beforeCursorComp, (float)textX, (float)textY, textColor);
-                } else {
-                    textXAfterCursor = this.font.draw(pose, beforeCursorComp, (float)textX, (float)textY, textColor);
-                }
+                textXAfterCursor = graphics.drawString(this.font, beforeCursorComp, textX, textY, textColor, this.textShadow);
             }
 
             boolean renderSmallCursor = (this.getCursorPosition() < this.getValue().length()) || (this.getValue().length() >= access.getMaxLengthFancyMenu());
@@ -128,48 +158,84 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
                         textCharacterRenderIndex++;
                     }
                 }
-                if (this.textShadow) {
-                    this.font.drawShadow(pose, afterCursorComp, (float)textXAfterCursor, (float)textY, textColor);
-                } else {
-                    this.font.draw(pose, afterCursorComp, (float)textXAfterCursor, (float)textY, textColor);
-                }
+                graphics.drawString(this.font, afterCursorComp, textXAfterCursor, textY, textColor, this.textShadow);
             }
 
             if ((hint != null) && text.isEmpty() && !this.isFocused()) {
-                if (this.textShadow) {
-                    this.font.drawShadow(pose, hint, (float) textXAfterCursor, (float) textY, textColor);
-                } else {
-                    this.font.draw(pose, hint, (float) textXAfterCursor, (float) textY, textColor);
-                }
+                graphics.drawString(this.font, hint, textXAfterCursor, textY, textColor, this.textShadow);
             }
 
             if (!renderSmallCursor && access.getSuggestionFancyMenu() != null) {
-                if (this.textShadow) {
-                    this.font.drawShadow(pose, access.getSuggestionFancyMenu(), (float) (finalTextXAfterCursor - 1), (float) textY, this.suggestionTextColor.getColorInt());
-                } else {
-                    this.font.draw(pose, access.getSuggestionFancyMenu(), (float)finalTextXAfterCursor, (float) textY, this.suggestionTextColor.getColorInt());
-                }
+                graphics.drawString(this.font, access.getSuggestionFancyMenu(), (finalTextXAfterCursor - 1), textY, this.suggestionTextColor.getColorInt(), this.textShadow);
             }
 
             if (isCursorVisible) {
                 if (renderSmallCursor) {
-                    fill(pose, finalTextXAfterCursor, textY - 1, finalTextXAfterCursor + 1, textY + 1 + 9, textColor);
+                    graphics.fill(finalTextXAfterCursor, textY - 1, finalTextXAfterCursor + 1, textY + 1 + 9, textColor);
                 } else {
-                    fill(pose, finalTextXAfterCursor, textY + this.font.lineHeight - 2, finalTextXAfterCursor + 5, textY + this.font.lineHeight - 1, textColor);
+                    graphics.fill(finalTextXAfterCursor, textY + this.font.lineHeight - 2, finalTextXAfterCursor + 5, textY + this.font.lineHeight - 1, textColor);
                 }
             }
 
             if (highlightPos != cursorPos) {
                 int l1 = textX + this.font.width(text.substring(0, highlightPos));
-                access.invokeRenderHighlightFancyMenu(finalTextXAfterCursor, textY - 1, l1 - 1, textY + 1 + 9);
+                this.renderHighlight(graphics, finalTextXAfterCursor, textY - 1, l1 - 1, textY + 1 + 9);
             }
+
+            graphics.flush();
 
         }
 
     }
 
-    public void setHeight(int height) {
-        this.height = height;
+    protected void renderHighlight(@NotNull GuiGraphics graphics, int x1, int y1, int x2, int y2) {
+
+        int left = Math.min(x1, x2);
+        int right = Math.max(x1, x2);
+        int top = Math.min(y1, y2);
+        int bottom = Math.max(y1, y2);
+
+        if (right > this.x + this.width) {
+            right = this.x + this.width;
+        }
+
+        if (left > this.x + this.width) {
+            left = this.x + this.width;
+        }
+
+        Tesselator tesselator = Tesselator.getInstance();
+        BufferBuilder buffer = tesselator.getBuilder();
+        RenderSystem.setShader(GameRenderer::getPositionShader);
+        graphics.setColor(0.0F, 0.0F, 1.0F, 1.0F);
+        RenderSystem.disableTexture();
+        RenderSystem.enableColorLogicOp();
+        RenderSystem.logicOp(GlStateManager.LogicOp.OR_REVERSE);
+        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+        buffer.vertex(left, bottom, 0.0).endVertex();
+        buffer.vertex(right, bottom, 0.0).endVertex();
+        buffer.vertex(right, top, 0.0).endVertex();
+        buffer.vertex(left, top, 0.0).endVertex();
+        tesselator.end();
+        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.disableColorLogicOp();
+        RenderSystem.enableTexture();
+
+    }
+
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+        if (this.isActiveSupplier != null) this.active = this.isActiveSupplier.get(this);
+
+        if (this.isVisibleSupplier != null) this.visible = this.isVisibleSupplier.get(this);
+
+        super.render(graphics.pose(), mouseX, mouseY, partial);
+
+    }
+
+    @Deprecated
+    @Override
+    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        this.render(GuiGraphics.currentGraphics(), mouseX, mouseY, partial);
     }
 
     public int getDisplayPosition() {
@@ -191,6 +257,16 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     public ExtendedEditBox setCharacterFilter(@Nullable CharacterFilter characterFilter) {
         this.characterFilter = characterFilter;
         return this;
+    }
+
+    @NotNull
+    public ExtendedEditBox setDeleteAllAllowed(boolean allowed) {
+        this.deleteAllAllowed = allowed;
+        return this;
+    }
+
+    public boolean isDeleteAllAllowed() {
+        return this.deleteAllAllowed;
     }
 
     public boolean hasTextShadow() {
@@ -314,6 +390,14 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         return this;
     }
 
+    public void setIsActiveSupplier(@Nullable ConsumingSupplier<ExtendedEditBox, Boolean> isActiveSupplier) {
+        this.isActiveSupplier = isActiveSupplier;
+    }
+
+    public void setIsVisibleSupplier(@Nullable ConsumingSupplier<ExtendedEditBox, Boolean> isVisibleSupplier) {
+        this.isVisibleSupplier = isVisibleSupplier;
+    }
+
     @Deprecated
     @Override
     public void setTextColor(int color) {
@@ -384,6 +468,15 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         String v = containsPrefix ? value.substring(this.inputPrefix.length()) : value;
         if (containsSuffix) v = v.substring(0, Math.max(0, v.length() - this.inputSuffix.length()));
         return v;
+    }
+
+    @Override
+    public void deleteText(int i) {
+        if (this.deleteAllAllowed) {
+            super.deleteText(i);
+        } else {
+            this.deleteChars(i);
+        }
     }
 
     @Override

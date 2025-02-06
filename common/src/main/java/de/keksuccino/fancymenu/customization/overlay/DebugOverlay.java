@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization.overlay;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.HideableElement;
@@ -12,6 +11,8 @@ import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -19,8 +20,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -38,7 +37,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @SuppressWarnings("all")
-public class DebugOverlay extends GuiComponent implements Widget, NarratableEntry, ContainerEventHandler {
+public class DebugOverlay implements Renderable, NarratableEntry, ContainerEventHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -63,13 +62,13 @@ public class DebugOverlay extends GuiComponent implements Widget, NarratableEntr
     public boolean allowRender = false;
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (!this.allowRender) return;
 
         if (Minecraft.getInstance().screen == null) return;
 
-        this.renderWidgetOverlays(pose, Minecraft.getInstance().screen, mouseX, mouseY, partial);
+        this.renderWidgetOverlays(graphics, Minecraft.getInstance().screen, mouseX, mouseY, partial);
 
         int leftX = 0;
         int rightX = Minecraft.getInstance().screen.width;
@@ -81,8 +80,8 @@ public class DebugOverlay extends GuiComponent implements Widget, NarratableEntr
 
         RenderSystem.enableDepthTest();
         RenderSystem.enableBlend();
-        pose.pushPose();
-        pose.translate(0.0F, 0.0F, 400.0F);
+        graphics.pose().pushPose();
+        graphics.pose().translate(0.0F, 0.0F, 400.0F);
 
         for (DebugOverlayLine line : this.lines) {
 
@@ -105,13 +104,9 @@ public class DebugOverlay extends GuiComponent implements Widget, NarratableEntr
 
             if (!(line instanceof DebugOverlaySpacerLine)) {
 
-                this.renderLineBackground(pose, x, y, width, height);
+                this.renderLineBackground(graphics, x, y, width, height);
 
-                if (this.lineTextShadow) {
-                    this.font.drawShadow(pose, text, x + this.lineBorderWidth, y + this.lineSpacerHeight, this.lineTextColor.getColorInt());
-                } else {
-                    this.font.draw(pose, text, x + this.lineBorderWidth, y + this.lineSpacerHeight, this.lineTextColor.getColorInt());
-                }
+                graphics.drawString(this.font, text, x + this.lineBorderWidth, y + this.lineSpacerHeight, this.lineTextColor.getColorInt(), this.lineTextShadow);
 
             }
 
@@ -123,10 +118,10 @@ public class DebugOverlay extends GuiComponent implements Widget, NarratableEntr
 
         }
 
-        pose.popPose();
+        graphics.pose().popPose();
 
         RenderSystem.disableDepthTest();
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
 
         //Close right-click context menu if context menu of overlay menu bar is open
         if ((CustomizationOverlay.getCurrentMenuBarInstance() != null) && CustomizationOverlay.getCurrentMenuBarInstance().isEntryContextMenuOpen()) {
@@ -136,18 +131,18 @@ public class DebugOverlay extends GuiComponent implements Widget, NarratableEntr
         if (this.rightClickMenu != null) {
             RenderSystem.enableBlend();
             RenderSystem.enableDepthTest();
-            pose.pushPose();
-            pose.translate(0.0F, 0.0F, 500.0F);
-            this.rightClickMenu.render(pose, mouseX, mouseY, partial);
-            pose.popPose();
+            graphics.pose().pushPose();
+            graphics.pose().translate(0.0F, 0.0F, 500.0F);
+            this.rightClickMenu.render(graphics, mouseX, mouseY, partial);
+            graphics.pose().popPose();
             RenderSystem.disableDepthTest();
         }
 
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
 
     }
 
-    protected void renderWidgetOverlays(@NotNull PoseStack pose, @NotNull Screen current, int mouseX, int mouseY, float partial) {
+    protected void renderWidgetOverlays(@NotNull GuiGraphics graphics, @NotNull Screen current, int mouseX, int mouseY, float partial) {
 
         ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(current);
         if (layer == null) return;
@@ -161,17 +156,17 @@ public class DebugOverlay extends GuiComponent implements Widget, NarratableEntr
         for (AbstractElement e : widgets) {
             if ((e instanceof HideableElement h) && h.isHidden()) continue;
             this.currentScreenElements.add(e);
-            UIBase.renderBorder(pose, e.getAbsoluteX(), e.getAbsoluteY(), e.getAbsoluteX() + e.getAbsoluteWidth(), e.getAbsoluteY() + e.getAbsoluteHeight(), 1, UIBase.getUIColorTheme().layout_editor_element_border_color_normal, true, true, true, true);
+            UIBase.renderBorder(graphics, e.getAbsoluteX(), e.getAbsoluteY(), e.getAbsoluteX() + e.getAbsoluteWidth(), e.getAbsoluteY() + e.getAbsoluteHeight(), 1, UIBase.getUIColorTheme().layout_editor_element_border_color_normal, true, true, true, true);
         }
 
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
 
     }
 
-    protected void renderLineBackground(@NotNull PoseStack pose, int x, int y, int width, int height) {
+    protected void renderLineBackground(@NotNull GuiGraphics graphics, int x, int y, int width, int height) {
         RenderSystem.enableBlend();
-        fill(pose, x, y, x + width, y + height, this.lineBackgroundColor.getColorInt());
-        RenderingUtils.resetShaderColor();
+        graphics.fill(x, y, x + width, y + height, this.lineBackgroundColor.getColorInt());
+        RenderingUtils.resetShaderColor(graphics);
     }
 
     public DebugOverlay setLineTextShadow(boolean shadow) {

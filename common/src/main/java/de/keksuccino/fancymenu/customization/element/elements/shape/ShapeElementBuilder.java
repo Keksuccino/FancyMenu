@@ -38,12 +38,10 @@ public class ShapeElementBuilder extends ElementBuilder<ShapeElement, ShapeEdito
             element.shape = ShapeElement.Shape.getByName(shape);
         }
 
-        //TODO übernehmen
         String colorHex = serialized.getValue("color");
         if (colorHex != null) {
             element.colorRaw = colorHex;
         }
-        //---------------
 
         return element;
 
@@ -57,7 +55,6 @@ public class ShapeElementBuilder extends ElementBuilder<ShapeElement, ShapeEdito
         }
 
         if (element.color != null) {
-            //TODO übernehmen
             serializeTo.putProperty("color", element.colorRaw);
         }
 

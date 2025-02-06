@@ -17,7 +17,6 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.util.List;
 
-//TODO übernehmen
 public class IsSnowingRequirement extends LoadingRequirement {
 
     private static final Logger LOGGER = LogManager.getLogger();

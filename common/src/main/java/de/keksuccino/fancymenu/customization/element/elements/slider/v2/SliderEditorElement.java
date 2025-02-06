@@ -129,7 +129,6 @@ public class SliderEditorElement extends AbstractEditorElement {
                 .setIcon(ContextMenu.IconFactory.getIcon("script"))
                 .setStackable(false);
 
-        //TODO übernehmen
         this.rightClickMenu.addClickableEntry("widget_active_state_controller", Components.translatable("fancymenu.elements.button.active_state_controller"), (menu, entry) -> {
                     ManageRequirementsScreen s = new ManageRequirementsScreen(this.getElement().activeStateSupplier.copy(false), (call) -> {
                         if (call != null) {

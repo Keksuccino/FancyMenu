@@ -31,6 +31,7 @@ dependencies {
     implementation group: 'ca.weblite', name: 'java-objc-bridge', version: '1.1'
     //Test to fix weird behaviour with Gson
     implementation 'com.google.code.gson:gson:2.8.9'
+    implementation 'org.joml:joml:1.10.8'
 }
 
 publishing {

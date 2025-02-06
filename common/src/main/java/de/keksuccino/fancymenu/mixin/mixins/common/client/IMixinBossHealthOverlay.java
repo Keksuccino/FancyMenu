@@ -7,7 +7,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 import java.util.Map;
 import java.util.UUID;
 
-//TODO übernehmen
 @Mixin(BossHealthOverlay.class)
 public interface IMixinBossHealthOverlay {
 

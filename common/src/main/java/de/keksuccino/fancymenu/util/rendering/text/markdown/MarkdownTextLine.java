@@ -1,14 +1,14 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.gui.components.Widget;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MarkdownTextLine implements Widget {
+public class MarkdownTextLine implements Renderable {
 
     public MarkdownRenderer parent;
     public float offsetX;
@@ -25,18 +25,18 @@ public class MarkdownTextLine implements Widget {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-        this.onRender(pose, mouseX, mouseY, partial, true);
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        this.onRender(graphics, mouseX, mouseY, partial, true);
     }
 
-    protected void onRender(PoseStack pose, int mouseX, int mouseY, float partial, boolean shouldRender) {
+    protected void onRender(GuiGraphics graphics, int mouseX, int mouseY, float partial, boolean shouldRender) {
 
         float textX = this.parent.x + this.offsetX;
         for (MarkdownTextFragment f : this.fragments) {
             f.x = textX;
             f.y = this.parent.y + this.offsetY;
             if (shouldRender) {
-                f.render(pose, mouseX, mouseY, partial);
+                f.render(graphics, mouseX, mouseY, partial);
             }
             textX += f.getRenderWidth();
         }

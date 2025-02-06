@@ -10,6 +10,8 @@ import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
@@ -20,7 +22,6 @@ import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -29,7 +30,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
-public class LocalTexturePanoramaRenderer implements Widget {
+public class LocalTexturePanoramaRenderer implements Renderable {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -156,17 +157,16 @@ public class LocalTexturePanoramaRenderer implements Widget {
 	}
 
 	@Override
-	public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+	public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 		this.lastRenderCall = System.currentTimeMillis();
 		this.startTickerThreadIfNeeded();
 		if (this.panoramaImageSuppliers.size() < 6) {
 			RenderSystem.enableBlend();
-			RenderingUtils.resetShaderColor();
-			RenderingUtils.bindTexture(ITexture.MISSING_TEXTURE_LOCATION);
-			GuiComponent.blit(pose, 0, 0, 0.0F, 0.0F, ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight(), ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight());
-			RenderingUtils.resetShaderColor();
+			RenderingUtils.resetShaderColor(graphics);
+			graphics.blit(ITexture.MISSING_TEXTURE_LOCATION, 0, 0, 0.0F, 0.0F, ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight(), ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight());
+			RenderingUtils.resetShaderColor(graphics);
 		} else {
-			this.renderRaw(pose, this.opacity);
+			this.renderRaw(graphics.pose(), this.opacity);
 		}
 	}
 
@@ -195,7 +195,6 @@ public class LocalTexturePanoramaRenderer implements Widget {
 		RenderSystem.enableBlend();
 		RenderSystem.disableCull();
 		RenderSystem.depthMask(false);
-		RenderSystem.defaultBlendFunc();
 		RenderSystem.disableDepthTest();
 
 		for(int j = 0; j < 4; ++j) {
@@ -270,20 +269,21 @@ public class LocalTexturePanoramaRenderer implements Widget {
 		RenderSystem.enableCull();
 		RenderSystem.enableDepthTest();
 
+		GuiGraphics graphics = GuiGraphics.currentGraphics();
+
 		if (this.overlayTextureSupplier != null) {
 			ITexture texture = this.overlayTextureSupplier.get();
 			if (texture != null) {
 				ResourceLocation location = texture.getResourceLocation();
 				if (location != null) {
-					RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.opacity);
+					graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
 					RenderSystem.enableBlend();
-					RenderingUtils.bindTexture(location);
-					GuiComponent.blit(pose, 0, 0, 0.0F, 0.0F, screenW, screenH, screenW, screenH);
+					graphics.blit(location, 0, 0, 0.0F, 0.0F, screenW, screenH, screenW, screenH);
 				}
 			}
 		}
 
-		RenderingUtils.resetShaderColor();
+		RenderingUtils.resetShaderColor(graphics);
 
 	}
 

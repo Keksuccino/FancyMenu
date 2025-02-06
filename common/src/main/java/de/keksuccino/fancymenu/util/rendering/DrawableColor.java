@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering;
 
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
@@ -14,6 +15,7 @@ public class DrawableColor {
     protected Color color;
     protected int colorInt;
     protected String hex;
+    protected FloatColor floatColor;
 
     /** Creates a {@link DrawableColor} out of the given {@link Color}. **/
     @NotNull
@@ -73,11 +75,37 @@ public class DrawableColor {
     protected DrawableColor() {
     }
 
+    public void setAsShaderColor(@NotNull GuiGraphics graphics, float alpha) {
+        FloatColor c = this.getAsFloats();
+        graphics.setColor(c.red(), c.green(), c.blue(), alpha);
+    }
+
+    public void setAsShaderColor(@NotNull GuiGraphics graphics) {
+        FloatColor c = this.getAsFloats();
+        graphics.setColor(c.red(), c.green(), c.blue(), c.alpha());
+    }
+
+    public void resetShaderColor(@NotNull GuiGraphics graphics) {
+        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+    }
+
+    @NotNull
+    public FloatColor getAsFloats() {
+        if (this.floatColor == null) {
+            float[] floats = argbToFloats(this.getColorInt());
+            this.floatColor = new FloatColor(floats[0], floats[1], floats[2], floats[3]);
+        }
+        return this.floatColor;
+    }
+
     @NotNull
     public Color getColor() {
         return this.color;
     }
 
+    /**
+     * Returns an ARGB color int of this color.
+     */
     public int getColorInt() {
         return this.colorInt;
     }
@@ -131,6 +159,28 @@ public class DrawableColor {
             return String.format("#%02X%02X%02X%02X", color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
         } catch (Exception ignored) {}
         return null;
+    }
+
+    /**
+     * Converts an ARGB color integer to an array of four floats (red, green, blue, alpha),
+     * each in the range 0.0 to 1.0.
+     *
+     * @param argb the color integer in ARGB format (0xAARRGGBB)
+     * @return a float array where:
+     *         index 0 = red,
+     *         index 1 = green,
+     *         index 2 = blue,
+     *         index 3 = alpha.
+     */
+    protected static float[] argbToFloats(int argb) {
+        float a = ((argb >> 24) & 0xFF) / 255.0f;
+        float r = ((argb >> 16) & 0xFF) / 255.0f;
+        float g = ((argb >> 8)  & 0xFF) / 255.0f;
+        float b = (argb & 0xFF) / 255.0f;
+        return new float[]{r, g, b, a};
+    }
+
+    public static record FloatColor(float red, float green, float blue, float alpha) {
     }
 
 }

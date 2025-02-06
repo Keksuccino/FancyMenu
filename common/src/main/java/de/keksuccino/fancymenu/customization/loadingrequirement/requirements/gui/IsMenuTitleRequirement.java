@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequireme
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.ScreenTitleUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
@@ -151,9 +152,9 @@ public class IsMenuTitleRequirement extends LoadingRequirement {
         }
 
         @Override
-        public void render(PoseStack pose, int mouseX, int mouseY, float partial) {
-            super.render(pose, mouseX, mouseY, partial);
-            this.localizationKeySuggestions.render(pose, mouseX, mouseY);
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            super.render(graphics, mouseX, mouseY, partial);
+            this.localizationKeySuggestions.render(graphics.pose(), mouseX, mouseY);
         }
 
         @Override

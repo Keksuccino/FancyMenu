@@ -1,10 +1,11 @@
 package de.keksuccino.fancymenu.customization.layout;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.cycle.ValueCycle;
 import de.keksuccino.fancymenu.util.file.FileUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
@@ -24,7 +25,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ManageLayoutsScreen extends Screen {
+public class ManageLayoutsScreen extends ModernScreen {
 
     protected Consumer<List<Layout>> callback;
     protected List<Layout> layouts;
@@ -126,49 +127,49 @@ public class ManageLayoutsScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         RenderSystem.enableBlend();
 
-        fill(pose, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(pose, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        this.font.draw(pose, Components.translatable("fancymenu.layout.manage.layouts"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, Components.translatable("fancymenu.layout.manage.layouts"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
         this.layoutListScrollArea.setWidth((this.width / 2) - 40, true);
         this.layoutListScrollArea.setHeight(this.height - 85, true);
         this.layoutListScrollArea.setX(20, true);
         this.layoutListScrollArea.setY(50 + 15, true);
-        this.layoutListScrollArea.render(pose, mouseX, mouseY, partial);
+        this.layoutListScrollArea.render(graphics, mouseX, mouseY, partial);
 
         this.sortingButton.setWidth(this.font.width(this.sortingButton.getMessage()) + 10);
         this.sortingButton.x = (this.layoutListScrollArea.getXWithBorder() + this.layoutListScrollArea.getWidthWithBorder() - this.sortingButton.getWidth());
         this.sortingButton.y = (this.layoutListScrollArea.getYWithBorder() - 5 - this.sortingButton.getHeight());
-        this.sortingButton.render(pose, mouseX, mouseY, partial);
+        this.sortingButton.render(graphics.pose(), mouseX, mouseY, partial);
 
         this.doneButton.x = (this.width - 20 - this.doneButton.getWidth());
         this.doneButton.y = (this.height - 20 - 20);
-        this.doneButton.render(pose, mouseX, mouseY, partial);
+        this.doneButton.render(graphics.pose(), mouseX, mouseY, partial);
 
         this.openInTextEditorButton.x = (this.width - 20 - this.openInTextEditorButton.getWidth());
         this.openInTextEditorButton.y = (this.doneButton.y - 15 - 20);
-        this.openInTextEditorButton.render(pose, mouseX, mouseY, partial);
+        this.openInTextEditorButton.render(graphics.pose(), mouseX, mouseY, partial);
 
         this.deleteButton.x = (this.width - 20 - this.deleteButton.getWidth());
         this.deleteButton.y = (this.openInTextEditorButton.y - 5 - 20);
-        this.deleteButton.render(pose, mouseX, mouseY, partial);
+        this.deleteButton.render(graphics.pose(), mouseX, mouseY, partial);
 
         this.editButton.x = (this.width - 20 - this.editButton.getWidth());
         this.editButton.y = (this.deleteButton.y - 5 - 20);
-        this.editButton.render(pose, mouseX, mouseY, partial);
+        this.editButton.render(graphics.pose(), mouseX, mouseY, partial);
 
         this.toggleStatusButton.x = (this.width - 20 - this.toggleStatusButton.getWidth());
         this.toggleStatusButton.y = (this.editButton.y - 5 - 20);
-        this.toggleStatusButton.render(pose, mouseX, mouseY, partial);
+        this.toggleStatusButton.render(graphics.pose(), mouseX, mouseY, partial);
 
-        super.render(pose, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
 
     }
 

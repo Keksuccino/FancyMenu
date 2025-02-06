@@ -5,14 +5,15 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.awt.*;
 
-//TODO übernehmen
 public class DraggerElementBuilder extends ElementBuilder<DraggerElement, DraggerEditorElement> {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -26,6 +27,7 @@ public class DraggerElementBuilder extends ElementBuilder<DraggerElement, Dragge
         DraggerElement i = new DraggerElement(this);
         i.baseWidth = 100;
         i.baseHeight = 100;
+        i.inEditorColor = DrawableColor.of(new Color(227, 14, 35));
         return i;
     }
 

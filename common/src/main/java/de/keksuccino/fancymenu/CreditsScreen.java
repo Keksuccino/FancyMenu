@@ -1,8 +1,9 @@
 package de.keksuccino.fancymenu;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.ScrollableMarkdownRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -16,7 +17,7 @@ import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
-public class CreditsScreen extends Screen {
+public class CreditsScreen extends ModernScreen {
 
     private static final ResourceSource CREDITS_SOURCE = ResourceSource.of("fancymenu:credits_and_copyright.md", ResourceSourceType.LOCATION);
 
@@ -55,7 +56,7 @@ public class CreditsScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (!this.textSet) {
             IText text = this.creditsTextSupplier.get();
@@ -75,12 +76,12 @@ public class CreditsScreen extends Screen {
         RenderSystem.enableBlend();
 
         //Background
-        fill(graphics, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
-        RenderingUtils.resetShaderColor();
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
+        RenderingUtils.resetShaderColor(graphics);
 
         //Footer
-        fill(graphics, 0, this.height - this.footerHeight, this.width, this.height, UIBase.getUIColorTheme().area_background_color.getColorInt());
-        RenderingUtils.resetShaderColor();
+        graphics.fill(0, this.height - this.footerHeight, this.width, this.height, UIBase.getUIColorTheme().area_background_color.getColorInt());
+        RenderingUtils.resetShaderColor(graphics);
 
         super.render(graphics, mouseX, mouseY, partial);
 

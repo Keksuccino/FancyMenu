@@ -111,7 +111,6 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
 
         element.navigatable = deserializeBoolean(element.navigatable, serialized.getValue("navigatable"));
 
-        //TODO übernehmen
         String activeStateRequirementContainerIdentifier = serialized.getValue("widget_active_state_requirement_container_identifier");
         if (activeStateRequirementContainerIdentifier != null) {
             LoadingRequirementContainer c = LoadingRequirementContainer.deserializeWithIdentifier(activeStateRequirementContainerIdentifier, serialized);
@@ -119,7 +118,6 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
                 element.activeStateSupplier = c;
             }
         }
-        //--------------------------
 
         element.buildSlider();
         element.prepareExecutableBlock();
@@ -196,10 +194,8 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
 
         serializeTo.putProperty("navigatable", "" + element.navigatable);
 
-        //TODO übernehmen
         serializeTo.putProperty("widget_active_state_requirement_container_identifier", element.activeStateSupplier.identifier);
         element.activeStateSupplier.serializeToExistingPropertyContainer(serializeTo);
-        //-----------------------
 
         return serializeTo;
 

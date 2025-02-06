@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import net.minecraft.client.Minecraft;
@@ -27,7 +28,6 @@ import java.util.List;
 public class AudioElement extends AbstractElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final DrawableColor BACKGROUND_COLOR = DrawableColor.of(new Color(92, 166, 239));
     private static final long AUDIO_START_COOLDOWN_MS = 2000;
 
     @NotNull
@@ -38,14 +38,13 @@ public class AudioElement extends AbstractElement {
     protected SoundSource soundSource = SoundSource.MASTER;
     /** Call {@link AudioElement#resetAudioElementKeepAudios()} after adding or removing audios. **/
     public List<AudioInstance> audios = new ArrayList<>();
-    protected int currentAudioIndex = -1;
+    public int currentAudioIndex = -1;
     @Nullable
-    protected AudioInstance currentAudioInstance;
-    protected IAudio currentAudio;
+    public AudioInstance currentAudioInstance;
+    public IAudio currentAudio;
     protected boolean currentAudioStarted = false;
     protected long lastAudioStart = -1L;
     protected boolean cacheChecked = false;
-    //TODO übernehmen
     protected float lastControllerVolume = 1.0F;
 
     public AudioElement(@NotNull ElementBuilder<?, ?> builder) {
@@ -73,6 +72,11 @@ public class AudioElement extends AbstractElement {
         this.getMemory().putProperty("last_played_loop_shuffle_audio", lastPlayedLoopShuffleAudio);
     }
 
+    @Override
+    public void afterConstruction() {
+        if (!AudioElementController.hasMetaFor(this.getInstanceIdentifier())) AudioElementController.putMeta(this.getInstanceIdentifier(), new AudioElementController.AudioElementMeta(this.getInstanceIdentifier(), 1.0F));
+    }
+
     public void renderTick() {
 
         //Don't play music in editor
@@ -85,14 +89,14 @@ public class AudioElement extends AbstractElement {
                 if ((this.audios.size()-1) >= cached) {
                     this.currentAudioIndex = cached;
                     loadedFromCache = true;
-//                    LOGGER.info("######### CACHED FOUND FOR: INSTANCE ID: " + this.getInstanceIdentifier() + " | CACHED INDEX: " + this.currentAudioIndex + " | CACHED SOURCE: " + AudioElementBuilder.CURRENT_AUDIO_CACHE.get(this.getInstanceIdentifier()).getFirst().getSourceWithPrefix() + " | INSTANCE: " + this);
+//                    LOGGER.info("######### CACHED FOUND FOR: INSTANCE ID: " + this.getInstanceIdentifier() + " | CACHED INDEX: " + this.currentAudioIndex + " | CACHED SOURCE: " + AudioElementBuilder.CURRENT_AUDIO_CACHE.get(this.getInstanceIdentifier()).get(0).getSourceWithPrefix() + " | INSTANCE: " + this);
                 }
             }
             this.cacheChecked = true;
         }
 
         if (this.shouldRender()) {
-            if (!loadedFromCache) this.pickNextAudio();
+            if (!loadedFromCache) this.pickNextAudio(false);
         } else if (loadedFromCache) {
             AudioElementBuilder.CURRENT_AUDIO_CACHE.get(this.getInstanceIdentifier()).getSecond().stop();
             AudioElementBuilder.CURRENT_AUDIO_CACHE.remove(this.getInstanceIdentifier());
@@ -136,11 +140,10 @@ public class AudioElement extends AbstractElement {
 
             //Update current volume, channel if loaded from cache + update lastAudioStart in case current loaded from cache is still playing
             if (loadedFromCache) {
-                if (this.currentAudio.isReady() && this.currentAudio.isPlaying()) {
+                if (this.currentAudio.isReady() && (this.currentAudio.isPlaying() || this.currentAudio.isPaused())) {
                     this.lastAudioStart = now;
                     this.currentAudioStarted = true;
                 }
-                //TODO übernehmen
                 this.updateVolume();
                 this.currentAudio.setSoundChannel(this.soundSource);
             }
@@ -151,7 +154,6 @@ public class AudioElement extends AbstractElement {
             if (!isOnCooldown && (this.currentAudioInstance != null)) {
                 if (!this.currentAudioStarted && this.currentAudio.isReady() && !this.currentAudio.isPlaying()) {
                     this.lastAudioStart = now;
-                    //TODO übernehmen
                     this.updateVolume();
                     this.currentAudio.setSoundChannel(this.soundSource);
                     this.currentAudio.play();
@@ -160,18 +162,16 @@ public class AudioElement extends AbstractElement {
                 }
             }
 
-            //TODO übernehmen
             if (this.lastControllerVolume != this.getControllerVolume()) {
                 this.updateVolume();
                 this.lastControllerVolume = this.getControllerVolume();
             }
-            //--------------
 
         }
 
     }
 
-    protected void pickNextAudio() {
+    public void pickNextAudio(boolean ignorePaused) {
 
         //Return if no audios to play
         if (this.audios.isEmpty()) return;
@@ -182,7 +182,7 @@ public class AudioElement extends AbstractElement {
             if (this.currentAudio != null) {
                 long now = System.currentTimeMillis();
                 boolean isOnCooldown = ((this.lastAudioStart + AUDIO_START_COOLDOWN_MS) > now);
-                if (!isOnCooldown && this.currentAudioStarted && (!this.currentAudio.isReady() || !this.currentAudio.isPlaying())) {
+                if (!isOnCooldown && this.currentAudioStarted && (!this.currentAudio.isReady() || (!this.currentAudio.isPlaying() && (!this.currentAudio.isPaused() || ignorePaused)))) {
                     this.skipToNextAudio(false);
                 }
             } else {
@@ -233,20 +233,145 @@ public class AudioElement extends AbstractElement {
         }
     }
 
+    public void goToPreviousAudio() {
+        if (this.audios.isEmpty()) return;
+
+        if (this.playMode == PlayMode.NORMAL) {
+            handleNormalModePrevious();
+        } else if (this.playMode == PlayMode.SHUFFLE) {
+            handleShuffleModePrevious();
+        }
+
+        resetAudioStateAndUpdateCache();
+    }
+
+    private void handleNormalModePrevious() {
+        int newIndex = this.currentAudioIndex - 1;
+        if (newIndex < 0) {
+            newIndex = this.loop ? this.audios.size() - 1 : -2;
+        }
+
+        if (newIndex >= 0 && newIndex < this.audios.size()) {
+            this.currentAudioIndex = newIndex;
+        } else {
+            this.currentAudioIndex = newIndex;
+            if (newIndex == -2) this.clearCacheForElement();
+        }
+    }
+
+    private void handleShuffleModePrevious() {
+        List<Integer> alreadyPlayed = this.getAlreadyPlayedShuffleAudios();
+        if (alreadyPlayed.isEmpty()) return;
+
+        // Remove current index from history
+        int currentIndex = alreadyPlayed.remove(alreadyPlayed.size() - 1);
+
+        // Update loop tracking if needed
+        if (this.loop) {
+            this.setLastPlayedLoopShuffleAudio(
+                    alreadyPlayed.isEmpty() ? -10000 : alreadyPlayed.get(alreadyPlayed.size() - 1)
+            );
+        }
+
+        // Determine new current index
+        this.currentAudioIndex = alreadyPlayed.isEmpty() ? -1 : alreadyPlayed.get(alreadyPlayed.size() - 1);
+    }
+
+    public void goToNextAudio() {
+        if (this.audios.isEmpty()) return;
+
+        if (this.playMode == PlayMode.NORMAL) {
+            handleNormalModeNext();
+        } else if (this.playMode == PlayMode.SHUFFLE) {
+            handleShuffleModeNext();
+        }
+
+        resetAudioStateAndUpdateCache();
+    }
+
+    private void handleNormalModeNext() {
+        this.currentAudioIndex++;
+        if (this.currentAudioIndex >= this.audios.size()) {
+            this.currentAudioIndex = this.loop ? 0 : -2;
+        }
+    }
+
+    private void handleShuffleModeNext() {
+        List<Integer> indexes = this.buildShuffleIndexesList();
+
+        // Reset playback history if looping and no tracks available
+        if (indexes.isEmpty() && this.loop && !this.audios.isEmpty()) {
+            this.getAlreadyPlayedShuffleAudios().clear();
+            if (this.audios.size() == 1) this.setLastPlayedLoopShuffleAudio(-10000);
+            indexes = this.buildShuffleIndexesList();
+        }
+
+        if (!indexes.isEmpty()) {
+            int pickedIndex = (indexes.size() == 1) ? 0 : MathUtils.getRandomNumberInRange(0, indexes.size()-1);
+            this.currentAudioIndex = indexes.get(pickedIndex);
+            this.getAlreadyPlayedShuffleAudios().add(this.currentAudioIndex);
+            if (this.loop) this.setLastPlayedLoopShuffleAudio(this.currentAudioIndex);
+        } else {
+            this.currentAudioIndex = -2;
+        }
+    }
+
+    private void resetAudioStateAndUpdateCache() {
+        // Stop current audio and reset state
+        if (this.currentAudio != null && this.currentAudio.isReady()) {
+            this.currentAudio.stop();
+        }
+        this.currentAudioInstance = null;
+        this.currentAudio = null;
+        this.currentAudioStarted = false;
+        this.lastAudioStart = -1L;
+
+        // Update cache with new index or clear if invalid
+        if (this.currentAudioIndex >= 0 && this.currentAudioIndex < this.audios.size()) {
+            AudioInstance instance = this.audios.get(this.currentAudioIndex);
+            if (instance != null) {
+                this.currentAudioInstance = instance;
+                this.currentAudio = instance.supplier.get();
+                if (this.currentAudio != null) {
+                    AudioElementBuilder.CURRENT_AUDIO_CACHE.put(
+                            this.getInstanceIdentifier(),
+                            Trio.of(instance.supplier, this.currentAudio, this.currentAudioIndex)
+                    );
+                }
+            }
+        } else {
+            this.clearCacheForElement();
+        }
+    }
+
     @NotNull
     protected List<Integer> buildShuffleIndexesList() {
         List<Integer> indexes = new ArrayList<>();
         if (this.playMode != PlayMode.SHUFFLE) return indexes;
+
+        // Create weighted pool of indices
+        List<Integer> weightedPool = new ArrayList<>();
         int i = 0;
-        for (AudioInstance ignored : this.audios) {
-            indexes.add(i);
+        for (AudioInstance audio : this.audios) {
+            // Add index multiple times based on weight
+            int occurrences = Math.max(1, Math.round(audio.weight * 10)); // Scale weight by 10 for more granular control
+            for (int j = 0; j < occurrences; j++) {
+                weightedPool.add(i);
+            }
             i++;
         }
-        indexes.removeIf(integer -> this.getAlreadyPlayedShuffleAudios().contains(integer));
-        if (this.loop && (this.getLastPlayedLoopShuffleAudio() != -10000) && (indexes.contains(this.getLastPlayedLoopShuffleAudio()))) {
-            indexes.remove(this.getLastPlayedLoopShuffleAudio());
+
+        // Remove already played tracks
+        weightedPool.removeIf(integer -> this.getAlreadyPlayedShuffleAudios().contains(integer));
+
+        // Remove last played track if looping (to avoid repeats)
+        if (this.loop && (this.getLastPlayedLoopShuffleAudio() != -10000)) {
+            weightedPool.removeIf(integer -> integer == this.getLastPlayedLoopShuffleAudio());
         }
-        return indexes;
+
+        // Convert weighted pool to unique indices
+        Set<Integer> uniqueIndexes = new LinkedHashSet<>(weightedPool);
+        return new ArrayList<>(uniqueIndexes);
     }
 
     public void resetAudioElementKeepAudios() {
@@ -291,7 +416,6 @@ public class AudioElement extends AbstractElement {
         return this.playMode;
     }
 
-    //TODO übernehmen
     public void updateVolume() {
         float v = Math.max(0.0F, Math.min(1.0F, this.getControllerVolume() * this.volume));
         if (this.currentAudio != null) {
@@ -306,7 +430,6 @@ public class AudioElement extends AbstractElement {
         if (volume > 1.0F) volume = 1.0F;
         if (volume < 0.0F) volume = 0.0F;
         this.volume = volume;
-        //TODO übernehmen
         this.updateVolume();
     }
 
@@ -317,18 +440,17 @@ public class AudioElement extends AbstractElement {
         return this.volume;
     }
 
-    //TODO übernehmen
     /**
      * Returns the volume of this element that is set in the {@link AudioElementController}.<br>
      * The controller volume is set by actions and similar things that are user-controlled in most cases.
      */
     public float getControllerVolume() {
+        if (!AudioElementController.hasMetaFor(this.getInstanceIdentifier())) AudioElementController.putMeta(this.getInstanceIdentifier(), new AudioElementController.AudioElementMeta(this.getInstanceIdentifier(), 1.0F));
         AudioElementController.AudioElementMeta meta = AudioElementController.getMeta(this.getInstanceIdentifier());
         if (meta != null) return Math.max(0.0F, Math.min(1.0F, meta.volume));
         return 1.0F;
     }
 
-    //TODO übernehmen
     public void setControllerVolume(float volume) {
         AudioElementController.AudioElementMeta meta = AudioElementController.getMeta(this.getInstanceIdentifier());
         if (meta == null) {
@@ -352,13 +474,7 @@ public class AudioElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
-
-        //TODO übernehmen
-        //this.renderTick();
-
-        //TODO übernehmen
-        //if (!this.shouldRender()) return;
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (isEditor()) {
             int x = this.getAbsoluteX();
@@ -366,16 +482,15 @@ public class AudioElement extends AbstractElement {
             int w = this.getAbsoluteWidth();
             int h = this.getAbsoluteHeight();
             RenderSystem.enableBlend();
-            fill(pose, x, y, x + w, y + h, BACKGROUND_COLOR.getColorInt());
-            RenderingUtils.enableScissor(x, y, x + w, y + h);
-            drawCenteredString(pose, Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
-            RenderingUtils.disableScissor();
-            RenderingUtils.resetShaderColor();
+            graphics.fill(x, y, x + w, y + h, this.inEditorColor.getColorInt());
+            graphics.enableScissor(x, y, x + w, y + h);
+            graphics.drawCenteredString(Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
+            graphics.disableScissor();
+            RenderingUtils.resetShaderColor(graphics);
         }
 
     }
 
-    //TODO übernehmen
     @Override
     public void renderTick_Inner_Stage_1() {
         this.renderTick();
@@ -430,16 +545,23 @@ public class AudioElement extends AbstractElement {
     public static class AudioInstance {
 
         @NotNull
-        ResourceSupplier<IAudio> supplier;
+        public ResourceSupplier<IAudio> supplier;
+        float weight = 1.0f; // Default weight of 1.0
 
         public AudioInstance(@NotNull ResourceSupplier<IAudio> supplier) {
             this.supplier = Objects.requireNonNull(supplier);
+        }
+
+        public AudioInstance(@NotNull ResourceSupplier<IAudio> supplier, float weight) {
+            this.supplier = Objects.requireNonNull(supplier);
+            this.weight = Math.max(0.0f, weight); // Ensure non-negative weight
         }
 
         public static void serializeAllToExistingContainer(@NotNull List<AudioInstance> instances, @NotNull PropertyContainer container) {
             int i = 0;
             for (AudioInstance instance : instances) {
                 container.putProperty("audio_instance_" + i, instance.supplier.getSourceWithPrefix());
+                container.putProperty("audio_instance_weight_" + i, String.valueOf(instance.weight));
                 i++;
             }
         }
@@ -448,8 +570,14 @@ public class AudioElement extends AbstractElement {
         public static List<AudioInstance> deserializeAllOfContainer(@NotNull PropertyContainer container) {
             List<AudioInstance> instances = new ArrayList<>();
             container.getProperties().forEach((key, value) -> {
-                if (StringUtils.startsWith(key, "audio_instance_")) {
-                    instances.add(new AudioInstance(ResourceSupplier.audio(value)));
+                if (StringUtils.startsWith(key, "audio_instance_") && !key.contains("weight")) {
+                    float weight = 1.0f;
+                    String weightKey = "audio_instance_weight_" + key.substring("audio_instance_".length());
+                    String weightValue = container.getValue(weightKey);
+                    if (weightValue != null && MathUtils.isFloat(weightValue)) {
+                        weight = Float.parseFloat(weightValue);
+                    }
+                    instances.add(new AudioInstance(ResourceSupplier.audio(value), weight));
                 }
             });
             return instances;

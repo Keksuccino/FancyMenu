@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.platform;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.platform.services.IPlatformHelper;
+import de.keksuccino.fancymenu.util.mod.UniversalModContainer;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.core.Registry;
 import net.minecraft.data.BuiltinRegistries;
@@ -83,7 +84,6 @@ public class ForgePlatformHelper implements IPlatformHelper {
         return keyMapping.getKey();
     }
 
-    //TODO übernehmen
     @Override
     public @Nullable ResourceLocation getItemKey(@NotNull Item item) {
         try {
@@ -94,7 +94,6 @@ public class ForgePlatformHelper implements IPlatformHelper {
         return null;
     }
 
-    //TODO übernehmen
     @Override
     public @Nullable ResourceLocation getEffectKey(@NotNull MobEffect effect) {
         try {
@@ -105,7 +104,6 @@ public class ForgePlatformHelper implements IPlatformHelper {
         return null;
     }
 
-    //TODO übernehmen
     @Override
     public @Nullable ResourceLocation getEntityKey(@NotNull EntityType<?> type) {
         try {
@@ -114,6 +112,15 @@ public class ForgePlatformHelper implements IPlatformHelper {
             ex.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public @NotNull List<UniversalModContainer> getLoadedMods() {
+        List<UniversalModContainer> mods = new ArrayList<>();
+        ModList.get().getMods().forEach(mod -> {
+            mods.add(new UniversalModContainer(mod.getModId(), mod.getDisplayName(), mod.getDescription(), mod.getOwningFile().getLicense(), null));
+        });
+        return mods;
     }
 
 }

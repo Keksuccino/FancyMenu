@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
@@ -69,11 +70,40 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
         this.font = font;
     }
 
-    @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public int getX() {
+        return this.x;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public int getY() {
+        return this.y;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.width = this.getWidth();
         this.height = this.getHeight();
-        super.render(pose, mouseX, mouseY, partial);
+        super.render(graphics.pose(), mouseX, mouseY, partial);
+    }
+
+    @Deprecated
+    @Override
+    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+        this.render(GuiGraphics.currentGraphics(), mouseX, mouseY, partial);
     }
 
     @Override

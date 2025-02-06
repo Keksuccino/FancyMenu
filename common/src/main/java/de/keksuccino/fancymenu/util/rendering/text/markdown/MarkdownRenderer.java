@@ -1,15 +1,14 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import de.keksuccino.fancymenu.util.rendering.ui.FocuslessContainerEventHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.resources.language.I18n;
@@ -25,7 +24,7 @@ import java.util.List;
 import java.util.Objects;
 
 @SuppressWarnings("unused")
-public class MarkdownRenderer extends GuiComponent implements Widget, FocuslessContainerEventHandler, NarratableEntry, NavigatableWidget {
+public class MarkdownRenderer implements Renderable, FocuslessContainerEventHandler, NarratableEntry, NavigatableWidget {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -89,12 +88,12 @@ public class MarkdownRenderer extends GuiComponent implements Widget, FocuslessC
     protected final List<ConsumingSupplier<MarkdownTextLine, Boolean>> lineRenderValidators = new ArrayList<>();
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.tick();
-        this.onRender(pose, mouseX, mouseY, partial, true);
+        this.onRender(graphics, mouseX, mouseY, partial, true);
     }
 
-    protected void onRender(PoseStack pose, int mouseX, int mouseY, float partial, boolean shouldRender) {
+    protected void onRender(GuiGraphics graphics, int mouseX, int mouseY, float partial, boolean shouldRender) {
 
         float lineOffsetY = this.border;
         for (MarkdownTextLine line : this.lines) {
@@ -112,7 +111,7 @@ public class MarkdownRenderer extends GuiComponent implements Widget, FocuslessC
             line.offsetX = this.border + lineAlignmentOffsetX;
             line.offsetY = lineOffsetY;
             if (shouldRender && this.isLineRenderingAllowedByValidators(line)) {
-                line.render(pose, mouseX, mouseY, partial);
+                line.render(graphics, mouseX, mouseY, partial);
             }
             lineOffsetY += line.getLineHeight() + this.lineSpacing;
         }
@@ -542,7 +541,6 @@ public class MarkdownRenderer extends GuiComponent implements Widget, FocuslessC
         return this;
     }
 
-    //TODO übernehmen
     public void resetHovered() {
         this.fragments.forEach(markdownTextFragment -> markdownTextFragment.hovered = false);
     }

@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
@@ -137,9 +138,9 @@ public class IsVariableValueRequirement extends LoadingRequirement {
         }
 
         @Override
-        public void render(PoseStack pose, int mouseX, int mouseY, float partial) {
+        public void render(GuiGraphics pose, int mouseX, int mouseY, float partial) {
             super.render(pose, mouseX, mouseY, partial);
-            this.variableNameSuggestions.render(pose, mouseX, mouseY);
+            this.variableNameSuggestions.render(pose.pose(), mouseX, mouseY);
         }
 
         @Override

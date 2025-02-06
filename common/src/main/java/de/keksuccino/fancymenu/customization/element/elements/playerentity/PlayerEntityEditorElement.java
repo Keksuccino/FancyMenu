@@ -17,7 +17,6 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
     public PlayerEntityEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
         this.settings.setFadeable(false);
-        //TODO übernehmen
         this.settings.setOpacityChangeable(false);
         this.settings.setResizeable(false);
         this.settings.setAdvancedSizingSupported(false);

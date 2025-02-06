@@ -12,7 +12,6 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.*;
 
-//TODO übernehmen
 public class AudioElementController {
 
     public static final File METAS_FILE = new File(FancyMenu.MOD_DIR, "/audio_element_controller_metas.json");
@@ -73,6 +72,12 @@ public class AudioElementController {
         if (!initialized) read();
         initialized = true;
         write();
+    }
+
+    public static boolean hasMetaFor(@NotNull String elementIdentifier) {
+        if (!initialized) read();
+        initialized = true;
+        return METAS.containsKey(elementIdentifier);
     }
 
     @Nullable

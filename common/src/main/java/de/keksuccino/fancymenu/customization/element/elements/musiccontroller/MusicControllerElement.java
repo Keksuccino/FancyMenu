@@ -1,11 +1,10 @@
 package de.keksuccino.fancymenu.customization.element.elements.musiccontroller;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.Minecraft;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,7 +16,6 @@ import java.awt.*;
 public class MusicControllerElement extends AbstractElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final DrawableColor BACKGROUND_COLOR = DrawableColor.of(new Color(124, 217, 2));
 
     public boolean playMenuMusic = true;
     public boolean playWorldMusic = true;
@@ -38,7 +36,7 @@ public class MusicControllerElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (!this.shouldRender()) return;
 
@@ -48,11 +46,11 @@ public class MusicControllerElement extends AbstractElement {
             int w = this.getAbsoluteWidth();
             int h = this.getAbsoluteHeight();
             RenderSystem.enableBlend();
-            fill(pose, x, y, x + w, y + h, BACKGROUND_COLOR.getColorInt());
-            RenderingUtils.enableScissor(x, y, x + w, y + h);
-            drawCenteredString(pose, Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
-            RenderingUtils.disableScissor();
-            RenderingUtils.resetShaderColor();
+            graphics.fill(x, y, x + w, y + h, this.inEditorColor.getColorInt());
+            graphics.enableScissor(x, y, x + w, y + h);
+            graphics.drawCenteredString(Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
+            graphics.disableScissor();
+            RenderingUtils.resetShaderColor(graphics);
         }
 
     }

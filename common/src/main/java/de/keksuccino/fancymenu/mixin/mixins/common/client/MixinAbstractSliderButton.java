@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
@@ -64,7 +65,7 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
         boolean renderVanilla;
         int handleX = this.x + (int)(this.value * (double)(this.getWidth() - 8));
         //For sliders, the normal widget background is the slider handle texture
-        renderVanilla = cus.renderCustomBackgroundFancyMenu(this, pose, handleX, this.y, 8, this.getHeight());
+        renderVanilla = cus.renderCustomBackgroundFancyMenu(this, GuiGraphics.currentGraphics(), handleX, this.y, 8, this.getHeight());
         //Re-bind default texture after rendering custom
         RenderSystem.setShaderTexture(0, WIDGETS_LOCATION);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
@@ -77,12 +78,12 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
      */
     @Unique
     private void render119VanillaHandleFancyMenu(PoseStack pose) {
-        RenderSystem.setShaderTexture(0, WIDGETS_LOCATION);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
+        GuiGraphics graphics = GuiGraphics.currentGraphics();
+        graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
         RenderSystem.enableBlend();
         RenderSystem.enableDepthTest();
-        RenderingUtils.blitNineSliced_Vanilla(pose, this.getSliderHandleXFancyMenu(), this.y, 8, this.getHeight(), 20, 4, 200, 20, 0, this.getHandleTextureYFancyMenu());
-        RenderingUtils.resetShaderColor();
+        graphics.blitNineSliced(WIDGETS_LOCATION, this.getSliderHandleXFancyMenu(), this.y, 8, this.getHeight(), 20, 4, 200, 20, 0, this.getHandleTextureYFancyMenu());
+        RenderingUtils.resetShaderColor(graphics);
     }
 
     @Unique

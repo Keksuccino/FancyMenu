@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen.resource;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
@@ -16,6 +15,7 @@ import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
 import de.keksuccino.fancymenu.util.file.type.types.TextFileType;
 import de.keksuccino.fancymenu.util.file.type.types.VideoFileType;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
@@ -127,7 +127,6 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
         this.resourceSourceCallback = resourceSourceCallback;
     }
 
-
     @Override
     protected void initCells() {
 
@@ -185,6 +184,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
         this.editBox.setHighlightPos(0);
         this.editBox.applyInputPrefixSuffixCharacterRenderFormatter();
         this.editBox.setEditable(!isLegacyLocal);
+        this.editBox.setDeleteAllAllowed(false);
         this.editBox.setResponder(s -> this.resourceSource = s);
         sourceInputCell.setEditorCallback((s, textInputCell) -> {
             if (isLocal && !isLegacyLocal && !s.startsWith("/config/fancymenu/assets/")) {
@@ -245,14 +245,14 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
     }
 
     @Override
-    public void render(PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.updateLegacyLocalWarning();
         this.updateNoExtensionWarning();
 
-        super.render(pose, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
 
-        this.renderWarning(pose, mouseX, mouseY, partial);
+        this.renderWarning(graphics, mouseX, mouseY, partial);
 
         this.updateInputFieldTooltips();
 
@@ -279,7 +279,7 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
         }
     }
 
-    protected void renderWarning(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    protected void renderWarning(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         if ((this.showWarningLegacyLocal || this.showWarningNoExtension) && (this.editBox != null)) {
             ResourceLocation loc = WARNING_TEXTURE.getResourceLocation();
             if (loc != null) {
@@ -288,10 +288,9 @@ public class ResourceChooserScreen<R extends Resource, F extends FileType<R>> ex
                 int x = this.editBox.x - w - 2;
                 int y = this.editBox.y + 2;
                 this.warningHovered = UIBase.isXYInArea(mouseX, mouseY, x, y, w, h);
-                RenderingUtils.setShaderColor(UIBase.getUIColorTheme().warning_text_color, 1.0F);
-                RenderingUtils.bindTexture(loc);
-                blit(pose, x, y, 0.0F, 0.0F, w, h, w, h);
-                RenderingUtils.resetShaderColor();
+                RenderingUtils.setShaderColor(graphics, UIBase.getUIColorTheme().warning_text_color, 1.0F);
+                graphics.blit(loc, x, y, 0.0F, 0.0F, w, h, w, h);
+                RenderingUtils.resetShaderColor(graphics);
             }
         }
     }

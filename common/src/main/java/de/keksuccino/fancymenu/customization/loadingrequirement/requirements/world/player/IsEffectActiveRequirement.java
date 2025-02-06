@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequireme
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
@@ -28,7 +29,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-//TODO übernehmen
 public class IsEffectActiveRequirement extends LoadingRequirement {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -154,9 +154,9 @@ public class IsEffectActiveRequirement extends LoadingRequirement {
         }
 
         @Override
-        public void render(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {
+        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             super.render(graphics, mouseX, mouseY, partial);
-            this.suggestions.render(graphics, mouseX, mouseY);
+            this.suggestions.render(graphics.pose(), mouseX, mouseY);
         }
 
         @Override

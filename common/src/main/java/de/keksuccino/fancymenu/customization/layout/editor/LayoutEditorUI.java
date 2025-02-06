@@ -1,7 +1,9 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.background.ChooseMenuBackgroundScreen;
+import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
@@ -12,6 +14,7 @@ import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidg
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.ManageLayoutsScreen;
+import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
@@ -415,10 +418,14 @@ public class LayoutEditorUI {
 		menu.addSeparatorEntry("separator_after_universal_layout_menu");
 
 		menu.addClickableEntry("menu_background_settings", Components.translatable("fancymenu.helper.editor.layoutoptions.backgroundoptions.setbackground"), (menu1, entry) -> {
-					ChooseMenuBackgroundScreen s = new ChooseMenuBackgroundScreen(editor.layout.menuBackground, true, (call) -> {
+					ChooseMenuBackgroundScreen s = new ChooseMenuBackgroundScreen(editor.layout.menuBackgrounds.isEmpty() ? null : editor.layout.menuBackgrounds.get(0), true, (call) -> {
 						if (call != null) {
 							editor.history.saveSnapshot();
-							editor.layout.menuBackground = (call != ChooseMenuBackgroundScreen.NO_BACKGROUND) ? call : null;
+							MenuBackground b = (call != ChooseMenuBackgroundScreen.NO_BACKGROUND) ? call : null;
+							editor.layout.menuBackgrounds.clear();
+							if (b != null) {
+								editor.layout.menuBackgrounds.add(b);
+							}
 						}
 						Minecraft.getInstance().setScreen(editor);
 					});
@@ -430,8 +437,6 @@ public class LayoutEditorUI {
 			editor.history.saveSnapshot();
 			editor.layout.preserveBackgroundAspectRatio = cycle.getAsBoolean();
 		})).setIcon(ContextMenu.IconFactory.getIcon("aspect_ratio"));
-
-		menu.addSeparatorEntry("separator_after_keep_background_aspect");
 
 		if ((editor.layoutTargetScreen != null) && !editor.layout.isUniversalLayout()) {
 
@@ -609,10 +614,40 @@ public class LayoutEditorUI {
 
 		menu.addSeparatorEntry("separator_after_layout_wide_requirements");
 
+		menu.addClickableEntry("manage_open_screen_actions", Components.translatable("fancymenu.layout.editor.edit_open_screen_action_script"), (menu1, entry) -> {
+					ManageActionsScreen s = new ManageActionsScreen(editor.layout.openScreenExecutableBlocks.isEmpty() ? new GenericExecutableBlock() : editor.layout.openScreenExecutableBlocks.get(0).copy(false), (call) -> {
+						if (call != null) {
+							editor.history.saveSnapshot();
+							editor.layout.openScreenExecutableBlocks.clear();
+							editor.layout.openScreenExecutableBlocks.add(call);
+						}
+						Minecraft.getInstance().setScreen(editor);
+					});
+					Minecraft.getInstance().setScreen(s);
+				}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.layout.editor.edit_open_screen_action_script.desc")))
+				.setIcon(ContextMenu.IconFactory.getIcon("script"))
+				.setStackable(false);
+
+		menu.addClickableEntry("manage_close_screen_actions", Components.translatable("fancymenu.layout.editor.edit_close_screen_action_script"), (menu1, entry) -> {
+					ManageActionsScreen s = new ManageActionsScreen(editor.layout.closeScreenExecutableBlocks.isEmpty() ? new GenericExecutableBlock() : editor.layout.closeScreenExecutableBlocks.get(0).copy(false), (call) -> {
+						if (call != null) {
+							editor.history.saveSnapshot();
+							editor.layout.closeScreenExecutableBlocks.clear();
+							editor.layout.closeScreenExecutableBlocks.add(call);
+						}
+						Minecraft.getInstance().setScreen(editor);
+					});
+					Minecraft.getInstance().setScreen(s);
+				}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.layout.editor.edit_close_screen_action_script.desc")))
+				.setIcon(ContextMenu.IconFactory.getIcon("script"))
+				.setStackable(false);
+
+		menu.addSeparatorEntry("separator_after_manage_actions");
+
 		menu.addClickableEntry("paste_elements", Components.translatable("fancymenu.editor.edit.paste"), (menu1, entry) -> {
-					editor.history.saveSnapshot();
-					editor.pasteElementsFromClipboard();
-				}).setIsActiveSupplier((menu1, entry) -> !LayoutEditorScreen.COPIED_ELEMENTS_CLIPBOARD.isEmpty())
+			editor.history.saveSnapshot();
+			editor.pasteElementsFromClipboard();
+		}).setIsActiveSupplier((menu1, entry) -> !LayoutEditorScreen.COPIED_ELEMENTS_CLIPBOARD.isEmpty())
 				.setIcon(ContextMenu.IconFactory.getIcon("paste"));
 
 		menu.addSeparatorEntry("separator_after_paste_elements");
@@ -706,11 +741,12 @@ public class LayoutEditorUI {
 				ContextMenu.ClickableContextMenuEntry<?> entry = menu.addClickableEntry("element_" + i, builder.getDisplayName(null), (menu1, entry1) -> {
 					AbstractEditorElement editorElement = builder.wrapIntoEditorElementInternal(builder.buildDefaultInstance(), editor);
 					if (editorElement != null) {
+						editorElement.element.afterConstruction();
 						editor.history.saveSnapshot();
 						editor.normalEditorElements.add(editorElement);
 						if ((editor.rightClickMenuOpenPosX != -1000) && (editor.rightClickMenuOpenPosY != -1000)) {
 							//Add new element at right-click menu coordinates
-							editorElement.setAnchorPoint(editorElement.element.anchorPoint, true, editor.rightClickMenuOpenPosX, editor.rightClickMenuOpenPosY, true);
+							editorElement.setAnchorPoint(editorElement.element.anchorPoint, editor.rightClickMenuOpenPosX, editor.rightClickMenuOpenPosY, true);
 							editor.deselectAllElements();
 							editorElement.setSelected(true);
 							editor.rightClickMenuOpenPosX = -1000;

@@ -3,7 +3,7 @@ plugins {
     id 'java'
     id 'idea'
     id 'maven-publish'
-    id 'fabric-loom' version '1.6-SNAPSHOT'
+    id 'fabric-loom' version '1.9-SNAPSHOT'
 }
 
 base {
@@ -30,6 +30,7 @@ dependencies {
     modImplementation "maven.modrinth:melody:1.0.1-1.18.2-fabric"
     modImplementation "maven.modrinth:konkrete:1.8.0-1.18-1.18.2-fabric"
     modImplementation "maven.modrinth:modmenu:3.2.5"
+    include(implementation 'org.joml:joml:1.10.8')
     //This is only to fix the missing dependency error in-dev
     implementation group: 'ca.weblite', name: 'java-objc-bridge', version: '1.1'
 }

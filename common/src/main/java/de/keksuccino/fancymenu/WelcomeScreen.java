@@ -1,11 +1,11 @@
-//TODO übernehmen
 package de.keksuccino.fancymenu;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.ScrollableMarkdownRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -21,7 +21,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class WelcomeScreen extends Screen {
+public class WelcomeScreen extends ModernScreen {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final int HEADER_HEIGHT = 40;
@@ -65,26 +65,26 @@ public class WelcomeScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.renderBackground(graphics, mouseX, mouseY, partial);
 
         super.render(graphics, mouseX, mouseY, partial);
 
-        drawCenteredString(graphics, this.font, this.headline, this.width / 2, (HEADER_HEIGHT / 2) - (this.font.lineHeight / 2), -1);
+        graphics.drawCenteredString(this.font, this.headline, this.width / 2, (HEADER_HEIGHT / 2) - (this.font.lineHeight / 2), -1);
 
     }
 
-    public void renderBackground(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.renderBackground(graphics);
 
         //Render header and footer separators
         RenderSystem.enableBlend();
-        RenderingUtils.resetShaderColor();
-        fillGradient(graphics, 0, HEADER_HEIGHT, this.width, HEADER_HEIGHT + 4, -16777216, 0);
-        fillGradient(graphics, 0, this.height - FOOTER_HEIGHT - 4, this.width, this.height - FOOTER_HEIGHT, 0, -16777216);
-        RenderingUtils.resetShaderColor();
+        RenderingUtils.resetShaderColor(graphics);
+        graphics.fillGradient(0, HEADER_HEIGHT, this.width, HEADER_HEIGHT + 4, -16777216, 0);
+        graphics.fillGradient(0, this.height - FOOTER_HEIGHT - 4, this.width, this.height - FOOTER_HEIGHT, 0, -16777216);
+        RenderingUtils.resetShaderColor(graphics);
 
     }
 

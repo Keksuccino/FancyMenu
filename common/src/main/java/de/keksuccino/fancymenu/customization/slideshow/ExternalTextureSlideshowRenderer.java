@@ -5,24 +5,22 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
-import de.keksuccino.konkrete.rendering.RenderUtils;
-import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
-public class ExternalTextureSlideshowRenderer extends GuiComponent {
+public class ExternalTextureSlideshowRenderer {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -51,24 +49,25 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 	protected ResourceSupplier<ITexture> current;
 
 	public ExternalTextureSlideshowRenderer(String slideshowDir) {
+
 		this.dir = slideshowDir;
 		File props = new File(this.dir + "/properties.txt");
 		if (!props.isFile()) props = new File(this.dir + "/properties.txt.txt");
-		
+
 		if (props.exists()) {
-			
+
 			PropertyContainerSet s = PropertiesParser.deserializeSetFromFile(props.getPath());
-			
+
 			if (s != null) {
 				List<PropertyContainer> l = s.getContainersOfType("slideshow-meta");
 				if (!l.isEmpty()) {
 					this.name = l.get(0).getValue("name");
-					
+
 					String dur = l.get(0).getValue("duration");
 					if ((dur != null) && MathUtils.isDouble(dur)) {
 						this.imageDuration = Double.parseDouble(dur);
 					}
-					
+
 					String fs = l.get(0).getValue("fadespeed");
 					if ((fs != null) && MathUtils.isFloat(fs)) {
 						float f = Float.parseFloat(fs);
@@ -77,47 +76,48 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 						}
 						this.fadeSpeed = f;
 					}
-					
+
 					String sx = l.get(0).getValue("x");
 					if ((sx != null) && MathUtils.isInteger(sx)) {
 						this.x = Integer.parseInt(sx);
 					}
-					
+
 					String sy = l.get(0).getValue("y");
 					if ((sy != null) && MathUtils.isInteger(sy)) {
 						this.y = Integer.parseInt(sy);
 					}
-					
+
 					String sw = l.get(0).getValue("width");
 					if ((sw != null) && MathUtils.isInteger(sw)) {
 						this.width = Integer.parseInt(sw);
 					}
-					
+
 					String sh = l.get(0).getValue("height");
 					if ((sh != null) && MathUtils.isInteger(sh)) {
 						this.height = Integer.parseInt(sh);
 					}
 
 					this.randomize = SerializationUtils.deserializeBoolean(this.randomize, l.get(0).getValue("randomize"));
-					
+
 				}
 			}
-			
+
 		}
 	}
-	
+
 	public void prepareSlideshow() {
+
 		if (!this.prepared && (this.name != null)) {
-			
+
 			File imagesDir = new File(GameDirectoryUtils.getAbsoluteGameDirectoryPath(this.dir + "/images"));
-			
+
 			if (imagesDir.exists() && imagesDir.isDirectory()) {
-				
+
 				String[] list = imagesDir.list();
 				List<String> images = (list != null) ? Arrays.asList(list) : new ArrayList<>();
-				
+
 				if (!images.isEmpty()) {
-					
+
 					images.sort(String.CASE_INSENSITIVE_ORDER);
 
 					for (String s : images) {
@@ -134,43 +134,44 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 							this.originalHeight = t.getHeight();
 						}
 					}
-					
+
 					File overlay = new File(this.dir + "/overlay.png");
 					if (overlay.exists()) {
 						this.overlayTexture = ResourceSupplier.image(overlay.getPath());
 					}
-					
+
 				}
-				
+
 				this.prepared = true;
-				
+
 			}
-			
+
 		}
+
 	}
 
-	public void render(PoseStack matrix) {
+	public void render(GuiGraphics graphics) {
 		try {
 			if (!this.images.isEmpty()) {
 				this.tick();
-				this.renderCurrent(matrix);
-				this.renderPrevious(matrix);
-				this.renderOverlay(matrix);
+				this.renderCurrent(graphics);
+				this.renderPrevious(graphics);
+				this.renderOverlay(graphics);
 			}
 		} catch (Exception ex) {
 			LOGGER.error("[FANCYMENU] Failed to render slideshow!", ex);
 		}
 	}
-	
+
 	protected void tick() {
-		
+
 		if (!this.images.isEmpty()) {
-			
+
 			long time = System.currentTimeMillis();
 			long duration = (long) (1000 * this.imageDuration);
 			long opacityTickSpeed = 25;
-			
-			if (firstLoop) {
+
+			if (this.firstLoop) {
 				duration = duration / 2;
 			}
 
@@ -197,7 +198,8 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 				this.previous = this.current;
 				this.current = this.images.get(this.frameCounter);
 			}
-			
+			//------------------------
+
 			//lower opacity when prev image is set to fade it out
 			if ((this.previous != null) && (this.opacity > 0.0F)) {
 				this.firstLoop = false;
@@ -211,57 +213,54 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 			} else {
 				this.previous = null;
 			}
-			
+
 		}
-		
+
 	}
 
-	protected void renderPrevious(PoseStack matrix) {
+	protected void renderPrevious(GuiGraphics graphics) {
 		if ((this.previous != null) && (this.current != this.previous)) {
-			matrix.pushPose();
+			graphics.pose().pushPose();
 			RenderSystem.enableBlend();
 			float o = this.opacity;
 			if (o > this.slideshowOpacity) {
 				o = this.slideshowOpacity;
 			}
-			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, o);
+			graphics.setColor(1.0F, 1.0F, 1.0F, o);
 			ITexture t = this.previous.get();
 			ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
 			if (loc != null) {
-				RenderUtils.bindTexture(loc);
-				blit(matrix, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
+				graphics.blit(loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
-			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-			matrix.popPose();
+			graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+			graphics.pose().popPose();
 		}
 	}
 
-	protected void renderCurrent(PoseStack matrix) {
+	protected void renderCurrent(GuiGraphics graphics) {
 		if (this.current != null) {
 			RenderSystem.enableBlend();
-			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.slideshowOpacity);
+			graphics.setColor(1.0F, 1.0F, 1.0F, this.slideshowOpacity);
 			ITexture t = this.current.get();
 			ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
 			if (loc != null) {
-				RenderUtils.bindTexture(loc);
-				blit(matrix, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
+				graphics.blit(loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
 		}
 	}
 
-	protected void renderOverlay(PoseStack matrix) {
+	protected void renderOverlay(GuiGraphics graphics) {
 		if (this.overlayTexture != null) {
 			RenderSystem.enableBlend();
-			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+			graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 			ITexture t = this.overlayTexture.get();
 			ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
 			if (loc != null) {
-				RenderUtils.bindTexture(loc);
-				blit(matrix, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
+				graphics.blit(loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
 			}
 		}
 	}
-	
+
 	public String getName() {
 		return this.name;
 	}
@@ -269,14 +268,14 @@ public class ExternalTextureSlideshowRenderer extends GuiComponent {
 	public void setDuration(double duration) {
 		this.imageDuration = duration;
 	}
-	
+
 	public void setFadeSpeed(float speed) {
 		if (speed < 0.0F) {
 			speed = 0.0F;
 		}
 		this.fadeSpeed = speed;
 	}
-	
+
 	public boolean isReady() {
 		return this.prepared;
 	}

@@ -8,6 +8,8 @@ import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.AnchorPointOverlay;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.ListUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -138,7 +140,7 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements H
     }
 
     @Override
-    protected void renderDraggingNotAllowedOverlay(PoseStack pose) {
+    protected void renderDraggingNotAllowedOverlay(GuiGraphics graphics) {
         if ((this.element.anchorPoint == ElementAnchorPoints.VANILLA) && (this.renderMovingNotAllowedTime >= System.currentTimeMillis()) && !this.topLeftDisplay.hasLine("vanilla_button_dragging_not_allowed")) {
             this.topLeftDisplay.addLine("vanilla_button_dragging_not_allowed", () -> Components.translatable("fancymenu.elements.vanilla_button.dragging_not_allowed"));
         }
@@ -152,7 +154,7 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements H
         if ((this.renderMovingNotAllowedTime < System.currentTimeMillis()) && this.topLeftDisplay.hasLine("vanilla_button_copyright_unable_to_move")) {
             this.topLeftDisplay.removeLine("vanilla_button_copyright_unable_to_move");
         }
-        super.renderDraggingNotAllowedOverlay(pose);
+        super.renderDraggingNotAllowedOverlay(graphics);
     }
 
     protected void handleCopyrightButtonPositionRestrictions() {
@@ -233,8 +235,7 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements H
     }
 
     public boolean isCopyrightButton() {
-        String compId = ((VanillaWidgetElement)this.element).widgetMeta.getUniversalIdentifier();
-        return ((compId != null) && compId.equals("mc_titlescreen_copyright_button"));
+        return ((VanillaWidgetElement)this.element).isCopyrightButton();
     }
 
     public VanillaWidgetElement getElement() {

@@ -5,8 +5,6 @@ import de.keksuccino.fancymenu.platform.Services;
 import net.fabricmc.api.ModInitializer;
 
 public class FancyMenuFabric implements ModInitializer {
-
-    //TODO übernehmen (add rrls to mod.json)
     
     @Override
     public void onInitialize() {

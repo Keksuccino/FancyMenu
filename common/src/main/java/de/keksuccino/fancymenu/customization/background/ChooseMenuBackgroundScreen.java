@@ -5,6 +5,8 @@ import de.keksuccino.fancymenu.customization.background.backgrounds.image.ImageM
 import de.keksuccino.fancymenu.customization.background.backgrounds.image.ImageMenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
@@ -24,7 +26,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class ChooseMenuBackgroundScreen extends Screen {
+public class ChooseMenuBackgroundScreen extends ModernScreen {
 
     protected static final MenuBackgroundBuilder<ImageMenuBackground> NO_BACKGROUND_TYPE = new ImageMenuBackgroundBuilder();
     public static final MenuBackground NO_BACKGROUND = new ImageMenuBackground(NO_BACKGROUND_TYPE);
@@ -85,14 +87,14 @@ public class ChooseMenuBackgroundScreen extends Screen {
             }
         }) {
             @Override
-            public void render(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+            public void render(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {
                 if (ChooseMenuBackgroundScreen.this.backgroundType == null) {
                     TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.menu_background.choose.not_background_selected")).setDefaultStyle(), false, true);
                     this.active = false;
                 } else {
                     this.active = ChooseMenuBackgroundScreen.this.backgroundType != NO_BACKGROUND_TYPE;
                 }
-                super.render(pose, mouseX, mouseY, partial);
+                super.render(graphics, mouseX, mouseY, partial);
             }
         };
         this.addWidget(this.configureButton);
@@ -102,7 +104,7 @@ public class ChooseMenuBackgroundScreen extends Screen {
             this.callback.accept(this.background);
         }) {
             @Override
-            public void renderButton(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+            public void renderButton(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {
                 if (ChooseMenuBackgroundScreen.this.backgroundType == null) {
                     TooltipHandler.INSTANCE.addWidgetTooltip(this, Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.menu_background.choose.not_background_selected")).setDefaultStyle(), false, true);
                     this.active = false;
@@ -112,7 +114,7 @@ public class ChooseMenuBackgroundScreen extends Screen {
                 } else {
                     this.active = true;
                 }
-                super.renderButton(pose, mouseX, mouseY, partial);
+                super.renderButton(graphics, mouseX, mouseY, partial);
             }
         };
         this.addWidget(this.doneButton);
@@ -134,44 +136,44 @@ public class ChooseMenuBackgroundScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull PoseStack matrix, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        fill(matrix, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(matrix, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        this.font.draw(matrix, Components.translatable("fancymenu.menu_background.choose.available_types"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, Components.translatable("fancymenu.menu_background.choose.available_types"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
         this.backgroundTypeListScrollArea.setWidth((this.width / 2) - 40, true);
         this.backgroundTypeListScrollArea.setHeight(this.height - 85, true);
         this.backgroundTypeListScrollArea.setX(20, true);
         this.backgroundTypeListScrollArea.setY(50 + 15, true);
-        this.backgroundTypeListScrollArea.render(matrix, mouseX, mouseY, partial);
+        this.backgroundTypeListScrollArea.render(graphics, mouseX, mouseY, partial);
 
         Component descLabel = Components.translatable("fancymenu.menu_background.choose.type_description");
         int descLabelWidth = this.font.width(descLabel);
-        this.font.draw(matrix, descLabel, this.width - 20 - descLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, descLabel, this.width - 20 - descLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
         this.backgroundDescriptionScrollArea.setWidth((this.width / 2) - 40, true);
         this.backgroundDescriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
         this.backgroundDescriptionScrollArea.setX(this.width - 20 - this.backgroundDescriptionScrollArea.getWidthWithBorder(), true);
         this.backgroundDescriptionScrollArea.setY(50 + 15, true);
-        this.backgroundDescriptionScrollArea.render(matrix, mouseX, mouseY, partial);
+        this.backgroundDescriptionScrollArea.render(graphics, mouseX, mouseY, partial);
 
-        this.doneButton.x = this.width - 20 - this.doneButton.getWidth();
-        this.doneButton.y = this.height - 20 - 20;
-        this.doneButton.render(matrix, mouseX, mouseY, partial);
+        this.doneButton.x = (this.width - 20 - this.doneButton.getWidth());
+        this.doneButton.y = (this.height - 20 - 20);
+        this.doneButton.render(graphics.pose(), mouseX, mouseY, partial);
 
-        this.cancelButton.x = this.width - 20 - this.cancelButton.getWidth();
-        this.cancelButton.y = this.doneButton.y - 5 - 20;
-        this.cancelButton.render(matrix, mouseX, mouseY, partial);
+        this.cancelButton.x = (this.width - 20 - this.cancelButton.getWidth());
+        this.cancelButton.y = (this.doneButton.y - 5 - 20);
+        this.cancelButton.render(graphics.pose(), mouseX, mouseY, partial);
 
-        this.configureButton.x = this.width - 20 - this.configureButton.getWidth();
-        this.configureButton.y = this.cancelButton.y - 15 - 20;
-        this.configureButton.render(matrix, mouseX, mouseY, partial);
+        this.configureButton.x = (this.width - 20 - this.configureButton.getWidth());
+        this.configureButton.y = (this.cancelButton.y - 15 - 20);
+        this.configureButton.render(graphics.pose(), mouseX, mouseY, partial);
 
-        super.render(matrix, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
 
     }
 
@@ -208,7 +210,6 @@ public class ChooseMenuBackgroundScreen extends Screen {
             this.backgroundTypeListScrollArea.addEntry(e);
         }
 
-        //TODO handling für deprecated adden ---->
         for (MenuBackgroundBuilder<?> b : MenuBackgroundRegistry.getBuilders()) {
             if ((LayoutEditorScreen.getCurrentInstance() != null) && !b.shouldShowUpInEditorBackgroundMenu(LayoutEditorScreen.getCurrentInstance())) continue;
             BackgroundTypeScrollEntry e = new BackgroundTypeScrollEntry(this.backgroundTypeListScrollArea, b, (entry) -> {
@@ -254,12 +255,12 @@ public class ChooseMenuBackgroundScreen extends Screen {
         }
 
         @Override
-        public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             if (this.tooltipSupplier != null) {
                 Tooltip t = this.tooltipSupplier.get();
                 if (t != null) TooltipHandler.INSTANCE.addTooltip(t, this::isHovered, false, true);
             }
-            super.render(matrix, mouseX, mouseY, partial);
+            super.render(graphics, mouseX, mouseY, partial);
         }
 
         private static Component getText(MenuBackgroundBuilder<?> backgroundType) {

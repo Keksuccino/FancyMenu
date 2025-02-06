@@ -1,8 +1,9 @@
-
 package de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -26,7 +27,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.function.Consumer;
 
-public class ManageRequirementsScreen extends Screen {
+public class ManageRequirementsScreen extends ModernScreen {
 
     protected LoadingRequirementContainer container;
     protected Consumer<LoadingRequirementContainer> callback;
@@ -40,7 +41,7 @@ public class ManageRequirementsScreen extends Screen {
     protected ExtendedButton cancelButton;
 
     public ManageRequirementsScreen(@NotNull LoadingRequirementContainer container, @NotNull Consumer<LoadingRequirementContainer> callback) {
-        super(Components.literal(I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.manage")));
+        super(Components.translatable("fancymenu.editor.loading_requirement.screens.manage_screen.manage"));
         this.container = container;
         this.callback = callback;
         this.updateRequirementsScrollArea();
@@ -95,7 +96,7 @@ public class ManageRequirementsScreen extends Screen {
             }
         }) {
             @Override
-            public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(@NotNull PoseStack graphics, int p_93658_, int p_93659_, float p_93660_) {
                 ManageRequirementsScreen s = ManageRequirementsScreen.this;
                 if (!s.isInstanceSelected() && !s.isGroupSelected()) {
                     this.setLabel(I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.edit.generic"));
@@ -110,7 +111,7 @@ public class ManageRequirementsScreen extends Screen {
                     this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.manage_screen.edit.desc")).setDefaultStyle());
                     this.active = true;
                 }
-                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+                super.render(graphics, p_93658_, p_93659_, p_93660_);
             }
         };
         this.addWidget(this.editButton);
@@ -142,7 +143,7 @@ public class ManageRequirementsScreen extends Screen {
             }
         }) {
             @Override
-            public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(@NotNull PoseStack graphics, int p_93658_, int p_93659_, float p_93660_) {
                 ManageRequirementsScreen s = ManageRequirementsScreen.this;
                 if (!s.isInstanceSelected() && !s.isGroupSelected()) {
                     this.setLabel(I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.remove.generic"));
@@ -157,7 +158,7 @@ public class ManageRequirementsScreen extends Screen {
                     this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.loading_requirement.screens.manage_screen.remove.desc")).setDefaultStyle());
                     this.active = true;
                 }
-                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+                super.render(graphics, p_93658_, p_93659_, p_93660_);
             }
         };
         this.addWidget(this.removeButton);
@@ -183,46 +184,46 @@ public class ManageRequirementsScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull PoseStack matrix, int mouseX, int mouseY, float partial) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        fill(matrix, 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        this.font.draw(matrix, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        this.font.draw(matrix, I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.requirements_and_groups"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, I18n.get("fancymenu.editor.loading_requirement.screens.manage_screen.requirements_and_groups"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
         this.requirementsScrollArea.setWidth(this.width - 20 - 150 - 20 - 20, true);
         this.requirementsScrollArea.setHeight(this.height - 85, true);
         this.requirementsScrollArea.setX(20, true);
         this.requirementsScrollArea.setY(50 + 15, true);
-        this.requirementsScrollArea.render(matrix, mouseX, mouseY, partial);
+        this.requirementsScrollArea.render(graphics, mouseX, mouseY, partial);
 
         this.doneButton.x = (this.width - 20 - this.doneButton.getWidth());
         this.doneButton.y = (this.height - 20 - 20);
-        this.doneButton.render(matrix, mouseX, mouseY, partial);
+        this.doneButton.render(graphics.pose(), mouseX, mouseY, partial);
 
         this.cancelButton.x = (this.width - 20 - this.cancelButton.getWidth());
         this.cancelButton.y = (this.doneButton.y - 5 - 20);
-        this.cancelButton.render(matrix, mouseX, mouseY, partial);
+        this.cancelButton.render(graphics.pose(), mouseX, mouseY, partial);
 
         this.removeButton.x = (this.width - 20 - this.removeButton.getWidth());
         this.removeButton.y = (this.cancelButton.y - 15 - 20);
-        this.removeButton.render(matrix, mouseX, mouseY, partial);
+        this.removeButton.render(graphics.pose(), mouseX, mouseY, partial);
 
         this.editButton.x = (this.width - 20 - this.editButton.getWidth());
         this.editButton.y = (this.removeButton.y - 5 - 20);
-        this.editButton.render(matrix, mouseX, mouseY, partial);
+        this.editButton.render(graphics.pose(), mouseX, mouseY, partial);
 
         this.addGroupButton.x = (this.width - 20 - this.addGroupButton.getWidth());
         this.addGroupButton.y = (this.editButton.y - 5 - 20);
-        this.addGroupButton.render(matrix, mouseX, mouseY, partial);
+        this.addGroupButton.render(graphics.pose(), mouseX, mouseY, partial);
 
         this.addRequirementButton.x = (this.width - 20 - this.addRequirementButton.getWidth());
         this.addRequirementButton.y = (this.addGroupButton.y - 5 - 20);
-        this.addRequirementButton.render(matrix, mouseX, mouseY, partial);
+        this.addRequirementButton.render(graphics.pose(), mouseX, mouseY, partial);
 
-        super.render(matrix, mouseX, mouseY, partial);
+        super.render(graphics, mouseX, mouseY, partial);
 
     }
 
@@ -312,9 +313,9 @@ public class ManageRequirementsScreen extends Screen {
         }
 
         @Override
-        public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-            super.render(matrix, mouseX, mouseY, partial);
+            super.render(graphics, mouseX, mouseY, partial);
 
             int centerYLine1 = this.getY() + HEADER_FOOTER_HEIGHT + (this.lineHeight / 2);
             int centerYLine2 = this.getY() + HEADER_FOOTER_HEIGHT + ((this.lineHeight / 2) * 3);
@@ -322,14 +323,14 @@ public class ManageRequirementsScreen extends Screen {
 
             RenderSystem.enableBlend();
 
-            renderListingDot(matrix, this.getX() + 5, centerYLine1 - 2, UIBase.getUIColorTheme().listing_dot_color_2.getColor());
-            this.font.draw(matrix, this.displayNameComponent, (float)(this.getX() + 5 + 4 + 3), (float)(centerYLine1 - (this.font.lineHeight / 2)), -1);
+            renderListingDot(graphics, this.getX() + 5, centerYLine1 - 2, UIBase.getUIColorTheme().listing_dot_color_2.getColor());
+            graphics.drawString(this.font, this.displayNameComponent, (this.getX() + 5 + 4 + 3), (centerYLine1 - (this.font.lineHeight / 2)), -1, false);
 
-            renderListingDot(matrix, this.getX() + 5 + 4 + 3, centerYLine2 - 2, UIBase.getUIColorTheme().listing_dot_color_1.getColor());
-            this.font.draw(matrix, this.modeComponent, (float)(this.getX() + 5 + 4 + 3 + 4 + 3), (float)(centerYLine2 - (this.font.lineHeight / 2)), -1);
+            renderListingDot(graphics, this.getX() + 5 + 4 + 3, centerYLine2 - 2, UIBase.getUIColorTheme().listing_dot_color_1.getColor());
+            graphics.drawString(this.font, this.modeComponent, (this.getX() + 5 + 4 + 3 + 4 + 3), (centerYLine2 - (this.font.lineHeight / 2)), -1, false);
 
-            renderListingDot(matrix, this.getX() + 5 + 4 + 3, centerYLine3 - 2, UIBase.getUIColorTheme().listing_dot_color_1.getColor());
-            this.font.draw(matrix, this.valueComponent, (float)(this.getX() + 5 + 4 + 3 + 4 + 3), (float)(centerYLine3 - (this.font.lineHeight / 2)), -1);
+            renderListingDot(graphics, this.getX() + 5 + 4 + 3, centerYLine3 - 2, UIBase.getUIColorTheme().listing_dot_color_1.getColor());
+            graphics.drawString(this.font, this.valueComponent, (this.getX() + 5 + 4 + 3 + 4 + 3), (centerYLine3 - (this.font.lineHeight / 2)), -1, false);
 
         }
 

@@ -7,6 +7,8 @@ import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -43,7 +45,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 @SuppressWarnings("all")
-public class TextEditorScreen extends Screen {
+public class TextEditorScreen extends ModernScreen {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -220,61 +222,61 @@ public class TextEditorScreen extends Screen {
         this.rightClickContextMenu = new ContextMenu();
 
         this.rightClickContextMenu.addClickableEntry("copy", Components.translatable("fancymenu.ui.text_editor.copy"), (menu, entry) -> {
-            Minecraft.getInstance().keyboardHandler.setClipboard(this.getHighlightedText());
-            menu.closeMenu();
-        }).setIsActiveSupplier((menu, entry) -> {
-            if (!menu.isOpen()) return false;
-            return this.selectedHoveredOnRightClickMenuOpen;
-        }).setShortcutTextSupplier((menu, entry) -> Components.translatable("fancymenu.editor.shortcuts.copy"))
+                    Minecraft.getInstance().keyboardHandler.setClipboard(this.getHighlightedText());
+                    menu.closeMenu();
+                }).setIsActiveSupplier((menu, entry) -> {
+                    if (!menu.isOpen()) return false;
+                    return this.selectedHoveredOnRightClickMenuOpen;
+                }).setShortcutTextSupplier((menu, entry) -> Components.translatable("fancymenu.editor.shortcuts.copy"))
                 .setIcon(ContextMenu.IconFactory.getIcon("copy"));
 
         this.rightClickContextMenu.addClickableEntry("paste", Components.translatable("fancymenu.ui.text_editor.paste"), (menu, entry) -> {
-            this.pasteText(Minecraft.getInstance().keyboardHandler.getClipboard());
-            menu.closeMenu();
-        }).setShortcutTextSupplier((menu, entry) -> Components.translatable("fancymenu.editor.shortcuts.paste"))
+                    this.pasteText(Minecraft.getInstance().keyboardHandler.getClipboard());
+                    menu.closeMenu();
+                }).setShortcutTextSupplier((menu, entry) -> Components.translatable("fancymenu.editor.shortcuts.paste"))
                 .setIcon(ContextMenu.IconFactory.getIcon("paste"));
 
         this.rightClickContextMenu.addSeparatorEntry("separator_after_paste");
 
         this.rightClickContextMenu.addClickableEntry("cut", Components.translatable("fancymenu.ui.text_editor.cut"), (menu, entry) -> {
-            Minecraft.getInstance().keyboardHandler.setClipboard(this.cutHighlightedText());
-            menu.closeMenu();
-        }).setIsActiveSupplier((menu, entry) -> {
-            if (!menu.isOpen()) return false;
-            return this.selectedHoveredOnRightClickMenuOpen;
-        }).setShortcutTextSupplier((menu, entry) -> Components.translatable("fancymenu.editor.shortcuts.cut"))
+                    Minecraft.getInstance().keyboardHandler.setClipboard(this.cutHighlightedText());
+                    menu.closeMenu();
+                }).setIsActiveSupplier((menu, entry) -> {
+                    if (!menu.isOpen()) return false;
+                    return this.selectedHoveredOnRightClickMenuOpen;
+                }).setShortcutTextSupplier((menu, entry) -> Components.translatable("fancymenu.editor.shortcuts.cut"))
                 .setIcon(ContextMenu.IconFactory.getIcon("cut"));
 
         this.rightClickContextMenu.addSeparatorEntry("separator_after_cut");
 
         this.rightClickContextMenu.addClickableEntry("select_all", Components.translatable("fancymenu.ui.text_editor.select_all"), (menu, entry) -> {
-            for (TextEditorLine t : this.textFieldLines) {
-                t.setHighlightPos(0);
-                t.setCursorPosition(t.getValue().length());
-            }
-            this.setFocusedLine(this.getLineCount()-1);
-            this.startHighlightLineIndex = 0;
-            this.endHighlightLineIndex = this.getLineCount()-1;
-            menu.closeMenu();
-        }).setShortcutTextSupplier((menu, entry) -> Components.translatable("fancymenu.editor.shortcuts.select_all"))
+                    for (TextEditorLine t : this.textFieldLines) {
+                        t.setHighlightPos(0);
+                        t.setCursorPosition(t.getValue().length());
+                    }
+                    this.setFocusedLine(this.getLineCount()-1);
+                    this.startHighlightLineIndex = 0;
+                    this.endHighlightLineIndex = this.getLineCount()-1;
+                    menu.closeMenu();
+                }).setShortcutTextSupplier((menu, entry) -> Components.translatable("fancymenu.editor.shortcuts.select_all"))
                 .setIcon(ContextMenu.IconFactory.getIcon("select"));
 
         this.rightClickContextMenu.addSeparatorEntry("separator_after_select_all");
 
         this.rightClickContextMenu.addClickableEntry("undo", Components.translatable("fancymenu.editor.edit.undo"), (menu, entry) -> {
-            this.history.stepBack();
-        }).setShortcutTextSupplier((menu, entry) -> Components.translatable("fancymenu.editor.shortcuts.undo"))
+                    this.history.stepBack();
+                }).setShortcutTextSupplier((menu, entry) -> Components.translatable("fancymenu.editor.shortcuts.undo"))
                 .setIcon(ContextMenu.IconFactory.getIcon("undo"));
 
         this.rightClickContextMenu.addClickableEntry("redo", Components.translatable("fancymenu.editor.edit.redo"), (menu, entry) -> {
-            this.history.stepForward();
-        }).setShortcutTextSupplier((menu, entry) -> Components.translatable("fancymenu.editor.shortcuts.redo"))
+                    this.history.stepForward();
+                }).setShortcutTextSupplier((menu, entry) -> Components.translatable("fancymenu.editor.shortcuts.redo"))
                 .setIcon(ContextMenu.IconFactory.getIcon("redo"));
 
     }
 
     @Override
-    public void render(PoseStack pose, int mouseX, int mouseY, float partial) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         //Reset scrolls if content fits editor area
         if (this.currentLineWidth <= this.getEditorAreaWidth()) {
@@ -291,11 +293,10 @@ public class TextEditorScreen extends Screen {
         //Adjust the scroll wheel speed depending on the amount of lines
         this.verticalScrollBar.setWheelScrollSpeed(1.0F / ((float)this.getTotalScrollHeight() / 500.0F));
 
-        this.renderScreenBackground(pose);
+        this.renderScreenBackground(graphics);
 
-        this.renderEditorAreaBackground(pose);
+        this.renderEditorAreaBackground(graphics);
 
-        //TODO use GuiComponent#enableScissor instead
         Window win = Minecraft.getInstance().getWindow();
         double scale = win.getGuiScale();
         int sciBottom = this.height - this.footerHeight;
@@ -308,14 +309,14 @@ public class TextEditorScreen extends Screen {
         //Update positions and size of lines and render them
         this.updateLines((line) -> {
             if (line.isInEditorArea()) {
-                this.lineNumberRenderQueue.add(() -> this.renderLineNumber(pose, line));
+                this.lineNumberRenderQueue.add(() -> this.renderLineNumber(graphics, line));
             }
-            line.render(pose, mouseX, mouseY, partial);
+            line.render(graphics.pose(), mouseX, mouseY, partial);
         });
 
         RenderSystem.disableScissor();
 
-        this.renderLineNumberBackground(pose, this.borderLeft);
+        this.renderLineNumberBackground(graphics, this.borderLeft);
 
         RenderSystem.enableScissor(0, (int)(win.getHeight() - (sciBottom * scale)), (int)(this.borderLeft * scale), (int)(this.getEditorAreaHeight() * scale));
         for (Runnable r : this.lineNumberRenderQueue) {
@@ -326,32 +327,32 @@ public class TextEditorScreen extends Screen {
         this.lastTickFocusedLineIndex = this.getFocusedLineIndex();
         this.triggeredFocusedLineWasTooHighInCursorPosMethod = false;
 
-        UIBase.renderBorder(pose, this.borderLeft-1, this.headerHeight-1, this.getEditorAreaX() + this.getEditorAreaWidth(), this.height - this.footerHeight + 1, 1, this.editorAreaBorderColor, true, true, true, true);
+        UIBase.renderBorder(graphics, this.borderLeft-1, this.headerHeight-1, this.getEditorAreaX() + this.getEditorAreaWidth(), this.height - this.footerHeight + 1, 1, this.editorAreaBorderColor, true, true, true, true);
 
-        this.verticalScrollBar.render(pose);
-        this.horizontalScrollBar.render(pose);
+        this.verticalScrollBar.render(graphics);
+        this.horizontalScrollBar.render(graphics);
 
-        this.renderPlaceholderMenu(pose, mouseX, mouseY, partial);
+        this.renderPlaceholderMenu(graphics, mouseX, mouseY, partial);
 
-        this.cancelButton.render(pose, mouseX, mouseY, partial);
+        this.cancelButton.render(graphics.pose(), mouseX, mouseY, partial);
 
         this.doneButton.active = this.isTextValid();
         this.doneButton.setTooltip(this.textValidatorFeedbackTooltip);
-        this.doneButton.render(pose, mouseX, mouseY, partial);
+        this.doneButton.render(graphics.pose(), mouseX, mouseY, partial);
 
-        this.renderMultilineNotSupportedNotification(pose, mouseX, mouseY, partial);
+        this.renderMultilineNotSupportedNotification(graphics, mouseX, mouseY, partial);
 
-        this.rightClickContextMenu.render(pose, mouseX, mouseY, partial);
+        this.rightClickContextMenu.render(graphics, mouseX, mouseY, partial);
 
         this.tickMouseHighlighting();
 
         MutableComponent t = this.title.copy();
         t.setStyle(t.getStyle().withBold(this.boldTitle));
-        this.font.draw(pose, t, this.borderLeft, (this.headerHeight / 2) - (this.font.lineHeight / 2), UIBase.getUIColorTheme().generic_text_base_color.getColorInt());
+        graphics.drawString(this.font, t, this.borderLeft, (this.headerHeight / 2) - (this.font.lineHeight / 2), UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
     }
 
-    protected void renderMultilineNotSupportedNotification(PoseStack matrix, int mouseX, int mouseY, float partial) {
+    protected void renderMultilineNotSupportedNotification(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         long now = System.currentTimeMillis();
         if (!this.multilineMode && (this.multilineNotSupportedNotificationDisplayStart + 3000L >= now)) {
             int a = 255;
@@ -361,11 +362,11 @@ public class TextEditorScreen extends Screen {
                 a = Math.max(10, (int)(255F * f));
             }
             Color c = new Color(this.multilineNotSupportedNotificationColor.getRed(), this.multilineNotSupportedNotificationColor.getGreen(), this.multilineNotSupportedNotificationColor.getBlue(), a);
-            this.font.draw(matrix, I18n.get("fancymenu.ui.text_editor.error.multiline_support"), this.borderLeft, this.headerHeight - this.font.lineHeight - 5, c.getRGB());
+            graphics.drawString(this.font, I18n.get("fancymenu.ui.text_editor.error.multiline_support"), this.borderLeft, this.headerHeight - this.font.lineHeight - 5, c.getRGB(), false);
         }
     }
 
-    protected void renderPlaceholderMenu(PoseStack matrix, int mouseX, int mouseY, float partial) {
+    protected void renderPlaceholderMenu(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (extendedPlaceholderMenu) {
 
@@ -377,7 +378,7 @@ public class TextEditorScreen extends Screen {
             }
 
             //Render placeholder menu background
-            fill(matrix, this.width - this.borderRight - this.placeholderMenuWidth, this.getEditorAreaY(), this.width - this.borderRight, this.getEditorAreaY() + this.getEditorAreaHeight(), this.editorAreaBackgroundColor.getRGB());
+            graphics.fill(this.width - this.borderRight - this.placeholderMenuWidth, this.getEditorAreaY(), this.width - this.borderRight, this.getEditorAreaY() + this.getEditorAreaHeight(), this.editorAreaBackgroundColor.getRGB());
 
             Window win = Minecraft.getInstance().getWindow();
             double scale = win.getGuiScale();
@@ -392,23 +393,23 @@ public class TextEditorScreen extends Screen {
             for (PlaceholderMenuEntry e : entries) {
                 e.x = (this.width - this.borderRight - this.placeholderMenuWidth) + this.getPlaceholderEntriesRenderOffsetX();
                 e.y = this.getEditorAreaY() + (this.placeholderMenuEntryHeight * index) + this.getPlaceholderEntriesRenderOffsetY();
-                e.render(matrix, mouseX, mouseY, partial);
+                e.render(graphics, mouseX, mouseY, partial);
                 index++;
             }
 
             RenderSystem.disableScissor();
 
             //Render placeholder menu border
-            UIBase.renderBorder(matrix, this.width - this.borderRight - this.placeholderMenuWidth - 1, this.headerHeight-1, this.width - this.borderRight, this.height - this.footerHeight + 1, 1, this.editorAreaBorderColor, true, true, true, true);
+            UIBase.renderBorder(graphics, this.width - this.borderRight - this.placeholderMenuWidth - 1, this.headerHeight-1, this.width - this.borderRight, this.height - this.footerHeight + 1, 1, this.editorAreaBorderColor, true, true, true, true);
 
             //Render placeholder menu scroll bars
-            this.verticalScrollBarPlaceholderMenu.render(matrix);
-            this.horizontalScrollBarPlaceholderMenu.render(matrix);
+            this.verticalScrollBarPlaceholderMenu.render(graphics);
+            this.horizontalScrollBarPlaceholderMenu.render(graphics);
 
         }
 
         if (this.placeholderButton != null) {
-            this.placeholderButton.render(matrix, mouseX, mouseY, partial);
+            this.placeholderButton.render(graphics.pose(), mouseX, mouseY, partial);
         }
 
     }
@@ -530,22 +531,22 @@ public class TextEditorScreen extends Screen {
         return categories;
     }
 
-    protected void renderLineNumberBackground(PoseStack matrix, int width) {
-        fill(matrix, this.getEditorAreaX(), this.getEditorAreaY() - 1, this.getEditorAreaX() - width - 1, this.getEditorAreaY() + this.getEditorAreaHeight() + 1, this.sideBarColor.getRGB());
+    protected void renderLineNumberBackground(GuiGraphics graphics, int width) {
+        graphics.fill(this.getEditorAreaX(), this.getEditorAreaY() - 1, this.getEditorAreaX() - width - 1, this.getEditorAreaY() + this.getEditorAreaHeight() + 1, this.sideBarColor.getRGB());
     }
 
-    protected void renderLineNumber(PoseStack matrix, TextEditorLine line) {
+    protected void renderLineNumber(GuiGraphics graphics, TextEditorLine line) {
         String lineNumberString = "" + (line.lineIndex+1);
         int lineNumberWidth = this.font.width(lineNumberString);
-        this.font.draw(matrix, lineNumberString, this.getEditorAreaX() - 3 - lineNumberWidth, line.getY() + (line.getHeight() / 2) - (this.font.lineHeight / 2), line.isFocused() ? this.lineNumberTextColorFocused.getRGB() : this.lineNumberTextColorNormal.getRGB());
+        graphics.drawString(this.font, lineNumberString, this.getEditorAreaX() - 3 - lineNumberWidth, line.getY() + (line.getHeight() / 2) - (this.font.lineHeight / 2), line.isFocused() ? this.lineNumberTextColorFocused.getRGB() : this.lineNumberTextColorNormal.getRGB(), false);
     }
 
-    protected void renderEditorAreaBackground(PoseStack matrix) {
-        fill(matrix, this.getEditorAreaX(), this.getEditorAreaY(), this.getEditorAreaX() + this.getEditorAreaWidth(), this.getEditorAreaY() + this.getEditorAreaHeight(), this.editorAreaBackgroundColor.getRGB());
+    protected void renderEditorAreaBackground(GuiGraphics graphics) {
+        graphics.fill(this.getEditorAreaX(), this.getEditorAreaY(), this.getEditorAreaX() + this.getEditorAreaWidth(), this.getEditorAreaY() + this.getEditorAreaHeight(), this.editorAreaBackgroundColor.getRGB());
     }
 
-    protected void renderScreenBackground(PoseStack matrix) {
-        fill(matrix, 0, 0, this.width, this.height, this.screenBackgroundColor.getRGB());
+    protected void renderScreenBackground(GuiGraphics graphics) {
+        graphics.fill(0, 0, this.width, this.height, this.screenBackgroundColor.getRGB());
     }
 
     protected void tickMouseHighlighting() {
@@ -1675,16 +1676,16 @@ public class TextEditorScreen extends Screen {
                     super.onClick(p_93371_, p_93372_);
                 }
                 @Override
-                public void render(@NotNull PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+                public void render(@NotNull PoseStack graphics, int p_93658_, int p_93659_, float p_93660_) {
                     if (PlaceholderMenuEntry.this.parent.isMouseInteractingWithPlaceholderGrabbers()) {
                         this.isHovered = false;
                     }
-                    super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+                    super.render(graphics, p_93658_, p_93659_, p_93660_);
                 }
             };
         }
 
-        public void render(PoseStack matrix, int mouseX, int mouseY, float partial) {
+        public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             //Update the button colors
             this.buttonBase.setBackgroundColor(
                     DrawableColor.of(this.backgroundColorIdle),
@@ -1695,15 +1696,15 @@ public class TextEditorScreen extends Screen {
                     DrawableColor.of(this.backgroundColorIdle)
             );
             //Update the button pos
-            this.buttonBase.x = this.x;
-            this.buttonBase.y = this.y;
+            this.buttonBase.x = (this.x);
+            this.buttonBase.y = (this.y);
             int yCenter = this.y + (this.getHeight() / 2);
             //Render the button
-            this.buttonBase.render(matrix, mouseX, mouseY, partial);
+            this.buttonBase.render(graphics.pose(), mouseX, mouseY, partial);
             //Render dot
-            renderListingDot(matrix, this.x + 5, yCenter - 2, this.dotColor);
+            renderListingDot(graphics, this.x + 5, yCenter - 2, this.dotColor);
             //Render label
-            this.font.draw(matrix, this.label, this.x + 5 + 4 + 3, yCenter - (this.font.lineHeight / 2), this.entryLabelColor.getRGB());
+            graphics.drawString(this.font, this.label, this.x + 5 + 4 + 3, yCenter - (this.font.lineHeight / 2), this.entryLabelColor.getRGB(), false);
         }
 
         public int getWidth() {

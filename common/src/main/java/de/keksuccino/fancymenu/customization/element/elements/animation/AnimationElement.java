@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.resources.ResourceLocation;
@@ -13,7 +14,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-//TODO übernehmen (whole class)
 @Deprecated(forRemoval = true)
 public class AnimationElement extends AbstractElement {
 
@@ -33,7 +33,7 @@ public class AnimationElement extends AbstractElement {
     }
 
     @Override
-    public void render(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {}
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {}
 
     protected void updateResources() {}
 
