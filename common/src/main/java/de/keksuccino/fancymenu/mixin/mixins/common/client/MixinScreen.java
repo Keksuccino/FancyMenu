@@ -54,22 +54,18 @@ public class MixinScreen implements CustomizableScreen {
 		EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this.getScreen_FancyMenu(), pose));
 	}
 
-	@WrapOperation(method = "renderBackground(Lcom/mojang/blaze3d/vertex/PoseStack;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderDirtBackground(I)V"))
-	private void wrap_renderDirtBackground_in_renderBackground_FancyMenu(Screen instance, int $$0, Operation<Void> original) {
+	@Inject(method = "renderDirtBackground", at = @At("RETURN"))
+	private void return_renderDirtBackground_FancyMenu(int i, CallbackInfo info) {
 		ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen((Screen)((Object)this));
-		if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this.getScreen_FancyMenu()) && (MixinCacheCommon.current_screen_render_pose_stack != null)) {
+		if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this.getScreen_FancyMenu())) {
 			if (!l.layoutBase.menuBackgrounds.isEmpty()) {
 				RenderSystem.enableBlend();
 				//Render a black background before the custom background gets rendered
 				GuiGraphics.currentGraphics().fill(0, 0, this.getScreen_FancyMenu().width, this.getScreen_FancyMenu().height, 0);
 				RenderingUtils.resetShaderColor(GuiGraphics.currentGraphics());
-			} else {
-				original.call(instance, $$0);
 			}
-		} else {
-			original.call(instance, $$0);
 		}
-		EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this.getScreen_FancyMenu(), MixinCacheCommon.current_screen_render_pose_stack));
+		EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this.getScreen_FancyMenu(), GuiGraphics.currentGraphics().pose()));
 	}
 
 	@Inject(method = "init(Lnet/minecraft/client/Minecraft;II)V", at = @At("HEAD"))

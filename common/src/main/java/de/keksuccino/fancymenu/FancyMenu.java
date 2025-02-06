@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu;
 
 import java.io.File;
 import de.keksuccino.fancymenu.util.ObjectUtils;
-import de.keksuccino.fancymenu.util.auth.AuthVerifier;
+import de.keksuccino.fancymenu.util.auth.ModValidator;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.file.FileUtils;
@@ -56,8 +56,9 @@ public class FancyMenu {
 
 			EventHandler.INSTANCE.registerListenersOf(new Test());
 
-			//TODO remove debug
-			AuthVerifier.printImportantFields();
+			if (!ModValidator.isFancyMenuMetadataValid()) {
+				ModValidator.printInfo();
+			}
 
 		}
 

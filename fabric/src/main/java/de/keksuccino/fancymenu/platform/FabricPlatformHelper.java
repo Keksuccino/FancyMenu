@@ -2,10 +2,12 @@ package de.keksuccino.fancymenu.platform;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.platform.services.IPlatformHelper;
+import de.keksuccino.fancymenu.util.mod.UniversalModContainer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
+import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
@@ -106,6 +108,18 @@ public class FabricPlatformHelper implements IPlatformHelper {
             ex.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public @NotNull List<UniversalModContainer> getLoadedMods() {
+        List<UniversalModContainer> mods = new ArrayList<>();
+        FabricLoader.getInstance().getAllMods().forEach(mod -> {
+            ModMetadata m = mod.getMetadata();
+            List<String> authors = new ArrayList<>();
+            m.getAuthors().forEach(person -> authors.add(person.getName()));
+            mods.add(new UniversalModContainer(m.getId(), m.getName(), m.getDescription(), String.join("\n", m.getLicense()), authors));
+        });
+        return mods;
     }
 
 }
