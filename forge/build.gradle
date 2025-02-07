@@ -14,7 +14,7 @@ mixin {
     config("${mod_id}.forge.mixins.json")
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 jarJar.enable()
 
@@ -76,11 +76,11 @@ sourceSets.main.resources.srcDir 'src/generated/resources'
 
 dependencies {
     minecraft("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
-    implementation('net.sf.jopt-simple:jopt-simple:5.0.4') { version { strictly '5.0.4' } }
+//    implementation('net.sf.jopt-simple:jopt-simple:5.0.4') { version { strictly '5.0.4' } }
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
     //Needs to be "implementation" when building and "compileOnly" in-dev for some frickin reason
-    implementation(annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.5"))
-    //compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.5"))
+    //implementation(annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.5"))
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.5"))
     implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.3.5")) {
         jarJar.ranged(it, "[0.3.5,)")
     }
@@ -93,11 +93,11 @@ dependencies {
     minecraftLibrary(jarJar("org.joml:joml:1.10.8")) {
         jarJar.ranged(it, "[1.10.8,)")
     }
-    implementation fg.deobf("maven.modrinth:konkrete:1.8.0-1.19-1.19.2-forge")
-    implementation fg.deobf("maven.modrinth:melody:1.0.1-1.19.2-forge")
+    implementation (fg.deobf("maven.modrinth:konkrete:1.8.0-1.19-1.19.2-forge"))
+    implementation (fg.deobf("maven.modrinth:melody:1.0.1-1.19.2-forge"))
     //This is only to fix the missing dependency error in-dev
-    implementation group: 'ca.weblite', name: 'java-objc-bridge', version: '1.1'
-    compileOnly project(":common")
+    implementation (group: 'ca.weblite', name: 'java-objc-bridge', version: '1.1')
+    compileOnly (project(":common"))
 }
 
 tasks.withType(JavaCompile).configureEach {
