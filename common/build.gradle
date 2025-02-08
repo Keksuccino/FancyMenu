@@ -28,10 +28,10 @@ dependencies {
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
     implementation group: 'org.ow2.asm', name: 'asm-tree', version: '9.7'
     //This is only to fix the missing dependency error in-dev
-    implementation group: 'ca.weblite', name: 'java-objc-bridge', version: '1.1'
+    compileOnly group: 'ca.weblite', name: 'java-objc-bridge', version: '1.1'
     //Test to fix weird behaviour with Gson
-    implementation 'com.google.code.gson:gson:2.8.9'
-    implementation 'org.joml:joml:1.10.8'
+    compileOnly 'com.google.code.gson:gson:2.8.9'
+    compileOnly 'org.joml:joml:1.10.8'
 }
 
 publishing {

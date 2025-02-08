@@ -8,11 +8,11 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.StringBuilderScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.konkrete.math.MathUtils;
-import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -184,6 +184,8 @@ public class IsNumberRequirement extends LoadingRequirement {
             Minecraft.getInstance().setScreen(parentScreen);
         });
         Minecraft.getInstance().setScreen(s);
+        MouseInput.isLeftMouseDown();
+        MouseInput.isRightMouseDown();
     }
 
     public static class IsNumberValueConfigScreen extends StringBuilderScreen {
