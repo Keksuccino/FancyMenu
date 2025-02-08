@@ -93,6 +93,7 @@ public class LoadingRequirements {
     public static final IsAttackStrengthWeakenedRequirement IS_ATTACK_STRENGTH_WEAKENED = new IsAttackStrengthWeakenedRequirement();
     public static final IsKeyPressedRequirement IS_KEY_PRESSED = new IsKeyPressedRequirement();
     public static final OncePerSessionRequirement ONLY_ONCE_PER_SESSION = new OncePerSessionRequirement();
+    public static final MouseClickedRequirement MOUSE_CLICKED = new MouseClickedRequirement();
 
     public static void registerAll() {
 
@@ -177,6 +178,7 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(IS_SERVER_ONLINE);
         LoadingRequirementRegistry.register(IS_VARIABLE_VALUE);
         LoadingRequirementRegistry.register(ONLY_ONCE_PER_SESSION);
+        LoadingRequirementRegistry.register(MOUSE_CLICKED);
 
     }
 
