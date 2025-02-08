@@ -166,18 +166,11 @@ public class ItemElement extends AbstractElement {
 
         int count = SerializationUtils.deserializeNumber(Integer.class, 1, PlaceholderParser.replacePlaceholders(this.itemCount));
 
-        graphics.pose().pushPose();
-        graphics.pose().translate(0.0F, 0.0F, 100.0F);
+        this.renderScaledItem(graphics, itemStack, x, y, width, height);
 
-        int size = Math.max(width, height);
-        int randomSeed = x + y * this.getAbsoluteWidth();
-        this._renderItem(graphics, x, y, size, randomSeed, itemStack);
         if (count > 1) {
-            this.renderItemCount(graphics, this.font, x, y, size, count);
+            this.renderItemCount(graphics, this.font, x, y, Math.max(width, height), count);
         }
-
-        graphics.pose().popPose();
-        graphics.flush();
 
         if (!isEditor() && this.showTooltip && UIBase.isXYInArea(mouseX, mouseY, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight())) {
             ScreenRenderUtils.postPostRenderTask((graphics1, mouseX1, mouseY1, partial) -> this.renderItemTooltip(graphics1, mouseX, mouseY, itemStack));
@@ -185,46 +178,24 @@ public class ItemElement extends AbstractElement {
 
     }
 
-    protected void _renderItem(@NotNull GuiGraphics graphics, int x, int y, int size, int seed, @NotNull ItemStack itemStack) {
-        int guiOffset = 0;
+    protected void renderScaledItem(@NotNull GuiGraphics graphics, @NotNull ItemStack stack, int x, int y, int width, int height) {
+        // Save the current transformation state.
         PoseStack pose = graphics.pose();
-        BakedModel model = Minecraft.getInstance().getItemRenderer().getModel(itemStack, null, null, seed);
-        if (!itemStack.isEmpty()) {
-            // Calculate the scaling factor based on the requested size (maintaining aspect ratio)
-            float scaleFactor = size / 16.0F;  // Convert from the original 16x16 base size
-            pose.pushPose();
-            // Adjust translation to account for new size (center point needs to scale with size)
-            pose.translate(
-                    (float)(x + size/2),  // Center point X scales with size
-                    (float)(y + size/2),  // Center point Y scales with size
-                    (float)(150 + (model.isGui3d() ? guiOffset : 0))
-            );
-            try {
-                // Apply scaled transformation while maintaining aspect ratio
-                pose.scale(
-                        16.0F * scaleFactor,    // Width scaling
-                        -16.0F * scaleFactor,   // Height scaling (negative for Y-axis orientation)
-                        16.0F                   // Keep Z scale constant
-                );
-                boolean bl = !model.usesBlockLight();
-                if (bl) {
-                    graphics.flush();
-                    Lighting.setupForFlatItems();
-                }
-                Minecraft.getInstance().getItemRenderer().render(itemStack, ItemDisplayContext.GUI, false, graphics.pose(), ((IMixinGuiGraphics)graphics).getBufferSource_FancyMenu(), 15728880, OverlayTexture.NO_OVERLAY, model);
-                graphics.flush();
-                if (bl) {
-                    Lighting.setupFor3DItems();
-                }
-            } catch (Throwable throwable) {
-                CrashReport crashReport = CrashReport.forThrowable(throwable, "[FANCYMENU] Rendering item in layout");
-                CrashReportCategory crashReportCategory = crashReport.addCategory("Item being rendered");
-                crashReportCategory.setDetail("Item Type", (() -> String.valueOf(itemStack.getItem())));
-                crashReportCategory.setDetail("Item Foil", (() -> String.valueOf(itemStack.hasFoil())));
-                throw new ReportedException(crashReport);
-            }
-            pose.popPose();
-        }
+        pose.pushPose();
+
+        // Translate to the top-left of where you want the item to be drawn.
+        pose.translate(x, y, 0);
+
+        // Calculate a uniform scale factor based on the desired size.
+        // (Items are rendered at a base size of 16x16.)
+        float scale = Math.min(width, height) / 16.0F;
+        pose.scale(scale, scale, 1.0F);
+
+        // Now render the item at (0,0) because the translation has been applied.
+        graphics.renderItem(stack, 0, 0);
+
+        // Restore the previous transformation state.
+        pose.popPose();
     }
 
     protected void renderItemCount(@NotNull GuiGraphics graphics, @NotNull Font font, int x, int y, int size, int count) {
