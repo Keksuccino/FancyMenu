@@ -54,6 +54,7 @@ public class ActionInstance implements Executable, ValuePlaceholderHolder {
                 //Replace normal (system-wide) placeholders in value
                 v = PlaceholderParser.replacePlaceholders(v);
             }
+            this.action.currentInstance = this;
             if (this.action.hasValue()) {
                 this.action.execute(v);
             } else {

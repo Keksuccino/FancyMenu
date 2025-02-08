@@ -60,11 +60,10 @@ dependencies {
     implementation(jarJar("com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7")) {
         jarJar.ranged(it, "[1.7,)")
     }
-    compileOnly "com.cinemamod:mcef:2.1.6-1.21.1"
-//    runtimeOnly "com.cinemamod:mcef-neoforge:2.1.6-1.21.1"
+    implementation "com.cinemamod:mcef:2.1.6-1.21.1"
 }
 
-// NeoGradle compiles the game, but we don't want to add our common code to the game's code
+// NeoGradle compiles the game, but we don't want to add our common code to the game's code++
 Spec<Task> notNeoTask = { Task it -> !it.name.startsWith("neo") } as Spec<Task>
 
 tasks.withType(JavaCompile).matching(notNeoTask).configureEach {
