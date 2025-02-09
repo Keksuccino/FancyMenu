@@ -1,4 +1,22 @@
 
+CHANGELOG | FANCYMENU v3.4.2
+ 
+- Fixed FM crashing when using latest NeoForge 1.21.4 version
+
+%changelog:end%
+
+
+
+
+CHANGELOG | FANCYMENU v3.4.1
+ 
+- Re-compiled some Fabric builds with older Loom version for in-dev compatibility reasons
+
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.4.0
 
 - This update is available for MC 1.18.2, 1.19.2, 1.20.1, 1.21.1, 1.21.4 (all other versions get dropped)
@@ -94,6 +112,8 @@ CHANGELOG | FANCYMENU v3.4.0
 CHANGELOG | FANCYMENU v3.3.5
  
 - Fixed opacity not working for the Image menu background type in MC 1.21.4
+
+%changelog:end%
 
 
 
