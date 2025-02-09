@@ -67,7 +67,8 @@
   ],
   "mixins": [
     "client.IMixinEntity",
-    "client.IMixinLivingEntity"
+    "client.IMixinLivingEntity",
+    "client.MixinReloadableResourceManager"
   ],
   "injectors": {
     "defaultRequire": 1
