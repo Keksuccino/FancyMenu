@@ -9,6 +9,7 @@ CHANGELOG | FANCYMENU v3.4.3 [ W I P !! Not public yet !! ]
 - Fixed screen flickering black for a moment when opening the Inventory screen (#1045)
 - Fixed world rendering breaks when opening the Inventory screen while having Distant Horizons installed (#1042)
 - Fixed element fading speed is calculated the wrong way around (#1035)
+- Fixed context menu not opening when right-clicking a Vanilla widget outside the editor (when the debug overlay is enabled) (#1036)
  
 %changelog:end%
 
