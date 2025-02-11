@@ -1,6 +1,8 @@
 
-CHANGELOG | FANCYMENU v3.X.X [ W I P !! Not public yet !! ]
+CHANGELOG | FANCYMENU v3.4.3 [ W I P !! Not public yet !! ]
 
+- Fixed screen flickering black for a moment when opening the Inventory screen (#1045)
+- Fixed world rendering breaks when opening the Inventory screen while having Distant Horizons installed (#1042)
 - 
  
 %changelog:end%
