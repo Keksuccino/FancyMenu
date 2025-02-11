@@ -5,9 +5,10 @@ CHANGELOG | FANCYMENU v3.4.3 [ W I P !! Not public yet !! ]
   - You may need to make a new layout for this fix to work
 - "Disconnect" and "Back to Main Menu" buttons in the Pause screen now have the same widget identifier to fix button customizations resetting when one of the buttons replaces the other (#1047)
   - You may need to make a new layout for this fix to work
+- Improved element fading speed logic to better handle high speed values
 - Fixed screen flickering black for a moment when opening the Inventory screen (#1045)
 - Fixed world rendering breaks when opening the Inventory screen while having Distant Horizons installed (#1042)
-- 
+- Fixed element fading speed is calculated the wrong way around (#1035)
  
 %changelog:end%
 
