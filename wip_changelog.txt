@@ -1,6 +1,10 @@
 
 CHANGELOG | FANCYMENU v3.4.3 [ W I P !! Not public yet !! ]
 
+- "Share to Lan" and "Report Player" buttons in the Pause screen now have the same widget identifier to fix button customizations resetting when one of the buttons replaces the other (#1047)
+  - You may need to make a new layout for this fix to work
+- "Disconnect" and "Back to Main Menu" buttons in the Pause screen now have the same widget identifier to fix button customizations resetting when one of the buttons replaces the other (#1047)
+  - You may need to make a new layout for this fix to work
 - Fixed screen flickering black for a moment when opening the Inventory screen (#1045)
 - Fixed world rendering breaks when opening the Inventory screen while having Distant Horizons installed (#1042)
 - 
