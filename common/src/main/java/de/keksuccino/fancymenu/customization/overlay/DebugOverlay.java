@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -37,7 +38,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @SuppressWarnings("all")
-public class DebugOverlay implements Renderable, NarratableEntry, ContainerEventHandler {
+public class DebugOverlay implements FancyMenuUiComponent, Renderable, NarratableEntry, ContainerEventHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -352,7 +353,7 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (ContainerEventHandler.super.mouseClicked(mouseX, mouseY, button)) return true;
+        if ((this.rightClickMenu != null) && this.rightClickMenu.mouseClicked(mouseX, mouseY, button) && this.rightClickMenu.isOpen()) return true;
         this.closeRightClickContextMenu();
         for (DebugOverlayLine line : this.lines) {
             if (line.onClick(button, (int) mouseX, (int) mouseY)) return true;
