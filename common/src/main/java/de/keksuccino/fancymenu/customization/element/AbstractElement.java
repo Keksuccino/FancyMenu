@@ -275,15 +275,19 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			boolean fadeInDone = this.getMemory().putPropertyIfAbsentAndGet("fade_in_done", false);
 			if (!fadeInIsResize || !fadeInDone) {
 				if ((this.fadeIn != Fading.NO_FADING) && this.shouldDoFadeInIfNeeded && (this.lastBaseOpacity > 0.0F)) {
-					if ((this.fadeIn != Fading.FIRST_TIME) || !fadeInDone) {
+					// Only start fade-in once
+					if ((this.fadeIn != Fading.FIRST_TIME) || !this.getMemory().putPropertyIfAbsentAndGet("fade_in_done", false)) {
 						if (!this.fadeInStarted) {
 							this.fadeInStarted = true;
-							this.opacity = 0.0F;
+							this.opacity = 0.02F;
+							this.lastFadeInTick = System.currentTimeMillis(); // initialize timer
 						}
-						if ((this.lastFadeInTick + (long)(50.0F * this.fadeInSpeed)) < System.currentTimeMillis()) {
-							this.lastFadeInTick = System.currentTimeMillis();
-							this.opacity += 0.02F;
-						}
+						long now = System.currentTimeMillis();
+						float elapsedSeconds = (now - this.lastFadeInTick) / 1000.0F;
+						this.lastFadeInTick = now;
+						// Increase opacity based on elapsed time; 0.4 is the base rate for fadeSpeed = 1.
+						this.opacity += elapsedSeconds * (0.4F * this.fadeInSpeed);
+						this.opacity = Math.max(0.02F, this.opacity);
 						if (this.opacity >= this.lastBaseOpacity) {
 							this.opacity = this.lastBaseOpacity;
 							this.shouldDoFadeInIfNeeded = false;
@@ -310,13 +314,16 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 					if (!this.fadeOutStarted) {
 						this.fadeOutStarted = true;
 						this.opacity = this.lastBaseOpacity;
+						this.lastFadeOutTick = System.currentTimeMillis(); // initialize timer
 					}
-					if ((this.lastFadeOutTick + (long)(50.0F * this.fadeOutSpeed)) < System.currentTimeMillis()) {
-						this.lastFadeOutTick = System.currentTimeMillis();
-						this.opacity -= 0.02F;
-					}
-					if (this.opacity <= 0.0F) {
-						this.opacity = 0.0F;
+					long now = System.currentTimeMillis();
+					float elapsedSeconds = (now - this.lastFadeOutTick) / 1000.0F;
+					this.lastFadeOutTick = now;
+					// Decrease opacity based on elapsed time.
+					this.opacity -= elapsedSeconds * (0.4F * this.fadeOutSpeed);
+					this.opacity = Math.max(0.02F, this.opacity);
+					if (this.opacity <= 0.02F) {
+						this.opacity = 0.02F;
 						this.shouldDoFadeOutIfNeeded = false;
 						this.fadeOutFinished = true;
 						this.getMemory().putProperty("fade_out_done", true);

@@ -32,7 +32,8 @@ dependencies {
     modImplementation "maven.modrinth:modmenu:7.2.2"
     modImplementation "maven.modrinth:rrls:4.0.6.1+mc1.20.1-fabric"
     modImplementation "maven.modrinth:cloth-config:11.1.136+fabric"
-    modCompileOnly "curse.maven:mcef-636236:5828196"
+    modCompileOnly "com.cinemamod:mcef:2.1.6-1.20.1"
+    modRuntimeOnly "com.cinemamod:mcef-fabric:2.1.6-1.20.1"
 }
 
 loom {

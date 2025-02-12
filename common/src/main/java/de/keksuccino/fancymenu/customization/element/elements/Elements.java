@@ -41,7 +41,7 @@ public class Elements {
     public static final AudioElementBuilder AUDIO_V2 = new AudioElementBuilder();
     public static final MusicControllerElementBuilder MUSIC_CONTROLLER = new MusicControllerElementBuilder();
     public static final DraggerElementBuilder DRAGGER = new DraggerElementBuilder();
-    public static final BrowserElementBuilder BROWSER = new BrowserElementBuilder();
+//    public static final BrowserElementBuilder BROWSER = new BrowserElementBuilder();
     public static final ItemElementBuilder ITEM = new ItemElementBuilder();
     public static final AnimationControllerElementBuilder ANIMATION_CONTROLLER = new AnimationControllerElementBuilder();
 
@@ -64,7 +64,7 @@ public class Elements {
         ElementRegistry.register(AUDIO_V2);
         ElementRegistry.register(MUSIC_CONTROLLER);
         ElementRegistry.register(DRAGGER);
-        ElementRegistry.register(BROWSER);
+//        ElementRegistry.register(BROWSER);
         ElementRegistry.register(ITEM);
         ElementRegistry.register(ANIMATION_CONTROLLER);
 
