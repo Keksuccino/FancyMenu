@@ -61,6 +61,7 @@ dependencies {
         jarJar.ranged(it, "[1.7,)")
     }
     implementation "com.cinemamod:mcef:2.1.6-1.21.1"
+    implementation "curse.maven:distant-horizons-508933:5689286"
 }
 
 // NeoGradle compiles the game, but we don't want to add our common code to the game's code
