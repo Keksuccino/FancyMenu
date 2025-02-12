@@ -1,4 +1,14 @@
 
+CHANGELOG | FANCYMENU v3.4.4
+
+- Added "In Memory Of UwUCookies" to the credits
+- Fixed visual glitch in element fading (#1050)
+ 
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.4.3
 
 - "Share to Lan" and "Report Player" buttons in the Pause screen now have the same widget identifier to fix button customizations resetting when one of the buttons replaces the other (#1047)
