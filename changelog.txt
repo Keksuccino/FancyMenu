@@ -1,4 +1,22 @@
 
+CHANGELOG | FANCYMENU v3.4.3
+
+- "Share to Lan" and "Report Player" buttons in the Pause screen now have the same widget identifier to fix button customizations resetting when one of the buttons replaces the other (#1047)
+  - You may need to make a new layout for this fix to work
+- "Disconnect" and "Back to Main Menu" buttons in the Pause screen now have the same widget identifier to fix button customizations resetting when one of the buttons replaces the other (#1047)
+  - You may need to make a new layout for this fix to work
+- Improved element fading speed logic to better handle high speed values
+- Temporarily removed the "Browser" element from MC 1.20.1 because it crashed the game (will try to get it to work in 1.20.1, but not sure if I will succeed)
+- Fixed screen flickering black for a moment when opening the Inventory screen (#1045)
+- Fixed world rendering breaks when opening the Inventory screen while having Distant Horizons installed (#1042)
+- Fixed element fading speed is calculated the wrong way around (#1035)
+- Fixed context menu not opening when right-clicking a Vanilla widget outside the editor (when the debug overlay is enabled) (#1036)
+ 
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.4.2
  
 - Fixed FM crashing when using latest NeoForge 1.21.4 version
