@@ -5,6 +5,7 @@ CHANGELOG | FANCYMENU v3.4.5 [ W I P !! Not public yet !! ]
 - Fixed "Modified JAR" warning rendering over Forge/NeoForge "Failed to Load" screen (#1074)
 - Fixed Progress Bar element never visually reaching 100% (#1071)
 - Fixed some cases where the dragged element would change its position when changing its anchor by hovering an anchor point or element
+- Fixed server crashing on launch when FancyMenu is installed (#1065)
 - 
  
 %changelog:end%
