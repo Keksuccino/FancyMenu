@@ -1,8 +1,8 @@
 
-CHANGELOG | FANCYMENU v3.4.4 [ W I P !! Not public yet !! ]
+CHANGELOG | FANCYMENU v3.4.5 [ W I P !! Not public yet !! ]
 
-- Added "In Memory Of UwUCookies" to the credits
-- Fixed visual glitch in element fading (#1050)
+- Fixed "Modified JAR" warning rendering over Forge/NeoForge "Failed to Load" screen (#1074)
+- 
  
 %changelog:end%
 
