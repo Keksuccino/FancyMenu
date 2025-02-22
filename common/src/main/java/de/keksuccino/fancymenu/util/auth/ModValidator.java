@@ -70,9 +70,12 @@ public class ModValidator {
         Screen current = Minecraft.getInstance().screen;
         if (current == null) return;
 
+        //Do not render the error in non-Minecraft screens
+        if (!current.getClass().getName().startsWith("net.minecraft.")) return;
+
         graphics.flush();
         graphics.pose().pushPose();
-        graphics.pose().translate(1.0F, 1.0F, 400.0F);
+        graphics.pose().translate(0.0F, 0.0F, 400.0F);
 
         graphics.fill(0, 0, current.width, current.height, DrawableColor.BLACK.getColorInt());
 

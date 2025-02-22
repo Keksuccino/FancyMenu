@@ -81,6 +81,10 @@ public class ProgressBarEditorElement extends AbstractEditorElement {
                 .setStackable(false)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.elements.progress_bar.source.desc")));
 
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "smooth_filling_animation", ProgressBarEditorElement.class,
+                consumes -> consumes.getElement().smoothFillingAnimation,
+                (element, aBoolean) -> element.getElement().smoothFillingAnimation = aBoolean, "fancymenu.editor.elements.progress_bar.smoothing");
+
         this.rightClickMenu.addSeparatorEntry("separator_after_progress_source");
 
         this.addCycleContextMenuEntryTo(this.rightClickMenu, "set_direction",
