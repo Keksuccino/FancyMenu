@@ -25,7 +25,7 @@ public class FancyMenu {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	public static final String VERSION = "3.4.4";
+	public static final String VERSION = "3.4.5";
 	public static final String MOD_LOADER = Services.PLATFORM.getPlatformName();
 	public static final String MOD_ID = "fancymenu";
 
@@ -48,9 +48,9 @@ public class FancyMenu {
 			LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in server-side mode on " + MOD_LOADER.toUpperCase() + "!");
 		}
 
-		FileTypes.registerAll();
-
 		if (Services.PLATFORM.isOnClient()) {
+
+			FileTypes.registerAll();
 
 			if (MCEFUtil.isMCEFLoaded()) BrowserHandler.init();
 
