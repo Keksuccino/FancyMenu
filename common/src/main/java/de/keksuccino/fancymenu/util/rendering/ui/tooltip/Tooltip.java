@@ -84,6 +84,9 @@ public class Tooltip implements Renderable {
         Screen s = Minecraft.getInstance().screen;
         if (!this.isEmpty() && (s != null)) {
 
+            //Dummy-render a Vanilla tooltip to fix the custom one (this is hacky af and I hate it, but I don't have time to analyze the whole frickin Vanilla tooltip rendering tbh)
+            graphics.renderTooltip(Minecraft.getInstance().font, Component.empty(), -10000, -10000);
+
             this.updateAspectRatio();
 
             int x = this.calculateX(s, mouseX);
@@ -161,28 +164,9 @@ public class Tooltip implements Renderable {
 
         graphics.pose().pushPose();
 
-        ShaderInstance shaderInstance = RenderSystem.getShader();
-        Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder builder = tesselator.getBuilder();
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-        Matrix4f matrix4f2 = graphics.pose().last().pose();
-
         //Set Z to 0, because Z level gets handled in parent method instead
         int z = 0;
-        TooltipRenderUtil.renderTooltipBackground(graphics, x, y, width, height, z);
-
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        builder.end();
-        BufferUploader.end(builder);
-
-        if (shaderInstance != null) {
-            RenderSystem.setShader(() -> shaderInstance);
-        }
-
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderingUtils.resetShaderColor(graphics);
+        graphics.drawManaged(() -> TooltipRenderUtil.renderTooltipBackground(graphics, x, y, width, height, z));
 
         graphics.pose().popPose();
 
