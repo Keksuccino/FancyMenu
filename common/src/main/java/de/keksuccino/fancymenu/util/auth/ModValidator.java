@@ -37,7 +37,7 @@ public class ModValidator {
         UniversalModContainer mod = Services.PLATFORM.getLoadedMod("fancymenu");
         if (mod == null) return false;
         if (mod.license() == null) return false;
-        return mod.license().contains("DSMSLv2");
+        return mod.license().contains("DSMSLv3");
     }
 
     public static boolean isFancyMenuMetadataValid() {

@@ -135,18 +135,21 @@ public class ProgressBarElement extends AbstractElement {
             if (texture != null) {
                 ResourceLocation loc = texture.getResourceLocation();
                 if (loc != null) {
-                    graphics.blit(RenderType::guiTextured, loc, progressX, progressY, offsetX, offsetY, progressWidth, progressHeight, fullWidth, fullHeight, DrawableColor.WHITE.getColorIntWithAlpha(opacity));
+                    DrawableColor.WHITE.setAsShaderColor(graphics, this.opacity);
+                    graphics.blit(loc, progressX, progressY, offsetX, offsetY, progressWidth, progressHeight, fullWidth, fullHeight);
                 }
             }
         }
         // Otherwise, render a solid colored bar.
         else if (barColor != null) {
-            float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) ARGB.alpha(barColor.getColorInt()) / 255.0F));
+            float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) FastColor.ARGB32.alpha(barColor.getColorInt()) / 255.0F));
             if (opacity <= colorAlpha) {
                 colorAlpha = opacity;
             }
-            graphics.fill(RenderType.guiOverlay(), progressX, progressY, progressX + progressWidth, progressY + progressHeight, barColor.getColorIntWithAlpha(colorAlpha));
+            graphics.fill(progressX, progressY, progressX + progressWidth, progressY + progressHeight, barColor.getColorIntWithAlpha(colorAlpha));
         }
+
+        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 
     }
 
@@ -157,15 +160,17 @@ public class ProgressBarElement extends AbstractElement {
         RenderSystem.enableBlend();
         if (backgroundTextureSupplier != null) {
             backgroundTextureSupplier.forRenderable((texture, location) -> {
-                graphics.blit(RenderType::guiTextured, location, getAbsoluteX(), getAbsoluteY(), 0.0F, 0.0F, getAbsoluteWidth(), getAbsoluteHeight(), getAbsoluteWidth(), getAbsoluteHeight(), DrawableColor.WHITE.getColorIntWithAlpha(opacity));
+                DrawableColor.WHITE.setAsShaderColor(graphics, this.opacity);
+                graphics.blit(location, getAbsoluteX(), getAbsoluteY(), 0.0F, 0.0F, getAbsoluteWidth(), getAbsoluteHeight(), getAbsoluteWidth(), getAbsoluteHeight());
             });
         } else if (backgroundColor != null) {
-            float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) ARGB.alpha(backgroundColor.getColorInt()) / 255.0F));
+            float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) FastColor.ARGB32.alpha(backgroundColor.getColorInt()) / 255.0F));
             if (opacity <= colorAlpha) {
                 colorAlpha = opacity;
             }
-            graphics.fill(RenderType.guiOverlay(), getAbsoluteX(), getAbsoluteY(), getAbsoluteX() + getAbsoluteWidth(), getAbsoluteY() + getAbsoluteHeight(), backgroundColor.getColorIntWithAlpha(colorAlpha));
+            graphics.fill(getAbsoluteX(), getAbsoluteY(), getAbsoluteX() + getAbsoluteWidth(), getAbsoluteY() + getAbsoluteHeight(), backgroundColor.getColorIntWithAlpha(colorAlpha));
         }
+        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
     }
 
     /**
