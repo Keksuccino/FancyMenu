@@ -49,12 +49,14 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import javax.annotation.Nonnull;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
@@ -216,7 +218,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 														if (e.settings.isAnchorPointChangeable() && e.settings.isElementAnchorPointAllowed()) {
 															e.element.anchorPointElementIdentifier = editorElement.element.getInstanceIdentifier();
 															e.element.setElementAnchorPointParent(editorElement.element);
-															e.setAnchorPoint(ElementAnchorPoints.ELEMENT, e.getX(), e.getY(), true);
+															e.setAnchorPoint(ElementAnchorPoints.ELEMENT, true);
 														}
 													}
 													Minecraft.getInstance().setScreen(this.editor);
@@ -246,14 +248,11 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			for (ElementAnchorPoint p : ElementAnchorPoints.getAnchorPoints()) {
 				if ((p != ElementAnchorPoints.ELEMENT) && (this.settings.isVanillaAnchorPointAllowed() || (p != ElementAnchorPoints.VANILLA))) {
 					anchorPointMenu.addClickableEntry("anchor_point_" + p.getName().replace("-", "_"), p.getDisplayName(), (menu, entry) -> {
-								if (entry.getStackMeta().isFirstInStack()) {
-									this.editor.history.saveSnapshot();
-									for (AbstractEditorElement e : this.editor.getSelectedElements()) {
-										if (e.settings.isAnchorPointChangeable()) {
-											e.setAnchorPoint(p, e.getX(), e.getY(), true);
-										}
-									}
-									menu.closeMenu();
+						if (entry.getStackMeta().isFirstInStack()) {
+							this.editor.history.saveSnapshot();
+							for (AbstractEditorElement e : this.editor.getSelectedElements()) {
+								if (e.settings.isAnchorPointChangeable()) {
+									e.setAnchorPoint(p, true);
 								}
 							}).setStackable(true)
 							.setIcon(ContextMenu.IconFactory.getIcon("anchor_" + p.getName().replace("-", "_")));
@@ -787,45 +786,81 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 	}
 
-	public void setAnchorPoint(ElementAnchorPoint anchor, int oldAbsoluteX, int oldAbsoluteY, boolean resetElementStates) {
+	/**
+	 * Sets the {@link ElementAnchorPoint} of the element.<br>
+	 * It is important to set {@link AbstractElement#anchorPointElementIdentifier} first before calling
+	 * this method, in case {@code newAnchor} is {@link ElementAnchorPoints#ELEMENT}.
+	 */
+	public void setAnchorPoint(ElementAnchorPoint newAnchor, boolean resetElementStates) {
 
-		if (resetElementStates) this.resetElementStates();
+		// Capture the element’s actual (absolute) position before changing the anchor.
+		int oldAbsX = this.element.getAbsoluteX();
+		int oldAbsY = this.element.getAbsoluteY();
 
-		if (anchor == null) {
-			anchor = ElementAnchorPoints.MID_CENTERED;
-		}
-
-		if (anchor != ElementAnchorPoints.ELEMENT) {
-			this.element.anchorPointElementIdentifier = null;
-			this.element.setElementAnchorPointParent(null);
-		}
-
-		this.element.anchorPoint = anchor;
-
-		int newAbsoluteX = this.element.getAbsoluteX();
-		int newAbsoluteY = this.element.getAbsoluteY();
-
-		this.element.posOffsetX += oldAbsoluteX - newAbsoluteX;
-		this.element.posOffsetY += oldAbsoluteY - newAbsoluteY;
+		this.setAnchorPoint(newAnchor, oldAbsX, oldAbsY, resetElementStates);
 
 	}
 
-	public void setAnchorPointViaOverlay(AnchorPointOverlay.AnchorPointArea anchor, int mouseX, int mouseY) {
-		int oldAbsoluteX = this.getX();
-		int oldAbsoluteY = this.getY();
+	/**
+	 * Sets the {@link ElementAnchorPoint} of the element.<br>
+	 * It is important to set {@link AbstractElement#anchorPointElementIdentifier} first before calling
+	 * this method, in case {@code newAnchor} is {@link ElementAnchorPoints#ELEMENT}.
+	 */
+	public void setAnchorPoint(ElementAnchorPoint newAnchor, int oldAbsX, int oldAbsY, boolean resetElementStates) {
+
 		if (!this.settings.isAnchorPointChangeable()) return;
-		if ((anchor.anchorPoint == ElementAnchorPoints.ELEMENT) && !this.settings.isElementAnchorPointAllowed()) return;
-		if (anchor instanceof AnchorPointOverlay.ElementAnchorPointArea ea) {
-			this.element.anchorPointElementIdentifier = ea.elementIdentifier;
-			AbstractEditorElement ee = ea.getElement();
+		if ((newAnchor == ElementAnchorPoints.ELEMENT) && !this.settings.isElementAnchorPointAllowed()) return;
+		if ((newAnchor == ElementAnchorPoints.ELEMENT) && (this.element.anchorPointElementIdentifier == null)) {
+			LOGGER.error("[FANCYMENU] Failed to set element's anchor to anchor point type 'ELEMENT'! Identifier was NULL!", new NullPointerException());
+			return;
+		}
+
+		boolean stayOnScreen = this.element.stayOnScreen;
+		this.element.stayOnScreen = false;
+
+		if (resetElementStates) {
+			this.resetElementStates();
+		}
+		if (newAnchor == null) {
+			newAnchor = ElementAnchorPoints.MID_CENTERED;
+		}
+
+		if (newAnchor == ElementAnchorPoints.ELEMENT) {
+			AbstractEditorElement ee = this.editor.getElementByInstanceIdentifier(Objects.requireNonNull(this.element.anchorPointElementIdentifier));
 			if (ee != null) {
 				this.element.setElementAnchorPointParent(ee.element);
 			} else {
 				this.element.setElementAnchorPointParent(null);
-				LOGGER.error("[FANCYMENU] Failed to get parent element for ELEMENT anchor! Element was NULL!", new NullPointerException());
+				LOGGER.error("[FANCYMENU] Failed to get parent element for 'ELEMENT' anchor type! Element was NULL!", new NullPointerException());
 			}
+		} else {
+			this.element.anchorPointElementIdentifier = null;
+			this.element.setElementAnchorPointParent(null);
 		}
-		this.setAnchorPoint(anchor.anchorPoint, oldAbsoluteX, oldAbsoluteY, false);
+
+		// Update the anchor.
+		this.element.anchorPoint = newAnchor;
+
+		// Now get the new absolute position with the new anchor settings.
+		int newAbsX = this.element.getAbsoluteX();
+		int newAbsY = this.element.getAbsoluteY();
+
+		// Adjust posOffset to counteract any shift—keeping the on-screen (absolute) position unchanged.
+		this.element.posOffsetX += (oldAbsX - newAbsX);
+		this.element.posOffsetY += (oldAbsY - newAbsY);
+
+		this.element.stayOnScreen = stayOnScreen;
+
+	}
+
+	@ApiStatus.Internal
+	public void setAnchorPointViaOverlay(AnchorPointOverlay.AnchorPointArea anchor, int mouseX, int mouseY) {
+		if (!this.settings.isAnchorPointChangeable()) return;
+		if ((anchor.anchorPoint == ElementAnchorPoints.ELEMENT) && !this.settings.isElementAnchorPointAllowed()) return;
+		if (anchor instanceof AnchorPointOverlay.ElementAnchorPointArea ea) {
+			this.element.anchorPointElementIdentifier = ea.elementIdentifier;
+		}
+		this.setAnchorPoint(anchor.anchorPoint, false);
 		this.updateLeftMouseDownCachedValues(mouseX, mouseY);
 		this.updateMovingStartPos(mouseX, mouseY);
 	}

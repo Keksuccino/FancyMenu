@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.network.chat.Component;
@@ -64,6 +65,8 @@ public class ProgressBarElementBuilder extends ElementBuilder<ProgressBarElement
 
         element.progressSource = serialized.getValue("progress_source");
 
+        element.smoothFillingAnimation = SerializationUtils.deserializeBoolean(element.smoothFillingAnimation, serialized.getValue("smooth_filling_animation"));
+
         return element;
 
     }
@@ -83,6 +86,8 @@ public class ProgressBarElementBuilder extends ElementBuilder<ProgressBarElement
         serializeTo.putProperty("progress_for_element_anchor", "" + element.useProgressForElementAnchor);
         serializeTo.putProperty("progress_source", element.progressSource);
         serializeTo.putProperty("value_mode", element.progressValueMode.getName());
+
+        serializeTo.putProperty("smooth_filling_animation", "" + element.smoothFillingAnimation);
 
         return serializeTo;
         

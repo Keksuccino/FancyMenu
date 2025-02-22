@@ -137,6 +137,9 @@ public class Placeholders {
     public static final AudioDurationPlaceholder AUDIO_ELEMENT_DURATION = new AudioDurationPlaceholder();
     public static final AudioPlaytimePlaceholder AUDIO_ELEMENT_PLAYTIME = new AudioPlaytimePlaceholder();
     public static final AudioPlayingStatePlaceholder AUDIO_ELEMENT_PLAYING_STATE = new AudioPlayingStatePlaceholder();
+    public static final CurrentPlayerOxygenPlaceholder CURRENT_PLAYER_OXYGEN = new CurrentPlayerOxygenPlaceholder();
+    public static final MaxPlayerOxygenPlaceholder MAX_PLAYER_OXYGEN = new MaxPlayerOxygenPlaceholder();
+    public static final CurrentPlayerOxygenPercentagePlaceholder CURRENT_PLAYER_OXYGEN_PERCENTAGE = new CurrentPlayerOxygenPercentagePlaceholder();
 
     public static void registerAll() {
 
@@ -207,6 +210,9 @@ public class Placeholders {
         PlaceholderRegistry.register(PLAYER_ATTACK_STRENGTH_PERCENTAGE);
         PlaceholderRegistry.register(PLAYER_GAMEMODE);
         PlaceholderRegistry.register(PLAYER_VIEW_DIRECTION);
+        PlaceholderRegistry.register(CURRENT_PLAYER_OXYGEN);
+        PlaceholderRegistry.register(MAX_PLAYER_OXYGEN);
+        PlaceholderRegistry.register(CURRENT_PLAYER_OXYGEN_PERCENTAGE);
 
         //Server
         PlaceholderRegistry.register(SERVER_MOTD);

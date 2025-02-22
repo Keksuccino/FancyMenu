@@ -118,6 +118,10 @@ public class AudioElementBuilder extends ElementBuilder<AudioElement, AudioEdito
 
         AudioElement element = this.buildDefaultInstance();
 
+        //Manually set the identifier early to fix call to getControllerVolume()
+        String id = serialized.getValue("instance_identifier");
+        element.setInstanceIdentifier(Objects.requireNonNull(id));
+
         element.audios.addAll(AudioElement.AudioInstance.deserializeAllOfContainer(serialized));
 
         String playMode = serialized.getValue("play_mode");
