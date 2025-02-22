@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.networking.packets.commands.layout.command;
 
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
@@ -22,10 +23,10 @@ public class ClientSideLayoutCommandPacketLogic {
                 layout.setEnabled(packet.enabled, true);
                 return true;
             } else {
-                packet.sendChatFeedback(Component.translatable("fancymenu.commmands.layout.unable_to_set_state"), true);
+                packet.sendChatFeedback(Components.translatable("fancymenu.commmands.layout.unable_to_set_state"), true);
             }
         } catch (Exception ex) {
-            packet.sendChatFeedback(Component.translatable("fancymenu.commmands.layout.error"), true);
+            packet.sendChatFeedback(Components.translatable("fancymenu.commmands.layout.error"), true);
             LOGGER.error("[FANCYMENU] An error happened while trying to set a layout state via the /fmlayout command!", ex);
         }
         return false;

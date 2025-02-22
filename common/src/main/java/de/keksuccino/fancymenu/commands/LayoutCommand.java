@@ -5,6 +5,7 @@ import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.networking.packets.commands.layout.command.LayoutCommandPacket;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.konkrete.command.CommandUtils;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -60,7 +61,7 @@ public class LayoutCommand {
                 }
             }
         } catch (Exception ex) {
-            stack.sendFailure(Component.literal("Error while executing /fmlayout command!"));
+            stack.sendFailure(Components.literal("Error while executing /fmlayout command!"));
             ex.printStackTrace();
         }
         return 1;

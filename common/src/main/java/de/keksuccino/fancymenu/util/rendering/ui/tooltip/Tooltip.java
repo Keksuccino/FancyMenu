@@ -85,7 +85,7 @@ public class Tooltip implements Renderable {
         if (!this.isEmpty() && (s != null)) {
 
             //Dummy-render a Vanilla tooltip to fix the custom one (this is hacky af and I hate it, but I don't have time to analyze the whole frickin Vanilla tooltip rendering tbh)
-            graphics.renderTooltip(Minecraft.getInstance().font, Component.empty(), -10000, -10000);
+            graphics.renderTooltip(Minecraft.getInstance().font, Components.empty(), -10000, -10000);
 
             this.updateAspectRatio();
 
