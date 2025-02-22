@@ -249,11 +249,14 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			for (ElementAnchorPoint p : ElementAnchorPoints.getAnchorPoints()) {
 				if ((p != ElementAnchorPoints.ELEMENT) && (this.settings.isVanillaAnchorPointAllowed() || (p != ElementAnchorPoints.VANILLA))) {
 					anchorPointMenu.addClickableEntry("anchor_point_" + p.getName().replace("-", "_"), p.getDisplayName(), (menu, entry) -> {
-						if (entry.getStackMeta().isFirstInStack()) {
-							this.editor.history.saveSnapshot();
-							for (AbstractEditorElement e : this.editor.getSelectedElements()) {
-								if (e.settings.isAnchorPointChangeable()) {
-									e.setAnchorPoint(p, true);
+								if (entry.getStackMeta().isFirstInStack()) {
+									this.editor.history.saveSnapshot();
+									for (AbstractEditorElement e : this.editor.getSelectedElements()) {
+										if (e.settings.isAnchorPointChangeable()) {
+											e.setAnchorPoint(p, true);
+										}
+									}
+									menu.closeMenu();
 								}
 							}).setStackable(true)
 							.setIcon(ContextMenu.IconFactory.getIcon("anchor_" + p.getName().replace("-", "_")));
