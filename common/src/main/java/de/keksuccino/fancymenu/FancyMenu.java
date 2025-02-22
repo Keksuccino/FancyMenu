@@ -50,8 +50,6 @@ public class FancyMenu {
 
 			FileTypes.registerAll();
 
-			if (MCEFUtil.isMCEFLoaded()) BrowserHandler.init();
-
 			UIColorThemes.registerAll();
 
 			TextColorFormatters.registerAll();
