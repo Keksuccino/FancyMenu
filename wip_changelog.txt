@@ -11,6 +11,7 @@ CHANGELOG | FANCYMENU v3.4.5 [ W I P !! Not public yet !! ]
 - Fixed Progress Bar element never visually reaching 100% (#1071)
 - Fixed some cases where the dragged element would change its position when changing its anchor by hovering an anchor point or element
 - Fixed server crashing on launch when FancyMenu is installed (#1065)
+- Fixed entry spam in audio_element_controller_metas.json file (#1066)
  
 %changelog:end%
 
