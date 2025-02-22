@@ -17,6 +17,7 @@ CHANGELOG | FANCYMENU v3.4.5 [ W I P !! Not public yet !! ]
 - Fixed some cases where the dragged element would change its position when changing its anchor by hovering an anchor point or element
 - Fixed server crashing on launch when FancyMenu is installed (#1065)
 - Fixed entry spam in audio_element_controller_metas.json file (#1066)
+- Fixed tooltips of custom buttons not having a background until a Vanilla tooltip gets rendered (probably only happened in MC 1.21.1)
  
 %changelog:end%
 
