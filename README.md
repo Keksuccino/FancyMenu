@@ -6,7 +6,7 @@ This is the repository for FancyMenu v3.
 # Copyright
 
 FancyMenu © Copyright 2020-2025 Keksuccino.<br>
-FancyMenu is licenced under DSMSLv2.<br>
+FancyMenu is licenced under DSMSLv3.<br>
 For more information about the license, please check `LICENSE.md`.
 
 Japng © Copyright A. Ellerton.<br>
