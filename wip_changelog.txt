@@ -6,6 +6,7 @@ CHANGELOG | FANCYMENU v3.4.5 [ W I P !! Not public yet !! ]
 - Added "Max Player Oxygen Level" placeholder (for Spiffy) (#1069)
 - Added "Current Player Oxygen Level (Percent)" placeholder (for Spiffy) (#1069)
 - Added "/fmlayout <layout_name> <enabled [true|false]> <target_players>" command to remotely enable/disable layouts for players (#1068)
+- Renamed placeholders, actions and requirements referring to the "active hotbar slot" to say "selected hotbar slot" instead (#1067)
 - Fixed "Modified JAR" warning rendering over Forge/NeoForge "Failed to Load" screen (#1074)
 - Fixed Progress Bar element never visually reaching 100% (#1071)
 - Fixed some cases where the dragged element would change its position when changing its anchor by hovering an anchor point or element
