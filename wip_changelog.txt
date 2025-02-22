@@ -8,9 +8,9 @@ CHANGELOG | FANCYMENU v3.4.5 [ W I P !! Not public yet !! ]
 - Added "Current Player Oxygen Level (Percent)" placeholder (for Spiffy) (#1069)
 - Added "/fmlayout <layout_name> <enabled [true|false]> <target_players>" command to remotely enable/disable layouts for players (#1068)
 - Added German localization
-- Added Russian localization (thanks to xllifi!)
+- Added Russian localization (Thanks to xllifi!)
 - Added Japanese localization
-- Updated Simplified Chinese localization (thanks to Henry!)
+- Updated Simplified Chinese localization (Thanks to Henry!)
 - Renamed placeholders, actions and requirements referring to the "active hotbar slot" to say "selected hotbar slot" instead (#1067)
 - Fixed "Modified JAR" warning rendering over Forge/NeoForge "Failed to Load" screen (#1074)
 - Fixed Progress Bar element never visually reaching 100% (#1071)
