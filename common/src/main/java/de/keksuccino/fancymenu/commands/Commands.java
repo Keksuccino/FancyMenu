@@ -13,6 +13,7 @@ public class Commands {
         CloseGuiScreenCommand.register(dispatcher);
         OpenGuiScreenCommand.register(dispatcher);
         VariableCommand.register(dispatcher);
+        LayoutCommand.register(dispatcher);
 
     }
 

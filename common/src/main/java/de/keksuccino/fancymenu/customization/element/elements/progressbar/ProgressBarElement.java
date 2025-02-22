@@ -6,8 +6,6 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -22,6 +20,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
 
+/**
+ * A progress bar element that renders a filled bar based on a progress value.
+ * <p>
+ * It supports rendering with either a solid color or a texture, in four possible directions.
+ * The filling can be smoothly interpolated (lerped) or set directly based on a toggle.
+ */
 public class ProgressBarElement extends AbstractElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -36,109 +40,149 @@ public class ProgressBarElement extends AbstractElement {
     public boolean useProgressForElementAnchor = false;
     public String progressSource = null;
     public ProgressValueMode progressValueMode = ProgressValueMode.PERCENTAGE;
+    public boolean smoothFillingAnimation = true;
 
-    //These fields are for caching the last x, y, width and height of the PROGRESS (not the element!)
-    protected int lastProgressX = 0;
-    protected int lastProgressY = 0;
-    protected int lastProgressWidth = 0;
-    protected int lastProgressHeight = 0;
-    protected float renderProgress = 0.0F;
+    protected int lastRenderedProgressX = 0;
+    protected int lastRenderedProgressY = 0;
+    protected int lastRenderedProgressWidth = 0;
+    protected int lastRenderedProgressHeight = 0;
+    protected float smoothedProgress = 0.0F;
 
     public ProgressBarElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
     }
 
+    /**
+     * Render the progress bar element.
+     */
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (!this.shouldRender()) return;
 
-        this.renderBackground(graphics);
-        this.renderProgress(graphics);
+        // First, render the background.
+        renderBackground(graphics);
+        // Then, render the progress (filled portion).
+        renderProgress(graphics);
 
     }
 
+    /**
+     * Renders the progress (filled) portion of the bar.
+     */
     protected void renderProgress(@NotNull GuiGraphics graphics) {
 
-        float actualProgress = Math.max(0.0F, Math.min(1.0F, this.getCurrentProgress()));
-        this.renderProgress = Mth.clamp(this.renderProgress * 0.95F + actualProgress * 0.050000012F, 0.0F, 1.0F);
-        int progressWidth = this.getAbsoluteWidth();
-        int progressHeight = this.getAbsoluteHeight();
-        int progressX = this.getAbsoluteX();
-        int progressY = this.getAbsoluteY();
-        float offsetX = 0.0F;
-        float offsetY = 0.0F;
-        if ((this.direction == BarDirection.LEFT) || (this.direction == BarDirection.RIGHT)) {
-            progressWidth = (int)((float)this.getAbsoluteWidth() * this.renderProgress);
-        }
-        if ((this.direction == BarDirection.UP) || (this.direction == BarDirection.DOWN)) {
-            progressHeight = (int)((float)this.getAbsoluteHeight() * this.renderProgress);
-        }
-        if (this.direction == BarDirection.LEFT) {
-            progressX += this.getAbsoluteWidth() - progressWidth;
-            offsetX = this.getAbsoluteWidth() - progressWidth;
-        }
-        if (this.direction == BarDirection.UP) {
-            progressY += this.getAbsoluteHeight() - progressHeight;
-            offsetY = this.getAbsoluteHeight() - progressHeight;
-        }
-        this.lastProgressX = progressX;
-        this.lastProgressY = progressY;
-        this.lastProgressWidth = progressWidth;
-        this.lastProgressHeight = progressHeight;
+        // Clamp the actual progress between 0.0 and 1.0.
+        float targetProgress = Math.max(0.0F, Math.min(1.0F, getCurrentProgress()));
 
-        RenderSystem.enableBlend();
-        if (this.barTextureSupplier != null) {
-            ITexture t = this.barTextureSupplier.get();
-            if (t != null) {
-                ResourceLocation loc = t.getResourceLocation();
-                if (loc != null) {
-                    graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
-                    graphics.blit(loc, progressX, progressY, offsetX, offsetY, progressWidth, progressHeight, this.getAbsoluteWidth(), this.getAbsoluteHeight());
-                    RenderingUtils.resetShaderColor(graphics);
+        // Update the smoothed progress value based on the smoothLerpEnabled toggle.
+        if (!smoothFillingAnimation) {
+            // No smoothing: set progress directly.
+            smoothedProgress = targetProgress;
+        } else {
+            if (targetProgress >= 1.0F) {
+                smoothedProgress = 1.0F;
+            } else {
+                // Smoothly interpolate: 95% of previous value and 5% of target.
+                smoothedProgress = Mth.clamp(smoothedProgress * 0.95F + targetProgress * 0.05F, 0.0F, 1.0F);
+                // If the difference is negligible, snap to target.
+                if (Math.abs(smoothedProgress - targetProgress) < 0.001F) {
+                    smoothedProgress = targetProgress;
                 }
             }
-        } else if (this.barColor != null) {
-            RenderingUtils.resetShaderColor(graphics);
-            RenderSystem.enableBlend();
-            float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) FastColor.ARGB32.alpha(this.barColor.getColorInt()) / 255.0F));
-            if (this.opacity <= colorAlpha) colorAlpha = this.opacity;
-            graphics.fill(progressX, progressY, progressX + progressWidth, progressY + progressHeight, RenderingUtils.replaceAlphaInColor(this.barColor.getColorInt(), colorAlpha));
-            RenderingUtils.resetShaderColor(graphics);
+        }
+
+        // Get the full dimensions and position of the element.
+        int fullWidth = getAbsoluteWidth();
+        int fullHeight = getAbsoluteHeight();
+        int progressX = getAbsoluteX();
+        int progressY = getAbsoluteY();
+        float offsetX = 0.0F;
+        float offsetY = 0.0F;
+        int progressWidth = fullWidth;
+        int progressHeight = fullHeight;
+
+        // Adjust width/height based on the bar fill direction.
+        if (direction == BarDirection.LEFT || direction == BarDirection.RIGHT) {
+            progressWidth = (int) (fullWidth * smoothedProgress);
+        }
+        if (direction == BarDirection.UP || direction == BarDirection.DOWN) {
+            progressHeight = (int) (fullHeight * smoothedProgress);
+        }
+        // For left/up directions, adjust the starting point.
+        if (direction == BarDirection.LEFT) {
+            progressX += fullWidth - progressWidth;
+            offsetX = fullWidth - progressWidth;
+        }
+        if (direction == BarDirection.UP) {
+            progressY += fullHeight - progressHeight;
+            offsetY = fullHeight - progressHeight;
+        }
+
+        // Cache the computed progress bar area.
+        lastRenderedProgressX = progressX;
+        lastRenderedProgressY = progressY;
+        lastRenderedProgressWidth = progressWidth;
+        lastRenderedProgressHeight = progressHeight;
+
+        // Enable blending for transparency.
+        RenderSystem.enableBlend();
+
+        // Render using a texture if available.
+        if (barTextureSupplier != null) {
+            ITexture texture = barTextureSupplier.get();
+            if (texture != null) {
+                ResourceLocation loc = texture.getResourceLocation();
+                if (loc != null) {
+                    graphics.blit(RenderType::guiTextured, loc, progressX, progressY, offsetX, offsetY, progressWidth, progressHeight, fullWidth, fullHeight, DrawableColor.WHITE.getColorIntWithAlpha(opacity));
+                }
+            }
+        }
+        // Otherwise, render a solid colored bar.
+        else if (barColor != null) {
+            float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) ARGB.alpha(barColor.getColorInt()) / 255.0F));
+            if (opacity <= colorAlpha) {
+                colorAlpha = opacity;
+            }
+            graphics.fill(RenderType.guiOverlay(), progressX, progressY, progressX + progressWidth, progressY + progressHeight, barColor.getColorIntWithAlpha(colorAlpha));
         }
 
     }
 
+    /**
+     * Renders the background of the progress bar element.
+     */
     protected void renderBackground(@NotNull GuiGraphics graphics) {
         RenderSystem.enableBlend();
-        if (this.backgroundTextureSupplier != null) {
-            this.backgroundTextureSupplier.forRenderable((iTexture, location) -> {
-                graphics.setColor(1.0F, 1.0F, 1.0F, this.opacity);
-                graphics.blit(location, this.getAbsoluteX(), this.getAbsoluteY(), 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
-                RenderingUtils.resetShaderColor(graphics);
+        if (backgroundTextureSupplier != null) {
+            backgroundTextureSupplier.forRenderable((texture, location) -> {
+                graphics.blit(RenderType::guiTextured, location, getAbsoluteX(), getAbsoluteY(), 0.0F, 0.0F, getAbsoluteWidth(), getAbsoluteHeight(), getAbsoluteWidth(), getAbsoluteHeight(), DrawableColor.WHITE.getColorIntWithAlpha(opacity));
             });
-        } else if (this.backgroundColor != null) {
-            RenderingUtils.resetShaderColor(graphics);
-            RenderSystem.enableBlend();
-            float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) FastColor.ARGB32.alpha(this.backgroundColor.getColorInt()) / 255.0F));
-            if (this.opacity <= colorAlpha) colorAlpha = this.opacity;
-            graphics.fill(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), RenderingUtils.replaceAlphaInColor(this.backgroundColor.getColorInt(), colorAlpha));
-            RenderingUtils.resetShaderColor(graphics);
+        } else if (backgroundColor != null) {
+            float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) ARGB.alpha(backgroundColor.getColorInt()) / 255.0F));
+            if (opacity <= colorAlpha) {
+                colorAlpha = opacity;
+            }
+            graphics.fill(RenderType.guiOverlay(), getAbsoluteX(), getAbsoluteY(), getAbsoluteX() + getAbsoluteWidth(), getAbsoluteY() + getAbsoluteHeight(), backgroundColor.getColorIntWithAlpha(colorAlpha));
         }
     }
 
     /**
-     * Float between 0.0F and 1.0F.<br>
-     * 0.0F = 0%<br>
-     * 1.0F = 100%
+     * Returns the current progress value (from 0.0F to 1.0F).
+     * <p>
+     * In editor mode, a fixed value of 0.5 is returned.
      */
     public float getCurrentProgress() {
         if (isEditor()) return 0.5F;
-        if (this.progressSource != null) {
-            String s = StringUtils.replace(PlaceholderParser.replacePlaceholders(this.progressSource), " ", "");
-            if (MathUtils.isFloat(s)) {
-                if (this.progressValueMode == ProgressValueMode.PERCENTAGE) return Float.parseFloat(s) / 100.0F;
-                return Float.parseFloat(s);
+        if (progressSource != null) {
+            // Replace placeholders and remove spaces.
+            String progressString = StringUtils.replace(PlaceholderParser.replacePlaceholders(progressSource), " ", "");
+            if (MathUtils.isFloat(progressString)) {
+                // If progress is provided as a percentage, convert to 0.0-1.0.
+                if (progressValueMode == ProgressValueMode.PERCENTAGE) {
+                    return Float.parseFloat(progressString) / 100.0F;
+                }
+                return Float.parseFloat(progressString);
             }
         }
         return 0.0F;
@@ -146,36 +190,38 @@ public class ProgressBarElement extends AbstractElement {
 
     @Override
     public int getChildElementAnchorPointX() {
-        if (this.useProgressForElementAnchor) {
-            if (this.direction == BarDirection.RIGHT) return this.getProgressX() + this.getProgressWidth();
-            return this.getProgressX();
+        if (useProgressForElementAnchor) {
+            // Anchor on the progress bar's right edge for RIGHT direction, left edge otherwise.
+            if (direction == BarDirection.RIGHT) return getProgressX() + getProgressWidth();
+            return getProgressX();
         }
         return super.getChildElementAnchorPointX();
     }
 
     @Override
     public int getChildElementAnchorPointY() {
-        if (this.useProgressForElementAnchor) {
-            if (this.direction == BarDirection.DOWN) return this.getProgressY() + this.getProgressHeight();
-            return this.getProgressY();
+        if (useProgressForElementAnchor) {
+            // Anchor on the progress bar's bottom edge for DOWN direction, top edge otherwise.
+            if (direction == BarDirection.DOWN) return getProgressY() + getProgressHeight();
+            return getProgressY();
         }
         return super.getChildElementAnchorPointY();
     }
 
     public int getProgressX() {
-        return this.lastProgressX;
+        return lastRenderedProgressX;
     }
 
     public int getProgressY() {
-        return this.lastProgressY;
+        return lastRenderedProgressY;
     }
 
     public int getProgressWidth() {
-        return this.lastProgressWidth;
+        return lastRenderedProgressWidth;
     }
 
     public int getProgressHeight() {
-        return this.lastProgressHeight;
+        return lastRenderedProgressHeight;
     }
 
     public enum BarDirection implements LocalizedCycleEnum<BarDirection> {
