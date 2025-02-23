@@ -2,6 +2,7 @@
 CHANGELOG | FANCYMENU v3.4.6 [ W I P !! Not public yet !! ]
 
 - Fixed button in Keyframe Editor screen of Element Animator going out of screen when using a GUI scale that's too big for the screen (#1080)
+- Fixed Progress Bar elements refilling themselves every time the user reloads the screen or resizes the window (#1078)
 - 
  
 %changelog:end%
