@@ -60,6 +60,8 @@ public class Options extends AbstractOptions {
 
     public final Option<Boolean> showWelcomeScreen = new Option<>(config, "show_welcome_screen", true, "tutorial");
 
+    public final Option<Boolean> arrowKeysMovePreview = new Option<>(config, "arrow_keys_move_preview", false, "keyframe_editor");
+
     public Options() {
         this.config.syncConfig();
         this.config.clearUnusedValues();

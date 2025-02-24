@@ -47,7 +47,6 @@ public class ProgressBarElement extends AbstractElement {
     protected int lastRenderedProgressY = 0;
     protected int lastRenderedProgressWidth = 0;
     protected int lastRenderedProgressHeight = 0;
-    protected float smoothedProgress = 0.0F;
 
     public ProgressBarElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -75,21 +74,18 @@ public class ProgressBarElement extends AbstractElement {
 
         // Clamp the actual progress between 0.0 and 1.0.
         float targetProgress = Math.max(0.0F, Math.min(1.0F, getCurrentProgress()));
+        float smoothedProgress = this.getSmoothedProgress();
 
         // Update the smoothed progress value based on the smoothLerpEnabled toggle.
         if (!smoothFillingAnimation) {
             // No smoothing: set progress directly.
             smoothedProgress = targetProgress;
         } else {
-            if (targetProgress >= 1.0F) {
-                smoothedProgress = 1.0F;
-            } else {
-                // Smoothly interpolate: 95% of previous value and 5% of target.
-                smoothedProgress = Mth.clamp(smoothedProgress * 0.95F + targetProgress * 0.05F, 0.0F, 1.0F);
-                // If the difference is negligible, snap to target.
-                if (Math.abs(smoothedProgress - targetProgress) < 0.001F) {
-                    smoothedProgress = targetProgress;
-                }
+            // Smoothly interpolate: 95% of previous value and 5% of target.
+            smoothedProgress = Mth.clamp(smoothedProgress * 0.95F + targetProgress * 0.05F, 0.0F, 1.0F);
+            // If the difference is negligible, snap to target.
+            if (Math.abs(smoothedProgress - targetProgress) < 0.001F) {
+                smoothedProgress = targetProgress;
             }
         }
 
@@ -106,9 +102,17 @@ public class ProgressBarElement extends AbstractElement {
         // Adjust width/height based on the bar fill direction.
         if (direction == BarDirection.LEFT || direction == BarDirection.RIGHT) {
             progressWidth = (int) (fullWidth * smoothedProgress);
+            // If we're aiming for 100% and the remaining gap is very small, fill it completely.
+            if ((targetProgress == 1.0F) && (progressWidth >= ((float)fullWidth - ((float)fullWidth * 0.01F)))) {
+                progressWidth = fullWidth;
+            }
         }
         if (direction == BarDirection.UP || direction == BarDirection.DOWN) {
             progressHeight = (int) (fullHeight * smoothedProgress);
+            // If target is 100% and the gap is very small, snap to full height
+            if ((targetProgress == 1.0F) && (progressHeight >= ((float)fullHeight - ((float)fullHeight * 0.01F)))) {
+                progressHeight = fullHeight;
+            }
         }
         // For left/up directions, adjust the starting point.
         if (direction == BarDirection.LEFT) {
@@ -149,7 +153,13 @@ public class ProgressBarElement extends AbstractElement {
             graphics.fill(progressX, progressY, progressX + progressWidth, progressY + progressHeight, barColor.getColorIntWithAlpha(colorAlpha));
         }
 
+<<<<<<< HEAD
         graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+=======
+        if (this.smoothFillingAnimation) LOGGER.info("################### PROG WIDTH: " + progressWidth + " | ELE WIDTH: " + this.getAbsoluteWidth() + " | SNAP TO 1 WHEN: " + ((float)fullWidth - ((float)fullWidth * 0.01F)));
+
+        this.setSmoothedProgress(smoothedProgress);
+>>>>>>> 83962c6... v3.4.6
 
     }
 
@@ -228,6 +238,16 @@ public class ProgressBarElement extends AbstractElement {
 
     public int getProgressHeight() {
         return lastRenderedProgressHeight;
+    }
+
+    protected float getSmoothedProgress() {
+        Float f = this.getMemory().getProperty("smoothed_progress", Float.class);
+        if (f == null) f = 0.0F;
+        return f;
+    }
+
+    protected void setSmoothedProgress(float progress) {
+        this.getMemory().putProperty("smoothed_progress", progress);
     }
 
     public enum BarDirection implements LocalizedCycleEnum<BarDirection> {
