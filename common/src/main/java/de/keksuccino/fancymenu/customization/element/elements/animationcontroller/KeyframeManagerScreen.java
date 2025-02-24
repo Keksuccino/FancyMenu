@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.element.elements.animationcontroller;
 
 import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
@@ -18,6 +19,8 @@ import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
@@ -338,12 +341,12 @@ public class KeyframeManagerScreen extends ModernScreen {
         // Timestamp input box
         this.timestampInput = new ExtendedEditBox(Minecraft.getInstance().font, (this.width / 2) - 50, this.stickyButton.getY() - 40, 100, 20, Component.empty()) {
             @Override
-            public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            public void renderButton(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {
                 MutableComponent c = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.timestamp_edit.input");
                 int cW = Minecraft.getInstance().font.width(c);
-                graphics.drawString(Minecraft.getInstance().font, c,
+                GuiGraphics.currentGraphics().drawString(Minecraft.getInstance().font, c,
                         this.getX() + (this.getWidth() / 2) - (cW / 2), this.getY() - Minecraft.getInstance().font.lineHeight - 5, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
-                super.renderWidget(graphics, mouseX, mouseY, partial);
+                super.renderButton(graphics, mouseX, mouseY, partial);
             }
         };
         this.timestampInput.setCharacterFilter(CharacterFilter.buildIntegerFiler());
@@ -363,7 +366,7 @@ public class KeyframeManagerScreen extends ModernScreen {
         boolean resized = (window.getScreenWidth() != this.lastGuiScaleCorrectionWidth) || (window.getScreenHeight() != this.lastGuiScaleCorrectionHeight);
         this.lastGuiScaleCorrectionWidth = window.getScreenWidth();
         this.lastGuiScaleCorrectionHeight = window.getScreenHeight();
-        boolean tooFarRight = (farRightWidget.getX() + farRightWidget.getWidth()) >= (this.width - 100);
+        boolean tooFarRight = (farRightWidget.x + farRightWidget.getWidth()) >= (this.width - 100);
 
         //Adjust GUI scale to make all buttons fit in the screen
         if (tooFarRight && (window.getGuiScale() > 1)) {
@@ -431,7 +434,10 @@ public class KeyframeManagerScreen extends ModernScreen {
                 this.setFocused(this.timestampInput);
             }
         } else {
-            if (this.timestampInput == this.getFocused()) ((IMixinScreen)this).invoke_clearFocus_FancyMenu();
+            if (this.timestampInput == this.getFocused()) {
+                this.timestampInput.setFocused(false);
+                this.setFocused(null);
+            }
         }
 
         long actualEndTime = timelineDuration - TIMELINE_PADDING_DURATION;
@@ -546,16 +552,14 @@ public class KeyframeManagerScreen extends ModernScreen {
         float usableWidth = timelineWidth * ((float)Math.max(actualEndTime + TIMELINE_PADDING_DURATION, MIN_TIMELINE_DURATION) / timelineDuration);
 
         // Draw main timeline background
-        graphics.fill(GuiRenderTypes.gui(),
-                timelineX, timelineY,
+        graphics.fill(timelineX, timelineY,
                 timelineX + (int)((float)actualEndTime / timelineDuration * usableWidth),
                 timelineY + TIMELINE_HEIGHT,
                 TIMELINE_COLOR.getColorInt());
 
         // Draw padding area
         int paddingStartX = timelineX + (int)((float)actualEndTime / timelineDuration * usableWidth);
-        graphics.fill(GuiRenderTypes.gui(),
-                paddingStartX, timelineY,
+        graphics.fill(paddingStartX, timelineY,
                 timelineX + (int)usableWidth,
                 timelineY + TIMELINE_HEIGHT,
                 TIMELINE_PADDING_COLOR.getColorInt());
@@ -575,8 +579,7 @@ public class KeyframeManagerScreen extends ModernScreen {
             DrawableColor color = selectedKeyframes.contains(keyframe) ?
                     KEYFRAME_COLOR_SELECTED : KEYFRAME_COLOR;
 
-            graphics.fill(GuiRenderTypes.gui(),
-                    lineX - KEYFRAME_LINE_WIDTH/2,
+            graphics.fill(lineX - KEYFRAME_LINE_WIDTH/2,
                     timelineY + (TIMELINE_HEIGHT - KEYFRAME_LINE_HEIGHT)/2,
                     lineX + KEYFRAME_LINE_WIDTH/2,
                     timelineY + (TIMELINE_HEIGHT + KEYFRAME_LINE_HEIGHT)/2,
@@ -692,8 +695,7 @@ public class KeyframeManagerScreen extends ModernScreen {
             progressX = timelineX + (int)(timelineWidth * newProgress);
         }
 
-        graphics.fill(GuiRenderTypes.gui(),
-                progressX - PROGRESS_LINE_WIDTH/2,
+        graphics.fill(progressX - PROGRESS_LINE_WIDTH/2,
                 timelineY,
                 progressX + PROGRESS_LINE_WIDTH/2,
                 timelineY + TIMELINE_HEIGHT,
@@ -787,7 +789,7 @@ public class KeyframeManagerScreen extends ModernScreen {
             // Draw indicator rectangle
             if (recordingBlinkState) {
                 int rectX = recordingTextX + recordingTextWidth + padding;
-                graphics.fill(GuiRenderTypes.gui(), rectX, yOffset, rectX + rectSize, yOffset + rectSize, RECORDING_COLOR.getColorInt());
+                graphics.fill(rectX, yOffset, rectX + rectSize, yOffset + rectSize, RECORDING_COLOR.getColorInt());
             }
 
         }
@@ -1598,8 +1600,7 @@ public class KeyframeManagerScreen extends ModernScreen {
             DrawableColor c = PREVIEW_COLOR_NORMAL;
             if (KeyframeManagerScreen.this.isRecording) c = RECORDING_COLOR;
             if (KeyframeManagerScreen.this.selectedKeyframes.size() == 1) c = KEYFRAME_COLOR_SELECTED;
-            graphics.fill(GuiRenderTypes.gui(),
-                    this.element.getAbsoluteX(),
+            graphics.fill(this.element.getAbsoluteX(),
                     this.element.getAbsoluteY(),
                     this.element.getAbsoluteX() + this.element.getAbsoluteWidth(),
                     this.element.getAbsoluteY() + this.element.getAbsoluteHeight(),
