@@ -18,6 +18,7 @@ import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiRenderTypes;
 import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
@@ -304,7 +305,7 @@ public class KeyframeManagerScreen extends ModernScreen {
 
         // Timestamp button
         ExtendedButton timestampButton = UIBase.applyDefaultWidgetSkinTo(new ExtendedButton(0, 0, buttonBaseWidth, 0,
-                Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.timestamp_edit"),
+                Components.translatable("fancymenu.elements.animation_controller.keyframe_manager.timestamp_edit"),
                 button -> toggleTimestampInput()));
         timestampButton.setIsActiveSupplier(consumes -> !this.isPlaying && !this.isRecording && (this.selectedKeyframes.size() == 1) && !this.isShowingSmoothingInput);
         timestampButton.setTooltipSupplier(consumes -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.keyframe_manager.timestamp_edit.desc")));
@@ -340,10 +341,10 @@ public class KeyframeManagerScreen extends ModernScreen {
         // ---------------------------------------------------------
 
         // Timestamp input box
-        this.timestampInput = new ExtendedEditBox(Minecraft.getInstance().font, (this.width / 2) - 50, this.stickyButton.getY() - 40, 100, 20, Component.empty()) {
+        this.timestampInput = new ExtendedEditBox(Minecraft.getInstance().font, (this.width / 2) - 50, this.stickyButton.getY() - 40, 100, 20, Components.empty()) {
             @Override
             public void renderButton(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {
-                MutableComponent c = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.timestamp_edit.input");
+                MutableComponent c = Components.translatable("fancymenu.elements.animation_controller.keyframe_manager.timestamp_edit.input");
                 int cW = Minecraft.getInstance().font.width(c);
                 GuiGraphics.currentGraphics().drawString(Minecraft.getInstance().font, c,
                         this.getX() + (this.getWidth() / 2) - (cW / 2), this.getY() - Minecraft.getInstance().font.lineHeight - 5, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
