@@ -30,30 +30,38 @@ public class AnimationControllerElement extends AbstractElement {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        if (!this.shouldRender()) return;
-
         if (isEditor()) {
 
-            int x = this.getAbsoluteX();
-            int y = this.getAbsoluteY();
-            int w = this.getAbsoluteWidth();
-            int h = this.getAbsoluteHeight();
-            RenderSystem.enableBlend();
-            graphics.fill(RenderType.guiOverlay(), x, y, x + w, y + h, this.inEditorColor.getColorInt());
-            graphics.enableScissor(x, y, x + w, y + h);
-            graphics.drawCenteredString(Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
-            graphics.disableScissor();
+            if (this.shouldRender()) {
+
+                int x = this.getAbsoluteX();
+                int y = this.getAbsoluteY();
+                int w = this.getAbsoluteWidth();
+                int h = this.getAbsoluteHeight();
+                RenderSystem.enableBlend();
+                graphics.fill(RenderType.guiOverlay(), x, y, x + w, y + h, this.inEditorColor.getColorInt());
+                graphics.enableScissor(x, y, x + w, y + h);
+                graphics.drawCenteredString(Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
+                graphics.disableScissor();
+
+            }
 
         } else {
 
             this.targetElements.forEach(targetElement -> {
-                if (AnimationControllerHandler.wasAnimatedInThePast(targetElement.targetElementId) && !AnimationControllerHandler.isAnimating(targetElement.targetElementId)) {
-                    targetElement.animationApplied = true;
+                if (this.shouldRender()) {
+                    if (AnimationControllerHandler.wasAnimatedInThePast(targetElement.targetElementId) && AnimationControllerHandler.isFinished(targetElement.targetElementId) && !AnimationControllerHandler.isAnimating(targetElement.targetElementId)) {
+                        targetElement.animationApplied = true;
+                    } else {
+                        ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getActiveLayer();
+                        if (layer != null) {
+                            AbstractElement target = layer.getElementByInstanceIdentifier(targetElement.targetElementId);
+                            if (target != null) targetElement.animationApplied = AnimationControllerHandler.applyAnimation(this, target);
+                        }
+                    }
                 } else {
-                    ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getActiveLayer();
-                    if (layer != null) {
-                        AbstractElement target = layer.getElementByInstanceIdentifier(targetElement.targetElementId);
-                        if (target != null) targetElement.animationApplied = AnimationControllerHandler.applyAnimation(this, target);
+                    if (AnimationControllerHandler.wasAnimatedInThePast(targetElement.targetElementId) && !AnimationControllerHandler.isFinished(targetElement.targetElementId)) {
+                        targetElement.animationApplied = false;
                     }
                 }
             });

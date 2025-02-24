@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.element.elements.animationcontroller;
 
+import com.mojang.blaze3d.platform.Window;
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
@@ -13,6 +15,7 @@ import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
@@ -28,6 +31,7 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.world.entity.schedule.Keyframe;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -109,6 +113,7 @@ public class KeyframeManagerScreen extends Screen {
     protected final List<Notification> activeNotifications = new ArrayList<>();
     protected boolean isShowingSmoothingInput = false;
     protected String lastSmoothingInputValue = null;
+    protected boolean isShowingTimestampInput = false;
     protected boolean isOffsetMode = false;
 
     protected final Stack<List<AnimationKeyframe>> undoStack = new Stack<>();
@@ -124,6 +129,10 @@ public class KeyframeManagerScreen extends Screen {
     protected RangeSlider recordingSpeedSlider;
     protected ExtendedButton smoothingButton;
     protected ExtendedEditBox smoothingDistanceInput;
+    protected ExtendedEditBox timestampInput;
+
+    protected int lastGuiScaleCorrectionWidth = 0;
+    protected int lastGuiScaleCorrectionHeight = 0;
 
     public KeyframeManagerScreen(AnimationControllerElement controller, Consumer<AnimationControllerMetadata> resultCallback) {
         super(Component.translatable("fancymenu.elements.animation_controller.keyframe_manager"));
@@ -242,7 +251,7 @@ public class KeyframeManagerScreen extends Screen {
         this.smoothingButton = UIBase.applyDefaultWidgetSkinTo(new ExtendedButton(0, 0, buttonBaseWidth, 0,
                 Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.smoothing"),
                 button -> toggleSmoothingInput()));
-        this.smoothingButton.setIsActiveSupplier(consumes -> !this.isPlaying && !this.isRecording && this.selectedKeyframes.size() > 1);
+        this.smoothingButton.setIsActiveSupplier(consumes -> !this.isPlaying && !this.isRecording && (this.selectedKeyframes.size() > 1) && !this.isShowingTimestampInput);
         this.smoothingButton.setTooltipSupplier(consumes -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.keyframe_manager.smoothing.desc")));
         this.addBottomWidget(1, 0, this.smoothingButton);
 
@@ -288,6 +297,21 @@ public class KeyframeManagerScreen extends Screen {
         this.stickyButton.setIsActiveSupplier(consumes -> ((this.selectedKeyframes.size() == 1) || this.isRecording) && !this.isOffsetMode);
         this.addBottomWidget(2, 0, this.stickyButton);
 
+        // Timestamp button
+        ExtendedButton timestampButton = UIBase.applyDefaultWidgetSkinTo(new ExtendedButton(0, 0, buttonBaseWidth, 0,
+                Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.timestamp_edit"),
+                button -> toggleTimestampInput()));
+        timestampButton.setIsActiveSupplier(consumes -> !this.isPlaying && !this.isRecording && (this.selectedKeyframes.size() == 1) && !this.isShowingSmoothingInput);
+        timestampButton.setTooltipSupplier(consumes -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.keyframe_manager.timestamp_edit.desc")));
+        this.addBottomWidget(2, 0, timestampButton);
+
+        // Preview moving toggle
+        CycleButton<?> previewMovingButton = new CycleButton<>(0, 0, buttonBaseWidth + 65, 0,
+                CommonCycles.cycleEnabledDisabled("fancymenu.elements.animation_controller.keyframe_manager.move_preview_with_arrow_keys", FancyMenu.getOptions().arrowKeysMovePreview.getValue()),
+                (value, button) -> FancyMenu.getOptions().arrowKeysMovePreview.setValue(value.getAsBoolean()));
+        previewMovingButton.setTooltipSupplier(consumes -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.animation_controller.keyframe_manager.move_preview_with_arrow_keys.desc")));
+        this.addBottomWidget(2, 0, previewMovingButton);
+
         // ---------------------------------------------------------
 
         // Smoothing input box
@@ -309,8 +333,46 @@ public class KeyframeManagerScreen extends Screen {
 
         // ---------------------------------------------------------
 
+        // Timestamp input box
+        this.timestampInput = new ExtendedEditBox(Minecraft.getInstance().font, (this.width / 2) - 50, this.stickyButton.getY() - 40, 100, 20, Component.empty()) {
+            @Override
+            public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+                MutableComponent c = Component.translatable("fancymenu.elements.animation_controller.keyframe_manager.timestamp_edit.input");
+                int cW = Minecraft.getInstance().font.width(c);
+                graphics.drawString(Minecraft.getInstance().font, c,
+                        this.getX() + (this.getWidth() / 2) - (cW / 2), this.getY() - Minecraft.getInstance().font.lineHeight - 5, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+                super.renderWidget(graphics, mouseX, mouseY, partial);
+            }
+        };
+        this.timestampInput.setCharacterFilter(CharacterFilter.buildIntegerFiler());
+        this.timestampInput.setIsVisibleSupplier(consumes -> this.isShowingTimestampInput);
+        this.timestampInput.setMaxLength(20);
+        UIBase.applyDefaultWidgetSkinTo(this.timestampInput);
+        this.addRenderableWidget(this.timestampInput);
+
+        // ---------------------------------------------------------
+
         if (!isPlaying && !isRecording) {
             updateTimelineDurationToMaxTimestamp();
+        }
+
+        AbstractWidget farRightWidget = previewMovingButton;
+        Window window = Minecraft.getInstance().getWindow();
+        boolean resized = (window.getScreenWidth() != this.lastGuiScaleCorrectionWidth) || (window.getScreenHeight() != this.lastGuiScaleCorrectionHeight);
+        this.lastGuiScaleCorrectionWidth = window.getScreenWidth();
+        this.lastGuiScaleCorrectionHeight = window.getScreenHeight();
+        boolean tooFarRight = (farRightWidget.getX() + farRightWidget.getWidth()) >= (this.width - 100);
+
+        //Adjust GUI scale to make all buttons fit in the screen
+        if (tooFarRight && (window.getGuiScale() > 1)) {
+            double newScale = window.getGuiScale();
+            newScale--;
+            if (newScale < 1) newScale = 1;
+            window.setGuiScale(newScale);
+            this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
+        } else if (!tooFarRight && resized) {
+            RenderingUtils.resetGuiScale();
+            this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
         }
 
     }
@@ -345,6 +407,7 @@ public class KeyframeManagerScreen extends Screen {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
+
         if (this.isShowingSmoothingInput) {
             if (!this.smoothingDistanceInput.isFocused()) {
                 this.smoothingDistanceInput.setFocusable(true);
@@ -352,6 +415,18 @@ public class KeyframeManagerScreen extends Screen {
             }
         } else {
             if (this.smoothingDistanceInput == this.getFocused()) this.clearFocus();
+        }
+
+        if (this.isShowingTimestampInput && (this.selectedKeyframes.size() != 1)) {
+            this.isShowingTimestampInput = false;
+        }
+        if (this.isShowingTimestampInput) {
+            if (!this.timestampInput.isFocused()) {
+                this.timestampInput.setFocusable(true);
+                this.setFocused(this.timestampInput);
+            }
+        } else {
+            if (this.timestampInput == this.getFocused()) this.clearFocus();
         }
 
         long actualEndTime = timelineDuration - TIMELINE_PADDING_DURATION;
@@ -430,7 +505,7 @@ public class KeyframeManagerScreen extends Screen {
 
         // Apply interpolated values to preview element
         if ((this.isPlaying || this.isDraggingProgress) && (currentFrame != null) && (nextFrame != null)) {
-            this.setSelectedKeyframe(null);
+            this.selectKeyframeClearOldSelection(null);
             float progress = (float)(currentPlayOrRecordPosition - currentFrame.timestamp) / (float)(nextFrame.timestamp - currentFrame.timestamp);
 
             if (this.isOffsetMode) {
@@ -793,6 +868,13 @@ public class KeyframeManagerScreen extends Screen {
             }
         }
 
+        if (this.isShowingTimestampInput) {
+            // Check if click is outside the input box
+            if (!this.timestampInput.isMouseOver(mouseX, mouseY)) {
+                this.isShowingTimestampInput = false;
+            }
+        }
+
         if (this.previewEditorElement.mouseClicked(mouseX, mouseY, button)) return true;
 
         // Handle clicking progress line
@@ -810,7 +892,7 @@ public class KeyframeManagerScreen extends Screen {
         int clickedIndex = getKeyframeIndexAtPosition((int)mouseX, (int)mouseY);
         // Handle clicking empty timeline area to deselect frames
         if (!Screen.hasControlDown() && isInTimelineArea((int)mouseX, (int)mouseY) && (clickedIndex == -1)) {
-            this.setSelectedKeyframe(null);
+            this.selectKeyframeClearOldSelection(null);
             return true;
         }
         if (this.isRecording && !this.isRecordingPaused && (clickedIndex >= 0)) {
@@ -827,7 +909,7 @@ public class KeyframeManagerScreen extends Screen {
                 this.lastCtrlClickedFrameForDeselect = keyframe;
             } else {
                 // Handle CTRL-click for multi-select
-                this.setSelectedKeyframe(workingKeyframes.get(clickedIndex), Screen.hasControlDown());
+                this.selectKeyframe(workingKeyframes.get(clickedIndex), Screen.hasControlDown());
             }
             return true;
         }
@@ -853,11 +935,11 @@ public class KeyframeManagerScreen extends Screen {
                 this.selectedKeyframes.remove(this.lastCtrlClickedFrameForDeselect);
                 if (this.selectedKeyframes.size() == 1) {
                     AnimationKeyframe lastSelected = this.selectedKeyframes.getFirst();
-                    this.setSelectedKeyframe(null); // first clear all
-                    this.setSelectedKeyframe(lastSelected); // then properly single-select the frame again
+                    this.selectKeyframeClearOldSelection(null); // first clear all
+                    this.selectKeyframeClearOldSelection(lastSelected); // then properly single-select the frame again
                 }
             } else {
-                this.setSelectedKeyframe(null);
+                this.selectKeyframeClearOldSelection(null);
             }
         }
         this.lastCtrlClickedFrameForDeselect = null;
@@ -895,16 +977,32 @@ public class KeyframeManagerScreen extends Screen {
             }
         }
 
+        // Handle timestamp input shortcuts
+        if (this.isShowingTimestampInput && this.timestampInput.isFocused()) {
+            if (keyCode == InputConstants.KEY_ENTER) {
+                this.saveState();
+                if ((this.selectedKeyframes.size() == 1) && MathUtils.isLong(this.timestampInput.getValue())) {
+                    this.selectedKeyframes.get(0).timestamp = Long.parseLong(this.timestampInput.getValue());
+                }
+                this.isShowingTimestampInput = false;
+                updateTimelineDurationToMaxTimestamp();
+                return true;
+            } else if (keyCode == InputConstants.KEY_ESCAPE) {
+                this.isShowingTimestampInput = false;
+                return true;
+            }
+        }
+
         // Select all keyframes
         if (!this.isRecording || this.isRecordingPaused) {
             if (Screen.hasControlDown() && (keyCode == InputConstants.KEY_A)) {
-                this.setSelectedKeyframe(null);
-                this.workingKeyframes.forEach(keyframe -> this.setSelectedKeyframe(keyframe, true));
+                this.selectKeyframeClearOldSelection(null);
+                this.workingKeyframes.forEach(keyframe -> this.selectKeyframe(keyframe, true));
             }
         }
 
         // Handle arrow keys for selected keyframes
-        if (!this.selectedKeyframes.isEmpty()) {
+        if (!this.selectedKeyframes.isEmpty() && !FancyMenu.getOptions().arrowKeysMovePreview.getValue()) {
             if (keyCode == KEY_MOVE_KEYFRAME_LEFT || keyCode == KEY_MOVE_KEYFRAME_RIGHT) {
                 saveState(); // Save state before modifying timestamp
 
@@ -940,6 +1038,26 @@ public class KeyframeManagerScreen extends Screen {
                     });
                     updateTimelineDurationToMaxTimestamp();
                 }
+                return true;
+            }
+        } else if (FancyMenu.getOptions().arrowKeysMovePreview.getValue() && (this.selectedKeyframes.size() == 1) && (!this.isRecording || this.isRecordingPaused) && !this.isPlaying) {
+            if ((keyCode == InputConstants.KEY_LEFT) || (keyCode == InputConstants.KEY_RIGHT) || (keyCode == InputConstants.KEY_UP) || (keyCode == InputConstants.KEY_DOWN)) {
+                this.saveState();
+                this.isShowingTimestampInput = false;
+                this.isShowingSmoothingInput = false;
+                if (keyCode == InputConstants.KEY_LEFT) {
+                    this.previewElement.posOffsetX -= 1;
+                }
+                if (keyCode == InputConstants.KEY_RIGHT) {
+                    this.previewElement.posOffsetX += 1;
+                }
+                if (keyCode == InputConstants.KEY_UP) {
+                    this.previewElement.posOffsetY -= 1;
+                }
+                if (keyCode == InputConstants.KEY_DOWN) {
+                    this.previewElement.posOffsetY += 1;
+                }
+                this.applyElementValuesToKeyframe(this.previewElement, this.selectedKeyframes.get(0));
                 return true;
             }
         }
@@ -1024,7 +1142,7 @@ public class KeyframeManagerScreen extends Screen {
         isPlaying = !isPlaying;
         if (isPlaying) {
             playStartTime = System.currentTimeMillis() - currentPlayOrRecordPosition;
-            this.setSelectedKeyframe(null);
+            this.selectKeyframeClearOldSelection(null);
             draggingKeyframeIndex = -1;
             this.displayNotification(PLAYING_STARTED_TEXT, 2000);
         } else {
@@ -1048,7 +1166,7 @@ public class KeyframeManagerScreen extends Screen {
         // Calculate the corrected start time based on current position and speed
         // This ensures recording starts at the correct position when speed < 100%
         recordStartTime = System.currentTimeMillis() - (long)(currentPlayOrRecordPosition / recordingSpeed);
-        this.setSelectedKeyframe(null);
+        this.selectKeyframeClearOldSelection(null);
         draggingKeyframeIndex = -1;
         previewEditorElement.setSelected(true);
     }
@@ -1057,7 +1175,7 @@ public class KeyframeManagerScreen extends Screen {
         isRecording = false;
         isRecordingPaused = false;
         recordStartTime = -1;
-        this.setSelectedKeyframe(null);
+        this.selectKeyframeClearOldSelection(null);
         // Reset play position to start
         currentPlayOrRecordPosition = 0;
         // Reset timeline duration if needed
@@ -1090,7 +1208,7 @@ public class KeyframeManagerScreen extends Screen {
                     long now = System.currentTimeMillis();
                     this.recordStartTime = now - (long) (this.currentPlayOrRecordPosition / newSpeed);
                 }
-                this.setSelectedKeyframe(null);
+                this.selectKeyframeClearOldSelection(null);
                 this.isRecordingPaused = false;
             } else {
                 this.isRecordingPaused = true;
@@ -1162,9 +1280,9 @@ public class KeyframeManagerScreen extends Screen {
     protected void deleteSelectedKeyframes() {
         if (!this.selectedKeyframes.isEmpty()) {
             saveState();
-            this.selectedKeyframes.forEach(selectedKeyframe -> {
+            new ArrayList<>(this.selectedKeyframes).forEach(selectedKeyframe -> {
                 workingKeyframes.remove(selectedKeyframe);
-                this.setSelectedKeyframe(null);
+                this.selectKeyframeClearOldSelection(null);
                 updateTimelineDurationToMaxTimestamp();
                 this.displayNotification(KEYFRAME_DELETED_TEXT, 2000);
             });
@@ -1190,7 +1308,7 @@ public class KeyframeManagerScreen extends Screen {
             // Pop and apply state from undo stack
             workingKeyframes.clear();
             workingKeyframes.addAll(undoStack.pop());
-            this.setSelectedKeyframe(null);
+            this.selectKeyframeClearOldSelection(null);
             updateTimelineDurationToMaxTimestamp();
         }
         if (!selected.isEmpty() && !this.isRecording) {
@@ -1202,7 +1320,7 @@ public class KeyframeManagerScreen extends Screen {
                         break;
                     }
                 }
-                this.setSelectedKeyframe(frame, true);
+                this.selectKeyframe(frame, true);
             });
         }
     }
@@ -1217,7 +1335,7 @@ public class KeyframeManagerScreen extends Screen {
             // Pop and apply state from redo stack
             workingKeyframes.clear();
             workingKeyframes.addAll(redoStack.pop());
-            this.setSelectedKeyframe(null);
+            this.selectKeyframeClearOldSelection(null);
             updateTimelineDurationToMaxTimestamp();
         }
         if (!selected.isEmpty() && !this.isRecording) {
@@ -1229,12 +1347,12 @@ public class KeyframeManagerScreen extends Screen {
                         break;
                     }
                 }
-                this.setSelectedKeyframe(frame, true);
+                this.selectKeyframe(frame, true);
             });
         }
     }
 
-    protected void setSelectedKeyframe(@Nullable AnimationKeyframe selected, boolean addToSelection) {
+    protected void selectKeyframe(@Nullable AnimationKeyframe selected, boolean addToSelection) {
 
         if (!addToSelection) {
             // Clear previous selection if not adding to it
@@ -1277,8 +1395,8 @@ public class KeyframeManagerScreen extends Screen {
 
     }
 
-    protected void setSelectedKeyframe(@Nullable AnimationKeyframe selected) {
-        setSelectedKeyframe(selected, false);
+    protected void selectKeyframeClearOldSelection(@Nullable AnimationKeyframe keyframe) {
+        selectKeyframe(keyframe, false);
     }
 
     protected void toggleSmoothingInput() {
@@ -1289,6 +1407,15 @@ public class KeyframeManagerScreen extends Screen {
             if (this.smoothingDistanceInput.getValue().isBlank()) {
                 this.smoothingDistanceInput.setValue("100"); //Default value
             }
+        }
+    }
+
+    protected void toggleTimestampInput() {
+        if (this.selectedKeyframes.size() != 1) return;
+        AnimationKeyframe selected = this.selectedKeyframes.get(0);
+        this.isShowingTimestampInput = !this.isShowingTimestampInput;
+        if (this.isShowingTimestampInput) {
+            this.timestampInput.setValue("" + selected.timestamp);
         }
     }
 

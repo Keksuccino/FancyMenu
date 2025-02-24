@@ -13,10 +13,11 @@ public class AnimationControllerHandler {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Map<String, AnimationState> RUNNING_ANIMATIONS = new HashMap<>();
     private static final List<String> ANIMATED_MEMORY = new ArrayList<>();
+    private static final List<String> FINISHED_ANIMATIONS = new ArrayList<>();
 
     public static boolean applyAnimation(@NotNull AnimationControllerElement controller, @Nullable AbstractElement targetElement) {
 
-        if ((targetElement == null) || !controller.loadingRequirementsMet()) {
+        if ((targetElement == null) || !controller.shouldRender()) {
             return false;
         }
 
@@ -53,6 +54,8 @@ public class AnimationControllerHandler {
 
             Map.Entry<String, AnimationState> entry = it.next();
             AnimationState state = entry.getValue();
+
+            state.controller.shouldRender();
 
             // Calculate animation progress
             long elapsedTime = currentTime - state.startTime;
@@ -135,8 +138,8 @@ public class AnimationControllerHandler {
                 }
             }
 
-            // Remove non-looping animations once they finish
-            if (!state.controller.loop && elapsedTime > lastKeyframe.timestamp) {
+            // Remove non-looping animations once they finish or animations in general when the controller is not active anymore
+            if ((!state.controller.loop && elapsedTime > lastKeyframe.timestamp) || !state.controller.shouldRender()) {
                 // Restore original properties
                 if (!state.controller.offsetMode) {
                     state.targetElement.posOffsetX = state.originalPosOffsetX;
@@ -149,6 +152,9 @@ public class AnimationControllerHandler {
                 state.targetElement.animatedOffsetX = 0;
                 state.targetElement.animatedOffsetY = 0;
                 it.remove();
+                if (state.controller.shouldRender()) {
+                    FINISHED_ANIMATIONS.add(state.targetElement.getInstanceIdentifier());
+                }
             }
 
         }
@@ -167,8 +173,9 @@ public class AnimationControllerHandler {
         RUNNING_ANIMATIONS.clear();
     }
 
-    public static void eraseAnimatedMemory() {
+    public static void clearMemory() {
         ANIMATED_MEMORY.clear();
+        FINISHED_ANIMATIONS.clear();
     }
 
     public static boolean wasAnimatedInThePast(@NotNull String targetElementId) {
@@ -177,6 +184,10 @@ public class AnimationControllerHandler {
 
     public static boolean isAnimating(@NotNull String targetElementId) {
         return RUNNING_ANIMATIONS.containsKey(targetElementId);
+    }
+
+    public static boolean isFinished(@NotNull String targetElementId) {
+        return FINISHED_ANIMATIONS.contains(targetElementId);
     }
 
     protected static class AnimationState {
