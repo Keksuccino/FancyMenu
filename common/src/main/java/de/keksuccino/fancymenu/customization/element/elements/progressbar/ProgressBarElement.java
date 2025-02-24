@@ -153,13 +153,9 @@ public class ProgressBarElement extends AbstractElement {
             graphics.fill(progressX, progressY, progressX + progressWidth, progressY + progressHeight, barColor.getColorIntWithAlpha(colorAlpha));
         }
 
-<<<<<<< HEAD
         graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
-=======
-        if (this.smoothFillingAnimation) LOGGER.info("################### PROG WIDTH: " + progressWidth + " | ELE WIDTH: " + this.getAbsoluteWidth() + " | SNAP TO 1 WHEN: " + ((float)fullWidth - ((float)fullWidth * 0.01F)));
 
         this.setSmoothedProgress(smoothedProgress);
->>>>>>> 83962c6... v3.4.6
 
     }
 
