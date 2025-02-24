@@ -431,7 +431,7 @@ public class KeyframeManagerScreen extends ModernScreen {
                 this.setFocused(this.timestampInput);
             }
         } else {
-            if (this.timestampInput == this.getFocused()) this.clearFocus();
+            if (this.timestampInput == this.getFocused()) ((IMixinScreen)this).invoke_clearFocus_FancyMenu();
         }
 
         long actualEndTime = timelineDuration - TIMELINE_PADDING_DURATION;
@@ -939,7 +939,7 @@ public class KeyframeManagerScreen extends ModernScreen {
             if (this.selectedKeyframes.size() > 1) {
                 this.selectedKeyframes.remove(this.lastCtrlClickedFrameForDeselect);
                 if (this.selectedKeyframes.size() == 1) {
-                    AnimationKeyframe lastSelected = this.selectedKeyframes.getFirst();
+                    AnimationKeyframe lastSelected = this.selectedKeyframes.get(0);
                     this.selectKeyframeClearOldSelection(null); // first clear all
                     this.selectKeyframeClearOldSelection(lastSelected); // then properly single-select the frame again
                 }
