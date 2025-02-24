@@ -1,13 +1,7 @@
 
-CHANGELOG | FANCYMENU v3.4.6 [ W I P !! Not public yet !! ]
+CHANGELOG | FANCYMENU v3.4.X [ W I P !! Not public yet !! ]
 
-- Added option to the Element Animator's Keyframe Editor screen to manually set the timestamp of the selected keyframe (#1081)
-- It is now possible to use the arrow keys to move the preview in the Keyframe Editor screen of the Element Animator (#1082)
-- Improved the smooth filling logic of Progress Bar elements to make them not jump too much when correcting visual bugs
-- Fixed button in Keyframe Editor screen of Element Animator going out of screen when using a GUI scale that's too big for the screen (#1080)
-- Fixed Progress Bar elements refilling themselves every time the user reloads the screen or resizes the window (#1078)
-- Fixed Element Animator not stopping to animate elements when the Animator gets hidden via requirements, etc. (#1077)
-- Fixed game crashing when deleting a keyframe in the Keyframe Editor screen of the Element Animator (#1076)
+- 
  
 %changelog:end%
 
