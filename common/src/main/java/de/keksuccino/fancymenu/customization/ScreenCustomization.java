@@ -276,7 +276,7 @@ public class ScreenCustomization {
 		UIColorThemes.reloadThemes();
 		LayoutHandler.reloadLayouts();
 		AnimationControllerHandler.stopAllAnimations();
-		AnimationControllerHandler.eraseAnimatedMemory();
+		AnimationControllerHandler.clearMemory();
 		EventHandler.INSTANCE.postEvent(new ModReloadEvent(Minecraft.getInstance().screen));
 		reInitCurrentScreen();
 	}
@@ -307,7 +307,7 @@ public class ScreenCustomization {
 	public static void onSwitchingToNewScreenType(@Nullable Screen newScreen, @Nullable Screen lastScreen) {
 
 		AnimationControllerHandler.stopAllAnimations();
-		AnimationControllerHandler.eraseAnimatedMemory();
+		AnimationControllerHandler.clearMemory();
 
 		//Handle "Once Per Session" elements
 		if (lastScreen != null) {
