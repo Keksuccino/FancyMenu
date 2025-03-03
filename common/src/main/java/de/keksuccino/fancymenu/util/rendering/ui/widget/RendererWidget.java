@@ -72,6 +72,10 @@ public class RendererWidget extends AbstractWidget implements UniqueWidget, Navi
         //no click sound
     }
 
+    public float getAlpha() {
+        return this.alpha;
+    }
+
     @FunctionalInterface
     public interface RendererWidgetBody {
         void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial, int x, int y, int width, int height, @NotNull RendererWidget renderer);

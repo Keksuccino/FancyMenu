@@ -6,8 +6,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
-import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
-import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.HideableElement;
@@ -78,7 +76,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public Layout layout;
 	public List<AbstractEditorElement> normalEditorElements = new ArrayList<>();
 	public List<VanillaWidgetEditorElement> vanillaWidgetEditorElements = new ArrayList<>();
-	public List<AbstractDeepEditorElement> deepEditorElements = new ArrayList<>();
 	public LayoutEditorHistory history = new LayoutEditorHistory(this);
 	public MenuBar menuBar;
 	public AnchorPointOverlay anchorPointOverlay = new AnchorPointOverlay(this);
@@ -299,10 +296,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		for (VanillaWidgetEditorElement e : new ArrayList<>(this.vanillaWidgetEditorElements)) {
 			if (!e.isSelected() && !e.isHidden()) e.render(graphics, mouseX, mouseY, partial);
 		}
-		//Render deep elements
-		for (AbstractDeepEditorElement e : new ArrayList<>(this.deepEditorElements)) {
-			if (!e.isSelected() && !e.isHidden()) e.render(graphics, mouseX, mouseY, partial);
-		}
 		//Render normal elements before vanilla if NOT renderBehindVanilla
 		if (!this.layout.renderElementsBehindVanilla) {
 			for (AbstractEditorElement e : new ArrayList<>(this.normalEditorElements)) {
@@ -500,11 +493,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		}
 		this.normalEditorElements.clear();
 		this.vanillaWidgetEditorElements.clear();
-		this.deepEditorElements.clear();
 
 		Layout.OrderedElementCollection normalElements = new Layout.OrderedElementCollection();
 		List<VanillaWidgetElement> vanillaWidgetElements = (this.layoutTargetScreen != null) ? new ArrayList<>() : null;
-		List<AbstractDeepElement> deepElements = (this.layoutTargetScreen != null) ? new ArrayList<>() : null;
 
 		this.cachedVanillaWidgetMetas.clear();
 		if (this.layoutTargetScreen != null) {
@@ -516,22 +507,13 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			}
 		}
 
-		this.constructElementInstances(this.layout.screenIdentifier, this.cachedVanillaWidgetMetas, this.layout, normalElements, vanillaWidgetElements, deepElements);
+		this.constructElementInstances(this.layout.screenIdentifier, this.cachedVanillaWidgetMetas, this.layout, normalElements, vanillaWidgetElements);
 
 		//Wrap normal elements
 		for (AbstractElement e : ListUtils.mergeLists(normalElements.backgroundElements, normalElements.foregroundElements)) {
 			AbstractEditorElement editorElement = e.builder.wrapIntoEditorElementInternal(e, this);
 			if (editorElement != null) {
 				this.normalEditorElements.add(editorElement);
-			}
-		}
-		//Wrap deep elements
-		if (deepElements != null) {
-			for (AbstractElement e : deepElements) {
-				AbstractEditorElement editorElement = e.builder.wrapIntoEditorElementInternal(e, this);
-				if (editorElement instanceof AbstractDeepEditorElement d) {
-					this.deepEditorElements.add(d);
-				}
 			}
 		}
 		//Wrap vanilla elements
@@ -559,13 +541,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				this.layout.serializedElements.add(serialized);
 			}
 		}
-		//Serialize deep elements
-		for (AbstractEditorElement e : this.deepEditorElements) {
-			SerializedElement serialized = e.element.builder.serializeElementInternal(e.element);
-			if (serialized != null) {
-				this.layout.serializedDeepElements.add(serialized);
-			}
-		}
 		//Serialize vanilla button elements
 		for (VanillaWidgetEditorElement e : this.vanillaWidgetEditorElements) {
 			SerializedElement serialized = VanillaWidgetElementBuilder.INSTANCE.serializeElementInternal(e.element);
@@ -585,7 +560,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			elements.addAll(this.normalEditorElements);
 		}
 		elements.addAll(this.vanillaWidgetEditorElements);
-		elements.addAll(this.deepEditorElements);
 		if (!this.layout.renderElementsBehindVanilla) {
 			elements.addAll(this.normalEditorElements);
 		}
@@ -669,7 +643,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			if (!element.settings.shouldHideInsteadOfDestroy()) {
 				this.normalEditorElements.remove(element);
 				this.vanillaWidgetEditorElements.remove(element);
-				this.deepEditorElements.remove(element);
 				for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
 					w.editorElementRemovedOrHidden(element);
 				}

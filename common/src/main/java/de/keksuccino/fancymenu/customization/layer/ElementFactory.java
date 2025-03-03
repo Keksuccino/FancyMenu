@@ -3,10 +3,6 @@ package de.keksuccino.fancymenu.customization.layer;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
-import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
-import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
-import de.keksuccino.fancymenu.customization.deep.DeepScreenCustomizationLayer;
-import de.keksuccino.fancymenu.customization.deep.DeepScreenCustomizationLayerRegistry;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElementBuilder;
 import de.keksuccino.fancymenu.customization.layout.Layout;
@@ -25,31 +21,20 @@ public interface ElementFactory {
     /**
      * Constructs element instances for {@link ScreenCustomizationLayer}s and {@link LayoutEditorScreen}s.
      *
-     * @param screenIdentifier        The target menu the elements get constructed for. If this is NULL, no {@link AbstractDeepElement} instances will get constructed.
+     * @param screenIdentifier The target menu the elements get constructed for.
      * @param vanillaWidgetMetaList The vanilla buttons of the target menu. If this is NULL, no {@link VanillaWidgetElement}s will get constructed.
-     * @param layouts               The source layouts to construct the elements from.
-     * @param normalElements        All normal {@link AbstractElement} instances will get added to this {@link Layout.OrderedElementCollection}.
+     * @param layouts The source layouts to construct the elements from.
+     * @param normalElements All normal {@link AbstractElement} instances will get added to this {@link Layout.OrderedElementCollection}.
      * @param vanillaWidgetElements All {@link VanillaWidgetElement} instances will get added to this list. If this is NULL, no {@link VanillaWidgetElement}s will get constructed.
-     * @param deepElements          All {@link AbstractDeepElement} instances will get added to this list. If this is NULL, no {@link AbstractDeepElement}s will get constructed.
      */
-    default void constructElementInstances(@Nullable String screenIdentifier, @Nullable List<WidgetMeta> vanillaWidgetMetaList, @NotNull List<Layout> layouts, @NotNull Layout.OrderedElementCollection normalElements, @Nullable List<VanillaWidgetElement> vanillaWidgetElements, @Nullable List<AbstractDeepElement> deepElements) {
+    default void constructElementInstances(@Nullable String screenIdentifier, @Nullable List<WidgetMeta> vanillaWidgetMetaList, @NotNull List<Layout> layouts, @NotNull Layout.OrderedElementCollection normalElements, @Nullable List<VanillaWidgetElement> vanillaWidgetElements) {
 
         Map<WidgetMeta, List<VanillaWidgetElement>> unstackedVanillaButtonElements = new HashMap<>();
-        Map<DeepElementBuilder<?, ?, ?>, List<AbstractDeepElement>> unstackedDeepElements = new HashMap<>();
         for (Layout layout : layouts) {
             //Construct element instances
             Layout.OrderedElementCollection layoutElements = layout.buildElementInstances();
             normalElements.backgroundElements.addAll(layoutElements.backgroundElements);
             normalElements.foregroundElements.addAll(layoutElements.foregroundElements);
-            if (deepElements != null) {
-                //Construct deep element instances
-                for (AbstractDeepElement element : layout.buildDeepElementInstances()) {
-                    if (!unstackedDeepElements.containsKey((DeepElementBuilder<?, ?, ?>) element.builder)) {
-                        unstackedDeepElements.put((DeepElementBuilder<?, ?, ?>) element.builder, new ArrayList<>());
-                    }
-                    unstackedDeepElements.get(element.builder).add(element);
-                }
-            }
             if (vanillaWidgetElements != null) {
                 //Construct vanilla button element instances
                 for (VanillaWidgetElement element : layout.buildVanillaButtonElementInstances()) {
@@ -62,47 +47,6 @@ public interface ElementFactory {
                         unstackedVanillaButtonElements.get(d).add(element);
                     }
                 }
-            }
-        }
-
-        if (deepElements != null) {
-            //Add missing deep element instances
-            DeepScreenCustomizationLayer deepScreenCustomizationLayer = (screenIdentifier != null) ? DeepScreenCustomizationLayerRegistry.getLayer(screenIdentifier) : null;
-            if (deepScreenCustomizationLayer != null) {
-                for (DeepElementBuilder<?, ?, ?> builder : deepScreenCustomizationLayer.getBuilders()) {
-                    if (!unstackedDeepElements.containsKey(builder)) {
-                        AbstractDeepElement element = builder.buildDefaultInstance();
-                        unstackedDeepElements.put(builder, new ArrayList<>());
-                        unstackedDeepElements.get(builder).add(element);
-                    }
-                }
-            }
-            //Stack collected deep elements, so only one element per element type is active at the same time
-            for (Map.Entry<DeepElementBuilder<?, ?, ?>, List<AbstractDeepElement>> m : unstackedDeepElements.entrySet()) {
-                if (!m.getValue().isEmpty()) {
-                    if (m.getValue().size() > 1) {
-                        AbstractDeepElement stacked = m.getKey().stackElementsInternal(m.getKey().buildDefaultInstance(), m.getValue().toArray(new AbstractDeepElement[0]));
-                        if (stacked != null) {
-                            deepElements.add(stacked);
-                        }
-                    } else {
-                        deepElements.add(m.getValue().get(0));
-                    }
-                }
-            }
-            //Order deep elements by builder order
-            if (deepScreenCustomizationLayer != null) {
-                List<AbstractDeepElement> deepElementsOrdered = new ArrayList<>();
-                for (DeepElementBuilder<?,?,?> b : deepScreenCustomizationLayer.getBuilders()) {
-                    for (AbstractDeepElement e : deepElements) {
-                        if (e.builder == b) {
-                            deepElementsOrdered.add(e);
-                            break;
-                        }
-                    }
-                }
-                deepElements.clear();
-                deepElements.addAll(deepElementsOrdered);
             }
         }
 
@@ -142,15 +86,14 @@ public interface ElementFactory {
     /**
      * Constructs element instances for {@link ScreenCustomizationLayer}s and {@link LayoutEditorScreen}s.
      *
-     * @param menuIdentifier The target menu the elements get constructed for. If this is NULL, no {@link AbstractDeepElement} instances will get constructed.
+     * @param menuIdentifier The target menu the elements get constructed for.
      * @param vanillaWidgetMetaList The vanilla buttons of the target menu. If this is NULL, no {@link VanillaWidgetElement}s will get constructed.
      * @param layout The source layout to construct the elements from.
      * @param normalElements All normal {@link AbstractElement} instances will get added to this {@link Layout.OrderedElementCollection}.
      * @param vanillaWidgetElements All {@link VanillaWidgetElement} instances will get added to this list. If this is NULL, no {@link VanillaWidgetElement}s will get constructed.
-     * @param deepElements All {@link AbstractDeepElement} instances will get added to this list. If this is NULL, no {@link AbstractDeepElement}s will get constructed.
      */
-    default void constructElementInstances(@Nullable String menuIdentifier, @Nullable List<WidgetMeta> vanillaWidgetMetaList, @NotNull Layout layout, @NotNull Layout.OrderedElementCollection normalElements, @Nullable List<VanillaWidgetElement> vanillaWidgetElements, @Nullable List<AbstractDeepElement> deepElements) {
-        this.constructElementInstances(menuIdentifier, vanillaWidgetMetaList, ListUtils.of(layout), normalElements, vanillaWidgetElements, deepElements);
+    default void constructElementInstances(@Nullable String menuIdentifier, @Nullable List<WidgetMeta> vanillaWidgetMetaList, @NotNull Layout layout, @NotNull Layout.OrderedElementCollection normalElements, @Nullable List<VanillaWidgetElement> vanillaWidgetElements) {
+        this.constructElementInstances(menuIdentifier, vanillaWidgetMetaList, ListUtils.of(layout), normalElements, vanillaWidgetElements);
     }
 
     /**

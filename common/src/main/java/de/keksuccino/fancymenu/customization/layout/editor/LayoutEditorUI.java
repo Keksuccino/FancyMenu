@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBloc
 import de.keksuccino.fancymenu.customization.background.ChooseMenuBackgroundScreen;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
-import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
@@ -785,25 +784,11 @@ public class LayoutEditorUI {
 						hiddenVanillaButtons.add(e);
 					}
 				}
-				List<AbstractDeepEditorElement> hiddenDeepElements = new ArrayList<>();
-				for (AbstractDeepEditorElement e : editor.deepEditorElements) {
-					if (e.isHidden()) {
-						hiddenDeepElements.add(e);
-					}
-				}
 
 				int i = 0;
 				for (VanillaWidgetEditorElement e : hiddenVanillaButtons) {
 					AbstractWidget w = ((VanillaWidgetElement)e.element).getWidget();
 					this.addClickableEntry("element_" + i, (w != null) ? w.getMessage() : Component.empty(), (menu1, entry) -> {
-						editor.history.saveSnapshot();
-						e.setHidden(false);
-						MainThreadTaskExecutor.executeInMainThread(() -> menu1.removeEntry(entry.getIdentifier()), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
-					}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.hidden_vanilla_elements.element.desc")));
-					i++;
-				}
-				for (AbstractDeepEditorElement e : hiddenDeepElements) {
-					this.addClickableEntry("element_" + i, e.element.builder.getDisplayName(e.element), (menu1, entry) -> {
 						editor.history.saveSnapshot();
 						e.setHidden(false);
 						MainThreadTaskExecutor.executeInMainThread(() -> menu1.removeEntry(entry.getIdentifier()), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
