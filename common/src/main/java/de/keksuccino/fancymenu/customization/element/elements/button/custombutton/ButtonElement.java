@@ -9,11 +9,14 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandl
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
+import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtendedSlider;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
@@ -21,9 +24,11 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -36,6 +41,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
     @Nullable
     private AbstractWidget widget;
+    private final RangeSlider templateDummySlider = new RangeSlider(0, 0, 0, 0, Component.empty(), 0.0D, 1.0D, 0.5D);
     public ResourceSupplier<IAudio> clickSound;
     public ResourceSupplier<IAudio> hoverSound;
     @Nullable
@@ -46,10 +52,6 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public ResourceSupplier<ITexture> backgroundTextureNormal;
     public ResourceSupplier<ITexture> backgroundTextureHover;
     public ResourceSupplier<ITexture> backgroundTextureInactive;
-    public String backgroundAnimationNormal;
-    public String backgroundAnimationHover;
-    public String backgroundAnimationInactive;
-    public boolean loopBackgroundAnimations = true;
     public boolean restartBackgroundAnimationsOnHover = true;
     public boolean nineSliceCustomBackground = false;
     public int nineSliceBorderX = 5;
@@ -67,16 +69,18 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public boolean templateApplyOpacity = false;
     public boolean templateApplyVisibility = false;
     public boolean templateApplyLabel = false;
+    @NotNull
+    public TemplateSharing templateShareWith = TemplateSharing.BUTTONS;
     public ResourceSupplier<ITexture> sliderBackgroundTextureNormal;
     public ResourceSupplier<ITexture> sliderBackgroundTextureHighlighted;
-    public String sliderBackgroundAnimationNormal;
-    public String sliderBackgroundAnimationHighlighted;
     public boolean nineSliceSliderHandle = false;
     public int nineSliceSliderHandleBorderX = 5;
     public int nineSliceSliderHandleBorderY = 5;
 
-    protected static long lastTemplateUpdate = -1L;
-    protected static ButtonElement lastTemplate = null;
+    protected static long lastTemplateUpdateButton = -1L;
+    protected static ButtonElement lastTemplateButton = null;
+    protected static long lastTemplateUpdateSlider = -1L;
+    protected static ButtonElement lastTemplateSlider = null;
 
     public ButtonElement(ElementBuilder<ButtonElement, ButtonEditorElement> builder) {
         super(builder);
@@ -149,7 +153,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     @Override
     public int getAbsoluteWidth() {
         if (!this.isTemplate && this.isTemplateActive()) {
-            ButtonElement template = getTopActiveTemplateElement();
+            ButtonElement template = getTopActiveTemplateElement(this.isSlider());
             if ((template != null) && template.templateApplyWidth) return template.getAbsoluteWidth();
         }
         return super.getAbsoluteWidth();
@@ -158,7 +162,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     @Override
     public int getAbsoluteHeight() {
         if (!this.isTemplate && this.isTemplateActive()) {
-            ButtonElement template = getTopActiveTemplateElement();
+            ButtonElement template = getTopActiveTemplateElement(this.isSlider());
             if ((template != null) && template.templateApplyHeight) return template.getAbsoluteHeight();
         }
         return super.getAbsoluteHeight();
@@ -167,7 +171,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     @Override
     public int getAbsoluteX() {
         if (!this.isTemplate && this.isTemplateActive()) {
-            ButtonElement template = getTopActiveTemplateElement();
+            ButtonElement template = getTopActiveTemplateElement(this.isSlider());
             if ((template != null) && template.templateApplyPosX) return template.getAbsoluteX();
         }
         return super.getAbsoluteX();
@@ -176,7 +180,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     @Override
     public int getAbsoluteY() {
         if (!this.isTemplate && this.isTemplateActive()) {
-            ButtonElement template = getTopActiveTemplateElement();
+            ButtonElement template = getTopActiveTemplateElement(this.isSlider());
             if ((template != null) && template.templateApplyPosY) return template.getAbsoluteY();
         }
         return super.getAbsoluteY();
@@ -185,7 +189,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     @Override
     public boolean shouldRender() {
         if (!this.isTemplate && this.isTemplateActive()) {
-            ButtonElement template = getTopActiveTemplateElement();
+            ButtonElement template = getTopActiveTemplateElement(this.isSlider());
             if ((template != null) && template.templateApplyVisibility) return template.shouldRender();
         }
         return super.shouldRender();
@@ -307,10 +311,35 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
             w.setCustomBackgroundResetBehaviorFancyMenu(this.getPropertySource().restartBackgroundAnimationsOnHover ? CustomizableWidget.CustomBackgroundResetBehavior.RESET_ON_HOVER : CustomizableWidget.CustomBackgroundResetBehavior.RESET_NEVER);
         }
 
+        //-------------------------------------
+
+        RenderableResource sliderBackNormal = null;
+        RenderableResource sliderBackHighlighted = null;
+
+        //Normal
+        if (this.getPropertySource().sliderBackgroundTextureNormal != null) {
+            sliderBackNormal = this.getPropertySource().sliderBackgroundTextureNormal.get();
+        }
+        //Highlighted
+        if (this.getPropertySource().sliderBackgroundTextureHighlighted != null) {
+            sliderBackHighlighted = this.getPropertySource().sliderBackgroundTextureHighlighted.get();
+        }
+
+        if (this.getWidget() instanceof CustomizableSlider w) {
+            w.setNineSliceCustomSliderHandle_FancyMenu(this.getPropertySource().nineSliceSliderHandle);
+            w.setNineSliceSliderHandleBorderX_FancyMenu(this.getPropertySource().nineSliceSliderHandleBorderX);
+            w.setNineSliceSliderHandleBorderY_FancyMenu(this.getPropertySource().nineSliceSliderHandleBorderY);
+            w.setCustomSliderBackgroundNormalFancyMenu(sliderBackNormal);
+            w.setCustomSliderBackgroundHighlightedFancyMenu(sliderBackHighlighted);
+        }
+
     }
 
     @Nullable
     public AbstractWidget getWidget() {
+        if (isEditor() && this.isTemplate && (this.templateShareWith == TemplateSharing.SLIDERS)) {
+            return this.templateDummySlider;
+        }
         return this.widget;
     }
 
@@ -323,9 +352,17 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         return this.actionExecutor;
     }
 
+    public boolean isButton() {
+        return (this.getWidget() instanceof AbstractButton);
+    }
+
+    public boolean isSlider() {
+        return (this.getWidget() instanceof CustomizableSlider);
+    }
+
     public float getOpacity() {
         if (this.isTemplate) return this.opacity;
-        ButtonElement template = getTopActiveTemplateElement();
+        ButtonElement template = getTopActiveTemplateElement(this.isSlider());
         if ((template != null) && template.templateApplyOpacity) return template.opacity;
         return this.opacity;
     }
@@ -333,7 +370,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     @Nullable
     public String getLabel() {
         if (this.isTemplate) return this.label;
-        ButtonElement template = getTopActiveTemplateElement();
+        ButtonElement template = getTopActiveTemplateElement(this.isSlider());
         if ((template != null) && template.templateApplyLabel) return template.label;
         return this.label;
     }
@@ -341,7 +378,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     @Nullable
     public String getHoverLabel() {
         if (this.isTemplate) return this.hoverLabel;
-        ButtonElement template = getTopActiveTemplateElement();
+        ButtonElement template = getTopActiveTemplateElement(this.isSlider());
         if ((template != null) && template.templateApplyLabel) return template.hoverLabel;
         return this.hoverLabel;
     }
@@ -349,42 +386,105 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     @NotNull
     public ButtonElement getPropertySource() {
         if (this.isTemplate) return this;
-        ButtonElement template = getTopActiveTemplateElement();
-        if (template != null) return template;
+        ButtonElement template = getTopActiveTemplateElement(this.isSlider());
+        if (template != null) {
+            if (this.isSlider() && (template.templateShareWith == TemplateSharing.BUTTONS)) return this;
+            if (this.isButton() && (template.templateShareWith == TemplateSharing.SLIDERS)) return this;
+            return template;
+        }
         return this;
     }
 
     public boolean isTemplateActive() {
         if (this.isTemplate) return false;
-        return (getTopActiveTemplateElement() != null);
+        return (getTopActiveTemplateElement(this.isSlider()) != null);
     }
 
     @Nullable
-    public static ButtonElement getTopActiveTemplateElement() {
+    public static ButtonElement getTopActiveTemplateElement(boolean forSlider) {
         long now = System.currentTimeMillis();
-        if ((lastTemplateUpdate + 100L) > now) {
-            return lastTemplate;
+        if (!forSlider && ((lastTemplateUpdateButton + 100L) > now)) {
+            return lastTemplateButton;
+        }
+        if (forSlider && ((lastTemplateUpdateSlider + 100L) > now)) {
+            return lastTemplateSlider;
         }
         ButtonElement template = null;
         ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getActiveLayer();
         if (layer != null) {
             for (AbstractElement e : layer.allElements) {
                 if (e instanceof ButtonElement b) {
-                    if (b.isTemplate && b.shouldRender()) {
+                    boolean validTemplate = true;
+                    if (forSlider && (b.templateShareWith == TemplateSharing.BUTTONS)) validTemplate = false;
+                    if (!forSlider && (b.templateShareWith == TemplateSharing.SLIDERS)) validTemplate = false;
+                    if (b.isTemplate && b.shouldRender() && validTemplate) {
                         template = b;
                         break;
                     }
                 }
             }
         }
-        lastTemplate = template;
-        lastTemplateUpdate = now;
+        if (!forSlider) {
+            lastTemplateButton = template;
+            lastTemplateUpdateButton = now;
+        } else {
+            lastTemplateSlider = template;
+            lastTemplateUpdateSlider = now;
+        }
         return template;
     }
 
     public static void resetTemplateCache() {
-        lastTemplate = null;
-        lastTemplateUpdate = -1L;
+        lastTemplateButton = null;
+        lastTemplateUpdateButton = -1L;
+        lastTemplateSlider = null;
+        lastTemplateUpdateSlider = -1L;
+    }
+
+    public enum TemplateSharing implements LocalizedCycleEnum<TemplateSharing> {
+
+        BUTTONS("buttons"),
+        SLIDERS("sliders");
+
+        private final String name;
+
+        TemplateSharing(@NotNull String name) {
+            this.name = name;
+        }
+
+        @Override
+        public @NotNull String getLocalizationKeyBase() {
+            return "fancymenu.elements.button.template.share_with";
+        }
+
+        @Override
+        public @NotNull String getName() {
+            return this.name;
+        }
+
+        @Override
+        public @NotNull Style getValueComponentStyle() {
+            return WARNING_TEXT_STYLE.get();
+        }
+
+        @Override
+        public @NotNull TemplateSharing[] getValues() {
+            return TemplateSharing.values();
+        }
+
+        @Override
+        public @Nullable TemplateSharing getByNameInternal(@NotNull String name) {
+            return getByName(name);
+        }
+
+        @Nullable
+        public static TemplateSharing getByName(@NotNull String name) {
+            for (TemplateSharing sharing : TemplateSharing.values()) {
+                if (sharing.name.equals(name)) return sharing;
+            }
+            return null;
+        }
+
     }
 
 }

@@ -6,10 +6,8 @@ import de.keksuccino.fancymenu.customization.element.HideableElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
-import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import org.apache.logging.log4j.LogManager;
@@ -67,33 +65,6 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
     @Override
     public void updateWidgetNavigatable() {
         //do nothing
-    }
-
-    @Override
-    public void updateWidgetTexture() {
-
-        super.updateWidgetTexture();
-
-        RenderableResource sliderBackNormal = null;
-        RenderableResource sliderBackHighlighted = null;
-
-        //Normal
-        if (this.getPropertySource().sliderBackgroundTextureNormal != null) {
-            sliderBackNormal = this.getPropertySource().sliderBackgroundTextureNormal.get();
-        }
-        //Highlighted
-        if (this.getPropertySource().sliderBackgroundTextureHighlighted != null) {
-            sliderBackHighlighted = this.getPropertySource().sliderBackgroundTextureHighlighted.get();
-        }
-
-        if (this.getWidget() instanceof CustomizableSlider w) {
-            w.setNineSliceCustomSliderHandle_FancyMenu(this.getPropertySource().nineSliceSliderHandle);
-            w.setNineSliceSliderHandleBorderX_FancyMenu(this.getPropertySource().nineSliceSliderHandleBorderX);
-            w.setNineSliceSliderHandleBorderY_FancyMenu(this.getPropertySource().nineSliceSliderHandleBorderY);
-            w.setCustomSliderBackgroundNormalFancyMenu(sliderBackNormal);
-            w.setCustomSliderBackgroundHighlightedFancyMenu(sliderBackHighlighted);
-        }
-
     }
 
     @Override

@@ -128,18 +128,6 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
         if (e.backgroundTextureInactive != null) {
             stack.backgroundTextureInactive = e.backgroundTextureInactive;
         }
-        if (e.backgroundAnimationNormal != null) {
-            stack.backgroundAnimationNormal = e.backgroundAnimationNormal;
-        }
-        if (e.backgroundAnimationHover != null) {
-            stack.backgroundAnimationHover = e.backgroundAnimationHover;
-        }
-        if (e.backgroundAnimationInactive != null) {
-            stack.backgroundAnimationInactive = e.backgroundAnimationInactive;
-        }
-        if (!e.loopBackgroundAnimations) {
-            stack.loopBackgroundAnimations = false;
-        }
         if (!e.restartBackgroundAnimationsOnHover) {
             stack.restartBackgroundAnimationsOnHover = false;
         }
@@ -166,12 +154,6 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
         }
         if (e.sliderBackgroundTextureHighlighted != null) {
             stack.sliderBackgroundTextureHighlighted = e.sliderBackgroundTextureHighlighted;
-        }
-        if (e.sliderBackgroundAnimationNormal != null) {
-            stack.sliderBackgroundAnimationNormal = e.sliderBackgroundAnimationNormal;
-        }
-        if (e.sliderBackgroundAnimationHighlighted != null) {
-            stack.sliderBackgroundAnimationHighlighted = e.sliderBackgroundAnimationHighlighted;
         }
 
     }

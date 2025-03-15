@@ -922,18 +922,12 @@ public class Layout extends LayoutBase {
                 }
 
                 if (action.equalsIgnoreCase("setbuttontexture")) {
-                    String loopBackAnimations = sec.getValue("loopbackgroundanimations");
-                    if ((loopBackAnimations != null) && loopBackAnimations.equalsIgnoreCase("false")) {
-                        element.loopBackgroundAnimations = false;
-                    }
                     String restartBackAnimationsOnHover = sec.getValue("restartbackgroundanimations");
                     if ((restartBackAnimationsOnHover != null) && restartBackAnimationsOnHover.equalsIgnoreCase("false")) {
                         element.restartBackgroundAnimationsOnHover = false;
                     }
                     element.backgroundTextureNormal = SerializationUtils.deserializeImageResourceSupplier(sec.getValue("backgroundnormal"));
                     element.backgroundTextureHover = SerializationUtils.deserializeImageResourceSupplier(sec.getValue("backgroundhovered"));
-                    element.backgroundAnimationNormal = sec.getValue("backgroundanimationnormal");
-                    element.backgroundAnimationHover = sec.getValue("backgroundanimationhovered");
                     addElement = true;
                 }
 
