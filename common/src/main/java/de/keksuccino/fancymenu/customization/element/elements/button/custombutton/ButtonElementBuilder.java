@@ -108,6 +108,24 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
             }
         }
 
+        element.isTemplate = deserializeBoolean(element.isTemplate, serialized.getValue("is_template"));
+        element.templateApplyWidth = deserializeBoolean(element.templateApplyWidth, serialized.getValue("template_apply_width"));
+        element.templateApplyHeight = deserializeBoolean(element.templateApplyHeight, serialized.getValue("template_apply_height"));
+        element.templateApplyPosX = deserializeBoolean(element.templateApplyPosX, serialized.getValue("template_apply_posx"));
+        element.templateApplyPosY = deserializeBoolean(element.templateApplyPosY, serialized.getValue("template_apply_posy"));
+        element.templateApplyOpacity = deserializeBoolean(element.templateApplyOpacity, serialized.getValue("template_apply_opacity"));
+        element.templateApplyVisibility = deserializeBoolean(element.templateApplyVisibility, serialized.getValue("template_apply_visibility"));
+        element.templateApplyLabel = deserializeBoolean(element.templateApplyLabel, serialized.getValue("template_apply_label"));
+
+        element.sliderBackgroundTextureNormal = deserializeImageResourceSupplier(serialized.getValue("slider_background_texture_normal"));
+        element.sliderBackgroundTextureHighlighted = deserializeImageResourceSupplier(serialized.getValue("slider_background_texture_highlighted"));
+        element.sliderBackgroundAnimationNormal = serialized.getValue("slider_background_animation_normal");
+        element.sliderBackgroundAnimationHighlighted = serialized.getValue("slider_background_animation_highlighted");
+
+        element.nineSliceSliderHandle = deserializeBoolean(element.nineSliceSliderHandle, serialized.getValue("nine_slice_slider_handle"));
+        element.nineSliceSliderHandleBorderX = deserializeNumber(Integer.class, element.nineSliceSliderHandleBorderX, serialized.getValue("nine_slice_slider_handle_border_x"));
+        element.nineSliceSliderHandleBorderY = deserializeNumber(Integer.class, element.nineSliceSliderHandleBorderY, serialized.getValue("nine_slice_slider_handle_border_y"));
+
         return element;
 
     }
@@ -160,6 +178,28 @@ public class ButtonElementBuilder extends ElementBuilder<ButtonElement, ButtonEd
 
         serializeTo.putProperty("widget_active_state_requirement_container_identifier", element.activeStateSupplier.identifier);
         element.activeStateSupplier.serializeToExistingPropertyContainer(serializeTo);
+
+        serializeTo.putProperty("is_template", "" + element.isTemplate);
+        serializeTo.putProperty("template_apply_width", "" + element.templateApplyWidth);
+        serializeTo.putProperty("template_apply_height", "" + element.templateApplyHeight);
+        serializeTo.putProperty("template_apply_posx", "" + element.templateApplyPosX);
+        serializeTo.putProperty("template_apply_posy", "" + element.templateApplyPosY);
+        serializeTo.putProperty("template_apply_opacity", "" + element.templateApplyOpacity);
+        serializeTo.putProperty("template_apply_visibility", "" + element.templateApplyVisibility);
+        serializeTo.putProperty("template_apply_label", "" + element.templateApplyLabel);
+
+        if (element.sliderBackgroundTextureNormal != null) {
+            serializeTo.putProperty("slider_background_texture_normal", element.sliderBackgroundTextureNormal.getSourceWithPrefix());
+        }
+        if (element.sliderBackgroundTextureHighlighted != null) {
+            serializeTo.putProperty("slider_background_texture_highlighted", element.sliderBackgroundTextureHighlighted.getSourceWithPrefix());
+        }
+        serializeTo.putProperty("slider_background_animation_normal", element.sliderBackgroundAnimationNormal);
+        serializeTo.putProperty("slider_background_animation_highlighted", element.sliderBackgroundAnimationHighlighted);
+
+        serializeTo.putProperty("nine_slice_slider_handle", "" + element.nineSliceSliderHandle);
+        serializeTo.putProperty("nine_slice_slider_handle_border_x", "" + element.nineSliceSliderHandleBorderX);
+        serializeTo.putProperty("nine_slice_slider_handle_border_y", "" + element.nineSliceSliderHandleBorderY);
 
         return serializeTo;
 

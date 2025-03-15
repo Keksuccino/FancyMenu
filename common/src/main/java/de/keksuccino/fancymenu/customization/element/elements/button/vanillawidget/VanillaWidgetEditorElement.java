@@ -31,6 +31,8 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements H
     @Override
     public void init() {
 
+        this.showTemplateOptions = false;
+
         super.init();
 
         this.rightClickMenu.removeEntry("manage_actions");

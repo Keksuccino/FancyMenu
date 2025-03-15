@@ -18,6 +18,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class ButtonEditorElement extends AbstractEditorElement {
 
+    public boolean showTemplateOptions = true;
+
     public ButtonEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
     }
@@ -196,6 +198,58 @@ public class ButtonEditorElement extends AbstractEditorElement {
                     .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.generic.navigatable.desc")));
 
         }
+
+        ContextMenu templateSettingsMenu = new ContextMenu();
+
+        this.rightClickMenu.addSeparatorEntry("separator_before_template_settings")
+                .addIsVisibleSupplier((menu, entry) -> this.showTemplateOptions);
+
+        this.rightClickMenu.addSubMenuEntry("template_settings", Component.translatable("fancymenu.elements.button.template_settings"), templateSettingsMenu)
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.template_settings.desc")))
+                .addIsVisibleSupplier((menu, entry) -> this.showTemplateOptions);
+
+        this.addToggleContextMenuEntryTo(templateSettingsMenu, "is_template", ButtonEditorElement.class,
+                        consumes -> consumes.getElement().isTemplate,
+                        (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().isTemplate = aBoolean,
+                        "fancymenu.elements.button.is_template")
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.template_settings.desc")));
+
+        templateSettingsMenu.addSeparatorEntry("separator_after_is_template");
+
+        this.addToggleContextMenuEntryTo(templateSettingsMenu, "template_apply_width", ButtonEditorElement.class,
+                consumes -> consumes.getElement().templateApplyWidth,
+                (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().templateApplyWidth = aBoolean,
+                "fancymenu.elements.button.template_apply_width");
+
+        this.addToggleContextMenuEntryTo(templateSettingsMenu, "template_apply_height", ButtonEditorElement.class,
+                consumes -> consumes.getElement().templateApplyHeight,
+                (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().templateApplyHeight = aBoolean,
+                "fancymenu.elements.button.template_apply_height");
+
+        this.addToggleContextMenuEntryTo(templateSettingsMenu, "template_apply_posx", ButtonEditorElement.class,
+                consumes -> consumes.getElement().templateApplyPosX,
+                (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().templateApplyPosX = aBoolean,
+                "fancymenu.elements.button.template_apply_posx");
+
+        this.addToggleContextMenuEntryTo(templateSettingsMenu, "template_apply_posy", ButtonEditorElement.class,
+                consumes -> consumes.getElement().templateApplyPosY,
+                (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().templateApplyPosY = aBoolean,
+                "fancymenu.elements.button.template_apply_posy");
+
+        this.addToggleContextMenuEntryTo(templateSettingsMenu, "template_apply_opacity", ButtonEditorElement.class,
+                consumes -> consumes.getElement().templateApplyOpacity,
+                (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().templateApplyOpacity = aBoolean,
+                "fancymenu.elements.button.template_apply_opacity");
+
+        this.addToggleContextMenuEntryTo(templateSettingsMenu, "template_apply_visibility", ButtonEditorElement.class,
+                consumes -> consumes.getElement().templateApplyVisibility,
+                (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().templateApplyVisibility = aBoolean,
+                "fancymenu.elements.button.template_apply_visibility");
+
+        this.addToggleContextMenuEntryTo(templateSettingsMenu, "template_apply_label", ButtonEditorElement.class,
+                consumes -> consumes.getElement().templateApplyLabel,
+                (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().templateApplyLabel = aBoolean,
+                "fancymenu.elements.button.template_apply_label");
 
     }
 

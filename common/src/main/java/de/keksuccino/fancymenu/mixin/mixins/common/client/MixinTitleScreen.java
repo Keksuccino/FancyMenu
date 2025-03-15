@@ -42,17 +42,17 @@ public abstract class MixinTitleScreen extends Screen {
         super(null);
     }
 
-    /**
-     * @reason Add an identifier to the Copyright button.
-     */
     @Inject(method = "init", at = @At("RETURN"))
     private void after_init_FancyMenu(CallbackInfo info) {
 
+        // Give the Copyright button and identifier
         this.children().forEach(guiEventListener -> {
             if (guiEventListener instanceof PlainTextButton b) {
                 if (b.getMessage() == COPYRIGHT_TEXT) ((UniqueWidget)b).setWidgetIdentifierFancyMenu("title_screen_copyright_button");
             }
         });
+
+        // Add widgets for all Title screen elements to make them editable
 
         MinecraftLogoRenderer logo = MinecraftLogoRenderer.DEFAULT_INSTANCE;
         this.addRenderableWidget(new RendererWidget((this.width / 2) - (logo.getWidth() / 2), 30, logo.getWidth(), logo.getHeight(),

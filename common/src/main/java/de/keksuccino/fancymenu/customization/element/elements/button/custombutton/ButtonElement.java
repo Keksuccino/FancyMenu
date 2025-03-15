@@ -4,10 +4,11 @@ import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBloc
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ExecutableElement;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
-import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
@@ -58,6 +59,24 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public GenericExecutableBlock actionExecutor = new GenericExecutableBlock();
     @NotNull
     public LoadingRequirementContainer activeStateSupplier = new LoadingRequirementContainer();
+    public boolean isTemplate = false;
+    public boolean templateApplyWidth = false;
+    public boolean templateApplyHeight = false;
+    public boolean templateApplyPosX = false;
+    public boolean templateApplyPosY = false;
+    public boolean templateApplyOpacity = false;
+    public boolean templateApplyVisibility = false;
+    public boolean templateApplyLabel = false;
+    public ResourceSupplier<ITexture> sliderBackgroundTextureNormal;
+    public ResourceSupplier<ITexture> sliderBackgroundTextureHighlighted;
+    public String sliderBackgroundAnimationNormal;
+    public String sliderBackgroundAnimationHighlighted;
+    public boolean nineSliceSliderHandle = false;
+    public int nineSliceSliderHandleBorderX = 5;
+    public int nineSliceSliderHandleBorderY = 5;
+
+    protected static long lastTemplateUpdate = -1L;
+    protected static ButtonElement lastTemplate = null;
 
     public ButtonElement(ElementBuilder<ButtonElement, ButtonEditorElement> builder) {
         super(builder);
@@ -71,6 +90,11 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         //This is mainly to make Vanilla buttons not flicker for the first frame when hidden
         this.updateWidget();
 
+    }
+
+    @Override
+    public void afterConstruction() {
+        resetTemplateCache();
     }
 
     @Override
@@ -107,7 +131,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     }
 
     protected void renderElementWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        if (this.getWidget() != null) {
+        if ((this.getWidget() != null) && (!this.isTemplate || isEditor())) {
             //Prevents crashes related to dividing by zero
             if (this.getWidget().getHeight() <= 0) return;
             if (this.getWidget().getWidth() <= 0) return;
@@ -117,8 +141,54 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
     @Override
     public @Nullable List<GuiEventListener> getWidgetsToRegister() {
+        if (this.isTemplate) return null;
         if (this.getWidget() == null) return null;
         return List.of(this.getWidget());
+    }
+
+    @Override
+    public int getAbsoluteWidth() {
+        if (!this.isTemplate && this.isTemplateActive()) {
+            ButtonElement template = getTopActiveTemplateElement();
+            if ((template != null) && template.templateApplyWidth) return template.getAbsoluteWidth();
+        }
+        return super.getAbsoluteWidth();
+    }
+
+    @Override
+    public int getAbsoluteHeight() {
+        if (!this.isTemplate && this.isTemplateActive()) {
+            ButtonElement template = getTopActiveTemplateElement();
+            if ((template != null) && template.templateApplyHeight) return template.getAbsoluteHeight();
+        }
+        return super.getAbsoluteHeight();
+    }
+
+    @Override
+    public int getAbsoluteX() {
+        if (!this.isTemplate && this.isTemplateActive()) {
+            ButtonElement template = getTopActiveTemplateElement();
+            if ((template != null) && template.templateApplyPosX) return template.getAbsoluteX();
+        }
+        return super.getAbsoluteX();
+    }
+
+    @Override
+    public int getAbsoluteY() {
+        if (!this.isTemplate && this.isTemplateActive()) {
+            ButtonElement template = getTopActiveTemplateElement();
+            if ((template != null) && template.templateApplyPosY) return template.getAbsoluteY();
+        }
+        return super.getAbsoluteY();
+    }
+
+    @Override
+    public boolean shouldRender() {
+        if (!this.isTemplate && this.isTemplateActive()) {
+            ButtonElement template = getTopActiveTemplateElement();
+            if ((template != null) && template.templateApplyVisibility) return template.shouldRender();
+        }
+        return super.shouldRender();
     }
 
     public void updateWidget() {
@@ -154,7 +224,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
     public void updateWidgetAlpha() {
         if (this.getWidget() == null) return;
-        this.getWidget().setAlpha(this.opacity);
+        this.getWidget().setAlpha(this.getOpacity());
     }
 
     public void updateWidgetPosition() {
@@ -177,26 +247,28 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     }
 
     public void updateWidgetLabels() {
+        String l = this.getLabel();
+        String h = this.getHoverLabel();
         if (this.getWidget() == null) return;
-        if (this.label != null) {
-            this.getWidget().setMessage(buildComponent(this.label));
+        if (l != null) {
+            this.getWidget().setMessage(buildComponent(l));
         } else {
             this.getWidget().setMessage(Component.empty());
         }
-        if ((this.hoverLabel != null) && this.getWidget().isHoveredOrFocused() && this.getWidget().active) {
-            this.getWidget().setMessage(buildComponent(this.hoverLabel));
+        if ((h != null) && this.getWidget().isHoveredOrFocused() && this.getWidget().active) {
+            this.getWidget().setMessage(buildComponent(h));
         }
     }
 
     public void updateWidgetHoverSound() {
         if (this.getWidget() instanceof CustomizableWidget w) {
-            w.setHoverSoundFancyMenu((this.hoverSound != null) ? this.hoverSound.get() : null);
+            w.setHoverSoundFancyMenu((this.getPropertySource().hoverSound != null) ? this.getPropertySource().hoverSound.get() : null);
         }
     }
 
     public void updateWidgetClickSound() {
         if (this.getWidget() instanceof CustomizableWidget w) {
-            w.setCustomClickSoundFancyMenu((this.clickSound != null) ? this.clickSound.get() : null);
+            w.setCustomClickSoundFancyMenu((this.getPropertySource().clickSound != null) ? this.getPropertySource().clickSound.get() : null);
         }
     }
 
@@ -207,32 +279,32 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         RenderableResource backInactive = null;
 
         //Normal
-        if (this.backgroundTextureNormal != null) {
-            backNormal = this.backgroundTextureNormal.get();
+        if (this.getPropertySource().backgroundTextureNormal != null) {
+            backNormal = this.getPropertySource().backgroundTextureNormal.get();
         }
         //Hover
-        if (this.backgroundTextureHover != null) {
-            backHover = this.backgroundTextureHover.get();
+        if (this.getPropertySource().backgroundTextureHover != null) {
+            backHover = this.getPropertySource().backgroundTextureHover.get();
         }
         //Inactive
-        if (this.backgroundTextureInactive != null) {
-            backInactive = this.backgroundTextureInactive.get();
+        if (this.getPropertySource().backgroundTextureInactive != null) {
+            backInactive = this.getPropertySource().backgroundTextureInactive.get();
         }
 
         if (this.getWidget() instanceof CustomizableWidget w) {
             if (this.getWidget() instanceof CustomizableSlider s) {
-                s.setNineSliceCustomSliderBackground_FancyMenu(this.nineSliceCustomBackground);
-                s.setNineSliceSliderBackgroundBorderX_FancyMenu(this.nineSliceBorderX);
-                s.setNineSliceSliderBackgroundBorderY_FancyMenu(this.nineSliceBorderY);
+                s.setNineSliceCustomSliderBackground_FancyMenu(this.getPropertySource().nineSliceCustomBackground);
+                s.setNineSliceSliderBackgroundBorderX_FancyMenu(this.getPropertySource().nineSliceBorderX);
+                s.setNineSliceSliderBackgroundBorderY_FancyMenu(this.getPropertySource().nineSliceBorderY);
             } else {
-                w.setNineSliceCustomBackground_FancyMenu(this.nineSliceCustomBackground);
-                w.setNineSliceBorderX_FancyMenu(this.nineSliceBorderX);
-                w.setNineSliceBorderY_FancyMenu(this.nineSliceBorderY);
+                w.setNineSliceCustomBackground_FancyMenu(this.getPropertySource().nineSliceCustomBackground);
+                w.setNineSliceBorderX_FancyMenu(this.getPropertySource().nineSliceBorderX);
+                w.setNineSliceBorderY_FancyMenu(this.getPropertySource().nineSliceBorderY);
             }
             w.setCustomBackgroundNormalFancyMenu(backNormal);
             w.setCustomBackgroundHoverFancyMenu(backHover);
             w.setCustomBackgroundInactiveFancyMenu(backInactive);
-            w.setCustomBackgroundResetBehaviorFancyMenu(this.restartBackgroundAnimationsOnHover ? CustomizableWidget.CustomBackgroundResetBehavior.RESET_ON_HOVER : CustomizableWidget.CustomBackgroundResetBehavior.RESET_NEVER);
+            w.setCustomBackgroundResetBehaviorFancyMenu(this.getPropertySource().restartBackgroundAnimationsOnHover ? CustomizableWidget.CustomBackgroundResetBehavior.RESET_ON_HOVER : CustomizableWidget.CustomBackgroundResetBehavior.RESET_NEVER);
         }
 
     }
@@ -249,6 +321,70 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     @Override
     public @NotNull GenericExecutableBlock getExecutableBlock() {
         return this.actionExecutor;
+    }
+
+    public float getOpacity() {
+        if (this.isTemplate) return this.opacity;
+        ButtonElement template = getTopActiveTemplateElement();
+        if ((template != null) && template.templateApplyOpacity) return template.opacity;
+        return this.opacity;
+    }
+
+    @Nullable
+    public String getLabel() {
+        if (this.isTemplate) return this.label;
+        ButtonElement template = getTopActiveTemplateElement();
+        if ((template != null) && template.templateApplyLabel) return template.label;
+        return this.label;
+    }
+
+    @Nullable
+    public String getHoverLabel() {
+        if (this.isTemplate) return this.hoverLabel;
+        ButtonElement template = getTopActiveTemplateElement();
+        if ((template != null) && template.templateApplyLabel) return template.hoverLabel;
+        return this.hoverLabel;
+    }
+
+    @NotNull
+    public ButtonElement getPropertySource() {
+        if (this.isTemplate) return this;
+        ButtonElement template = getTopActiveTemplateElement();
+        if (template != null) return template;
+        return this;
+    }
+
+    public boolean isTemplateActive() {
+        if (this.isTemplate) return false;
+        return (getTopActiveTemplateElement() != null);
+    }
+
+    @Nullable
+    public static ButtonElement getTopActiveTemplateElement() {
+        long now = System.currentTimeMillis();
+        if ((lastTemplateUpdate + 100L) > now) {
+            return lastTemplate;
+        }
+        ButtonElement template = null;
+        ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getActiveLayer();
+        if (layer != null) {
+            for (AbstractElement e : layer.allElements) {
+                if (e instanceof ButtonElement b) {
+                    if (b.isTemplate && b.shouldRender()) {
+                        template = b;
+                        break;
+                    }
+                }
+            }
+        }
+        lastTemplate = template;
+        lastTemplateUpdate = now;
+        return template;
+    }
+
+    public static void resetTemplateCache() {
+        lastTemplate = null;
+        lastTemplateUpdate = -1L;
     }
 
 }

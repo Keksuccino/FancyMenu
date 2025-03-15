@@ -1589,5 +1589,17 @@
   "fancymenu.placeholders.world.current_player_oxygen_percent": "Current Player Oxygen Level (Percent)",
   "fancymenu.placeholders.world.current_player_oxygen_percent.desc": "Returns the current oxygen level of the player in percent.\nReturns '0' when not in a world.\nPossible Values: 0-100",
   "fancymenu.commmands.layout.unable_to_set_state": "[FANCYMENU] Unable to set layout state of '%s'! Layout not found!",
-  "fancymenu.commmands.layout.error": "[FANCYMENU] An error happened while trying to set layout state of '%s'!"
+  "fancymenu.commmands.layout.error": "[FANCYMENU] An error happened while trying to set layout state of '%s'!",
+  "fancymenu.placeholders.last_world_server": "Last World or Server",
+  "fancymenu.placeholders.last_world_server.desc": "Returns the last world or server the player joined.\nYou can control via the 'type' value if the placeholder\nshould return both servers and worlds or only one of them.\n\nTypes: both, world, server",
+  "fancymenu.elements.button.template_settings": "Template Settings",
+  "fancymenu.elements.button.template_settings.desc": "When you enable the template mode for a custom button, it will apply\nsome of its settings to all other buttons in the current screen.\n\nTemplate buttons will be §linvisible§r outside the editor.\n\n§lSettings that get shared are:\n\n- Button Textures\n- Button Click Sounds\n- Button Hover Sounds\n- Button Position (if enabled)\n- Button Size (if enabled)\n- Button Opacity (if enabled)\n- Button Visibility (if enabled)\n- Button Label (if enabled)",
+  "fancymenu.elements.button.is_template": "Template Mode: %s",
+  "fancymenu.elements.button.template_apply_width": "Share Width in Template Mode: %s",
+  "fancymenu.elements.button.template_apply_height": "Share Height in Template Mode: %s",
+  "fancymenu.elements.button.template_apply_posx": "Share X-Position in Template Mode: %s",
+  "fancymenu.elements.button.template_apply_posy": "Share Y-Position in Template Mode: %s",
+  "fancymenu.elements.button.template_apply_opacity": "Share Opacity in Template Mode: %s",
+  "fancymenu.elements.button.template_apply_visibility": "Share Visibility in Template Mode: %s",
+  "fancymenu.elements.button.template_apply_label": "Share Label in Template Mode: %s"
 }
