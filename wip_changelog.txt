@@ -5,10 +5,10 @@ CHANGELOG | FANCYMENU v3.5.0 [ W I P !! Not public yet !! ]
 - Added a "Template Mode" for buttons, so the button will apply many of its settings like textures and sounds to all other buttons in the screen (#1009, #672)
 - You can now set a hover sound for Custom Slider elements (was only possible for Vanilla sliders and Custom Button elements before)
 - Replaced the old hardcoded dummy Title screen elements (logo, splash, branding, realms button icons) with actual widgets, which means they can be moved now and basically work like Vanilla buttons (#656)
+- Improved the error handling of the "Join Server" action (#1055)
 - Fixed raw text components fail to get parsed when they don't start with " { " (#1089)
 - Fixed FancyMenu creating directories in "/" when loaded server-side (hopefully fixed, not 100% sure if that fix works every time) (#1056)
 - Fixed custom slider textures broken in MC 1.21.4 (#1106)
-- 
  
 %changelog:end%
 
