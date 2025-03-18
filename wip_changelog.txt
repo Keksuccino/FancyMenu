@@ -3,6 +3,7 @@ CHANGELOG | FANCYMENU v3.5.0 [ W I P !! Not public yet !! ]
 
 - Added "Last World or Server" placeholder that returns the last world/server or an empty value if no last world/server was set (#1091)
 - Added a "Template Mode" for buttons, so the button will apply many of its settings like textures and sounds to all other buttons in the screen (#1009, #672)
+- Added "Is Internet Connection Available" loading requirement to check if there's a working internet connection available
 - You can now set a hover sound for Custom Slider elements (was only possible for Vanilla sliders and Custom Button elements before)
 - Replaced the old hardcoded dummy Title screen elements (logo, splash, branding, realms button icons) with actual widgets, which means they can be moved now and basically work like Vanilla buttons (#656)
 - Improved the error handling of the "Join Server" action (#1055)
