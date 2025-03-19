@@ -1605,5 +1605,7 @@
   "fancymenu.elements.button.template.share_with": "Share Settings With: %s",
   "fancymenu.elements.button.template.share_with.sliders": "Sliders",
   "fancymenu.elements.button.template.share_with.buttons": "Buttons",
-  "fancymenu.actions.generic.async_error": "The '%s' action can't get executed asynchronously!"
+  "fancymenu.actions.generic.async_error": "The '%s' action can't get executed asynchronously!",
+  "fancymenu.requirements.is_internet_connection_available": "Is Internet Connection Available",
+  "fancymenu.requirements.is_internet_connection_available.desc": "Returns true when there is a working internet connection available."
 }

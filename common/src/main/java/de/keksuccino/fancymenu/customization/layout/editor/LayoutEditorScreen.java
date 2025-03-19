@@ -96,6 +96,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	protected LayoutEditorHistory.Snapshot preDragElementSnapshot;
 	public final List<WidgetMeta> cachedVanillaWidgetMetas = new ArrayList<>();
 
+	public static boolean enableGridSnapping = true;
+	public static float gridSnapThresholdMultiplier = 1.0f; // Default value - higher = more aggressive snapping
+
 	public LayoutEditorScreen(@NotNull Layout layout) {
 		this(null, layout);
 	}

@@ -18,7 +18,6 @@ import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.M
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlayUI;
-import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
@@ -196,11 +195,13 @@ public class LayoutEditorUI {
 				.setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.grid"))
 				.setIcon(ContextMenu.IconFactory.getIcon("grid"));
 
+		List<Integer> gridSizes = List.of(10,20,30,40,50,60,70,80,90,100);
 		int preSelectedGridSize = FancyMenu.getOptions().layoutEditorGridSize.getValue();
-		if ((preSelectedGridSize != 10) && (preSelectedGridSize != 20) && (preSelectedGridSize != 30) && (preSelectedGridSize != 40)) {
+		if (!gridSizes.contains(preSelectedGridSize)) {
 			preSelectedGridSize = 10;
+			FancyMenu.getOptions().layoutEditorGridSize.setValue(preSelectedGridSize);
 		}
-		windowMenu.addValueCycleEntry("grid_size", CommonCycles.cycle("fancymenu.editor.menu_bar.window.grid_size", ListUtils.of(10,20,30,40), preSelectedGridSize)
+		windowMenu.addValueCycleEntry("grid_size", CommonCycles.cycle("fancymenu.editor.menu_bar.window.grid_size", gridSizes, preSelectedGridSize)
 						.addCycleListener(integer -> {
 							FancyMenu.getOptions().layoutEditorGridSize.setValue(integer);
 						}))
