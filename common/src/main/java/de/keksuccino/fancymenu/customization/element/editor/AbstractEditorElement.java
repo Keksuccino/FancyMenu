@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
-import de.keksuccino.fancymenu.customization.element.elements.ticker.TickerEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.AnchorPointOverlay;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
@@ -55,7 +54,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -953,8 +951,8 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	 * @param mouseX The X coordinate of the mouse.
 	 * @param mouseY The Y coordinate of the mouse.
 	 * @param button The button that is being dragged.
-	 * @param dragX The X distance of the drag (distance per tick + mouse move, mostly values between 0.3 and 5).
-	 * @param dragY The Y distance of the drag (distance per tick + mouse move, mostly values between 0.3 and 5).
+	 * @param dragX The X distance of the drag (mouse move distance per tick; mostly values between 0.3 and 5).
+	 * @param dragY The Y distance of the drag (mouse move distance per tick; mostly values between 0.3 and 5).
 	 */
 	@Override
 	public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
@@ -972,7 +970,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 						this.element.posOffsetY = this.leftMouseDownBaseY + diffY;
 
 						// Apply grid snapping if enabled
-						if (LayoutEditorScreen.enableGridSnapping) {
+						if (FancyMenu.getOptions().showLayoutEditorGrid.getValue() && FancyMenu.getOptions().layoutEditorGridSnapping.getValue()) {
 							// Get element edges
 							int leftEdge = this.getX();
 							int rightEdge = leftEdge + this.getWidth();
@@ -986,7 +984,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 							int gridSize = FancyMenu.getOptions().layoutEditorGridSize.getValue();
 
 							// Calculate magnetic snap threshold (smaller = more precise snapping)
-							double snapThreshold = Math.max(2 * guiScale, gridSize / 5.0) * LayoutEditorScreen.gridSnapThresholdMultiplier;
+							double snapThreshold = Math.max(2 * guiScale, gridSize / 5.0) * FancyMenu.getOptions().layoutEditorGridSnappingStrength.getValue();
 
 							// Get screen centers at grid space
 							double centerXInGridSpace = AbstractElement.getScreenWidth() * guiScale / 2.0;

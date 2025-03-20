@@ -21,6 +21,7 @@ import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlayUI;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
+import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.TextValidators;
@@ -37,6 +38,7 @@ import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -206,6 +208,34 @@ public class LayoutEditorUI {
 							FancyMenu.getOptions().layoutEditorGridSize.setValue(integer);
 						}))
 				.setIcon(ContextMenu.IconFactory.getIcon("measure"));
+
+		windowMenu.addValueCycleEntry("grid_snapping", CommonCycles.cycleEnabledDisabled("fancymenu.layout_editor.grid.snapping", FancyMenu.getOptions().layoutEditorGridSnapping.getValue())
+						.addCycleListener(cycleEnabledDisabled -> {
+							FancyMenu.getOptions().layoutEditorGridSnapping.setValue(cycleEnabledDisabled.getAsBoolean());
+						}))
+				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.layout_editor.grid.snapping.desc")));
+
+		List<Float> gridSnappingStrengths = List.of(0.5f,0.75f,1.0f,1.5f,2.0f,3.0f,5.0f);
+		float preSelectedGridSnappingStrength = FancyMenu.getOptions().layoutEditorGridSnappingStrength.getValue();
+		if (!gridSnappingStrengths.contains(preSelectedGridSnappingStrength)) {
+			preSelectedGridSnappingStrength = 1.0f;
+			FancyMenu.getOptions().layoutEditorGridSnappingStrength.setValue(preSelectedGridSnappingStrength);
+		}
+		windowMenu.addValueCycleEntry("grid_snapping_strength", CommonCycles.cycle("fancymenu.layout_editor.grid.snapping.strength", gridSnappingStrengths, preSelectedGridSnappingStrength)
+						.setValueNameSupplier(strength -> {
+							if (strength == 0.5f) return I18n.get("fancymenu.layout_editor.grid.snapping.strength.pixel_perfect");
+							if (strength == 0.75f) return I18n.get("fancymenu.layout_editor.grid.snapping.strength.high_precision");
+							if (strength == 1.5f) return I18n.get("fancymenu.layout_editor.grid.snapping.strength.moderate");
+							if (strength == 2.0f) return I18n.get("fancymenu.layout_editor.grid.snapping.strength.magnetic");
+							if (strength == 3.0f) return I18n.get("fancymenu.layout_editor.grid.snapping.strength.strong_magnetic");
+							if (strength == 5.0f) return I18n.get("fancymenu.layout_editor.grid.snapping.strength.maximum");
+							return I18n.get("fancymenu.layout_editor.grid.snapping.strength.standard"); // 1.0f
+						})
+						.setValueComponentStyleSupplier(consumes -> LocalizedCycleEnum.WARNING_TEXT_STYLE.get())
+						.addCycleListener(strength -> {
+							FancyMenu.getOptions().layoutEditorGridSnappingStrength.setValue(strength);
+						}))
+				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.layout_editor.grid.snapping.strength.desc")));
 
 		windowMenu.addSeparatorEntry("separator_after_grid_size");
 

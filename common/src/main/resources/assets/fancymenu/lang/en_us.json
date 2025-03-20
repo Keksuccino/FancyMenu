@@ -1607,5 +1607,16 @@
   "fancymenu.elements.button.template.share_with.buttons": "Buttons",
   "fancymenu.actions.generic.async_error": "The '%s' action can't get executed asynchronously!",
   "fancymenu.requirements.is_internet_connection_available": "Is Internet Connection Available",
-  "fancymenu.requirements.is_internet_connection_available.desc": "Returns true when there is a working internet connection available."
+  "fancymenu.requirements.is_internet_connection_available.desc": "Returns true when there is a working internet connection available.",
+  "fancymenu.layout_editor.grid.snapping": "Grid Snapping: %s",
+  "fancymenu.layout_editor.grid.snapping.desc": "If elements should snap to the grid lines when being moved.",
+  "fancymenu.layout_editor.grid.snapping.strength": "Grid Snapping Strength: %s",
+  "fancymenu.layout_editor.grid.snapping.strength.desc": "Controls how strongly elements snap to grid lines.\nLower values require more precision.\nHigher values snap from further away.",
+  "fancymenu.layout_editor.grid.snapping.strength.pixel_perfect": "Pixel Perfect (0.5)",
+  "fancymenu.layout_editor.grid.snapping.strength.high_precision": "High Precision (0.75)",
+  "fancymenu.layout_editor.grid.snapping.strength.standard": "Normal (1.0)",
+  "fancymenu.layout_editor.grid.snapping.strength.moderate": "Moderate (1.5)",
+  "fancymenu.layout_editor.grid.snapping.strength.magnetic": "Magnetic (2.0)",
+  "fancymenu.layout_editor.grid.snapping.strength.strong_magnetic": "Strong Magnetic (3.0)",
+  "fancymenu.layout_editor.grid.snapping.strength.maximum": "Maximum (5.0)"
 }
