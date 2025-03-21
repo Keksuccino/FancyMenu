@@ -1,5 +1,5 @@
 
-CHANGELOG | FANCYMENU v3.5.0 [ W I P !! Not public yet !! ]
+CHANGELOG | FANCYMENU v3.5.0 [ W I P !! Not public yet !! ] - The "Quality of Life" Update
 
 - Added "Last World or Server" placeholder that returns the last world/server or an empty value if no last world/server was set (#1091)
 - Added a "Template Mode" for buttons, so the button will apply many of its settings like textures and sounds to all other buttons in the screen (#1009, #672)
