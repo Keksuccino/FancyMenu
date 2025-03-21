@@ -8,7 +8,8 @@ CHANGELOG | FANCYMENU v3.5.0 [ W I P !! Not public yet !! ]
 - Added grid snapping feature to the layout editor (#780)
   - Snapping precision is configurable
   - Can be toggled off
-- Added search bar to the action browser to search for actions by their names and descriptions (Build Action Screen)
+- Added search bar to the actions browser to search for actions by their names and descriptions (Build Action Screen)
+- Added search bar to the requirements browser to search for requirements by their names and descriptions (Build Requirement Screen)
 - You can now set a hover sound for Custom Slider elements (was only possible for Vanilla sliders and Custom Button elements before)
 - Replaced the old hardcoded dummy Title screen elements (logo, splash, branding, realms button icons) with actual widgets, which means they can be moved now and basically work like Vanilla buttons (#656)
 - Improved the error handling of the "Join Server" action (#1055)
