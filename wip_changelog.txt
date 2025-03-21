@@ -19,6 +19,7 @@ CHANGELOG | FANCYMENU v3.5.0 [ W I P !! Not public yet !! ] - The "Quality of Li
 - Fixed FancyMenu creating directories in "/" when loaded server-side (hopefully fixed, not 100% sure if that fix works every time) (#1056)
 - Fixed custom slider textures broken in MC 1.21.4 (#1106)
 - Fixed description of "Mouse Clicked" requirement showing as one line instead of multiple lines
+- Fixed undo/redo in the text editor not working when adding placeholders via the placeholder browser (#1109)
 - Hopefully fixed JSON placeholder sometimes not showing its replacement anymore after reloading FancyMenu (#1100)
  
 %changelog:end%
