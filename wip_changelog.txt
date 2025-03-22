@@ -20,6 +20,7 @@ CHANGELOG | FANCYMENU v3.5.0 [ W I P !! Not public yet !! ] - The "Quality of Li
 - Fixed custom slider textures broken in MC 1.21.4 (#1106)
 - Fixed description of "Mouse Clicked" requirement showing as one line instead of multiple lines
 - Fixed undo/redo in the text editor not working when adding placeholders via the placeholder browser (#1109)
+- Fixed "Format Error" in description of "Current Audio Track" placeholder
 - Hopefully fixed JSON placeholder sometimes not showing its replacement anymore after reloading FancyMenu (#1100)
  
 %changelog:end%
