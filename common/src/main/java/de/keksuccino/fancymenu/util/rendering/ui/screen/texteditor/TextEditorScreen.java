@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -27,6 +28,7 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,10 +37,8 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import java.awt.*;
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 @SuppressWarnings("all")
@@ -104,6 +104,7 @@ public class TextEditorScreen extends Screen {
     protected Tooltip textValidatorFeedbackTooltip = null;
     protected boolean selectedHoveredOnRightClickMenuOpen = false;
     protected final TextEditorHistory history = new TextEditorHistory(this);
+    protected ExtendedEditBox searchBar;
 
     @NotNull
     public static TextEditorScreen build(@Nullable Component title, @Nullable CharacterFilter characterFilter, @NotNull Consumer<String> callback) {
@@ -125,12 +126,13 @@ public class TextEditorScreen extends Screen {
         this.verticalScrollBar.setScrollWheelAllowed(true);
         this.verticalScrollBarPlaceholderMenu.setScrollWheelAllowed(true);
         this.formattingRules.addAll(TextEditorFormattingRules.getRules());
-        this.updatePlaceholderEntries(null, true, true);
         this.updateCurrentLineWidth();
     }
 
     @Override
     public void init() {
+
+        this.placeholderMenuWidth = Math.max(120, (int)((double)this.width / 3.5D));
 
         this.updateRightClickContextMenu();
         this.addWidget(this.rightClickContextMenu);
@@ -145,18 +147,35 @@ public class TextEditorScreen extends Screen {
         this.horizontalScrollBar.scrollAreaEndX = this.getEditorAreaX() + this.getEditorAreaWidth() - this.verticalScrollBar.grabberWidth - 2;
         this.horizontalScrollBar.scrollAreaEndY = this.getEditorAreaY() + this.getEditorAreaHeight() - 1;
 
-        int placeholderAreaX = this.width - this.borderRight - this.placeholderMenuWidth;
-        int placeholderAreaY = this.getEditorAreaY();
+        int placeholderSearchBarY = this.getPlaceholderAreaY() - 25;
 
-        this.verticalScrollBarPlaceholderMenu.scrollAreaStartX = placeholderAreaX + 1;
-        this.verticalScrollBarPlaceholderMenu.scrollAreaStartY = placeholderAreaY + 1;
-        this.verticalScrollBarPlaceholderMenu.scrollAreaEndX = placeholderAreaX + this.placeholderMenuWidth - 2;
-        this.verticalScrollBarPlaceholderMenu.scrollAreaEndY = placeholderAreaY + this.getEditorAreaHeight() - this.horizontalScrollBarPlaceholderMenu.grabberHeight - 2;
+        String oldSearchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
+        this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, this.getPlaceholderAreaX(), placeholderSearchBarY, this.getPlaceholderAreaWidth(), 20 - 2, Component.empty()) {
+            @Override
+            public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+                super.renderWidget(graphics, mouseX, mouseY, partial);
+                if (this.getValue().isBlank() && !this.isFocused()) {
+                    graphics.enableScissor(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight());
+                    graphics.drawString(this.font, Component.translatable("fancymenu.placeholders.text_editor.search_placeholder"), this.getX() + 4, this.getY() + (this.getHeight() / 2) - (this.font.lineHeight / 2), UIBase.getUIColorTheme().edit_box_text_color_uneditable.getColorInt(), false);
+                    graphics.disableScissor();
+                }
+            }
+        };
+        this.searchBar.setValue(oldSearchValue);
+        this.searchBar.setResponder(s -> this.updatePlaceholdersList());
+        this.searchBar.setIsVisibleSupplier(consumes -> extendedPlaceholderMenu && this.allowPlaceholders);
+        this.addRenderableWidget(this.searchBar);
+        UIBase.applyDefaultWidgetSkinTo(this.searchBar);
 
-        this.horizontalScrollBarPlaceholderMenu.scrollAreaStartX = placeholderAreaX + 1;
-        this.horizontalScrollBarPlaceholderMenu.scrollAreaStartY = placeholderAreaY + 1;
-        this.horizontalScrollBarPlaceholderMenu.scrollAreaEndX = placeholderAreaX + this.placeholderMenuWidth - this.verticalScrollBarPlaceholderMenu.grabberWidth - 2;
-        this.horizontalScrollBarPlaceholderMenu.scrollAreaEndY = placeholderAreaY + this.getEditorAreaHeight() - 1;
+        this.verticalScrollBarPlaceholderMenu.scrollAreaStartX = this.getPlaceholderAreaX() + 1;
+        this.verticalScrollBarPlaceholderMenu.scrollAreaStartY = this.getPlaceholderAreaY() + 1;
+        this.verticalScrollBarPlaceholderMenu.scrollAreaEndX = this.getPlaceholderAreaX() + this.getPlaceholderAreaWidth() - 2;
+        this.verticalScrollBarPlaceholderMenu.scrollAreaEndY = this.getPlaceholderAreaY() + this.getPlaceholderAreaHeight() - this.horizontalScrollBarPlaceholderMenu.grabberHeight - 2;
+
+        this.horizontalScrollBarPlaceholderMenu.scrollAreaStartX = this.getPlaceholderAreaX() + 1;
+        this.horizontalScrollBarPlaceholderMenu.scrollAreaStartY = this.getPlaceholderAreaY() + 1;
+        this.horizontalScrollBarPlaceholderMenu.scrollAreaEndX = this.getPlaceholderAreaX() + this.getPlaceholderAreaWidth() - this.verticalScrollBarPlaceholderMenu.grabberWidth - 2;
+        this.horizontalScrollBarPlaceholderMenu.scrollAreaEndY = this.getPlaceholderAreaY() + this.getPlaceholderAreaHeight() - 1;
 
         //Set scroll grabber colors
         this.verticalScrollBar.idleBarColor = this.scrollGrabberIdleColor;
@@ -170,44 +189,39 @@ public class TextEditorScreen extends Screen {
         this.horizontalScrollBarPlaceholderMenu.idleBarColor = this.scrollGrabberIdleColor;
         this.horizontalScrollBarPlaceholderMenu.hoverBarColor = this.scrollGrabberHoverColor;
 
-        this.cancelButton = new ExtendedButton(this.width - this.borderRight - 100 - 5 - 100, this.height - 35, 100, 20, I18n.get("fancymenu.guicomponents.cancel"), (button) -> {
+        this.cancelButton = new ExtendedButton(this.width - this.borderRight - 100 - 5 - 100, this.height - 35, 100, 20, Component.translatable("fancymenu.guicomponents.cancel"), (button) -> {
             this.onClose();
         });
         this.addWidget(this.cancelButton);
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
 
-        this.doneButton = new ExtendedButton(this.width - this.borderRight - 100, this.height - 35, 100, 20, I18n.get("fancymenu.guicomponents.done"), (button) -> {
+        this.doneButton = new ExtendedButton(this.width - this.borderRight - 100, this.height - 35, 100, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
             if (this.isTextValid()) this.callback.accept(this.getText());
         });
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton);
 
         if (this.allowPlaceholders) {
-            this.placeholderButton = new ExtendedButton(this.width - this.borderRight - 100, (this.headerHeight / 2) - 10, 100, 20, I18n.get("fancymenu.ui.text_editor.placeholders"), (button) -> {
+            MutableComponent placeholderButtonLabel = Component.translatable("fancymenu.ui.text_editor.placeholders");
+            if (extendedPlaceholderMenu) {
+                placeholderButtonLabel = placeholderButtonLabel.withStyle(Style.EMPTY.withUnderlined(true));
+            }
+            this.placeholderButton = new ExtendedButton(this.width - this.borderRight - 100, (this.headerHeight / 2) - 10, 100, 20, placeholderButtonLabel, (button) -> {
                 if (extendedPlaceholderMenu) {
                     extendedPlaceholderMenu = false;
                 } else {
                     extendedPlaceholderMenu = true;
                 }
                 this.rebuildWidgets();
-            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.dynamicvariabletextfield.variables.desc")).setDefaultStyle());
+            }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.dynamicvariabletextfield.variables.desc")));
             this.addWidget(this.placeholderButton);
             UIBase.applyDefaultWidgetSkinTo(this.placeholderButton);
-            if (extendedPlaceholderMenu) {
-                this.placeholderButton.setBackgroundColor(
-                        UIBase.getUIColorTheme().element_background_color_normal,
-                        UIBase.getUIColorTheme().element_background_color_hover,
-                        UIBase.getUIColorTheme().element_background_color_normal,
-                        DrawableColor.of(this.editorAreaBorderColor),
-                        DrawableColor.of(this.editorAreaBorderColor),
-                        DrawableColor.of(this.editorAreaBorderColor)
-                );
-                ((IMixinAbstractWidget)this.placeholderButton).setHeightFancyMenu(this.getEditorAreaY() - ((this.headerHeight / 2) - 10));
-            }
         } else {
             this.placeholderButton = null;
             extendedPlaceholderMenu = false;
         }
+
+        this.updatePlaceholdersList();
 
     }
 
@@ -351,6 +365,12 @@ public class TextEditorScreen extends Screen {
 
         RenderSystem.enableDepthTest();
 
+        super.render(graphics, mouseX, mouseY, partial);
+
+    }
+
+    @Override
+    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
     }
 
     protected void renderMultilineNotSupportedNotification(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
@@ -371,26 +391,25 @@ public class TextEditorScreen extends Screen {
 
         if (extendedPlaceholderMenu) {
 
-            if (this.getTotalPlaceholderEntriesWidth() <= this.placeholderMenuWidth) {
+            if (this.getTotalPlaceholderEntriesWidth() <= this.getPlaceholderAreaWidth()) {
                 this.horizontalScrollBarPlaceholderMenu.setScroll(0.0F);
             }
-            if (this.getTotalPlaceholderEntriesHeight() <= this.getEditorAreaHeight()) {
+            if (this.getTotalPlaceholderEntriesHeight() <= this.getPlaceholderAreaHeight()) {
                 this.verticalScrollBarPlaceholderMenu.setScroll(0.0F);
             }
 
             //Render placeholder menu background
-            graphics.fill(RenderType.gui(), this.width - this.borderRight - this.placeholderMenuWidth, this.getEditorAreaY(), this.width - this.borderRight, this.getEditorAreaY() + this.getEditorAreaHeight(), this.editorAreaBackgroundColor.getRGB());
+            graphics.fill(RenderType.gui(), this.width - this.borderRight - this.getPlaceholderAreaWidth(), this.getPlaceholderAreaY(), this.width - this.borderRight, this.getPlaceholderAreaY() + this.getPlaceholderAreaHeight(), this.editorAreaBackgroundColor.getRGB());
 
             //Don't render parts of placeholder entries outside of placeholder menu area
-            graphics.enableScissor(this.width - this.borderRight - this.placeholderMenuWidth, this.getEditorAreaY(), this.width - this.borderRight, this.getEditorAreaY() + this.getEditorAreaHeight());
+            graphics.enableScissor(this.width - this.borderRight - this.getPlaceholderAreaWidth(), this.getPlaceholderAreaY(), this.width - this.borderRight, this.getPlaceholderAreaY() + this.getPlaceholderAreaHeight());
 
             //Render placeholder entries
-            List<PlaceholderMenuEntry> entries = new ArrayList<>();
-            entries.addAll(this.placeholderMenuEntries);
+            List<PlaceholderMenuEntry> entries = new ArrayList<>(this.placeholderMenuEntries);
             int index = 0;
             for (PlaceholderMenuEntry e : entries) {
-                e.x = (this.width - this.borderRight - this.placeholderMenuWidth) + this.getPlaceholderEntriesRenderOffsetX();
-                e.y = this.getEditorAreaY() + (this.placeholderMenuEntryHeight * index) + this.getPlaceholderEntriesRenderOffsetY();
+                e.x = (this.width - this.borderRight - this.getPlaceholderAreaWidth()) + this.getPlaceholderEntriesRenderOffsetX();
+                e.y = (this.getPlaceholderAreaY()) + (this.placeholderMenuEntryHeight * index) + this.getPlaceholderEntriesRenderOffsetY();
                 e.render(graphics, mouseX, mouseY, partial);
                 index++;
             }
@@ -398,7 +417,7 @@ public class TextEditorScreen extends Screen {
             graphics.disableScissor();
 
             //Render placeholder menu border
-            UIBase.renderBorder(graphics, this.width - this.borderRight - this.placeholderMenuWidth - 1, this.headerHeight-1, this.width - this.borderRight, this.height - this.footerHeight + 1, 1, this.editorAreaBorderColor, true, true, true, true);
+            UIBase.renderBorder(graphics, this.width - this.borderRight - this.getPlaceholderAreaWidth() - 1, this.headerHeight - 1 + 25, this.width - this.borderRight, this.height - this.footerHeight + 1, 1, this.editorAreaBorderColor, true, true, true, true);
 
             //Render placeholder menu scroll bars
             this.verticalScrollBarPlaceholderMenu.render(graphics);
@@ -412,12 +431,28 @@ public class TextEditorScreen extends Screen {
 
     }
 
+    public int getPlaceholderAreaX() {
+        return this.width - this.borderRight - this.getPlaceholderAreaWidth();
+    }
+
+    public int getPlaceholderAreaY() {
+        return this.getEditorAreaY() + 25;
+    }
+
+    public int getPlaceholderAreaHeight() {
+        return this.getEditorAreaHeight() - 25;
+    }
+
+    public int getPlaceholderAreaWidth() {
+        return this.placeholderMenuWidth;
+    }
+
     public int getTotalPlaceholderEntriesHeight() {
         return this.placeholderMenuEntryHeight * this.placeholderMenuEntries.size();
     }
 
     public int getTotalPlaceholderEntriesWidth() {
-        int i = this.placeholderMenuWidth;
+        int i = this.getPlaceholderAreaWidth();
         for (PlaceholderMenuEntry e : this.placeholderMenuEntries) {
             if (e.getWidth() > i) {
                 i = e.getWidth();
@@ -427,19 +462,62 @@ public class TextEditorScreen extends Screen {
     }
 
     public int getPlaceholderEntriesRenderOffsetX() {
-        int totalScrollWidth = Math.max(0, this.getTotalPlaceholderEntriesWidth() - this.placeholderMenuWidth);
+        int totalScrollWidth = Math.max(0, this.getTotalPlaceholderEntriesWidth() - this.getPlaceholderAreaWidth());
         return -(int)(((float)totalScrollWidth / 100.0F) * (this.horizontalScrollBarPlaceholderMenu.getScroll() * 100.0F));
     }
 
     public int getPlaceholderEntriesRenderOffsetY() {
-        int totalScrollHeight = Math.max(0, this.getTotalPlaceholderEntriesHeight() - this.getEditorAreaHeight());
+        int totalScrollHeight = Math.max(0, this.getTotalPlaceholderEntriesHeight() - (this.getPlaceholderAreaHeight()));
         return -(int)(((float)totalScrollHeight / 100.0F) * (this.verticalScrollBarPlaceholderMenu.getScroll() * 100.0F));
+    }
+
+    protected boolean placeholderFitsSearchValue(@NotNull Placeholder placeholder, @Nullable String s) {
+        if ((s == null) || s.isBlank()) return true;
+        s = s.toLowerCase();
+        if (placeholder.getDisplayName().toLowerCase().contains(s)) return true;
+        if (placeholder.getIdentifier().toLowerCase().contains(s)) return true;
+        return this.placeholderDescriptionContains(placeholder, s);
+    }
+
+    protected boolean placeholderDescriptionContains(@NotNull Placeholder placeholder, @NotNull String s) {
+        List<String> desc = Objects.requireNonNullElse(placeholder.getDescription(), new ArrayList<>());
+        for (String line : desc) {
+            if (line.toLowerCase().contains(s)) return true;
+        }
+        return false;
     }
 
     public void updatePlaceholderEntries(@Nullable String category, boolean clearList, boolean addBackButton) {
 
-        if (clearList) {
+        String searchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
+        if (searchValue.isBlank()) searchValue = null;
+
+        if (clearList || (searchValue != null)) {
             this.placeholderMenuEntries.clear();
+        }
+
+        if (searchValue != null) {
+            for (Placeholder p : PlaceholderRegistry.getPlaceholders()) {
+                if (!this.placeholderFitsSearchValue(p, searchValue)) continue;
+                PlaceholderMenuEntry entry = new PlaceholderMenuEntry(this, Component.literal(p.getDisplayName()), () -> {
+                    this.history.saveSnapshot();
+                    this.pasteText(p.getDefaultPlaceholderString().toString());
+                });
+                List<String> desc = p.getDescription();
+                if (desc != null) {
+                    entry.setDescription(desc.toArray(new String[0]));
+                }
+                entry.dotColor = this.placeholderEntryDotColorPlaceholder;
+                entry.entryLabelColor = this.placeholderEntryLabelColor;
+                this.placeholderMenuEntries.add(entry);
+            }
+            for (PlaceholderMenuEntry e : this.placeholderMenuEntries) {
+                e.backgroundColorIdle = this.placeholderEntryBackgroundColorIdle;
+                e.backgroundColorHover = this.placeholderEntryBackgroundColorHover;
+            }
+            this.verticalScrollBarPlaceholderMenu.setScroll(0.0F);
+            this.horizontalScrollBarPlaceholderMenu.setScroll(0.0F);
+            return;
         }
 
         Map<String, List<Placeholder>> categories = this.getPlaceholdersOrderedByCategories();
@@ -478,6 +556,7 @@ public class TextEditorScreen extends Screen {
                     if (placeholders != null) {
                         for (Placeholder p : placeholders) {
                             PlaceholderMenuEntry entry = new PlaceholderMenuEntry(this, Component.literal(p.getDisplayName()), () -> {
+                                this.history.saveSnapshot();
                                 this.pasteText(p.getDefaultPlaceholderString().toString());
                             });
                             List<String> desc = p.getDescription();
@@ -502,6 +581,10 @@ public class TextEditorScreen extends Screen {
             }
         }
 
+    }
+
+    protected void updatePlaceholdersList() {
+        this.updatePlaceholderEntries(null, true, false);
     }
 
     protected Map<String, List<Placeholder>> getPlaceholdersOrderedByCategories() {
@@ -1210,6 +1293,10 @@ public class TextEditorScreen extends Screen {
     @Override
     public boolean charTyped(char character, int modifiers) {
 
+        if (this.placeholdersAllowed() && extendedPlaceholderMenu && (this.searchBar != null) && this.searchBar.isFocused()) {
+            return this.searchBar.charTyped(character, modifiers);
+        }
+
         if (this.isLineFocused()) {
             this.history.saveSnapshot();
         }
@@ -1225,6 +1312,10 @@ public class TextEditorScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keycode, int scancode, int modifiers) {
+
+        if (this.placeholdersAllowed() && extendedPlaceholderMenu && (this.searchBar != null) && this.searchBar.isFocused()) {
+            return this.searchBar.keyPressed(keycode, scancode, modifiers);
+        }
 
         for (TextEditorLine l : new ArrayList<>(this.textFieldLines)) {
             l.keyPressed(keycode, scancode, modifiers);
@@ -1335,6 +1426,10 @@ public class TextEditorScreen extends Screen {
 
     @Override
     public boolean keyReleased(int i1, int i2, int i3) {
+
+        if (this.placeholdersAllowed() && extendedPlaceholderMenu && (this.searchBar != null) && this.searchBar.isFocused()) {
+            return this.searchBar.keyReleased(i1, i2, i3);
+        }
 
         for (TextEditorLine l : this.textFieldLines) {
             l.keyReleased(i1, i2, i3);
@@ -1610,7 +1705,7 @@ public class TextEditorScreen extends Screen {
     public int getEditorAreaWidth() {
         int i = (this.width - this.borderRight) - this.borderLeft;
         if (extendedPlaceholderMenu) {
-            i = i - this.placeholderMenuWidth - 15;
+            i = i - this.getPlaceholderAreaWidth() - 15;
         }
         return i;
     }

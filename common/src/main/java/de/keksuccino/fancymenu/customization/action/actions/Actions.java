@@ -38,7 +38,6 @@ public class Actions {
     public static final UpdateScreenAction UPDATE_SCREEN = new UpdateScreenAction();
     public static final OpenLinkAction OPEN_LINK = new OpenLinkAction();
     public static final ReloadFancyMenuAction RELOAD_FANCYMENU = new ReloadFancyMenuAction();
-    public static final RunButtonScriptAction RUN_BUTTON_SCRIPT = new RunButtonScriptAction();
     public static final CopyToClipboardAction COPY_TO_CLIPBOARD = new CopyToClipboardAction();
     public static final MimicButtonAction MIMIC_BUTTON = new MimicButtonAction();
     public static final EditMinecraftOptionAction EDIT_MINECRAFT_OPTION = new EditMinecraftOptionAction();
@@ -66,7 +65,6 @@ public class Actions {
         ActionRegistry.register(UPDATE_SCREEN);
         ActionRegistry.register(OPEN_LINK);
         ActionRegistry.register(RELOAD_FANCYMENU);
-        ActionRegistry.register(RUN_BUTTON_SCRIPT);
         ActionRegistry.register(COPY_TO_CLIPBOARD);
         ActionRegistry.register(MIMIC_BUTTON);
         ActionRegistry.register(EDIT_MINECRAFT_OPTION);

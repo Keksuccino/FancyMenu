@@ -1,8 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.theme;
 
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.awt.*;
@@ -37,8 +35,8 @@ public class UIColorTheme {
     public DrawableColor slider_handle_color_hover = DrawableColor.of(new Color(83, 156, 212));
     public DrawableColor area_background_color = DrawableColor.of(new Color(43, 43, 43));
     public DrawableColor edit_box_background_color = DrawableColor.of(new Color(43, 43, 43));
-    public DrawableColor edit_box_border_color_normal = DrawableColor.of(new Color(209, 194, 209));
-    public DrawableColor edit_box_border_color_focused = DrawableColor.of(new Color(227, 211, 227));
+    public DrawableColor edit_box_border_color_normal = DrawableColor.of(new Color(93, 97, 100));
+    public DrawableColor edit_box_border_color_focused = DrawableColor.of(new Color(93, 97, 100));
     public DrawableColor list_entry_color_selected_hovered = DrawableColor.of(new Color(50, 50, 50));
     public DrawableColor text_editor_sidebar_color = DrawableColor.of(new Color(49, 51, 53));
     public DrawableColor text_editor_line_number_text_color_normal = DrawableColor.of(new Color(91, 92, 94));

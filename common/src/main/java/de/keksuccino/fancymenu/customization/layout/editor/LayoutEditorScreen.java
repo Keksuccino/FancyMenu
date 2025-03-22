@@ -95,6 +95,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	protected int rightClickMenuOpenPosY = -1000;
 	protected LayoutEditorHistory.Snapshot preDragElementSnapshot;
 	public final List<WidgetMeta> cachedVanillaWidgetMetas = new ArrayList<>();
+	public boolean unsavedChanges = false;
 
 	public LayoutEditorScreen(@NotNull Layout layout) {
 		this(null, layout);
@@ -785,6 +786,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 					Minecraft.getInstance().setScreen(this);
 				}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
 			} else {
+				this.unsavedChanges = false;
 				LayoutHandler.reloadLayouts();
 			}
 		} else {
@@ -819,6 +821,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 							Minecraft.getInstance().setScreen(this);
 						}, LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.saving_failed.generic")));
 					} else {
+						this.unsavedChanges = false;
 						LayoutHandler.reloadLayouts();
 					}
 				} catch (Exception ex) {
