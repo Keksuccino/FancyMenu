@@ -9,7 +9,7 @@ CHANGELOG | FANCYMENU v3.5.0 [ W I P !! Not public yet !! ] - The "Quality of Li
   - Snapping precision is configurable
   - Can be toggled off
 - Added a search bar to the actions browser to search for actions by their names and descriptions (Build Action Screen)
-- Added a search bar to the requirements browser to search for requirements by their names and descriptions (Build Requirement Screen)
+- Added a search bar to the requirements browser to search for requirements by their names and descriptions (Add/Edit Requirement Screen)
 - Updated names and descriptions of all placeholders, actions and requirements related to FM's variables to be more clear
 - The placeholder browser in the text editor now dynamically changes its size based on the window size to be able to better see long placeholder names
 - You can now set a hover sound for Custom Slider elements (was only possible for Custom Button elements and Vanilla sliders/buttons before)
