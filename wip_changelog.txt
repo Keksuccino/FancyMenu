@@ -19,6 +19,8 @@ CHANGELOG | FANCYMENU v3.5.0 [ W I P !! Not public yet !! ] - The "Quality of Li
 - Replaced the old hardcoded dummy Title screen elements (logo, splash, branding, realms button icons) with actual widgets, which means they can be moved now and basically work like Vanilla buttons (#656)
 - Improved the error handling of the "Join Server" action (#1055)
 - Removed the old and deprecated "Run Button Script" action, since it got replaced by the action script system long time ago
+- Removed the old and long deprecated Text element from FancyMenu v2, because it got replaced by the new Text element in FancyMenu v3
+- Removed the old and long deprecated Slider element from FancyMenu v2, because it got replaced by the new Slider element in FancyMenu v3
 - Fixed raw text components fail to get parsed when they don't start with " { " (#1089)
 - Fixed FancyMenu creating directories in "/" when loaded server-side (hopefully fixed, not 100% sure if that fix works every time) (#1056)
 - Fixed custom slider textures broken in MC 1.21.4 (#1106)
