@@ -13,6 +13,7 @@ CHANGELOG | FANCYMENU v3.5.0 [ W I P !! Not public yet !! ] - The "Quality of Li
 - Added a search bar to the placeholders browser in the text editor to search for placeholders by their names, descriptions and identifiers
 - Added a search bar to the variables browser in the Manage Variables screen to search for variables by their names and values (#743)
 - The Manage Variables screen now shows the variable's value after each variable name
+- Placeholders can now be edited with multi-line support in the text editor (this feature is experimental, so it could break stuff in some cases)
 - Updated names and descriptions of all placeholders, actions and requirements related to FM's variables to be more clear
 - The placeholder browser in the text editor now dynamically changes its size based on the window size to be able to better see long placeholder names
 - You can now set a hover sound for Custom Slider elements (was only possible for Custom Button elements and Vanilla sliders/buttons before)
