@@ -17,6 +17,7 @@ CHANGELOG | FANCYMENU v3.5.0 [ W I P !! Not public yet !! ] - The "Quality of Li
 - The color formatting of placeholders in the text editor got reworked to be more useful (they now get formatted similar to other text editors format JSON-like text)
 - Updated names and descriptions of all placeholders, actions and requirements related to FM's variables to be more clear
 - The placeholder browser in the text editor now dynamically changes its size based on the window size to be able to better see long placeholder names
+- There's now an unsaved changes indicator in the layout editor (#658)
 - Context menus are now scrollable when they are too long for the window size (#1110)
 - You can now set a hover sound for Custom Slider elements (was only possible for Custom Button elements and Vanilla sliders/buttons before) (#1015)
 - Replaced the old hardcoded dummy Title screen elements (logo, splash, branding, realms button icons) with actual widgets, which means they can be moved now and basically work like Vanilla buttons (#656)
