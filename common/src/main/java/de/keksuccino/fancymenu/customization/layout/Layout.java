@@ -7,12 +7,10 @@ import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidg
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundRegistry;
 import de.keksuccino.fancymenu.customization.background.SerializedMenuBackground;
-import de.keksuccino.fancymenu.customization.background.backgrounds.animation.AnimationMenuBackground;
 import de.keksuccino.fancymenu.customization.background.backgrounds.image.ImageMenuBackground;
 import de.keksuccino.fancymenu.customization.background.backgrounds.panorama.PanoramaMenuBackground;
 import de.keksuccino.fancymenu.customization.background.backgrounds.slideshow.SlideshowMenuBackground;
@@ -770,21 +768,6 @@ public class Layout extends LayoutBase {
                             b.textureSupplier = SerializationUtils.deserializeImageResourceSupplier(value);
                             b.slideLeftRight = (pano != null) && pano.equalsIgnoreCase("true");
                             return b;
-                        }
-                    }
-                }
-                if (action.equalsIgnoreCase("animatebackground")) {
-                    String value = sec.getValue("name");
-                    String restartOnLoadString = sec.getValue("restart_on_load");
-                    if (value != null) {
-                        if (AnimationHandler.animationExists(value)) {
-                            MenuBackgroundBuilder<?> builder = MenuBackgroundRegistry.getBuilder("animation");
-                            if (builder != null) {
-                                AnimationMenuBackground b = new AnimationMenuBackground((MenuBackgroundBuilder<AnimationMenuBackground>) builder);
-                                b.animationName = value;
-                                b.restartOnMenuLoad = (restartOnLoadString != null) && restartOnLoadString.equalsIgnoreCase("true");
-                                return b;
-                            }
                         }
                     }
                 }

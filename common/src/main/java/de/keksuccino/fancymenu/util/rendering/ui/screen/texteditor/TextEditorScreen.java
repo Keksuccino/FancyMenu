@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderRegistry;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.konkrete.input.CharacterFilter;
@@ -40,11 +41,18 @@ import java.lang.reflect.Array;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @SuppressWarnings("all")
 public class TextEditorScreen extends Screen {
 
     private static final Logger LOGGER = LogManager.getLogger();
+
+    private static final HashMap<String, String> COMPILED_SINGLE_LINE_STRINGS = new HashMap<>();
+
+    public static final String NEWLINE_CODE = "%!n!%";
+    public static final String SPACE_CODE = "%!s!%";
 
     protected final CharacterFilter characterFilter;
     protected final Consumer<String> callback;
@@ -75,7 +83,6 @@ public class TextEditorScreen extends Screen {
     protected Color sideBarColor = UIBase.getUIColorTheme().text_editor_sidebar_color.getColor();
     protected Color lineNumberTextColorNormal = UIBase.getUIColorTheme().text_editor_line_number_text_color_normal.getColor();
     protected Color lineNumberTextColorFocused = UIBase.getUIColorTheme().text_editor_line_number_text_color_selected.getColor();
-    protected Color multilineNotSupportedNotificationColor = UIBase.getUIColorTheme().error_text_color.getColor();
     protected Color placeholderEntryBackgroundColorIdle = UIBase.getUIColorTheme().area_background_color.getColor();
     protected Color placeholderEntryBackgroundColorHover = UIBase.getUIColorTheme().list_entry_color_selected_hovered.getColor();
     protected Color placeholderEntryDotColorPlaceholder = UIBase.getUIColorTheme().listing_dot_color_1.getColor();
@@ -98,13 +105,15 @@ public class TextEditorScreen extends Screen {
     protected List<PlaceholderMenuEntry> placeholderMenuEntries = new ArrayList<>();
     protected boolean multilineMode = true;
     protected boolean allowPlaceholders = true;
-    protected long multilineNotSupportedNotificationDisplayStart = -1L;
     protected boolean boldTitle = true;
     protected ConsumingSupplier<TextEditorScreen, Boolean> textValidator = null;
     protected Tooltip textValidatorFeedbackTooltip = null;
     protected boolean selectedHoveredOnRightClickMenuOpen = false;
     protected final TextEditorHistory history = new TextEditorHistory(this);
     protected ExtendedEditBox searchBar;
+
+    protected IndentationGuideRenderer indentGuideRenderer;
+    protected boolean showIndentationGuides = true;
 
     @NotNull
     public static TextEditorScreen build(@Nullable Component title, @Nullable CharacterFilter characterFilter, @NotNull Consumer<String> callback) {
@@ -126,6 +135,7 @@ public class TextEditorScreen extends Screen {
         this.verticalScrollBar.setScrollWheelAllowed(true);
         this.verticalScrollBarPlaceholderMenu.setScrollWheelAllowed(true);
         this.formattingRules.addAll(TextEditorFormattingRules.getRules());
+        this.indentGuideRenderer = new IndentationGuideRenderer(this);
         this.updateCurrentLineWidth();
     }
 
@@ -310,6 +320,11 @@ public class TextEditorScreen extends Screen {
 
         this.renderEditorAreaBackground(graphics);
 
+        // Render indentation guides if enabled
+        if (this.showIndentationGuides) {
+            this.indentGuideRenderer.render(graphics);
+        }
+
         //Don't render parts of lines outside editor area
         graphics.enableScissor(this.getEditorAreaX(), this.getEditorAreaY(), this.getEditorAreaX() + this.getEditorAreaWidth(), this.getEditorAreaY() + this.getEditorAreaHeight());
 
@@ -374,16 +389,15 @@ public class TextEditorScreen extends Screen {
     }
 
     protected void renderMultilineNotSupportedNotification(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        long now = System.currentTimeMillis();
-        if (!this.multilineMode && (this.multilineNotSupportedNotificationDisplayStart + 3000L >= now)) {
-            int a = 255;
-            int diff = (int) (this.multilineNotSupportedNotificationDisplayStart + 3000L - now);
-            if (diff <= 1000) {
-                float f = (float)diff / 1000F;
-                a = Math.max(10, (int)(255F * f));
+        if (!this.multilineMode) {
+            MutableComponent indicator = Component.translatable("fancymenu.editor.text_editor.single_line_warning.indicator").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())).append(Component.literal(" [?]").withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())));
+            int indicatorX = this.getEditorAreaX();
+            int indicatorY = this.getEditorAreaY() - this.font.lineHeight - 5;
+            int indicatorWidth = this.font.width(indicator);
+            graphics.drawString(this.font, indicator, indicatorX, indicatorY, -1, false);
+            if (UIBase.isXYInArea(mouseX, mouseY, indicatorX, indicatorY, indicatorWidth, this.font.lineHeight)) {
+                TooltipHandler.INSTANCE.addTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.text_editor.single_line_warning")).setDefaultStyle().setTextBaseColor(UIBase.getUIColorTheme().error_text_color), () -> true, true, true);
             }
-            Color c = new Color(this.multilineNotSupportedNotificationColor.getRed(), this.multilineNotSupportedNotificationColor.getGreen(), this.multilineNotSupportedNotificationColor.getBlue(), a);
-            graphics.drawString(this.font, I18n.get("fancymenu.ui.text_editor.error.multiline_support"), this.borderLeft, this.headerHeight - this.font.lineHeight - 5, c.getRGB(), false);
         }
     }
 
@@ -791,10 +805,6 @@ public class TextEditorScreen extends Screen {
 
     @Nullable
     public TextEditorLine addLineAtIndex(int index) {
-        if (!this.multilineMode && (this.getLineCount() > 0)) {
-            this.multilineNotSupportedNotificationDisplayStart = System.currentTimeMillis();
-            return null;
-        }
         TextEditorLine f = new TextEditorLine(Minecraft.getInstance().font, 0, 0, 50, this.lineHeight, false, this.characterFilter, this);
         f.setMaxLength(Integer.MAX_VALUE);
         f.lineIndex = index;
@@ -1123,10 +1133,6 @@ public class TextEditorScreen extends Screen {
                 if (text.contains("\n")) {
                     lines = text.split("\n", -1);
                 }
-                if (!this.multilineMode && (lines.length > 1)) {
-                    lines = new String[]{lines[0]};
-                    this.multilineNotSupportedNotificationDisplayStart = System.currentTimeMillis();
-                }
                 Array.set(lines, lines.length-1, lines[lines.length-1] + textAfterCursor);
                 if (lines.length == 1) {
                     this.getFocusedLine().insertText(lines[0]);
@@ -1151,11 +1157,15 @@ public class TextEditorScreen extends Screen {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        if (this.indentGuideRenderer != null) {
+            this.indentGuideRenderer.markDirty();
+        }
         this.resetHighlighting();
     }
 
     public TextEditorScreen setText(@Nullable String text) {
         if (text == null) text = "";
+        text = text.replace(NEWLINE_CODE, "\n").replace(SPACE_CODE, " ");
         TextEditorLine t = this.getLine(0);
         this.textFieldLines.clear();
         this.textFieldLines.add(t);
@@ -1166,21 +1176,35 @@ public class TextEditorScreen extends Screen {
         this.setFocusedLine(0);
         t.moveCursorTo(0, false);
         this.verticalScrollBar.setScroll(0.0F);
+        if (this.indentGuideRenderer != null) {
+            this.indentGuideRenderer.markDirty();
+        }
         return this;
     }
 
     @NotNull
     public String getText() {
         StringBuilder s = new StringBuilder();
-        boolean b = false;
+        boolean notFirstLine = false;
         for (TextEditorLine t : this.textFieldLines) {
-            if (b) {
+            String value = t.getValue();
+            if (notFirstLine) {
                 s.append("\n");
+                if (!this.multilineMode) {
+                    // Replace all leading spaces with SPACE_CODE
+                    Pattern pattern = Pattern.compile("^( +)");
+                    Matcher matcher = pattern.matcher(value);
+                    if (matcher.find()) {
+                        String replacement = matcher.group().replace(" ", SPACE_CODE);
+                        value = matcher.replaceFirst(replacement);
+                    }
+                }
             }
-            s.append(t.getValue());
-            b = true;
+            s.append(value);
+            notFirstLine = true;
         }
-        return s.toString();
+        String text = s.toString();
+        return !this.multilineMode ? text.replace("\n", NEWLINE_CODE) : text;
     }
 
     protected boolean isTextValid() {
@@ -1293,6 +1317,10 @@ public class TextEditorScreen extends Screen {
     @Override
     public boolean charTyped(char character, int modifiers) {
 
+        if (this.indentGuideRenderer != null) {
+            this.indentGuideRenderer.markDirty();
+        }
+
         if (this.placeholdersAllowed() && extendedPlaceholderMenu && (this.searchBar != null) && this.searchBar.isFocused()) {
             return this.searchBar.charTyped(character, modifiers);
         }
@@ -1312,6 +1340,10 @@ public class TextEditorScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keycode, int scancode, int modifiers) {
+
+        if (this.indentGuideRenderer != null) {
+            this.indentGuideRenderer.markDirty();
+        }
 
         if (this.placeholdersAllowed() && extendedPlaceholderMenu && (this.searchBar != null) && this.searchBar.isFocused()) {
             return this.searchBar.keyPressed(keycode, scancode, modifiers);
@@ -1336,16 +1368,13 @@ public class TextEditorScreen extends Screen {
         }
         //ENTER
         if (keycode == InputConstants.KEY_ENTER) {
-            if (!this.isInMouseHighlightingMode() && this.multilineMode) {
+            if (!this.isInMouseHighlightingMode()) {
                 if (this.isLineFocused()) {
                     this.history.saveSnapshot();
                     this.resetHighlighting();
                     this.goDownLine(true);
                     this.correctYScroll(1);
                 }
-            }
-            if (!this.multilineMode) {
-                this.multilineNotSupportedNotificationDisplayStart = System.currentTimeMillis();
             }
             return true;
         }
@@ -1720,6 +1749,32 @@ public class TextEditorScreen extends Screen {
 
     public int getEditorAreaY() {
         return this.headerHeight;
+    }
+
+    public void toggleIndentationGuides() {
+        this.showIndentationGuides = !this.showIndentationGuides;
+    }
+
+    public boolean areIndentationGuidesVisible() {
+        return this.showIndentationGuides;
+    }
+
+    /**
+     * @return The compiled version of the input string or NULL if the input was NULL.
+     */
+    public static String compileSingleLineString(@Nullable String s) {
+        if (s == null) return null;
+        String compiled = COMPILED_SINGLE_LINE_STRINGS.get(s);
+        if (compiled == null) {
+            compiled = s.replace(NEWLINE_CODE, "").replace(SPACE_CODE, "");
+            COMPILED_SINGLE_LINE_STRINGS.put(s, compiled);
+        }
+        return compiled;
+    }
+
+    public static void clearCompiledSingleLineCache() {
+        LOGGER.info("[FANCYMENU] Clearing text editor's compiled single line string cache..");
+        COMPILED_SINGLE_LINE_STRINGS.clear();
     }
 
     public class PlaceholderMenuEntry extends UIBase {
