@@ -1624,5 +1624,6 @@
   "fancymenu.placeholders.text_editor.search_placeholder": "Search placeholder..",
   "fancymenu.variables.manage_variables.screen.search_variable": "Search variable..",
   "fancymenu.editor.text_editor.single_line_warning": "The target needs a single-line text, which means all lines will\nget merged into one line and all leading spaces of all lines\nexcept the very first line will get removed in the actual\noutput text for the target.",
-  "fancymenu.editor.text_editor.single_line_warning.indicator": "SINGLE-LINE MODE ENABLED!"
+  "fancymenu.editor.text_editor.single_line_warning.indicator": "SINGLE-LINE MODE ENABLED!",
+  "fancymenu.editor.menu_bar.unsaved_warning": "* Unsaved Changes! *"
 }

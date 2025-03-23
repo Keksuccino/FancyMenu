@@ -76,7 +76,7 @@ public class LayoutEditorUI {
 		menuBar.addContextMenuEntry("layout_tab", Component.translatable("fancymenu.editor.layout"), layoutMenu);
 
 		layoutMenu.addClickableEntry("new_layout", Component.translatable("fancymenu.editor.layout.new"), (menu, entry) -> {
-			displayUnsavedWarning(call -> {
+			displayUnsavedWarning(editor, call -> {
 				if (call) {
 					editor.saveWidgetSettings();
 					if (editor.layout.isUniversalLayout()) {
@@ -121,7 +121,7 @@ public class LayoutEditorUI {
 		layoutMenu.addSeparatorEntry("separator_after_layout_settings");
 
 		layoutMenu.addClickableEntry("close_editor", Component.translatable("fancymenu.editor.close"), (menu, entry) -> {
-			displayUnsavedWarning(call -> {
+			displayUnsavedWarning(editor, call -> {
 				if (call) {
 					editor.closeEditor();
 				} else {
@@ -320,7 +320,7 @@ public class LayoutEditorUI {
 
 		//CLOSE EDITOR BUTTON
 		menuBar.addClickableEntry(MenuBar.Side.RIGHT, "close_editor", Component.empty(), (bar, entry) -> {
-					displayUnsavedWarning(call -> {
+					displayUnsavedWarning(editor, call -> {
 						if (call) {
 							editor.closeEditor();
 						} else {
@@ -330,11 +330,20 @@ public class LayoutEditorUI {
 				}).setIconTexture(CLOSE_EDITOR_TEXTURE)
 				.setIconTextureColor(() -> UIBase.getUIColorTheme().layout_editor_close_icon_color);
 
+		menuBar.addClickableEntry(MenuBar.Side.RIGHT, "unsaved_indicator", Component.empty(), (bar, entry) -> {
+				}).setLabelSupplier((bar, entry) ->
+						editor.unsavedChanges ? Component.translatable("fancymenu.editor.menu_bar.unsaved_warning").withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())) : Component.empty())
+				.setActive(false);
+
 		return menuBar;
 
 	}
 
-	protected static void displayUnsavedWarning(@NotNull Consumer<Boolean> callback) {
+	protected static void displayUnsavedWarning(@NotNull LayoutEditorScreen editor, @NotNull Consumer<Boolean> callback) {
+		if (!editor.unsavedChanges) {
+			callback.accept(true);
+			return;
+		}
 		Minecraft.getInstance().setScreen(ConfirmationScreen.warning(callback, LocalizationUtils.splitLocalizedLines("fancymenu.editor.warning.unsaved")));
 	}
 
@@ -860,7 +869,7 @@ public class LayoutEditorUI {
 			if (allLayoutsCount > 8) {
 				String moreLayoutCount = "" + (allLayoutsCount-8);
 				menu.addClickableEntry("x_more_layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.more_layouts", moreLayoutCount), (menu1, entry) -> {
-					displayUnsavedWarning(call -> {
+					displayUnsavedWarning(editor, call -> {
 						if (call) {
 							editor.saveWidgetSettings();
 							Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), editor.layoutTargetScreen, layouts -> {
@@ -876,7 +885,7 @@ public class LayoutEditorUI {
 			menu.addSeparatorEntry("separator_after_recent_layouts");
 
 			menu.addClickableEntry("all_layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.all"), (menu1, entry) -> {
-				displayUnsavedWarning(call -> {
+				displayUnsavedWarning(editor, call -> {
 					if (call) {
 						editor.saveWidgetSettings();
 						Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), editor.layoutTargetScreen, layouts -> {
@@ -909,7 +918,7 @@ public class LayoutEditorUI {
 			if (allLayoutsCount > 8) {
 				String moreLayoutCount = "" + (allLayoutsCount-8);
 				menu.addClickableEntry("x_more_layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.more_layouts", moreLayoutCount), (menu1, entry) -> {
-					displayUnsavedWarning(call -> {
+					displayUnsavedWarning(editor, call -> {
 						if (call) {
 							editor.saveWidgetSettings();
 							Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(editor.layout.screenIdentifier, false), editor.layoutTargetScreen, layouts -> {
@@ -925,7 +934,7 @@ public class LayoutEditorUI {
 			menu.addSeparatorEntry("separator_after_recent_layouts");
 
 			menu.addClickableEntry("all_layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.all"), (menu1, entry) -> {
-				displayUnsavedWarning(call -> {
+				displayUnsavedWarning(editor, call -> {
 					if (call) {
 						editor.saveWidgetSettings();
 						Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(editor.layout.screenIdentifier, false), editor.layoutTargetScreen, layouts -> {
@@ -956,7 +965,7 @@ public class LayoutEditorUI {
 		}).setLabelSupplier((menu1, entry) -> layout.getStatus().getCycleComponent());
 
 		menu.addClickableEntry("edit_layout", Component.translatable("fancymenu.layout.manage.edit"), (menu1, entry) -> {
-			displayUnsavedWarning(call -> {
+			displayUnsavedWarning(editor, call -> {
 				if (call) {
 					editor.saveWidgetSettings();
 					MainThreadTaskExecutor.executeInMainThread(() -> LayoutHandler.openLayoutEditor(layout, layout.isUniversalLayout() ? null : editor.layoutTargetScreen), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);

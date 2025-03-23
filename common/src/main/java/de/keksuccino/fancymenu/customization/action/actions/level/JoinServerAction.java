@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinServerList;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConnectScreen;
@@ -74,7 +75,9 @@ public class JoinServerAction extends Action {
                 long now = System.currentTimeMillis();
                 if ((lastErrorTriggered + 60000) < now) {
                     lastErrorTriggered = now;
-                    Minecraft.getInstance().setScreen(new GenericMessageScreen(Component.translatable("fancymenu.actions.generic.async_error", this.getActionDisplayName())));
+                    MainThreadTaskExecutor.executeInMainThread(
+                            () -> Minecraft.getInstance().setScreen(new GenericMessageScreen(Component.translatable("fancymenu.actions.generic.async_error", this.getActionDisplayName()))),
+                            MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                 }
             }
         }

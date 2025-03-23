@@ -40,7 +40,10 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     private static final ResourceLocation SUB_CONTEXT_MENU_ARROW_ICON = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/contextmenu/context_menu_sub_arrow.png");
     private static final ResourceLocation CONTEXT_MENU_TOOLTIP_ICON = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/contextmenu/context_menu_tooltip.png");
+    private static final ResourceLocation SCROLL_UP_ARROW = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/contextmenu/scroll_up_arrow.png");
+    private static final ResourceLocation SCROLL_DOWN_ARROW = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/contextmenu/scroll_down_arrow.png");
     private static final DrawableColor SHADOW_COLOR = DrawableColor.of(new Color(43, 43, 43, 100));
+    private static final int SCROLL_INDICATOR_HEIGHT = 12; // Space reserved for arrows
 
     protected final List<ContextMenuEntry<?>> entries = new ArrayList<>();
     protected float scale = UIBase.getUIScale();
@@ -58,10 +61,12 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     protected boolean forceRawXY = false;
     protected boolean forceSide = false;
     protected boolean forceSideSubMenus = true;
+    protected float scrollPosition = 0.0f; // Current scroll position
+    private boolean needsScrolling = false; // Flag to track if menu is scrollable
+    private float displayHeight = 0; // Adjusted height when scrollable
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-
         if (!this.isOpen()) return;
 
         if (this.forceUIScale) this.scale = UIBase.getUIScale();
@@ -119,6 +124,16 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         renderEntries.add(new SpacerContextMenuEntry("unregistered_spacer_bottom", this));
 
+        // Calculate max height considering both menu scale and GUI scale
+        double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
+        float menuScale = UIBase.calculateFixedScale(this.scale);
+        float maxMenuHeight = (getScreenHeight() / menuScale) * 0.7f;
+
+        this.needsScrolling = this.rawHeight > maxMenuHeight;
+
+        // If scrollable, adjust displayed height
+        this.displayHeight = needsScrolling ? maxMenuHeight : this.rawHeight;
+
         float x = this.getActualX();
         float y = this.getActualY();
         float scaledX = (float)((float)x/scale) + this.getBorderThickness();
@@ -129,28 +144,141 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         //Render shadow
         if (this.hasShadow()) {
-            RenderingUtils.fillF(graphics, (float) (scaledX + 4), (float) (scaledY + 4), (float) (scaledX + this.getWidth() + 4), (float) (scaledY + this.getHeight() + 4), SHADOW_COLOR.getColorInt());
+            RenderingUtils.fillF(graphics, (float) (scaledX + 4), (float) (scaledY + 4),
+                    (float) (scaledX + this.getWidth() + 4),
+                    (float) (scaledY + displayHeight + 4), SHADOW_COLOR.getColorInt());
         }
+
         //Render background
-        RenderingUtils.fillF(graphics, (float) scaledX, (float) scaledY, (float) (scaledX + this.getWidth()), (float) (scaledY + this.getHeight()), UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
+        RenderingUtils.fillF(graphics, (float) scaledX, (float) scaledY,
+                (float) (scaledX + this.getWidth()),
+                (float) (scaledY + displayHeight),
+                UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
+
+        // Enable scissoring if scrollable
+        if (needsScrolling) {
+            float scissorTop = scaledY + SCROLL_INDICATOR_HEIGHT;
+            float scissorBottom = scaledY + displayHeight - SCROLL_INDICATOR_HEIGHT;
+            graphics.enableScissor(
+                    (int)scaledX,
+                    (int)scissorTop,
+                    (int)(scaledX + this.getWidth()),
+                    (int)scissorBottom
+            );
+        }
+
         //Update + render entries
         float entryY = scaledY;
+        if (needsScrolling) {
+            // Add space for scroll indicator and apply scroll position
+            entryY += SCROLL_INDICATOR_HEIGHT - scrollPosition;
+        }
+
         for (ContextMenuEntry<?> e : renderEntries) {
             e.x = scaledX;
             e.y = entryY; //already scaled
             e.width = this.getWidth(); //don't scale, because already scaled via graphics.pose().scale()
+
+            boolean isVisible = true;
+            if (needsScrolling) {
+                // Check if entry is visible in the scrollable area
+                float entryBottom = entryY + e.getHeight();
+                float visibleTop = scaledY + SCROLL_INDICATOR_HEIGHT;
+                float visibleBottom = scaledY + displayHeight - SCROLL_INDICATOR_HEIGHT;
+
+                // Entry is visible if it's at least partially within the visible area
+                isVisible = (entryY < visibleBottom && entryBottom > visibleTop);
+            }
+
             boolean hover = e.isHovered();
-            e.setHovered(!navigatingInSub && UIBase.isXYInArea(scaledMouseX, scaledMouseY, e.x, e.y, e.width, e.getHeight()));
+            // Only set hover if the entry is visible in the scroll area
+            e.setHovered(isVisible && !navigatingInSub && UIBase.isXYInArea(scaledMouseX, scaledMouseY, e.x, e.y, e.width, e.getHeight()));
+
             //Run hover action of element if its hover state changed to hovered
             if (!hover && e.isHovered() && (e.hoverAction != null)) {
                 e.hoverAction.run(this, e, false);
             }
-            RenderSystem.enableBlend();
-            e.render(graphics, (int) scaledMouseX, (int) scaledMouseY, partial);
+
+            // Only render if visible
+            if (isVisible) {
+                RenderSystem.enableBlend();
+                e.render(graphics, (int) scaledMouseX, (int) scaledMouseY, partial);
+            }
+
             entryY += e.getHeight(); //don't scale this, because already scaled via graphics.pose().scale()
         }
+
+        // Disable scissoring and render arrow indicators if needed
+        if (needsScrolling) {
+            graphics.disableScissor();
+
+            // Calculate max scroll position
+            float maxScrollPosition = this.rawHeight - (displayHeight - SCROLL_INDICATOR_HEIGHT * 2);
+
+            // Create a darker version of the background color (about 10% darker)
+            Color bgColor = UIBase.getUIColorTheme().element_background_color_normal.getColor();
+            Color darkerBgColor = new Color(
+                    Math.max(0, (int)(bgColor.getRed() * 0.9)),
+                    Math.max(0, (int)(bgColor.getGreen() * 0.9)),
+                    Math.max(0, (int)(bgColor.getBlue() * 0.9)),
+                    bgColor.getAlpha()
+            );
+            int darkerBackgroundColor = darkerBgColor.getRGB();
+
+            // Render up arrow background and arrow if scrolled down
+            if (scrollPosition > 0) {
+                // Fill background
+                RenderingUtils.fillF(graphics,
+                        scaledX,
+                        scaledY,
+                        scaledX + this.getWidth(),
+                        scaledY + SCROLL_INDICATOR_HEIGHT,
+                        darkerBackgroundColor);
+
+                // Render arrow centered
+                RenderSystem.enableBlend();
+                graphics.blit(
+                        RenderType::guiTextured,
+                        SCROLL_UP_ARROW,
+                        (int)(scaledX + this.getWidth()/2 - 5),
+                        (int)(scaledY + (SCROLL_INDICATOR_HEIGHT - 10) / 2), // Center vertically
+                        0.0F, 0.0F, 10, 10, 10, 10,
+                        UIBase.getUIColorTheme().ui_texture_color.getColorInt()
+                );
+            }
+
+            // Render down arrow background and arrow if can scroll further
+            if (scrollPosition < maxScrollPosition) {
+                // Fill background
+                RenderingUtils.fillF(graphics,
+                        scaledX,
+                        scaledY + displayHeight - SCROLL_INDICATOR_HEIGHT,
+                        scaledX + this.getWidth(),
+                        scaledY + displayHeight,
+                        darkerBackgroundColor);
+
+                // Render arrow centered (with fixed position)
+                RenderSystem.enableBlend();
+                graphics.blit(
+                        RenderType::guiTextured,
+                        SCROLL_DOWN_ARROW,
+                        (int)(scaledX + this.getWidth()/2 - 5),
+                        (int)(scaledY + displayHeight - SCROLL_INDICATOR_HEIGHT + (SCROLL_INDICATOR_HEIGHT - 10) / 2), // Centered in area
+                        0.0F, 0.0F, 10, 10, 10, 10,
+                        UIBase.getUIColorTheme().ui_texture_color.getColorInt()
+                );
+            }
+        }
+
         //Render border
-        UIBase.renderBorder(graphics, (float) (scaledX - this.getBorderThickness()), (float) (scaledY - this.getBorderThickness()), (float) (scaledX + this.getWidth() + this.getBorderThickness()), (float) (scaledY + this.getHeight() + this.getBorderThickness()), (float) this.getBorderThickness(), UIBase.getUIColorTheme().element_border_color_normal.getColorInt(), true, true, true, true);
+        UIBase.renderBorder(graphics,
+                (float) (scaledX - this.getBorderThickness()),
+                (float) (scaledY - this.getBorderThickness()),
+                (float) (scaledX + this.getWidth() + this.getBorderThickness()),
+                (float) (scaledY + displayHeight + this.getBorderThickness()),
+                (float) this.getBorderThickness(),
+                UIBase.getUIColorTheme().element_border_color_normal.getColorInt(),
+                true, true, true, true);
 
         //Post-tick
         for (ContextMenuEntry<?> e : renderEntries) {
@@ -172,7 +300,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 s.subContextMenu.render(graphics, mouseX, mouseY, partial);
             }
         }
-
     }
 
     @NotNull
@@ -421,10 +548,24 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         if (this.forceRawXY) {
             return y;
         }
-        //Force the menu to stay on screen
-        if ((y + this.getScaledHeightWithBorder()) >= (getScreenHeight() - this.getMinDistanceToScreenEdge())) {
-            return getScreenHeight() - this.getScaledHeightWithBorder() - this.getMinDistanceToScreenEdge() - 1;
+
+        // Calculate the actual height to use for positioning considering scaling
+        float menuScale = UIBase.calculateFixedScale(this.scale);
+        float heightToUse;
+
+        if (this.needsScrolling) {
+            // Use the actual display height that's determined during rendering
+            // This is already capped at 70% of screen height in logical coordinates
+            heightToUse = this.displayHeight * menuScale + this.getBorderThickness() * 2 * menuScale;
+        } else {
+            heightToUse = this.getScaledHeightWithBorder();
         }
+
+        // Make sure the menu stays fully on screen
+        if ((y + heightToUse) >= (getScreenHeight() - this.getMinDistanceToScreenEdge())) {
+            return getScreenHeight() - heightToUse - this.getMinDistanceToScreenEdge() - 1;
+        }
+
         return Math.max(y, this.getMinDistanceToScreenEdge());
     }
 
@@ -490,7 +631,10 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     public float getScaledHeight() {
         float scale = UIBase.calculateFixedScale(this.scale);
-        return (float) ((float)this.getHeight() * scale);
+        if (this.needsScrolling) {
+            return (float)((float)this.displayHeight * scale);
+        }
+        return (float)((float)this.getHeight() * scale);
     }
 
     public float getScaledHeightWithBorder() {
@@ -619,6 +763,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         this.rawX = x;
         this.rawY = y;
         this.open = true;
+        this.scrollPosition = 0.0f; // Reset scroll position when opening menu
         if ((entryPath != null) && !entryPath.isEmpty()) {
             String firstId = entryPath.get(0);
             ContextMenuEntry<?> entry = this.getEntry(firstId);
@@ -697,15 +842,35 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         return l;
     }
 
+    // Helper to check if an entry is currently visible in the scrollable area
+    private boolean isEntryVisible(ContextMenuEntry<?> entry) {
+        if (!this.needsScrolling) return true;
+
+        float scale = UIBase.calculateFixedScale(this.getScale());
+        float scaledY = (float)((float)this.getActualY()/scale) + this.getBorderThickness();
+
+        float entryTop = entry.y;
+        float entryBottom = entry.y + entry.getHeight();
+        float visibleTop = scaledY + SCROLL_INDICATOR_HEIGHT;
+        float visibleBottom = scaledY + this.displayHeight - SCROLL_INDICATOR_HEIGHT;
+
+        return entryTop < visibleBottom && entryBottom > visibleTop;
+    }
+
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (this.isUserNavigatingInMenu()) {
             float scale = UIBase.calculateFixedScale(this.scale);
             int scaledMouseX = (int) ((float)mouseX / scale);
             int scaledMouseY = (int) ((float)mouseY / scale);
+
+            // Process entries only if they're visible in the scroll area
             for (ContextMenuEntry<?> entry : this.entries) {
-                entry.mouseClicked(scaledMouseX, scaledMouseY, button);
+                if (!this.needsScrolling || isEntryVisible(entry)) {
+                    entry.mouseClicked(scaledMouseX, scaledMouseY, button);
+                }
             }
+
             //Handle click for sub context menus
             for (ContextMenuEntry<?> e : this.entries) {
                 if (e instanceof SubMenuContextMenuEntry s) {
@@ -715,6 +880,54 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return true;
         }
         return GuiEventListener.super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
+
+        if (this.isOpen()) {
+
+            if (this.needsScrolling && this.isMouseOver(mouseX, mouseY)) {
+                // Close all sub-menus when scrolling in the parent menu
+                this.closeSubMenus();
+
+                // Update scroll position (scrollDeltaY is negative when scrolling down)
+                this.scrollPosition -= scrollDeltaY * 30.0; // Adjust scroll speed
+
+                // Clamp scroll position
+                float maxScrollPosition = this.rawHeight - (this.displayHeight - SCROLL_INDICATOR_HEIGHT * 2);
+                this.scrollPosition = Math.max(0, Math.min(this.scrollPosition, maxScrollPosition));
+
+                return true; // We handled the scroll
+            }
+
+            // Check if any submenu can handle the scroll
+            for (ContextMenuEntry<?> e : this.entries) {
+                if (e instanceof SubMenuContextMenuEntry s) {
+                    if (s.subContextMenu.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY)) {
+                        return true;
+                    }
+                }
+            }
+
+        }
+
+        return GuiEventListener.super.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
+
+    }
+
+    @Override
+    public boolean isMouseOver(double mouseX, double mouseY) {
+        float scale = UIBase.calculateFixedScale(this.getScale());
+        float actualX = this.getActualX() / scale + this.getBorderThickness();
+        float actualY = this.getActualY() / scale + this.getBorderThickness();
+        float width = this.getWidth();
+        float height = this.needsScrolling ? this.displayHeight : this.getHeight();
+
+        return mouseX >= actualX * scale &&
+                mouseX <= (actualX + width) * scale &&
+                mouseY >= actualY * scale &&
+                mouseY <= (actualY + height) * scale;
     }
 
     @Override
@@ -1638,5 +1851,4 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/contextmenu/icons/" + iconName + ".png");
         }
     }
-
 }

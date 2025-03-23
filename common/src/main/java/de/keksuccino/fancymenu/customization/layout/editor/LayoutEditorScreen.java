@@ -973,12 +973,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		boolean menuBarContextOpen = (this.menuBar != null) && this.menuBar.isEntryContextMenuOpen();
 
-		if (PopupHandler.isPopupActive()) {
-			this.closeRightClickMenu();
-			this.closeActiveElementMenu();
-			return false;
-		}
-
 		if (super.mouseClicked(mouseX, mouseY, button)) {
 			this.closeRightClickMenu();
 			this.closeActiveElementMenu();
@@ -1052,6 +1046,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		this.anchorPointOverlay.mouseReleased(mouseX, mouseY, button);
 
+		boolean cachedMovingStarted = this.elementMovingStarted;
+
 		this.elementMovingStarted = false;
 		this.elementResizingStarted = false;
 		this.currentlyDraggedElements.clear();
@@ -1063,8 +1059,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		if (button == 0) {
 			this.isMouseSelection = false;
 		}
-
-		if (PopupHandler.isPopupActive()) return false;
 
 		//Imitate super.mouseReleased in a way that doesn't suck
 		this.setDragging(false);
@@ -1090,7 +1084,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		}
 
 		//Save snapshot from before started dragging element(s)
-		if (elementRecentlyMovedByDragging && (this.preDragElementSnapshot != null)) {
+		if (cachedMovingStarted && (this.preDragElementSnapshot != null)) {
 			this.history.saveSnapshot(this.preDragElementSnapshot);
 		}
 		this.preDragElementSnapshot = null;
@@ -1102,8 +1096,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	@Override
 	public boolean mouseDragged(double mouseX, double mouseY, int button, double $$3, double $$4) {
 
-		if (PopupHandler.isPopupActive()) return false;
-
 		if (super.mouseDragged(mouseX, mouseY, button, $$3, $$4)) return true;
 
 		if (this.isMouseSelection) {
@@ -1114,9 +1106,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			}
 		}
 
-		if (this.preDragElementSnapshot == null) {
-			this.preDragElementSnapshot = this.history.createSnapshot();
-		}
+//		if (this.preDragElementSnapshot == null) {
+//			this.preDragElementSnapshot = this.history.createSnapshot();
+//		}
 
 		int draggingDiffX = (int) (mouseX - this.leftMouseDownPosX);
 		int draggingDiffY = (int) (mouseY - this.leftMouseDownPosY);
@@ -1134,6 +1126,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		boolean movingCrumpleZonePassed = (Math.abs(draggingDiffX) >= ELEMENT_DRAG_CRUMPLE_ZONE) || (Math.abs(draggingDiffY) >= ELEMENT_DRAG_CRUMPLE_ZONE);
 		if (movingCrumpleZonePassed) {
 			if (!this.elementMovingStarted) {
+				if (this.preDragElementSnapshot == null) {
+					this.preDragElementSnapshot = this.history.createSnapshot();
+				}
 				allElements.forEach(element -> {
 					element.updateMovingStartPos((int)mouseX, (int)mouseY);
 					element.movingCrumpleZonePassed = true;
