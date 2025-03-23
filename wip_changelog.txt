@@ -32,6 +32,7 @@ CHANGELOG | FANCYMENU v3.5.0 [ W I P !! Not public yet !! ] - The "Quality of Li
 - Fixed description of "Mouse Clicked" requirement showing as one line instead of multiple lines
 - Fixed undo/redo in the text editor not working when adding placeholders via the placeholder browser (#1109)
 - Fixed "Format Error" in description of "Current Audio Track" placeholder
+- Fixed unable to undo/redo moving an element in the editor when it got moved only 1 pixel
 - Hopefully fixed JSON placeholder sometimes not showing its replacement anymore after reloading FancyMenu (#1100)
  
 %changelog:end%
