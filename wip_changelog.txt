@@ -14,6 +14,7 @@ CHANGELOG | FANCYMENU v3.5.0 [ W I P !! Not public yet !! ] - The "Quality of Li
 - Added a search bar to the placeholders browser in the text editor to search for placeholders by their names, descriptions and identifiers
 - Added a search bar to the variables browser in the Manage Variables screen to search for variables by their names and values (#743)
 - It is now possible to move layers in the Layer widget by dragging them (with multi-selection support) (#1112)
+- The Layers widget lets you make layers (elements) invisible in the editor now without actually deleting them (they will be visible outside the editor) (#1112)
 - The Manage Variables screen now shows the variable's value after each variable name
 - Placeholders can now be edited with multi-line support in the text editor (this feature is experimental, so it could break stuff in some cases)
 - The color formatting of placeholders in the text editor got reworked to be more useful (they now get formatted similar to other text editors format JSON-like text)
