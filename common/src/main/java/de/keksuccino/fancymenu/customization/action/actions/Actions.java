@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.customization.action.actions.level.EnterWorldActi
 import de.keksuccino.fancymenu.customization.action.actions.level.JoinLastWorldServerAction;
 import de.keksuccino.fancymenu.customization.action.actions.level.JoinServerAction;
 import de.keksuccino.fancymenu.customization.action.actions.other.*;
+import de.keksuccino.fancymenu.customization.action.actions.screen.BackToLastScreenAction;
 import de.keksuccino.fancymenu.customization.action.actions.screen.CloseScreenAction;
 import de.keksuccino.fancymenu.customization.action.actions.screen.OpenScreenAction;
 import de.keksuccino.fancymenu.customization.action.actions.screen.UpdateScreenAction;
@@ -45,6 +46,7 @@ public class Actions {
     public static final NextTrackAction NEXT_AUDIO_ELEMENT_TRACK = new NextTrackAction();
     public static final PreviousTrackAction PREVIOUS_AUDIO_ELEMENT_TRACK = new PreviousTrackAction();
     public static final TogglePlayTrackAction TOGGLE_PLAY_AUDIO_ELEMENT_TRACK = new TogglePlayTrackAction();
+    public static final BackToLastScreenAction BACK_TO_LAST_SCREEN = new BackToLastScreenAction();
 
     public static void registerAll() {
 
@@ -72,6 +74,7 @@ public class Actions {
         ActionRegistry.register(NEXT_AUDIO_ELEMENT_TRACK);
         ActionRegistry.register(PREVIOUS_AUDIO_ELEMENT_TRACK);
         ActionRegistry.register(TOGGLE_PLAY_AUDIO_ELEMENT_TRACK);
+        ActionRegistry.register(BACK_TO_LAST_SCREEN);
 
     }
 

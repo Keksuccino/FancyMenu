@@ -744,6 +744,62 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		return movedBehind;
 	}
 
+	/**
+	 * Moves a layer element to a specific position in the layer order.
+	 *
+	 * @param element The element to move
+	 * @param targetIndex The index to move the element to (in the normalEditorElements list)
+	 * @return true if the move was successful, false otherwise
+	 */
+	public boolean moveLayerToPosition(AbstractEditorElement element, int targetIndex) {
+		try {
+			if (this.normalEditorElements.contains(element)) {
+				int sourceIndex = this.normalEditorElements.indexOf(element);
+
+				// Skip if element is already at the target position
+				if (sourceIndex == targetIndex) {
+					return false;
+				}
+
+				// Create a new list for the reordered elements
+				List<AbstractEditorElement> newNormalEditorElements = new ArrayList<>(this.normalEditorElements);
+
+				// Remove the element from its current position
+				newNormalEditorElements.remove(element);
+
+				// Make sure targetIndex is valid after removal
+				int adjustedTargetIndex = targetIndex;
+				if (sourceIndex < targetIndex) {
+					adjustedTargetIndex--;
+				}
+
+				// Insert at the target position
+				if (adjustedTargetIndex >= newNormalEditorElements.size()) {
+					newNormalEditorElements.add(element);
+				} else if (adjustedTargetIndex < 0) {
+					newNormalEditorElements.add(0, element);
+				} else {
+					newNormalEditorElements.add(adjustedTargetIndex, element);
+				}
+
+				// Update the elements list
+				this.normalEditorElements = newNormalEditorElements;
+
+				// Notify widgets about the change
+				boolean movedUp = sourceIndex > targetIndex;
+				this.layoutEditorWidgets.forEach(widget -> widget.editorElementOrderChanged(element, movedUp));
+
+				// Mark layout as having unsaved changes
+				this.unsavedChanges = true;
+
+				return true;
+			}
+		} catch (Exception ex) {
+			LOGGER.error("Failed to move layer to position", ex);
+		}
+		return false;
+	}
+
 	public void copyElementsToClipboard(AbstractEditorElement... elements) {
 		if ((elements != null) && (elements.length > 0)) {
 			COPIED_ELEMENTS_CLIPBOARD.clear();

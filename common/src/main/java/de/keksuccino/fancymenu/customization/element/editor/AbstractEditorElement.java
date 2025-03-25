@@ -277,13 +277,6 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		}
 
-		this.addToggleContextMenuEntryTo(this.rightClickMenu, "load_once_per_session", AbstractEditorElement.class,
-						consumes -> consumes.element.loadOncePerSession,
-						(element1, aBoolean) -> element1.element.loadOncePerSession = aBoolean,
-						"fancymenu.elements.element.load_once_per_session")
-				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.element.load_once_per_session.desc")))
-				.setStackable(true);
-
 		if (this.settings.isAdvancedPositioningSupported()) {
 
 			ContextMenu advancedPositioningMenu = new ContextMenu();
@@ -413,6 +406,13 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 					.setIcon(ContextMenu.IconFactory.getIcon("check_list"));
 
 		}
+
+		this.addToggleContextMenuEntryTo(this.rightClickMenu, "load_once_per_session", AbstractEditorElement.class,
+						consumes -> consumes.element.loadOncePerSession,
+						(element1, aBoolean) -> element1.element.loadOncePerSession = aBoolean,
+						"fancymenu.elements.element.load_once_per_session")
+				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.element.load_once_per_session.desc")))
+				.setStackable(true);
 
 		this.rightClickMenu.addSeparatorEntry("separator_5");
 
