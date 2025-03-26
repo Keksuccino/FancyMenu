@@ -18,6 +18,7 @@ import de.keksuccino.fancymenu.customization.layer.ElementFactory;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiEasterEgg;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.LayoutEditorWidgetRegistry;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
@@ -96,6 +97,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	protected LayoutEditorHistory.Snapshot preDragElementSnapshot;
 	public final List<WidgetMeta> cachedVanillaWidgetMetas = new ArrayList<>();
 	public boolean unsavedChanges = false;
+	protected final TamagotchiEasterEgg tamagotchiEasterEgg = new TamagotchiEasterEgg(0, 0);
 
 	public LayoutEditorScreen(@NotNull Layout layout) {
 		this(null, layout);
@@ -194,6 +196,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			w.refresh();
 		}
 
+		this.addWidget(this.tamagotchiEasterEgg);
+		this.tamagotchiEasterEgg.setScreenSize(this.width, this.height);
+
 	}
 
 	@Override
@@ -203,6 +208,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	@Override
 	public void tick() {
+
+		this.tamagotchiEasterEgg.tick();
 
 		for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
 			w.tick();
@@ -256,6 +263,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		this.anchorPointOverlay.render(graphics, mouseX, mouseY, partial);
 
 		this.renderLayoutEditorWidgets(graphics, mouseX, mouseY, partial);
+
+		this.tamagotchiEasterEgg.render(graphics, mouseX, mouseY, partial);
 
 		this.menuBar.render(graphics, mouseX, mouseY, partial);
 
@@ -581,6 +590,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		List<AbstractEditorElement> elements = new ArrayList<>();
 		for (AbstractEditorElement e : this.getAllElements()) {
 			if (e.isHovered()) {
+				if (e.element.layerHiddenInEditor) continue;
 				boolean hidden = (e instanceof HideableElement h) && h.isHidden();
 				if (!hidden) elements.add(e);
 			}
@@ -628,6 +638,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	public void selectAllElements() {
 		for (AbstractEditorElement e : this.getAllElements()) {
+			if (e.element.layerHiddenInEditor) continue;
 			e.setSelected(true);
 		}
 	}
@@ -666,6 +677,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	public boolean allSelectedElementsMovable() {
 		for (AbstractEditorElement e : this.getSelectedElements()) {
+			if (e.element.layerHiddenInEditor) return false;
 			if (!e.settings.isMovable()) return false;
 		}
 		return true;
@@ -804,6 +816,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		if ((elements != null) && (elements.length > 0)) {
 			COPIED_ELEMENTS_CLIPBOARD.clear();
 			for (AbstractEditorElement e : elements) {
+				if (e.element.layerHiddenInEditor) continue;
 				if (e.settings.isCopyable()) {
 					SerializedElement serialized = e.element.builder.serializeElementInternal(e.element);
 					if (serialized != null) {
@@ -826,6 +839,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 					if (deserializedEditorElement != null) {
 						this.normalEditorElements.add(deserializedEditorElement);
 						this.layoutEditorWidgets.forEach(widget -> widget.editorElementAdded(deserializedEditorElement));
+						deserializedEditorElement.element.layerHiddenInEditor = false;
 						deserializedEditorElement.setSelected(true);
 					}
 				}
@@ -1084,7 +1098,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			if (button == 1) {
 				this.openRightClickMenuAtMouse((int) mouseX, (int) mouseY);
 			}
-		} else {
+		} else if (!topHoverElement.element.layerHiddenInEditor) {
 			this.closeRightClickMenu();
 			//Set and open active element context menu
 			if (button == 1) {
@@ -1156,15 +1170,12 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		if (this.isMouseSelection) {
 			for (AbstractEditorElement e : this.getAllElements()) {
+				if (e.element.layerHiddenInEditor) continue;
 				boolean b = this.isElementOverlappingArea(e, Math.min(this.mouseSelectionStartX, (int)mouseX), Math.min(this.mouseSelectionStartY, (int)mouseY), Math.max(this.mouseSelectionStartX, (int)mouseX), Math.max(this.mouseSelectionStartY, (int)mouseY));
 				if (!b && hasControlDown()) continue; //skip deselect if CTRL pressed
 				e.setSelected(b);
 			}
 		}
-
-//		if (this.preDragElementSnapshot == null) {
-//			this.preDragElementSnapshot = this.history.createSnapshot();
-//		}
 
 		int draggingDiffX = (int) (mouseX - this.leftMouseDownPosX);
 		int draggingDiffY = (int) (mouseY - this.leftMouseDownPosY);
@@ -1215,6 +1226,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		if (super.keyPressed(keycode, scancode, modifiers)) return true;
 
 		for (AbstractEditorElement abstractEditorElement : this.getAllElements()) {
+			if (abstractEditorElement.element.layerHiddenInEditor) continue;
 			if (abstractEditorElement.keyPressed(keycode, scancode, modifiers)) return true;
 		}
 
@@ -1294,6 +1306,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		if (keycode == InputConstants.KEY_DELETE) {
 			this.history.saveSnapshot();
 			for (AbstractEditorElement e : this.getSelectedElements()) {
+				if (e.element.layerHiddenInEditor) continue;
 				e.deleteElement();
 			}
 			return true;

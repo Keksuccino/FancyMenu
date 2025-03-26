@@ -701,6 +701,13 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	@Override
 	public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
+		if (this.element.layerHiddenInEditor) {
+			if (this.rightClickMenu.isOpen()) {
+				this.rightClickMenu.closeMenu();
+			}
+			return;
+		}
+
 		this.tick();
 
 		this.hovered = this.isMouseOver(mouseX, mouseY);
@@ -912,6 +919,9 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 	@Override
 	public boolean mouseClicked(double mouseX, double mouseY, int button) {
+
+		if (this.element.layerHiddenInEditor) return false;
+
 		if (!this.isSelected()) {
 			return false;
 		}
@@ -956,6 +966,9 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	 */
 	@Override
 	public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+
+		if (this.element.layerHiddenInEditor) return false;
+
 		if (!this.isSelected()) {
 			return false;
 		}
@@ -1123,6 +1136,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 	@Override
 	public boolean isMouseOver(double mouseX, double mouseY) {
+		if (this.element.layerHiddenInEditor) return false;
 		return UIBase.isXYInArea((int) mouseX, (int) mouseY, this.getX(), this.getY(), this.getWidth(), this.getHeight());
 	}
 
@@ -1155,6 +1169,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	}
 
 	public boolean isHovered() {
+		if (this.element.layerHiddenInEditor) return false;
 		return this.hovered || this.rightClickMenu.isUserNavigatingInMenu() || (this.getHoveredResizeGrabber() != null);
 	}
 

@@ -1,10 +1,12 @@
 package de.keksuccino.fancymenu.util.rendering;
 
 import com.mojang.blaze3d.platform.Window;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphics;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -43,6 +45,39 @@ public class RenderingUtils {
         graphics.fill(RenderType.guiOverlay(), x, y + partH, x + partW, y + height, MISSING_TEXTURE_COLOR_BLACK.getColorInt());
         //Bottom-right
         graphics.fill(RenderType.guiOverlay(), x + partW, y + partH, x + width, y + height, MISSING_TEXTURE_COLOR_MAGENTA.getColorInt());
+    }
+
+    /**
+     * Draws a textured quad with the texture mirrored horizontally by explicitly flipping the texture coordinates.
+     *
+     * @param graphics       The GuiGraphics context.
+     * @param atlasLocation  The texture resource location.
+     * @param x              The x coordinate on screen.
+     * @param y              The y coordinate on screen.
+     * @param u              The u coordinate in the texture.
+     * @param v              The v coordinate in the texture.
+     * @param width          The width of the quad on screen.
+     * @param height         The height of the quad on screen.
+     * @param textureWidth   The width of the texture.
+     * @param textureHeight  The height of the texture.
+     */
+    public static void blitMirrored(@NotNull GuiGraphics graphics, ResourceLocation atlasLocation, int x, int y, int u, int v, int width, int height, int textureWidth, int textureHeight) {
+        // Calculate texture coordinates
+        float minU = (float)u / (float)textureWidth;
+        float maxU = (float)(u + width) / (float)textureWidth;
+        float minV = (float)v / (float)textureHeight;
+        float maxV = (float)(v + height) / (float)textureHeight;
+
+        // For mirroring, we swap the U coordinates
+        RenderType renderType = RenderType.guiTextured(atlasLocation);
+        Matrix4f matrix4f = graphics.pose().last().pose();
+        VertexConsumer consumer = ((IMixinGuiGraphics)graphics).getBufferSource_FancyMenu().getBuffer(renderType);
+
+        // Add vertices with flipped U coordinates (maxU/minU swapped)
+        consumer.addVertex(matrix4f, (float)x, (float)y, 0.0F).setUv(maxU, minV).setColor(-1);
+        consumer.addVertex(matrix4f, (float)x, (float)(y + height), 0.0F).setUv(maxU, maxV).setColor(-1);
+        consumer.addVertex(matrix4f, (float)(x + width), (float)(y + height), 0.0F).setUv(minU, maxV).setColor(-1);
+        consumer.addVertex(matrix4f, (float)(x + width), (float)y, 0.0F).setUv(minU, minV).setColor(-1);
     }
 
     /**

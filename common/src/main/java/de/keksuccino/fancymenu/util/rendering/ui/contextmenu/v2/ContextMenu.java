@@ -916,8 +916,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     }
 
-    @Override
-    public boolean isMouseOver(double mouseX, double mouseY) {
+    // It's important to not use the real isMouseOver() method, because that would break FM's GUIs
+    public boolean isMouseOverMenu(double mouseX, double mouseY) {
         float scale = UIBase.calculateFixedScale(this.getScale());
         float actualX = this.getActualX() / scale + this.getBorderThickness();
         float actualY = this.getActualY() / scale + this.getBorderThickness();
@@ -928,6 +928,12 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 mouseX <= (actualX + width) * scale &&
                 mouseY >= actualY * scale &&
                 mouseY <= (actualY + height) * scale;
+    }
+
+    // Always return false here to not break FM's GUIs
+    @Override
+    public boolean isMouseOver(double $$0, double $$1) {
+        return false;
     }
 
     @Override
