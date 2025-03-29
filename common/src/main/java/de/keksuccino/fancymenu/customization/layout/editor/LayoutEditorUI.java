@@ -872,6 +872,7 @@ public class LayoutEditorUI {
 					displayUnsavedWarning(editor, call -> {
 						if (call) {
 							editor.saveWidgetSettings();
+							editor.tamagotchiEasterEgg.cleanup();
 							Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), editor.layoutTargetScreen, layouts -> {
 								Minecraft.getInstance().setScreen(editor);
 							}));

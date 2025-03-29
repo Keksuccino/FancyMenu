@@ -13,11 +13,9 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.function.BooleanSupplier;
 
 /**
  * TamagotchiBuddy is a cute Easter egg that adds a pixel art pet
@@ -40,9 +38,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     private static final int SPRITE_WIDTH = 32;
     private static final int SPRITE_HEIGHT = 32;
     private static final int ATLAS_COLUMNS = 4; // 4 animation frames per row
-    private static final int ATLAS_ROWS = 10; // Different states (idle, happy, eating, etc.) - now 10 rows
-    private static final int RADIAL_MENU_RADIUS = 50; // Distance of buttons from buddy's center
-    private static final int DISABLED_BUTTON_COLOR = 0x80FFFFFF; // 50% transparent white for disabled buttons
+    private static final int ATLAS_ROWS = 11; // Different states (idle, happy, eating, etc.) - now 11 rows with pooping
     private static final int CHASE_SPEED = 3; // Faster than normal walk speed
 
     // State indices in the texture atlas (rows)
@@ -56,6 +52,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     private static final int STATE_SAD_STAND = 7;
     private static final int STATE_STRETCHING = 8;  // New state for stretching animation
     private static final int STATE_EXCITED = 9;     // New state for excitement animation
+    private static final int STATE_POOPING = 10;    // New state for pooping animation
 
     // Game state
     private int posX;
@@ -65,15 +62,16 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     private boolean facingLeft = false;
     private boolean isVisible = true;
     private boolean isOffScreen = false;
-    private boolean isRadialMenuOpen = false;
     private boolean isStandingIdle = false;
-    private List<RadialButton> radialButtons = new ArrayList<>();
+    private TamagotchiBuddyGui gui; // New GUI to replace radial menu
 
     // Animation
     private int currentState = STATE_IDLE_WALK;
     private int currentFrame = 0;
     private int animationTicks = 0;
-    private int animationSpeed = 5; // Ticks per frame
+    private int animationSpeed = 5; // Ticks per frame for regular animations
+    private float hopAnimationCounter = 0; // Dedicated counter for hop animation to ensure smooth motion
+    private float hopAnimationSpeed = 0.3f; // Speed of hop animation cycle
 
     // Needs and stats
     private float hunger = 100.0f;
@@ -115,7 +113,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     private int maxWalkDistance = 200; // Maximum pixels to walk before forcing a behavior change
     private float standChance = 0.01f;   // Reduced chance to stop and stand
     private float walkChance = 0.08f;    // Increased chance to start walking again when standing
-    private float hopChance = 0.005f;  // Chance per tick to hop while walking
+    private float hopChance = 0.003f;  // Reduced chance per tick to hop while walking (makes it more special)
     private float lookChance = 0.002f;  // Chance per tick to look around
     private float stretchChance = 0.001f; // Chance per tick to stretch
     private float excitedChance = 0.001f; // Chance per tick to get excited
@@ -126,8 +124,18 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     private FoodItem droppedFood = null;
     private PlayBall playBall = null;
 
+    // Poop system
+    private List<Poop> poops = new ArrayList<>();
+    private boolean isPooping = false;
+    private int timeSinceLastPoop = 0;
+    private int poopingInterval = 1500; // Time between potential poops (in ticks)
+    private float poopChance = 0.05f; // Chance to poop when the interval is reached
+    private static final int MAX_POOPS_BEFORE_SAD = 3; // Buddy gets sad if there are too many poops
+
     // Event listeners
     private final List<GuiEventListener> children = new ArrayList<>();
+
+    private long lastRenderDebugOut = -1L;
 
     /**
      * Creates a new TamagotchiBuddy
@@ -143,51 +151,42 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         // Initialize with random timer
         this.stateChangeTimer = random.nextInt(200) + 100;
 
-        // Initialize radial buttons
-        initRadialButtons();
+        // Initialize GUI
+        this.gui = new TamagotchiBuddyGui(this);
     }
 
-    /**
-     * Initializes the radial menu buttons
-     */
-    private void initRadialButtons() {
-        // Clear existing buttons to avoid duplicates
-        radialButtons.clear();
+    // Radial menu buttons have been replaced by the GUI
 
-        // Create feed button
-        radialButtons.add(new RadialButton(
-                TEXTURE_FEED_BUTTON,
-                "Feed",
-                () -> {
-                    dropFoodAboveBuddy();
-                    isRadialMenuOpen = false;
-                },
-                // Condition for button to be active
-                () -> droppedFood == null
-        ));
-
-        // Create play button (replacing work button)
-        radialButtons.add(new RadialButton(
-                TEXTURE_PLAY_BUTTON,
-                "Play",
-                () -> {
-                    startPlaying();
-                    isRadialMenuOpen = false;
-                },
-                // Condition for button to be active
-                () -> !isSleeping && energy > 20 && playBall == null
-        ));
-
-        // Log the number of buttons for debugging
-        LOGGER.info("Initialized " + radialButtons.size() + " radial menu buttons");
-    }
+    // Track visibility changes
+    private boolean wasVisible = true;
+    private boolean wasOffScreen = false;
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        // Log visibility changes
+        if (wasVisible != isVisible) {
+            LOGGER.info("Buddy visibility changed: {} -> {}", wasVisible, isVisible);
+            wasVisible = isVisible;
+        }
+
         if (!isVisible) return;
+
+        // Log off-screen changes
+        if (wasOffScreen != isOffScreen) {
+            LOGGER.info("Buddy off-screen state changed: {} -> {}", wasOffScreen, isOffScreen);
+            wasOffScreen = isOffScreen;
+        }
 
         // Don't render if off screen
         if (isOffScreen) return;
+
+        // Log render position and state
+        long now = System.currentTimeMillis();
+        if ((lastRenderDebugOut + 200) < now) {  // Only log periodically to avoid spam
+            LOGGER.info("Rendering buddy: pos=({},{}), state={}, frame={}, hopping={}",
+                    posX, posY, getStateName(currentState), currentFrame, isHopping);
+            lastRenderDebugOut = now;
+        }
 
         // Update animation frame
         animationTicks++;
@@ -200,91 +199,87 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         int texX = currentFrame * SPRITE_WIDTH;
         int texY = currentState * SPRITE_HEIGHT;
 
+        // Render any poops first (so they appear behind the buddy)
+        for (Poop poop : new ArrayList<>(poops)) {
+            poop.render(graphics);
+        }
+
         // Render the play ball if it exists
         if (playBall != null) {
             playBall.render(graphics);
         }
 
-        // Calculate vertical offset and squash/stretch for hopping animation
-        int verticalOffset = 0;
-        int heightAdjust = 0;
-        int widthAdjust = 0;
-        int yPosAdjust = 0;
+        try {
+            if (isHopping && currentState != STATE_EXCITED) {
+                // For hopping animation, we'll just use a simple Y offset without squash/stretch
 
-        if (isHopping && currentState != STATE_EXCITED) {
-            // Create a more dynamic bouncing effect with sine wave
-            float hopProgress = animationTicks * 0.3f;
-            float bounceFactor = (float)Math.sin(hopProgress) * 6.0f;
-            verticalOffset = (int)bounceFactor;
+                // Calculate a simple vertical hop offset using sine wave
+                float hopOffset = (float)Math.sin(hopAnimationCounter) * 10.0f;
 
-            // Apply squash and stretch effect
-            if (bounceFactor < -3.0f) {
-                // At bottom of hop (squash)
-                heightAdjust = -3; // Reduce height
-                widthAdjust = 4;   // Increase width
-                yPosAdjust = 3;    // Adjust Y position to keep bottom aligned
-            } else if (bounceFactor > 3.0f) {
-                // At top of hop (stretch)
-                heightAdjust = 3;  // Increase height
-                widthAdjust = -2;  // Reduce width
-            }
-        }
+                // Apply the vertical offset to the rendering position
+                int renderY = posY - (int)hopOffset;
 
-        // Render the buddy with squash/stretch if hopping
-        if (isHopping && currentState != STATE_EXCITED) {
-            // Custom rendering for squash/stretch
-            int renderWidth = SPRITE_WIDTH + widthAdjust;
-            int renderHeight = SPRITE_HEIGHT + heightAdjust;
-            int xPos = posX - widthAdjust/2;  // Center the width adjustment
-            int yPos = posY + verticalOffset + yPosAdjust;
-
-            if (facingLeft) {
-                // Custom stretch/squash rendering when facing left
-                graphics.blit(
-                        RenderType::guiTextured,
-                        TEXTURE_ATLAS,
-                        xPos, yPos,
-                        texX, texY,
-                        renderWidth, renderHeight,
-                        SPRITE_WIDTH * ATLAS_COLUMNS, SPRITE_HEIGHT * ATLAS_ROWS
-                );
+                // Regular rendering but with adjusted Y position
+                if (facingLeft) {
+                    // Use our custom method for mirrored rendering
+                    RenderingUtils.blitMirrored(
+                            graphics,
+                            TEXTURE_ATLAS,
+                            posX, renderY,
+                            texX, texY,
+                            SPRITE_WIDTH, SPRITE_HEIGHT,
+                            SPRITE_WIDTH * ATLAS_COLUMNS, SPRITE_HEIGHT * ATLAS_ROWS
+                    );
+                } else {
+                    // Standard rendering
+                    graphics.blit(
+                            RenderType::guiTextured,
+                            TEXTURE_ATLAS,
+                            posX, renderY,
+                            texX, texY,
+                            SPRITE_WIDTH, SPRITE_HEIGHT,
+                            SPRITE_WIDTH * ATLAS_COLUMNS, SPRITE_HEIGHT * ATLAS_ROWS
+                    );
+                }
             } else {
-                // Custom stretch/squash rendering when facing right
-                graphics.blit(
-                        RenderType::guiTextured,
-                        TEXTURE_ATLAS,
-                        xPos, yPos,
-                        texX, texY,
-                        renderWidth, renderHeight,
-                        SPRITE_WIDTH * ATLAS_COLUMNS, SPRITE_HEIGHT * ATLAS_ROWS
-                );
+                // Normal rendering without hopping offset
+                if (facingLeft) {
+                    // Use our custom method for mirrored rendering
+                    RenderingUtils.blitMirrored(
+                            graphics,
+                            TEXTURE_ATLAS,
+                            posX, posY,
+                            texX, texY,
+                            SPRITE_WIDTH, SPRITE_HEIGHT,
+                            SPRITE_WIDTH * ATLAS_COLUMNS, SPRITE_HEIGHT * ATLAS_ROWS
+                    );
+                } else {
+                    // Standard rendering
+                    graphics.blit(
+                            RenderType::guiTextured,
+                            TEXTURE_ATLAS,
+                            posX, posY,
+                            texX, texY,
+                            SPRITE_WIDTH, SPRITE_HEIGHT,
+                            SPRITE_WIDTH * ATLAS_COLUMNS, SPRITE_HEIGHT * ATLAS_ROWS
+                    );
+                }
             }
-        } else {
-            // Normal rendering without squash/stretch
-            if (facingLeft) {
-                // Use our custom method for mirrored rendering
-                RenderingUtils.blitMirrored(
-                        graphics,
-                        TEXTURE_ATLAS,
-                        posX, posY + verticalOffset,
-                        texX, texY,
-                        SPRITE_WIDTH, SPRITE_HEIGHT,
-                        SPRITE_WIDTH * ATLAS_COLUMNS, SPRITE_HEIGHT * ATLAS_ROWS
-                );
-            } else {
-                graphics.blit(
-                        RenderType::guiTextured,
-                        TEXTURE_ATLAS,
-                        posX, posY + verticalOffset,
-                        texX, texY,
-                        SPRITE_WIDTH, SPRITE_HEIGHT,
-                        SPRITE_WIDTH * ATLAS_COLUMNS, SPRITE_HEIGHT * ATLAS_ROWS
-                );
-            }
+        } catch (Exception ex) {
+            LOGGER.error("Error during buddy rendering!", ex);
+            // Always show basic rendering if there's an error
+            graphics.blit(
+                    RenderType::guiTextured,
+                    TEXTURE_ATLAS,
+                    posX, posY,
+                    texX, texY,
+                    SPRITE_WIDTH, SPRITE_HEIGHT,
+                    SPRITE_WIDTH * ATLAS_COLUMNS, SPRITE_HEIGHT * ATLAS_ROWS
+            );
         }
 
         // Render looking direction indicator if looking around
-        if (isLookingAround && !isRadialMenuOpen) {
+        if (isLookingAround && !gui.isVisible()) {
             int lookX = posX + SPRITE_WIDTH/2 + (lookDirection * 10);
             int lookY = posY - 10;
 
@@ -295,12 +290,9 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
                     lookX + dotSize/2, lookY + dotSize/2, color);
         }
 
-        // Render needs indicator when radial menu is not open
-        renderNeedsIndicator(graphics);
-
-        // Render the radial menu if open
-        if (isRadialMenuOpen) {
-            renderRadialMenu(graphics, mouseX, mouseY);
+        // Render needs indicator
+        if (!isEating && !isBeingPet && !isPlaying && !isSleeping) {
+            renderNeedsIndicator(graphics);
         }
 
         // Render any dropped food
@@ -308,93 +300,18 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             droppedFood.render(graphics);
         }
 
-        // Render status bars
-        renderStatusBars(graphics);
+        // Render the GUI
+        gui.render(graphics, mouseX, mouseY);
     }
 
-    /**
-     * Renders the radial menu when it's open
-     */
-    private void renderRadialMenu(GuiGraphics graphics, int mouseX, int mouseY) {
-        if (!isRadialMenuOpen) return;
-
-        int centerX = posX + SPRITE_WIDTH / 2;
-        int centerY = posY + SPRITE_HEIGHT / 2;
-        int numButtons = radialButtons.size();
-
-        if (numButtons > 0) {
-            // Use a 180-degree arc above the buddy instead of a full circle
-            double arcAngle = Math.PI; // 180 degrees
-            double startAngle = -Math.PI; // Start at left side (-180 degrees)
-
-            // Calculate angle step based on number of buttons and arc angle
-            double angleStep = arcAngle / (numButtons - 1);
-            if (numButtons == 1) {
-                // If there's only one button, place it directly above
-                startAngle = -Math.PI / 2;
-                angleStep = 0;
-            }
-
-            LOGGER.info("Rendering radial menu with " + numButtons + " buttons");
-
-            int buttonIndex = 0;
-            for (RadialButton button : radialButtons) {
-                // Calculate position using the arc positioning
-                double angle = startAngle + buttonIndex * angleStep;
-
-                // Place buttons above buddy's head
-                int buttonX = centerX + (int)(Math.cos(angle) * RADIAL_MENU_RADIUS) - RadialButton.BUTTON_SIZE / 2;
-                // Make sure buttons are above the buddy (use negative sin values)
-                int buttonY = centerY - Math.abs((int)(Math.sin(angle) * RADIAL_MENU_RADIUS)) - RadialButton.BUTTON_SIZE / 2 - 10;
-
-                // Update button position
-                button.setPosition(buttonX, buttonY);
-
-                // Update button active state
-                button.updateActiveState();
-
-                // Check if button is hovered
-                boolean hovered = button.isMouseOver(mouseX, mouseY) && button.isActive();
-
-                LOGGER.info("Button " + buttonIndex + " texture: " + button.getTexture() +
-                        " position: (" + buttonX + "," + buttonY + ") active: " + button.isActive());
-
-                // Always render the button, but with different appearance based on state
-                if (button.isActive()) {
-                    // Render normally if active
-                    int yOffset = hovered ? RadialButton.BUTTON_SIZE : 0;
-                    graphics.blit(
-                            RenderType::guiTextured,
-                            button.getTexture(),
-                            buttonX, buttonY,
-                            0, yOffset,
-                            RadialButton.BUTTON_SIZE, RadialButton.BUTTON_SIZE,
-                            RadialButton.BUTTON_SIZE, RadialButton.BUTTON_SIZE * 2
-                    );
-                } else {
-                    // Render with transparency if inactive (disabled)
-                    graphics.blit(
-                            RenderType::guiTextured,
-                            button.getTexture(),
-                            buttonX, buttonY,
-                            0, 0, // Always use non-hovered state for disabled buttons
-                            RadialButton.BUTTON_SIZE, RadialButton.BUTTON_SIZE,
-                            RadialButton.BUTTON_SIZE, RadialButton.BUTTON_SIZE * 2,
-                            DISABLED_BUTTON_COLOR
-                    );
-                }
-
-                buttonIndex++;
-            }
-        }
-    }
+    // Radial menu has been replaced by the GUI
 
     /**
      * Renders an indicator above the buddy's head showing its current need
      */
     private void renderNeedsIndicator(GuiGraphics graphics) {
         // Don't render thought bubble if any of these conditions are true
-        if (isRadialMenuOpen || isEating || isBeingPet || isPlaying || isSleeping) return;
+        if (isEating || isBeingPet || isPlaying || isSleeping) return;
 
         int iconSize = 16;
         int iconX = posX + (SPRITE_WIDTH / 2) - (iconSize / 2);
@@ -406,7 +323,8 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             icon = FoodItem.TEXTURE_FOOD;
         } else if (needsPet) {
             icon = TEXTURE_HEART;
-        } else if (needsPlay) {
+        } else if (needsPlay && !isPlaying && !isChasingBall) {
+            // Only show play indicator if buddy isn't already playing or chasing the ball
             icon = TEXTURE_PLAY;
         }
 
@@ -476,8 +394,28 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     public void tick() {
         if (!isVisible) return;
 
+        // Immediately stop hopping if buddy becomes sad
+        if (isHopping && (needsFood || needsPet || needsPlay || poops.size() >= MAX_POOPS_BEFORE_SAD)) {
+            LOGGER.info("Stopping hopping because buddy is sad");
+            isHopping = false;
+            hopAnimationCounter = 0;
+        }
+
+        // Update special hop animation counter - ensures smooth hopping regardless of frame rate
+        if (isHopping) {
+            // Use configurable speed for energetic hopping animation
+            hopAnimationCounter += hopAnimationSpeed;
+
+            // Reset counter when it completes a full cycle for continuous animation
+            if (hopAnimationCounter >= 2 * Math.PI) {
+                hopAnimationCounter -= 2 * Math.PI;
+            }
+        } else {
+            hopAnimationCounter = 0;
+        }
+
         // Update standing idle state
-        isStandingIdle = isRadialMenuOpen || isEating || isBeingPet || (isPlaying && isHoldingBall) || isSleeping;
+        isStandingIdle = gui.isVisible() || isEating || isBeingPet || (isPlaying && isHoldingBall) || isSleeping || isPooping;
 
         // Update stats over time
         updateStats();
@@ -512,6 +450,42 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             }
         }
 
+        // Update poops
+        for (int i = poops.size() - 1; i >= 0; i--) {
+            Poop poop = poops.get(i);
+            poop.tick();
+
+            if (poop.shouldRemove()) {
+                poops.remove(i);
+            }
+        }
+
+        // Periodically check for invalid poops (every 30 seconds)
+        if (animationTicks % (20 * 30) == 0) {
+            cleanupInvalidPoops();
+        }
+
+        // Check if there are too many poops and make buddy sad
+        if (poops.size() >= MAX_POOPS_BEFORE_SAD) {
+            // Decrease happiness due to too many poops
+            happiness = Math.max(0, happiness - 0.05f);
+        }
+
+        // Handle pooping timer and chance
+        if (!isPooping) {
+            timeSinceLastPoop++;
+
+            // Consider pooping if enough time has passed
+            if (timeSinceLastPoop >= poopingInterval) {
+                // Small chance to poop if not already doing something important
+                // IMPORTANT: Only allow pooping when on screen
+                if (!isSleeping && !isEating && !isPlaying && !isChasingBall &&
+                        !isOffScreen && random.nextFloat() < poopChance) {
+                    startPooping();
+                }
+            }
+        }
+
         // Update state change timer
         stateChangeTimer--;
         if (stateChangeTimer <= 0) {
@@ -523,18 +497,28 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         if (actionDuration > 0) {
             actionDuration--;
             if (actionDuration <= 0) {
+                LOGGER.info("Buddy action duration ended: eating={}, beingPet={}, playing={}, pooping={}",
+                        isEating, isBeingPet, isPlaying, isPooping);
+
                 // End current action
                 isEating = false;
                 isBeingPet = false;
 
+                // End pooping and create poop
+                if (isPooping) {
+                    isPooping = false;
+                    dropPoop();
+                }
+
                 // Don't end play here, it ends when the ball is removed
                 if (isPlaying && playBall == null) {
+                    LOGGER.info("Ending play due to no ball");
                     isPlaying = false;
                     isHoldingBall = false;
                 }
 
                 // Don't end sleep here, it ends when energy is full
-                if (!isSleeping && !isPlaying) {
+                if (!isSleeping && !isPlaying && !isPooping) {
                     updateVisualState();
                 }
             }
@@ -544,10 +528,14 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         if (activityDuration > 0) {
             activityDuration--;
             if (activityDuration <= 0) {
+                LOGGER.info("Buddy activity duration ended: looking={}, stretching={}, hopping={}, excited={}",
+                        isLookingAround, isStretching, isHopping, isExcited);
+
                 // End the current special activity
                 if (isLookingAround || isStretching) {
                     // These activities set isStanding=true, so we need to end both
                     isStanding = false;
+                    LOGGER.info("Ending standing due to end of looking/stretching");
                 }
 
                 isHopping = false;
@@ -709,7 +697,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         }
 
         // Chance to randomly get excited
-        if (happiness > 70 && random.nextFloat() < excitedChance) {
+        if (happiness > 70 && random.nextFloat() < excitedChance && !(needsFood || needsPet || needsPlay)) {
             startExcitement();
             return;
         }
@@ -721,13 +709,13 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         }
 
         // Chance to stretch
-        if (random.nextFloat() < stretchChance) {
+        if (random.nextFloat() < stretchChance && !(needsFood || needsPet || needsPlay)) {
             startStretching();
             return;
         }
 
-        // Chance to hop while walking
-        if (!isHopping && random.nextFloat() < hopChance) {
+        // Chance to randomly hop while walking
+        if (!isHopping && random.nextFloat() < hopChance && !(needsFood || needsPet || needsPlay)) {
             startHopping();
         }
 
@@ -752,9 +740,14 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
 
             // Check if we should turn around or go off screen
             if (posX < -SPRITE_WIDTH) {
-                isOffScreen = true;
+                if (!isOffScreen) {
+                    LOGGER.info("Buddy going offscreen to the left at x={}", posX);
+                    isOffScreen = true;
+                }
+
                 // Random chance to come back
                 if (random.nextFloat() < 0.01f) {
+                    LOGGER.info("Buddy coming back onscreen from the left");
                     facingLeft = false;
                     isOffScreen = false;
                     posX = -SPRITE_WIDTH;
@@ -777,9 +770,14 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
 
             // Check if we should turn around or go off screen
             if (posX > screenWidth) {
-                isOffScreen = true;
+                if (!isOffScreen) {
+                    LOGGER.info("Buddy going offscreen to the right at x={}", posX);
+                    isOffScreen = true;
+                }
+
                 // Random chance to come back
                 if (random.nextFloat() < 0.01f) {
+                    LOGGER.info("Buddy coming back onscreen from the right");
                     facingLeft = true;
                     isOffScreen = false;
                     posX = screenWidth;
@@ -799,6 +797,8 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
      * Starts the buddy standing idle animation
      */
     private void startStanding() {
+        LOGGER.info("Buddy starting to stand: x={}, y={}, state={}", posX, posY, getStateName(currentState));
+
         isStanding = true;
         isHopping = false;
         isLookingAround = false;
@@ -810,69 +810,197 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         if (activityDuration <= 0) {
             activityDuration = minStandTime;
         }
+
+        LOGGER.info("Standing activity duration set to: {}", activityDuration);
     }
 
     /**
      * Starts the buddy hopping animation
      */
     private void startHopping() {
-        isHopping = true;
-        // Longer duration for more noticeable hopping
-        activityDuration = 40 + random.nextInt(80); // Hop for 2-6 seconds
+        // Don't hop if the buddy is sad or has critical needs
+        if (needsFood || needsPet || needsPlay) {
+            LOGGER.info("Buddy is too sad to hop right now");
+            return;
+        }
 
-        // If buddy is very happy, hop for even longer
+        LOGGER.info("Buddy starting to hop: x={}, y={}, state={}", posX, posY, getStateName(currentState));
+
+        isHopping = true;
+
+        // Shorter duration for more energetic hopping sequences
+        // Quick burst of happy hops makes it more lively
+        activityDuration = 40 + random.nextInt(60); // Hop for 2-5 seconds
+
+        // If buddy is very happy, hop for longer with more enthusiasm
         if (happiness > 80) {
-            activityDuration += 60;
+            activityDuration += 40; // Added time for happy hopping
         }
 
         // Reset animation ticks for smooth start
         animationTicks = 0;
+        hopAnimationCounter = 0;
+
+        // Use a faster hop animation speed than before
+        hopAnimationSpeed = 0.3f;  // Increased from 0.25f for more energetic hops
+
+        // Small chance to do an excited animation when starting
+        if (currentState == STATE_IDLE_WALK && random.nextFloat() < 0.3f && happiness > 60) {
+            // Will switch to excited animation when very happy
+            isExcited = true;
+            activityDuration = Math.min(activityDuration, 40); // Shorter excited animation
+            LOGGER.info("Buddy switching to excited animation during hop");
+        }
+
+        LOGGER.info("Hop activity duration set to: {}", activityDuration);
     }
 
     /**
      * Starts the buddy looking around animation
      */
     private void startLookingAround() {
+        LOGGER.info("Buddy starting to look around: x={}, y={}, state={}", posX, posY, getStateName(currentState));
+
         isLookingAround = true;
         isStanding = true;
         lookDirection = random.nextInt(3) - 1; // -1, 0, or 1
         activityDuration = 60 + random.nextInt(60); // Look for 3-6 seconds
+
+        LOGGER.info("Looking around activity duration set to: {}, direction: {}", activityDuration, lookDirection);
     }
 
     /**
      * Starts the buddy stretching animation
      */
     private void startStretching() {
+        // Don't stretch if the buddy is sad or has critical needs
+        if (needsFood || needsPet || needsPlay) {
+            LOGGER.info("Buddy is too sad to stretch right now");
+            return;
+        }
+
+        LOGGER.info("Buddy starting to stretch: x={}, y={}, state={}", posX, posY, getStateName(currentState));
+
         isStretching = true;
         isStanding = false; // Not needed since we have a dedicated animation state
         activityDuration = 60; // Stretch for 3 seconds
+
+        LOGGER.info("Stretching activity duration set to: {}", activityDuration);
     }
 
     /**
      * Starts the buddy excitement animation
      */
     private void startExcitement() {
+        // Don't get excited if the buddy is sad or has critical needs
+        if (needsFood || needsPet || needsPlay || happiness < 50) {
+            LOGGER.info("Buddy is too sad to get excited right now");
+            return;
+        }
+
+        LOGGER.info("Buddy starting to get excited: x={}, y={}, state={}", posX, posY, getStateName(currentState));
+
         isExcited = true;
         activityDuration = 40 + random.nextInt(40); // Get excited for 2-4 seconds
+
+        LOGGER.info("Excitement activity duration set to: {}", activityDuration);
+    }
+
+    /**
+     * Starts the buddy pooping animation
+     */
+    private void startPooping() {
+        // Don't allow pooping when off-screen
+        if (isOffScreen) {
+            LOGGER.info("Buddy tried to poop while off-screen, preventing");
+            return;
+        }
+
+        LOGGER.info("Buddy starting to poop: x={}, y={}", posX, posY);
+
+        isPooping = true;
+        actionDuration = 60; // 3 seconds for pooping animation
+        currentState = STATE_POOPING;
+
+        // Reset timer
+        timeSinceLastPoop = 0;
+    }
+
+    /**
+     * Creates and drops a poop after the pooping animation ends
+     */
+    private void dropPoop() {
+        int poopX;
+
+        // Drop poop to the side based on which way the buddy is facing
+        if (facingLeft) {
+            poopX = posX + SPRITE_WIDTH + 5; // Poop appears to the right when facing left
+        } else {
+            poopX = posX - 5; // Poop appears to the left when facing right
+        }
+
+        // Position poop on the ground (at buddy's feet)
+        int poopY = posY + SPRITE_HEIGHT - 8;
+
+        // Ensure poop doesn't go too close to screen edges (at least 50px from edges)
+        int minX = 50;
+        int maxX = screenWidth - 50;
+
+        // If the calculated position would be outside the allowed range,
+        // place the poop at a reasonable distance from the buddy in the valid range
+        if (poopX < minX) {
+            // Too close to left edge, place it to the right of buddy instead
+            poopX = posX + SPRITE_WIDTH + 5;
+            // If still out of bounds, force it into the valid range
+            poopX = Math.max(minX, Math.min(maxX, poopX));
+        } else if (poopX > maxX) {
+            // Too close to right edge, place it to the left of buddy instead
+            poopX = posX - 5;
+            // If still out of bounds, force it into the valid range
+            poopX = Math.max(minX, Math.min(maxX, poopX));
+        }
+
+        // Ensure vertical position is also reasonable
+        poopY = Math.max(10, Math.min(screenHeight - 10, poopY));
+
+        // Safety check for invalid coordinates
+        if (poopX < 0 || poopX > screenWidth || poopY < 0 || poopY > screenHeight ||
+                poopX == Integer.MAX_VALUE || poopY == Integer.MAX_VALUE) {
+            LOGGER.warn("Attempted to create poop with invalid coordinates: ({}, {}), skipping", poopX, poopY);
+            return;
+        }
+
+        // Create and add the poop
+        poops.add(new Poop(poopX, poopY, this));
+
+        LOGGER.info("Buddy pooped at position: x={}, y={}, total poops: {}", poopX, poopY, poops.size());
+
+        // If too many poops, make the buddy sad
+        if (poops.size() >= MAX_POOPS_BEFORE_SAD) {
+            LOGGER.info("Too many poops! Buddy is getting sad");
+        }
     }
 
     /**
      * Performs a random action when turning around
      */
     private void performRandomActionOnTurn() {
+        // Don't perform happy actions if the buddy is sad
+        boolean isSad = needsFood || needsPet || needsPlay;
+
         float chance = random.nextFloat();
 
         if (chance < 0.3f) {
-            // 30% chance to just stand for a moment
+            // 30% chance to just stand for a moment - can do this even when sad
             startStanding();
-        } else if (chance < 0.4f) {
-            // 10% chance to look around
+        } else if (!isSad && chance < 0.4f) {
+            // 10% chance to look around (only when not sad)
             startLookingAround();
-        } else if (chance < 0.45f && happiness > 70) {
-            // 5% chance to get excited if happy
+        } else if (!isSad && chance < 0.45f && happiness > 70) {
+            // 5% chance to get excited if happy (only when not sad)
             startExcitement();
-        } else if (chance < 0.5f) {
-            // 5% chance to stretch
+        } else if (!isSad && chance < 0.5f) {
+            // 5% chance to stretch (only when not sad)
             startStretching();
         }
         // Otherwise just continue walking
@@ -940,7 +1068,22 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
      * Updates the visual state based on current actions
      */
     private void updateVisualState() {
-        if (isSleeping) {
+        int previousState = currentState;
+
+        // Check if buddy is sad
+        boolean isSad = needsFood || needsPet ||
+                (needsPlay && !isPlaying && !isChasingBall) || // Only sad about play if not already playing
+                poops.size() >= MAX_POOPS_BEFORE_SAD;
+
+        // Stop hopping if buddy is sad
+        if (isHopping && isSad) {
+            isHopping = false;
+            hopAnimationCounter = 0;
+        }
+
+        if (isPooping) {
+            currentState = STATE_POOPING;
+        } else if (isSleeping) {
             currentState = STATE_SLEEPING;
         } else if (isEating) {
             currentState = STATE_EATING_STAND;
@@ -955,19 +1098,44 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             currentState = STATE_PLAYING_STAND;
         } else if (isChasingBall) {
             // Use walking animation when chasing (but could be sad if energy low)
-            currentState = energy < 30 ? STATE_SAD_WALK : STATE_IDLE_WALK;
+            currentState = energy < 30 || isSad ? STATE_SAD_WALK : STATE_IDLE_WALK;
         } else if (isStanding || isLookingAround) {
             // Use standing animations for special activities
-            currentState = (needsFood || needsPet || needsPlay) ? STATE_SAD_STAND : STATE_IDLE_STAND;
-        } else if (isRadialMenuOpen) {
-            // Use standing animations when menu is open
-            currentState = (needsFood || needsPet || needsPlay) ? STATE_SAD_STAND : STATE_IDLE_STAND;
-        } else if (needsFood || needsPet || needsPlay) {
-            // When walking and sad
+            currentState = isSad ? STATE_SAD_STAND : STATE_IDLE_STAND;
+        } else if (gui.isVisible()) {
+            // Use standing animations when GUI is open
+            currentState = isSad ? STATE_SAD_STAND : STATE_IDLE_STAND;
+        } else if (isSad) {
+            // When walking and sad (also when too much poop)
             currentState = STATE_SAD_WALK;
         } else {
             // When walking and happy/normal
             currentState = STATE_IDLE_WALK;
+        }
+
+        // Log state changes to help debug invisibility issues
+        if (previousState != currentState) {
+            LOGGER.info("Buddy state changed: {} -> {}", getStateName(previousState), getStateName(currentState));
+        }
+    }
+
+    /**
+     * Helper method to get state name for logging
+     */
+    private String getStateName(int state) {
+        switch (state) {
+            case STATE_IDLE_WALK: return "IDLE_WALK";
+            case STATE_HAPPY_STAND: return "HAPPY_STAND";
+            case STATE_SAD_WALK: return "SAD_WALK";
+            case STATE_EATING_STAND: return "EATING_STAND";
+            case STATE_PLAYING_STAND: return "PLAYING_STAND";
+            case STATE_SLEEPING: return "SLEEPING";
+            case STATE_IDLE_STAND: return "IDLE_STAND";
+            case STATE_SAD_STAND: return "SAD_STAND";
+            case STATE_STRETCHING: return "STRETCHING";
+            case STATE_EXCITED: return "EXCITED";
+            case STATE_POOPING: return "POOPING";
+            default: return "UNKNOWN_STATE";
         }
     }
 
@@ -1026,7 +1194,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     /**
      * Creates and drops a food item above the buddy
      */
-    private void dropFoodAboveBuddy() {
+    public void dropFoodAboveBuddy() {
         if (droppedFood == null) {
             // Position food above the buddy's head
             int foodX = posX + SPRITE_WIDTH / 2;
@@ -1044,31 +1212,43 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         }
     }
 
+    /**
+     * Creates a play ball at the specified position
+     */
+    public void createPlayBallAt(int x, int y) {
+        if (playBall == null) {
+            playBall = new PlayBall(x, y, this);
+        }
+    }
+
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!isVisible || isOffScreen) return false;
 
+        // First handle the GUI if it's visible
+        if (gui.isVisible()) {
+            return gui.mouseClicked(mouseX, mouseY, button);
+        }
+
         if (button == 1) { // Right click
-            // If clicked on buddy, toggle radial menu
+            // If clicked on buddy, open the GUI
             if (isMouseOverBuddy(mouseX, mouseY)) {
-                isRadialMenuOpen = !isRadialMenuOpen;
-                updateVisualState(); // Update visual state immediately when opening/closing menu
+                gui.show(screenWidth, screenHeight);
+                LOGGER.info("Opening buddy GUI");
+                updateVisualState(); // Update visual state immediately when opening GUI
                 return true;
             }
         } else if (button == 0) { // Left click
-            // If radial menu is open, check for button clicks
-            if (isRadialMenuOpen) {
-                for (RadialButton radialButton : radialButtons) {
-                    if (radialButton.isActive() && radialButton.isMouseOver(mouseX, mouseY)) {
-                        radialButton.onClick();
-                        return true;
-                    }
-                }
 
-                // Close menu if clicked outside
-                isRadialMenuOpen = false;
-                updateVisualState(); // Update visual state when closing menu
-                return true;
+            // Check if clicked on a poop
+            for (Poop poop : new ArrayList<>(poops)) {
+                if (poop.isMouseOver(mouseX, mouseY)) {
+                    poop.startCleaning();
+                    // Increase happiness slightly for cleaning up poop
+                    happiness = Math.min(100, happiness + 5);
+                    LOGGER.info("Cleaned up poop at ({},{}), happiness: {}", poop.getX(), poop.getY(), happiness);
+                    return true;
+                }
             }
 
             // Normal petting if menu isn't open
@@ -1091,6 +1271,12 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
                 // If buddy was holding the ball, it's not anymore
                 if (isHoldingBall) {
                     isHoldingBall = false;
+                    // Don't start chasing immediately when player grabs from buddy's hands
+                } else if (!isChasingBall) {
+                    // If ball was on the ground or rolling and buddy wasn't already chasing,
+                    // make buddy start chasing the ball
+                    isChasingBall = true;
+                    isPlaying = true;
                 }
 
                 return true;
@@ -1104,20 +1290,38 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         if (button == 0) {
             if (droppedFood != null && droppedFood.isBeingDragged()) {
-                droppedFood.drop((int)mouseX, (int)mouseY);
+                // Check if food is near buddy before dropping it
+                if (droppedFood.isNearBuddy(posX + SPRITE_WIDTH/2, posY + SPRITE_HEIGHT/2)) {
+                    // If close to buddy, don't drop - just start eating
+                    eatFood();
+                    droppedFood = null;
+                } else {
+                    // If not close, just drop normally
+                    droppedFood.drop((int)mouseX, (int)mouseY);
+                }
                 return true;
             }
 
             // Handle ball throw on release
             if (playBall != null && playBall.isBeingDragged()) {
-                playBall.throw_((int)mouseX, (int)mouseY);
+                // Check if ball is near buddy before throwing
+                if (playBall.isNearBuddy(posX + SPRITE_WIDTH/2, posY + SPRITE_HEIGHT/2)) {
+                    // If close to buddy, don't throw - start playing
+                    isPlaying = true;
+                    isHoldingBall = true;
+                    isChasingBall = false;
+                    playBall.setGrabbed(true);
+                    needsPlay = false; // Reset play need immediately
+                    currentState = STATE_PLAYING_STAND;
+                } else {
+                    // If not close, throw normally
+                    playBall.throw_((int)mouseX, (int)mouseY);
 
-                // If buddy was playing, stop playing and start chasing
-                if (isPlaying) {
-                    isPlaying = false;
+                    // Always make buddy chase the ball when thrown
+                    isPlaying = true;
                     isChasingBall = true;
+                    isHoldingBall = false;
                 }
-
                 return true;
             }
         }
@@ -1141,6 +1345,21 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         return false;
     }
 
+    @Override
+    public void mouseMoved(double mouseX, double mouseY) {
+
+        // Update position of dragged items when mouse moves without buttons pressed
+        if (droppedFood != null && droppedFood.isBeingDragged()) {
+            droppedFood.setPosition((int)mouseX, (int)mouseY);
+            return;
+        }
+
+        if (playBall != null && playBall.isBeingDragged()) {
+            playBall.updateDragPosition((int)mouseX, (int)mouseY);
+        }
+
+    }
+
     /**
      * Checks if the mouse is over the buddy
      */
@@ -1160,9 +1379,30 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
      * Sets the screen dimensions for the buddy
      */
     public void setScreenSize(int width, int height) {
+        LOGGER.info("Screen size changed: {}x{} -> {}x{}", this.screenWidth, this.screenHeight, width, height);
+
+        // Ensure valid dimensions
+        width = Math.max(1, width);
+        height = Math.max(1, height);
+
         this.screenWidth = width;
         this.screenHeight = height;
         this.posY = height - SPRITE_HEIGHT - 10; // Keep at bottom
+
+        // Update all poop positions when screen size changes
+        for (Poop poop : new ArrayList<>(poops)) {
+            poop.updatePosition(width, height);
+        }
+
+        // Clean up any poops that might now be invalid
+        cleanupInvalidPoops();
+
+        // If GUI is visible, update its position based on new screen size
+        if (gui.isVisible()) {
+            gui.show(width, height);
+        }
+
+        LOGGER.info("Updated buddy position to y={}", this.posY);
     }
 
     @Override
@@ -1239,5 +1479,150 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
 
     public void setChasingBall(boolean chasingBall) {
         isChasingBall = chasingBall;
+    }
+
+    // Additional getters and setters for persistence
+
+    public float getHunger() {
+        return hunger;
+    }
+
+    public void setHunger(float hunger) {
+        this.hunger = hunger;
+        // Update needs based on new hunger value
+        this.needsFood = hunger < 30;
+    }
+
+    public float getHappiness() {
+        return happiness;
+    }
+
+    public void setHappiness(float happiness) {
+        this.happiness = happiness;
+        // Update needs based on new happiness value
+        this.needsPet = happiness < 30;
+    }
+
+    public float getEnergy() {
+        return energy;
+    }
+
+    public void setEnergy(float energy) {
+        this.energy = energy;
+        // Handle auto-sleep if energy is critically low
+        if (energy < 10 && !isSleeping) {
+            isSleeping = true;
+            currentState = STATE_SLEEPING;
+        }
+    }
+
+    public float getFunLevel() {
+        return funLevel;
+    }
+
+    public void setFunLevel(float funLevel) {
+        this.funLevel = funLevel;
+        // Update needs based on new fun level
+        this.needsPlay = funLevel < 30;
+    }
+
+    public List<Poop> getPoops() {
+        return new ArrayList<>(poops);
+    }
+
+    public void setPoops(List<Poop> poops) {
+        this.poops = new ArrayList<>(poops);
+    }
+
+    /**
+     * Gets the current food item, if any
+     */
+    public FoodItem getDroppedFood() {
+        return droppedFood;
+    }
+
+    /**
+     * Sets the current food item
+     */
+    public void setDroppedFood(FoodItem food) {
+        this.droppedFood = food;
+    }
+
+    /**
+     * Gets the current play ball, if any
+     */
+    public PlayBall getPlayBall() {
+        return playBall;
+    }
+
+    /**
+     * Sets the current play ball
+     */
+    public void setPlayBall(PlayBall ball) {
+        this.playBall = ball;
+    }
+
+    public boolean isSleeping() {
+        return isSleeping;
+    }
+
+    /**
+     * Saves the buddy's state to persistent storage
+     */
+    public void saveState() {
+        TamagotchiBuddyPersistence.saveBuddy(this);
+    }
+
+    /**
+     * Loads the buddy's state from persistent storage
+     * @return true if state was successfully loaded, false otherwise
+     */
+    public boolean loadState() {
+        boolean result = TamagotchiBuddyPersistence.loadBuddy(this);
+
+        // After loading, clean up any poops that might be off-screen
+        cleanupInvalidPoops();
+
+        return result;
+    }
+
+    /**
+     * Repositions poops that are off-screen and removes any with invalid coordinates
+     */
+    private void cleanupInvalidPoops() {
+        List<Poop> validPoops = new ArrayList<>();
+        boolean madeChanges = false;
+
+        for (Poop poop : poops) {
+            int x = poop.getX();
+            int y = poop.getY();
+
+            // Check for extreme invalid values that should be removed
+            boolean isExtremlyInvalid = x < 0 || x == Integer.MAX_VALUE ||
+                    y < 0 || y == Integer.MAX_VALUE ||
+                    x > 10000 || y > 10000;
+
+            if (isExtremlyInvalid) {
+                LOGGER.info("Removed invalid poop at position ({}, {})", x, y);
+                madeChanges = true;
+                continue;  // Skip this poop
+            }
+
+            // Check if poop is off-screen but has reasonable coordinates
+            if (x > screenWidth || y > screenHeight) {
+                // Update position to bring it within screen bounds
+                LOGGER.info("Repositioning off-screen poop from ({}, {}) to within screen bounds", x, y);
+                poop.updatePosition(screenWidth, screenHeight);
+                madeChanges = true;
+            }
+
+            validPoops.add(poop);
+        }
+
+        // If we removed or repositioned any poops, update the list
+        if (madeChanges) {
+            LOGGER.info("Cleaned up {} invalid poops", poops.size() - validPoops.size());
+            poops = validPoops;
+        }
     }
 }

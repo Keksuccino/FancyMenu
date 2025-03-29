@@ -1331,6 +1331,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	public void closeEditor() {
 		this.saveWidgetSettings();
+		this.tamagotchiEasterEgg.cleanup();
 		currentInstance = null;
 		if (this.layoutTargetScreen != null) {
 			if (!((IMixinScreen)this.layoutTargetScreen).get_initialized_FancyMenu()) {

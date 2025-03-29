@@ -10,7 +10,7 @@ import java.util.Random;
  */
 public class PlayBall {
     public static final ResourceLocation TEXTURE_BALL = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/ball.png");
-    private static final int CATCH_DISTANCE = 15; // Distance at which buddy can catch the ball
+    private static final int CATCH_DISTANCE = 25; // Increased from 15 to make giving the ball easier
     private static final int INACTIVITY_TIMEOUT = 400; // Ball despawns after 20 seconds of no interaction
     private static final int USER_INACTIVITY_TIMEOUT = 200; // Ball despawns after 10 seconds of no USER interaction
 

@@ -49,35 +49,87 @@ public class RenderingUtils {
 
     /**
      * Draws a textured quad with the texture mirrored horizontally by explicitly flipping the texture coordinates.
+     * Uses the standard sprite width and height for both texture coordinates and rendering dimensions.
      *
      * @param graphics       The GuiGraphics context.
      * @param atlasLocation  The texture resource location.
      * @param x              The x coordinate on screen.
      * @param y              The y coordinate on screen.
-     * @param u              The u coordinate in the texture.
-     * @param v              The v coordinate in the texture.
-     * @param width          The width of the quad on screen.
-     * @param height         The height of the quad on screen.
-     * @param textureWidth   The width of the texture.
-     * @param textureHeight  The height of the texture.
+     * @param u              The u coordinate in the texture (top-left of the sprite).
+     * @param v              The v coordinate in the texture (top-left of the sprite).
+     * @param spriteWidth    The width of the sprite quad on screen and in the texture.
+     * @param spriteHeight   The height of the sprite quad on screen and in the texture.
+     * @param textureWidth   The total width of the texture atlas.
+     * @param textureHeight  The total height of the texture atlas.
      */
-    public static void blitMirrored(@NotNull GuiGraphics graphics, ResourceLocation atlasLocation, int x, int y, int u, int v, int width, int height, int textureWidth, int textureHeight) {
-        // Calculate texture coordinates
-        float minU = (float)u / (float)textureWidth;
-        float maxU = (float)(u + width) / (float)textureWidth;
-        float minV = (float)v / (float)textureHeight;
-        float maxV = (float)(v + height) / (float)textureHeight;
+    public static void blitMirrored(@NotNull GuiGraphics graphics, ResourceLocation atlasLocation, int x, int y, int u, int v, int spriteWidth, int spriteHeight, int textureWidth, int textureHeight) {
+        blitMirroredScaled(graphics, atlasLocation, x, y, u, v, spriteWidth, spriteHeight, spriteWidth, spriteHeight, textureWidth, textureHeight, -1);
+    }
 
-        // For mirroring, we swap the U coordinates
+    /**
+     * Draws a textured quad with the texture mirrored horizontally by explicitly flipping the texture coordinates.
+     * Uses the standard sprite width and height for both texture coordinates and rendering dimensions.
+     *
+     * @param graphics       The GuiGraphics context.
+     * @param atlasLocation  The texture resource location.
+     * @param x              The x coordinate on screen.
+     * @param y              The y coordinate on screen.
+     * @param u              The u coordinate in the texture (top-left of the sprite).
+     * @param v              The v coordinate in the texture (top-left of the sprite).
+     * @param spriteWidth    The width of the sprite quad on screen and in the texture.
+     * @param spriteHeight   The height of the sprite quad on screen and in the texture.
+     * @param textureWidth   The total width of the texture atlas.
+     * @param textureHeight  The total height of the texture atlas.
+     */
+    public static void blitMirrored(@NotNull GuiGraphics graphics, ResourceLocation atlasLocation, int x, int y, int u, int v, int spriteWidth, int spriteHeight, int textureWidth, int textureHeight, int colorTint) {
+        blitMirroredScaled(graphics, atlasLocation, x, y, u, v, spriteWidth, spriteHeight, spriteWidth, spriteHeight, textureWidth, textureHeight, colorTint);
+    }
+
+    /**
+     * Draws a textured quad scaled to a specific render size, with the texture mirrored horizontally
+     * by explicitly flipping the texture coordinates.
+     *
+     * @param graphics       The GuiGraphics context.
+     * @param atlasLocation  The texture resource location.
+     * @param x              The x coordinate on screen (top-left of the rendered quad).
+     * @param y              The y coordinate on screen (top-left of the rendered quad).
+     * @param u              The u coordinate in the texture (top-left of the source sprite region).
+     * @param v              The v coordinate in the texture (top-left of the source sprite region).
+     * @param spriteWidth    The width of the source sprite region in the texture atlas.
+     * @param spriteHeight   The height of the source sprite region in the texture atlas.
+     * @param renderWidth    The desired width of the quad to render on screen.
+     * @param renderHeight   The desired height of the quad to render on screen.
+     * @param textureWidth   The total width of the texture atlas.
+     * @param textureHeight  The total height of the texture atlas.
+     * @param color          The color tint to apply (ARGB format, -1 for white/no tint).
+     */
+    public static void blitMirroredScaled(
+            @NotNull GuiGraphics graphics,
+            ResourceLocation atlasLocation,
+            int x, int y,          // Screen position
+            int u, int v,          // Texture region origin in atlas
+            int spriteWidth, int spriteHeight, // Original sprite size in atlas for UV calculation
+            int renderWidth, int renderHeight, // Target size on screen
+            int textureWidth, int textureHeight, // Total atlas size
+            int color             // Tint color
+    ) {
+        // Calculate texture coordinates based on the original sprite dimensions
+        float minU = (float)u / (float)textureWidth;
+        float maxU = (float)(u + spriteWidth) / (float)textureWidth; // Use spriteWidth for UVs
+        float minV = (float)v / (float)textureHeight;
+        float maxV = (float)(v + spriteHeight) / (float)textureHeight; // Use spriteHeight for UVs
+
+        // Access rendering internals
         RenderType renderType = RenderType.guiTextured(atlasLocation);
         Matrix4f matrix4f = graphics.pose().last().pose();
         VertexConsumer consumer = ((IMixinGuiGraphics)graphics).getBufferSource_FancyMenu().getBuffer(renderType);
 
-        // Add vertices with flipped U coordinates (maxU/minU swapped)
-        consumer.addVertex(matrix4f, (float)x, (float)y, 0.0F).setUv(maxU, minV).setColor(-1);
-        consumer.addVertex(matrix4f, (float)x, (float)(y + height), 0.0F).setUv(maxU, maxV).setColor(-1);
-        consumer.addVertex(matrix4f, (float)(x + width), (float)(y + height), 0.0F).setUv(minU, maxV).setColor(-1);
-        consumer.addVertex(matrix4f, (float)(x + width), (float)y, 0.0F).setUv(minU, minV).setColor(-1);
+        // Add vertices with screen dimensions using renderWidth/renderHeight,
+        // but texture coordinates (UVs) swapped horizontally (minU/maxU flipped)
+        consumer.addVertex(matrix4f, (float)x,              (float)y,               0.0F).setUv(maxU, minV).setColor(color); // Top-left screen -> Top-right texture UV (maxU, minV)
+        consumer.addVertex(matrix4f, (float)x,              (float)(y + renderHeight), 0.0F).setUv(maxU, maxV).setColor(color); // Bottom-left screen -> Bottom-right texture UV (maxU, maxV)
+        consumer.addVertex(matrix4f, (float)(x + renderWidth), (float)(y + renderHeight), 0.0F).setUv(minU, maxV).setColor(color); // Bottom-right screen -> Bottom-left texture UV (minU, maxV)
+        consumer.addVertex(matrix4f, (float)(x + renderWidth), (float)y,               0.0F).setUv(minU, minV).setColor(color); // Top-right screen -> Top-left texture UV (minU, minV)
     }
 
     /**
@@ -157,8 +209,8 @@ public class RenderingUtils {
      * @param color The color to tint the texture with
      */
     public static void blitNineSlicedTexture(GuiGraphics graphics, @NotNull Function<ResourceLocation, RenderType> renderType, ResourceLocation texture, int x, int y, int width, int height,
-                               int textureWidth, int textureHeight,
-                               int borderTop, int borderRight, int borderBottom, int borderLeft, int color) {
+                                             int textureWidth, int textureHeight,
+                                             int borderTop, int borderRight, int borderBottom, int borderLeft, int color) {
 
         // Corner pieces
         // Top left

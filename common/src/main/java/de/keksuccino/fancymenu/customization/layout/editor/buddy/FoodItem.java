@@ -81,7 +81,8 @@ public class FoodItem {
     public boolean isNearBuddy(int buddyX, int buddyY) {
         int dx = x - buddyX;
         int dy = y - buddyY;
-        return Math.sqrt(dx*dx + dy*dy) < 30;
+        // Increased detection radius to make feeding easier
+        return Math.sqrt(dx*dx + dy*dy) < 40;
     }
 
     public int getX() {
