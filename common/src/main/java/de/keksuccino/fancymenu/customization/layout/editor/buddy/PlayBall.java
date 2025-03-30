@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy;
 
+import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
@@ -24,7 +25,7 @@ public class PlayBall {
     private int kickCooldown = 0;
     private boolean isUp = false; // Whether the ball is being tossed up
     private boolean isRolling = false; // Whether the ball is rolling on ground
-    private boolean isGrabbed = false; // Whether buddy is holding the ball
+    private boolean isGrabbedByBuddy = false; // Whether buddy is holding the ball
     private boolean wasKickedByUser = false; // Whether ball was kicked by user
     private boolean isDragged = false; // Whether ball is being dragged by user
     private float gravity = 0.2f;
@@ -44,6 +45,9 @@ public class PlayBall {
     // Reference to the buddy
     private final TamagotchiBuddy buddy;
     private final Random random;
+
+    public boolean stickToCursor = false;
+    public boolean justCreated = true;
 
     public PlayBall(int x, int y, TamagotchiBuddy buddy) {
         this.x = x;
@@ -72,7 +76,7 @@ public class PlayBall {
 
     public void render(GuiGraphics graphics) {
         // If ball is grabbed, position it relative to buddy
-        if (isGrabbed) {
+        if (isGrabbedByBuddy) {
             // Position ball above buddy's head during play animation
             x = buddy.getPosX() + buddy.getSpriteWidth() / 2;
 
@@ -95,7 +99,7 @@ public class PlayBall {
 
         // Apply trail effect if moving fast
         float speed = (float)Math.sqrt(velocityX * velocityX + velocityY * velocityY);
-        if (speed > 5 && !isGrabbed && !isDragged) {
+        if (speed > 5 && !isGrabbedByBuddy && !isDragged && !stickToCursor) {
             // Render motion blur/trail (semi-transparent copies behind the ball)
             float trailLength = Math.min(speed / 2, 3); // Cap trail length
             for (int i = 1; i <= trailLength; i++) {
@@ -129,17 +133,24 @@ public class PlayBall {
     }
 
     public void tick() {
+
+        this.justCreated = false;
+
         // Increment inactivity timers
         inactivityTimer++;
         userInactivityTimer++;
 
         // Skip physics updates if being dragged
-        if (isDragged) {
+        if (isDragged || stickToCursor) {
+            if (stickToCursor) {
+                x = MouseInput.getMouseX();
+                y = MouseInput.getMouseY();
+            }
             return;
         }
 
         // If grabbed by buddy
-        if (isGrabbed) {
+        if (isGrabbedByBuddy) {
             resetInactivityTimer(); // Buddy interaction counts for general timer
             // But NOT for user inactivity timer!
 
@@ -147,7 +158,7 @@ public class PlayBall {
 
             // Throw the ball after holding it for a while
             if (holdTimer > 40) {
-                throwBall();
+                buddyThrowBallUp();
             }
             return;
         }
@@ -219,10 +230,11 @@ public class PlayBall {
     }
 
     /**
-     * Throws the ball for play
+     * Let buddy throw the ball up for play
      */
-    private void throwBall() {
-        isGrabbed = false;
+    private void buddyThrowBallUp() {
+        if (this.justCreated) return;
+        isGrabbedByBuddy = false;
         holdTimer = 0;
         isUp = true;
 
@@ -238,9 +250,9 @@ public class PlayBall {
     /**
      * Sets the ball as grabbed by buddy
      */
-    public void setGrabbed(boolean grabbed) {
-        this.isGrabbed = grabbed;
-        if (grabbed) {
+    public void setGrabbedByBuddy(boolean grabbedByBuddy) {
+        this.isGrabbedByBuddy = grabbedByBuddy;
+        if (grabbedByBuddy) {
             resetInactivityTimer(); // Buddy grabbing counts as interaction
             holdTimer = 0;
             isUp = false;
@@ -259,7 +271,8 @@ public class PlayBall {
      * Starts dragging the ball
      */
     public void pickup(int mouseX, int mouseY) {
-        isDragged = true;
+        if (this.justCreated) return;
+        setBeingDragged(true); // Use setter to ensure state is properly set
         resetUserInactivityTimer(); // User interaction
 
         // Initialize mouse tracking with current position
@@ -276,8 +289,8 @@ public class PlayBall {
         y = mouseY;
 
         // If buddy was holding the ball, release it
-        if (isGrabbed) {
-            isGrabbed = false;
+        if (isGrabbedByBuddy) {
+            isGrabbedByBuddy = false;
             buddy.setHoldingBall(false);
         }
 
@@ -312,7 +325,8 @@ public class PlayBall {
     /**
      * Throws the ball based on recent mouse movement velocity
      */
-    public void throw_(int mouseX, int mouseY) {
+    public void throwBall(int mouseX, int mouseY) {
+        if (this.justCreated) return;
         isDragged = false;
         resetUserInactivityTimer(); // User interaction
 
@@ -371,35 +385,6 @@ public class PlayBall {
         buddy.increaseFunLevel(10);
     }
 
-    /**
-     * Original kick method - now used for simple kicks without dragging
-     */
-    public void kick() {
-        resetUserInactivityTimer(); // User interaction
-
-        // Simple kick if not using drag feature
-        isUp = true;
-        velocityY = -5f;
-        velocityX = (random.nextFloat() - 0.5f) * 7f;
-        kickCooldown = 20;
-        wasKickedByUser = true;
-
-        // If buddy was holding the ball, release it
-        if (isGrabbed) {
-            isGrabbed = false;
-        }
-
-        // If buddy was playing, stop playing and start chasing
-        if (buddy.isPlaying() && buddy.isHoldingBall()) {
-            buddy.setHoldingBall(false);
-            buddy.setPlaying(false);
-            buddy.setChasingBall(true);
-        }
-
-        // Bonus happiness for interaction
-        buddy.increaseFunLevel(10);
-    }
-
     public void setPosition(int x, int y) {
         this.x = x;
         this.y = y;
@@ -407,6 +392,13 @@ public class PlayBall {
 
     public boolean isBeingDragged() {
         return isDragged;
+    }
+    
+    /**
+     * Explicitly sets the dragged state for the play ball
+     */
+    public void setBeingDragged(boolean dragged) {
+        isDragged = dragged;
     }
 
     public boolean shouldRemove() {
@@ -429,7 +421,8 @@ public class PlayBall {
         return y;
     }
 
-    public boolean isGrabbed() {
-        return isGrabbed;
+    public boolean isGrabbedByBuddy() {
+        return isGrabbedByBuddy;
     }
+
 }

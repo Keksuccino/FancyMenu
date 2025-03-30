@@ -1,11 +1,15 @@
 
 
-- Make buddy not go into excited, stretching or hopping mode while sad.
-- Hopping is WAY too fast and glitchy. We need to fix that.
 - Sit state
 - Waving state
 - Yawning state
 - Sleepy state (combine with yawning shortly after maybe?)
 - When energy is low, show sleepy state instead of sad
-- Poop mechanism (poop will stay on the ground until the user cleans it by left-clicking it)
 - Washing mechanism (new button in radial menu for washing; will give the user a shower head to wash buddy; washing will need 10 seconds, then the action ends)
+
+- Buddy seems to get sad sometimes when tired, but it shouldn't, it should only walk slower
+- Buddy should not do other actions like hopping while he is pooping
+
+- Make look around slower
+
+- Grumpy state

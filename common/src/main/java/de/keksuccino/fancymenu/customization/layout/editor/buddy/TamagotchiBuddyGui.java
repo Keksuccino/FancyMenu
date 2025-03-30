@@ -1,6 +1,10 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy;
 
+import com.mojang.blaze3d.platform.Window;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
+import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -69,14 +73,15 @@ public class TamagotchiBuddyGui {
         buttons.add(new GuiButton(
                 "Feed",
                 () -> {
-                    // Create a food item at the cursor position and immediately make it stick to cursor
-                    int mouseX = (int)Minecraft.getInstance().mouseHandler.xpos();
-                    int mouseY = (int)Minecraft.getInstance().mouseHandler.ypos();
+                    int mouseX = MouseInput.getMouseX();
+                    int mouseY = MouseInput.getMouseY();
+                    
+                    LOGGER.info("Creating food at screen coordinates: ({}, {})", mouseX, mouseY);
 
                     // Create the food with drag mode already enabled
                     FoodItem food = new FoodItem(mouseX, mouseY, buddy);
-                    food.pickup(mouseX, mouseY); // Ensure it's in dragged mode
                     buddy.setDroppedFood(food);
+                    food.stickToCursor = true;
 
                     // Close the GUI to let the player feed
                     hide();
@@ -89,14 +94,16 @@ public class TamagotchiBuddyGui {
         buttons.add(new GuiButton(
                 "Play",
                 () -> {
-                    // Create a ball at the cursor position and immediately make it stick to cursor
-                    int mouseX = (int)Minecraft.getInstance().mouseHandler.xpos();
-                    int mouseY = (int)Minecraft.getInstance().mouseHandler.ypos();
+                    int mouseX = MouseInput.getMouseX();
+                    int mouseY = MouseInput.getMouseY();
+                    
+                    LOGGER.info("Creating play ball at screen coordinates: ({}, {})", mouseX, mouseY);
 
                     // Create the ball with drag mode already enabled
                     PlayBall ball = new PlayBall(mouseX, mouseY, buddy);
-                    ball.pickup(mouseX, mouseY); // Ensure it's in dragged mode
                     buddy.setPlayBall(ball);
+                    buddy.setChasingBall(true);
+                    ball.stickToCursor = true;
 
                     // Close the GUI to let the player give the ball to buddy
                     hide();

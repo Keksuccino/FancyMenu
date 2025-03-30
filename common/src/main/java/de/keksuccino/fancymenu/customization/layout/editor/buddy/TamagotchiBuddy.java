@@ -38,7 +38,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     private static final int SPRITE_WIDTH = 32;
     private static final int SPRITE_HEIGHT = 32;
     private static final int ATLAS_COLUMNS = 4; // 4 animation frames per row
-    private static final int ATLAS_ROWS = 11; // Different states (idle, happy, eating, etc.) - now 11 rows with pooping
+    private static final int ATLAS_ROWS = 13; // Different states (idle, happy, eating, etc.) - now 13 rows with looking around and grumpy
     private static final int CHASE_SPEED = 3; // Faster than normal walk speed
 
     // State indices in the texture atlas (rows)
@@ -53,6 +53,8 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     private static final int STATE_STRETCHING = 8;  // New state for stretching animation
     private static final int STATE_EXCITED = 9;     // New state for excitement animation
     private static final int STATE_POOPING = 10;    // New state for pooping animation
+    private static final int STATE_LOOKING_AROUND = 11; // New state for looking around animation
+    private static final int STATE_GRUMPY = 12;    // New state for grumpy animation when woken up
 
     // Game state
     private int posX;
@@ -70,6 +72,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     private int currentFrame = 0;
     private int animationTicks = 0;
     private int animationSpeed = 5; // Ticks per frame for regular animations
+    private int lookingAroundAnimationSpeed = 40; // Slower animation for looking around (2 sec per frame)
     private float hopAnimationCounter = 0; // Dedicated counter for hop animation to ensure smooth motion
     private float hopAnimationSpeed = 0.3f; // Speed of hop animation cycle
 
@@ -96,6 +99,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     private boolean isLookingAround = false;
     private boolean isStretching = false;
     private boolean isExcited = false;
+    private boolean isGrumpy = false;
     private int activityDuration = 0;
     private int hopHeight = 0;
     private int lookDirection = 0; // -1 for left, 0 for center, 1 for right
@@ -169,7 +173,12 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             wasVisible = isVisible;
         }
 
-        if (!isVisible) return;
+        // Check if renderer is completely disabled
+        if (!isVisible) {
+            // Even when buddy is invisible, we still need to render poops
+            renderPoops(graphics);
+            return;
+        }
 
         // Log off-screen changes
         if (wasOffScreen != isOffScreen) {
@@ -177,7 +186,10 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             wasOffScreen = isOffScreen;
         }
 
-        // Don't render if off screen
+        // Always render poops regardless of buddy visibility
+        renderPoops(graphics);
+        
+        // Don't render buddy if off screen
         if (isOffScreen) return;
 
         // Log render position and state
@@ -190,7 +202,9 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
 
         // Update animation frame
         animationTicks++;
-        if (animationTicks >= animationSpeed) {
+        // Use different animation speeds for different states
+        int currentAnimationSpeed = isLookingAround ? lookingAroundAnimationSpeed : animationSpeed;
+        if (animationTicks >= currentAnimationSpeed) {
             animationTicks = 0;
             currentFrame = (currentFrame + 1) % ATLAS_COLUMNS;
         }
@@ -199,13 +213,8 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         int texX = currentFrame * SPRITE_WIDTH;
         int texY = currentState * SPRITE_HEIGHT;
 
-        // Render any poops first (so they appear behind the buddy)
-        for (Poop poop : new ArrayList<>(poops)) {
-            poop.render(graphics);
-        }
-
-        // Render the play ball if it exists
-        if (playBall != null) {
+        // Render the play ball if it exists (non-dragged balls render before buddy)
+        if (playBall != null && !playBall.isBeingDragged()) {
             playBall.render(graphics);
         }
 
@@ -278,24 +287,19 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             );
         }
 
-        // Render looking direction indicator if looking around
-        if (isLookingAround && !gui.isVisible()) {
-            int lookX = posX + SPRITE_WIDTH/2 + (lookDirection * 10);
-            int lookY = posY - 10;
-
-            // Draw a small eye or attention mark
-            int dotSize = 3;
-            int color = 0xFFFFFFFF; // White
-            graphics.fill(lookX - dotSize/2, lookY - dotSize/2,
-                    lookX + dotSize/2, lookY + dotSize/2, color);
-        }
+        // Removed looking direction indicator in favor of a dedicated texture animation
 
         // Render needs indicator
         if (!isEating && !isBeingPet && !isPlaying && !isSleeping) {
             renderNeedsIndicator(graphics);
         }
 
-        // Render any dropped food
+        // Render dragged play ball (after buddy, so it appears on top)
+        if (playBall != null && playBall.isBeingDragged()) {
+            playBall.render(graphics);
+        }
+
+        // Render any dropped food (always render on top when dragged)
         if (droppedFood != null) {
             droppedFood.render(graphics);
         }
@@ -415,7 +419,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         }
 
         // Update standing idle state
-        isStandingIdle = gui.isVisible() || isEating || isBeingPet || (isPlaying && isHoldingBall) || isSleeping || isPooping;
+        isStandingIdle = isEating || isBeingPet || (isPlaying && isHoldingBall) || isSleeping || isPooping || isGrumpy;
 
         // Update stats over time
         updateStats();
@@ -528,20 +532,21 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         if (activityDuration > 0) {
             activityDuration--;
             if (activityDuration <= 0) {
-                LOGGER.info("Buddy activity duration ended: looking={}, stretching={}, hopping={}, excited={}",
-                        isLookingAround, isStretching, isHopping, isExcited);
+                LOGGER.info("Buddy activity duration ended: looking={}, stretching={}, hopping={}, excited={}, grumpy={}",
+                        isLookingAround, isStretching, isHopping, isExcited, isGrumpy);
 
                 // End the current special activity
-                if (isLookingAround || isStretching) {
+                if (isLookingAround || isStretching || isGrumpy) {
                     // These activities set isStanding=true, so we need to end both
                     isStanding = false;
-                    LOGGER.info("Ending standing due to end of looking/stretching");
+                    LOGGER.info("Ending standing due to end of special activity");
                 }
 
                 isHopping = false;
                 isLookingAround = false;
                 isStretching = false;
                 isExcited = false;
+                isGrumpy = false;
                 updateVisualState();
             }
         }
@@ -863,10 +868,18 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
 
         isLookingAround = true;
         isStanding = true;
+        // Reset animation frame to 0 for consistent start of looking around animation
+        currentFrame = 0;
+        animationTicks = 0;
+        
+        // Set the direction (for code that might use this later)
         lookDirection = random.nextInt(3) - 1; // -1, 0, or 1
-        activityDuration = 60 + random.nextInt(60); // Look for 3-6 seconds
+        
+        // Duration between 6-8 seconds (120-160 ticks) to match the slower animation speed
+        activityDuration = 120 + random.nextInt(40);
 
-        LOGGER.info("Looking around activity duration set to: {}, direction: {}", activityDuration, lookDirection);
+        LOGGER.info("Looking around activity duration set to: {} ticks ({} seconds), direction: {}", 
+                   activityDuration, activityDuration/20f, lookDirection);
     }
 
     /**
@@ -1015,7 +1028,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             isChasingBall = false;
             isHoldingBall = true;
             isPlaying = true;
-            playBall.setGrabbed(true);
+            playBall.setGrabbedByBuddy(true);
             currentState = STATE_PLAYING_STAND;
         }
     }
@@ -1024,8 +1037,8 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
      * Decides what behavior the buddy should exhibit next
      */
     private void decideNextBehavior() {
-        // Don't change behavior if off screen or standing idle
-        if (isOffScreen || isStandingIdle) return;
+        // Don't change behavior if off screen or in a special state that requires standing still
+        if (isOffScreen || isEating || isBeingPet || (isPlaying && isHoldingBall) || isSleeping || isPooping || isGrumpy) return;
 
         float chance = random.nextFloat();
 
@@ -1085,6 +1098,8 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             currentState = STATE_POOPING;
         } else if (isSleeping) {
             currentState = STATE_SLEEPING;
+        } else if (isGrumpy) {
+            currentState = STATE_GRUMPY;     // Prioritize grumpy state
         } else if (isEating) {
             currentState = STATE_EATING_STAND;
         } else if (isBeingPet) {
@@ -1093,6 +1108,8 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             currentState = STATE_EXCITED;     // Use dedicated excitement state
         } else if (isStretching) {
             currentState = STATE_STRETCHING;  // Use dedicated stretching state
+        } else if (isLookingAround) {
+            currentState = STATE_LOOKING_AROUND; // Use dedicated looking around state
         } else if (isPlaying && isHoldingBall) {
             // Only show playing animation when actively playing with ball
             currentState = STATE_PLAYING_STAND;
@@ -1101,9 +1118,6 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             currentState = energy < 30 || isSad ? STATE_SAD_WALK : STATE_IDLE_WALK;
         } else if (isStanding || isLookingAround) {
             // Use standing animations for special activities
-            currentState = isSad ? STATE_SAD_STAND : STATE_IDLE_STAND;
-        } else if (gui.isVisible()) {
-            // Use standing animations when GUI is open
             currentState = isSad ? STATE_SAD_STAND : STATE_IDLE_STAND;
         } else if (isSad) {
             // When walking and sad (also when too much poop)
@@ -1135,6 +1149,8 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             case STATE_STRETCHING: return "STRETCHING";
             case STATE_EXCITED: return "EXCITED";
             case STATE_POOPING: return "POOPING";
+            case STATE_LOOKING_AROUND: return "LOOKING_AROUND";
+            case STATE_GRUMPY: return "GRUMPY";
             default: return "UNKNOWN_STATE";
         }
     }
@@ -1155,10 +1171,12 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
      */
     public void pet() {
         if (isSleeping) {
-            // Waking up
+            // Waking up - make buddy grumpy
             isSleeping = false;
-            happiness += 5;
-            updateVisualState();
+            // Slightly decrease happiness when woken up
+            happiness = Math.max(0, happiness - 5);
+            // Start grumpy state
+            startGrumpyState();
         } else {
             isBeingPet = true;
             actionDuration = 40; // 2 seconds
@@ -1170,6 +1188,34 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
                 startExcitement();
             }
         }
+    }
+    
+    /**
+     * Starts the buddy grumpy animation
+     */
+    private void startGrumpyState() {
+        LOGGER.info("Buddy is grumpy after being woken up");
+        
+        // Clear other states
+        isHopping = false;
+        isLookingAround = false;
+        isStretching = false;
+        isExcited = false;
+        
+        // Set grumpy state
+        isGrumpy = true;
+        
+        // Reset animation frame
+        currentFrame = 0;
+        animationTicks = 0;
+        
+        // Set duration - 3 seconds
+        activityDuration = 60;
+        
+        // Update visual state immediately
+        currentState = STATE_GRUMPY;
+        
+        LOGGER.info("Started grumpy state with duration: {} ticks", activityDuration);
     }
 
     /**
@@ -1185,7 +1231,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             // Start with buddy holding the ball
             isHoldingBall = true;
             isPlaying = true;
-            playBall.setGrabbed(true);
+            playBall.setGrabbedByBuddy(true);
             needsPlay = false; // Reset the play need after starting to play
             currentState = STATE_PLAYING_STAND;
         }
@@ -1212,17 +1258,49 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         }
     }
 
-    /**
-     * Creates a play ball at the specified position
-     */
-    public void createPlayBallAt(int x, int y) {
-        if (playBall == null) {
-            playBall = new PlayBall(x, y, this);
-        }
-    }
-
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+
+        if ((droppedFood != null) && !droppedFood.justCreated) {
+            droppedFood.stickToCursor = false;
+        }
+
+        if ((playBall != null) && !playBall.justCreated) {
+            playBall.stickToCursor = false;
+            // Check if ball is near buddy before throwing
+            if (playBall.isNearBuddy(posX + SPRITE_WIDTH/2, posY + SPRITE_HEIGHT/2)) {
+                // If close to buddy, don't throw - start playing
+                isPlaying = true;
+                isHoldingBall = true;
+                isChasingBall = false;
+                playBall.setGrabbedByBuddy(true);
+                needsPlay = false; // Reset play need immediately
+                currentState = STATE_PLAYING_STAND;
+            } else {
+                // If not close, throw normally
+                playBall.throwBall((int)mouseX, (int)mouseY);
+                // Always make buddy chase the ball when thrown
+                isPlaying = true;
+                isChasingBall = true;
+                isHoldingBall = false;
+            }
+        }
+
+        // Always handle poop clicks regardless of buddy visibility
+        if (button == 0) { // Left click
+            // Check if clicked on a poop
+            for (Poop poop : new ArrayList<>(poops)) {
+                if (poop.isMouseOver(mouseX, mouseY)) {
+                    poop.startCleaning();
+                    // Increase happiness slightly for cleaning up poop
+                    happiness = Math.min(100, happiness + 5);
+                    LOGGER.info("Cleaned up poop at ({},{}), happiness: {}", poop.getX(), poop.getY(), happiness);
+                    return true;
+                }
+            }
+        }
+        
+        // Skip other interaction if buddy is not visible or offscreen
         if (!isVisible || isOffScreen) return false;
 
         // First handle the GUI if it's visible
@@ -1239,18 +1317,6 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
                 return true;
             }
         } else if (button == 0) { // Left click
-
-            // Check if clicked on a poop
-            for (Poop poop : new ArrayList<>(poops)) {
-                if (poop.isMouseOver(mouseX, mouseY)) {
-                    poop.startCleaning();
-                    // Increase happiness slightly for cleaning up poop
-                    happiness = Math.min(100, happiness + 5);
-                    LOGGER.info("Cleaned up poop at ({},{}), happiness: {}", poop.getX(), poop.getY(), happiness);
-                    return true;
-                }
-            }
-
             // Normal petting if menu isn't open
             if (isMouseOverBuddy(mouseX, mouseY)) {
                 pet();
@@ -1310,12 +1376,12 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
                     isPlaying = true;
                     isHoldingBall = true;
                     isChasingBall = false;
-                    playBall.setGrabbed(true);
+                    playBall.setGrabbedByBuddy(true);
                     needsPlay = false; // Reset play need immediately
                     currentState = STATE_PLAYING_STAND;
                 } else {
                     // If not close, throw normally
-                    playBall.throw_((int)mouseX, (int)mouseY);
+                    playBall.throwBall((int)mouseX, (int)mouseY);
 
                     // Always make buddy chase the ball when thrown
                     isPlaying = true;
@@ -1347,17 +1413,26 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
 
     @Override
     public void mouseMoved(double mouseX, double mouseY) {
-
         // Update position of dragged items when mouse moves without buttons pressed
         if (droppedFood != null && droppedFood.isBeingDragged()) {
+            LOGGER.debug("Updating dragged food position to: ({}, {})", (int)mouseX, (int)mouseY);
             droppedFood.setPosition((int)mouseX, (int)mouseY);
-            return;
         }
 
         if (playBall != null && playBall.isBeingDragged()) {
+            LOGGER.debug("Updating dragged ball position to: ({}, {})", (int)mouseX, (int)mouseY);
             playBall.updateDragPosition((int)mouseX, (int)mouseY);
         }
+    }
 
+    /**
+     * Renders all poops in the world
+     */
+    private void renderPoops(GuiGraphics graphics) {
+        // Render any poops (so they appear behind the buddy)
+        for (Poop poop : new ArrayList<>(poops)) {
+            poop.render(graphics);
+        }
     }
 
     /**

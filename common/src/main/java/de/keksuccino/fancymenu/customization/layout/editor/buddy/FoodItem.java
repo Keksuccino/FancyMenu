@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy;
 
+import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
@@ -15,6 +16,8 @@ public class FoodItem {
     private boolean isDragged = false;
     private int lifetime = 600; // 30 seconds
     private final int size = 16;
+    public boolean stickToCursor = false;
+    public boolean justCreated = true;
 
     // Reference to the buddy
     private final TamagotchiBuddy buddy;
@@ -37,15 +40,22 @@ public class FoodItem {
     }
 
     public void tick() {
+
+        this.justCreated = false;
+
         lifetime--;
 
         // Fall if not being dragged
-        if (!isDragged) {
+        if (!this.isDragged && !this.stickToCursor) {
             y += 1;
             if (y > buddy.getScreenHeight()) {
                 lifetime = 0;
             }
+        } else if (this.stickToCursor) {
+            x = MouseInput.getMouseX();
+            y = MouseInput.getMouseY();
         }
+
     }
 
     public boolean isMouseOver(double mouseX, double mouseY) {
@@ -54,13 +64,15 @@ public class FoodItem {
     }
 
     public void pickup(int mouseX, int mouseY) {
-        isDragged = true;
+        if (this.justCreated) return;
+        this.setBeingDragged(true); // Use setter to ensure state is properly set
         x = mouseX;
         y = mouseY;
     }
 
     public void drop(int mouseX, int mouseY) {
-        isDragged = false;
+        if (this.justCreated) return;
+        this.setBeingDragged(false);
         x = mouseX;
         y = mouseY;
     }
@@ -72,6 +84,13 @@ public class FoodItem {
 
     public boolean isBeingDragged() {
         return isDragged;
+    }
+    
+    /**
+     * Explicitly sets the dragged state for the food item
+     */
+    public void setBeingDragged(boolean dragged) {
+        isDragged = dragged;
     }
 
     public boolean shouldRemove() {
@@ -92,4 +111,5 @@ public class FoodItem {
     public int getY() {
         return y;
     }
+
 }
