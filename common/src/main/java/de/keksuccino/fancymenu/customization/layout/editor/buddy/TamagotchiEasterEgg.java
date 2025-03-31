@@ -86,7 +86,7 @@ public class TamagotchiEasterEgg extends AbstractContainerEventHandler implement
         if (saveTimer >= SAVE_INTERVAL) {
             saveTimer = 0;
             buddy.saveState();
-            LOGGER.debug("Auto-saved buddy state");
+            LOGGER.info("Auto-saved buddy state");
             
             // Log current poop positions for debugging
             List<Poop> poops = buddy.getPoops();

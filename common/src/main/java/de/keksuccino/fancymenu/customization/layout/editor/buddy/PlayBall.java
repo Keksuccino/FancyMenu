@@ -53,7 +53,7 @@ public class PlayBall {
         this.x = x;
         this.y = y;
         this.buddy = buddy;
-        this.groundY = buddy.getPosY() + buddy.getSpriteHeight() - size;
+        this.groundY = buddy.getBuddyPosY() + buddy.getSpriteHeight() - size;
         this.inactivityTimer = 0;
         this.userInactivityTimer = 0;
         this.random = new Random();
@@ -78,7 +78,7 @@ public class PlayBall {
         // If ball is grabbed, position it relative to buddy
         if (isGrabbedByBuddy) {
             // Position ball above buddy's head during play animation
-            x = buddy.getPosX() + buddy.getSpriteWidth() / 2;
+            x = buddy.getBuddyPosX() + buddy.getSpriteWidth() / 2;
 
             // Animated vertical movement when playing - make it look like throw and catch
             playBouncePhase += playBounceSpeed;
@@ -88,12 +88,12 @@ public class PlayBall {
 
             // Apply smooth sinusoidal motion with varying amplitude based on animation frame
             float amplitude = 10 + (buddy.getCurrentFrame() % 2) * 5; // Amplitude varies with animation
-            y = buddy.getPosY() - 20 - (int)(Math.sin(playBouncePhase) * amplitude);
+            y = buddy.getBuddyPosY() - 20 - (int)(Math.sin(playBouncePhase) * amplitude);
         }
 
         // Add a slight bounce effect when rolling
         int drawY = y;
-        if (isRolling && buddy.getAnimationTicks() % 20 < 10) {
+        if (isRolling && buddy.getAnimationRenderTicks() % 20 < 10) {
             drawY -= 2; // Small bounce when rolling
         }
 
@@ -214,7 +214,7 @@ public class PlayBall {
         }
 
         // Check if ball is far from buddy and not being interacted with
-        boolean isFarFromBuddy = !isNearBuddy(buddy.getPosX() + buddy.getSpriteWidth()/2, buddy.getPosY() + buddy.getSpriteHeight()/2);
+        boolean isFarFromBuddy = !isNearBuddy(buddy.getBuddyPosX() + buddy.getSpriteWidth()/2, buddy.getBuddyPosY() + buddy.getSpriteHeight()/2);
 
         // Start chasing if ball is far and not recently kicked by user
         if (isFarFromBuddy && !buddy.isChasingBall() && !wasKickedByUser) {
