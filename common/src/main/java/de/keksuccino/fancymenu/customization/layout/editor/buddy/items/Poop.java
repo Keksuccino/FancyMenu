@@ -1,5 +1,6 @@
-package de.keksuccino.fancymenu.customization.layout.editor.buddy;
+package de.keksuccino.fancymenu.customization.layout.editor.buddy.items;
 
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddy;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
@@ -9,21 +10,22 @@ import net.minecraft.resources.ResourceLocation;
  * The poop stays on the ground until the user cleans it up.
  */
 public class Poop {
+
     public static final ResourceLocation TEXTURE_POOP = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/poop.png");
 
-    private int x;
-    private int y;
-    private final int size = 16;
-    private boolean isBeingCleaned = false;
-    private int cleaningAnimation = 0;
-    private static final int CLEANING_DURATION = 20; // increased from 10 to 20 frames
+    public int x;
+    public int y;
+    public final int size = 16;
+    public boolean isBeingCleaned = false;
+    public int cleaningAnimation = 0;
+    public static final int CLEANING_DURATION = 20; // increased from 10 to 20 frames
     
     // Store relative position for screen resizing
-    private float relativeX; // Position as percentage of screen width
-    private float relativeY; // Position as percentage of screen height (NEW - replaces groundLevel)
+    public float relativeX; // Position as percentage of screen width
+    public float relativeY; // Position as percentage of screen height (NEW - replaces groundLevel)
     
     // Reference to the buddy
-    private final TamagotchiBuddy buddy;
+    public final TamagotchiBuddy buddy;
 
     public Poop(int x, int y, TamagotchiBuddy buddy) {
         this.x = x;
@@ -129,4 +131,5 @@ public class Poop {
     public int getY() {
         return y;
     }
+
 }

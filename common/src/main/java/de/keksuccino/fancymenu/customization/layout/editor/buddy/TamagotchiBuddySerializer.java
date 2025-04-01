@@ -5,9 +5,9 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonArray;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.Poop;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -18,7 +18,7 @@ import java.util.List;
 /**
  * Handles saving and loading the Tamagotchi Buddy's state to and from persistent storage.
  */
-public class TamagotchiBuddyPersistence {
+public class TamagotchiBuddySerializer {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -168,4 +168,5 @@ public class TamagotchiBuddyPersistence {
             return false;
         }
     }
+
 }

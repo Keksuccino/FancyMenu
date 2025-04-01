@@ -1,5 +1,6 @@
-package de.keksuccino.fancymenu.customization.layout.editor.buddy;
+package de.keksuccino.fancymenu.customization.layout.editor.buddy.animation;
 
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -35,14 +36,16 @@ public class AnimationStates {
             .activationCondition(buddy -> buddy.isPooping)
             .temporaryState(true)
             .duration(60, 60) // 3 seconds for pooping
+            .ignoresLockedState(true)
             .build());
 
     public static final AnimationState SLEEPING = registerState(new AnimationState.Builder("SLEEPING", ATLAS_INDEX_SLEEPING)
             .priority(90)
             .allowsMovement(false)
             .allowsHopping(false)
-            .animationSpeed(15) // Slower breathing animation
+            .animationSpeed((buddy, state) -> 15) // Slower breathing animation
             .activationCondition(buddy -> buddy.isSleeping)
+            .ignoresLockedState(true)
             .build());
 
     public static final AnimationState GRUMPY_STANDING = registerState(new AnimationState.Builder("GRUMPY_STANDING", ATLAS_INDEX_GRUMPY_STAND)
@@ -61,6 +64,7 @@ public class AnimationStates {
             .activationCondition(buddy -> buddy.isEating)
             .temporaryState(true)
             .duration(60, 60) // 3 seconds for eating
+            .ignoresLockedState(true)
             .build());
 
     public static final AnimationState BEING_PET = registerState(new AnimationState.Builder("BEING_PET", ATLAS_INDEX_BEING_PET)
@@ -70,6 +74,7 @@ public class AnimationStates {
             .activationCondition(buddy -> buddy.isBeingPet)
             .temporaryState(true)
             .duration(40, 40) // 2 seconds for being pet
+            .ignoresLockedState(true)
             .build());
 
     public static final AnimationState PLAYING_WITH_BALL_STANDING = registerState(new AnimationState.Builder("PLAYING_WITH_BALL_STANDING", ATLAS_INDEX_PLAYING_WITH_BALL_STAND)
@@ -77,19 +82,21 @@ public class AnimationStates {
             .allowsMovement(false)
             .allowsHopping(false)
             .activationCondition(buddy -> buddy.isPlaying && buddy.isHoldingBall)
+            .ignoresLockedState(true)
             .build());
 
     public static final AnimationState CHASING_BALL = registerState(new AnimationState.Builder("CHASING_BALL", ATLAS_INDEX_IDLE_WALK)
             .priority(59)
             .walkingSpeed((buddy, state) -> 5)
             .activationCondition(buddy -> buddy.isChasingBall)
+            .ignoresLockedState(true)
             .build());
 
     public static final AnimationState LOOKING_AROUND_STANDING = registerState(new AnimationState.Builder("LOOKING_AROUND_STANDING", ATLAS_INDEX_LOOKING_AROUND_STANDING)
             .priority(29)
             .allowsMovement(false)
             .allowsHopping(false)
-            .animationSpeed(80)
+            .animationSpeed((buddy, state) -> 80)
             .activationCondition(buddy -> buddy.isLookingAround)
             .preventionCondition(buddy -> buddy.isSad() || buddy.isSleepy)
             .temporaryState(true)
@@ -137,7 +144,7 @@ public class AnimationStates {
 
     public static final AnimationState WALKING_SLEEPY = registerState(new AnimationState.Builder("WALKING_SLEEPY", ATLAS_INDEX_SLEEPY_WALKING)
             .priority(9)
-            .animationSpeed(25)
+            .animationSpeed((buddy, state) -> 25)
             .walkingSpeed((buddy, state) -> 1)
             .allowsHopping(false)
             .activationCondition(buddy -> buddy.isSleepy)
@@ -154,10 +161,14 @@ public class AnimationStates {
 
     public static final AnimationState RUNNING = registerState(new AnimationState.Builder("RUNNING", ATLAS_INDEX_IDLE_WALK)
             .priority(1)
-            .animationSpeed(2)
+            .animationSpeed((buddy, state) -> 3)
             .walkingSpeed((buddy, state) -> 7)
-            .activationCondition(buddy -> (buddy.energy >= 80) && buddy.chanceCheck(40.0f)) // 40% chance to trigger RUNNING when energy is high enough
+            .activationCondition(buddy -> (buddy.energy >= 70) && buddy.chanceCheck(0.2f)) // 0.2% chance to trigger RUNNING when energy is high enough
             .preventionCondition(buddy -> buddy.isSad() || buddy.isSleepy)
+            .temporaryState(true)
+            .duration(50, 70)
+            .lockStateUntilFinished(true)
+            .cooldown(20000) // After activating, go on cooldown for 20 seconds
             .build());
 
     public static final AnimationState WALKING = registerState(new AnimationState.Builder("WALKING", ATLAS_INDEX_IDLE_WALK)
@@ -189,6 +200,19 @@ public class AnimationStates {
             cachedSortedStates = l;
         }
         return cachedSortedStates;
+    }
+
+    @NotNull
+    public static AnimationState findFirstValidStateFor(@NotNull TamagotchiBuddy buddy) {
+        AnimationState selectedState = null;
+        for (AnimationState state : AnimationStates.getStates()) {
+            if (state.canActivate(buddy)) {
+                selectedState = state;
+                break;
+            }
+        }
+        if (selectedState == null) selectedState = WALKING;
+        return selectedState;
     }
 
 }

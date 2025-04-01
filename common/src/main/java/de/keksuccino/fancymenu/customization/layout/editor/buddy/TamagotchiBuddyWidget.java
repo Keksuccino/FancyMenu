@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy;
 
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.Poop;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
@@ -17,7 +18,7 @@ import java.util.List;
 /**
  * Wrapper to integrate the TamagotchiBuddy with any Minecraft screen
  */
-public class TamagotchiEasterEgg extends AbstractContainerEventHandler implements Renderable, NarratableEntry, FancyMenuUiComponent {
+public class TamagotchiBuddyWidget extends AbstractContainerEventHandler implements Renderable, NarratableEntry, FancyMenuUiComponent {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -29,7 +30,7 @@ public class TamagotchiEasterEgg extends AbstractContainerEventHandler implement
     // Flag to track if buddy has been initialized with proper screen size
     private boolean fullyInitialized = false;
     
-    public TamagotchiEasterEgg(int screenWidth, int screenHeight) {
+    public TamagotchiBuddyWidget(int screenWidth, int screenHeight) {
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
         LOGGER.info("Creating new TamagotchiEasterEgg with screen size: {}x{}", screenWidth, screenHeight);

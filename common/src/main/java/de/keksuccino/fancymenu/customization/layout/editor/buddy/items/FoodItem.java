@@ -1,5 +1,6 @@
-package de.keksuccino.fancymenu.customization.layout.editor.buddy;
+package de.keksuccino.fancymenu.customization.layout.editor.buddy.items;
 
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddy;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
@@ -9,18 +10,19 @@ import net.minecraft.resources.ResourceLocation;
  * Represents a food item that can be fed to the buddy.
  */
 public class FoodItem {
+
     public static final ResourceLocation TEXTURE_FOOD = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/food.png");
 
-    private int x;
-    private int y;
-    private boolean isDragged = false;
-    private int lifetime = 600; // 30 seconds
-    private final int size = 16;
+    public int x;
+    public int y;
+    public boolean isDragged = false;
+    public int lifetime = 600; // 30 seconds
+    public final int size = 16;
     public boolean stickToCursor = false;
     public boolean justCreated = true;
 
     // Reference to the buddy
-    private final TamagotchiBuddy buddy;
+    public final TamagotchiBuddy buddy;
 
     public FoodItem(int x, int y, TamagotchiBuddy buddy) {
         this.x = x;

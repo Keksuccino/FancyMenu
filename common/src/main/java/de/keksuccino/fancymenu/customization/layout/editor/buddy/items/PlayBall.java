@@ -1,5 +1,6 @@
-package de.keksuccino.fancymenu.customization.layout.editor.buddy;
+package de.keksuccino.fancymenu.customization.layout.editor.buddy.items;
 
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddy;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
@@ -10,41 +11,42 @@ import java.util.Random;
  * A ball that the buddy can play with, featuring physics and interaction.
  */
 public class PlayBall {
-    public static final ResourceLocation TEXTURE_BALL = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/ball.png");
-    private static final int CATCH_DISTANCE = 25; // Increased from 15 to make giving the ball easier
-    private static final int INACTIVITY_TIMEOUT = 400; // Ball despawns after 20 seconds of no interaction
-    private static final int USER_INACTIVITY_TIMEOUT = 200; // Ball despawns after 10 seconds of no USER interaction
 
-    private int x;
-    private int y;
-    private float velocityX = 0;
-    private float velocityY = 0;
-    private int inactivityTimer = 0;
-    private int userInactivityTimer = 0; // New timer that only tracks user interaction
-    private final int size = 12;
-    private int kickCooldown = 0;
-    private boolean isUp = false; // Whether the ball is being tossed up
-    private boolean isRolling = false; // Whether the ball is rolling on ground
-    private boolean isGrabbedByBuddy = false; // Whether buddy is holding the ball
-    private boolean wasKickedByUser = false; // Whether ball was kicked by user
-    private boolean isDragged = false; // Whether ball is being dragged by user
-    private float gravity = 0.2f;
-    private float groundY; // Ground level for the ball
-    private int holdTimer = 0; // Time buddy holds the ball before throwing
-    private float playBouncePhase = 0; // Phase for vertical bounce when playing
-    private float playBounceSpeed = 0.15f; // Speed of bounce cycle
+    public static final ResourceLocation TEXTURE_BALL = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/ball.png");
+    public static final int CATCH_DISTANCE = 25; // Increased from 15 to make giving the ball easier
+    public static final int INACTIVITY_TIMEOUT = 400; // Ball despawns after 20 seconds of no interaction
+    public static final int USER_INACTIVITY_TIMEOUT = 200; // Ball despawns after 10 seconds of no USER interaction
+
+    public int x;
+    public int y;
+    public float velocityX = 0;
+    public float velocityY = 0;
+    public int inactivityTimer = 0;
+    public int userInactivityTimer = 0; // New timer that only tracks user interaction
+    public final int size = 12;
+    public int kickCooldown = 0;
+    public boolean isUp = false; // Whether the ball is being tossed up
+    public boolean isRolling = false; // Whether the ball is rolling on ground
+    public boolean isGrabbedByBuddy = false; // Whether buddy is holding the ball
+    public boolean wasKickedByUser = false; // Whether ball was kicked by user
+    public boolean isDragged = false; // Whether ball is being dragged by user
+    public float gravity = 0.2f;
+    public float groundY; // Ground level for the ball
+    public int holdTimer = 0; // Time buddy holds the ball before throwing
+    public float playBouncePhase = 0; // Phase for vertical bounce when playing
+    public float playBounceSpeed = 0.15f; // Speed of bounce cycle
 
     // Fields for tracking mouse movement velocity
-    private static final int VELOCITY_SAMPLE_SIZE = 5; // Number of samples to track
-    private int[] recentMouseX = new int[VELOCITY_SAMPLE_SIZE];
-    private int[] recentMouseY = new int[VELOCITY_SAMPLE_SIZE];
-    private long[] recentMouseTimes = new long[VELOCITY_SAMPLE_SIZE];
-    private int mouseSampleIndex = 0;
-    private boolean hasFullSamples = false;
+    public static final int VELOCITY_SAMPLE_SIZE = 5; // Number of samples to track
+    public int[] recentMouseX = new int[VELOCITY_SAMPLE_SIZE];
+    public int[] recentMouseY = new int[VELOCITY_SAMPLE_SIZE];
+    public long[] recentMouseTimes = new long[VELOCITY_SAMPLE_SIZE];
+    public int mouseSampleIndex = 0;
+    public boolean hasFullSamples = false;
 
     // Reference to the buddy
-    private final TamagotchiBuddy buddy;
-    private final Random random;
+    public final TamagotchiBuddy buddy;
+    public final Random random;
 
     public boolean stickToCursor = false;
     public boolean justCreated = true;
@@ -232,7 +234,7 @@ public class PlayBall {
     /**
      * Let buddy throw the ball up for play
      */
-    private void buddyThrowBallUp() {
+    public void buddyThrowBallUp() {
         if (this.justCreated) return;
         isGrabbedByBuddy = false;
         holdTimer = 0;

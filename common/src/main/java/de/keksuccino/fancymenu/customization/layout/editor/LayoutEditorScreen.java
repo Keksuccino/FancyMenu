@@ -18,7 +18,7 @@ import de.keksuccino.fancymenu.customization.layer.ElementFactory;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiEasterEgg;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddyWidget;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.LayoutEditorWidgetRegistry;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
@@ -97,7 +97,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	protected LayoutEditorHistory.Snapshot preDragElementSnapshot;
 	public final List<WidgetMeta> cachedVanillaWidgetMetas = new ArrayList<>();
 	public boolean unsavedChanges = false;
-	protected final TamagotchiEasterEgg tamagotchiEasterEgg = new TamagotchiEasterEgg(0, 0);
+	protected final TamagotchiBuddyWidget tamagotchiBuddyWidget = new TamagotchiBuddyWidget(0, 0);
 
 	public LayoutEditorScreen(@NotNull Layout layout) {
 		this(null, layout);
@@ -196,8 +196,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			w.refresh();
 		}
 
-		this.addWidget(this.tamagotchiEasterEgg);
-		this.tamagotchiEasterEgg.setScreenSize(this.width, this.height);
+		this.addWidget(this.tamagotchiBuddyWidget);
+		this.tamagotchiBuddyWidget.setScreenSize(this.width, this.height);
 
 	}
 
@@ -209,7 +209,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	@Override
 	public void tick() {
 
-		this.tamagotchiEasterEgg.tick();
+		this.tamagotchiBuddyWidget.tick();
 
 		for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
 			w.tick();
@@ -264,7 +264,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		this.renderLayoutEditorWidgets(graphics, mouseX, mouseY, partial);
 
-		this.tamagotchiEasterEgg.render(graphics, mouseX, mouseY, partial);
+		this.tamagotchiBuddyWidget.render(graphics, mouseX, mouseY, partial);
 
 		this.menuBar.render(graphics, mouseX, mouseY, partial);
 
@@ -1331,7 +1331,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	public void closeEditor() {
 		this.saveWidgetSettings();
-		this.tamagotchiEasterEgg.cleanup();
+		this.tamagotchiBuddyWidget.cleanup();
 		currentInstance = null;
 		if (this.layoutTargetScreen != null) {
 			if (!((IMixinScreen)this.layoutTargetScreen).get_initialized_FancyMenu()) {

@@ -1,5 +1,6 @@
-package de.keksuccino.fancymenu.customization.layout.editor.buddy;
+package de.keksuccino.fancymenu.customization.layout.editor.buddy.animation;
 
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddy;
 import de.keksuccino.fancymenu.util.MathUtils;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -25,7 +26,7 @@ public class AnimationState {
 
     private final String name;
     private final int atlasIndex;
-    private final int animationSpeed;
+    private final AnimationSpeedSupplier animationSpeed;
     private final boolean allowsMovement;
     private final boolean allowsHopping;
     private final Predicate<TamagotchiBuddy> activationCondition;
@@ -37,10 +38,15 @@ public class AnimationState {
     private final DurationRandomizer durationRandomizer;
     @NotNull
     private final WalkingSpeedSupplier walkingSpeed;
-    
+    private final boolean lockStateUntilFinished;
+    private final boolean ignoresLockedState;
+    private final long cooldown;
+
+    private long lastCountdownTriggerTime = -1l;
+
     /**
      * Creates a new animation state.
-     * 
+     *
      * @param name The unique name of the state for logging and identification
      * @param atlasIndex The row in the texture atlas containing this animation (first row is 0)
      * @param animationSpeed The speed of the animation in ticks per frame
@@ -53,11 +59,16 @@ public class AnimationState {
      * @param minDuration The minimum duration
      * @param maxDuration The maximum duration
      * @param durationRandomizer The duration randomizer
+     * @param walkingSpeed The speed buddy should walk at
+     * @param lockStateUntilFinished Locks buddy into this state until the state finished playing
+     * @param ignoresLockedState If this state should other locked states
+     * @param cooldown The amount of time in MS the state should be on cooldown after getting activated
      */
-    private AnimationState(@NotNull String name, int atlasIndex, int animationSpeed, boolean allowsMovement,
+    private AnimationState(@NotNull String name, int atlasIndex, @NotNull AnimationSpeedSupplier animationSpeed, boolean allowsMovement,
                            boolean allowsHopping, @NotNull Predicate<TamagotchiBuddy> activationCondition,
                            @NotNull Predicate<TamagotchiBuddy> preventionCondition, int priority,
-                           boolean isTemporaryState, int minDuration, int maxDuration, @NotNull DurationRandomizer durationRandomizer, @NotNull WalkingSpeedSupplier walkingSpeed) {
+                           boolean isTemporaryState, int minDuration, int maxDuration, @NotNull DurationRandomizer durationRandomizer, @NotNull WalkingSpeedSupplier walkingSpeed,
+                           boolean lockStateUntilFinished, boolean ignoresLockedState, long cooldown) {
         this.name = name;
         this.atlasIndex = atlasIndex;
         this.animationSpeed = animationSpeed;
@@ -71,11 +82,14 @@ public class AnimationState {
         this.maxDuration = maxDuration;
         this.durationRandomizer = durationRandomizer;
         this.walkingSpeed = walkingSpeed;
+        this.lockStateUntilFinished = lockStateUntilFinished;
+        this.ignoresLockedState = ignoresLockedState;
+        this.cooldown = cooldown;
     }
 
     /**
      * Checks if this state can be activated for the given buddy.
-     * 
+     *
      * @param buddy The buddy to check
      * @return true if this state can be activated, false otherwise
      */
@@ -85,31 +99,42 @@ public class AnimationState {
             return false;
         }
         // Then check prevention condition if present
-        return !preventionCondition.test(buddy);
+        if (preventionCondition.test(buddy)) {
+            return false;
+        }
+        // If state is on cooldown, don't activate
+        long now = System.currentTimeMillis();
+        if ((this.cooldown > 0) && ((this.lastCountdownTriggerTime + this.cooldown) > now)) {
+            LOGGER.info("State on cooldown! Will not activate: " + this.getName());
+            return false;
+        }
+        return true;
     }
 
     /**
      * Called when this state becomes active
-     * 
+     *
      * @param buddy The buddy instance
      */
     public void onActivate(TamagotchiBuddy buddy) {
 
         LOGGER.info("Activating state: {}", name);
-        
+
         // Reset animation frame when changing state
         buddy.resetAnimationFrame();
-        
+
         // Set activity duration for temporary states
         if (isTemporaryState) {
             buddy.setCurrentStateDuration(Math.min(this.maxDuration, Math.max(this.minDuration, this.getRandomizedDuration(buddy))));
         }
 
+        this.lastCountdownTriggerTime = System.currentTimeMillis();
+
     }
-    
+
     /**
      * Called when this state is deactivated
-     * 
+     *
      * @param buddy The buddy instance
      */
     public void onDeactivate(TamagotchiBuddy buddy) {
@@ -125,14 +150,14 @@ public class AnimationState {
         return atlasIndex;
     }
 
-    public int getAnimationSpeed() {
-        return animationSpeed;
+    public int getAnimationSpeed(@NotNull TamagotchiBuddy buddy) {
+        return animationSpeed.speed(buddy, this);
     }
 
     public boolean allowsMovement() {
         return allowsMovement;
     }
-    
+
     public boolean allowsHopping() {
         return allowsHopping;
     }
@@ -140,7 +165,7 @@ public class AnimationState {
     public int getPriority() {
         return priority;
     }
-    
+
     public boolean isTemporaryState() {
         return isTemporaryState;
     }
@@ -161,6 +186,18 @@ public class AnimationState {
         return this.walkingSpeed.speed(buddy, this);
     }
 
+    public boolean shouldLockStateUntilFinished() {
+        return this.lockStateUntilFinished;
+    }
+
+    public boolean shouldIgnoreLockedState() {
+        return this.ignoresLockedState;
+    }
+
+    public long getCooldown() {
+        return this.cooldown;
+    }
+
     @Override
     public String toString() {
         return name;
@@ -168,12 +205,17 @@ public class AnimationState {
 
     @FunctionalInterface
     public interface DurationRandomizer {
-        public int randomize(TamagotchiBuddy buddy, AnimationState state);
+        int randomize(TamagotchiBuddy buddy, AnimationState state);
     }
 
     @FunctionalInterface
     public interface WalkingSpeedSupplier {
-        public int speed(TamagotchiBuddy buddy, AnimationState state);
+        int speed(TamagotchiBuddy buddy, AnimationState state);
+    }
+
+    @FunctionalInterface
+    public interface AnimationSpeedSupplier {
+        int speed(TamagotchiBuddy buddy, AnimationState state);
     }
 
     // Builder pattern for easier construction
@@ -181,7 +223,7 @@ public class AnimationState {
 
         private final String name;
         private final int atlasIndex;
-        private int animationSpeed = 5; // Default animation speed
+        private AnimationSpeedSupplier animationSpeed = (buddy, state) -> 5; // Default animation speed
         private boolean allowsMovement = true;
         private boolean allowsHopping = true;
         private Predicate<TamagotchiBuddy> activationCondition = buddy -> true; // Default: always active
@@ -192,6 +234,9 @@ public class AnimationState {
         private int maxDuration = 60;
         private DurationRandomizer durationRandomizer = (buddy, state) -> MathUtils.getRandomNumberInRange(state.minDuration, state.maxDuration);
         private WalkingSpeedSupplier walkingSpeed = (buddy, state) -> 2; // Default walking speed
+        private boolean lockStateUntilFinished = false;
+        private boolean ignoresLockedState = false;
+        private long cooldown = 0L;
 
         public Builder(String name, int atlasIndex) {
             this.name = name;
@@ -201,16 +246,22 @@ public class AnimationState {
         /**
          * @param animationSpeed Higher value means slower animation. Default speed is 5.
          */
-        public Builder animationSpeed(int animationSpeed) {
+        public Builder animationSpeed(@NotNull AnimationSpeedSupplier animationSpeed) {
             this.animationSpeed = animationSpeed;
             return this;
         }
 
+        /**
+         * If buddy should be able to move while this state is active. Default is true.
+         */
         public Builder allowsMovement(boolean allowsMovement) {
             this.allowsMovement = allowsMovement;
             return this;
         }
-        
+
+        /**
+         * If buddy should be able to hop while in this state. Default is true.
+         */
         public Builder allowsHopping(boolean allowsHopping) {
             this.allowsHopping = allowsHopping;
             return this;
@@ -232,7 +283,7 @@ public class AnimationState {
         }
 
         /**
-         * @param isTemporary If the state should automatically end after its max duration or if it should play endlessly until ended manually
+         * @param isTemporary If the state should automatically end after its max duration or if it should play endlessly until ended manually. Default is false.
          */
         public Builder temporaryState(boolean isTemporary) {
             this.isTemporaryState = isTemporary;
@@ -265,11 +316,36 @@ public class AnimationState {
             return this;
         }
 
+        /**
+         * Locks buddy in this state until the state finished playing. Default is false.
+         */
+        public Builder lockStateUntilFinished(boolean lock) {
+            this.lockStateUntilFinished = lock;
+            return this;
+        }
+
+        /**
+         * If this state can ignore states that are locked.
+         */
+        public Builder ignoresLockedState(boolean ignoresLockedState) {
+            this.ignoresLockedState = ignoresLockedState;
+            return this;
+        }
+
+        /**
+         * If there should be a cooldown in MS after the state got successfully activated. Default is no cooldown (0).
+         */
+        public Builder cooldown(long cooldownMillis) {
+            this.cooldown = cooldownMillis;
+            return this;
+        }
+
         public AnimationState build() {
             return new AnimationState(
-                name, atlasIndex, animationSpeed, allowsMovement, allowsHopping,
-                activationCondition, preventionCondition, priority,
-                isTemporaryState, minDuration, maxDuration, durationRandomizer, walkingSpeed
+                    name, atlasIndex, animationSpeed, allowsMovement, allowsHopping,
+                    activationCondition, preventionCondition, priority, isTemporaryState,
+                    minDuration, maxDuration, durationRandomizer, walkingSpeed,
+                    lockStateUntilFinished, ignoresLockedState, cooldown
             );
         }
 

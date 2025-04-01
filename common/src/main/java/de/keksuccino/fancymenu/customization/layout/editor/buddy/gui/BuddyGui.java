@@ -1,48 +1,43 @@
-package de.keksuccino.fancymenu.customization.layout.editor.buddy;
+package de.keksuccino.fancymenu.customization.layout.editor.buddy.gui;
 
-import com.mojang.blaze3d.platform.Window;
-import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddy;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.FoodItem;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.PlayBall;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 
+import static de.keksuccino.fancymenu.customization.layout.editor.buddy.gui.BuddyGuiButton.*;
+
 /**
  * A GUI interface for interacting with the TamagotchiBuddy
  */
-public class TamagotchiBuddyGui {
+public class BuddyGui {
+
     private static final Logger LOGGER = LogManager.getLogger();
 
     // GUI Constants
     private static final int GUI_WIDTH = 200;
     private static final int GUI_HEIGHT = 200; // Increased height to accommodate buttons below status bars
-    private static final int BUTTON_WIDTH = 80;
-    private static final int BUTTON_HEIGHT = 20;
     private static final int STATUS_BAR_WIDTH = 150;
     private static final int STATUS_BAR_HEIGHT = 10;
-    private static final int BACKGROUND_COLOR = 0xC0000000; // Fallback semi-transparent black background
-    private static final int BORDER_COLOR = 0xFF666666; // Fallback gray border
 
     // GUI Texture
     private static final ResourceLocation GUI_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/buddy_gui.png");
 
     // Nine-slice border sizes
     private static final int BORDER_SIZE = 7;
-
-    // Flag to use texture (set to false for debug/fallback mode)
-    private static final boolean USE_TEXTURE_BACKGROUND = true;
 
     // Reference to the buddy
     private final TamagotchiBuddy buddy;
@@ -51,13 +46,9 @@ public class TamagotchiBuddyGui {
     private boolean isVisible = false;
     private int guiX;
     private int guiY;
-    private List<GuiButton> buttons = new ArrayList<>();
+    private final List<BuddyGuiButton> buttons = new ArrayList<>();
 
-    // Resource locations for button textures (reusing from the radial menu)
-    private static final ResourceLocation TEXTURE_FEED_BUTTON = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/feed_button.png");
-    private static final ResourceLocation TEXTURE_PLAY_BUTTON = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/play_button.png");
-
-    public TamagotchiBuddyGui(TamagotchiBuddy buddy) {
+    public BuddyGui(TamagotchiBuddy buddy) {
         this.buddy = buddy;
         initButtons();
     }
@@ -66,12 +57,14 @@ public class TamagotchiBuddyGui {
      * Initializes the GUI buttons
      */
     private void initButtons() {
+
         // Clear existing buttons to avoid duplicates
         buttons.clear();
 
         // Create feed button
-        buttons.add(new GuiButton(
-                "Feed",
+        buttons.add(new BuddyGuiButton(
+                this.buddy,
+                buddy -> "Feed",
                 () -> {
                     int mouseX = MouseInput.getMouseX();
                     int mouseY = MouseInput.getMouseY();
@@ -87,12 +80,13 @@ public class TamagotchiBuddyGui {
                     hide();
                 },
                 // Condition for button to be active
-                () -> buddy.getDroppedFood() == null
+                () -> (buddy.getDroppedFood() == null) && !buddy.isSleeping && !buddy.isPlaying && !buddy.isEating && !buddy.isPooping
         ));
 
         // Create play button
-        buttons.add(new GuiButton(
-                "Play",
+        buttons.add(new BuddyGuiButton(
+                this.buddy,
+                buddy -> "Play",
                 () -> {
                     int mouseX = MouseInput.getMouseX();
                     int mouseY = MouseInput.getMouseY();
@@ -109,10 +103,11 @@ public class TamagotchiBuddyGui {
                     hide();
                 },
                 // Condition for button to be active
-                () -> !buddy.isSleeping() && buddy.getEnergy() > 20 && buddy.getPlayBall() == null
+                () -> !buddy.isSleeping && (buddy.getEnergy() > 20) && (buddy.getPlayBall() == null) && !buddy.isEating && !buddy.isPooping
         ));
 
         LOGGER.info("Initialized " + buttons.size() + " GUI buttons");
+
     }
 
     /**
@@ -165,7 +160,7 @@ public class TamagotchiBuddyGui {
 
         // Position each button horizontally
         for (int i = 0; i < buttons.size(); i++) {
-            GuiButton button = buttons.get(i);
+            BuddyGuiButton button = buttons.get(i);
             int buttonX = startX + (i * (BUTTON_WIDTH + buttonSpacing));
 
             button.setPosition(buttonX, buttonsY);
@@ -183,22 +178,16 @@ public class TamagotchiBuddyGui {
         graphics.pose().pushPose();
         graphics.pose().translate(0, 0, 400); // Use z=400 (same as tooltips)
 
-        if (USE_TEXTURE_BACKGROUND) {
-            // Use the built-in nine-slice rendering
-            RenderingUtils.blitNineSlicedTexture(
-                    graphics,
-                    GUI_TEXTURE,
-                    guiX, guiY,
-                    GUI_WIDTH, GUI_HEIGHT,
-                    256, 256,  // Texture dimensions (assuming standard 256x256 texture)
-                    BORDER_SIZE, BORDER_SIZE, BORDER_SIZE, BORDER_SIZE,  // Border sizes (top, right, bottom, left)
-                    -1  // No color tint
-            );
-        } else {
-            // Fallback to a basic filled rectangle
-            graphics.fill(guiX, guiY, guiX + GUI_WIDTH, guiY + GUI_HEIGHT, BACKGROUND_COLOR);
-            graphics.renderOutline(guiX, guiY, GUI_WIDTH, GUI_HEIGHT, BORDER_COLOR);
-        }
+        // Use the built-in nine-slice rendering
+        RenderingUtils.blitNineSlicedTexture(
+                graphics,
+                GUI_TEXTURE,
+                guiX, guiY,
+                GUI_WIDTH, GUI_HEIGHT,
+                256, 256,  // Texture dimensions (assuming standard 256x256 texture)
+                BORDER_SIZE, BORDER_SIZE, BORDER_SIZE, BORDER_SIZE,  // Border sizes (top, right, bottom, left)
+                -1  // No color tint
+        );
 
         // Draw title
         String title = "Buddy Status";
@@ -211,7 +200,7 @@ public class TamagotchiBuddyGui {
         renderStatusBars(graphics);
 
         // Draw buttons
-        for (GuiButton button : buttons) {
+        for (BuddyGuiButton button : buttons) {
             // Update button active state before rendering
             button.updateActiveState();
             button.render(graphics, mouseX, mouseY);
@@ -225,6 +214,7 @@ public class TamagotchiBuddyGui {
      * Renders the buddy's status bars in the GUI
      */
     private void renderStatusBars(GuiGraphics graphics) {
+
         int barX = guiX + (GUI_WIDTH - STATUS_BAR_WIDTH) / 2;
         int startY = guiY + 40; // Adjusted to account for lower title position
         Font font = Minecraft.getInstance().font;
@@ -320,11 +310,11 @@ public class TamagotchiBuddyGui {
                 mouseY >= guiY && mouseY < guiY + GUI_HEIGHT) {
 
             // Check if clicked on any button
-            for (GuiButton guiButton : buttons) {
+            for (BuddyGuiButton buddyGuiButton : buttons) {
                 // Make sure to update the active state before checking
-                guiButton.updateActiveState();
-                if (guiButton.isActive() && guiButton.isMouseOver(mouseX, mouseY)) {
-                    guiButton.onClick();
+                buddyGuiButton.updateActiveState();
+                if (buddyGuiButton.isActive() && buddyGuiButton.isMouseOver(mouseX, mouseY)) {
+                    buddyGuiButton.onClick();
                     return true;
                 }
             }
@@ -338,64 +328,6 @@ public class TamagotchiBuddyGui {
         }
     }
 
-    /**
-     * Represents a button in the buddy GUI
-     */
-    public static class GuiButton {
-        private final String name;
-        private final Runnable action;
-        private final BooleanSupplier activeCondition;
-
-        private int x, y;
-        private boolean active = true;
-
-        public GuiButton(String name, Runnable action, BooleanSupplier activeCondition) {
-            this.name = name;
-            this.action = action;
-            this.activeCondition = activeCondition;
-        }
-
-        public void setPosition(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-
-        public boolean isMouseOver(double mouseX, double mouseY) {
-            return mouseX >= x && mouseX < x + BUTTON_WIDTH &&
-                    mouseY >= y && mouseY < y + BUTTON_HEIGHT;
-        }
-
-        public void onClick() {
-            if (active && action != null) {
-                action.run();
-            }
-        }
-
-        public boolean isActive() {
-            return active;
-        }
-
-        public void updateActiveState() {
-            this.active = activeCondition == null || activeCondition.getAsBoolean();
-        }
-
-        public void render(GuiGraphics graphics, int mouseX, int mouseY) {
-            boolean hovered = isMouseOver(mouseX, mouseY) && active;
-            int backgroundColor = active ? (hovered ? 0xFF909090 : 0xFF606060) : 0xFF404040;
-            int textColor = active ? 0xFFFFFFFF : 0xFFAAAAAA;
-            Font font = Minecraft.getInstance().font;
-
-            // Draw button background
-            graphics.fill(x, y, x + BUTTON_WIDTH, y + BUTTON_HEIGHT, backgroundColor);
-            graphics.renderOutline(x, y, BUTTON_WIDTH, BUTTON_HEIGHT, 0xFF000000);
-
-            // Draw button text
-            int textX = x + (BUTTON_WIDTH - font.width(name)) / 2;
-            int textY = y + (BUTTON_HEIGHT - 8) / 2;
-            graphics.drawString(font, name, textX, textY, textColor);
-        }
-    }
-
     public boolean isVisible() {
         return isVisible;
     }
@@ -403,8 +335,9 @@ public class TamagotchiBuddyGui {
     /**
      * Adds a new button to the GUI
      */
-    public void addButton(String name, Runnable action, BooleanSupplier activeCondition) {
-        buttons.add(new GuiButton(name, action, activeCondition));
+    public void addButton(@NotNull TamagotchiBuddy buddy, @NotNull BuddyGuiButton.ButtonNameSupplier nameSupplier, @NotNull Runnable action, @Nullable BooleanSupplier activeCondition) {
+        buttons.add(new BuddyGuiButton(buddy, nameSupplier, action, activeCondition));
         updateButtonPositions();
     }
+
 }
