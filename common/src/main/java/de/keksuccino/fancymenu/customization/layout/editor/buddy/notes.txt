@@ -1,8 +1,5 @@
 
 
-- Sit state
-- Waving state
-- Yawning state
 - Washing mechanism (new button in radial menu for washing; will give the user a shower head to wash buddy; washing will need 10 seconds, then the action ends)
 
 - Buddy should peek first for some time before he actually comes out to walk around
@@ -14,3 +11,7 @@
 - Buddy Cosmetics
   - Werden durch "Quests" freigeschaltet
   - Cosmetics sind Overlays, die über normalem Character liegen
+
+- Level System
+  - Bei Level-Up wird LvlUp Animation gezeigt
+  - Durch leveln verdient man Stats Points, mit denen man Werte verbessern kann

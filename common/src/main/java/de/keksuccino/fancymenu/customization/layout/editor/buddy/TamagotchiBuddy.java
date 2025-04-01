@@ -83,6 +83,9 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     public boolean isStretching = false;
     public boolean isExcited = false;
     public boolean isGrumpy = false;
+    public boolean isSitting = false;
+    public boolean isWaving = false;
+    public boolean isYawning = false;
 
     // Timers and behaviors
     public int stateChangeTimer;
@@ -455,6 +458,9 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
                 isGrumpy = false;
                 isEating = false;
                 isBeingPet = false;
+                isYawning = false;
+                isSitting = false;
+                isWaving = false;
 
             }
 
@@ -669,6 +675,24 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             startExcitement();
             return;
         }
+        
+        // Chance to wave when happy
+        if ((happiness > 60) && this.chanceCheck(1.0f) && !isSad() && !isSleepy) {
+            startWaving();
+            return;
+        }
+
+        // Chance to yawn when tired
+        if ((energy < 60) && this.chanceCheck(2.0f)) {
+            startYawning();
+            return;
+        }
+
+        // Chance to sit down and rest for a bit
+        if (this.chanceCheck(1.5f)) {
+            startSitting();
+            return;
+        }
 
         // Chance to look around
         if (this.chanceCheck(lookChancePercentage)) {
@@ -711,7 +735,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
      * The state should ALWAYS get set via this method.
      */
     public void setState(@NotNull AnimationState state) {
-        if (!this.lockedInState() && !state.shouldIgnoreLockedState()) return;
+        if (this.lockedInState() && !state.shouldIgnoreLockedState()) return;
         Objects.requireNonNull(state);
         // Apply the selected state if it's different from the current one
         if (currentState != state) {
@@ -725,7 +749,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     }
 
     public boolean lockedInState() {
-        return !(currentState.shouldLockStateUntilFinished() && (this.currentStateDuration > 0));
+        return (currentState.shouldLockStateUntilFinished() && (this.currentStateDuration > 0));
     }
 
     public void stopAllStandingActions() {
@@ -736,6 +760,9 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         isEating = false;
         isSleeping = false;
         isBeingPet = false;
+        isSitting = false;
+        isWaving = false;
+        isYawning = false;
     }
 
     /**
@@ -743,7 +770,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
      */
     public void startStanding() {
 
-        if (!this.lockedInState()) return;
+        if (this.lockedInState()) return;
 
         LOGGER.info("Buddy starting to stand: x={}, y={}, state={}", buddyPosX, buddyPosY, currentState.getName());
 
@@ -790,7 +817,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
      * Starts the buddy looking around animation
      */
     public void startLookingAround() {
-        if (!this.lockedInState()) return;
+        if (this.lockedInState()) return;
         LOGGER.info("Buddy starting to look around: x={}, y={}, state={}", buddyPosX, buddyPosY, currentState.getName());
         isLookingAround = true;
         isStanding = true;
@@ -801,7 +828,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
      */
     public void startStretching() {
 
-        if (!this.lockedInState()) return;
+        if (this.lockedInState()) return;
 
         // Don't stretch if the buddy is sad or has critical needs
         if (isSad()) {
@@ -815,11 +842,72 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     }
 
     /**
+     * Starts the buddy sitting animation
+     */
+    public void startSitting() {
+        if (this.lockedInState()) return;
+
+        LOGGER.info("Buddy starting to sit: x={}, y={}, state={}", buddyPosX, buddyPosY, currentState.getName());
+
+        isSitting = true;
+        isHopping = false;
+        isLookingAround = false;
+        isStretching = false;
+        isExcited = false;
+        isStanding = false;  // Clear standing state since sitting is a different pose
+    }
+    
+    /**
+     * Starts the buddy waving animation
+     */
+    public void startWaving() {
+        if (this.lockedInState()) return;
+        
+        // Only wave when buddy is happy enough
+        if (happiness < 60) {
+            LOGGER.info("Buddy is not happy enough to wave right now");
+            return;
+        }
+        
+        // Don't wave if buddy is sad or sleepy
+        if (isSad() || isSleepy) {
+            LOGGER.info("Buddy doesn't feel like waving right now");
+            return;
+        }
+        
+        LOGGER.info("Buddy starting to wave: x={}, y={}, state={}", buddyPosX, buddyPosY, currentState.getName());
+        
+        isWaving = true;
+        isHopping = false;
+        isLookingAround = false;
+        isStretching = false;
+        isExcited = false;
+        isSitting = false;
+    }
+    
+    /**
+     * Starts the buddy yawning animation
+     */
+    public void startYawning() {
+        if (this.lockedInState()) return;
+        
+        LOGGER.info("Buddy starting to yawn: x={}, y={}, state={}", buddyPosX, buddyPosY, currentState.getName());
+        
+        isYawning = true;
+        isHopping = false;
+        isLookingAround = false;
+        isStretching = false;
+        isExcited = false;
+        isSitting = false;
+        isWaving = false;
+    }
+
+    /**
      * Starts the buddy excitement animation
      */
     public void startExcitement() {
 
-        if (!this.lockedInState()) return;
+        if (this.lockedInState()) return;
 
         // Don't get excited if the buddy is sad or has critical needs
         if (isSad() || happiness < 50) {

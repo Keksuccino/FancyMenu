@@ -6,6 +6,7 @@ import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Predicate;
 
@@ -21,8 +22,7 @@ public class AnimationState {
     public static final int SPRITE_WIDTH = 32;
     public static final int SPRITE_HEIGHT = 32;
     public static final int ATLAS_COLUMNS = 4; // 4 animation frames per row
-    public static final int ATLAS_ROWS = 14; // Different states (idle, happy, eating, etc.) - now 14 rows with looking around, grumpy, and sleepy
-    public static final int CHASE_SPEED = 3; // Faster than normal walk speed
+    public static final int ATLAS_ROWS = 17; // Different states (idle, happy, eating, etc.) - now 17 rows with sitting, waving, and yawning animations
 
     private final String name;
     private final int atlasIndex;
@@ -41,8 +41,10 @@ public class AnimationState {
     private final boolean lockStateUntilFinished;
     private final boolean ignoresLockedState;
     private final long cooldown;
+    @Nullable
+    private final StateEndAction onDeactivate;
 
-    private long lastCountdownTriggerTime = -1l;
+    private long lastCountdownTriggerTime = -1L;
 
     /**
      * Creates a new animation state.
@@ -68,7 +70,7 @@ public class AnimationState {
                            boolean allowsHopping, @NotNull Predicate<TamagotchiBuddy> activationCondition,
                            @NotNull Predicate<TamagotchiBuddy> preventionCondition, int priority,
                            boolean isTemporaryState, int minDuration, int maxDuration, @NotNull DurationRandomizer durationRandomizer, @NotNull WalkingSpeedSupplier walkingSpeed,
-                           boolean lockStateUntilFinished, boolean ignoresLockedState, long cooldown) {
+                           boolean lockStateUntilFinished, boolean ignoresLockedState, long cooldown, @Nullable StateEndAction onDeactivate) {
         this.name = name;
         this.atlasIndex = atlasIndex;
         this.animationSpeed = animationSpeed;
@@ -85,6 +87,7 @@ public class AnimationState {
         this.lockStateUntilFinished = lockStateUntilFinished;
         this.ignoresLockedState = ignoresLockedState;
         this.cooldown = cooldown;
+        this.onDeactivate = onDeactivate;
     }
 
     /**
@@ -139,6 +142,7 @@ public class AnimationState {
      */
     public void onDeactivate(TamagotchiBuddy buddy) {
         LOGGER.info("Deactivating state: {}", name);
+        if (this.onDeactivate != null) this.onDeactivate.onDeactivate(buddy, this);
     }
 
     // Getters
@@ -218,6 +222,11 @@ public class AnimationState {
         int speed(TamagotchiBuddy buddy, AnimationState state);
     }
 
+    @FunctionalInterface
+    public interface StateEndAction {
+        void onDeactivate(TamagotchiBuddy buddy, AnimationState state);
+    }
+
     // Builder pattern for easier construction
     public static class Builder {
 
@@ -237,6 +246,8 @@ public class AnimationState {
         private boolean lockStateUntilFinished = false;
         private boolean ignoresLockedState = false;
         private long cooldown = 0L;
+        @Nullable
+        private StateEndAction onDeactivate = null;
 
         public Builder(String name, int atlasIndex) {
             this.name = name;
@@ -340,12 +351,17 @@ public class AnimationState {
             return this;
         }
 
+        public Builder onDeactivate(StateEndAction onDeactivate) {
+            this.onDeactivate = onDeactivate;
+            return this;
+        }
+
         public AnimationState build() {
             return new AnimationState(
                     name, atlasIndex, animationSpeed, allowsMovement, allowsHopping,
                     activationCondition, preventionCondition, priority, isTemporaryState,
                     minDuration, maxDuration, durationRandomizer, walkingSpeed,
-                    lockStateUntilFinished, ignoresLockedState, cooldown
+                    lockStateUntilFinished, ignoresLockedState, cooldown, onDeactivate
             );
         }
 

@@ -28,6 +28,9 @@ public class AnimationStates {
     private static final int ATLAS_INDEX_LOOKING_AROUND_STANDING = 11;
     private static final int ATLAS_INDEX_GRUMPY_STAND = 12;
     private static final int ATLAS_INDEX_SLEEPY_WALKING = 13;
+    private static final int ATLAS_INDEX_SITTING = 14;
+    private static final int ATLAS_INDEX_WAVING = 15;
+    private static final int ATLAS_INDEX_YAWNING = 16;
 
     public static final AnimationState POOPING_STANDING = registerState(new AnimationState.Builder("POOPING_STANDING", ATLAS_INDEX_POOPING_STANDING)
             .priority(100)
@@ -90,6 +93,37 @@ public class AnimationStates {
             .walkingSpeed((buddy, state) -> 5)
             .activationCondition(buddy -> buddy.isChasingBall)
             .ignoresLockedState(true)
+            .build());
+
+    public static final AnimationState YAWNING_STANDING = registerState(new AnimationState.Builder("YAWNING_STANDING", ATLAS_INDEX_YAWNING)
+            .priority(40)
+            .allowsMovement(false)
+            .allowsHopping(false)
+            .animationSpeed((buddy, state) -> 25)
+            .activationCondition(buddy -> buddy.isYawning)
+            .temporaryState(true)
+            .duration(50, 70) // 2.5-3.5 seconds at 20 ticks per second
+            .build());
+
+    public static final AnimationState WAVING_STANDING = registerState(new AnimationState.Builder("WAVING_STANDING", ATLAS_INDEX_WAVING)
+            .priority(55)
+            .allowsMovement(false)
+            .allowsHopping(false)
+            .animationSpeed((buddy, state) -> 5)
+            .activationCondition(buddy -> buddy.isWaving)
+            .preventionCondition(buddy -> buddy.isSad() || buddy.isSleepy)
+            .temporaryState(true)
+            .duration(40, 60) // 2-3 seconds at 20 ticks per second
+            .build());
+
+    public static final AnimationState SITTING = registerState(new AnimationState.Builder("SITTING", ATLAS_INDEX_SITTING)
+            .priority(30)
+            .allowsMovement(false)
+            .allowsHopping(false)
+            .animationSpeed((buddy, state) -> 10) // Moderate animation speed for sitting
+            .activationCondition(buddy -> buddy.isSitting)
+            .temporaryState(true)
+            .duration(80, 240) // 4-12 seconds at 20 ticks per second
             .build());
 
     public static final AnimationState LOOKING_AROUND_STANDING = registerState(new AnimationState.Builder("LOOKING_AROUND_STANDING", ATLAS_INDEX_LOOKING_AROUND_STANDING)
@@ -163,12 +197,12 @@ public class AnimationStates {
             .priority(1)
             .animationSpeed((buddy, state) -> 3)
             .walkingSpeed((buddy, state) -> 7)
-            .activationCondition(buddy -> (buddy.energy >= 70) && buddy.chanceCheck(0.2f)) // 0.2% chance to trigger RUNNING when energy is high enough
+            .activationCondition(buddy -> (buddy.energy >= 70) && buddy.chanceCheck(0.02f)) // 0.02% chance to trigger RUNNING when energy is high enough
             .preventionCondition(buddy -> buddy.isSad() || buddy.isSleepy)
             .temporaryState(true)
-            .duration(50, 70)
+            .duration(30, 50)
             .lockStateUntilFinished(true)
-            .cooldown(20000) // After activating, go on cooldown for 20 seconds
+            .cooldown(60000) // After activating, go on cooldown for 60 seconds
             .build());
 
     public static final AnimationState WALKING = registerState(new AnimationState.Builder("WALKING", ATLAS_INDEX_IDLE_WALK)
