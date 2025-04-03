@@ -7,26 +7,19 @@ import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidg
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundRegistry;
 import de.keksuccino.fancymenu.customization.background.SerializedMenuBackground;
-import de.keksuccino.fancymenu.customization.background.backgrounds.animation.AnimationMenuBackground;
 import de.keksuccino.fancymenu.customization.background.backgrounds.image.ImageMenuBackground;
 import de.keksuccino.fancymenu.customization.background.backgrounds.panorama.PanoramaMenuBackground;
 import de.keksuccino.fancymenu.customization.background.backgrounds.slideshow.SlideshowMenuBackground;
-import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
-import de.keksuccino.fancymenu.customization.deep.DeepElementBuilder;
-import de.keksuccino.fancymenu.customization.deep.DeepScreenCustomizationLayer;
-import de.keksuccino.fancymenu.customization.deep.DeepScreenCustomizationLayerRegistry;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.Elements;
-import de.keksuccino.fancymenu.customization.element.elements.animation.AnimationElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.image.ImageElement;
@@ -77,8 +70,6 @@ public class Layout extends LayoutBase {
     public List<SerializedElement> serializedElements = new ArrayList<>();
     public List<SerializedElement> serializedVanillaButtonElements = new ArrayList<>();
     public List<SerializedElement> serializedDeepElements = new ArrayList<>();
-    @Nullable
-    public DeepScreenCustomizationLayer deepScreenCustomizationLayer = null;
     @Legacy("Remove this in the future.")
     public boolean legacyLayout = false;
 
@@ -316,6 +307,30 @@ public class Layout extends LayoutBase {
 
             }
 
+            // Convert old deep elements to their new widget versions
+            for (PropertyContainer c : serialized.getContainersOfType("deep_element")) {
+                String elementType = c.getValue("element_type");
+                boolean hidden = SerializationUtils.deserializeBoolean(false, c.getValue("is_hidden"));
+                if (hidden) {
+                    PropertyContainer dummy = new PropertyContainer("vanilla_button");
+                    dummy.putProperty("element_type", "vanilla_button");
+                    dummy.putProperty("is_hidden", "true");
+                    if ("title_screen_logo".equals(elementType)) {
+                        dummy.putProperty("instance_identifier", "minecraft_logo_widget");
+                    }
+                    if ("title_screen_branding".equals(elementType)) {
+                        dummy.putProperty("instance_identifier", "minecraft_branding_widget");
+                    }
+                    if ("title_screen_splash".equals(elementType)) {
+                        dummy.putProperty("instance_identifier", "minecraft_splash_widget");
+                    }
+                    if ("title_screen_realms_notification".equals(elementType)) {
+                        dummy.putProperty("instance_identifier", "minecraft_realms_notification_icons_widget");
+                    }
+                    serialized.putContainer(dummy);
+                }
+            }
+
             //Handle vanilla button elements
             for (PropertyContainer sec : serialized.getContainersOfType("vanilla_button")) {
                 SerializedElement serializedVanilla = convertContainerToSerializedElement(sec);
@@ -373,26 +388,6 @@ public class Layout extends LayoutBase {
                 }
                 layout.serializedElements.clear();
                 layout.serializedElements.addAll(combined);
-            }
-
-            //Handle deep elements
-            layout.deepScreenCustomizationLayer = ((layout.screenIdentifier != null) && !layout.isUniversalLayout()) ? DeepScreenCustomizationLayerRegistry.getLayer(layout.screenIdentifier) : null;
-            if (layout.deepScreenCustomizationLayer != null) {
-                for (PropertyContainer sec : ListUtils.mergeLists(serialized.getContainersOfType("deep_element"), serialized.getContainersOfType("customization"))) {
-                    String elementType = sec.getValue("element_type");
-                    if (elementType == null) {
-                        elementType = sec.getValue("action");
-                    }
-                    if (elementType != null) {
-                        elementType = elementType.replace("deep_customization_element:", "");
-                        if (layout.deepScreenCustomizationLayer.hasBuilder(elementType)) {
-                            SerializedElement e = convertContainerToSerializedElement(sec);
-                            e.setType("deep_element");
-                            e.putProperty("element_type", elementType);
-                            layout.serializedDeepElements.add(e);
-                        }
-                    }
-                }
             }
 
             //Handle menu backgrounds
@@ -605,27 +600,6 @@ public class Layout extends LayoutBase {
     }
 
     @NotNull
-    public List<AbstractDeepElement> buildDeepElementInstances() {
-        List<AbstractDeepElement> elements = new ArrayList<>();
-        if (this.deepScreenCustomizationLayer != null) {
-            for (SerializedElement serialized : this.serializedDeepElements) {
-                String elementType = serialized.getValue("element_type");
-                if (elementType != null) {
-                    DeepElementBuilder<?, ?, ?> builder = this.deepScreenCustomizationLayer.getBuilder(elementType);
-                    if (builder != null) {
-                        AbstractDeepElement element = builder.deserializeElementInternal(serialized);
-                        if (element != null) {
-                            element.setParentLayout(this);
-                            elements.add(element);
-                        }
-                    }
-                }
-            }
-        }
-        return elements;
-    }
-
-    @NotNull
     public List<VanillaWidgetElement> buildVanillaButtonElementInstances() {
         List<VanillaWidgetElement> elements = new ArrayList<>();
         for (SerializedElement serialized : this.serializedVanillaButtonElements) {
@@ -797,21 +771,6 @@ public class Layout extends LayoutBase {
                         }
                     }
                 }
-                if (action.equalsIgnoreCase("animatebackground")) {
-                    String value = sec.getValue("name");
-                    String restartOnLoadString = sec.getValue("restart_on_load");
-                    if (value != null) {
-                        if (AnimationHandler.animationExists(value)) {
-                            MenuBackgroundBuilder<?> builder = MenuBackgroundRegistry.getBuilder("animation");
-                            if (builder != null) {
-                                AnimationMenuBackground b = new AnimationMenuBackground((MenuBackgroundBuilder<AnimationMenuBackground>) builder);
-                                b.animationName = value;
-                                b.restartOnMenuLoad = (restartOnLoadString != null) && restartOnLoadString.equalsIgnoreCase("true");
-                                return b;
-                            }
-                        }
-                    }
-                }
 
             }
 
@@ -946,18 +905,12 @@ public class Layout extends LayoutBase {
                 }
 
                 if (action.equalsIgnoreCase("setbuttontexture")) {
-                    String loopBackAnimations = sec.getValue("loopbackgroundanimations");
-                    if ((loopBackAnimations != null) && loopBackAnimations.equalsIgnoreCase("false")) {
-                        element.loopBackgroundAnimations = false;
-                    }
                     String restartBackAnimationsOnHover = sec.getValue("restartbackgroundanimations");
                     if ((restartBackAnimationsOnHover != null) && restartBackAnimationsOnHover.equalsIgnoreCase("false")) {
                         element.restartBackgroundAnimationsOnHover = false;
                     }
                     element.backgroundTextureNormal = SerializationUtils.deserializeImageResourceSupplier(sec.getValue("backgroundnormal"));
                     element.backgroundTextureHover = SerializationUtils.deserializeImageResourceSupplier(sec.getValue("backgroundhovered"));
-                    element.backgroundAnimationNormal = sec.getValue("backgroundanimationnormal");
-                    element.backgroundAnimationHover = sec.getValue("backgroundanimationhovered");
                     addElement = true;
                 }
 

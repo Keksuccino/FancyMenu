@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.element.elements.slider.v2;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
@@ -144,6 +145,61 @@ public class SliderEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("separator_after_actions");
 
+        this.addTextureSettings();
+
+        this.rightClickMenu.addSeparatorEntry("separator_after_texture_settings").setStackable(true);
+
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_label",
+                        SliderEditorElement.class,
+                        consumes -> ((SliderElement)consumes.element).label,
+                        (sliderEditorElement, s) -> ((SliderElement)sliderEditorElement.element).label = s,
+                        null, false, true, Component.translatable("fancymenu.elements.slider.v2.label"),
+                        true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.label.desc")))
+                .setIcon(ContextMenu.IconFactory.getIcon("text"));
+
+        this.rightClickMenu.addSeparatorEntry("separator_after_set_label").setStackable(true);
+
+        this.addAudioResourceChooserContextMenuEntryTo(this.rightClickMenu, "hover_sound",
+                        SliderEditorElement.class,
+                        null,
+                        consumes -> consumes.getElement().hoverSound,
+                        (buttonEditorElement, supplier) -> buttonEditorElement.getElement().hoverSound = supplier,
+                        Component.translatable("fancymenu.editor.items.button.hoversound"), true, null, true, true, true)
+                .setIcon(ContextMenu.IconFactory.getIcon("sound"));
+
+        this.rightClickMenu.addSeparatorEntry("separator_after_hover_sound").setStackable(true);
+
+        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "edit_tooltip",
+                        SliderEditorElement.class,
+                        consumes -> {
+                            String t = ((SliderElement)consumes.element).tooltip;
+                            if (t != null) t = t.replace("%n%", "\n");
+                            return t;
+                        },
+                        (element1, s) -> {
+                            if (s != null) {
+                                s = s.replace("\n", "%n%");
+                            }
+                            ((SliderElement)element1.element).tooltip = s;
+                        },
+                        null, true, true, Component.translatable("fancymenu.editor.items.button.btndescription"),
+                        true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.button.btndescription.desc")))
+                .setIcon(ContextMenu.IconFactory.getIcon("talk"));
+
+        this.rightClickMenu.addSeparatorEntry("separator_before_navigatable");
+
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "toggle_navigatable", SliderEditorElement.class,
+                        consumes -> consumes.getElement().navigatable,
+                        (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().navigatable = aBoolean,
+                        "fancymenu.elements.widgets.generic.navigatable")
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.generic.navigatable.desc")));
+
+    }
+
+    protected void addTextureSettings() {
+
         ContextMenu buttonBackgroundMenu = new ContextMenu();
         this.rightClickMenu.addSubMenuEntry("button_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.alternate.slider"), buttonBackgroundMenu)
                 .setIcon(ContextMenu.IconFactory.getIcon("image"))
@@ -159,7 +215,6 @@ public class SliderEditorElement extends AbstractEditorElement {
                 consumes -> consumes.getElement().handleTextureNormal,
                 (buttonEditorElement, iTextureResourceSupplier) -> {
                     buttonEditorElement.getElement().handleTextureNormal = iTextureResourceSupplier;
-                    buttonEditorElement.getElement().handleAnimationNormal = null;
                 }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.normal.alternate.slider"), true, null, true, true, true);
 
         this.addImageResourceChooserContextMenuEntryTo(setBackMenu, "hover_background_texture",
@@ -168,7 +223,6 @@ public class SliderEditorElement extends AbstractEditorElement {
                 consumes -> consumes.getElement().handleTextureHover,
                 (buttonEditorElement, iTextureResourceSupplier) -> {
                     buttonEditorElement.getElement().handleTextureHover = iTextureResourceSupplier;
-                    buttonEditorElement.getElement().handleAnimationHover = null;
                 }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.hover.alternate.slider"), true, null, true, true, true);
 
         this.addImageResourceChooserContextMenuEntryTo(setBackMenu, "inactive_background_texture",
@@ -177,7 +231,6 @@ public class SliderEditorElement extends AbstractEditorElement {
                 consumes -> consumes.getElement().handleTextureInactive,
                 (buttonEditorElement, iTextureResourceSupplier) -> {
                     buttonEditorElement.getElement().handleTextureInactive = iTextureResourceSupplier;
-                    buttonEditorElement.getElement().handleAnimationInactive = null;
                 }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.inactive.alternate.slider"), true, null, true, true, true);
 
         setBackMenu.addSeparatorEntry("separator_before_slider_background_entries");
@@ -188,7 +241,6 @@ public class SliderEditorElement extends AbstractEditorElement {
                 consumes -> consumes.getElement().sliderBackgroundTextureNormal,
                 (buttonEditorElement, iTextureResourceSupplier) -> {
                     buttonEditorElement.getElement().sliderBackgroundTextureNormal = iTextureResourceSupplier;
-                    buttonEditorElement.getElement().sliderBackgroundAnimationNormal = null;
                 }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.slider.normal"), true, null, true, true, true);
 
         this.addImageResourceChooserContextMenuEntryTo(setBackMenu, "highlighted_slider_background_texture",
@@ -197,7 +249,6 @@ public class SliderEditorElement extends AbstractEditorElement {
                         consumes -> consumes.getElement().sliderBackgroundTextureHighlighted,
                         (buttonEditorElement, iTextureResourceSupplier) -> {
                             buttonEditorElement.getElement().sliderBackgroundTextureHighlighted = iTextureResourceSupplier;
-                            buttonEditorElement.getElement().sliderBackgroundAnimationHighlighted = null;
                         }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.slider.highlighted"), true, null, true, true, true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.buttons.buttonbackground.slider.highlighted.desc")));
 
@@ -243,45 +294,6 @@ public class SliderEditorElement extends AbstractEditorElement {
                 consumes -> consumes.getElement().nineSliceSliderHandleBorderY,
                 (buttonEditorElement, integer) -> buttonEditorElement.getElement().nineSliceSliderHandleBorderY = integer,
                 Component.translatable("fancymenu.elements.slider.v2.handle.textures.nine_slice.border_y"), true, 5, null, null);
-
-        this.rightClickMenu.addSeparatorEntry("separator_after_texture_settings").setStackable(true);
-
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_label",
-                        SliderEditorElement.class,
-                        consumes -> ((SliderElement)consumes.element).label,
-                        (sliderEditorElement, s) -> ((SliderElement)sliderEditorElement.element).label = s,
-                        null, false, true, Component.translatable("fancymenu.elements.slider.v2.label"),
-                        true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.label.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("text"));
-
-        this.rightClickMenu.addSeparatorEntry("separator_after_set_label").setStackable(true);
-
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "edit_tooltip",
-                        SliderEditorElement.class,
-                        consumes -> {
-                            String t = ((SliderElement)consumes.element).tooltip;
-                            if (t != null) t = t.replace("%n%", "\n");
-                            return t;
-                        },
-                        (element1, s) -> {
-                            if (s != null) {
-                                s = s.replace("\n", "%n%");
-                            }
-                            ((SliderElement)element1.element).tooltip = s;
-                        },
-                        null, true, true, Component.translatable("fancymenu.editor.items.button.btndescription"),
-                        true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.button.btndescription.desc")))
-                .setIcon(ContextMenu.IconFactory.getIcon("talk"));
-
-        this.rightClickMenu.addSeparatorEntry("separator_before_navigatable");
-
-        this.addToggleContextMenuEntryTo(this.rightClickMenu, "toggle_navigatable", SliderEditorElement.class,
-                        consumes -> consumes.getElement().navigatable,
-                        (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().navigatable = aBoolean,
-                        "fancymenu.elements.widgets.generic.navigatable")
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.generic.navigatable.desc")));
 
     }
 

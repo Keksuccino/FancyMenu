@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.customization.action.actions.level.EnterWorldActi
 import de.keksuccino.fancymenu.customization.action.actions.level.JoinLastWorldServerAction;
 import de.keksuccino.fancymenu.customization.action.actions.level.JoinServerAction;
 import de.keksuccino.fancymenu.customization.action.actions.other.*;
+import de.keksuccino.fancymenu.customization.action.actions.screen.BackToLastScreenAction;
 import de.keksuccino.fancymenu.customization.action.actions.screen.CloseScreenAction;
 import de.keksuccino.fancymenu.customization.action.actions.screen.OpenScreenAction;
 import de.keksuccino.fancymenu.customization.action.actions.screen.UpdateScreenAction;
@@ -38,7 +39,6 @@ public class Actions {
     public static final UpdateScreenAction UPDATE_SCREEN = new UpdateScreenAction();
     public static final OpenLinkAction OPEN_LINK = new OpenLinkAction();
     public static final ReloadFancyMenuAction RELOAD_FANCYMENU = new ReloadFancyMenuAction();
-    public static final RunButtonScriptAction RUN_BUTTON_SCRIPT = new RunButtonScriptAction();
     public static final CopyToClipboardAction COPY_TO_CLIPBOARD = new CopyToClipboardAction();
     public static final MimicButtonAction MIMIC_BUTTON = new MimicButtonAction();
     public static final EditMinecraftOptionAction EDIT_MINECRAFT_OPTION = new EditMinecraftOptionAction();
@@ -46,6 +46,7 @@ public class Actions {
     public static final NextTrackAction NEXT_AUDIO_ELEMENT_TRACK = new NextTrackAction();
     public static final PreviousTrackAction PREVIOUS_AUDIO_ELEMENT_TRACK = new PreviousTrackAction();
     public static final TogglePlayTrackAction TOGGLE_PLAY_AUDIO_ELEMENT_TRACK = new TogglePlayTrackAction();
+    public static final BackToLastScreenAction BACK_TO_LAST_SCREEN = new BackToLastScreenAction();
 
     public static void registerAll() {
 
@@ -66,7 +67,6 @@ public class Actions {
         ActionRegistry.register(UPDATE_SCREEN);
         ActionRegistry.register(OPEN_LINK);
         ActionRegistry.register(RELOAD_FANCYMENU);
-        ActionRegistry.register(RUN_BUTTON_SCRIPT);
         ActionRegistry.register(COPY_TO_CLIPBOARD);
         ActionRegistry.register(MIMIC_BUTTON);
         ActionRegistry.register(EDIT_MINECRAFT_OPTION);
@@ -74,6 +74,7 @@ public class Actions {
         ActionRegistry.register(NEXT_AUDIO_ELEMENT_TRACK);
         ActionRegistry.register(PREVIOUS_AUDIO_ELEMENT_TRACK);
         ActionRegistry.register(TOGGLE_PLAY_AUDIO_ELEMENT_TRACK);
+        ActionRegistry.register(BACK_TO_LAST_SCREEN);
 
     }
 

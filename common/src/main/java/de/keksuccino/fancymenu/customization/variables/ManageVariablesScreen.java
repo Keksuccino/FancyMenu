@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.Text
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -29,40 +30,71 @@ public class ManageVariablesScreen extends Screen {
     protected Consumer<List<Variable>> callback;
 
     protected ScrollArea variableListScrollArea = new ScrollArea(0, 0, 0, 0);
-    protected ExtendedButton doneButton;
-    protected ExtendedButton setValueButton;
-    protected ExtendedButton deleteVariableButton;
-    protected ExtendedButton addVariableButton;
-    protected ExtendedButton toggleResetOnLaunchButton;
+    protected ExtendedEditBox searchBar;
 
     public ManageVariablesScreen(@NotNull Consumer<List<Variable>> callback) {
-
         super(Component.translatable("fancymenu.overlay.menu_bar.variables.manage"));
-
         this.callback = callback;
-        this.updateVariableScrollArea();
-
     }
 
     @Override
     protected void init() {
 
-        this.addVariableButton = new ExtendedButton(0, 0, 220, 20, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.add_variable"), (button) -> {
+        String oldSearchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
+        this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, 20 + 1, 50 + 15 + 1, (this.width / 2) - 40 - 2, 20 - 2, Component.empty()) {
+            @Override
+            public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+                super.renderWidget(graphics, mouseX, mouseY, partial);
+                if (this.getValue().isBlank() && !this.isFocused()) {
+                    graphics.drawString(this.font, Component.translatable("fancymenu.variables.manage_variables.screen.search_variable"), this.getX() + 4, this.getY() + (this.getHeight() / 2) - (this.font.lineHeight / 2), UIBase.getUIColorTheme().edit_box_text_color_uneditable.getColorInt(), false);
+                }
+            }
+        };
+        this.searchBar.setValue(oldSearchValue);
+        this.searchBar.setResponder(s -> this.updateVariablesList());
+        this.addRenderableWidget(this.searchBar);
+        UIBase.applyDefaultWidgetSkinTo(this.searchBar);
+
+        // Set positions for scroll area
+        this.variableListScrollArea.setWidth((this.width / 2) - 40, true);
+        this.variableListScrollArea.setHeight(this.height - 85 - 25, true);
+        this.variableListScrollArea.setX(20, true);
+        this.variableListScrollArea.setY(50 + 15 + 25, true);
+
+        // Calculate button width
+        int buttonWidth = (this.width - 20) - ((this.variableListScrollArea.getXWithBorder() + (this.variableListScrollArea.getWidthWithBorder() + 20)));
+        if (buttonWidth < 150) buttonWidth = 150;
+        if (buttonWidth > 220) buttonWidth = 220;
+
+        // Calculate button positions
+        int doneButtonX = this.width - 20 - buttonWidth;
+        int doneButtonY = this.height - 20 - 20;
+        int toggleResetButtonX = doneButtonX;
+        int toggleResetButtonY = doneButtonY - 15 - 20;
+        int deleteButtonX = doneButtonX;
+        int deleteButtonY = toggleResetButtonY - 5 - 20;
+        int setValueButtonX = doneButtonX;
+        int setValueButtonY = deleteButtonY - 5 - 20;
+        int addButtonX = doneButtonX;
+        int addButtonY = setValueButtonY - 15 - 20;
+
+        // Create buttons with positions in constructors
+        ExtendedButton addVariableButton = new ExtendedButton(addButtonX, addButtonY, buttonWidth, 20, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.add_variable"), (button) -> {
             TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.overlay.menu_bar.variables.manage.add_variable.input_name"), CharacterFilter.buildOnlyLowercaseFileNameFilter(), (call) -> {
                 if (call != null) {
                     if (!VariableHandler.variableExists(call)) {
                         VariableHandler.setVariable(call, "");
-                        updateVariableScrollArea();
+                        updateVariablesList();
                     }
                 }
                 Minecraft.getInstance().setScreen(this);
             });
             Minecraft.getInstance().setScreen(s);
         });
-        this.addWidget(this.addVariableButton);
-        UIBase.applyDefaultWidgetSkinTo(this.addVariableButton);
+        this.addRenderableWidget(addVariableButton);
+        UIBase.applyDefaultWidgetSkinTo(addVariableButton);
 
-        this.setValueButton = new ExtendedButton(0, 0, 220, 20, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.set_value"), (button) -> {
+        ExtendedButton setValueButton = new ExtendedButton(setValueButtonX, setValueButtonY, buttonWidth, 20, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.set_value"), (button) -> {
             VariableScrollEntry e = this.getSelectedEntry();
             if (e != null) {
                 TextInputScreen s = new TextInputScreen(Component.translatable("fancymenu.overlay.menu_bar.variables.manage.set_value"), null, (call) -> {
@@ -75,26 +107,26 @@ public class ManageVariablesScreen extends Screen {
                 Minecraft.getInstance().setScreen(s);
             }
         }).setIsActiveSupplier(consumes -> (this.getSelectedEntry() != null));
-        this.addWidget(this.setValueButton);
-        UIBase.applyDefaultWidgetSkinTo(this.setValueButton);
+        this.addRenderableWidget(setValueButton);
+        UIBase.applyDefaultWidgetSkinTo(setValueButton);
 
-        this.deleteVariableButton = new ExtendedButton(0, 0, 220, 20, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.delete_variable"), (button) -> {
+        ExtendedButton deleteVariableButton = new ExtendedButton(deleteButtonX, deleteButtonY, buttonWidth, 20, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.delete_variable"), (button) -> {
             VariableScrollEntry e = this.getSelectedEntry();
             if (e != null) {
                 Minecraft.getInstance().setScreen(ConfirmationScreen.ofStrings(call -> {
                     if (call) {
                         VariableHandler.removeVariable(e.variable.getName());
-                        this.updateVariableScrollArea();
+                        this.updateVariablesList();
                     }
                     Minecraft.getInstance().setScreen(this);
                 }, LocalizationUtils.splitLocalizedStringLines("fancymenu.overlay.menu_bar.variables.manage.delete_variable.confirm")));
             }
         }).setIsActiveSupplier(consumes -> (this.getSelectedEntry() != null));
-        this.addWidget(this.deleteVariableButton);
-        UIBase.applyDefaultWidgetSkinTo(this.deleteVariableButton);
+        this.addRenderableWidget(deleteVariableButton);
+        UIBase.applyDefaultWidgetSkinTo(deleteVariableButton);
 
         LocalizedEnumValueCycle<CommonCycles.CycleEnabledDisabled> resetOnLaunchDisabled = CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.variables.manage.clear_on_launch", false);
-        this.toggleResetOnLaunchButton = new ExtendedButton(0, 0, 220, 20, Component.empty(), (button) -> {
+        ExtendedButton toggleResetOnLaunchButton = new ExtendedButton(toggleResetButtonX, toggleResetButtonY, buttonWidth, 20, Component.empty(), (button) -> {
             VariableScrollEntry e = this.getSelectedEntry();
             if (e != null) {
                 e.variable.setResetOnLaunch(!e.variable.isResetOnLaunch());
@@ -109,14 +141,16 @@ public class ManageVariablesScreen extends Screen {
                     }
                     return resetOnLaunchDisabled.getCycleComponent();
                 });
-        this.addWidget(this.toggleResetOnLaunchButton);
-        UIBase.applyDefaultWidgetSkinTo(this.toggleResetOnLaunchButton);
+        this.addRenderableWidget(toggleResetOnLaunchButton);
+        UIBase.applyDefaultWidgetSkinTo(toggleResetOnLaunchButton);
 
-        this.doneButton = new ExtendedButton(0, 0, 220, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
+        ExtendedButton doneButton = new ExtendedButton(doneButtonX, doneButtonY, buttonWidth, 20, Component.translatable("fancymenu.guicomponents.done"), (button) -> {
             this.callback.accept(VariableHandler.getVariables());
         });
-        this.addWidget(this.doneButton);
-        UIBase.applyDefaultWidgetSkinTo(this.doneButton);
+        this.addRenderableWidget(doneButton);
+        UIBase.applyDefaultWidgetSkinTo(doneButton);
+
+        this.updateVariablesList();
 
     }
 
@@ -137,47 +171,14 @@ public class ManageVariablesScreen extends Screen {
 
         graphics.drawString(this.font, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.variables"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        this.variableListScrollArea.setWidth((this.width / 2) - 40, true);
-        this.variableListScrollArea.setHeight(this.height - 85, true);
-        this.variableListScrollArea.setX(20, true);
-        this.variableListScrollArea.setY(50 + 15, true);
         this.variableListScrollArea.render(graphics, mouseX, mouseY, partial);
-
-        int buttonWidth = (this.width - 20) - ((this.variableListScrollArea.getXWithBorder() + (this.variableListScrollArea.getWidthWithBorder() + 20)));
-        if (buttonWidth < 150) buttonWidth = 150;
-        if (buttonWidth > 220) buttonWidth = 220;
-
-        this.doneButton.setWidth(buttonWidth);
-        this.doneButton.setX(this.width - 20 - this.doneButton.getWidth());
-        this.doneButton.setY(this.height - 20 - 20);
-        this.doneButton.render(graphics, mouseX, mouseY, partial);
-
-        this.toggleResetOnLaunchButton.setWidth(buttonWidth);
-        this.toggleResetOnLaunchButton.setX(this.width - 20 - this.toggleResetOnLaunchButton.getWidth());
-        this.toggleResetOnLaunchButton.setY(this.doneButton.getY() - 15 - 20);
-        this.toggleResetOnLaunchButton.render(graphics, mouseX, mouseY, partial);
-
-        this.deleteVariableButton.setWidth(buttonWidth);
-        this.deleteVariableButton.setX(this.width - 20 - this.deleteVariableButton.getWidth());
-        this.deleteVariableButton.setY(this.toggleResetOnLaunchButton.getY() - 5 - 20);
-        this.deleteVariableButton.render(graphics, mouseX, mouseY, partial);
-
-        this.setValueButton.setWidth(buttonWidth);
-        this.setValueButton.setX(this.width - 20 - this.setValueButton.getWidth());
-        this.setValueButton.setY(this.deleteVariableButton.getY() - 5 - 20);
-        this.setValueButton.render(graphics, mouseX, mouseY, partial);
-
-        this.addVariableButton.setWidth(buttonWidth);
-        this.addVariableButton.setX(this.width - 20 - this.addVariableButton.getWidth());
-        this.addVariableButton.setY(this.setValueButton.getY() - 15 - 20);
-        this.addVariableButton.render(graphics, mouseX, mouseY, partial);
 
         super.render(graphics, mouseX, mouseY, partial);
 
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
     }
 
     @Nullable
@@ -190,9 +191,22 @@ public class ManageVariablesScreen extends Screen {
         return null;
     }
 
-    protected void updateVariableScrollArea() {
+    protected boolean variableFitsSearchValue(@NotNull Variable variable, @Nullable String s) {
+        if ((s == null) || s.isBlank()) return true;
+        s = s.toLowerCase();
+        if (variable.getName().toLowerCase().contains(s)) return true;
+        return variable.getValue().toLowerCase().contains(s);
+    }
+
+    protected void updateVariablesList() {
+
+        String searchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
+        if (searchValue.isBlank()) searchValue = null;
+
         this.variableListScrollArea.clearEntries();
+
         for (Variable v : VariableHandler.getVariables()) {
+            if (!this.variableFitsSearchValue(v, searchValue)) continue;
             VariableScrollEntry e = new VariableScrollEntry(this.variableListScrollArea, v, (entry) -> {
             });
             this.variableListScrollArea.addEntry(e);
@@ -200,6 +214,7 @@ public class ManageVariablesScreen extends Screen {
         if (this.variableListScrollArea.getEntries().isEmpty()) {
             this.variableListScrollArea.addEntry(new TextScrollAreaEntry(this.variableListScrollArea, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.no_variables").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().error_text_color.getColorInt())), (entry) -> {}));
         }
+
     }
 
     public static class VariableScrollEntry extends TextListScrollAreaEntry {
@@ -207,7 +222,7 @@ public class ManageVariablesScreen extends Screen {
         public Variable variable;
 
         public VariableScrollEntry(ScrollArea parent, @NotNull Variable variable, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Component.literal(variable.name).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), UIBase.getUIColorTheme().listing_dot_color_1.getColor(), onClick);
+            super(parent, Component.literal(variable.name).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())).append(Component.literal(" (" + variable.value + ")").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()))), UIBase.getUIColorTheme().listing_dot_color_1.getColor(), onClick);
             this.variable = variable;
         }
 
