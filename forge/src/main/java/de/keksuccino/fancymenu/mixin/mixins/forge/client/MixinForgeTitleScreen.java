@@ -3,13 +3,11 @@ package de.keksuccino.fancymenu.mixin.mixins.forge.client;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraftforge.client.gui.TitleScreenModUpdateIndicator;
 import org.jetbrains.annotations.Nullable;
@@ -27,17 +25,17 @@ public class MixinForgeTitleScreen {
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/client/ForgeHooksClient;renderMainMenu(Lnet/minecraft/client/gui/screens/TitleScreen;Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/client/gui/Font;III)V", remap = false))
     private boolean cancelForgeWarningAboveLogoRenderingFancyMenu(TitleScreen gui, GuiGraphics guiGraphics, Font font, int width, int height, int alpha) {
-        return !ScreenCustomization.isCustomizationEnabledForScreen((Screen)((Object)this));
+        return false;
     }
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/internal/BrandingControl;forEachLine(ZZLjava/util/function/ObjIntConsumer;)V", remap = false))
     private boolean cancelForgeBrandingRenderingFancyMenu(boolean idx, boolean includeMC, ObjIntConsumer<String> reverse) {
-        return !ScreenCustomization.isCustomizationEnabledForScreen((Screen)((Object)this));
+        return false;
     }
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/internal/BrandingControl;forEachAboveCopyrightLine(Ljava/util/function/ObjIntConsumer;)V", remap = false))
     private boolean cancelForgeBrandingAboveCopyrightRenderingFancyMenu(ObjIntConsumer<String> idx) {
-        return !ScreenCustomization.isCustomizationEnabledForScreen((Screen)((Object)this));
+        return false;
     }
 
     @WrapOperation(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/client/gui/TitleScreenModUpdateIndicator;init(Lnet/minecraft/client/gui/screens/TitleScreen;Lnet/minecraft/client/gui/components/Button;)Lnet/minecraftforge/client/gui/TitleScreenModUpdateIndicator;", remap = false))

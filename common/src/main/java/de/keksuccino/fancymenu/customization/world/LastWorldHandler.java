@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
+import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.util.List;
 
@@ -12,6 +13,7 @@ public class LastWorldHandler {
     public static final File LAST_WORLD_SAVE_FILE = new File(FancyMenu.INSTANCE_DATA_DIR.getPath() + "/last_world.fmdata");
 
     protected static boolean isServer = false;
+    @NotNull
     protected static String lastWorld = "";
 
     public static void init() {
@@ -29,6 +31,7 @@ public class LastWorldHandler {
         writeFile();
     }
 
+    @NotNull
     public static String getLastWorld() {
         return lastWorld;
     }

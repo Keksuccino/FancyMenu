@@ -1,6 +1,10 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+<<<<<<< HEAD
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
+=======
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
+>>>>>>> 9427571... v3.5.0
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
@@ -54,10 +58,18 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
         this.sliderInitializedFancyMenu = true;
     }
 
+<<<<<<< HEAD
     @WrapWithCondition(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lnet/minecraft/resources/ResourceLocation;IIII)V"))
     private boolean wrapBlitNineSlicedInRenderWidgetFancyMenu(GuiGraphics graphics, ResourceLocation p_300860_, int p_298718_, int p_298541_, int blitWidth, int p_298426_) {
+=======
+    /**
+     * @reason This is to add support for custom textures to the slider.
+     */
+    @WrapWithCondition(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Ljava/util/function/Function;Lnet/minecraft/resources/ResourceLocation;IIIII)V"))
+    private boolean wrap_blitSprite_FancyMenu(GuiGraphics graphics, Function<ResourceLocation, RenderType> renderTypeGetter, ResourceLocation sprite, int x, int y, int width, int height, int color) {
+>>>>>>> 9427571... v3.5.0
         CustomizableWidget cus = this.getAsCustomizableWidgetFancyMenu();
-        boolean isHandle = (blitWidth == 8);
+        boolean isHandle = (width == 8);
         boolean renderVanilla;
         if (isHandle) {
             int handleX = this.getX() + (int)(this.value * (double)(this.getWidth() - 8));

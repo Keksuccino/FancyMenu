@@ -24,11 +24,7 @@ public class Elements {
 
     public static final ButtonElementBuilder BUTTON = new ButtonElementBuilder();
     public static final InputFieldElementBuilder INPUT_FIELD = new InputFieldElementBuilder();
-    @Deprecated
-    public static final de.keksuccino.fancymenu.customization.element.elements.slider.v1.SliderElementBuilder SLIDER_V1 = new de.keksuccino.fancymenu.customization.element.elements.slider.v1.SliderElementBuilder();
     public static final SliderElementBuilder SLIDER_V2 = new SliderElementBuilder();
-    @Deprecated
-    public static final de.keksuccino.fancymenu.customization.element.elements.text.v1.TextElementBuilder TEXT_V1 = new de.keksuccino.fancymenu.customization.element.elements.text.v1.TextElementBuilder();
     public static final TextElementBuilder TEXT_V2 = new TextElementBuilder();
     public static final TickerElementBuilder TICKER = new TickerElementBuilder();
     public static final PlayerEntityElementBuilder PLAYER_ENTITY = new PlayerEntityElementBuilder();
@@ -49,9 +45,7 @@ public class Elements {
 
         ElementRegistry.register(BUTTON);
         ElementRegistry.register(INPUT_FIELD);
-        ElementRegistry.register(SLIDER_V1);
         ElementRegistry.register(SLIDER_V2);
-        ElementRegistry.register(TEXT_V1);
         ElementRegistry.register(TEXT_V2);
         ElementRegistry.register(TICKER);
         ElementRegistry.register(PLAYER_ENTITY);
