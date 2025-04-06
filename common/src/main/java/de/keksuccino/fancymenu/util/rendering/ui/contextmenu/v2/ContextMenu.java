@@ -887,7 +887,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         if (this.isOpen()) {
 
-            if (this.needsScrolling && this.isMouseOver(mouseX, mouseY)) {
+            if (this.needsScrolling && this.isMouseOverMenu(mouseX, mouseY)) {
                 // Close all sub-menus when scrolling in the parent menu
                 this.closeSubMenus();
 
