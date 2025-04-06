@@ -15,6 +15,7 @@ repositories {
 }
 
 dependencies {
+
     minecraft "com.mojang:minecraft:${minecraft_version}"
     mappings loom.layered() {
         officialMojangMappings()
@@ -31,7 +32,7 @@ dependencies {
     modImplementation "maven.modrinth:konkrete:1.9.9-1.21-fabric"
     modImplementation "maven.modrinth:modmenu:11.0.0-beta.1"
     modCompileOnly 'com.cinemamod:mcef:2.1.6-1.21.1'
-    modImplementation "curse.maven:architectury-api-419699:5786326"
+
 }
 
 loom {

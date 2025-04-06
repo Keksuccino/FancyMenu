@@ -1,10 +1,10 @@
 package de.keksuccino.fancymenu.customization.element.editor;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
-import de.keksuccino.fancymenu.customization.element.elements.ticker.TickerEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.AnchorPointOverlay;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
@@ -54,7 +54,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -278,13 +277,6 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 		}
 
-		this.addToggleContextMenuEntryTo(this.rightClickMenu, "load_once_per_session", AbstractEditorElement.class,
-						consumes -> consumes.element.loadOncePerSession,
-						(element1, aBoolean) -> element1.element.loadOncePerSession = aBoolean,
-						"fancymenu.elements.element.load_once_per_session")
-				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.element.load_once_per_session.desc")))
-				.setStackable(true);
-
 		if (this.settings.isAdvancedPositioningSupported()) {
 
 			ContextMenu advancedPositioningMenu = new ContextMenu();
@@ -414,6 +406,13 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 					.setIcon(ContextMenu.IconFactory.getIcon("check_list"));
 
 		}
+
+		this.addToggleContextMenuEntryTo(this.rightClickMenu, "load_once_per_session", AbstractEditorElement.class,
+						consumes -> consumes.element.loadOncePerSession,
+						(element1, aBoolean) -> element1.element.loadOncePerSession = aBoolean,
+						"fancymenu.elements.element.load_once_per_session")
+				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.element.load_once_per_session.desc")))
+				.setStackable(true);
 
 		this.rightClickMenu.addSeparatorEntry("separator_5");
 
@@ -702,6 +701,13 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	@Override
 	public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
+		if (this.element.layerHiddenInEditor) {
+			if (this.rightClickMenu.isOpen()) {
+				this.rightClickMenu.closeMenu();
+			}
+			return;
+		}
+
 		this.tick();
 
 		this.hovered = this.isMouseOver(mouseX, mouseY);
@@ -915,6 +921,9 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 	@Override
 	public boolean mouseClicked(double mouseX, double mouseY, int button) {
+
+		if (this.element.layerHiddenInEditor) return false;
+
 		if (!this.isSelected()) {
 			return false;
 		}
@@ -954,11 +963,14 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	 * @param mouseX The X coordinate of the mouse.
 	 * @param mouseY The Y coordinate of the mouse.
 	 * @param button The button that is being dragged.
-	 * @param dragX The X distance of the drag (distance per tick + mouse move, mostly values between 0.3 and 5).
-	 * @param dragY The Y distance of the drag (distance per tick + mouse move, mostly values between 0.3 and 5).
+	 * @param dragX The X distance of the drag (mouse move distance per tick; mostly values between 0.3 and 5).
+	 * @param dragY The Y distance of the drag (mouse move distance per tick; mostly values between 0.3 and 5).
 	 */
 	@Override
 	public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+
+		if (this.element.layerHiddenInEditor) return false;
+
 		if (!this.isSelected()) {
 			return false;
 		}
@@ -968,8 +980,109 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				int diffY = (int)-(this.movingStartPosY - mouseY);
 				if (this.editor.allSelectedElementsMovable()) {
 					if (!this.isMultiSelected() || !this.isElementAnchorAndParentIsSelected()) {
+						// Apply normal offset calculation
 						this.element.posOffsetX = this.leftMouseDownBaseX + diffX;
 						this.element.posOffsetY = this.leftMouseDownBaseY + diffY;
+
+						// Apply grid snapping if enabled
+						if (FancyMenu.getOptions().showLayoutEditorGrid.getValue() && FancyMenu.getOptions().layoutEditorGridSnapping.getValue()) {
+							// Get element edges
+							int leftEdge = this.getX();
+							int rightEdge = leftEdge + this.getWidth();
+							int topEdge = this.getY();
+							int bottomEdge = topEdge + this.getHeight();
+
+							// Get GUI scale to account for the scale difference
+							double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
+
+							// Get grid size
+							int gridSize = FancyMenu.getOptions().layoutEditorGridSize.getValue();
+
+							// Calculate magnetic snap threshold (smaller = more precise snapping)
+							double snapThreshold = Math.max(2 * guiScale, gridSize / 5.0) * FancyMenu.getOptions().layoutEditorGridSnappingStrength.getValue();
+
+							// Get screen centers at grid space
+							double centerXInGridSpace = AbstractElement.getScreenWidth() * guiScale / 2.0;
+							double centerYInGridSpace = AbstractElement.getScreenHeight() * guiScale / 2.0;
+
+							// Find nearest grid lines for all four edges
+							double[] edgesX = new double[] { leftEdge * guiScale, rightEdge * guiScale };
+							double[] distancesToGridX = new double[2];
+							int[] nearestGridLinesX = new int[2];
+
+							for (int i = 0; i < 2; i++) {
+								double edgeInGridSpace = edgesX[i];
+								double offsetFromCenter = edgeInGridSpace - centerXInGridSpace;
+								double modX = offsetFromCenter % gridSize;
+								if (modX < 0) modX += gridSize; // Handle negative numbers
+
+								double nearestLowerGridXInGridSpace = edgeInGridSpace - modX;
+								double nearestUpperGridXInGridSpace = nearestLowerGridXInGridSpace + gridSize;
+
+								// Calculate distances to both potential grid lines
+								double distToLower = Math.abs(edgeInGridSpace - nearestLowerGridXInGridSpace);
+								double distToUpper = Math.abs(nearestUpperGridXInGridSpace - edgeInGridSpace);
+
+								// Choose the closest grid line
+								if (distToLower <= distToUpper) {
+									distancesToGridX[i] = distToLower;
+									nearestGridLinesX[i] = (int)(nearestLowerGridXInGridSpace / guiScale);
+								} else {
+									distancesToGridX[i] = distToUpper;
+									nearestGridLinesX[i] = (int)(nearestUpperGridXInGridSpace / guiScale);
+								}
+							}
+
+							// Find the edge that's closest to a grid line (either left or right)
+							int closestEdgeIndexX = (distancesToGridX[0] <= distancesToGridX[1]) ? 0 : 1;
+
+							// If the closest edge is within threshold, snap to it
+							if (distancesToGridX[closestEdgeIndexX] <= snapThreshold) {
+								int edgePos = (closestEdgeIndexX == 0) ? leftEdge : rightEdge;
+								int gridPos = nearestGridLinesX[closestEdgeIndexX];
+								int xAdjustment = gridPos - edgePos;
+								this.element.posOffsetX += xAdjustment;
+							}
+
+							// Repeat for Y direction with top and bottom edges
+							double[] edgesY = new double[] { topEdge * guiScale, bottomEdge * guiScale };
+							double[] distancesToGridY = new double[2];
+							int[] nearestGridLinesY = new int[2];
+
+							for (int i = 0; i < 2; i++) {
+								double edgeInGridSpace = edgesY[i];
+								double offsetFromCenter = edgeInGridSpace - centerYInGridSpace;
+								double modY = offsetFromCenter % gridSize;
+								if (modY < 0) modY += gridSize; // Handle negative numbers
+
+								double nearestLowerGridYInGridSpace = edgeInGridSpace - modY;
+								double nearestUpperGridYInGridSpace = nearestLowerGridYInGridSpace + gridSize;
+
+								// Calculate distances to both potential grid lines
+								double distToLower = Math.abs(edgeInGridSpace - nearestLowerGridYInGridSpace);
+								double distToUpper = Math.abs(nearestUpperGridYInGridSpace - edgeInGridSpace);
+
+								// Choose the closest grid line
+								if (distToLower <= distToUpper) {
+									distancesToGridY[i] = distToLower;
+									nearestGridLinesY[i] = (int)(nearestLowerGridYInGridSpace / guiScale);
+								} else {
+									distancesToGridY[i] = distToUpper;
+									nearestGridLinesY[i] = (int)(nearestUpperGridYInGridSpace / guiScale);
+								}
+							}
+
+							// Find the edge that's closest to a grid line (either top or bottom)
+							int closestEdgeIndexY = (distancesToGridY[0] <= distancesToGridY[1]) ? 0 : 1;
+
+							// If the closest edge is within threshold, snap to it
+							if (distancesToGridY[closestEdgeIndexY] <= snapThreshold) {
+								int edgePos = (closestEdgeIndexY == 0) ? topEdge : bottomEdge;
+								int gridPos = nearestGridLinesY[closestEdgeIndexY];
+								int yAdjustment = gridPos - edgePos;
+								this.element.posOffsetY += yAdjustment;
+							}
+						}
 					}
 					if ((diffX > 0) || (diffY > 0)) {
 						this.recentlyMovedByDragging = true;
@@ -1007,7 +1120,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 						this.element.autoSizingHeight = 0;
 						int cachedOldOffsetY = this.element.posOffsetY;
 						int cachedOldPosY = this.element.getAbsoluteY();
-						int cachedOldHeight = this.element.baseHeight;
+						int cachedOldHeight = this.element.getAbsoluteHeight();
 						this.element.baseHeight = newHeight;
 						this.element.posOffsetY = this.leftMouseDownBaseY + this.element.anchorPoint.getResizePositionOffsetY(this.element, diffY, this.activeResizeGrabber.type);
 						if (this.element.stickyAnchor) {
@@ -1025,6 +1138,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 	@Override
 	public boolean isMouseOver(double mouseX, double mouseY) {
+		if (this.element.layerHiddenInEditor) return false;
 		return UIBase.isXYInArea((int) mouseX, (int) mouseY, this.getX(), this.getY(), this.getWidth(), this.getHeight());
 	}
 
@@ -1057,6 +1171,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	}
 
 	public boolean isHovered() {
+		if (this.element.layerHiddenInEditor) return false;
 		return this.hovered || this.rightClickMenu.isUserNavigatingInMenu() || (this.getHoveredResizeGrabber() != null);
 	}
 
