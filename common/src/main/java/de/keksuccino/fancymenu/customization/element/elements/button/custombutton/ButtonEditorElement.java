@@ -15,8 +15,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
+import java.util.List;
 
 public class ButtonEditorElement extends AbstractEditorElement {
+
+    public boolean showTemplateOptions = true;
 
     public ButtonEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
@@ -58,69 +61,9 @@ public class ButtonEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("button_separator_1");
 
-        ContextMenu buttonBackgroundMenu = new ContextMenu();
-        if (isSlider || isButton) {
-            this.rightClickMenu.addSubMenuEntry("button_background", isButton ? Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground") : Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.alternate.slider"), buttonBackgroundMenu)
-                    .setIcon(ContextMenu.IconFactory.getIcon("image"))
-                    .setStackable(true);
-        }
+        this.addTextureOptions(isButton, isSlider);
 
-        ContextMenu setBackMenu = new ContextMenu();
-        buttonBackgroundMenu.addSubMenuEntry("set_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.set"), setBackMenu)
-                .setStackable(true);
-
-        this.addImageResourceChooserContextMenuEntryTo(setBackMenu, "normal_background_texture",
-                ButtonEditorElement.class,
-                null,
-                consumes -> consumes.getElement().backgroundTextureNormal,
-                (buttonEditorElement, iTextureResourceSupplier) -> {
-                    buttonEditorElement.getElement().backgroundTextureNormal = iTextureResourceSupplier;
-                    buttonEditorElement.getElement().backgroundAnimationNormal = null;
-                }, isButton ? Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.normal") : Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.normal.alternate.slider"), true, null, true, true, true);
-
-        this.addImageResourceChooserContextMenuEntryTo(setBackMenu, "hover_background_texture",
-                ButtonEditorElement.class,
-                null,
-                consumes -> consumes.getElement().backgroundTextureHover,
-                (buttonEditorElement, iTextureResourceSupplier) -> {
-                    buttonEditorElement.getElement().backgroundTextureHover = iTextureResourceSupplier;
-                    buttonEditorElement.getElement().backgroundAnimationHover = null;
-                }, isButton ? Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.hover") : Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.hover.alternate.slider"), true, null, true, true, true);
-
-        this.addImageResourceChooserContextMenuEntryTo(setBackMenu, "inactive_background_texture",
-                ButtonEditorElement.class,
-                null,
-                consumes -> consumes.getElement().backgroundTextureInactive,
-                (buttonEditorElement, iTextureResourceSupplier) -> {
-                    buttonEditorElement.getElement().backgroundTextureInactive = iTextureResourceSupplier;
-                    buttonEditorElement.getElement().backgroundAnimationInactive = null;
-                }, isButton ? Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.inactive") : Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.inactive.alternate.slider"), true, null, true, true, true);
-
-        buttonBackgroundMenu.addSeparatorEntry("separator_after_set_background").setStackable(true);
-
-        this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "restart_animated_on_hover",
-                        ButtonEditorElement.class,
-                        consumes -> consumes.getElement().restartBackgroundAnimationsOnHover,
-                        (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().restartBackgroundAnimationsOnHover = aBoolean,
-                        "fancymenu.helper.editor.items.buttons.textures.restart_animated_on_hover")
-                .setStackable(true);
-
-        buttonBackgroundMenu.addSeparatorEntry("separator_after_restart_animation_on_hover");
-
-        this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_background", ButtonEditorElement.class,
-                consumes -> consumes.getElement().nineSliceCustomBackground,
-                (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().nineSliceCustomBackground = aBoolean,
-                "fancymenu.helper.editor.items.buttons.textures.nine_slice");
-
-        this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_border_x", ButtonEditorElement.class,
-                consumes -> consumes.getElement().nineSliceBorderX,
-                (buttonEditorElement, integer) -> buttonEditorElement.getElement().nineSliceBorderX = integer,
-                Component.translatable("fancymenu.helper.editor.items.buttons.textures.nine_slice.border_x"), true, 5, null, null);
-
-        this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_border_y", ButtonEditorElement.class,
-                consumes -> consumes.getElement().nineSliceBorderY,
-                (buttonEditorElement, integer) -> buttonEditorElement.getElement().nineSliceBorderY = integer,
-                Component.translatable("fancymenu.helper.editor.items.buttons.textures.nine_slice.border_y"), true, 5, null, null);
+        this.addSliderTextureOptionsForTemplateMode();
 
         this.rightClickMenu.addSeparatorEntry("button_separator_2").setStackable(true);
 
@@ -196,6 +139,233 @@ public class ButtonEditorElement extends AbstractEditorElement {
                     .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.generic.navigatable.desc")));
 
         }
+
+        this.addTemplateOptions();
+
+    }
+
+    protected void addTemplateOptions() {
+
+        ContextMenu templateSettingsMenu = new ContextMenu();
+
+        this.rightClickMenu.addSeparatorEntry("separator_before_template_settings")
+                .addIsVisibleSupplier((menu, entry) -> this.showTemplateOptions);
+
+        this.rightClickMenu.addSubMenuEntry("template_settings", Component.translatable("fancymenu.elements.button.template_settings"), templateSettingsMenu)
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.template_settings.desc")))
+                .addIsVisibleSupplier((menu, entry) -> this.showTemplateOptions);
+
+        this.addToggleContextMenuEntryTo(templateSettingsMenu, "is_template", ButtonEditorElement.class,
+                        consumes -> consumes.getElement().isTemplate,
+                        (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().isTemplate = aBoolean,
+                        "fancymenu.elements.button.is_template")
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.button.template_settings.desc")));
+
+        this.addCycleContextMenuEntryTo(templateSettingsMenu, "share_with", List.of(ButtonElement.TemplateSharing.values()), ButtonEditorElement.class,
+                consumes -> consumes.getElement().templateShareWith,
+                (buttonEditorElement, templateSharing) -> buttonEditorElement.getElement().templateShareWith = templateSharing,
+                (menu, entry, switcherValue) -> switcherValue.getCycleComponent());
+
+        templateSettingsMenu.addSeparatorEntry("separator_after_is_template");
+
+        this.addToggleContextMenuEntryTo(templateSettingsMenu, "template_apply_width", ButtonEditorElement.class,
+                consumes -> consumes.getElement().templateApplyWidth,
+                (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().templateApplyWidth = aBoolean,
+                "fancymenu.elements.button.template_apply_width");
+
+        this.addToggleContextMenuEntryTo(templateSettingsMenu, "template_apply_height", ButtonEditorElement.class,
+                consumes -> consumes.getElement().templateApplyHeight,
+                (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().templateApplyHeight = aBoolean,
+                "fancymenu.elements.button.template_apply_height");
+
+        this.addToggleContextMenuEntryTo(templateSettingsMenu, "template_apply_posx", ButtonEditorElement.class,
+                consumes -> consumes.getElement().templateApplyPosX,
+                (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().templateApplyPosX = aBoolean,
+                "fancymenu.elements.button.template_apply_posx");
+
+        this.addToggleContextMenuEntryTo(templateSettingsMenu, "template_apply_posy", ButtonEditorElement.class,
+                consumes -> consumes.getElement().templateApplyPosY,
+                (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().templateApplyPosY = aBoolean,
+                "fancymenu.elements.button.template_apply_posy");
+
+        this.addToggleContextMenuEntryTo(templateSettingsMenu, "template_apply_opacity", ButtonEditorElement.class,
+                consumes -> consumes.getElement().templateApplyOpacity,
+                (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().templateApplyOpacity = aBoolean,
+                "fancymenu.elements.button.template_apply_opacity");
+
+        this.addToggleContextMenuEntryTo(templateSettingsMenu, "template_apply_visibility", ButtonEditorElement.class,
+                consumes -> consumes.getElement().templateApplyVisibility,
+                (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().templateApplyVisibility = aBoolean,
+                "fancymenu.elements.button.template_apply_visibility");
+
+        this.addToggleContextMenuEntryTo(templateSettingsMenu, "template_apply_label", ButtonEditorElement.class,
+                consumes -> consumes.getElement().templateApplyLabel,
+                (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().templateApplyLabel = aBoolean,
+                "fancymenu.elements.button.template_apply_label");
+
+    }
+
+    protected void addTextureOptions(boolean isButton, boolean isSlider) {
+
+        ContextMenu buttonBackgroundMenu = new ContextMenu();
+        if (isSlider || isButton) {
+            this.rightClickMenu.addSubMenuEntry("button_background", isButton ? Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground") : Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.alternate.slider"), buttonBackgroundMenu)
+                    .setIcon(ContextMenu.IconFactory.getIcon("image"))
+                    .setStackable(true)
+                    .addIsVisibleSupplier((menu, entry) -> !this.getElement().isTemplate || (this.getElement().templateShareWith == ButtonElement.TemplateSharing.BUTTONS));
+        }
+
+        ContextMenu setBackMenu = new ContextMenu();
+        buttonBackgroundMenu.addSubMenuEntry("set_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.set"), setBackMenu)
+                .setStackable(true);
+
+        this.addImageResourceChooserContextMenuEntryTo(setBackMenu, "normal_background_texture",
+                ButtonEditorElement.class,
+                null,
+                consumes -> consumes.getElement().backgroundTextureNormal,
+                (buttonEditorElement, iTextureResourceSupplier) -> {
+                    buttonEditorElement.getElement().backgroundTextureNormal = iTextureResourceSupplier;
+                }, isButton ? Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.normal") : Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.normal.alternate.slider"), true, null, true, true, true);
+
+        this.addImageResourceChooserContextMenuEntryTo(setBackMenu, "hover_background_texture",
+                ButtonEditorElement.class,
+                null,
+                consumes -> consumes.getElement().backgroundTextureHover,
+                (buttonEditorElement, iTextureResourceSupplier) -> {
+                    buttonEditorElement.getElement().backgroundTextureHover = iTextureResourceSupplier;
+                }, isButton ? Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.hover") : Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.hover.alternate.slider"), true, null, true, true, true);
+
+        this.addImageResourceChooserContextMenuEntryTo(setBackMenu, "inactive_background_texture",
+                ButtonEditorElement.class,
+                null,
+                consumes -> consumes.getElement().backgroundTextureInactive,
+                (buttonEditorElement, iTextureResourceSupplier) -> {
+                    buttonEditorElement.getElement().backgroundTextureInactive = iTextureResourceSupplier;
+                }, isButton ? Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.inactive") : Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.inactive.alternate.slider"), true, null, true, true, true);
+
+        buttonBackgroundMenu.addSeparatorEntry("separator_after_set_background").setStackable(true);
+
+        this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "restart_animated_on_hover",
+                        ButtonEditorElement.class,
+                        consumes -> consumes.getElement().restartBackgroundAnimationsOnHover,
+                        (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().restartBackgroundAnimationsOnHover = aBoolean,
+                        "fancymenu.helper.editor.items.buttons.textures.restart_animated_on_hover")
+                .setStackable(true);
+
+        buttonBackgroundMenu.addSeparatorEntry("separator_after_restart_animation_on_hover");
+
+        this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_background", ButtonEditorElement.class,
+                consumes -> consumes.getElement().nineSliceCustomBackground,
+                (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().nineSliceCustomBackground = aBoolean,
+                "fancymenu.helper.editor.items.buttons.textures.nine_slice");
+
+        this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_border_x", ButtonEditorElement.class,
+                consumes -> consumes.getElement().nineSliceBorderX,
+                (buttonEditorElement, integer) -> buttonEditorElement.getElement().nineSliceBorderX = integer,
+                Component.translatable("fancymenu.helper.editor.items.buttons.textures.nine_slice.border_x"), true, 5, null, null);
+
+        this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_border_y", ButtonEditorElement.class,
+                consumes -> consumes.getElement().nineSliceBorderY,
+                (buttonEditorElement, integer) -> buttonEditorElement.getElement().nineSliceBorderY = integer,
+                Component.translatable("fancymenu.helper.editor.items.buttons.textures.nine_slice.border_y"), true, 5, null, null);
+
+    }
+
+    protected void addSliderTextureOptionsForTemplateMode() {
+
+        ContextMenu buttonBackgroundMenu = new ContextMenu();
+        this.rightClickMenu.addSubMenuEntry("slider_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.alternate.slider"), buttonBackgroundMenu)
+                .setIcon(ContextMenu.IconFactory.getIcon("image"))
+                .setStackable(false)
+                .addIsVisibleSupplier((menu, entry) -> this.getElement().isTemplate && (this.getElement().templateShareWith == ButtonElement.TemplateSharing.SLIDERS));
+
+        ContextMenu setBackMenu = new ContextMenu();
+        buttonBackgroundMenu.addSubMenuEntry("set_background", Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.set"), setBackMenu);
+
+        this.addImageResourceChooserContextMenuEntryTo(setBackMenu, "normal_background_texture",
+                ButtonEditorElement.class,
+                null,
+                consumes -> consumes.getElement().backgroundTextureNormal,
+                (buttonEditorElement, iTextureResourceSupplier) -> {
+                    buttonEditorElement.getElement().backgroundTextureNormal = iTextureResourceSupplier;
+                }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.normal.alternate.slider"), true, null, true, true, true);
+
+        this.addImageResourceChooserContextMenuEntryTo(setBackMenu, "hover_background_texture",
+                ButtonEditorElement.class,
+                null,
+                consumes -> consumes.getElement().backgroundTextureHover,
+                (buttonEditorElement, iTextureResourceSupplier) -> {
+                    buttonEditorElement.getElement().backgroundTextureHover = iTextureResourceSupplier;
+                }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.hover.alternate.slider"), true, null, true, true, true);
+
+        this.addImageResourceChooserContextMenuEntryTo(setBackMenu, "inactive_background_texture",
+                ButtonEditorElement.class,
+                null,
+                consumes -> consumes.getElement().backgroundTextureInactive,
+                (buttonEditorElement, iTextureResourceSupplier) -> {
+                    buttonEditorElement.getElement().backgroundTextureInactive = iTextureResourceSupplier;
+                }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.inactive.alternate.slider"), true, null, true, true, true);
+
+        setBackMenu.addSeparatorEntry("separator_before_slider_background_entries");
+
+        this.addImageResourceChooserContextMenuEntryTo(setBackMenu, "normal_slider_background_texture",
+                ButtonEditorElement.class,
+                null,
+                consumes -> consumes.getElement().sliderBackgroundTextureNormal,
+                (buttonEditorElement, iTextureResourceSupplier) -> {
+                    buttonEditorElement.getElement().sliderBackgroundTextureNormal = iTextureResourceSupplier;
+                }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.slider.normal"), true, null, true, true, true);
+
+        this.addImageResourceChooserContextMenuEntryTo(setBackMenu, "highlighted_slider_background_texture",
+                        ButtonEditorElement.class,
+                        null,
+                        consumes -> consumes.getElement().sliderBackgroundTextureHighlighted,
+                        (buttonEditorElement, iTextureResourceSupplier) -> {
+                            buttonEditorElement.getElement().sliderBackgroundTextureHighlighted = iTextureResourceSupplier;
+                        }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.slider.highlighted"), true, null, true, true, true)
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.buttons.buttonbackground.slider.highlighted.desc")));
+
+        buttonBackgroundMenu.addSeparatorEntry("separator_after_set_texture").setStackable(true);
+
+        this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "restart_animated_on_hover",
+                        ButtonEditorElement.class,
+                        consumes -> consumes.getElement().restartBackgroundAnimationsOnHover,
+                        (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().restartBackgroundAnimationsOnHover = aBoolean,
+                        "fancymenu.helper.editor.items.buttons.textures.restart_animated_on_hover");
+
+        buttonBackgroundMenu.addSeparatorEntry("separator_after_restart_animation_on_hover");
+
+        this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_background", ButtonEditorElement.class,
+                consumes -> consumes.getElement().nineSliceCustomBackground,
+                (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().nineSliceCustomBackground = aBoolean,
+                "fancymenu.helper.editor.items.buttons.textures.nine_slice");
+
+        this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_border_x", ButtonEditorElement.class,
+                consumes -> consumes.getElement().nineSliceBorderX,
+                (buttonEditorElement, integer) -> buttonEditorElement.getElement().nineSliceBorderX = integer,
+                Component.translatable("fancymenu.helper.editor.items.buttons.textures.nine_slice.border_x"), true, 5, null, null);
+
+        this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_border_y", ButtonEditorElement.class,
+                consumes -> consumes.getElement().nineSliceBorderY,
+                (buttonEditorElement, integer) -> buttonEditorElement.getElement().nineSliceBorderY = integer,
+                Component.translatable("fancymenu.helper.editor.items.buttons.textures.nine_slice.border_y"), true, 5, null, null);
+
+        buttonBackgroundMenu.addSeparatorEntry("separator_before_nine_slider_slider_handle_settings");
+
+        this.addToggleContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_slider_handle", ButtonEditorElement.class,
+                consumes -> consumes.getElement().nineSliceSliderHandle,
+                (buttonEditorElement, aBoolean) -> buttonEditorElement.getElement().nineSliceSliderHandle = aBoolean,
+                "fancymenu.elements.slider.v2.handle.textures.nine_slice");
+
+        this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_slider_handle_border_x", ButtonEditorElement.class,
+                consumes -> consumes.getElement().nineSliceSliderHandleBorderX,
+                (buttonEditorElement, integer) -> buttonEditorElement.getElement().nineSliceSliderHandleBorderX = integer,
+                Component.translatable("fancymenu.elements.slider.v2.handle.textures.nine_slice.border_x"), true, 5, null, null);
+
+        this.addIntegerInputContextMenuEntryTo(buttonBackgroundMenu, "nine_slice_slider_handle_border_y", ButtonEditorElement.class,
+                consumes -> consumes.getElement().nineSliceSliderHandleBorderY,
+                (buttonEditorElement, integer) -> buttonEditorElement.getElement().nineSliceSliderHandleBorderY = integer,
+                Component.translatable("fancymenu.elements.slider.v2.handle.textures.nine_slice.border_y"), true, 5, null, null);
 
     }
 

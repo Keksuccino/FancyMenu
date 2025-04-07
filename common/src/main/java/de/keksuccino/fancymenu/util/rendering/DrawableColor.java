@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering;
 
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.util.FastColor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
@@ -16,6 +17,16 @@ public class DrawableColor {
     protected int colorInt;
     protected String hex;
     protected FloatColor floatColor;
+
+    @NotNull
+    public static DrawableColor of(int color) {
+        DrawableColor c = new DrawableColor();
+        c.color = new Color(color);
+        c.colorInt = color;
+        c.hex = convertColorToHexString(c.color);
+        if (c.hex == null) c.hex = "#ffffffff";
+        return c;
+    }
 
     /** Creates a {@link DrawableColor} out of the given {@link Color}. **/
     @NotNull

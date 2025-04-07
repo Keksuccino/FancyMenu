@@ -509,6 +509,22 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
     }
 
     @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
+        float scale = UIBase.calculateFixedScale(this.scale);
+        int scaledMouseX = (int) ((float)mouseX / scale);
+        int scaledMouseY = (int) ((float)mouseY / scale);
+        boolean entryClick = false;
+        if (this.expanded) {
+            for (MenuBarEntry e : ListUtils.mergeLists(this.leftEntries, this.rightEntries)) {
+                if (e.isVisible()) {
+                    if (e.mouseScrolled(scaledMouseX, scaledMouseY, scrollDeltaX, scrollDeltaY)) return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    @Override
     public boolean isMouseOver(double mouseX, double mouseY) {
         if (!this.expanded) return this.collapseOrExpandEntry.hovered;
         float scale = UIBase.calculateFixedScale(this.scale);
@@ -922,6 +938,14 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
                 return true;
             }
             return super.mouseClicked(mouseX, mouseY, button);
+        }
+
+        @Override
+        public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
+            if (this.contextMenu.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY)) {
+                return true;
+            }
+            return super.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
         }
 
     }

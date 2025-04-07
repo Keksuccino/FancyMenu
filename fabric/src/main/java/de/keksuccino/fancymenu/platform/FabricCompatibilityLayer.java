@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.platform;
 
-import de.keksuccino.fancymenu.customization.deep.layers.titlescreen.TitleScreenLayer;
 import de.keksuccino.fancymenu.platform.services.IPlatformCompatibilityLayer;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
@@ -25,10 +24,6 @@ public class FabricCompatibilityLayer implements IPlatformCompatibilityLayer {
         List<Component> lines = new ArrayList<>();
         lines.add(Component.literal(branding));
         return lines;
-    }
-
-    @Override
-    public void registerTitleScreenDeepCustomizationLayerElements(TitleScreenLayer layer) {
     }
 
 }
