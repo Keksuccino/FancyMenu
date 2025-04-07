@@ -38,6 +38,7 @@ CHANGELOG | FANCYMENU v3.5.0 [ W I P !! Not public yet !! ] - The "Quality of Li
 - Fixed "Format Error" in description of "Current Audio Track" placeholder
 - Fixed unable to undo/redo moving an element in the editor when it got moved only 1 pixel
 - Fixed up/down arrows of layers in the Layer widget not correctly showing as normal/greyed out when a layer is at the very top or very bottom of the list
+- Fixed incompatibility with Valkyrien Skies 2 (#1119, #957)
 - Hopefully fixed JSON placeholder sometimes not showing its replacement anymore after reloading FancyMenu (#1100)
  
 %changelog:end%
