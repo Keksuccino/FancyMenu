@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinRealmsNotificationsScreen;
 import com.mojang.realmsclient.gui.screens.RealmsNotificationsScreen;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -158,7 +159,7 @@ public class RealmsNotificationRenderer {
      * @return true if old notifications should be shown
      */
     public boolean shouldShowOldNotifications() {
-
+        if (isEditor()) return true;
         // This mimics the logic in RealmsNotificationsScreen.getConfiguration()
         boolean isValidClient = this.screenAccess.get_validClient_FancyMenu().getNow(false);
         boolean inTitleScreen = this.minecraft.screen instanceof TitleScreen;
@@ -175,6 +176,7 @@ public class RealmsNotificationRenderer {
      * Get the current count of pending invites.
      */
     public int getNumberOfPendingInvites() {
+        if (isEditor()) return 1;
         return this.screenAccess.get_numberOfPendingInvites_FancyMenu();
     }
 
@@ -182,6 +184,7 @@ public class RealmsNotificationRenderer {
      * Check if there are any unseen notifications.
      */
     public boolean hasUnseenNotifications() {
+        if (isEditor()) return true;
         return this.screenAccess.get_hasUnseenNotifications();
     }
 
@@ -189,6 +192,7 @@ public class RealmsNotificationRenderer {
      * Check if there is unread news.
      */
     public boolean hasUnreadNews() {
+        if (isEditor()) return true;
         return this.screenAccess.get_hasUnreadNews_FancyMenu();
     }
 
@@ -196,7 +200,12 @@ public class RealmsNotificationRenderer {
      * Check if a trial is available.
      */
     public boolean isTrialAvailable() {
+        if (isEditor()) return true;
         return this.screenAccess.get_trialAvailable_FancyMenu();
+    }
+
+    protected static boolean isEditor() {
+        return (Minecraft.getInstance().screen instanceof LayoutEditorScreen);
     }
 
 }
