@@ -932,6 +932,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     // Always return false here to not break FM's GUIs
     @Override
+    @Deprecated
     public boolean isMouseOver(double $$0, double $$1) {
         return false;
     }

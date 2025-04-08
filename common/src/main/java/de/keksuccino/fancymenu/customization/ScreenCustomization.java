@@ -14,7 +14,6 @@ import de.keksuccino.fancymenu.customization.screen.identifier.UniversalScreenId
 import de.keksuccino.fancymenu.customization.widget.identification.identificationcontext.contexts.WidgetIdentificationContexts;
 import de.keksuccino.fancymenu.customization.action.actions.Actions;
 import de.keksuccino.fancymenu.customization.background.backgrounds.MenuBackgrounds;
-import de.keksuccino.fancymenu.customization.action.ButtonScriptHandler;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.element.elements.Elements;
@@ -108,8 +107,6 @@ public class ScreenCustomization {
 		LayoutHandler.init();
 
 		readCustomizableScreensFromFile();
-
-		ButtonScriptHandler.init();
 
 		LastWorldHandler.init();
 

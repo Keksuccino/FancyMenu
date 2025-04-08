@@ -6,10 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import de.keksuccino.fancymenu.util.Legacy;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.konkrete.input.StringUtils;
-import org.apache.commons.lang3.RegExUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -42,7 +40,6 @@ public class PropertiesParser {
     /**
      * Returns the deserialized {@link PropertyContainerSet} or NULL if the given String was not a valid serialized set.
      */
-    @Legacy("This is basically the Konkrete deserializer and is _very_ outdated, so better rewrite this at some point.")
     @Nullable
     public static PropertyContainerSet deserializeSetFromFancyString(@NotNull String serializedFancyString) {
         try {
@@ -53,7 +50,7 @@ public class PropertiesParser {
             boolean insideData = false;
             for (String line : lines) {
                 //Remove all types of spaces from line
-                String compactLine = RegExUtils.replacePattern(line, "[\\p{Z}\\s]+", "");
+                String compactLine = line.replaceAll("[\\p{Z}\\s]+", "");
                 //Set type of container set
                 if (compactLine.startsWith("type=") && !insideData) {
                     propertiesType = compactLine.split("=", 2)[1];
