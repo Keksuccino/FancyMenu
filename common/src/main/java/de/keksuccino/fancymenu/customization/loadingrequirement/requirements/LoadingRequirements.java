@@ -3,10 +3,7 @@ package de.keksuccino.fancymenu.customization.loadingrequirement.requirements;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirementRegistry;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.gui.*;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.realtime.*;
-import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.system.FileExistsRequirement;
-import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.system.IsOsLinuxRequirement;
-import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.system.IsOsMacOSRequirement;
-import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.system.IsOsWindowsRequirement;
+import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.system.*;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.window.*;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.IsWorldLoadedRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.requirements.world.gamemode.IsAdventureRequirement;
@@ -94,6 +91,7 @@ public class LoadingRequirements {
     public static final IsKeyPressedRequirement IS_KEY_PRESSED = new IsKeyPressedRequirement();
     public static final OncePerSessionRequirement ONLY_ONCE_PER_SESSION = new OncePerSessionRequirement();
     public static final MouseClickedRequirement MOUSE_CLICKED = new MouseClickedRequirement();
+    public static final IsInternetConnectionAvailableRequirement IS_INTERNET_CONNECTION_AVAILABLE = new IsInternetConnectionAvailableRequirement();
 
     public static void registerAll() {
 
@@ -118,6 +116,7 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(IS_OS_LINUX);
         LoadingRequirementRegistry.register(IS_OS_MAC_OS);
         LoadingRequirementRegistry.register(IS_OS_WINDOWS);
+        LoadingRequirementRegistry.register(IS_INTERNET_CONNECTION_AVAILABLE);
 
         LoadingRequirementRegistry.register(IS_FULLSCREEN);
         LoadingRequirementRegistry.register(IS_WINDOW_WIDTH);

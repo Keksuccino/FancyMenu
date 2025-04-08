@@ -1,14 +1,72 @@
 package de.keksuccino.fancymenu.util;
 
 import net.minecraft.client.Minecraft;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Locale;
 
 public class WebUtils {
+
+    private static final Logger LOGGER = LogManager.getLogger();
+
+    private static volatile boolean isConnectionAvailable = true;
+
+    public static void init() {
+
+        new Thread(() -> {
+            try {
+                isConnectionAvailable = _isInternetAvailable();
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to update the cached internet availability value!", ex);
+            }
+            try {
+                Thread.sleep(20000); // 20 seconds
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to sleep after updating cached internet availability value!", ex);
+            }
+        }, "FancyMenu-WebUtils-Thread").start();
+
+    }
+
+    /**
+     * Checks if an internet connection is available.
+     * The method can be called in the main thread, since the value it returns is updated asynchronously every 20 seconds.
+     *
+     * @return true if an internet connection is available, false otherwise
+     */
+    public static boolean isInternetAvailable() {
+        return isConnectionAvailable;
+    }
+
+    /**
+     * Checks if an internet connection is available.
+     * Uses a 3-second timeout for both connection and read operations.
+     *
+     * @return true if an internet connection is available, false otherwise
+     */
+    private static boolean _isInternetAvailable() {
+        try {
+            var url = new URL("https://8.8.8.8");
+            var connection = (HttpURLConnection) url.openConnection();
+
+            // Using 3 seconds (3000ms) as a reasonable timeout
+            connection.setConnectTimeout(3000);
+            connection.setReadTimeout(3000);
+            connection.setRequestMethod("HEAD");
+
+            int responseCode = connection.getResponseCode();
+            return (responseCode >= 200 && responseCode < 300);
+        } catch (IOException e) {
+            return false;
+        }
+    }
 
     @Nullable
     public static InputStream openResourceStream(@NotNull String resourceURL) {

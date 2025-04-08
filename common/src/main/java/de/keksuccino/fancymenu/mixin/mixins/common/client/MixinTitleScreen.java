@@ -1,27 +1,28 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
-import com.llamalad7.mixinextras.injector.WrapWithCondition;
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.realmsclient.gui.screens.RealmsNotificationsScreen;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.deep.layers.DeepScreenCustomizationLayers;
-import de.keksuccino.fancymenu.customization.deep.layers.titlescreen.realmsnotification.TitleScreenRealmsNotificationDeepElement;
-import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
-import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.*;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.renderer.PanoramaRenderer;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -29,118 +30,124 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(TitleScreen.class)
 public abstract class MixinTitleScreen extends Screen {
 
-    @Shadow @Final public static Component COPYRIGHT_TEXT;
+    @Shadow @Final private static Component COPYRIGHT_TEXT;
     @Shadow public boolean fading;
+    @Shadow private @Nullable RealmsNotificationsScreen realmsNotificationsScreen;
 
-    @Unique boolean handleRealmsNotificationFancyMenu = false;
-    @Unique GuiGraphics cachedGraphics_FancyMenu = null;
-    @Unique boolean shouldRenderVanillaBackground_FancyMenu = true;
+    @Unique private GuiGraphics cached_graphics_FancyMenu = null;
 
     //unused dummy constructor
+    @SuppressWarnings("all")
     private MixinTitleScreen() {
-        super(Component.empty());
+        super(null);
     }
 
-    /**
-     * @reason Cache {@link GuiGraphics} instance for later use.
-     */
-    @Inject(method = "render", at = @At("HEAD"))
-    private void head_render_FancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo info) {
-        this.shouldRenderVanillaBackground_FancyMenu = true;
-        this.cachedGraphics_FancyMenu = graphics;
-    }
-
-    /**
-     * @reason Add an identifier to the Copyright button.
-     */
     @Inject(method = "init", at = @At("RETURN"))
-    private void at_return_of_screen_init_FancyMenu(CallbackInfo info) {
+    private void after_init_FancyMenu(CallbackInfo info) {
 
+        // Give the Copyright button and identifier
         this.children().forEach(guiEventListener -> {
             if (guiEventListener instanceof PlainTextButton b) {
                 if (b.getMessage() == COPYRIGHT_TEXT) ((UniqueWidget)b).setWidgetIdentifierFancyMenu("title_screen_copyright_button");
             }
         });
 
+        // Add widgets for all Title screen elements to make them editable
+
+        MinecraftLogoRenderer logo = MinecraftLogoRenderer.DEFAULT_INSTANCE;
+        this.addRenderableWidget(new RendererWidget((this.width / 2) - (logo.getWidth() / 2), 30, logo.getWidth(), logo.getHeight(),
+                        (graphics, mouseX, mouseY, partial, x, y, width, height, renderer) -> {
+                            logo.renderLogoAtPosition(graphics, x, y, renderer.getAlpha());
+                        }))
+                .setWidgetIdentifierFancyMenu("minecraft_logo_widget")
+                .setMessage(Component.translatable("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.logo"));
+
+        MinecraftSplashRenderer splash = MinecraftSplashRenderer.getDefaultInstance();
+        this.addRenderableWidget(new RendererWidget(splash.getDefaultPositionX(this.width) - 50, splash.getDefaultPositionY() - 20, 100, 40,
+                        (graphics, mouseX, mouseY, partial, x, y, width, height, renderer) -> {
+                            int splashColor = Mth.ceil(renderer.getAlpha() * 255.0F) << 24;
+                            splash.renderAt(graphics, x + (width / 2), y + (height / 2), Minecraft.getInstance().font, splashColor);
+                        }))
+                .setWidgetIdentifierFancyMenu("minecraft_splash_widget")
+                .setMessage(Component.translatable("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.splash"));
+
+        if (this.realmsNotificationsScreen != null) {
+            RealmsNotificationRenderer notifications = new RealmsNotificationRenderer(this.realmsNotificationsScreen, this.width, this.height);
+            int totalWidth = notifications.getTotalWidth();
+            if (totalWidth == 0) totalWidth = 50;
+            this.addRenderableWidget(new RendererWidget(notifications.getDefaultPositionX(), notifications.getDefaultPositionY(), totalWidth, notifications.getTotalHeight(),
+                            (graphics, mouseX, mouseY, partial, x, y, width, height, renderer) -> {
+                                notifications.renderIcons(graphics, x, y, DrawableColor.WHITE.getColorIntWithAlpha(renderer.getAlpha()));
+                            }))
+                    .setWidgetIdentifierFancyMenu("minecraft_realms_notification_icons_widget")
+                    .setMessage(Component.translatable("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.realmsnotification"));
+        }
+
+        BrandingRenderer branding = new BrandingRenderer(this.height);
+        this.addRenderableWidget(new RendererWidget(branding.getDefaultPositionX(), branding.getDefaultPositionY(), branding.getTotalWidth(), branding.getTotalHeight(),
+                        (graphics, mouseX, mouseY, partial, x, y, width, height, renderer) -> {
+                            branding.setOpacity(renderer.getAlpha());
+                            branding.render(graphics, x, y);
+                        }))
+                .setWidgetIdentifierFancyMenu("minecraft_branding_widget")
+                .setMessage(Component.translatable("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.branding"));
+
+    }
+
+    @Inject(method = "render", at = @At("HEAD"))
+    private void before_render_FancyMenu(GuiGraphics graphics, int $$1, int $$2, float $$3, CallbackInfo ci) {
+        //Disable fading if customizations enabled, so FancyMenu can properly handle widget alpha
+        if (ScreenCustomization.isCustomizationEnabledForScreen(this)) {
+            this.fading = false;
+        }
+        this.cached_graphics_FancyMenu = graphics;
     }
 
     /**
      * @reason Manually fire FancyMenu's {@link RenderedScreenBackgroundEvent} in {@link TitleScreen}, because normal event doesn't work correctly here.
      */
     @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/PanoramaRenderer;render(FF)V"))
-    private void wrap_PanoramaRenderer_render_in_render_FancyMenu(PanoramaRenderer instance, float deltaT, float alpha, Operation<Void> original) {
+    private void wrap_renderPanorama_FancyMenu(PanoramaRenderer instance, float p_110004_, float p_110005_, Operation<Void> original) {
         ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen(this);
         if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this)) {
             if (!l.layoutBase.menuBackgrounds.isEmpty()) {
                 RenderSystem.enableBlend();
                 //Render a black background before the custom background gets rendered
-                this.cachedGraphics_FancyMenu.fill(0, 0, this.width, this.height, 0);
-                RenderingUtils.resetShaderColor(this.cachedGraphics_FancyMenu);
-                this.shouldRenderVanillaBackground_FancyMenu = false;
+                this.cached_graphics_FancyMenu.fill(RenderType.guiOverlay(), 0, 0, this.width, this.height, 0);
             } else {
-                original.call(instance, deltaT, alpha);
+                original.call(instance, p_110004_, p_110005_);
             }
         } else {
-            original.call(instance, deltaT, alpha);
+            original.call(instance, p_110004_, p_110005_);
         }
-        EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, this.cachedGraphics_FancyMenu));
+        EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, this.cached_graphics_FancyMenu));
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lnet/minecraft/resources/ResourceLocation;IIIIFFIIII)V"))
-    private boolean wrap_blit_in_render_FancyMenu(GuiGraphics instance, ResourceLocation atlasLocation, int x, int y, int width, int height, float uOffset, float vOffset, int uWidth, int vHeight, int textureWidth, int textureHeight) {
-        return this.shouldRenderVanillaBackground_FancyMenu;
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/realmsclient/gui/screens/RealmsNotificationsScreen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
+    private boolean cancel_VanillaRealmsNotificationRendering_FancyMenu(RealmsNotificationsScreen instance, GuiGraphics $$0, int $$1, int $$2, float $$3) {
+        return false;
     }
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/LogoRenderer;renderLogo(Lnet/minecraft/client/gui/GuiGraphics;IF)V"))
-    private boolean cancelVanillaLogoRenderingFancyMenu(LogoRenderer instance, GuiGraphics $$0, int $$1, float $$2) {
-        return !ScreenCustomization.isCustomizationEnabledForScreen((Screen)((Object)this));
+    private boolean cancel_VanillaLogoRendering_FancyMenu(LogoRenderer instance, GuiGraphics $$0, int $$1, float $$2) {
+        return false;
     }
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/SplashRenderer;render(Lnet/minecraft/client/gui/GuiGraphics;ILnet/minecraft/client/gui/Font;I)V"))
-    private boolean cancelVanillaSplashRenderingFancyMenu(SplashRenderer instance, GuiGraphics $$0, int $$1, Font $$2, int $$3) {
-        return !ScreenCustomization.isCustomizationEnabledForScreen((Screen)((Object)this));
-    }
-
-    @Inject(method = "render", at = @At("HEAD"))
-    private void beforeRenderFancyMenu(GuiGraphics $$0, int $$1, int $$2, float $$3, CallbackInfo ci) {
-        this.handleRealmsNotificationFancyMenu = true;
-        //Disable fading if customizations enabled, so FancyMenu can properly handle widget alpha
-        if (ScreenCustomization.isCustomizationEnabledForScreen((Screen)((Object)this))) {
-            this.fading = false;
-        }
-    }
-
-    @Inject(method = "render", at = @At("RETURN"))
-    private void afterRenderFancyMenu(GuiGraphics $$0, int $$1, int $$2, float $$3, CallbackInfo ci) {
-        this.handleRealmsNotificationFancyMenu = false;
-    }
-
-    @Inject(method = "realmsNotificationsEnabled", at = @At("HEAD"), cancellable = true)
-    private void cancelVanillaRealmsNotificationIconRenderingFancyMenu(CallbackInfoReturnable<Boolean> info) {
-        if (this.handleRealmsNotificationFancyMenu && ScreenCustomization.isCustomizationEnabledForScreen((Screen)((Object)this))) {
-            ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen((Screen)((Object)this));
-            if (layer != null) {
-                AbstractElement e = layer.getElementByInstanceIdentifier("deep:" + DeepScreenCustomizationLayers.TITLE_SCREEN.realmsNotification.getIdentifier());
-                if (e instanceof TitleScreenRealmsNotificationDeepElement d) {
-                    if (d.isHidden()) {
-                        info.setReturnValue(false);
-                    }
-                }
-            }
-        }
+    private boolean cancel_VanillaSplashRendering_FancyMenu(SplashRenderer instance, GuiGraphics $$0, int $$1, Font $$2, int $$3) {
+        return false;
     }
 
     /**
      * @reason This is to make the Title screen not constantly update the alpha of its widgets, so FancyMenu can properly handle it.
      */
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractWidget;setAlpha(F)V"))
-    private boolean wrapRenderAlphaFancyMenu(AbstractWidget instance, float alpha) {
-        return !ScreenCustomization.isCustomizationEnabledForScreen((Screen)((Object)this));
+    private boolean cancel_setAlpha_FancyMenu(AbstractWidget instance, float alpha) {
+        return !ScreenCustomization.isCustomizationEnabledForScreen(this);
     }
 
 }
