@@ -6,6 +6,7 @@
   ],
   "client": [
     "client.MixinFabricGameRenderer",
+    "client.MixinFabricMouseHandler",
     "client.MixinFabricTitleScreen"
   ],
   "injectors": {

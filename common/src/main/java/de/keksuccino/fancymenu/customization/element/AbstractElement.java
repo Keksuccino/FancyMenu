@@ -137,6 +137,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	public boolean loadOncePerSession = false;
 	@NotNull
 	public DrawableColor inEditorColor = DrawableColor.of(Color.ORANGE);
+	public boolean layerHiddenInEditor = false;
 	private String instanceIdentifier;
 	@Nullable
 	protected Layout parentLayout;
@@ -819,7 +820,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	@NotNull
 	public static Component buildComponent(@NotNull String serializedComponentOrPlainText) {
 		serializedComponentOrPlainText = PlaceholderParser.replacePlaceholders(serializedComponentOrPlainText);
-		if (!serializedComponentOrPlainText.startsWith("{")) return Component.literal(serializedComponentOrPlainText);
+		if (!serializedComponentOrPlainText.startsWith("{") && !serializedComponentOrPlainText.startsWith("[")) return Component.literal(serializedComponentOrPlainText);
 		try {
 			Component c = Component.Serializer.fromJson(serializedComponentOrPlainText);
 			if (c != null) return c;

@@ -17,6 +17,16 @@ public class DrawableColor {
     protected String hex;
     protected FloatColor floatColor;
 
+    @NotNull
+    public static DrawableColor of(int color) {
+        DrawableColor c = new DrawableColor();
+        c.color = new Color(color);
+        c.colorInt = color;
+        c.hex = convertColorToHexString(c.color);
+        if (c.hex == null) c.hex = "#ffffffff";
+        return c;
+    }
+
     /** Creates a {@link DrawableColor} out of the given {@link Color}. **/
     @NotNull
     public static DrawableColor of(@NotNull Color color) {

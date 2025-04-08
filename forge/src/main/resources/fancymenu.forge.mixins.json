@@ -6,6 +6,11 @@
   ],
   "client": [
     "client.MixinForgeGameRenderer",
+<<<<<<< HEAD
+=======
+    "client.MixinForgeLoadingOverlay",
+    "client.MixinForgeMouseHandler",
+>>>>>>> c435686... v3.5.0
     "client.MixinForgeTitleScreen"
   ],
   "injectors": {

@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -59,8 +60,12 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
 
     }
 
-    @Inject(method = "renderBg", at = @At("HEAD"), cancellable = true)
-    private void beforeRenderHandleFancyMenu(PoseStack pose, Minecraft mc, int $$2, int $$3, CallbackInfo info) {
+    /**
+     * @reason This is to add support for custom textures to the slider.
+     */
+    @WrapWithCondition(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitNineSliced(Lnet/minecraft/resources/ResourceLocation;IIIIIIIIII)V"))
+    private boolean wrapBlitNineSlicedInRenderWidgetFancyMenu(GuiGraphics graphics, ResourceLocation location, int $$1, int $$2, int blitWidth, int blitHeight, int $$5, int $$6, int $$7, int $$8, int $$9, int $$10) {
+
         CustomizableWidget cus = this.getAsCustomizableWidgetFancyMenu();
         boolean renderVanilla;
         int handleX = this.x + (int)(this.value * (double)(this.getWidth() - 8));
@@ -80,24 +85,8 @@ public abstract class MixinAbstractSliderButton extends AbstractWidget implement
     private void render119VanillaHandleFancyMenu(PoseStack pose) {
         GuiGraphics graphics = GuiGraphics.currentGraphics();
         graphics.setColor(1.0F, 1.0F, 1.0F, this.alpha);
-        RenderSystem.enableBlend();
-        RenderSystem.enableDepthTest();
-        graphics.blitNineSliced(WIDGETS_LOCATION, this.getSliderHandleXFancyMenu(), this.y, 8, this.getHeight(), 20, 4, 200, 20, 0, this.getHandleTextureYFancyMenu());
-        RenderingUtils.resetShaderColor(graphics);
-    }
+        return renderVanilla;
 
-    @Unique
-    private int getSliderHandleXFancyMenu() {
-        return this.x + (int)(this.value * (double)(this.getWidth() - 8));
-    }
-
-    @Unique
-    private int getHandleTextureYFancyMenu() {
-        int i = 1;
-        if (this.isHoveredOrFocused()) {
-            i = 2;
-        }
-        return 46 + i * 20;
     }
 
     @Unique

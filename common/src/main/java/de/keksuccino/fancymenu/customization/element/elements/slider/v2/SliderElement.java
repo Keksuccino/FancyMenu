@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBloc
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ExecutableElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
@@ -18,6 +19,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.ListSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
+import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.math.MathUtils;
@@ -49,14 +51,8 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     public ResourceSupplier<ITexture> handleTextureNormal;
     public ResourceSupplier<ITexture> handleTextureHover;
     public ResourceSupplier<ITexture> handleTextureInactive;
-    public String handleAnimationNormal;
-    public String handleAnimationHover;
-    public String handleAnimationInactive;
     public ResourceSupplier<ITexture> sliderBackgroundTextureNormal;
     public ResourceSupplier<ITexture> sliderBackgroundTextureHighlighted;
-    public String sliderBackgroundAnimationNormal;
-    public String sliderBackgroundAnimationHighlighted;
-    public boolean loopBackgroundAnimations = true;
     public boolean restartBackgroundAnimationsOnHover = true;
     public boolean nineSliceCustomBackground = false;
     public int nineSliceBorderX = 5;
@@ -69,6 +65,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     public GenericExecutableBlock executableBlock = new GenericExecutableBlock();
     @NotNull
     public LoadingRequirementContainer activeStateSupplier = new LoadingRequirementContainer();
+    public ResourceSupplier<IAudio> hoverSound;
 
     public SliderElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -156,7 +153,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         this.slider.setNavigatable(this.navigatable);
 
         this.slider.visible = this.shouldRender();
-        this.slider.setAlpha(this.opacity);
+        this.slider.setAlpha(this.getOpacity());
 
         if (!this.shouldRender()) return;
 
@@ -173,10 +170,17 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
 
     public void updateWidget() {
         if (this.slider == null) return;
+        this.updateWidgetHoverSound();
         this.updateWidgetActiveState();
         this.updateWidgetTooltip();
         this.updateWidgetTexture();
         this.slider.updateMessage();
+    }
+
+    public void updateWidgetHoverSound() {
+        if (this.slider instanceof CustomizableWidget w) {
+            w.setHoverSoundFancyMenu((this.getHoverSound() != null) ? this.getHoverSound().get() : null);
+        }
     }
 
     public void updateWidgetActiveState() {
@@ -197,12 +201,12 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         RenderableResource sliderBackHighlighted = null;
 
         //Normal Slider Background
-        if (this.sliderBackgroundTextureNormal != null) {
-            sliderBackNormal = this.sliderBackgroundTextureNormal.get();
+        if (this.getSliderBackgroundTextureNormal() != null) {
+            sliderBackNormal = this.getSliderBackgroundTextureNormal().get();
         }
         //Highlighted Slider Background
-        if (this.sliderBackgroundTextureHighlighted != null) {
-            sliderBackHighlighted = this.sliderBackgroundTextureHighlighted.get();
+        if (this.getSliderBackgroundTextureHighlighted() != null) {
+            sliderBackHighlighted = this.getSliderBackgroundTextureHighlighted().get();
         }
 
         if (this.slider instanceof CustomizableSlider w) {
@@ -215,31 +219,31 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         RenderableResource handleTextureInactive = null;
 
         //Normal
-        if (this.handleTextureNormal != null) {
-            handleTextureNormal = this.handleTextureNormal.get();
+        if (this.getHandleTextureNormal() != null) {
+            handleTextureNormal = this.getHandleTextureNormal().get();
         }
         //Hover
-        if (this.handleTextureHover != null) {
-            handleTextureHover = this.handleTextureHover.get();
+        if (this.getHandleTextureHover() != null) {
+            handleTextureHover = this.getHandleTextureHover().get();
         }
         //Inactive
-        if (this.handleTextureInactive != null) {
-            handleTextureInactive = this.handleTextureInactive.get();
+        if (this.getHandleTextureInactive() != null) {
+            handleTextureInactive = this.getHandleTextureInactive().get();
         }
 
         if (this.slider instanceof CustomizableWidget w) {
             if (this.slider instanceof CustomizableSlider s) {
-                s.setNineSliceCustomSliderBackground_FancyMenu(this.nineSliceCustomBackground);
-                s.setNineSliceSliderBackgroundBorderX_FancyMenu(this.nineSliceBorderX);
-                s.setNineSliceSliderBackgroundBorderY_FancyMenu(this.nineSliceBorderY);
-                s.setNineSliceCustomSliderHandle_FancyMenu(this.nineSliceSliderHandle);
-                s.setNineSliceSliderHandleBorderX_FancyMenu(this.nineSliceSliderHandleBorderX);
-                s.setNineSliceSliderHandleBorderY_FancyMenu(this.nineSliceSliderHandleBorderY);
+                s.setNineSliceCustomSliderBackground_FancyMenu(this.isNineSliceCustomBackground());
+                s.setNineSliceSliderBackgroundBorderX_FancyMenu(this.getNineSliceBorderX());
+                s.setNineSliceSliderBackgroundBorderY_FancyMenu(this.getNineSliceBorderY());
+                s.setNineSliceCustomSliderHandle_FancyMenu(this.isNineSliceSliderHandle());
+                s.setNineSliceSliderHandleBorderX_FancyMenu(this.getNineSliceSliderHandleBorderX());
+                s.setNineSliceSliderHandleBorderY_FancyMenu(this.getNineSliceSliderHandleBorderY());
             }
             w.setCustomBackgroundNormalFancyMenu(handleTextureNormal);
             w.setCustomBackgroundHoverFancyMenu(handleTextureHover);
             w.setCustomBackgroundInactiveFancyMenu(handleTextureInactive);
-            w.setCustomBackgroundResetBehaviorFancyMenu(this.restartBackgroundAnimationsOnHover ? CustomizableWidget.CustomBackgroundResetBehavior.RESET_ON_HOVER : CustomizableWidget.CustomBackgroundResetBehavior.RESET_NEVER);
+            w.setCustomBackgroundResetBehaviorFancyMenu(this.isRestartBackgroundAnimationsOnHover() ? CustomizableWidget.CustomBackgroundResetBehavior.RESET_ON_HOVER : CustomizableWidget.CustomBackgroundResetBehavior.RESET_NEVER);
         }
 
     }
@@ -247,6 +251,142 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     @Override
     public @NotNull GenericExecutableBlock getExecutableBlock() {
         return this.executableBlock;
+    }
+
+    @Override
+    public int getAbsoluteWidth() {
+        if (this.isTemplateActive()) {
+            ButtonElement template = this.getPropertySource();
+            if ((template != null) && template.templateApplyWidth) return template.getAbsoluteWidth();
+        }
+        return super.getAbsoluteWidth();
+    }
+
+    @Override
+    public int getAbsoluteHeight() {
+        if (this.isTemplateActive()) {
+            ButtonElement template = this.getPropertySource();
+            if ((template != null) && template.templateApplyHeight) return template.getAbsoluteHeight();
+        }
+        return super.getAbsoluteHeight();
+    }
+
+    @Override
+    public int getAbsoluteX() {
+        if (this.isTemplateActive()) {
+            ButtonElement template = this.getPropertySource();
+            if ((template != null) && template.templateApplyPosX) return template.getAbsoluteX();
+        }
+        return super.getAbsoluteX();
+    }
+
+    @Override
+    public int getAbsoluteY() {
+        if (this.isTemplateActive()) {
+            ButtonElement template = this.getPropertySource();
+            if ((template != null) && template.templateApplyPosY) return template.getAbsoluteY();
+        }
+        return super.getAbsoluteY();
+    }
+
+    @Override
+    public boolean shouldRender() {
+        if (this.isTemplateActive()) {
+            ButtonElement template = this.getPropertySource();
+            if ((template != null) && template.templateApplyVisibility) return template.shouldRender();
+        }
+        return super.shouldRender();
+    }
+
+    public ResourceSupplier<IAudio> getHoverSound() {
+        return this.getTemplateProperty(template -> template.hoverSound, this.hoverSound);
+    }
+
+    public ResourceSupplier<ITexture> getHandleTextureNormal() {
+        return this.getTemplateProperty(template -> template.backgroundTextureNormal, this.handleTextureNormal);
+    }
+
+    public ResourceSupplier<ITexture> getHandleTextureHover() {
+        return this.getTemplateProperty(template -> template.backgroundTextureHover, this.handleTextureHover);
+    }
+
+    public ResourceSupplier<ITexture> getHandleTextureInactive() {
+        return this.getTemplateProperty(template -> template.backgroundTextureInactive, this.handleTextureInactive);
+    }
+
+    public ResourceSupplier<ITexture> getSliderBackgroundTextureNormal() {
+        return this.getTemplateProperty(template -> template.sliderBackgroundTextureNormal, this.sliderBackgroundTextureNormal);
+    }
+
+    public ResourceSupplier<ITexture> getSliderBackgroundTextureHighlighted() {
+        return this.getTemplateProperty(template -> template.sliderBackgroundTextureHighlighted, this.sliderBackgroundTextureHighlighted);
+    }
+
+    public boolean isRestartBackgroundAnimationsOnHover() {
+        return this.getTemplateProperty(template -> template.restartBackgroundAnimationsOnHover, this.restartBackgroundAnimationsOnHover);
+    }
+
+    public boolean isNineSliceCustomBackground() {
+        return this.getTemplateProperty(template -> template.nineSliceCustomBackground, this.nineSliceCustomBackground);
+    }
+
+    public int getNineSliceBorderX() {
+        return this.getTemplateProperty(template -> template.nineSliceBorderX, this.nineSliceBorderX);
+    }
+
+    public int getNineSliceBorderY() {
+        return this.getTemplateProperty(template -> template.nineSliceBorderY, this.nineSliceBorderY);
+    }
+
+    public boolean isNineSliceSliderHandle() {
+        return this.getTemplateProperty(template -> template.nineSliceSliderHandle, this.nineSliceSliderHandle);
+    }
+
+    public int getNineSliceSliderHandleBorderX() {
+        return this.getTemplateProperty(template -> template.nineSliceSliderHandleBorderX, this.nineSliceSliderHandleBorderX);
+    }
+
+    public int getNineSliceSliderHandleBorderY() {
+        return this.getTemplateProperty(template -> template.nineSliceSliderHandleBorderY, this.nineSliceSliderHandleBorderY);
+    }
+
+    public float getOpacity() {
+        ButtonElement template = this.getPropertySource();
+        if ((template != null) && template.templateApplyOpacity) return template.opacity;
+        return this.opacity;
+    }
+
+    @Nullable
+    public String getLabel() {
+        ButtonElement template = this.getPropertySource();
+        if ((template != null) && template.templateApplyLabel) return template.label;
+        return this.label;
+    }
+
+    protected <T> T getTemplateProperty(@NotNull TemplatePropertyGetter<T> templatePropertyGetter, @Nullable T defaultProperty) {
+        if (this.getPropertySource() != null) {
+            return templatePropertyGetter.get(this.getPropertySource());
+        }
+        return defaultProperty;
+    }
+
+    @Nullable
+    public ButtonElement getPropertySource() {
+        ButtonElement template = ButtonElement.getTopActiveTemplateElement(true);
+        if (template != null) {
+            if (template.templateShareWith == ButtonElement.TemplateSharing.BUTTONS) return null;
+            return template;
+        }
+        return null;
+    }
+
+    public boolean isTemplateActive() {
+        return (this.getPropertySource() != null);
+    }
+
+    @FunctionalInterface
+    protected interface TemplatePropertyGetter<T> {
+        T get(@NotNull ButtonElement template);
     }
 
     public enum SliderType implements LocalizedCycleEnum<SliderType> {
