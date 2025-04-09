@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.overlay;
 import com.mojang.blaze3d.platform.GlUtil;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.layout.Layout;
@@ -17,7 +16,6 @@ import de.keksuccino.fancymenu.util.PerformanceUtils;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
-import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -101,15 +99,6 @@ public class DebugOverlayBuilder {
 
         if (!FancyMenu.getOptions().debugOverlayShowResourcesCategory.getValue()) return;
 
-        int animationCount = AnimationHandler.getAnimations().size();
-        int totalAnimationFrameCount = 0;
-        boolean tooHighAnimationResolution = false;
-        for (IAnimationRenderer ani : AnimationHandler.getAnimations()) {
-            totalAnimationFrameCount += ani.animationFrames();
-            if ((ani.getWidth() > 1920) || (ani.getHeight() > 1080)) tooHighAnimationResolution = true;
-        }
-        boolean tooManyAnimationFrames = totalAnimationFrameCount > 500;
-        final int finalTotalAnimationFrameCount = totalAnimationFrameCount;
         int slideshowCount = SlideshowHandler.getSlideshows().size();
         int totalSlideshowImages = 0;
         for (ExternalTextureSlideshowRenderer slide : SlideshowHandler.getSlideshows()) {
@@ -117,14 +106,7 @@ public class DebugOverlayBuilder {
         }
         final int finalTotalSlideshowImages = totalSlideshowImages;
 
-        overlay.addLine("total_animations", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Components.translatable("fancymenu.overlay.debug.loaded_animations", "" + animationCount, "" + finalTotalAnimationFrameCount));
-        if (tooManyAnimationFrames) {
-            overlay.addLine("too_many_animation_frames", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Components.translatable("fancymenu.overlay.debug.loaded_animations.too_many_frames").setStyle(Style.EMPTY.withColor(ChatFormatting.RED)));
-        }
-        if (tooHighAnimationResolution) {
-            overlay.addLine("too_high_resolution", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Components.translatable("fancymenu.overlay.debug.loaded_animations.resolution_too_high").setStyle(Style.EMPTY.withColor(ChatFormatting.RED)));
-        }
-        overlay.addLine("total_slideshows", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Components.translatable("fancymenu.overlay.debug.loaded_slideshows", "" + slideshowCount, "" + finalTotalSlideshowImages));
+        overlay.addLine("total_slideshows", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.loaded_slideshows", "" + slideshowCount, "" + finalTotalSlideshowImages));
 
         overlay.addSpacerLine("spacer_after_total_slideshows", DebugOverlay.LinePosition.TOP_LEFT, 5);
 

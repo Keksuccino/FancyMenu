@@ -90,16 +90,9 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
         element.handleTextureHover = deserializeImageResourceSupplier(serialized.getValue("handle_texture_hovered"));
         element.handleTextureInactive = deserializeImageResourceSupplier(serialized.getValue("handle_texture_inactive"));
 
-        element.handleAnimationNormal = serialized.getValue("handle_animation_normal");
-        element.handleAnimationHover = serialized.getValue("handle_animation_hovered");
-        element.handleAnimationInactive = serialized.getValue("handle_animation_inactive");
-
         element.sliderBackgroundTextureNormal = deserializeImageResourceSupplier(serialized.getValue("slider_background_texture_normal"));
         element.sliderBackgroundTextureHighlighted = deserializeImageResourceSupplier(serialized.getValue("slider_background_texture_highlighted"));
-        element.sliderBackgroundAnimationNormal = serialized.getValue("slider_background_animation_normal");
-        element.sliderBackgroundAnimationHighlighted = serialized.getValue("slider_background_animation_highlighted");
 
-        element.loopBackgroundAnimations = deserializeBoolean(element.loopBackgroundAnimations, serialized.getValue("loop_background_animations"));
         element.restartBackgroundAnimationsOnHover = deserializeBoolean(element.restartBackgroundAnimationsOnHover, serialized.getValue("restart_background_animations"));
 
         element.nineSliceCustomBackground = deserializeBoolean(element.nineSliceCustomBackground, serialized.getValue("nine_slice_custom_background"));
@@ -118,6 +111,8 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
                 element.activeStateSupplier = c;
             }
         }
+
+        element.hoverSound = deserializeAudioResourceSupplier(serialized.getValue("hoversound"));
 
         element.buildSlider();
         element.prepareExecutableBlock();
@@ -168,12 +163,7 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
             serializeTo.putProperty("handle_texture_inactive", element.handleTextureInactive.getSourceWithPrefix());
         }
 
-        serializeTo.putProperty("handle_animation_normal", element.handleAnimationNormal);
-        serializeTo.putProperty("handle_animation_hovered", element.handleAnimationHover);
-        serializeTo.putProperty("handle_animation_inactive", element.handleAnimationInactive);
-
         serializeTo.putProperty("restart_background_animations", "" + element.restartBackgroundAnimationsOnHover);
-        serializeTo.putProperty("loop_background_animations", "" + element.loopBackgroundAnimations);
 
         if (element.sliderBackgroundTextureNormal != null) {
             serializeTo.putProperty("slider_background_texture_normal", element.sliderBackgroundTextureNormal.getSourceWithPrefix());
@@ -181,9 +171,6 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
         if (element.sliderBackgroundTextureHighlighted != null) {
             serializeTo.putProperty("slider_background_texture_highlighted", element.sliderBackgroundTextureHighlighted.getSourceWithPrefix());
         }
-
-        serializeTo.putProperty("slider_background_animation_normal", element.sliderBackgroundAnimationNormal);
-        serializeTo.putProperty("slider_background_animation_highlighted", element.sliderBackgroundAnimationHighlighted);
 
         serializeTo.putProperty("nine_slice_custom_background", "" + element.nineSliceCustomBackground);
         serializeTo.putProperty("nine_slice_border_x", "" + element.nineSliceBorderX);
@@ -196,6 +183,10 @@ public class SliderElementBuilder extends ElementBuilder<SliderElement, SliderEd
 
         serializeTo.putProperty("widget_active_state_requirement_container_identifier", element.activeStateSupplier.identifier);
         element.activeStateSupplier.serializeToExistingPropertyContainer(serializeTo);
+
+        if (element.hoverSound != null) {
+            serializeTo.putProperty("hoversound", element.hoverSound.getSourceWithPrefix());
+        }
 
         return serializeTo;
 

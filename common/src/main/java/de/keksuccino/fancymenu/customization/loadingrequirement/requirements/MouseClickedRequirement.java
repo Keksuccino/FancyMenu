@@ -1,12 +1,12 @@
 package de.keksuccino.fancymenu.customization.loadingrequirement.requirements;
 
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.resources.language.I18n;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.Arrays;
 import java.util.List;
 
 public class MouseClickedRequirement extends LoadingRequirement {
@@ -41,7 +41,7 @@ public class MouseClickedRequirement extends LoadingRequirement {
 
     @Override
     public List<String> getDescription() {
-        return Arrays.asList(I18n.get("fancymenu.helper.editor.items.visibilityrequirements.mouse_click.desc"));
+        return List.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.helper.editor.items.visibilityrequirements.mouse_click.desc"));
     }
 
     @Nullable

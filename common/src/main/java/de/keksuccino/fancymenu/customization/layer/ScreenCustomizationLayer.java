@@ -9,13 +9,12 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
-import de.keksuccino.fancymenu.events.widget.RenderGuiListHeaderFooterEvent;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractSelectionList;
-import de.keksuccino.fancymenu.customization.deep.AbstractDeepElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutBase;
 import de.keksuccino.fancymenu.customization.widget.ScreenWidgetDiscoverer;
+import de.keksuccino.fancymenu.events.widget.RenderGuiListHeaderFooterEvent;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractSelectionList;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventPriority;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
@@ -62,7 +61,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	public List<AbstractElement> allElements = new ArrayList<>();
 	public Layout.OrderedElementCollection normalElements = new Layout.OrderedElementCollection();
 	public List<VanillaWidgetElement> vanillaWidgetElements = new ArrayList<>();
-	public List<AbstractDeepElement> deepElements = new ArrayList<>();
 	public Map<String, RandomLayoutContainer> randomLayoutGroups = new HashMap<>();
 	public List<Layout> activeLayouts = new ArrayList<>();
 	public List<String> delayAppearanceFirstTime = new ArrayList<>();
@@ -180,7 +178,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		this.layoutBase = new LayoutBase();
 		this.normalElements = new Layout.OrderedElementCollection();
 		this.vanillaWidgetElements.clear();
-		this.deepElements.clear();
 		this.allElements.clear();
 		this.backgroundOpacity = 1.0F;
 		this.backgroundDrawable = false;
@@ -278,10 +275,9 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		this.cachedScreenWidgetMetas = ScreenWidgetDiscoverer.getWidgetsOfScreen(e.getScreen());
 
-		this.constructElementInstances(this.getScreenIdentifier(), this.cachedScreenWidgetMetas, this.activeLayouts, this.normalElements, this.vanillaWidgetElements, this.deepElements);
+		this.constructElementInstances(this.getScreenIdentifier(), this.cachedScreenWidgetMetas, this.activeLayouts, this.normalElements, this.vanillaWidgetElements);
 		this.allElements.addAll(this.normalElements.backgroundElements);
 		this.allElements.addAll(this.normalElements.foregroundElements);
-		this.allElements.addAll(this.deepElements);
 		this.allElements.addAll(this.vanillaWidgetElements);
 
 		for (AbstractElement ae : this.allElements) {
@@ -372,10 +368,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			for (AbstractElement element : new ArrayList<>(this.normalElements.backgroundElements)) {
 				element.renderInternal(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 			}
-		}
-		//Render deep elements
-		for (AbstractElement element : new ArrayList<>(this.deepElements)) {
-			element.renderInternal(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 		}
 		//Render foreground elements
 		for (AbstractElement element : new ArrayList<>(this.normalElements.foregroundElements)) {

@@ -6,97 +6,298 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorLin
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.Nullable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 
 public class HighlightPlaceholdersFormattingRule extends TextEditorFormattingRule {
 
-    protected Style[] colorsByLevelOfNesting = new Style[] {
-            Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_1.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_2.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_3.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_4.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_5.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_6.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_7.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_8.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_9.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_10.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_11.getColorInt()),
-            Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_12.getColorInt())
-    };
+    // JSON syntax highlighting styles
+    private final Style braceStyle = Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_4.getColorInt());
+    private final Style keyStyle = Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_1.getColorInt());
+    private final Style stringStyle = Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_2.getColorInt());
+    private final Style punctuationStyle = Style.EMPTY.withColor(UIBase.getUIColorTheme().text_editor_text_formatting_nested_text_color_5.getColorInt());
 
-    protected Map<TextEditorLine, List<PlaceholderIndexPair>> placeholderIndexes = new HashMap<>();
+    // Store character positions with their styles
+    private Map<TextEditorLine, SortedMap<Integer, Style>> characterStyles = new HashMap<>();
+    // Track lines for position calculations
+    private final List<TextEditorLine> allLines = new ArrayList<>();
+    // Cache the complete text
+    private String fullText;
 
     @Override
     public void resetRule(TextEditorScreen editor) {
-        placeholderIndexes.clear();
+        characterStyles.clear();
+        allLines.clear();
+        allLines.addAll(editor.getLines());
+
+        // Build full text from all lines
+        StringBuilder fullTextBuilder = new StringBuilder();
+        Map<Integer, TextEditorLine> positionToLine = new HashMap<>();
+        Map<TextEditorLine, Integer> lineStartPositions = new HashMap<>();
+
+        int globalPos = 0;
+        for (TextEditorLine line : allLines) {
+            lineStartPositions.put(line, globalPos);
+            String lineContent = line.getValue();
+            for (int i = 0; i < lineContent.length(); i++) {
+                positionToLine.put(globalPos, line);
+                globalPos++;
+            }
+            fullTextBuilder.append(lineContent).append('\n');
+            globalPos++;
+        }
+
+        fullText = fullTextBuilder.toString();
+
+        // Process all JSON objects in the text
+        List<Integer> openBracePositions = findAllOpenBraces(fullText);
+        for (int openBracePos : openBracePositions) {
+            // Try to process as a potential placeholder
+            processJsonObject(fullText, openBracePos, positionToLine, lineStartPositions);
+        }
+    }
+
+    private List<Integer> findAllOpenBraces(String text) {
+        List<Integer> positions = new ArrayList<>();
+        int currentPos = 0;
+
+        while (currentPos < text.length()) {
+            int openBracePos = text.indexOf('{', currentPos);
+            if (openBracePos == -1) break;
+
+            positions.add(openBracePos);
+            currentPos = openBracePos + 1;
+        }
+
+        return positions;
+    }
+
+    private void processJsonObject(String text, int openBracePos, Map<Integer, TextEditorLine> posToLine, Map<TextEditorLine, Integer> lineStarts) {
+        int closeBracePos = findMatchingCloseBrace(text, openBracePos);
+        if (closeBracePos == -1) return;
+
+        // Check if this might be a placeholder
+        String jsonContent = text.substring(openBracePos, closeBracePos + 1);
+        if (!isPlaceholderJson(jsonContent)) return;
+
+        // Apply styles to the entire placeholder
+        tokenizeJson(text, openBracePos, closeBracePos, posToLine, lineStarts);
+    }
+
+    private boolean isPlaceholderJson(String json) {
+        // Simple check for placeholder format
+        return json.contains("\"placeholder\"") && json.contains("\"values\"");
+    }
+
+    private int findMatchingCloseBrace(String text, int openBracePos) {
+        int depth = 1;
+        int pos = openBracePos + 1;
+        boolean inString = false;
+        boolean escaped = false;
+
+        while (pos < text.length() && depth > 0) {
+            char c = text.charAt(pos);
+
+            if (inString) {
+                if (c == '\\' && !escaped) {
+                    escaped = true;
+                } else if (c == '"' && !escaped) {
+                    inString = false;
+                } else {
+                    escaped = false;
+                }
+            } else {
+                if (c == '"') {
+                    inString = true;
+                } else if (c == '{') {
+                    depth++;
+                } else if (c == '}') {
+                    depth--;
+                }
+            }
+
+            if (depth == 0) {
+                return pos;
+            }
+
+            pos++;
+        }
+
+        return -1; // No matching close brace found
+    }
+
+    private void tokenizeJson(String text, int startPos, int endPos, Map<Integer, TextEditorLine> posToLine, Map<TextEditorLine, Integer> lineStarts) {
+        int pos = startPos;
+        boolean inString = false;
+        boolean escaped = false;
+        boolean potentialKey = false;
+        int stringStartPos = -1;
+
+        while (pos <= endPos) {
+            char c = text.charAt(pos);
+
+            if (inString) {
+                if (c == '\\' && !escaped) {
+                    escaped = true;
+                } else if (c == '"' && !escaped) {
+                    // End of string
+                    inString = false;
+
+                    // Determine if this was a key or a value
+                    int endStringPos = pos;
+
+                    // Skip whitespace
+                    int checkPos = endStringPos + 1;
+                    while (checkPos < text.length() && Character.isWhitespace(text.charAt(checkPos))) {
+                        checkPos++;
+                    }
+
+                    // If we find a colon, it was a key
+                    boolean isKey = checkPos < text.length() && text.charAt(checkPos) == ':';
+                    Style style = isKey ? keyStyle : stringStyle;
+
+                    // Apply style to the opening and closing quotes
+                    applyStyleToPosition(stringStartPos, posToLine, lineStarts, style);
+                    applyStyleToPosition(endStringPos, posToLine, lineStarts, style);
+
+                    // Apply style to the content between quotes
+                    for (int i = stringStartPos + 1; i < endStringPos; i++) {
+                        applyStyleToPosition(i, posToLine, lineStarts, style);
+                    }
+
+                    // Check for placeholder nested in a string value
+                    if (!isKey && endStringPos - stringStartPos > 3) {
+                        String stringValue = text.substring(stringStartPos + 1, endStringPos);
+                        if (stringValue.startsWith("{") && stringValue.endsWith("}") && stringValue.contains("\"placeholder\"")) {
+                            // Process nested placeholder with adjusted offsets
+                            int finalStringStartPos = stringStartPos;
+                            int finalStringStartPos1 = stringStartPos;
+                            tokenizeJson(
+                                    stringValue,
+                                    0,
+                                    stringValue.length() - 1,
+                                    (i) -> posToLine.get(finalStringStartPos + 1 + i),
+                                    (line) -> lineStarts.get(line) + finalStringStartPos1 + 1
+                            );
+                        }
+                    }
+                } else {
+                    escaped = false;
+                }
+            } else {
+                if (c == '"') {
+                    inString = true;
+                    stringStartPos = pos;
+                } else if (c == '{' || c == '}') {
+                    applyStyleToPosition(pos, posToLine, lineStarts, braceStyle);
+                } else if (c == ':' || c == ',') {
+                    applyStyleToPosition(pos, posToLine, lineStarts, punctuationStyle);
+                }
+            }
+
+            pos++;
+        }
+    }
+
+    // Function overloads to handle both maps and functional interfaces
+    private void applyStyleToPosition(int pos, Map<Integer, TextEditorLine> posToLine, Map<TextEditorLine, Integer> lineStarts, Style style) {
+        TextEditorLine line = posToLine.get(pos);
+        if (line != null) {
+            int lineStartPos = lineStarts.get(line);
+            int posInLine = pos - lineStartPos;
+
+            if (posInLine >= 0 && posInLine < line.getValue().length()) {
+                characterStyles.computeIfAbsent(line, k -> new TreeMap<>()).put(posInLine, style);
+            }
+        }
+    }
+
+    private void tokenizeJson(String text, int startPos, int endPos, PosToLineMapper posToLine, LineToStartPosMapper lineStarts) {
+        int pos = startPos;
+        boolean inString = false;
+        boolean escaped = false;
+        int stringStartPos = -1;
+
+        while (pos <= endPos) {
+            char c = text.charAt(pos);
+
+            if (inString) {
+                if (c == '\\' && !escaped) {
+                    escaped = true;
+                } else if (c == '"' && !escaped) {
+                    // End of string
+                    inString = false;
+
+                    // Determine if this was a key or a value
+                    int endStringPos = pos;
+
+                    // Skip whitespace
+                    int checkPos = endStringPos + 1;
+                    while (checkPos < text.length() && Character.isWhitespace(text.charAt(checkPos))) {
+                        checkPos++;
+                    }
+
+                    // If we find a colon, it was a key
+                    boolean isKey = checkPos < text.length() && text.charAt(checkPos) == ':';
+                    Style style = isKey ? keyStyle : stringStyle;
+
+                    // Apply style to the opening and closing quotes
+                    applyStyleToPosition(stringStartPos, posToLine, lineStarts, style);
+                    applyStyleToPosition(endStringPos, posToLine, lineStarts, style);
+
+                    // Apply style to the content between quotes
+                    for (int i = stringStartPos + 1; i < endStringPos; i++) {
+                        applyStyleToPosition(i, posToLine, lineStarts, style);
+                    }
+                } else {
+                    escaped = false;
+                }
+            } else {
+                if (c == '"') {
+                    inString = true;
+                    stringStartPos = pos;
+                } else if (c == '{' || c == '}') {
+                    applyStyleToPosition(pos, posToLine, lineStarts, braceStyle);
+                } else if (c == ':' || c == ',') {
+                    applyStyleToPosition(pos, posToLine, lineStarts, punctuationStyle);
+                }
+            }
+
+            pos++;
+        }
+    }
+
+    private void applyStyleToPosition(int pos, PosToLineMapper posToLine, LineToStartPosMapper lineStarts, Style style) {
+        TextEditorLine line = posToLine.apply(pos);
+        if (line != null) {
+            int lineStartPos = lineStarts.apply(line);
+            int posInLine = pos - lineStartPos;
+
+            if (posInLine >= 0 && posInLine < line.getValue().length()) {
+                characterStyles.computeIfAbsent(line, k -> new TreeMap<>()).put(posInLine, style);
+            }
+        }
     }
 
     @Override
-    public @Nullable Style getStyle(char atCharacterInLine, int atCharacterIndexInLine, int cursorPosInLine, TextEditorLine inLine, int atCharacterIndexTotal, TextEditorScreen editor) {
-        String s = String.valueOf(atCharacterInLine);
-        if (s.equals("{") && inLine.getValue().substring(atCharacterIndexInLine).startsWith("{\"placeholder\":\"")) {
-            int endIndex = findPlaceholderEndIndex(inLine.getValue(), atCharacterIndexInLine);
-            if (endIndex > -1) {
-                if (!this.placeholderIndexes.containsKey(inLine)) {
-                    this.placeholderIndexes.put(inLine, new ArrayList<>());
-                }
-                this.placeholderIndexes.get(inLine).add(new PlaceholderIndexPair(atCharacterIndexInLine, endIndex));
-            }
-        }
-        int depth = this.getDepth(atCharacterIndexInLine, inLine);
-        if (depth > -1) {
-            if (depth > this.colorsByLevelOfNesting.length-1) {
-                depth = this.colorsByLevelOfNesting.length-1;
-            }
-            return this.colorsByLevelOfNesting[depth];
+    public @Nullable Style getStyle(char atCharacterInLine, int atCharacterIndexInLine, int cursorPosInLine,
+                                    TextEditorLine inLine, int atCharacterIndexTotal, TextEditorScreen editor) {
+        SortedMap<Integer, Style> lineStyles = characterStyles.get(inLine);
+        if (lineStyles != null && lineStyles.containsKey(atCharacterIndexInLine)) {
+            return lineStyles.get(atCharacterIndexInLine);
         }
         return null;
     }
 
-    private int getDepth(int charIndex, TextEditorLine line) {
-        if (this.placeholderIndexes.containsKey(line)) {
-            int depth = -1;
-            for (PlaceholderIndexPair p : this.placeholderIndexes.get(line)) {
-                if ((charIndex >= p.start) && (charIndex <= p.end)) {
-                    depth++;
-                }
-            }
-            return depth;
-        }
-        return -1;
+    // Functional interface versions for nested placeholders
+    @FunctionalInterface
+    private interface PosToLineMapper {
+        TextEditorLine apply(int pos);
     }
 
-    private static int findPlaceholderEndIndex(String in, int startIndex) {
-        if (in.substring(startIndex).startsWith("{") && ((startIndex == 0) || !in.substring(startIndex-1).startsWith("\\"))) {
-            int currentIndex = startIndex+1;
-            int depth = 0;
-            for (char c : in.substring(startIndex+1).toCharArray()) {
-                if (String.valueOf(c).equals("{") && !in.substring(currentIndex-1).startsWith("\\")) {
-                    depth++;
-                } else if (String.valueOf(c).equals("}") && !in.substring(currentIndex-1).startsWith("\\")) {
-                    if (depth <= 0) {
-                        return currentIndex;
-                    } else {
-                        depth--;
-                    }
-                }
-                currentIndex++;
-            }
-        }
-        return -1;
-    }
-
-    public static class PlaceholderIndexPair {
-        int start;
-        int end;
-        public PlaceholderIndexPair(int start, int end) {
-            this.start = start;
-            this.end = end;
-        }
+    @FunctionalInterface
+    private interface LineToStartPosMapper {
+        int apply(TextEditorLine line);
     }
 
 }
