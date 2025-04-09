@@ -6,13 +6,18 @@ import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Matrix4f;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinMinecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.MatrixUtils;
+import de.keksuccino.fancymenu.util.rendering.gui.ScreenRectangle;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
+import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Vector3f;
+
 import java.awt.*;
 
 public class RenderingUtils {
@@ -33,6 +38,99 @@ public class RenderingUtils {
         graphics.fill(x, y + partH, x + partW, y + height, MISSING_TEXTURE_COLOR_BLACK.getColorInt());
         //Bottom-right
         graphics.fill(x + partW, y + partH, x + width, y + height, MISSING_TEXTURE_COLOR_MAGENTA.getColorInt());
+    }
+
+    /**
+     * Draws a textured quad with the texture mirrored horizontally by explicitly flipping the texture coordinates.
+     * Uses the standard sprite width and height for both texture coordinates and rendering dimensions.
+     *
+     * @param graphics       The GuiGraphics context.
+     * @param atlasLocation  The texture resource location.
+     * @param x              The x coordinate on screen.
+     * @param y              The y coordinate on screen.
+     * @param u              The u coordinate in the texture (top-left of the sprite).
+     * @param v              The v coordinate in the texture (top-left of the sprite).
+     * @param spriteWidth    The width of the sprite quad on screen and in the texture.
+     * @param spriteHeight   The height of the sprite quad on screen and in the texture.
+     * @param textureWidth   The total width of the texture atlas.
+     * @param textureHeight  The total height of the texture atlas.
+     */
+    public static void blitMirrored(@NotNull GuiGraphics graphics, ResourceLocation atlasLocation, int x, int y, int u, int v, int spriteWidth, int spriteHeight, int textureWidth, int textureHeight) {
+        blitMirroredScaled(graphics, atlasLocation, x, y, u, v, spriteWidth, spriteHeight, spriteWidth, spriteHeight, textureWidth, textureHeight, -1);
+    }
+
+    /**
+     * Draws a textured quad with the texture mirrored horizontally by explicitly flipping the texture coordinates.
+     * Uses the standard sprite width and height for both texture coordinates and rendering dimensions.
+     *
+     * @param graphics       The GuiGraphics context.
+     * @param atlasLocation  The texture resource location.
+     * @param x              The x coordinate on screen.
+     * @param y              The y coordinate on screen.
+     * @param u              The u coordinate in the texture (top-left of the sprite).
+     * @param v              The v coordinate in the texture (top-left of the sprite).
+     * @param spriteWidth    The width of the sprite quad on screen and in the texture.
+     * @param spriteHeight   The height of the sprite quad on screen and in the texture.
+     * @param textureWidth   The total width of the texture atlas.
+     * @param textureHeight  The total height of the texture atlas.
+     */
+    public static void blitMirrored(@NotNull GuiGraphics graphics, ResourceLocation atlasLocation, int x, int y, int u, int v, int spriteWidth, int spriteHeight, int textureWidth, int textureHeight, int colorTint) {
+        blitMirroredScaled(graphics, atlasLocation, x, y, u, v, spriteWidth, spriteHeight, spriteWidth, spriteHeight, textureWidth, textureHeight, colorTint);
+    }
+
+    /**
+     * Draws a textured quad scaled to a specific render size, with the texture mirrored horizontally
+     * by explicitly flipping the texture coordinates.
+     *
+     * @param graphics       The GuiGraphics context.
+     * @param atlasLocation  The texture resource location.
+     * @param x              The x coordinate on screen (top-left of the rendered quad).
+     * @param y              The y coordinate on screen (top-left of the rendered quad).
+     * @param u              The u coordinate in the texture (top-left of the source sprite region).
+     * @param v              The v coordinate in the texture (top-left of the source sprite region).
+     * @param spriteWidth    The width of the source sprite region in the texture atlas.
+     * @param spriteHeight   The height of the source sprite region in the texture atlas.
+     * @param renderWidth    The desired width of the quad to render on screen.
+     * @param renderHeight   The desired height of the quad to render on screen.
+     * @param textureWidth   The total width of the texture atlas.
+     * @param textureHeight  The total height of the texture atlas.
+     * @param color          The color tint to apply (ARGB format, -1 for white/no tint).
+     */
+    public static void blitMirroredScaled(
+            @NotNull GuiGraphics graphics,
+            ResourceLocation atlasLocation,
+            int x, int y,          // Screen position
+            int u, int v,          // Texture region origin in atlas
+            int spriteWidth, int spriteHeight, // Original sprite size in atlas for UV calculation
+            int renderWidth, int renderHeight, // Target size on screen
+            int textureWidth, int textureHeight, // Total atlas size
+            int color             // Tint color
+    ) {
+        // Calculate texture coordinates based on the original sprite dimensions
+        float minU = (float)u / (float)textureWidth;
+        float maxU = (float)(u + spriteWidth) / (float)textureWidth; // Use spriteWidth for UVs
+        float minV = (float)v / (float)textureHeight;
+        float maxV = (float)(v + spriteHeight) / (float)textureHeight; // Use spriteHeight for UVs
+
+        RenderSystem.setShaderTexture(0, atlasLocation);
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+        RenderSystem.enableBlend();
+
+        // Access rendering internals
+        Matrix4f matrix4f = graphics.pose().last().pose();
+        BufferBuilder consumer = Tesselator.getInstance().getBuilder();
+        consumer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+
+        // Add vertices with screen dimensions using renderWidth/renderHeight,
+        // but texture coordinates (UVs) swapped horizontally (minU/maxU flipped)
+        consumer.vertex(matrix4f, (float)x,                 (float)y,                  0.0F).uv(maxU, minV).color(color); // Top-left screen -> Top-right texture UV (maxU, minV)
+        consumer.vertex(matrix4f, (float)x,                 (float)(y + renderHeight), 0.0F).uv(maxU, maxV).color(color); // Bottom-left screen -> Bottom-right texture UV (maxU, maxV)
+        consumer.vertex(matrix4f, (float)(x + renderWidth), (float)(y + renderHeight), 0.0F).uv(minU, maxV).color(color); // Bottom-right screen -> Bottom-left texture UV (minU, maxV)
+        consumer.vertex(matrix4f, (float)(x + renderWidth), (float)y,                  0.0F).uv(minU, minV).color(color); // Top-right screen -> Top-left texture UV (minU, minV)
+
+        BufferUploader.drawWithShader(consumer.end());
+        RenderSystem.disableBlend();
+
     }
 
     /**
@@ -67,7 +165,7 @@ public class RenderingUtils {
      * @param borderBottom The size of the bottom border
      * @param borderLeft The size of the left border
      */
-    public static void blitNineSlicedTexture(@NotNull GuiGraphics graphics, @NotNull ResourceLocation texture, int x, int y, int width, int height,
+    public static void blitNineSlicedTexture(GuiGraphics graphics, ResourceLocation texture, int x, int y, int width, int height,
                                              int textureWidth, int textureHeight,
                                              int borderTop, int borderRight, int borderBottom, int borderLeft) {
 
@@ -156,6 +254,21 @@ public class RenderingUtils {
         graphics.setColor(r, g, b, alpha);
     }
 
+    public static void setShaderColor(GuiGraphics graphics, int color, float alpha) {
+        float red = (float) FastColor.ARGB32.red(color) / 255.0F;
+        float green = (float)FastColor.ARGB32.green(color) / 255.0F;
+        float blue = (float)FastColor.ARGB32.blue(color) / 255.0F;
+        graphics.setColor(red, green, blue, alpha);
+    }
+
+    public static void setShaderColor(GuiGraphics graphics, int color) {
+        float red = (float) FastColor.ARGB32.red(color) / 255.0F;
+        float green = (float)FastColor.ARGB32.green(color) / 255.0F;
+        float blue = (float)FastColor.ARGB32.blue(color) / 255.0F;
+        float alpha = (float) FastColor.ARGB32.alpha(color) / 255.0F;
+        graphics.setColor(red, green, blue, alpha);
+    }
+
     /**
      * @param color The color.
      * @param newAlpha Value between 0 and 255.
@@ -207,6 +320,16 @@ public class RenderingUtils {
         RenderSystem.disableBlend();
     }
 
+    public static void blitF(@NotNull GuiGraphics graphics, ResourceLocation location, float x, float y, float f3, float f4, float width, float height, float width2, float height2, int color) {
+        float red = (float)FastColor.ARGB32.red(color) / 255.0F;
+        float green = (float)FastColor.ARGB32.green(color) / 255.0F;
+        float blue = (float)FastColor.ARGB32.blue(color) / 255.0F;
+        float alpha = (float) FastColor.ARGB32.alpha(color) / 255.0F;
+        graphics.setColor(red, green, blue, alpha);
+        blit(graphics, location, x, y, width, height, f3, f4, width, height, width2, height2);
+        graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+    }
+
     public static void blitF(@NotNull GuiGraphics graphics, ResourceLocation location, float x, float y, float f3, float f4, float width, float height, float width2, float height2) {
         blit(graphics, location, x, y, width, height, f3, f4, width, height, width2, height2);
     }
@@ -242,6 +365,32 @@ public class RenderingUtils {
         $$11.vertex($$10, $$2, $$4, $$5).uv($$7, $$9).endVertex();
         $$11.vertex($$10, $$2, $$3, $$5).uv($$7, $$8).endVertex();
         BufferUploader.drawWithShader($$11.end());
+    }
+
+    public static void enableScissor(@NotNull GuiGraphics graphics, int minX, int minY, int maxX, int maxY) {
+        ScreenRectangle r = new ScreenRectangle(minX, minY, maxX - minX, maxY - minY);
+        r = transformAxisAligned(r, graphics.pose().last().pose());
+        graphics.enableScissor(r.left(), r.top(), r.right(), r.bottom());
+    }
+
+    public static void disableScissor(@NotNull GuiGraphics graphics) {
+        graphics.disableScissor();
+    }
+
+    @NotNull
+    public static ScreenRectangle transformAxisAligned(@NotNull ScreenRectangle toTransform, @NotNull Matrix4f pose) {
+        if (isMatrixIdentity(pose)) {
+            return toTransform;
+        } else {
+            org.joml.Matrix4f jomlPose = MatrixUtils.convertToJoml(pose);
+            Vector3f vector3f = jomlPose.transformPosition((float)toTransform.left(), (float)toTransform.top(), 0.0F, new Vector3f());
+            Vector3f vector3f2 = jomlPose.transformPosition((float)toTransform.right(), (float)toTransform.bottom(), 0.0F, new Vector3f());
+            return new ScreenRectangle(Mth.floor(vector3f.x), Mth.floor(vector3f.y), Mth.floor(vector3f2.x - vector3f.x), Mth.floor(vector3f2.y - vector3f.y));
+        }
+    }
+
+    public static boolean isMatrixIdentity(Matrix4f matrix) {
+        return MatrixUtils.isMatrixIdentityMojang(matrix);
     }
 
 }

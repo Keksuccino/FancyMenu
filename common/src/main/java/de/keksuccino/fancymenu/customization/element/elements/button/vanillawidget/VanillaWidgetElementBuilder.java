@@ -45,19 +45,6 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
                 serializeTo.putProperty("is_hidden", "" + element.vanillaButtonHidden);
                 serializeTo.putProperty("automated_button_clicks", "" + element.automatedButtonClicks);
 
-                if (element.sliderBackgroundTextureNormal != null) {
-                    serializeTo.putProperty("slider_background_texture_normal", element.sliderBackgroundTextureNormal.getSourceWithPrefix());
-                }
-                if (element.sliderBackgroundTextureHighlighted != null) {
-                    serializeTo.putProperty("slider_background_texture_highlighted", element.sliderBackgroundTextureHighlighted.getSourceWithPrefix());
-                }
-                serializeTo.putProperty("slider_background_animation_normal", element.sliderBackgroundAnimationNormal);
-                serializeTo.putProperty("slider_background_animation_highlighted", element.sliderBackgroundAnimationHighlighted);
-
-                serializeTo.putProperty("nine_slice_slider_handle", "" + element.nineSliceSliderHandle);
-                serializeTo.putProperty("nine_slice_slider_handle_border_x", "" + element.nineSliceSliderHandleBorderX);
-                serializeTo.putProperty("nine_slice_slider_handle_border_y", "" + element.nineSliceSliderHandleBorderY);
-
                 return serializeTo;
 
             }
@@ -84,15 +71,6 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
         if ((automatedClicks != null) && MathUtils.isInteger(automatedClicks)) {
             element.automatedButtonClicks = Integer.parseInt(automatedClicks);
         }
-
-        element.sliderBackgroundTextureNormal = deserializeImageResourceSupplier(serialized.getValue("slider_background_texture_normal"));
-        element.sliderBackgroundTextureHighlighted = deserializeImageResourceSupplier(serialized.getValue("slider_background_texture_highlighted"));
-        element.sliderBackgroundAnimationNormal = serialized.getValue("slider_background_animation_normal");
-        element.sliderBackgroundAnimationHighlighted = serialized.getValue("slider_background_animation_highlighted");
-
-        element.nineSliceSliderHandle = deserializeBoolean(element.nineSliceSliderHandle, serialized.getValue("nine_slice_slider_handle"));
-        element.nineSliceSliderHandleBorderX = deserializeNumber(Integer.class, element.nineSliceSliderHandleBorderX, serialized.getValue("nine_slice_slider_handle_border_x"));
-        element.nineSliceSliderHandleBorderY = deserializeNumber(Integer.class, element.nineSliceSliderHandleBorderY, serialized.getValue("nine_slice_slider_handle_border_y"));
 
         return element;
 
@@ -150,18 +128,6 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
         if (e.backgroundTextureInactive != null) {
             stack.backgroundTextureInactive = e.backgroundTextureInactive;
         }
-        if (e.backgroundAnimationNormal != null) {
-            stack.backgroundAnimationNormal = e.backgroundAnimationNormal;
-        }
-        if (e.backgroundAnimationHover != null) {
-            stack.backgroundAnimationHover = e.backgroundAnimationHover;
-        }
-        if (e.backgroundAnimationInactive != null) {
-            stack.backgroundAnimationInactive = e.backgroundAnimationInactive;
-        }
-        if (!e.loopBackgroundAnimations) {
-            stack.loopBackgroundAnimations = false;
-        }
         if (!e.restartBackgroundAnimationsOnHover) {
             stack.restartBackgroundAnimationsOnHover = false;
         }
@@ -188,12 +154,6 @@ public class VanillaWidgetElementBuilder extends ButtonElementBuilder implements
         }
         if (e.sliderBackgroundTextureHighlighted != null) {
             stack.sliderBackgroundTextureHighlighted = e.sliderBackgroundTextureHighlighted;
-        }
-        if (e.sliderBackgroundAnimationNormal != null) {
-            stack.sliderBackgroundAnimationNormal = e.sliderBackgroundAnimationNormal;
-        }
-        if (e.sliderBackgroundAnimationHighlighted != null) {
-            stack.sliderBackgroundAnimationHighlighted = e.sliderBackgroundAnimationHighlighted;
         }
 
     }

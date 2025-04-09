@@ -36,6 +36,8 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements H
     @Override
     public void init() {
 
+        this.showTemplateOptions = false;
+
         super.init();
 
         this.rightClickMenu.removeEntry("manage_actions");
@@ -77,7 +79,6 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements H
                             consumes -> consumes.getElement().sliderBackgroundTextureNormal,
                             (buttonEditorElement, iTextureResourceSupplier) -> {
                                 buttonEditorElement.getElement().sliderBackgroundTextureNormal = iTextureResourceSupplier;
-                                buttonEditorElement.getElement().sliderBackgroundAnimationNormal = null;
                             }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.slider.normal"), true, null, true, true, true);
 
                     this.addImageResourceChooserContextMenuEntryTo(setBackMenu, "highlighted_slider_background_texture",
@@ -86,7 +87,6 @@ public class VanillaWidgetEditorElement extends ButtonEditorElement implements H
                                     consumes -> consumes.getElement().sliderBackgroundTextureHighlighted,
                                     (buttonEditorElement, iTextureResourceSupplier) -> {
                                         buttonEditorElement.getElement().sliderBackgroundTextureHighlighted = iTextureResourceSupplier;
-                                        buttonEditorElement.getElement().sliderBackgroundAnimationHighlighted = null;
                                     }, Component.translatable("fancymenu.helper.editor.items.buttons.buttonbackground.slider.highlighted"), true, null, true, true, true)
                             .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.buttons.buttonbackground.slider.highlighted.desc")));
 

@@ -20,6 +20,7 @@
     "client.IMixinOptions",
     "client.IMixinPlayerModel",
     "client.IMixinProgressScreen",
+    "client.IMixinRealmsNotificationsScreen",
     "client.IMixinReceivingLevelScreen",
     "client.IMixinScreen",
     "client.IMixinServerList",
@@ -54,6 +55,7 @@
     "client.MixinWorldListEntry"
   ],
   "mixins": [
+    "client.IMixinMatrix4f"
   ],
   "injectors": {
     "defaultRequire": 1

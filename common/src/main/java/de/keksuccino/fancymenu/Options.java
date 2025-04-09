@@ -34,6 +34,8 @@ public class Options extends AbstractOptions {
 
     public final Option<Boolean> showLayoutEditorGrid = new Option<>(config, "show_layout_editor_grid", true, "layout_editor");
     public final Option<Integer> layoutEditorGridSize = new Option<>(config, "layout_editor_grid_size", 10, "layout_editor");
+    public final Option<Boolean> layoutEditorGridSnapping = new Option<>(config, "layout_editor_grid_snapping", true, "layout_editor");
+    public final Option<Float> layoutEditorGridSnappingStrength = new Option<>(config, "layout_editor_grid_snapping_strength", 1.0f, "layout_editor");
 
     public final Option<Boolean> showAllAnchorOverlayConnections = new Option<>(config, "anchor_overlay_show_all_connection_lines", false, "layout_editor");
     public final Option<Boolean> anchorOverlayChangeAnchorOnAreaHover = new Option<>(config, "anchor_overlay_change_anchor_on_area_hover", true, "layout_editor");

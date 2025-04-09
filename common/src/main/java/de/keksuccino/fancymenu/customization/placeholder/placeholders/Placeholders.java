@@ -17,6 +17,7 @@ import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.ram.
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.player.PlayerNamePlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.player.PlayerUuidPlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.world.*;
+import de.keksuccino.fancymenu.customization.world.LastWorldHandler;
 
 public class Placeholders {
 
@@ -140,6 +141,7 @@ public class Placeholders {
     public static final CurrentPlayerOxygenPlaceholder CURRENT_PLAYER_OXYGEN = new CurrentPlayerOxygenPlaceholder();
     public static final MaxPlayerOxygenPlaceholder MAX_PLAYER_OXYGEN = new MaxPlayerOxygenPlaceholder();
     public static final CurrentPlayerOxygenPercentagePlaceholder CURRENT_PLAYER_OXYGEN_PERCENTAGE = new CurrentPlayerOxygenPercentagePlaceholder();
+    public static final LastWorldOrServerPlaceholder LAST_WORLD_OR_SERVER = new LastWorldOrServerPlaceholder();
 
     public static void registerAll() {
 
@@ -152,6 +154,7 @@ public class Placeholders {
         PlaceholderRegistry.register(TOTAL_MODS);
         PlaceholderRegistry.register(WORLD_LOAD_PROGRESS);
         PlaceholderRegistry.register(MINECRAFT_OPTION_VALUE);
+        PlaceholderRegistry.register(LAST_WORLD_OR_SERVER);
 
         //GUI
         PlaceholderRegistry.register(SCREEN_WIDTH);
