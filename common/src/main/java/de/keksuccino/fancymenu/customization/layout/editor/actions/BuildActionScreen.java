@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionRegistry;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.gui.ModernScreen;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
@@ -16,13 +17,14 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.Text
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import net.minecraft.client.resources.language.I18n;
-import net.minecraft.client.gui.screens.Screen;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 public class BuildActionScreen extends ModernScreen {
@@ -34,9 +36,7 @@ public class BuildActionScreen extends ModernScreen {
 
     protected ScrollArea actionsListScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ScrollArea actionDescriptionScrollArea = new ScrollArea(0, 0, 0, 0);
-    protected ExtendedButton editValueButton;
-    protected ExtendedButton doneButton;
-    protected ExtendedButton cancelButton;
+    protected ExtendedEditBox searchBar;
 
     public BuildActionScreen(@Nullable ActionInstance instanceToEdit, @NotNull Consumer<ActionInstance> callback) {
 
@@ -48,70 +48,86 @@ public class BuildActionScreen extends ModernScreen {
         }
         this.instance = (instanceToEdit != null) ? instanceToEdit : new ActionInstance(Action.EMPTY, null);
         this.callback = callback;
-        this.setContentOfActionsList();
-
-        //Select correct entry
-        if (this.instance.action != Action.EMPTY) {
-            for (ScrollAreaEntry e : this.actionsListScrollArea.getEntries()) {
-                if ((e instanceof ActionScrollEntry) && (((ActionScrollEntry)e).action == this.instance.action)) {
-                    e.setSelected(true);
-                    break;
-                }
-            }
-        }
 
     }
 
     @Override
     protected void init() {
 
-        this.editValueButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.editor.action.screens.build_screen.edit_value"), (button) -> {
+        String oldSearchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
+        this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, 20 + 1, 50 + 15 + 1, (this.width / 2) - 40 - 2, 20 - 2, Components.empty()) {
+            @Override
+            public void renderButton(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {
+                super.renderButton(graphics, mouseX, mouseY, partial);
+                if (this.getValue().isBlank() && !this.isFocused()) {
+                    GuiGraphics.currentGraphics().drawString(this.font, Components.translatable("fancymenu.actions.build_action.screen.search_action"), this.getX() + 4, this.getY() + (this.getHeight() / 2) - (this.font.lineHeight / 2), UIBase.getUIColorTheme().edit_box_text_color_uneditable.getColorInt(), false);
+                }
+            }
+        };
+        this.searchBar.setValue(oldSearchValue);
+        this.searchBar.setResponder(s -> this.updateActionsList());
+        this.addRenderableWidget(this.searchBar);
+        UIBase.applyDefaultWidgetSkinTo(this.searchBar);
+
+        // Set positions for scroll areas
+        this.actionsListScrollArea.setWidth((this.width / 2) - 40, true);
+        this.actionsListScrollArea.setHeight(this.height - 85 - 25, true);
+        this.actionsListScrollArea.setX(20, true);
+        this.actionsListScrollArea.setY(50 + 15 + 25, true);
+
+        this.actionDescriptionScrollArea.setWidth((this.width / 2) - 40, true);
+        this.actionDescriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
+        this.actionDescriptionScrollArea.setX(this.width - 20 - this.actionDescriptionScrollArea.getWidthWithBorder(), true);
+        this.actionDescriptionScrollArea.setY(50 + 15, true);
+
+        // Calculate button positions
+        int editValueButtonX = this.width - 20 - 150; // 150 is the button width
+        int editValueButtonY = this.height - 20 - 20 - 5 - 20 - 15 - 20;
+        int cancelButtonX = this.width - 20 - 150;
+        int cancelButtonY = this.height - 20 - 20 - 5 - 20;
+        int doneButtonX = this.width - 20 - 150;
+        int doneButtonY = this.height - 20 - 20;
+
+        // Create buttons with proper positions in constructors
+        ExtendedButton editValueButton = new ExtendedButton(editValueButtonX, editValueButtonY, 150, 20, Components.translatable("fancymenu.editor.action.screens.build_screen.edit_value"), (button) -> {
             if (this.instance.action == Action.EMPTY) return;
             this.originalAction = null;
             this.originalActionValue = null;
             this.instance.action.editValue(this, this.instance);
-        }) {
-            @Override
-            public void render(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {
-                Action b = BuildActionScreen.this.instance.action;
-                if ((b != Action.EMPTY) && !b.hasValue()) {
-                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.build_screen.edit_value.desc.no_value")));
-                } else {
-                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.build_screen.edit_value.desc.normal")));
-                }
-                this.active = (b != Action.EMPTY) && b.hasValue();
-                super.render(graphics, mouseX, mouseY, partial);
-            }
-        };
-        this.addWidget(this.editValueButton);
-        UIBase.applyDefaultWidgetSkinTo(this.editValueButton);
+        }).setIsActiveSupplier(consumes -> (this.instance.action != Action.EMPTY) && this.instance.action.hasValue())
+                .setTooltipSupplier(consumes -> {
+                    if ((this.instance.action != Action.EMPTY) && !this.instance.action.hasValue()) {
+                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.action.screens.build_screen.edit_value.desc.no_value"));
+                    }
+                    return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.action.screens.build_screen.edit_value.desc.normal"));
+                });
+        this.addRenderableWidget(editValueButton);
+        UIBase.applyDefaultWidgetSkinTo(editValueButton);
 
-        this.doneButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.guicomponents.done"), (button) -> {
+        ExtendedButton doneButton = new ExtendedButton(doneButtonX, doneButtonY, 150, 20, Components.translatable("fancymenu.guicomponents.done"), (button) -> {
             this.callback.accept((this.instance.action != Action.EMPTY) ? this.instance : null);
-        }) {
-            @Override
-            public void renderButton(@NotNull PoseStack graphics, int mouseX, int mouseY, float partial) {
-                if (BuildActionScreen.this.instance.action == Action.EMPTY) {
-                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.finish.no_action_selected")));
-                    this.active = false;
-                } else if ((BuildActionScreen.this.instance.value == null) && BuildActionScreen.this.instance.action.hasValue()) {
-                    this.setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.editor.action.screens.build_screen.finish.no_value_set")));
-                    this.active = false;
-                } else {
-                    this.setTooltip((Tooltip)null);
-                    this.active = true;
-                }
-                super.renderButton(graphics, mouseX, mouseY, partial);
-            }
-        };
-        this.addWidget(this.doneButton);
-        UIBase.applyDefaultWidgetSkinTo(this.doneButton);
+        }).setIsActiveSupplier(consumes -> {
+                    if (this.instance.action == Action.EMPTY) return false;
+                    return (this.instance.value != null) || !this.instance.action.hasValue();
+                })
+                .setTooltipSupplier(consumes -> {
+                    if (this.instance.action == Action.EMPTY) {
+                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.action.screens.finish.no_action_selected"));
+                    } else if ((this.instance.value == null) && this.instance.action.hasValue()) {
+                        return Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.action.screens.build_screen.finish.no_value_set"));
+                    }
+                    return null;
+                });
+        this.addRenderableWidget(doneButton);
+        UIBase.applyDefaultWidgetSkinTo(doneButton);
 
-        this.cancelButton = new ExtendedButton(0, 0, 150, 20, Components.translatable("fancymenu.guicomponents.cancel"), (button) -> {
+        ExtendedButton cancelButton = new ExtendedButton(cancelButtonX, cancelButtonY, 150, 20, Components.translatable("fancymenu.guicomponents.cancel"), (button) -> {
             this.callback.accept(null);
         });
-        this.addWidget(this.cancelButton);
-        UIBase.applyDefaultWidgetSkinTo(this.cancelButton);
+        this.addRenderableWidget(cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(cancelButton);
+
+        this.updateActionsList();
 
         this.setDescription(this.instance.action);
 
@@ -130,35 +146,14 @@ public class BuildActionScreen extends ModernScreen {
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        graphics.drawString(this.font, I18n.get("fancymenu.editor.action.screens.build_screen.available_actions"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        graphics.drawString(this.font, Components.translatable("fancymenu.editor.action.screens.build_screen.available_actions"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        this.actionsListScrollArea.setWidth((this.width / 2) - 40, true);
-        this.actionsListScrollArea.setHeight(this.height - 85, true);
-        this.actionsListScrollArea.setX(20, true);
-        this.actionsListScrollArea.setY(50 + 15, true);
+        Component descLabel = Components.translatable("fancymenu.editor.action.screens.build_screen.action_description");
+        int descLabelWidth = this.font.width(descLabel);
+        graphics.drawString(this.font, descLabel, this.width - 20 - descLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+
         this.actionsListScrollArea.render(graphics, mouseX, mouseY, partial);
-
-        String descLabelString = I18n.get("fancymenu.editor.action.screens.build_screen.action_description");
-        int descLabelWidth = this.font.width(descLabelString);
-        graphics.drawString(this.font, descLabelString, this.width - 20 - descLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
-
-        this.actionDescriptionScrollArea.setWidth((this.width / 2) - 40, true);
-        this.actionDescriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
-        this.actionDescriptionScrollArea.setX(this.width - 20 - this.actionDescriptionScrollArea.getWidthWithBorder(), true);
-        this.actionDescriptionScrollArea.setY(50 + 15, true);
         this.actionDescriptionScrollArea.render(graphics, mouseX, mouseY, partial);
-
-        this.doneButton.x = (this.width - 20 - this.doneButton.getWidth());
-        this.doneButton.y = (this.height - 20 - 20);
-        this.doneButton.render(graphics.pose(), mouseX, mouseY, partial);
-
-        this.cancelButton.x = (this.width - 20 - this.cancelButton.getWidth());
-        this.cancelButton.y = (this.doneButton.y - 5 - 20);
-        this.cancelButton.render(graphics.pose(), mouseX, mouseY, partial);
-
-        this.editValueButton.x = (this.width - 20 - this.editValueButton.getWidth());
-        this.editValueButton.y = (this.cancelButton.y - 15 - 20);
-        this.editValueButton.render(graphics.pose(), mouseX, mouseY, partial);
 
         super.render(graphics, mouseX, mouseY, partial);
 
@@ -177,21 +172,58 @@ public class BuildActionScreen extends ModernScreen {
         }
     }
 
+    protected boolean actionFitsSearchValue(@NotNull Action action, @Nullable String s) {
+        if ((s == null) || s.isBlank()) return true;
+        s = s.toLowerCase();
+        if (action.getActionDisplayName().getString().toLowerCase().contains(s)) return true;
+        return this.actionDescriptionContains(action, s);
+    }
+
+    protected boolean actionDescriptionContains(@NotNull Action action, @NotNull String s) {
+        Component[] desc = Objects.requireNonNullElse(action.getActionDescription(), new Component[0]);
+        for (Component c : desc) {
+            if (c.getString().toLowerCase().contains(s)) return true;
+        }
+        return false;
+    }
+
     protected void setContentOfActionsList() {
+
+        String searchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
+        if (searchValue.isBlank()) searchValue = null;
+
         this.actionsListScrollArea.clearEntries();
-        for (Action c : ActionRegistry.getActions()) {
-            if ((LayoutEditorScreen.getCurrentInstance() != null) && !c.shouldShowUpInEditorActionMenu(LayoutEditorScreen.getCurrentInstance())) continue;
-            ActionScrollEntry e = new ActionScrollEntry(this.actionsListScrollArea, c, (entry) -> {
-                this.instance.action = c;
-                if (this.originalAction == c) {
+        for (Action action : ActionRegistry.getActions()) {
+            if ((LayoutEditorScreen.getCurrentInstance() != null) && !action.shouldShowUpInEditorActionMenu(LayoutEditorScreen.getCurrentInstance())) continue;
+            if (!this.actionFitsSearchValue(action, searchValue)) continue;
+            ActionScrollEntry e = new ActionScrollEntry(this.actionsListScrollArea, action, (entry) -> {
+                this.instance.action = action;
+                if (this.originalAction == action) {
                     this.instance.value = this.originalActionValue;
                 } else {
                     this.instance.value = null;
                 }
-                this.setDescription(c);
+                this.setDescription(action);
             });
             this.actionsListScrollArea.addEntry(e);
         }
+
+    }
+
+    protected void updateActionsList() {
+
+        this.setContentOfActionsList();
+
+        //Select correct entry
+        if (this.instance.action != Action.EMPTY) {
+            for (ScrollAreaEntry e : this.actionsListScrollArea.getEntries()) {
+                if ((e instanceof ActionScrollEntry) && (((ActionScrollEntry)e).action == this.instance.action)) {
+                    e.setSelected(true);
+                    break;
+                }
+            }
+        }
+
     }
 
     public static class ActionScrollEntry extends TextListScrollAreaEntry {

@@ -253,6 +253,8 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                 element.inEditorColor = DrawableColor.of(inEditorColor);
             }
 
+            element.layerHiddenInEditor = deserializeBoolean(element.layerHiddenInEditor, serialized.getValue("layer_hidden_in_editor"));
+
             element.afterConstruction();
 
             return element;
@@ -380,6 +382,8 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             sec.putProperty("load_once_per_session", "" + element.loadOncePerSession);
 
             sec.putProperty("in_editor_color", element.inEditorColor.getHex());
+
+            sec.putProperty("layer_hidden_in_editor", "" + element.layerHiddenInEditor);
 
             return sec;
 

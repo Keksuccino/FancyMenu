@@ -9,6 +9,7 @@ import com.google.common.collect.Lists;
 import de.keksuccino.fancymenu.customization.variables.Variable;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import net.minecraft.client.resources.language.I18n;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -119,6 +120,10 @@ public class PlaceholderParser {
     protected static String replacePlaceholders(@Nullable String in, @Nullable HashMap<String, String> parsed, boolean replaceFormattingCodes) {
 
         if (in == null) return EMPTY_STRING;
+
+        // Can be done for multi-line strings too, because the method only replaces codes instead of actual spaces or newlines
+        in = TextEditorScreen.compileSingleLineString(in);
+
         if (in.length() <= 2) return in;
 
         Boolean containsPlaceholders = CONTAINS_PLACEHOLDERS.get(in);

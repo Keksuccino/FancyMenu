@@ -26,6 +26,7 @@ public class LayoutEditorHistory {
 	
 	public void saveSnapshot(Snapshot snap) {
 		if (!this.preventSnapshotSaving) {
+			this.editor.unsavedChanges = true;
 			if (this.current < 0) {
 				this.history.clear();
 				this.history.add(snap);

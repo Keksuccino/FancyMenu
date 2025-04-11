@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu;
 
 import java.io.File;
 import de.keksuccino.fancymenu.util.ObjectUtils;
+import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.auth.ModValidator;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.platform.Services;
@@ -23,7 +24,7 @@ public class FancyMenu {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	public static final String VERSION = "3.4.6";
+	public static final String VERSION = "3.5.0";
 	public static final String MOD_LOADER = Services.PLATFORM.getPlatformName();
 	public static final String MOD_ID = "fancymenu";
 
@@ -45,6 +46,8 @@ public class FancyMenu {
 		} else {
 			LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in server-side mode on " + MOD_LOADER.toUpperCase() + "!");
 		}
+
+		WebUtils.init();
 
 		if (Services.PLATFORM.isOnClient()) {
 

@@ -14,9 +14,6 @@ import de.keksuccino.fancymenu.customization.screen.identifier.UniversalScreenId
 import de.keksuccino.fancymenu.customization.widget.identification.identificationcontext.contexts.WidgetIdentificationContexts;
 import de.keksuccino.fancymenu.customization.action.actions.Actions;
 import de.keksuccino.fancymenu.customization.background.backgrounds.MenuBackgrounds;
-import de.keksuccino.fancymenu.customization.action.ButtonScriptHandler;
-import de.keksuccino.fancymenu.customization.widget.VanillaButtonHandler;
-import de.keksuccino.fancymenu.customization.deep.layers.DeepScreenCustomizationLayers;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.element.elements.Elements;
@@ -38,6 +35,7 @@ import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
@@ -84,10 +82,6 @@ public class ScreenCustomization {
 
 		ScreenCustomizationLayerHandler.init();
 
-		VanillaButtonHandler.init();
-
-		DeepScreenCustomizationLayers.registerAll();
-
 		Actions.registerAll();
 
 		LoadingRequirements.registerAll();
@@ -115,8 +109,6 @@ public class ScreenCustomization {
 		LayoutHandler.init();
 
 		readCustomizableScreensFromFile();
-
-		ButtonScriptHandler.init();
 
 		LastWorldHandler.init();
 
@@ -281,6 +273,7 @@ public class ScreenCustomization {
 		LayoutHandler.reloadLayouts();
 		AnimationControllerHandler.stopAllAnimations();
 		AnimationControllerHandler.clearMemory();
+		TextEditorScreen.clearCompiledSingleLineCache();
 		EventHandler.INSTANCE.postEvent(new ModReloadEvent(Minecraft.getInstance().screen));
 		reInitCurrentScreen();
 	}

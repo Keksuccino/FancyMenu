@@ -2,18 +2,30 @@ package de.keksuccino.fancymenu.util.file;
 
 import de.keksuccino.fancymenu.platform.Services;
 import net.minecraft.client.Minecraft;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
 
 public class GameDirectoryUtils {
 
+    private static final Logger LOGGER = LogManager.getLogger();
+
     public static File getGameDirectory() {
-        if (Services.PLATFORM.isOnClient()) {
-            return Minecraft.getInstance().gameDirectory;
-        } else {
-            return new File("");
+        try {
+            if (Services.PLATFORM.isOnClient()) {
+                return Minecraft.getInstance().gameDirectory;
+            } else {
+                Path path = Paths.get("server.properties");
+                return path.toAbsolutePath().getParent().toFile();
+            }
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to get game directory!", ex);
         }
+        return new File("");
     }
 
     public static boolean isExistingGameDirectoryPath(@NotNull String path) {

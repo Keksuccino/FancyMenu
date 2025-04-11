@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBloc
 import de.keksuccino.fancymenu.customization.background.ChooseMenuBackgroundScreen;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
-import de.keksuccino.fancymenu.customization.deep.AbstractDeepEditorElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
@@ -19,10 +18,10 @@ import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.M
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlayUI;
-import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
+import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.TextValidators;
@@ -40,8 +39,7 @@ import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.screens.TitleScreen;
-import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -78,7 +76,7 @@ public class LayoutEditorUI {
 		menuBar.addContextMenuEntry("layout_tab", Components.translatable("fancymenu.editor.layout"), layoutMenu);
 
 		layoutMenu.addClickableEntry("new_layout", Components.translatable("fancymenu.editor.layout.new"), (menu, entry) -> {
-			displayUnsavedWarning(call -> {
+			displayUnsavedWarning(editor, call -> {
 				if (call) {
 					editor.saveWidgetSettings();
 					if (editor.layout.isUniversalLayout()) {
@@ -123,7 +121,7 @@ public class LayoutEditorUI {
 		layoutMenu.addSeparatorEntry("separator_after_layout_settings");
 
 		layoutMenu.addClickableEntry("close_editor", Components.translatable("fancymenu.editor.close"), (menu, entry) -> {
-			displayUnsavedWarning(call -> {
+			displayUnsavedWarning(editor, call -> {
 				if (call) {
 					editor.closeEditor();
 				} else {
@@ -199,15 +197,45 @@ public class LayoutEditorUI {
 				.setShortcutTextSupplier((menu, entry) -> Components.translatable("fancymenu.editor.shortcuts.grid"))
 				.setIcon(ContextMenu.IconFactory.getIcon("grid"));
 
+		List<Integer> gridSizes = List.of(10,20,30,40,50,60,70,80,90,100);
 		int preSelectedGridSize = FancyMenu.getOptions().layoutEditorGridSize.getValue();
-		if ((preSelectedGridSize != 10) && (preSelectedGridSize != 20) && (preSelectedGridSize != 30) && (preSelectedGridSize != 40)) {
+		if (!gridSizes.contains(preSelectedGridSize)) {
 			preSelectedGridSize = 10;
+			FancyMenu.getOptions().layoutEditorGridSize.setValue(preSelectedGridSize);
 		}
-		windowMenu.addValueCycleEntry("grid_size", CommonCycles.cycle("fancymenu.editor.menu_bar.window.grid_size", ListUtils.of(10,20,30,40), preSelectedGridSize)
+		windowMenu.addValueCycleEntry("grid_size", CommonCycles.cycle("fancymenu.editor.menu_bar.window.grid_size", gridSizes, preSelectedGridSize)
 						.addCycleListener(integer -> {
 							FancyMenu.getOptions().layoutEditorGridSize.setValue(integer);
 						}))
 				.setIcon(ContextMenu.IconFactory.getIcon("measure"));
+
+		windowMenu.addValueCycleEntry("grid_snapping", CommonCycles.cycleEnabledDisabled("fancymenu.layout_editor.grid.snapping", FancyMenu.getOptions().layoutEditorGridSnapping.getValue())
+						.addCycleListener(cycleEnabledDisabled -> {
+							FancyMenu.getOptions().layoutEditorGridSnapping.setValue(cycleEnabledDisabled.getAsBoolean());
+						}))
+				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.layout_editor.grid.snapping.desc")));
+
+		List<Float> gridSnappingStrengths = List.of(0.5f,0.75f,1.0f,1.5f,2.0f,3.0f,5.0f);
+		float preSelectedGridSnappingStrength = FancyMenu.getOptions().layoutEditorGridSnappingStrength.getValue();
+		if (!gridSnappingStrengths.contains(preSelectedGridSnappingStrength)) {
+			preSelectedGridSnappingStrength = 1.0f;
+			FancyMenu.getOptions().layoutEditorGridSnappingStrength.setValue(preSelectedGridSnappingStrength);
+		}
+		windowMenu.addValueCycleEntry("grid_snapping_strength", CommonCycles.cycle("fancymenu.layout_editor.grid.snapping.strength", gridSnappingStrengths, preSelectedGridSnappingStrength)
+						.setValueNameSupplier(strength -> {
+							if (strength == 0.5f) return I18n.get("fancymenu.layout_editor.grid.snapping.strength.pixel_perfect");
+							if (strength == 0.75f) return I18n.get("fancymenu.layout_editor.grid.snapping.strength.high_precision");
+							if (strength == 1.5f) return I18n.get("fancymenu.layout_editor.grid.snapping.strength.moderate");
+							if (strength == 2.0f) return I18n.get("fancymenu.layout_editor.grid.snapping.strength.magnetic");
+							if (strength == 3.0f) return I18n.get("fancymenu.layout_editor.grid.snapping.strength.strong_magnetic");
+							if (strength == 5.0f) return I18n.get("fancymenu.layout_editor.grid.snapping.strength.maximum");
+							return I18n.get("fancymenu.layout_editor.grid.snapping.strength.standard"); // 1.0f
+						})
+						.setValueComponentStyleSupplier(consumes -> LocalizedCycleEnum.WARNING_TEXT_STYLE.get())
+						.addCycleListener(strength -> {
+							FancyMenu.getOptions().layoutEditorGridSnappingStrength.setValue(strength);
+						}))
+				.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.layout_editor.grid.snapping.strength.desc")));
 
 		windowMenu.addSeparatorEntry("separator_after_grid_size");
 
@@ -292,21 +320,30 @@ public class LayoutEditorUI {
 
 		//CLOSE EDITOR BUTTON
 		menuBar.addClickableEntry(MenuBar.Side.RIGHT, "close_editor", Components.empty(), (bar, entry) -> {
-			displayUnsavedWarning(call -> {
-				if (call) {
-					editor.closeEditor();
-				} else {
-					Minecraft.getInstance().setScreen(editor);
-				}
-			});
-		}).setIconTexture(CLOSE_EDITOR_TEXTURE)
+					displayUnsavedWarning(editor, call -> {
+						if (call) {
+							editor.closeEditor();
+						} else {
+							Minecraft.getInstance().setScreen(editor);
+						}
+					});
+				}).setIconTexture(CLOSE_EDITOR_TEXTURE)
 				.setIconTextureColor(() -> UIBase.getUIColorTheme().layout_editor_close_icon_color);
+
+		menuBar.addClickableEntry(MenuBar.Side.RIGHT, "unsaved_indicator", Components.empty(), (bar, entry) -> {
+				}).setLabelSupplier((bar, entry) ->
+						editor.unsavedChanges ? Components.translatable("fancymenu.editor.menu_bar.unsaved_warning").withStyle(Style.EMPTY.withBold(true).withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())) : Components.empty())
+				.setActive(false);
 
 		return menuBar;
 
 	}
 
-	protected static void displayUnsavedWarning(@NotNull Consumer<Boolean> callback) {
+	protected static void displayUnsavedWarning(@NotNull LayoutEditorScreen editor, @NotNull Consumer<Boolean> callback) {
+		if (!editor.unsavedChanges) {
+			callback.accept(true);
+			return;
+		}
 		Minecraft.getInstance().setScreen(ConfirmationScreen.warning(callback, LocalizationUtils.splitLocalizedLines("fancymenu.editor.warning.unsaved")));
 	}
 
@@ -787,25 +824,11 @@ public class LayoutEditorUI {
 						hiddenVanillaButtons.add(e);
 					}
 				}
-				List<AbstractDeepEditorElement> hiddenDeepElements = new ArrayList<>();
-				for (AbstractDeepEditorElement e : editor.deepEditorElements) {
-					if (e.isHidden()) {
-						hiddenDeepElements.add(e);
-					}
-				}
 
 				int i = 0;
 				for (VanillaWidgetEditorElement e : hiddenVanillaButtons) {
 					AbstractWidget w = ((VanillaWidgetElement)e.element).getWidget();
 					this.addClickableEntry("element_" + i, (w != null) ? w.getMessage() : Components.empty(), (menu1, entry) -> {
-						editor.history.saveSnapshot();
-						e.setHidden(false);
-						MainThreadTaskExecutor.executeInMainThread(() -> menu1.removeEntry(entry.getIdentifier()), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
-					}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.hidden_vanilla_elements.element.desc")));
-					i++;
-				}
-				for (AbstractDeepEditorElement e : hiddenDeepElements) {
-					this.addClickableEntry("element_" + i, e.element.builder.getDisplayName(e.element), (menu1, entry) -> {
 						editor.history.saveSnapshot();
 						e.setHidden(false);
 						MainThreadTaskExecutor.executeInMainThread(() -> menu1.removeEntry(entry.getIdentifier()), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
@@ -846,9 +869,10 @@ public class LayoutEditorUI {
 			if (allLayoutsCount > 8) {
 				String moreLayoutCount = "" + (allLayoutsCount-8);
 				menu.addClickableEntry("x_more_layouts", Components.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.more_layouts", moreLayoutCount), (menu1, entry) -> {
-					displayUnsavedWarning(call -> {
+					displayUnsavedWarning(editor, call -> {
 						if (call) {
 							editor.saveWidgetSettings();
+							editor.tamagotchiBuddyWidget.cleanup();
 							Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), editor.layoutTargetScreen, layouts -> {
 								Minecraft.getInstance().setScreen(editor);
 							}));
@@ -862,7 +886,7 @@ public class LayoutEditorUI {
 			menu.addSeparatorEntry("separator_after_recent_layouts");
 
 			menu.addClickableEntry("all_layouts", Components.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.all"), (menu1, entry) -> {
-				displayUnsavedWarning(call -> {
+				displayUnsavedWarning(editor, call -> {
 					if (call) {
 						editor.saveWidgetSettings();
 						Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), editor.layoutTargetScreen, layouts -> {
@@ -895,7 +919,7 @@ public class LayoutEditorUI {
 			if (allLayoutsCount > 8) {
 				String moreLayoutCount = "" + (allLayoutsCount-8);
 				menu.addClickableEntry("x_more_layouts", Components.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.more_layouts", moreLayoutCount), (menu1, entry) -> {
-					displayUnsavedWarning(call -> {
+					displayUnsavedWarning(editor, call -> {
 						if (call) {
 							editor.saveWidgetSettings();
 							Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(editor.layout.screenIdentifier, false), editor.layoutTargetScreen, layouts -> {
@@ -911,7 +935,7 @@ public class LayoutEditorUI {
 			menu.addSeparatorEntry("separator_after_recent_layouts");
 
 			menu.addClickableEntry("all_layouts", Components.translatable("fancymenu.overlay.menu_bar.customization.layout.manage.all"), (menu1, entry) -> {
-				displayUnsavedWarning(call -> {
+				displayUnsavedWarning(editor, call -> {
 					if (call) {
 						editor.saveWidgetSettings();
 						Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(editor.layout.screenIdentifier, false), editor.layoutTargetScreen, layouts -> {
@@ -942,7 +966,7 @@ public class LayoutEditorUI {
 		}).setLabelSupplier((menu1, entry) -> layout.getStatus().getCycleComponent());
 
 		menu.addClickableEntry("edit_layout", Components.translatable("fancymenu.layout.manage.edit"), (menu1, entry) -> {
-			displayUnsavedWarning(call -> {
+			displayUnsavedWarning(editor, call -> {
 				if (call) {
 					editor.saveWidgetSettings();
 					MainThreadTaskExecutor.executeInMainThread(() -> LayoutHandler.openLayoutEditor(layout, layout.isUniversalLayout() ? null : editor.layoutTargetScreen), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);

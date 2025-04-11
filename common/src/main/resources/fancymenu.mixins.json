@@ -19,6 +19,7 @@
     "client.IMixinOptions",
     "client.IMixinPlayerModel",
     "client.IMixinProgressScreen",
+    "client.IMixinRealmsNotificationsScreen",
     "client.IMixinReceivingLevelScreen",
     "client.IMixinScreen",
     "client.IMixinServerList",

@@ -1,18 +1,14 @@
 package de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.HideableElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
-import de.keksuccino.fancymenu.util.resource.RenderableResource;
-import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
-import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,13 +23,6 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
     public WidgetMeta widgetMeta;
     public boolean vanillaButtonHidden = false;
     public int automatedButtonClicks = 0;
-    public ResourceSupplier<ITexture> sliderBackgroundTextureNormal;
-    public ResourceSupplier<ITexture> sliderBackgroundTextureHighlighted;
-    public String sliderBackgroundAnimationNormal;
-    public String sliderBackgroundAnimationHighlighted;
-    public boolean nineSliceSliderHandle = false;
-    public int nineSliceSliderHandleBorderX = 5;
-    public int nineSliceSliderHandleBorderY = 5;
     protected boolean automatedButtonClicksDone = false;
 
     public VanillaWidgetElement(ElementBuilder<ButtonElement, ButtonEditorElement> builder) {
@@ -57,7 +46,7 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
 
     @SuppressWarnings("all")
     @Override
-    protected void renderElementWidget(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
+    protected void renderElementWidget(@NotNull GuiGraphics pose, int mouseX, int mouseY, float partial) {
         if (isEditor()) {
             //Only render button in editor
             super.renderElementWidget(pose, mouseX, mouseY, partial);
@@ -76,31 +65,6 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
     @Override
     public void updateWidgetNavigatable() {
         //do nothing
-    }
-
-    @Override
-    public void updateWidgetTexture() {
-
-        super.updateWidgetTexture();
-
-        RenderableResource sliderBackNormal = null;
-
-        //Normal
-        if (this.sliderBackgroundTextureNormal != null) {
-            sliderBackNormal = this.sliderBackgroundTextureNormal.get();
-        }
-//        //Highlighted
-//        if (this.sliderBackgroundTextureHighlighted != null) {
-//            sliderBackHighlighted = this.sliderBackgroundTextureHighlighted.get();
-//        }
-
-        if (this.getWidget() instanceof CustomizableSlider w) {
-            w.setNineSliceCustomSliderHandle_FancyMenu(this.nineSliceSliderHandle);
-            w.setNineSliceSliderHandleBorderX_FancyMenu(this.nineSliceSliderHandleBorderX);
-            w.setNineSliceSliderHandleBorderY_FancyMenu(this.nineSliceSliderHandleBorderY);
-            w.setCustomSliderBackgroundNormalFancyMenu(sliderBackNormal);
-        }
-
     }
 
     @Override
@@ -143,8 +107,8 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
     @Override
     public void updateWidgetLabels() {
         if (this.getWidget() == null) return;
-        ((CustomizableWidget)this.getWidget()).setCustomLabelFancyMenu((this.label != null) ? buildComponent(this.label) : null);
-        ((CustomizableWidget)this.getWidget()).setHoverLabelFancyMenu((this.hoverLabel != null) ? buildComponent(this.hoverLabel) : null);
+        ((CustomizableWidget)this.getWidget()).setCustomLabelFancyMenu((this.getLabel() != null) ? buildComponent(this.getLabel()) : null);
+        ((CustomizableWidget)this.getWidget()).setHoverLabelFancyMenu((this.getHoverLabel() != null) ? buildComponent(this.getHoverLabel()) : null);
     }
 
     @Override

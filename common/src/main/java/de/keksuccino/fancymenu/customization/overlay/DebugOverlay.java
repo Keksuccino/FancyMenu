@@ -151,8 +151,7 @@ public class DebugOverlay implements Renderable, NarratableEntry, ContainerEvent
 
         if (!ScreenCustomization.isCustomizationEnabledForScreen(current)) return;
 
-        List<AbstractElement> widgets = new ArrayList<>(layer.deepElements);
-        widgets.addAll(layer.vanillaWidgetElements);
+        List<AbstractElement> widgets = new ArrayList<>(layer.vanillaWidgetElements);
         for (AbstractElement e : widgets) {
             if ((e instanceof HideableElement h) && h.isHidden()) continue;
             this.currentScreenElements.add(e);

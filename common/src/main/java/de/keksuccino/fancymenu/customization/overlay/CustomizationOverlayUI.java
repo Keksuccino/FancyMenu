@@ -348,7 +348,6 @@ public class CustomizationOverlayUI {
                 () -> new ResourceChooserScreen<>(Components.empty(), introFileTypeGroup, null, s -> {}),
                 ResourceSupplier::image, emptyImageSupplier,
                 () -> {
-                    if (GameIntroHandler.introIsAnimation()) return emptyImageSupplier;
                     if (FancyMenu.getOptions().gameIntroAnimation.getValue().trim().isEmpty()) return emptyImageSupplier;
                     return ResourceSupplier.image(FancyMenu.getOptions().gameIntroAnimation.getValue());
                 },

@@ -6,8 +6,6 @@ import com.google.common.io.Files;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.customization.animation.AdvancedAnimation;
-import de.keksuccino.fancymenu.customization.animation.AnimationHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.file.FilenameComparator;
@@ -16,7 +14,6 @@ import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
-import de.keksuccino.konkrete.rendering.animation.IAnimationRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -250,14 +247,6 @@ public class LayoutHandler {
 
 	public static void openLayoutEditor(@NotNull Layout layout, @Nullable Screen layoutTargetScreen) {
 		try {
-			for (IAnimationRenderer r : AnimationHandler.getAnimations()) {
-				if (r instanceof AdvancedAnimation) {
-					((AdvancedAnimation)r).stopAudio();
-					if (((AdvancedAnimation)r).replayIntro()) {
-						r.resetAnimation();
-					}
-				}
-			}
 			GenericDirtMessageScreen msgScreen = new GenericDirtMessageScreen(Components.literal("Opening editor.."));
 			msgScreen.init(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
 			Minecraft.getInstance().screen = msgScreen;
