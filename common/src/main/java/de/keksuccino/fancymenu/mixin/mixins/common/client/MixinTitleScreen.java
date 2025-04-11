@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -77,12 +78,12 @@ public abstract class MixinTitleScreen extends Screen {
 
         BrandingRenderer branding = new BrandingRenderer(this.height);
         this.addRenderableWidget(new RendererWidget(branding.getDefaultPositionX(), branding.getDefaultPositionY(), branding.getTotalWidth(), branding.getTotalHeight(),
-                        (graphics, mouseX, mouseY, partial, x, y, width, height, renderer) -> {
+                        (pose, mouseX, mouseY, partial, x, y, width, height, renderer) -> {
                             branding.setOpacity(renderer.getAlpha());
                             branding.render(GuiGraphics.currentGraphics(), x, y);
                         }))
                 .setWidgetIdentifierFancyMenu("minecraft_branding_widget")
-                .setMessage(Component.translatable("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.branding"));
+                .setMessage(Components.translatable("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.branding"));
 
     }
 

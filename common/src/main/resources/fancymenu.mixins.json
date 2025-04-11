@@ -55,7 +55,6 @@
     "client.MixinWorldListEntry"
   ],
   "mixins": [
-    "client.IMixinMatrix4f"
   ],
   "injectors": {
     "defaultRequire": 1

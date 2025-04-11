@@ -19,11 +19,12 @@ public class BrandingRenderer {
     private final Font font;
     private float opacity = 1.0F; // Default opacity
     private final int screenHeight;
-    private final List<Component> lines = Services.COMPAT.getTitleScreenBrandingLines();
+    private final List<Component> lines;
 
     public BrandingRenderer(int screenHeight) {
         this.font = Minecraft.getInstance().font;
         this.screenHeight = screenHeight;
+        this.lines = Services.COMPAT.getTitleScreenBrandingLines();
     }
 
     /**
@@ -51,7 +52,9 @@ public class BrandingRenderer {
      */
     public int getDefaultPositionY() {
         int totalHeight = getTotalHeight();
-        return this.screenHeight - 2 - totalHeight;
+        int i = this.screenHeight - 2 - totalHeight;
+        i += 1; // I don't know why either. It just looks better.
+        return i;
     }
 
     /**

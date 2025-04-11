@@ -1,6 +1,17 @@
 package de.keksuccino.fancymenu.util.rendering.gui;
 
+import com.mojang.math.Matrix4f;
+import org.jetbrains.annotations.NotNull;
+
 public class GuiMatrix4f extends com.mojang.math.Matrix4f {
+
+    public GuiMatrix4f(@NotNull Matrix4f matrix4f) {
+        super(matrix4f);
+    }
+
+    public GuiMatrix4f() {
+        super();
+    }
 
     /**
      * Set this matrix to be a simple scale matrix.
@@ -24,6 +35,70 @@ public class GuiMatrix4f extends com.mojang.math.Matrix4f {
         this.m11 = y;
         this.m22 = z;
         return this;
+    }
+
+    public float getM00() {
+        return m00;
+    }
+
+    public float getM01() {
+        return m01;
+    }
+
+    public float getM02() {
+        return m02;
+    }
+
+    public float getM03() {
+        return m03;
+    }
+
+    public float getM10() {
+        return m10;
+    }
+
+    public float getM11() {
+        return m11;
+    }
+
+    public float getM12() {
+        return m12;
+    }
+
+    public float getM13() {
+        return m13;
+    }
+
+    public float getM20() {
+        return m20;
+    }
+
+    public float getM21() {
+        return m21;
+    }
+
+    public float getM22() {
+        return m22;
+    }
+
+    public float getM23() {
+        return m23;
+    }
+
+    public float getM30() {
+        return m30;
+    }
+
+    public float getM31() {
+        return m31;
+    }
+
+    public float getM32() {
+        return m32;
+    }
+
+    public float getM33() {
+        return m33;
     }
 
 }
