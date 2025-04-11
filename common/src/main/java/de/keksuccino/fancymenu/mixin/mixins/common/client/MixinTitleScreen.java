@@ -10,7 +10,6 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -22,7 +21,6 @@ import net.minecraft.client.renderer.PanoramaRenderer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -36,7 +34,6 @@ public abstract class MixinTitleScreen extends Screen {
 
     @Shadow @Final private static Component COPYRIGHT_TEXT;
     @Shadow public boolean fading;
-    @Shadow private @Nullable RealmsNotificationsScreen realmsNotificationsScreen;
 
     @Unique private GuiGraphics cached_graphics_FancyMenu = null;
 
@@ -75,20 +72,8 @@ public abstract class MixinTitleScreen extends Screen {
                 .setWidgetIdentifierFancyMenu("minecraft_splash_widget")
                 .setMessage(Component.translatable("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.splash"));
 
-        if (this.realmsNotificationsScreen != null) {
-            RealmsNotificationRenderer notifications = new RealmsNotificationRenderer(this.realmsNotificationsScreen, this.width, this.height);
-            int totalWidth = notifications.getTotalWidth();
-            if (totalWidth == 0) totalWidth = 50;
-            this.addRenderableWidget(new RendererWidget(notifications.getDefaultPositionX(), notifications.getDefaultPositionY(), totalWidth, notifications.getTotalHeight(),
-                            (graphics, mouseX, mouseY, partial, x, y, width, height, renderer) -> {
-                                notifications.renderIcons(graphics, x, y, DrawableColor.WHITE.getColorIntWithAlpha(renderer.getAlpha()));
-                            }))
-                    .setWidgetIdentifierFancyMenu("minecraft_realms_notification_icons_widget")
-                    .setMessage(Component.translatable("fancymenu.helper.editor.element.vanilla.deepcustomization.titlescreen.realmsnotification"));
-        }
-
         BrandingRenderer branding = new BrandingRenderer(this.height);
-        this.addRenderableWidget(new RendererWidget(branding.getDefaultPositionX(), branding.getDefaultPositionY(), branding.getTotalWidth(), branding.getTotalHeight(),
+        this.addRenderableWidget(new RendererWidget(branding.getDefaultPositionX(), branding.getDefaultPositionY() + 1, branding.getTotalWidth(), branding.getTotalHeight(),
                         (graphics, mouseX, mouseY, partial, x, y, width, height, renderer) -> {
                             branding.setOpacity(renderer.getAlpha());
                             branding.render(graphics, x, y);
