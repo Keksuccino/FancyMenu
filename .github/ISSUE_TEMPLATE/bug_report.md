@@ -28,9 +28,9 @@ DON'T SEND LOG SNIPPETS OR CRASH LOGS, PLEASE SEND THE WHOLE LATEST.LOG FILE!
 **Screenshots**
 If screenshots would help to explain the issue, please include these.
 
-**Basic Informations (please complete the following information):**
+**Basic Information (please complete the following information):**
  - OS: [e.g. Windows]
- - FancyMenu Version [e.g. 0.2]
- - Forge/Fabric Version [e.g. 31.2.24]
+ - FancyMenu Version [e.g. 3.5.0]
+ - Fabric/Forge/NeoForge Version [e.g. 31.2.24]
  - Minecraft Version [e.g. 1.15.1]
  - Active Mods [e.g. Optifine, 5zig, TooManyItems]
