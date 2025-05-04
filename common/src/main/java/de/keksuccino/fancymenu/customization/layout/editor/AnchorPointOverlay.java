@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
@@ -158,16 +158,16 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
 
         this.tickAreaMouseOver(mouseX, mouseY);
 
-        RenderSystem.enableBlend();
         //Invert color of overlay based on what's rendered behind it
         if (this.invertOverlayColors()) {
-            RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.ONE_MINUS_DST_COLOR, GlStateManager.DestFactor.ONE_MINUS_SRC_COLOR, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+            GlStateManager._enableBlend();
+            RenderingUtils.blendFuncSeparate(RenderingUtils.SourceFactor.ONE_MINUS_DST_COLOR, RenderingUtils.DestFactor.ONE_MINUS_SRC_COLOR, RenderingUtils.SourceFactor.ONE, RenderingUtils.DestFactor.ZERO);
         }
 
         this.renderAreas(graphics, mouseX, mouseY, partial);
         this.renderConnectionLines(graphics);
 
-        RenderSystem.defaultBlendFunc();
+        RenderingUtils.defaultBlendFunc();
 
     }
 
@@ -263,7 +263,6 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
             horizontalX += lineThickness;
         }
 
-        RenderSystem.enableBlend();
         //Horizontal Line
         graphics.fill(RenderType.guiOverlay(), horizontalX, horizontalY, horizontalX + horizontalWidth, horizontalY + lineThickness, color);
         //Vertical Line

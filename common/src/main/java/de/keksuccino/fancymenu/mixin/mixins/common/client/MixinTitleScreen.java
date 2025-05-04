@@ -110,7 +110,6 @@ public abstract class MixinTitleScreen extends Screen {
         ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen(this);
         if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this)) {
             if (!l.layoutBase.menuBackgrounds.isEmpty()) {
-                RenderSystem.enableBlend();
                 //Render a black background before the custom background gets rendered
                 graphics.fill(RenderType.guiOverlay(), 0, 0, this.width, this.height, 0);
             } else {

@@ -49,7 +49,6 @@ public abstract class MixinScreen implements CustomizableScreen {
 		ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen((Screen)((Object)this));
 		if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this.getScreen_FancyMenu())) {
 			if (!l.layoutBase.menuBackgrounds.isEmpty()) {
-				RenderSystem.enableBlend();
 				//Render a black background before the custom background gets rendered
 				graphics.fill(RenderType.guiOverlay(), 0, 0, this.getScreen_FancyMenu().width, this.getScreen_FancyMenu().height, 0);
 			} else {

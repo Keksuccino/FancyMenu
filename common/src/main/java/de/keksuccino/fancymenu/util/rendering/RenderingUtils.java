@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering;
 
+import com.mojang.blaze3d.DontObfuscate;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
@@ -366,6 +368,62 @@ public class RenderingUtils {
         consumer.addVertex(matrix4f, (float)$$2, (float)$$5, 0.0F).setUv($$6, $$9).setColor(color);
         consumer.addVertex(matrix4f, (float)$$3, (float)$$5, 0.0F).setUv($$7, $$9).setColor(color);
         consumer.addVertex(matrix4f, (float)$$3, (float)$$4, 0.0F).setUv($$7, $$8).setColor(color);
+    }
+
+    public static void blendFuncSeparate(SourceFactor sourceFactor, DestFactor destFactor, SourceFactor sourceFactor2, DestFactor destFactor2) {
+        RenderSystem.assertOnRenderThread();
+        GlStateManager._blendFuncSeparate(sourceFactor.value, destFactor.value, sourceFactor2.value, destFactor2.value);
+    }
+
+    public static void defaultBlendFunc() {
+        blendFuncSeparate(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA, SourceFactor.ONE, DestFactor.ZERO);
+    }
+
+    public static enum SourceFactor {
+        CONSTANT_ALPHA(32771),
+        CONSTANT_COLOR(32769),
+        DST_ALPHA(772),
+        DST_COLOR(774),
+        ONE(1),
+        ONE_MINUS_CONSTANT_ALPHA(32772),
+        ONE_MINUS_CONSTANT_COLOR(32770),
+        ONE_MINUS_DST_ALPHA(773),
+        ONE_MINUS_DST_COLOR(775),
+        ONE_MINUS_SRC_ALPHA(771),
+        ONE_MINUS_SRC_COLOR(769),
+        SRC_ALPHA(770),
+        SRC_ALPHA_SATURATE(776),
+        SRC_COLOR(768),
+        ZERO(0);
+
+        public final int value;
+
+        private SourceFactor(final int value) {
+            this.value = value;
+        }
+    }
+
+    public static enum DestFactor {
+        CONSTANT_ALPHA(32771),
+        CONSTANT_COLOR(32769),
+        DST_ALPHA(772),
+        DST_COLOR(774),
+        ONE(1),
+        ONE_MINUS_CONSTANT_ALPHA(32772),
+        ONE_MINUS_CONSTANT_COLOR(32770),
+        ONE_MINUS_DST_ALPHA(773),
+        ONE_MINUS_DST_COLOR(775),
+        ONE_MINUS_SRC_ALPHA(771),
+        ONE_MINUS_SRC_COLOR(769),
+        SRC_ALPHA(770),
+        SRC_COLOR(768),
+        ZERO(0);
+
+        public final int value;
+
+        private DestFactor(final int value) {
+            this.value = value;
+        }
     }
 
 }

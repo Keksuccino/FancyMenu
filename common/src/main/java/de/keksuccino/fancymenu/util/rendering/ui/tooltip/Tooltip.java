@@ -4,7 +4,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
@@ -13,9 +12,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
-import net.minecraft.client.renderer.CompiledShaderProgram;
-import net.minecraft.client.renderer.CoreShaders;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -89,8 +85,6 @@ public class Tooltip implements Renderable {
             int x = this.calculateX(s, mouseX);
             int y = this.calculateY(s, mouseY);
 
-            RenderSystem.enableBlend();
-
             graphics.pose().pushPose();
 
             float scale = 1.0F;
@@ -99,12 +93,10 @@ public class Tooltip implements Renderable {
                 graphics.pose().scale(scale, scale, scale);
             }
             graphics.pose().translate(0.0F, 0.0F, 600.0F / scale);
-            RenderSystem.enableDepthTest();
 
             this.renderBackground(graphics, x, y);
             this.renderTextLines(graphics, x, y);
 
-            RenderSystem.disableDepthTest();
             graphics.pose().popPose();
 
         }
@@ -158,19 +150,9 @@ public class Tooltip implements Renderable {
 
         graphics.pose().pushPose();
 
-        CompiledShaderProgram shaderInstance = RenderSystem.getShader();
-
         //Set Z to 0, because Z level gets handled in parent method instead
         int z = 0;
         TooltipRenderUtil.renderTooltipBackground(graphics, x, y, width, height, z, null);
-
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        if (shaderInstance != null) {
-            RenderSystem.setShader(shaderInstance);
-        }
-
-        RenderSystem.setShader(CoreShaders.POSITION_TEX_COLOR);
 
         graphics.pose().popPose();
 
