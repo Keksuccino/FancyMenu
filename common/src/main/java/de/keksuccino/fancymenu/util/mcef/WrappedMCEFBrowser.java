@@ -2,7 +2,7 @@ package de.keksuccino.fancymenu.util.mcef;
 
 import com.cinemamod.mcef.MCEF;
 import com.cinemamod.mcef.MCEFBrowser;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -11,6 +11,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
@@ -19,9 +20,9 @@ import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.handler.CefLoadHandlerAdapter;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Matrix4f;
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.Objects;
 import java.util.UUID;
 
 @SuppressWarnings("unused")
@@ -91,37 +92,37 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Fan
 
             if (this.autoHandle) BrowserHandler.notifyHandler(this.genericIdentifier.toString(), this);
 
-            RenderSystem.disableDepthTest();
-            RenderSystem.setShader(CoreShaders.POSITION_TEX_COLOR);
-            RenderSystem.setShaderTexture(0, this.browser.getRenderer().getTextureID());
-            Tesselator t = Tesselator.getInstance();
-            BufferBuilder buffer = t.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-
-            int alpha = (int)(this.opacity * 255.0F);
-
-            // Bottom left vertex
-            buffer.addVertex(this.getX(), this.getY() + this.getHeight(), 0.0F)
+            // We need to manually bind the texture since we have a raw OpenGL texture ID
+            GlStateManager._bindTexture(this.browser.getRenderer().getTextureID());
+            
+            // Use manual vertex rendering with the bound texture
+            graphics.drawSpecial(bufferSource -> {
+                Matrix4f matrix = graphics.pose().last().pose();
+                VertexConsumer vertexConsumer = bufferSource.getBuffer(RenderType.gui());
+                
+                int alpha = (int)(this.opacity * 255.0F);
+                
+                // Bottom left vertex
+                vertexConsumer.addVertex(matrix, this.getX(), this.getY() + this.getHeight(), 0.0F)
                     .setUv(0.0F, 1.0F)
                     .setColor(255, 255, 255, alpha);
-
-            // Bottom right vertex
-            buffer.addVertex(this.getX() + this.getWidth(), this.getY() + this.getHeight(), 0.0F)
+                
+                // Bottom right vertex
+                vertexConsumer.addVertex(matrix, this.getX() + this.getWidth(), this.getY() + this.getHeight(), 0.0F)
                     .setUv(1.0F, 1.0F)
                     .setColor(255, 255, 255, alpha);
-
-            // Top right vertex
-            buffer.addVertex(this.getX() + this.getWidth(), this.getY(), 0.0F)
+                
+                // Top right vertex
+                vertexConsumer.addVertex(matrix, this.getX() + this.getWidth(), this.getY(), 0.0F)
                     .setUv(1.0F, 0.0F)
                     .setColor(255, 255, 255, alpha);
-
-            // Top left vertex
-            buffer.addVertex(this.getX(), this.getY(), 0.0F)
+                
+                // Top left vertex
+                vertexConsumer.addVertex(matrix, this.getX(), this.getY(), 0.0F)
                     .setUv(0.0F, 0.0F)
                     .setColor(255, 255, 255, alpha);
+            });
 
-            BufferUploader.drawWithShader(Objects.requireNonNull(buffer.build()));
-            RenderSystem.setShaderTexture(0, 0);
-            RenderSystem.enableDepthTest();
             graphics.flush();
 
         } catch (Exception ex) {

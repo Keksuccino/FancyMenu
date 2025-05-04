@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.overlay;
 
-import com.mojang.blaze3d.platform.GlUtil;
+import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.blaze3d.platform.GLX;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
@@ -153,8 +154,8 @@ public class DebugOverlayBuilder {
             if (usage >= 80) usageString = ChatFormatting.RED + "" + usage + "%" + ChatFormatting.RESET;
             return Component.translatable("fancymenu.overlay.debug.cpu_usage.os", usageString);
         });
-        overlay.addLine("cpu_info", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.cpu", GlUtil.getCpuInfo()));
-        overlay.addLine("gpu_info", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.gpu", GlUtil.getRenderer(), GlUtil.getOpenGLVersion()));
+        overlay.addLine("cpu_info", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.cpu", GLX._getCpuInfo()));
+        overlay.addLine("gpu_info", DebugOverlay.LinePosition.TOP_LEFT, consumes -> Component.translatable("fancymenu.overlay.debug.gpu", GlStateManager._getString(7937), GlStateManager._getString(7938)));
 
         overlay.addSpacerLine("spacer_after_gpu_info", DebugOverlay.LinePosition.TOP_LEFT, 5);
 
