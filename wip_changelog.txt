@@ -1,6 +1,7 @@
 
 CHANGELOG | FANCYMENU v3.5.1 [ W I P !! Not public yet !! ]
 
+- Ported mod to MC 1.21.5
 - The old "Custom Localizations" system got removed, so it's now not possible anymore to load localizations using FancyMenu's own localization file format
   - Loading Vanilla Minecraft localization files via resource pack still works like before, so this is now the new default to load custom localizations
 - 
