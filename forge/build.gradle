@@ -96,6 +96,15 @@ dependencies {
     compileOnly project(":common")
 }
 
+// Exclude Fabric Loader from Forge
+configurations {
+    runtimeClasspath    { exclude group: 'net.fabricmc', module: 'fabric-loader' }
+    developmentRuntimeClasspath {
+        // Gradle 8 names used by ForgeGradle 6
+        exclude group: 'net.fabricmc', module: 'fabric-loader'
+    }
+}
+
 tasks.withType(JavaCompile).configureEach {
     source(project(":common").sourceSets.main.allSource)
     it.options.compilerArgs += ['-Xlint:-deprecation', '-Xlint:-removal']

@@ -63,6 +63,15 @@ dependencies {
     implementation "com.cinemamod:mcef:2.1.6-1.21.1"
 }
 
+// Exclude Fabric Loader from NeoForge
+configurations {
+    runtimeClasspath    { exclude group: 'net.fabricmc', module: 'fabric-loader' }
+    developmentRuntimeClasspath {
+        // Gradle 8 names used by ForgeGradle 6
+        exclude group: 'net.fabricmc', module: 'fabric-loader'
+    }
+}
+
 // NeoGradle compiles the game, but we don't want to add our common code to the game's code++
 Spec<Task> notNeoTask = { Task it -> !it.name.startsWith("neo") } as Spec<Task>
 
