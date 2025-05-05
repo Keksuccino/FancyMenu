@@ -8,7 +8,8 @@
     "client.MixinForgeHooksClient",
     "client.MixinForgeLoadingOverlay",
     "client.MixinForgeMouseHandler",
-    "client.MixinForgeTitleScreen"
+    "client.MixinForgeTitleScreen",
+    "client.MixinMinecraft"
   ],
   "injectors": {
     "defaultRequire": 1

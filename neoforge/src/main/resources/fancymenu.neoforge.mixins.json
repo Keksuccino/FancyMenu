@@ -5,6 +5,7 @@
   "mixins": [
   ],
   "client": [
+    "client.MixinMinecraft",
     "client.MixinNeoForgeGameRenderer",
     "client.MixinNeoForgeLoadingOverlay",
     "client.MixinNeoForgeMouseHandler",

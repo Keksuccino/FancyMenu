@@ -11,7 +11,7 @@ public class FancyMenuNeoForge {
     
     public FancyMenuNeoForge(@NotNull IEventBus eventBus) {
 
-        FancyMenu.init();
+        // FancyMenu.init(); got moved to MixinMinecraft
 
         PacketsNeoForge.init(eventBus);
 

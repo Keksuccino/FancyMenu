@@ -11,7 +11,7 @@ public class FancyMenuForge {
     
     public FancyMenuForge() {
 
-        FancyMenu.init();
+        // FancyMenu.init(); got moved to MixinMinecraft
 
         PacketsForge.init();
 
