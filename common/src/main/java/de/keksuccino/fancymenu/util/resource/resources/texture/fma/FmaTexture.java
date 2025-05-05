@@ -23,6 +23,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -357,7 +358,7 @@ public class FmaTexture implements ITexture, PlayableResource {
             if ((frame.resourceLocation == null) && !frame.loaded && (frame.nativeImage != null)) {
                 try {
                     this.frameRegistrationCounter++;
-                    frame.dynamicTexture = new DynamicTexture(frame.nativeImage);
+                    frame.dynamicTexture = new DynamicTexture(() -> UUID.randomUUID().toString(), frame.nativeImage);
                     frame.resourceLocation = RenderUtils.register("fancymenu_fma_frame_" + this.uniqueId + "_" + this.frameRegistrationCounter, frame.dynamicTexture);
                 } catch (Exception ex) {
                     LOGGER.error("[FANCYMENU] Failed to register FMA frame to Minecraft's TextureManager!", ex);

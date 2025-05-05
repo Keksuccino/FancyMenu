@@ -120,13 +120,13 @@ public class ItemElement extends AbstractElement {
             int w = this.getAbsoluteWidth();
             int h = this.getAbsoluteHeight();
 
-            RenderSystem.enableBlend();
+             
 
             if (this.cachedStack != null) {
                 this.renderItem(graphics, x, y, w, h, mouseX, mouseY, this.cachedStack);
             }
 
-            RenderSystem.disableBlend();
+             
 
         }
 

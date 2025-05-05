@@ -76,7 +76,6 @@ public interface CustomizableSlider {
             }
         }
         if (location != null) {
-            RenderSystem.enableBlend();
             if (this.isNineSliceCustomSliderBackground_FancyMenu()) {
                 RenderingUtils.blitNineSlicedTexture(graphics, location, widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight(), texture.getWidth(), texture.getHeight(), this.getNineSliceSliderBackgroundBorderY_FancyMenu(), this.getNineSliceSliderBackgroundBorderX_FancyMenu(), this.getNineSliceSliderBackgroundBorderY_FancyMenu(), this.getNineSliceSliderBackgroundBorderX_FancyMenu(), ARGB.white(((IMixinAbstractWidget)this).getAlphaFancyMenu()));
             } else {

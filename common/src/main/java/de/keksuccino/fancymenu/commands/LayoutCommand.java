@@ -5,7 +5,7 @@ import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.networking.packets.commands.layout.command.LayoutCommandPacket;
-import de.keksuccino.konkrete.command.CommandUtils;
+import de.keksuccino.fancymenu.util.CommandUtils;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -21,7 +21,7 @@ public class LayoutCommand {
     public static void register(CommandDispatcher<CommandSourceStack> d) {
         d.register(Commands.literal("fmlayout").then(Commands.argument("layout_name", StringArgumentType.string())
                 .suggests((context, provider) -> {
-                    return CommandUtils.getStringSuggestions(provider, getLayoutNameSuggestions(context.getSource().getPlayerOrException()));
+                    return CommandUtils.buildStringSuggestionsList(context, getLayoutNameSuggestions(context.getSource().getPlayerOrException()));
                 })
                 .then(Commands.argument("is_layout_enabled", BoolArgumentType.bool())
                         .executes(context -> {

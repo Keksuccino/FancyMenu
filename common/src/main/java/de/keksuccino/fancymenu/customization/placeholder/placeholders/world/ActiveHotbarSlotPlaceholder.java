@@ -28,7 +28,7 @@ public class ActiveHotbarSlotPlaceholder extends Placeholder {
             ClientLevel level = Minecraft.getInstance().level;
             LocalPlayer player = Minecraft.getInstance().player;
             if ((level != null) && (player != null)) {
-                return "" + player.getInventory().selected;
+                return "" + player.getInventory().getSelectedSlot();
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to get replacement for '" + this.getIdentifier() + "' placeholder.", ex);

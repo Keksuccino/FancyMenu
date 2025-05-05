@@ -4,6 +4,9 @@ import com.mojang.blaze3d.platform.NativeImage;
 import java.io.*;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Supplier;
+
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
@@ -242,7 +245,7 @@ public class PngTexture implements ITexture {
         if (this.closed) return FULLY_TRANSPARENT_TEXTURE;
         if ((this.resourceLocation == null) && !this.loadedIntoMinecraft && (this.nativeImage != null)) {
             try {
-                this.dynamicTexture = new DynamicTexture(this.nativeImage);
+                this.dynamicTexture = new DynamicTexture(() -> UUID.randomUUID().toString(), this.nativeImage);
                 this.resourceLocation = this.registerAbstractTexture(this.dynamicTexture);
             } catch (Exception ex) {
                 ex.printStackTrace();

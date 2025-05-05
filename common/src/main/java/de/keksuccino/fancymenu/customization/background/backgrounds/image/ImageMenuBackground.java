@@ -39,7 +39,6 @@ public class ImageMenuBackground extends MenuBackground {
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        RenderSystem.enableBlend();
 
         ResourceLocation resourceLocation = null;
         ITexture tex = null;

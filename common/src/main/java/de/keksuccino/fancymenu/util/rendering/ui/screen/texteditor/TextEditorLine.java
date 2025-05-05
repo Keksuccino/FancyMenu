@@ -2,8 +2,8 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
-import de.keksuccino.konkrete.gui.content.AdvancedTextField;
-import de.keksuccino.konkrete.input.CharacterFilter;
+import de.keksuccino.fancymenu.util.input.CharacterFilter;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
@@ -20,7 +20,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TextEditorLine extends AdvancedTextField {
+public class TextEditorLine extends ExtendedEditBox {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -28,7 +28,6 @@ public class TextEditorLine extends AdvancedTextField {
     protected String lastTickValue = "";
     public boolean isInMouseHighlightingMode = false;
     protected final Font font2;
-    protected final boolean handleSelf2;
     public int textWidth = 0;
     public int lineIndex = 0;
     protected int currentHighlightPosXStart = 0;
@@ -37,11 +36,11 @@ public class TextEditorLine extends AdvancedTextField {
 
     protected static boolean leftRightArrowWasDown = false;
 
-    public TextEditorLine(Font font, int x, int y, int width, int height, boolean handleSelf, @Nullable CharacterFilter characterFilter, TextEditorScreen parent) {
-        super(font, x, y, width, height, handleSelf, characterFilter);
+    public TextEditorLine(Font font, int x, int y, int width, int height, @Nullable CharacterFilter characterFilter, TextEditorScreen parent) {
+        super(font, x, y, width, height, Component.empty());
+        this.setCharacterFilter(characterFilter);
         this.parent = parent;
         this.font2 = font;
-        this.handleSelf2 = handleSelf;
         this.setBordered(false);
     }
 

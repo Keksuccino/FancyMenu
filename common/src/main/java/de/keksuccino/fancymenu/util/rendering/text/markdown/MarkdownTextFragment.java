@@ -75,19 +75,16 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
 
         if (this.imageSupplier != null) {
             this.imageSupplier.forRenderable((iTexture, location) -> {
-                RenderSystem.enableBlend();
                 RenderingUtils.blitF(graphics, RenderType::guiTextured, location, this.x, this.y, 0.0F, 0.0F, this.getRenderWidth(), this.getRenderHeight(), this.getRenderWidth(), this.getRenderHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.parent.textOpacity));
             });
         } else if (this.separationLine) {
 
-            RenderSystem.enableBlend();
             RenderingUtils.fillF(graphics, this.parent.x + this.parent.border, this.y, this.parent.x + this.parent.getRealWidth() - this.parent.border, this.y + this.getRenderHeight(), this.parent.separationLineColor.getColorIntWithAlpha(this.parent.textOpacity));
 
         } else {
 
             this.renderCodeBlock(graphics);
 
-            RenderSystem.enableBlend();
             graphics.pose().pushPose();
             graphics.pose().scale(this.getScale(), this.getScale(), this.getScale());
             graphics.drawString(this.parent.font, this.buildRenderComponent(false), (int) this.getTextRenderX(), (int) this.getTextRenderY(), this.parent.textBaseColor.getColorIntWithAlpha(this.parent.textOpacity), this.parent.textShadow && (this.codeBlockContext == null));
@@ -128,7 +125,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
     }
 
     protected void renderCodeBlockBackground(GuiGraphics graphics, float minX, float minY, float maxX, float maxY, int color) {
-        RenderSystem.enableBlend();
         RenderingUtils.fillF(graphics, minX+1, minY, maxX-1, minY+1, color);
         RenderingUtils.fillF(graphics, minX, minY+1, maxX, maxY-1, color);
         RenderingUtils.fillF(graphics, minX+1, maxY-1, maxX-1, maxY, color);
@@ -136,7 +132,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
 
     protected void renderHeadlineUnderline(GuiGraphics graphics) {
         if (this.startOfRenderLine && ((this.headlineType == HeadlineType.BIGGER) || (this.headlineType == HeadlineType.BIGGEST))) {
-            RenderSystem.enableBlend();
             float scale = (this.parent.parentRenderScale != null) ? this.parent.parentRenderScale : (float)Minecraft.getInstance().getWindow().getGuiScale();
             float lineThickness = (scale > 1) ? 0.5f : 1f;
             float lineY = this.y + this.getTextRenderHeight() + 1;
@@ -148,7 +143,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
         if ((this.quoteContext != null) && (this.quoteContext.getQuoteEnd() != null) && (this.quoteContext.getQuoteEnd() == this)) {
             float yStart = Objects.requireNonNull(this.quoteContext.getQuoteStart()).y - 2;
             float yEnd = this.y + this.getRenderHeight() + 1;
-            RenderSystem.enableBlend();
             if (this.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT) {
                 RenderingUtils.fillF(graphics, this.parent.x, yStart, this.parent.x + 2, yEnd, this.parent.quoteColor.getColorIntWithAlpha(this.parent.textOpacity));
             } else if (this.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT) {
@@ -159,7 +153,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
 
     protected void renderBulletListDot(GuiGraphics graphics) {
         if ((this.bulletListLevel > 0) && this.bulletListItemStart) {
-            RenderSystem.enableBlend();
             final float scale = this.getScale();
 
             // Calculate dimensions using scale

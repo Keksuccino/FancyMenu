@@ -76,7 +76,7 @@ public class WelcomeScreen extends Screen {
         super.renderBackground(graphics, mouseX, mouseY, partial);
 
         //Render header and footer separators
-        RenderSystem.enableBlend();
+         
         graphics.fillGradient(0, HEADER_HEIGHT, this.width, HEADER_HEIGHT + 4, -16777216, 0);
         graphics.fillGradient(0, this.height - FOOTER_HEIGHT - 4, this.width, this.height - FOOTER_HEIGHT, 0, -16777216);
 

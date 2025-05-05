@@ -921,7 +921,7 @@ public class ManageActionsScreen extends Screen {
             int centerYLine1 = this.getY() + HEADER_FOOTER_HEIGHT + (this.lineHeight / 2);
             int centerYLine2 = this.getY() + HEADER_FOOTER_HEIGHT + ((this.lineHeight / 2) * 3);
 
-            RenderSystem.enableBlend();
+             
 
             int renderX = this.getX() + (INDENT_X_OFFSET * this.indentLevel);
 

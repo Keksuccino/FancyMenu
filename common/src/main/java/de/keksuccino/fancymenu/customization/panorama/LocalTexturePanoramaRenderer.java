@@ -53,6 +53,7 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 	public File overlayImageFile;
 	protected String name = null;
 	public final List<ResourceSupplier<ITexture>> panoramaImageSuppliers = new ArrayList<>();
+	public final List<ResourceLocation> sides = new ArrayList<>();
 	@Nullable
 	public ResourceSupplier<ITexture> overlayTextureSupplier;
 	protected float speed = 1.0F;
@@ -171,13 +172,27 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 
 	@Override
 	public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
 		this.lastRenderCall = System.currentTimeMillis();
 		this.startTickerThreadIfNeeded();
-		if (this.panoramaImageSuppliers.size() < 6) {
+
+		this.sides.clear();
+		this.panoramaImageSuppliers.forEach(sup -> {
+			ITexture tex = sup.get();
+			if (tex != null) {
+				ResourceLocation loc = tex.getResourceLocation();
+				if (loc != null) {
+					this.sides.add(loc);
+				}
+			}
+		});
+
+		if ((this.panoramaImageSuppliers.size() < 6) || (this.sides.size() < 6)) {
 			graphics.blit(RenderType::guiTextured, ITexture.MISSING_TEXTURE_LOCATION, 0, 0, 0.0F, 0.0F, ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight(), ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight());
 		} else {
 			this._render(graphics, Minecraft.getInstance(), this.opacity);
 		}
+
 	}
 
 	private void _render(@NotNull GuiGraphics graphics, Minecraft mc, float alpha) {
@@ -225,15 +240,11 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, alpha / (j + 1));
 
 				for (int k = 0; k < 6; k++) {
-					if (k < this.panoramaImageSuppliers.size()) {
-						ResourceSupplier<ITexture> texSupplier = this.panoramaImageSuppliers.get(k);
-						ITexture texture = texSupplier.get();
-						if (texture != null) {
-							ResourceLocation location = texture.getResourceLocation();
-							if (location != null) {
-								renderPass.bindSampler("Sampler0", mc.getTextureManager().getTexture(location).getTexture());
-								renderPass.drawIndexed(6 * k, 6);
-							}
+					if (k < this.sides.size()) {
+						ResourceLocation location = this.sides.get(k);
+						if (location != null) {
+							renderPass.bindSampler("Sampler0", mc.getTextureManager().getTexture(location).getTexture());
+							renderPass.drawIndexed(6 * k, 6);
 						}
 					}
 				}

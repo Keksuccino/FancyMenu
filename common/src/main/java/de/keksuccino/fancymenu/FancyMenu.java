@@ -15,7 +15,6 @@ import de.keksuccino.fancymenu.util.rendering.text.color.colors.TextColorFormatt
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
-import de.keksuccino.fancymenu.customization.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.customization.server.ServerCache;
 import net.minecraft.SharedConstants;
 import org.apache.logging.log4j.LogManager;
@@ -82,8 +81,6 @@ public class FancyMenu {
 		WindowHandler.handleForceFullscreen();
 
 		CursorHandler.init();
-
-		CustomLocalsHandler.loadLocalizations();
 
 		ServerCache.init();
 

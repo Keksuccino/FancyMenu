@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -17,7 +17,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
-import de.keksuccino.konkrete.input.CharacterFilter;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.gui.GuiGraphics;
@@ -299,8 +298,6 @@ public class TextEditorScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        RenderSystem.disableDepthTest();
-
         //Reset scrolls if content fits editor area
         if (this.currentLineWidth <= this.getEditorAreaWidth()) {
             this.horizontalScrollBar.setScroll(0.0F);
@@ -377,8 +374,6 @@ public class TextEditorScreen extends Screen {
         MutableComponent t = this.title.copy();
         t.setStyle(t.getStyle().withBold(this.boldTitle));
         graphics.drawString(this.font, t, this.borderLeft, (this.headerHeight / 2) - (this.font.lineHeight / 2), UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
-
-        RenderSystem.enableDepthTest();
 
         super.render(graphics, mouseX, mouseY, partial);
 
@@ -805,7 +800,7 @@ public class TextEditorScreen extends Screen {
 
     @Nullable
     public TextEditorLine addLineAtIndex(int index) {
-        TextEditorLine f = new TextEditorLine(Minecraft.getInstance().font, 0, 0, 50, this.lineHeight, false, this.characterFilter, this);
+        TextEditorLine f = new TextEditorLine(Minecraft.getInstance().font, 0, 0, 50, this.lineHeight, this.characterFilter, this);
         f.setMaxLength(Integer.MAX_VALUE);
         f.lineIndex = index;
         if (index > 0) {
@@ -988,7 +983,7 @@ public class TextEditorScreen extends Screen {
     public List<TextEditorLine> getCopyOfLines() {
         List<TextEditorLine> l = new ArrayList<>();
         for (TextEditorLine t : this.textFieldLines) {
-            TextEditorLine n = new TextEditorLine(this.font, 0, 0, 0, 0, false, this.characterFilter, this);
+            TextEditorLine n = new TextEditorLine(this.font, 0, 0, 0, 0, this.characterFilter, this);
             n.setValue(t.getValue());
             n.setFocused(t.isFocused());
             n.moveCursorTo(t.getCursorPosition(), false);

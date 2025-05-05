@@ -272,7 +272,7 @@ public class NonStackableOverlayUI {
                 s.setText(getter.get());
                 inputScreen = s;
             } else {
-                TextEditorScreen s = new TextEditorScreen(label, (inputCharacterFilter != null) ? inputCharacterFilter.convertToLegacyFilter() : null, (call) -> {
+                TextEditorScreen s = new TextEditorScreen(label, (inputCharacterFilter != null) ? inputCharacterFilter : null, (call) -> {
                     if (call != null) {
                         valueSetter.accept(call);
                     }

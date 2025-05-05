@@ -4,7 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.networking.packets.commands.opengui.OpenGuiCommandPacket;
-import de.keksuccino.konkrete.command.CommandUtils;
+import de.keksuccino.fancymenu.util.CommandUtils;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -21,7 +21,7 @@ public class OpenGuiScreenCommand {
                     return openGui(stack.getSource(), StringArgumentType.getString(stack, "screen_identifier"), null);
                 })
                 .suggests((context, provider) -> {
-                    return CommandUtils.getStringSuggestions(provider, "<screen_identifier>");
+                    return CommandUtils.buildStringSuggestionsList(context, "<screen_identifier>");
                 })
                 .then(Commands.argument("target_players", EntityArgument.players())
                         .requires(stack -> stack.hasPermission(2))

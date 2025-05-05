@@ -34,7 +34,7 @@ public class IsPlayerWearingPumpkinRequirement extends LoadingRequirement {
             ClientLevel level = Minecraft.getInstance().level;
             LocalPlayer player = Minecraft.getInstance().player;
             if ((level != null) && (player != null)) {
-                ItemStack itemStack = player.getInventory().getArmor(3);
+                ItemStack itemStack = player.getInventory().getItem(39);
                 return (itemStack.is(Blocks.CARVED_PUMPKIN.asItem()));
             }
         } catch (Exception ex) {

@@ -116,8 +116,6 @@ public class BrowserElement extends AbstractElement {
 
                 this.browser.setInteractable(this.interactable && !isEditor());
 
-                RenderSystem.enableBlend();
-
                 this.browser.render(graphics, mouseX, mouseY, partial);
 
                 //Render warning when trying to click browser in editor
@@ -134,7 +132,6 @@ public class BrowserElement extends AbstractElement {
 
             } else {
 
-                RenderSystem.enableBlend();
                 graphics.fill(RenderType.guiOverlay(), x, y, x + w, y + h, ERROR_BACKGROUND_COLOR.getColorInt());
                 graphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("fancymenu.elements.browser.mcef_not_loaded.line_1").setStyle(Style.EMPTY.withBold(true)), x + (w / 2), y + (h / 2) - Minecraft.getInstance().font.lineHeight - 2, -1);
                 graphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("fancymenu.elements.browser.mcef_not_loaded.line_2").setStyle(Style.EMPTY.withBold(true)), x + (w / 2), y + (h / 2) + 2, -1);

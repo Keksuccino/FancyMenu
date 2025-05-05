@@ -78,9 +78,7 @@ public class DebugOverlay implements FancyMenuUiComponent, Renderable, Narratabl
         int topRightY = this.topYOffsetSupplier.get();
         int bottomLeftY = this.bottomYOffsetSupplier.get();
         int bottomRightY = this.bottomYOffsetSupplier.get();
-
-        RenderSystem.enableDepthTest();
-        RenderSystem.enableBlend();
+         
         graphics.pose().pushPose();
         graphics.pose().translate(0.0F, 0.0F, 400.0F);
 
@@ -121,21 +119,17 @@ public class DebugOverlay implements FancyMenuUiComponent, Renderable, Narratabl
 
         graphics.pose().popPose();
 
-        RenderSystem.disableDepthTest();
-
         //Close right-click context menu if context menu of overlay menu bar is open
         if ((CustomizationOverlay.getCurrentMenuBarInstance() != null) && CustomizationOverlay.getCurrentMenuBarInstance().isEntryContextMenuOpen()) {
             this.closeRightClickContextMenu();
         }
         //Render right-click context menu
         if (this.rightClickMenu != null) {
-            RenderSystem.enableBlend();
-            RenderSystem.enableDepthTest();
+
             graphics.pose().pushPose();
             graphics.pose().translate(0.0F, 0.0F, 500.0F);
             this.rightClickMenu.render(graphics, mouseX, mouseY, partial);
             graphics.pose().popPose();
-            RenderSystem.disableDepthTest();
         }
 
     }
@@ -159,7 +153,7 @@ public class DebugOverlay implements FancyMenuUiComponent, Renderable, Narratabl
     }
 
     protected void renderLineBackground(@NotNull GuiGraphics graphics, int x, int y, int width, int height) {
-        RenderSystem.enableBlend();
+         
         graphics.fill(RenderType.guiOverlay(), x, y, x + width, y + height, this.lineBackgroundColor.getColorInt());
     }
 

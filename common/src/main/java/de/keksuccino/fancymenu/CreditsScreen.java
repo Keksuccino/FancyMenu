@@ -73,8 +73,6 @@ public class CreditsScreen extends Screen {
             }
         }
 
-        RenderSystem.enableBlend();
-
         //Background
         graphics.fill(RenderType.guiOverlay(), 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
 

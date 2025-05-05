@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements;
 
+import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ConfirmationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
@@ -9,8 +10,7 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.internal.Loading
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
-import de.keksuccino.konkrete.gui.content.AdvancedTextField;
-import de.keksuccino.konkrete.input.CharacterFilter;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
@@ -38,7 +38,7 @@ public class BuildRequirementGroupScreen extends Screen {
     protected ExtendedButton editRequirementButton;
     protected ExtendedButton doneButton;
     protected ExtendedButton cancelButton;
-    protected AdvancedTextField groupIdentifierTextField;
+    protected ExtendedEditBox groupIdentifierTextField;
 
     public BuildRequirementGroupScreen(@Nullable Screen parentScreen, @NotNull LoadingRequirementContainer parent, @Nullable LoadingRequirementGroup groupToEdit, @NotNull Consumer<LoadingRequirementGroup> callback) {
 
@@ -51,7 +51,12 @@ public class BuildRequirementGroupScreen extends Screen {
         this.isEdit = groupToEdit != null;
         this.updateRequirementsScrollArea();
 
-        this.groupIdentifierTextField = new AdvancedTextField(Minecraft.getInstance().font, 0, 0, 150, 20, true, CharacterFilter.getBasicFilenameCharacterFilter()) {
+    }
+
+    @Override
+    protected void init() {
+
+        this.groupIdentifierTextField = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, 150, 20, Component.empty()) {
             @Override
             public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
                 super.render(graphics, mouseX, mouseY, partial);
@@ -61,11 +66,8 @@ public class BuildRequirementGroupScreen extends Screen {
         if (this.group.identifier != null) {
             this.groupIdentifierTextField.setValue(this.group.identifier);
         }
-
-    }
-
-    @Override
-    protected void init() {
+        this.groupIdentifierTextField.setCharacterFilter(CharacterFilter.buildOnlyLowercaseFileNameFilter());
+        this.addWidget(this.groupIdentifierTextField);
 
         //Reset the GUI scale in case the layout editor changed it
         Minecraft.getInstance().getWindow().setGuiScale(Minecraft.getInstance().getWindow().calculateScale(Minecraft.getInstance().options.guiScale().get(), Minecraft.getInstance().isEnforceUnicode()));

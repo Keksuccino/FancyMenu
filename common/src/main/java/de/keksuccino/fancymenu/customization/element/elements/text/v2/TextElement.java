@@ -117,7 +117,6 @@ public class TextElement extends AbstractElement {
 
                 this.markdownRenderer.setTextOpacity(this.opacity);
 
-                RenderSystem.enableBlend();
                 this.scrollArea.setX(this.getAbsoluteX(), true);
                 this.scrollArea.setY(this.getAbsoluteY(), true);
                 this.scrollArea.setWidth(this.getAbsoluteWidth(), true);

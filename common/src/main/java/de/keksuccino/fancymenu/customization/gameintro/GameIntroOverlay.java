@@ -105,7 +105,7 @@ public class GameIntroOverlay extends Overlay {
 
             ResourceLocation location = r.getResourceLocation();
             if (location != null) {
-                RenderSystem.enableBlend();
+                 
                 graphics.blit(RenderType::guiTextured, location, x, y, 0.0F, 0.0F, aspectWidth, aspectHeight, aspectWidth, aspectHeight, DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
             }
 
@@ -123,7 +123,7 @@ public class GameIntroOverlay extends Overlay {
             Component skipComp = customSkipText.isEmpty() ? Component.translatable("fancymenu.game_intro.press_any_key") : Component.literal(customSkipText);
             graphics.pose().pushPose();
             graphics.pose().scale(scale, scale, scale);
-            RenderSystem.enableBlend();
+             
             int normalizedWidth = (int)(this.width / scale);
             int normalizedHeight = (int)(this.height / scale);
             int textX = (normalizedWidth / 2) - (this.font.width(skipComp) / 2);

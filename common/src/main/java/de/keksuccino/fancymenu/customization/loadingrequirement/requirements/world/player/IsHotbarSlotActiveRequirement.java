@@ -34,7 +34,7 @@ public class IsHotbarSlotActiveRequirement extends LoadingRequirement {
             LocalPlayer player = Minecraft.getInstance().player;
             int slot = SerializationUtils.deserializeNumber(Integer.class, 0, value);
             if ((level != null) && (player != null)) {
-                return (player.getInventory().selected == slot);
+                return (player.getInventory().getSelectedSlot() == slot);
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to handle '" + this.getIdentifier() + "' loading requirement!", ex);

@@ -334,6 +334,10 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         this.isVisibleSupplier = isVisibleSupplier;
     }
 
+    public boolean isEditable() {
+        return ((IMixinEditBox)this).getIsEditableFancyMenu();
+    }
+
     @Deprecated
     @Override
     public void setTextColor(int color) {

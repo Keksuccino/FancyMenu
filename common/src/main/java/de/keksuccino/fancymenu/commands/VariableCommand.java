@@ -5,12 +5,11 @@ import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import de.keksuccino.fancymenu.networking.PacketHandler;
 import de.keksuccino.fancymenu.networking.packets.commands.variable.command.VariableCommandPacket;
-import de.keksuccino.konkrete.command.CommandUtils;
+import de.keksuccino.fancymenu.util.CommandUtils;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-
 import java.util.*;
 
 public class VariableCommand {
@@ -22,7 +21,7 @@ public class VariableCommand {
                 .then(Commands.literal("get")
                         .then(Commands.argument("variable_name", StringArgumentType.string())
                                 .suggests((context, builder) -> {
-                                    return CommandUtils.getStringSuggestions(builder, getVariableNameSuggestions(context.getSource().getPlayerOrException()));
+                                    return CommandUtils.buildStringSuggestionsList(context, getVariableNameSuggestions(context.getSource().getPlayerOrException()));
                                 })
                                 .executes((stack) -> {
                                     return getVariable(stack.getSource(), StringArgumentType.getString(stack, "variable_name"));
@@ -32,12 +31,12 @@ public class VariableCommand {
                 .then(Commands.literal("set")
                         .then(Commands.argument("variable_name", StringArgumentType.string())
                                 .suggests((context, builder) -> {
-                                    return CommandUtils.getStringSuggestions(builder, getVariableNameSuggestions(context.getSource().getPlayerOrException()));
+                                    return CommandUtils.buildStringSuggestionsList(context, getVariableNameSuggestions(context.getSource().getPlayerOrException()));
                                 })
                                 .then(Commands.argument("send_chat_feedback", BoolArgumentType.bool())
                                         .then(Commands.argument("set_to_value", StringArgumentType.greedyString())
                                                 .suggests((context, builder) -> {
-                                                    return CommandUtils.getStringSuggestions(builder, "<set_to_value>");
+                                                    return CommandUtils.buildStringSuggestionsList(context, "<set_to_value>");
                                                 })
                                                 .executes((stack) -> {
                                                     return setVariable(stack.getSource(), StringArgumentType.getString(stack, "variable_name"), StringArgumentType.getString(stack, "set_to_value"), BoolArgumentType.getBool(stack, "send_chat_feedback"));

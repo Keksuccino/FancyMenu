@@ -99,7 +99,6 @@ public class ScrollableMarkdownRenderer implements Renderable, ContainerEventHan
 
         this.tick();
 
-        RenderSystem.enableBlend();
         this.scrollArea.render(graphics, mouseX, mouseY, partial);
 
     }

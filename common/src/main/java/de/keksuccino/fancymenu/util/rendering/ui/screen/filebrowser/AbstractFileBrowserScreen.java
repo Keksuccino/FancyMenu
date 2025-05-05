@@ -163,7 +163,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
             this.fileTypeScrollArea.horizontalScrollBar.active = (Minecraft.getInstance().font.width(this.currentFileTypesComponent) > (this.fileTypeScrollArea.getInnerWidth() - 10));
         }
 
-        RenderSystem.enableBlend();
+         
 
         graphics.fill(RenderType.gui(), 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
@@ -246,7 +246,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
                 int x = this.width - 20 - w;
                 int y = 50 + 15;
                 graphics.fill(RenderType.guiOverlay(), x, y, x + w, y + h, UIBase.getUIColorTheme().area_background_color.getColorInt());
-                RenderSystem.enableBlend();
+                 
                 graphics.blit(RenderType::guiTextured, loc, x, y, 0.0F, 0.0F, w, h, w, h);
                 UIBase.renderBorder(graphics, x, y, x + w, y + h, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUIColorTheme().element_border_color_normal.getColor(), true, true, true, true);
             }
@@ -701,7 +701,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
             if (this.file.exists()) {
 
-                RenderSystem.enableBlend();
+                 
 
                 //Render icon
                 ResourceLocation loc = this.file.isFile() ? FILE_ICON_TEXTURE : FOLDER_ICON_TEXTURE;
@@ -750,7 +750,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
             super.render(graphics, mouseX, mouseY, partial);
 
-            RenderSystem.enableBlend();
+             
 
             //Render icon
             graphics.blit(RenderType::guiTextured, GO_UP_ICON_TEXTURE, this.x + BORDER, this.y + BORDER, 0.0F, 0.0F, 20, 20, 20, 20, UIBase.getUIColorTheme().ui_texture_color.getColorInt());

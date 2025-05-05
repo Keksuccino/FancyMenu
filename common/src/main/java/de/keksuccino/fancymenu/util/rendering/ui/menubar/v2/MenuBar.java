@@ -80,9 +80,6 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
 
         this.hovered = this.isMouseOver(mouseX, mouseY);
 
-        RenderSystem.enableBlend();
-        RenderSystem.enableDepthTest();
-
         graphics.pose().pushPose();
         graphics.pose().scale(scale, scale, scale);
         graphics.pose().translate(0f, 0f, 500f / scale);
@@ -102,7 +99,6 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
                 e.height = this.height;
                 e.hovered = e.isMouseOver(scaledMouseX, scaledMouseY);
                 if (e.isVisible()) {
-                    RenderSystem.enableBlend();
                     e.render(graphics, scaledMouseX, scaledMouseY, partial);
                 }
                 leftX += e.getWidth();
@@ -114,7 +110,6 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
                 e.height = this.height;
                 e.hovered = e.isMouseOver(scaledMouseX, scaledMouseY);
                 if (e.isVisible()) {
-                    RenderSystem.enableBlend();
                     e.render(graphics, scaledMouseX, scaledMouseY, partial);
                 }
                 rightX -= e.getWidth();
@@ -132,7 +127,6 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         graphics.pose().popPose();
 
         graphics.pose().pushPose();
-        RenderSystem.enableDepthTest();
 
         //Render context menus of ContextMenuBarEntries
         for (MenuBarEntry e : ListUtils.mergeLists(this.leftEntries, this.rightEntries)) {
@@ -141,7 +135,6 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
             }
         }
 
-        RenderSystem.disableDepthTest();
         graphics.pose().popPose();
 
     }
@@ -684,7 +677,6 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         }
 
         protected void renderLabelOrIcon(GuiGraphics graphics) {
-            RenderSystem.enableBlend();
             Component label = this.getLabel();
             ITexture iconTexture = this.getIconTexture();
             if (iconTexture != null) {
@@ -950,7 +942,6 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
 
         @Override
         protected void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            RenderSystem.enableBlend();
             this.renderBackground(graphics);
         }
 
@@ -1001,7 +992,6 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
 
         @Override
         protected void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            RenderSystem.enableBlend();
             graphics.fill(RenderType.guiOverlay(), this.x, this.y, this.x + this.getWidth(), this.y + this.height, color.getColorInt());
         }
 

@@ -157,7 +157,6 @@ public class ExternalTextureSlideshowRenderer {
 		try {
 			if (!this.images.isEmpty()) {
 				this.tick();
-				RenderSystem.enableBlend();
 				this.renderCurrent(graphics);
 				this.renderPrevious(graphics);
 				this.renderOverlay(graphics);

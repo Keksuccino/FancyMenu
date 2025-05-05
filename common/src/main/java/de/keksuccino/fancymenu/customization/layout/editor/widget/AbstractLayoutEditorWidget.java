@@ -164,7 +164,6 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
         float labelDisplayWidth = Math.max(1, this.getBodyWidth() - this.getCombinedHeaderButtonWidth() - 3);
         float scissorX = x + this.getBorderThickness() - 1;
         float scissorY = y + this.getBorderThickness() - 1;
-        RenderSystem.enableBlend();
         this.enableComponentScissor(graphics, (int) scissorX, (int) scissorY, (int) labelDisplayWidth + 1, (int) this.getHeaderHeight() + 2, true);
         UIBase.drawElementLabel(graphics, Minecraft.getInstance().font, this.displayLabel, (int)(headerX + 3), (int)(headerY + (this.getHeaderHeight() / 2f) - (Minecraft.getInstance().font.lineHeight / 2f)));
         this.disableComponentScissor(graphics);
@@ -490,7 +489,6 @@ public abstract class AbstractLayoutEditorWidget extends UIComponent {
             if (icon != null) {
                 ResourceLocation location = icon.getResourceLocation();
                 if (location != null) {
-                    RenderSystem.enableBlend();
                     blitF(graphics, RenderType::guiTextured, location, this.x, this.y, 0.0F, 0.0F, (int) this.width, (int) this.parent.getHeaderHeight(), (int) this.width, (int) this.parent.getHeaderHeight(), UIBase.getUIColorTheme().ui_texture_color.getColorInt());
                 }
             }

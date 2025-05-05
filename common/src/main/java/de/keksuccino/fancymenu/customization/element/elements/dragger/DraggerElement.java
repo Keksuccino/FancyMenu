@@ -111,7 +111,6 @@ public class DraggerElement extends AbstractElement {
             this.widget.render(graphics, mouseX, mouseY, partial);
 
             if (isEditor()) {
-                RenderSystem.enableBlend();
                 graphics.fill(RenderType.guiOverlay(), x, y, x + w, y + h, this.inEditorColor.getColorInt());
                 graphics.enableScissor(x, y, x + w, y + h);
                 graphics.drawCenteredString(Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);

@@ -41,7 +41,7 @@ public class ImageElement extends AbstractElement {
             int x = this.getAbsoluteX();
             int y = this.getAbsoluteY();
 
-            RenderSystem.enableBlend();
+             
 
             ITexture t = this.getTextureResource();
             if ((t != null) && t.isReady()) {
@@ -58,8 +58,6 @@ public class ImageElement extends AbstractElement {
             } else if (isEditor()) {
                 RenderingUtils.renderMissing(graphics, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
             }
-
-            RenderSystem.disableBlend();
 
         }
 

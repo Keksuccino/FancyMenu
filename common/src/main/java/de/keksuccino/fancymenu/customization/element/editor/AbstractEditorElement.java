@@ -743,7 +743,6 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 	protected void renderDraggingNotAllowedOverlay(GuiGraphics graphics) {
 		if (this.renderMovingNotAllowedTime >= System.currentTimeMillis()) {
-			RenderSystem.enableBlend();
 			graphics.fill(RenderType.guiOverlay(), this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), UIBase.getUIColorTheme().layout_editor_element_dragging_not_allowed_color.getColorInt());
 			AspectRatio ratio = new AspectRatio(32, 32);
 			int[] size = ratio.getAspectRatioSizeByMaximumSize(this.getWidth(), this.getHeight());
@@ -757,7 +756,6 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 	protected void renderDeprecatedIndicator(GuiGraphics graphics) {
 		if (this.element.builder.isDeprecated()) {
-			RenderSystem.enableBlend();
 			AspectRatio ratio = new AspectRatio(32, 32);
 			int[] size = ratio.getAspectRatioSizeByMaximumSize(this.getWidth() / 3, this.getHeight() / 3);
 			int texW = size[0];
@@ -1454,7 +1452,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 					s.setText(defaultText);
 					inputScreen = s;
 				} else {
-					TextEditorScreen s = new TextEditorScreen(label, (inputCharacterFilter != null) ? inputCharacterFilter.convertToLegacyFilter() : null, (call) -> {
+					TextEditorScreen s = new TextEditorScreen(label, (inputCharacterFilter != null) ? inputCharacterFilter : null, (call) -> {
 						if (call != null) {
 							this.editor.history.saveSnapshot();
 							for (AbstractEditorElement e : selectedElements) {

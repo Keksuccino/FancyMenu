@@ -108,7 +108,7 @@ public class PlayerEntityElement extends AbstractElement {
             this.baseWidth = (int)(this.getActiveEntityProperties().getDimensions().width() * scale);
             this.baseHeight = (int)(this.getActiveEntityProperties().getDimensions().height() * scale);
 
-            RenderSystem.enableBlend();
+             
 
             PlayerEntityProperties props = this.getActiveEntityProperties();
             int x = this.getAbsoluteX();

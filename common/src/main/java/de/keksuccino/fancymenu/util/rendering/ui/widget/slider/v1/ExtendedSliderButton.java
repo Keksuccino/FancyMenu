@@ -86,9 +86,6 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
     }
 
     protected void renderHandle(@NotNull GuiGraphics graphics) {
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.enableDepthTest();
         int handleX = this.getX() + (int)(this.value * (double)(this.width - 8));
         DrawableColor c = this.getHandleRenderColor();
         if (c == null) {
@@ -105,9 +102,6 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
     }
 
     protected void renderBackground(@NotNull GuiGraphics graphics) {
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.enableDepthTest();
         if (this.backgroundColor == null) {
             graphics.blitSprite(RenderType::guiTextured, this.getSprite(), this.getX(), this.getY(), this.getWidth(), this.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.alpha));
         } else {

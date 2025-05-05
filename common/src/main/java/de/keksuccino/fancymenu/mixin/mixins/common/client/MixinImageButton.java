@@ -42,7 +42,7 @@ public abstract class MixinImageButton {
 //		cachedShaderColor_FancyMenu = RenderSystem.getShaderColor();
 //		if (cachedShaderColor_FancyMenu.length < 4) cachedShaderColor_FancyMenu = new float[] { 1.0F, 1.0F, 1.0F, 1.0F };
 //
-//		RenderSystem.enableBlend();
+//		 
 //		//Fix missing alpha handling for ImageButtons (Vanilla bug)
 //		RenderSystem.setShaderColor(cachedShaderColor_FancyMenu[0], cachedShaderColor_FancyMenu[1], cachedShaderColor_FancyMenu[2], ((IMixinAbstractWidget)button).getAlphaFancyMenu());
 

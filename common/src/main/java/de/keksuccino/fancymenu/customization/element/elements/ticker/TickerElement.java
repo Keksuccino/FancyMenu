@@ -61,7 +61,7 @@ public class TickerElement extends AbstractElement implements ExecutableElement 
             int y = this.getAbsoluteY();
             int w = this.getAbsoluteWidth();
             int h = this.getAbsoluteHeight();
-            RenderSystem.enableBlend();
+             
             graphics.fill(RenderType.guiOverlay(), x, y, x + w, y + h, this.inEditorColor.getColorInt());
             graphics.enableScissor(x, y, x + w, y + h);
             graphics.drawCenteredString(Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);

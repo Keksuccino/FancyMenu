@@ -138,7 +138,7 @@ public class SplashTextElement extends AbstractElement {
         }
         splashBaseScale = splashBaseScale * 100.0F / (float) (font.width(renderTextComponent) + 32);
 
-        RenderSystem.enableBlend();
+         
 
         graphics.pose().pushPose();
         graphics.pose().scale(this.scale, this.scale, this.scale);

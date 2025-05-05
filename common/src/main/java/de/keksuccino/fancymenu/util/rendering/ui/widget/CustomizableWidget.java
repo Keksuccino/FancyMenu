@@ -67,7 +67,6 @@ public interface CustomizableWidget {
             ResourceLocation location = customBackground.getResourceLocation();
             if (location != null) {
                 renderVanilla = false;
-                RenderSystem.enableBlend();
                 if ((widget instanceof CustomizableSlider s) && s.isNineSliceCustomSliderHandle_FancyMenu()) {
                     RenderingUtils.blitNineSlicedTexture(graphics, location, x, y, width, height, customBackground.getWidth(), customBackground.getHeight(), s.getNineSliceSliderHandleBorderY_FancyMenu(), s.getNineSliceSliderHandleBorderX_FancyMenu(), s.getNineSliceSliderHandleBorderY_FancyMenu(), s.getNineSliceSliderHandleBorderX_FancyMenu(), ARGB.white(((IMixinAbstractWidget)widget).getAlphaFancyMenu()));
                 } else if (!(widget instanceof CustomizableSlider) && this.isNineSliceCustomBackgroundTexture_FancyMenu()) {

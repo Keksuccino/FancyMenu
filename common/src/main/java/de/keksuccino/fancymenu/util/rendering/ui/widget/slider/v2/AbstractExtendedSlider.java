@@ -99,7 +99,6 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
      * Returns if the slider should render its Vanilla background (true) or not (false).
      */
     protected boolean renderColorBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        RenderSystem.enableBlend();
         if ((this.isFocused() && !this.getAccessor().getCanChangeValueFancyMenu()) && (this.sliderBackgroundColorHighlighted != null)) {
             graphics.fill(RenderType.guiOverlay(), this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.sliderBackgroundColorHighlighted.getColorInt());
             if (this.sliderBorderColorHighlighted != null) {
@@ -117,9 +116,6 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     }
 
     protected void renderVanillaBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.enableDepthTest();
         graphics.blitSprite(RenderType::guiTextured, this.getSprite(), this.getX(), this.getY(), this.getWidth(), this.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.alpha));
     }
 
@@ -133,7 +129,6 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
      * Returns if the slider should render its Vanilla handle (true) or not (false).
      */
     protected boolean renderColorHandle(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        RenderSystem.enableBlend();
         int handleX = this.getHandleX();
         int handleWidth = this.getHandleWidth();
         if (this.active) {
@@ -158,9 +153,6 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     }
 
     protected void renderVanillaHandle(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.enableDepthTest();
         graphics.blitSprite(RenderType::guiTextured, this.getHandleSprite(), this.getHandleX(), this.getY(), this.getHandleWidth(), this.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.alpha));
     }
 

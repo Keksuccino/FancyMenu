@@ -88,7 +88,7 @@ public class ChooseSlideshowScreen extends Screen {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        RenderSystem.enableBlend();
+         
 
         graphics.fill(RenderType.guiOverlay(), 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 

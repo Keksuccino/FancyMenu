@@ -535,7 +535,7 @@ public abstract class CellScreen extends Screen {
             if (this.allowEditor) {
                 this.openEditorButton = new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.ui.screens.string_builder_screen.edit_in_editor"), button -> {
                     if (allowEditor) {
-                        TextEditorScreen s = new TextEditorScreen((characterFilter != null) ? characterFilter.convertToLegacyFilter() : null, callback -> {
+                        TextEditorScreen s = new TextEditorScreen((characterFilter != null) ? characterFilter : null, callback -> {
                             if (callback != null) {
                                 this.editorCallback.accept(callback, this);
                             }

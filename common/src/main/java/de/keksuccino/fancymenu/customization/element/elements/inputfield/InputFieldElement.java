@@ -34,8 +34,6 @@ public class InputFieldElement extends AbstractElement {
 
         if (this.shouldRender()) {
 
-            RenderSystem.enableBlend();
-
             //Handle editor mode for text field
             if (isEditor()) {
                 this.editBox.active = false;

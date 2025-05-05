@@ -132,7 +132,7 @@ public class ProgressBarElement extends AbstractElement {
         lastRenderedProgressHeight = progressHeight;
 
         // Enable blending for transparency.
-        RenderSystem.enableBlend();
+         
 
         // Render using a texture if available.
         if (barTextureSupplier != null) {
@@ -161,7 +161,7 @@ public class ProgressBarElement extends AbstractElement {
      * Renders the background of the progress bar element.
      */
     protected void renderBackground(@NotNull GuiGraphics graphics) {
-        RenderSystem.enableBlend();
+         
         if (backgroundTextureSupplier != null) {
             backgroundTextureSupplier.forRenderable((texture, location) -> {
                 graphics.blit(RenderType::guiTextured, location, getAbsoluteX(), getAbsoluteY(), 0.0F, 0.0F, getAbsoluteWidth(), getAbsoluteHeight(), getAbsoluteWidth(), getAbsoluteHeight(), DrawableColor.WHITE.getColorIntWithAlpha(opacity));

@@ -42,7 +42,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.SaveFileScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -328,18 +327,11 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		this.layout.menuBackgrounds.forEach(menuBackground -> {
 
-			RenderSystem.enableBlend();
-
 			menuBackground.keepBackgroundAspectRatio = this.layout.preserveBackgroundAspectRatio;
 			menuBackground.opacity = 1.0F;
 			menuBackground.render(graphics, mouseX, mouseY, partial);
 
 			//Restore render defaults
-			RenderSystem.colorMask(true, true, true, true);
-			RenderSystem.depthMask(true);
-			RenderSystem.enableCull();
-			RenderSystem.enableDepthTest();
-			RenderSystem.enableBlend();
 			graphics.flush();
 
 		});
@@ -348,7 +340,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 			if (this.layout.applyVanillaBackgroundBlur) {
 				Minecraft.getInstance().gameRenderer.processBlurEffect();
-				Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 			}
 
 			if (this.layout.showScreenBackgroundOverlayOnCustomBackground) {
@@ -420,7 +411,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				}
 			}
 
-			RenderSystem.enableBlend();
 			graphics.blit(RenderType::guiTextured, Screen.HEADER_SEPARATOR, 0, y0 - 2, 0.0F, 0.0F, this.width, 2, 32, 2);
 			graphics.blit(RenderType::guiTextured, Screen.FOOTER_SEPARATOR, 0, y1, 0.0F, 0.0F, this.width, 2, 32, 2);
 
@@ -1218,8 +1208,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	@Override
 	public boolean keyPressed(int keycode, int scancode, int modifiers) {
-
-		if (PopupHandler.isPopupActive()) return false;
 
 		this.anchorPointOverlay.keyPressed(keycode, scancode, modifiers);
 

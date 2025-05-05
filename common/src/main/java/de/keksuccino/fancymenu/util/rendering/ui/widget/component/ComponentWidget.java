@@ -80,7 +80,7 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
 
         this.handleComponentHover();
 
-        RenderSystem.enableBlend();
+         
 
         this.endX = this.getX();
         this.endX = graphics.drawString(this.font, this.getText(), this.getX(), this.getY(), this.getBaseColor().getColorInt(), this.shadow);

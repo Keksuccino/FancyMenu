@@ -21,7 +21,6 @@ public class ColorMenuBackground extends MenuBackground {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        RenderSystem.enableBlend();
         graphics.fill(RenderType.gui(), 0, 0, getScreenWidth(), getScreenHeight(), this.color.getColorIntWithAlpha(this.opacity));
         graphics.flush();
 

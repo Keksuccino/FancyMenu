@@ -75,7 +75,6 @@ public class SlideshowMenuBackground extends MenuBackground {
             this.slideshow.slideshowOpacity = 1.0F;
 
         } else {
-            RenderSystem.enableBlend();
             graphics.blit(RenderType::guiTextured, MISSING, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
         }
 

@@ -45,7 +45,6 @@ public class PanoramaMenuBackground extends MenuBackground {
             graphics.flush();
             this.panorama.opacity = 1.0F;
         } else {
-            RenderSystem.enableBlend();
             graphics.blit(RenderType::guiTextured, MISSING, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
         }
 

@@ -83,8 +83,6 @@ public class ScrollBar {
         this.lastGrabberX = x;
         this.lastGrabberY = y;
 
-        RenderSystem.enableBlend();
-
         if (this.isGrabberHovered() || this.isGrabberGrabbed()) {
             if (this.hoverBarTexture != null) {
                 graphics.blit(RenderType::guiTextured, this.hoverBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));

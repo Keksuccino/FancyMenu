@@ -99,7 +99,7 @@ public class BrandingRenderer {
      */
     public void render(@NotNull GuiGraphics graphics, int x, int y) {
 
-        RenderSystem.enableBlend();
+         
 
         if (lines.isEmpty()) {
             return;

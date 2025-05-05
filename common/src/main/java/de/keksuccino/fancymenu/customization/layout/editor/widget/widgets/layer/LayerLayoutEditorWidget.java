@@ -661,7 +661,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             this.eyeButtonHovered = this.isEyeButtonMouseOver(mouseX, mouseY);
             this.layerNameHovered = this.isLayerNameMouseOver(mouseX, mouseY);
 
-            RenderSystem.enableBlend();
+             
 
             if (this.element.isSelected() || this.element.isMultiSelected()) {
                 fillF(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), UIBase.getUIColorTheme().element_background_color_hover.getColorInt());
@@ -935,7 +935,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
             this.moveTopBottomButtonHovered = this.isMoveTopBottomButtonHovered(mouseX, mouseY);
 
-            RenderSystem.enableBlend();
+             
 
             ResourceLocation loc = this.layerWidget.editor.layout.renderElementsBehindVanilla ? MOVE_BEHIND_TEXTURE : MOVE_TO_TOP_TEXTURE;
             blitF(graphics, RenderType::guiTextured, loc, this.x, this.y, 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight(), UIBase.getUIColorTheme().ui_texture_color.getColorInt());
@@ -986,7 +986,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         @Override
         public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            RenderSystem.enableBlend();
+             
             fillF(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), UIBase.getUIColorTheme().element_border_color_normal.getColorInt());
         }
 

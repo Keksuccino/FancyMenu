@@ -71,10 +71,10 @@ public class TextInputScreen extends Screen {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        RenderSystem.enableBlend();
+         
         graphics.fill(RenderType.guiOverlay(), 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
-        RenderSystem.enableBlend();
+         
         MutableComponent t = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         int titleWidth = Minecraft.getInstance().font.width(t);
         graphics.drawString(this.font, t, (int)(this.width / 2) - (int)(titleWidth / 2), (int)(this.height / 2) - 30, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);

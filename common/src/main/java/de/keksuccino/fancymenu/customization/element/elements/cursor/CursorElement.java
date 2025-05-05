@@ -55,7 +55,6 @@ public class CursorElement extends AbstractElement {
                         }
                     }
                 } else {
-                    RenderSystem.enableBlend();
                     graphics.fill(RenderType.guiOverlay(), this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY() + this.getAbsoluteHeight(), DrawableColor.WHITE.getColorInt());
                     graphics.fill(RenderType.guiOverlay(), this.getAbsoluteX() + (this.getAbsoluteWidth() / 2), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), DrawableColor.BLACK.getColorInt());
                 }

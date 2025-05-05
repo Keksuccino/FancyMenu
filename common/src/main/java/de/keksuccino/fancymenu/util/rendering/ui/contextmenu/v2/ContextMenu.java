@@ -73,7 +73,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         float scale = UIBase.calculateFixedScale(this.getScale());
 
-        RenderSystem.enableBlend();
         graphics.pose().pushPose();
         graphics.pose().scale(scale, scale, scale);
         graphics.pose().translate(0.0F, 0.0F, 500.0F / scale);
@@ -201,7 +200,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
             // Only render if visible
             if (isVisible) {
-                RenderSystem.enableBlend();
                 e.render(graphics, (int) scaledMouseX, (int) scaledMouseY, partial);
             }
 
@@ -236,7 +234,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                         darkerBackgroundColor);
 
                 // Render arrow centered
-                RenderSystem.enableBlend();
                 graphics.blit(
                         RenderType::guiTextured,
                         SCROLL_UP_ARROW,
@@ -258,7 +255,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                         darkerBackgroundColor);
 
                 // Render arrow centered (with fixed position)
-                RenderSystem.enableBlend();
                 graphics.blit(
                         RenderType::guiTextured,
                         SCROLL_DOWN_ARROW,
@@ -1311,7 +1307,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         protected void renderIcon(GuiGraphics graphics) {
             if (this.icon != null) {
-                RenderSystem.enableBlend();
                 graphics.blit(RenderType::guiTextured, this.icon, (int) (this.x + 10), (int) (this.y + (this.getHeight() / 2) - (ICON_WIDTH_HEIGHT / 2)), 0.0F, 0.0F, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, UIBase.getUIColorTheme().ui_texture_color.getColorInt());
             }
         }
@@ -1332,7 +1327,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 }
                 this.tooltipActive = (this.tooltipIconHoverStart != -1) && ((this.tooltipIconHoverStart + 200) < System.currentTimeMillis());
 
-                RenderSystem.enableBlend();
                 graphics.blit(RenderType::guiTextured, CONTEXT_MENU_TOOLTIP_ICON, this.getTooltipIconX() + offsetX, this.getTooltipIconY(), 0.0F, 0.0F, 10, 10, 10, 10, UIBase.getUIColorTheme().ui_texture_color.getColorIntWithAlpha(this.tooltipIconHovered ? 1.0F : 0.2F));
 
                 if (this.tooltipActive) {
@@ -1551,7 +1545,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         protected void renderSubMenuArrow(GuiGraphics graphics) {
-            RenderSystem.enableBlend();
             graphics.blit(RenderType::guiTextured, SUB_CONTEXT_MENU_ARROW_ICON, (int) (this.x + this.width - 20), (int) (this.y + 5), 0.0F, 0.0F, 10, 10, 10, 10, UIBase.getUIColorTheme().ui_texture_color.getColorInt());
         }
 

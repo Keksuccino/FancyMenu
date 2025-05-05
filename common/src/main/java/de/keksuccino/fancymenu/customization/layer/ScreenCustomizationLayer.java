@@ -34,7 +34,6 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
@@ -340,7 +339,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	@EventListener
 	public void onScreenTickPre(ScreenTickEvent.Post e) {
 
-		if (PopupHandler.isPopupActive()) return;
 		if (!this.shouldCustomize(e.getScreen())) return;
 
 		this.layoutBase.menuBackgrounds.forEach(MenuBackground::tick);
@@ -354,7 +352,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	@EventListener(priority = EventPriority.VERY_HIGH)
 	public void onRenderPre(RenderScreenEvent.Pre e) {
 
-		if (PopupHandler.isPopupActive()) return;
 		if (!this.shouldCustomize(e.getScreen())) return;
 
 		//Re-init screen if layout-wide loading requirements changed
@@ -380,7 +377,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	@EventListener
 	public void onRenderPost(RenderScreenEvent.Post e) {
 
-		if (PopupHandler.isPopupActive()) return;
 		if (!this.shouldCustomize(e.getScreen())) return;
 
 		//Render background elements in foreground if it wasn't possible to render to the menu background
@@ -506,19 +502,12 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		this.layoutBase.menuBackgrounds.forEach(menuBackground -> {
 
-			RenderSystem.enableBlend();
-
 			menuBackground.keepBackgroundAspectRatio = this.layoutBase.preserveBackgroundAspectRatio;
 			menuBackground.opacity = this.backgroundOpacity;
 			menuBackground.render(graphics, mouseX, mouseY, partial);
 			menuBackground.opacity = 1.0F;
 
 			//Restore render defaults
-			RenderSystem.colorMask(true, true, true, true);
-			RenderSystem.depthMask(true);
-			RenderSystem.enableCull();
-			RenderSystem.enableDepthTest();
-			RenderSystem.enableBlend();
 			graphics.flush();
 
 		});
@@ -527,7 +516,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 			if (this.layoutBase.applyVanillaBackgroundBlur) {
 				Minecraft.getInstance().gameRenderer.processBlurEffect();
-				Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 			}
 
 			if (this.layoutBase.showScreenBackgroundOverlayOnCustomBackground) {
@@ -537,8 +525,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			}
 
 		}
-
-		if (PopupHandler.isPopupActive()) return;
 
 		//Render background elements
 		for (AbstractElement elements : new ArrayList<>(this.normalElements.backgroundElements)) {
@@ -555,7 +541,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 	public static void renderBackgroundOverlay(GuiGraphics graphics, int x, int y, int width, int height) {
 		ResourceLocation location = (Minecraft.getInstance().level == null) ? MENU_BACKGROUND : INWORLD_MENU_BACKGROUND;
-		RenderSystem.enableBlend();
 		graphics.blit(RenderType::guiTextured, location, x, y, 0, 0.0F, 0, width, height, 32, 32);
 	}
 
