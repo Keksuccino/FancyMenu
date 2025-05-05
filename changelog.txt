@@ -1,4 +1,15 @@
 
+CHANGELOG | FANCYMENU v3.5.1
+
+- Ported mod to MC 1.21.5
+- The old "Custom Localizations" system got removed, so it's now not possible anymore to load localizations using FancyMenu's own localization file format
+  - Loading Vanilla Minecraft localization files via resource pack still works like before, so this is now the new default to load custom localizations
+ 
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.5.0 - The "Quality of Life" Update
 
 - Added "Last World or Server" placeholder that returns the last world/server or an empty value if no last world/server was set (#1091)
