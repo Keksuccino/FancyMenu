@@ -196,8 +196,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			w.refresh();
 		}
 
-//		this.addWidget(this.tamagotchiBuddyWidget);
-//		this.tamagotchiBuddyWidget.setScreenSize(this.width, this.height);
+		this.addWidget(this.tamagotchiBuddyWidget);
+		this.tamagotchiBuddyWidget.setScreenSize(this.width, this.height);
 
 	}
 
@@ -209,7 +209,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	@Override
 	public void tick() {
 
-//		this.tamagotchiBuddyWidget.tick();
+		this.tamagotchiBuddyWidget.tick();
 
 		for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
 			w.tick();
@@ -264,7 +264,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		this.renderLayoutEditorWidgets(graphics, mouseX, mouseY, partial);
 
-//		this.tamagotchiBuddyWidget.render(graphics, mouseX, mouseY, partial);
+		this.tamagotchiBuddyWidget.render(graphics, mouseX, mouseY, partial);
 
 		this.menuBar.render(graphics, mouseX, mouseY, partial);
 

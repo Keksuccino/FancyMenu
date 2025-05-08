@@ -159,6 +159,12 @@ public class TamagotchiBuddyWidget extends AbstractContainerEventHandler impleme
     public void cleanup() {
         LOGGER.info("TamagotchiEasterEgg cleanup - saving buddy state");
         buddy.saveState();
+        
+        // Also save leveling data if available
+        if (buddy.getLevelingManager() != null) {
+            LOGGER.info("Saving buddy leveling data");
+            buddy.getLevelingManager().saveState();
+        }
     }
 
 }

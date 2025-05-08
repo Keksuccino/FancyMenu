@@ -105,6 +105,23 @@ public class BuddyGui {
                 // Condition for button to be active
                 () -> !buddy.isSleeping && (buddy.getEnergy() > 20) && (buddy.getPlayBall() == null) && !buddy.isEating && !buddy.isPooping
         ));
+        
+        // Create stats button to open leveling screen
+        buttons.add(new BuddyGuiButton(
+                this.buddy,
+                buddy -> "Stats",
+                () -> {
+                    LOGGER.info("Opening buddy stats screen");
+                    
+                    // Hide this GUI
+                    hide();
+                    
+                    // Open the leveling screen
+                    buddy.openLevelingScreen();
+                },
+                // Always active
+                () -> true
+        ));
 
         LOGGER.info("Initialized " + buttons.size() + " GUI buttons");
 

@@ -3,9 +3,11 @@ package de.keksuccino.fancymenu.customization.layout.editor.buddy;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.animation.AnimationState;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.animation.AnimationStates;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.gui.BuddyGui;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.gui.LevelingStatsScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.FoodItem;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.PlayBall;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.Poop;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.leveling.*;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
@@ -20,7 +22,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 
@@ -118,7 +123,32 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     public boolean wasOffScreen = false;
 
     public BuddyGui gui;
-
+    public LevelingStatsScreen levelingScreen;
+    
+    // Leveling system
+    private LevelingManager levelingManager;
+    
+    // Attribute effect multipliers (set by leveling manager based on attribute values)
+    private float hungerMultiplier = 1.0f;
+    private float happinessMultiplier = 1.0f;
+    private float energyMultiplier = 1.0f;
+    private float happinessGainMultiplier = 1.0f;
+    private float moveSpeedBonus = 0.0f;
+    private float experienceMultiplier = 1.0f;
+    private float animationVarietyBonus = 0.0f;
+    private float needsUnderstandingBonus = 0.0f;
+    private float luckBonus = 0.0f;
+    private float skillEffectMultiplier = 1.0f;
+    
+    // XP Sources tracking
+    private long lastXpGainTime = 0;
+    private Map<String, Long> xpCooldowns = new HashMap<>();
+    private static final long DEFAULT_XP_COOLDOWN = 60000; // 1 minute cooldown for most XP sources
+    
+    // Activity tracking for achievements
+    private long sessionStartTime;
+    private long lastSessionUpdateTime;
+    
     // Event listeners
     public final List<GuiEventListener> children = new ArrayList<>();
 
@@ -136,8 +166,16 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         // Initialize with random timer
         this.stateChangeTimer = random.nextInt(200) + 100;
 
+        // Initialize session timers
+        this.sessionStartTime = System.currentTimeMillis();
+        this.lastSessionUpdateTime = this.sessionStartTime;
+
+        // Initialize leveling manager
+        this.levelingManager = new LevelingManager(this);
+        
         // Initialize GUI
         this.gui = new BuddyGui(this);
+        this.levelingScreen = new LevelingStatsScreen(this, levelingManager);
     }
 
     @Override
@@ -258,7 +296,11 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
 
         // Render the GUI
         gui.render(graphics, mouseX, mouseY);
-
+        
+        // Render the leveling screen if visible
+        if (levelingScreen.isVisible()) {
+            levelingScreen.render(graphics, mouseX, mouseY);
+        }
     }
 
     /**
@@ -323,6 +365,18 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     public void tick() {
 
         if (!isDisabled) return;
+        
+        // Update session time tracking
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastSessionUpdateTime > 60000) { // Update every minute
+            if (levelingManager != null) {
+                levelingManager.updateSessionTime();
+            }
+            lastSessionUpdateTime = currentTime;
+            
+            // Check for midnight companion achievement
+            checkTimeBasedAchievements(currentTime);
+        }
 
         // Immediately stop hopping if buddy becomes sad
         if (isHopping && isSad()) {
@@ -482,58 +536,90 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
      */
     public void updateStatsAndNeeds() {
 
-        // Decrease stats over time
-        hunger = Math.max(0, hunger - 0.05f);
-        happiness = Math.max(0, happiness - 0.03f);
-        funLevel = Math.max(0, funLevel - 0.02f);  // NEW: Fun decreases slower than hunger
+        // Apply attribute effects from leveling system to stat changes
+        
+        // Decrease stats over time - modified by attributes
+        hunger = Math.max(0, hunger - (0.05f * hungerMultiplier));
+        happiness = Math.max(0, happiness - (0.03f * happinessMultiplier));
+        funLevel = Math.max(0, funLevel - 0.02f);  // Fun decreases slower than hunger
 
         // Energy decreases unless sleeping
         if (isSleeping) {
             energy = Math.min(100, energy + 0.3f);
         } else {
-            energy = Math.max(0, energy - 0.02f);
+            energy = Math.max(0, energy - (0.02f * energyMultiplier));
 
             // Playing increases fun but drains energy faster
             if (isPlaying) {
-                energy = Math.max(0, energy - 0.1f);
+                energy = Math.max(0, energy - (0.1f * energyMultiplier));
                 funLevel = Math.min(100, funLevel + 0.5f);  // Playing significantly increases fun
             }
 
             // Chasing drains energy faster
             if (isChasingBall) {
-                energy = Math.max(0, energy - 0.08f);
+                energy = Math.max(0, energy - (0.08f * energyMultiplier));
             }
 
             // Hopping drains energy faster
             if (isHopping) {
-                energy = Math.max(0, energy - 0.05f);
+                energy = Math.max(0, energy - (0.05f * energyMultiplier));
             }
 
             // Excitement drains energy faster
             if (isExcited) {
-                energy = Math.max(0, energy - 0.1f);
+                energy = Math.max(0, energy - (0.1f * energyMultiplier));
                 // But it also increases happiness!
-                happiness = Math.min(100, happiness + 0.1f);
+                happiness = Math.min(100, happiness + (0.1f * happinessGainMultiplier));
             }
 
             // Running drains energy faster
             if (this.currentState == RUNNING) {
-                energy = Math.max(0, energy - 0.1f);
+                energy = Math.max(0, energy - (0.1f * energyMultiplier));
             }
 
         }
 
-        // Set needs based on stats
-        needsFood = hunger < 30;
-        needsPet = happiness < 30;
-        needsPlay = funLevel < 30;
-        isSleepy = energy < 30 && energy >= 10;
+        // Set needs based on stats, improved by Empathy attribute
+        float needThreshold = 30f * (1f - (needsUnderstandingBonus * 0.3f)); // Up to 30% lower threshold with max empathy
+        needsFood = hunger < needThreshold;
+        needsPet = happiness < needThreshold;
+        needsPlay = funLevel < needThreshold;
+        isSleepy = energy < needThreshold && energy >= (needThreshold / 3);
 
         // Auto-sleep if energy is critically low
-        if (energy < 10 && !isSleeping) {
+        if (energy < (needThreshold / 3) && !isSleeping) {
             this.startSleeping();
         }
-
+        
+        // Check if we should award experience for maintaining good stats
+        awardStatMaintenanceXp();
+        
+        // Check for stat-based achievements
+        if (levelingManager != null) {
+            levelingManager.checkStatAchievements();
+        }
+    }
+    
+    /**
+     * Awards experience for maintaining good stats over time
+     */
+    private void awardStatMaintenanceXp() {
+        // Only check once every minute
+        long now = System.currentTimeMillis();
+        if (now - lastXpGainTime < 60000) return;
+        
+        // Check if all stats are good
+        if (hunger >= 70 && happiness >= 70 && energy >= 70 && funLevel >= 70) {
+            // Award XP for good stat maintenance
+            gainExperience("statMaintenance", 5, 60000);
+            
+            // If ALL stats are excellent (90+), award bonus XP
+            if (hunger >= 90 && happiness >= 90 && energy >= 90 && funLevel >= 90) {
+                gainExperience("excellentStats", 10, 300000); // 5 minute cooldown on excellent stats bonus
+            }
+        }
+        
+        lastXpGainTime = now;
     }
 
     /**
@@ -1014,8 +1100,10 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
      */
     public void eatFood() {
         isEating = true;
-        hunger = Math.min(100, hunger + 40);
-        happiness = Math.min(100, happiness + 10);
+        // Apply vitality bonus to food effectiveness
+        float foodEffectiveness = 1.0f + (levelingManager.getAttributeEffectPercentage(BuddyAttribute.AttributeType.VITALITY) * 0.5f);
+        hunger = Math.min(100, hunger + (40 * foodEffectiveness));
+        happiness = Math.min(100, happiness + (10 * happinessGainMultiplier));
     }
 
     /**
@@ -1031,9 +1119,10 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             startGrumpyState();
         } else {
             isBeingPet = true;
-            happiness = Math.min(100, happiness + 30);
+            // Happiness gain is affected by the happiness gain multiplier from Charisma attribute
+            happiness = Math.min(100, happiness + (30 * happinessGainMultiplier));
             // Sometimes get excited when petted if already happy
-            if ((happiness > 70) && this.chanceCheck(30.0f)) {
+            if ((happiness > 70) && this.chanceCheck(30.0f + (luckBonus * 10.0f))) { // Luck affects chance of excitement
                 startExcitement();
             }
         }
@@ -1065,6 +1154,11 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
 
         if (!isDisabled) return false;
+        
+        // First handle the leveling screen if it's visible (highest priority)
+        if (levelingScreen.isVisible()) {
+            return levelingScreen.mouseClicked(mouseX, mouseY, button);
+        }
 
         if ((droppedFood != null) && !droppedFood.justCreated) {
             droppedFood.stickToCursor = false;
@@ -1080,6 +1174,12 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
                 isChasingBall = false;
                 playBall.setGrabbedByBuddy(true);
                 needsPlay = false; // Reset play need immediately
+                
+                // Award XP for playing with buddy
+                gainExperience("playWithBuddy", 10, 60000);
+                if (levelingManager != null) {
+                    levelingManager.incrementPlayCount();
+                }
             } else {
                 // Always make buddy chase the ball when thrown
                 isPlaying = true;
@@ -1097,12 +1197,19 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
                     // Increase happiness slightly for cleaning up poop
                     happiness = Math.min(100, happiness + 5);
                     LOGGER.info("Cleaned up poop at ({},{}), happiness: {}", poop.getX(), poop.getY(), happiness);
+                    
+                    // Award XP for cleaning poop
+                    gainExperience("cleanPoop", 5, 30000);
+                    if (levelingManager != null) {
+                        levelingManager.incrementPoopCleanCount();
+                    }
+                    
                     return true;
                 }
             }
         }
 
-        // First handle the GUI if it's visible
+        // Handle the GUI if it's visible
         if (gui.isVisible()) {
             return gui.mouseClicked(mouseX, mouseY, button);
         }
@@ -1118,6 +1225,13 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             // Normal petting if menu isn't open
             if (isMouseOverBuddy(mouseX, mouseY)) {
                 pet();
+                
+                // Award XP for petting
+                gainExperience("petBuddy", 2, 10000);
+                if (levelingManager != null) {
+                    levelingManager.incrementPetCount();
+                }
+                
                 return true;
             }
 
@@ -1154,6 +1268,11 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
 
         if (!isDisabled) return false;
+        
+        // Handle the leveling screen first if it's visible
+        if (levelingScreen.isVisible()) {
+            return true; // Just consume the event, mouseReleased is handled internally
+        }
 
         if (button == 0) {
             if (droppedFood != null && droppedFood.isBeingDragged()) {
@@ -1162,6 +1281,12 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
                     // If close to buddy, don't drop - just start eating
                     eatFood();
                     droppedFood = null;
+                    
+                    // Award XP for feeding
+                    gainExperience("feedBuddy", 5, 30000);
+                    if (levelingManager != null) {
+                        levelingManager.incrementFeedCount();
+                    }
                 } else {
                     // If not close, just drop normally
                     droppedFood.drop((int)mouseX, (int)mouseY);
@@ -1179,6 +1304,12 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
                     isChasingBall = false;
                     playBall.setGrabbedByBuddy(true);
                     needsPlay = false; // Reset play need immediately
+                    
+                    // Award XP for playing with buddy
+                    gainExperience("playWithBuddy", 10, 60000);
+                    if (levelingManager != null) {
+                        levelingManager.incrementPlayCount();
+                    }
                 } else {
                     // If not close, throw normally
                     playBall.throwBall((int)mouseX, (int)mouseY);
@@ -1189,6 +1320,15 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
                 }
                 return true;
             }
+        }
+        return false;
+    }
+    
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double deltaX, double deltaY) {
+        // Handle mouse scroll for leveling screen if visible
+        if (levelingScreen.isVisible()) {
+            return levelingScreen.mouseScrolled(mouseX, mouseY, deltaX, deltaY);
         }
         return false;
     }
@@ -1523,7 +1663,123 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     public boolean chanceCheck(float percentage) {
         if (percentage < 0.0f) percentage = 0.0f;
         if (percentage > 100.0f) percentage = 100.0f;
-        return this.random.nextFloat() < (percentage / 100.0f);
+        
+        // Apply luck bonus to chance checks
+        float effectivePercentage = percentage * (1.0f + (luckBonus * 0.3f));
+        effectivePercentage = Math.min(100.0f, effectivePercentage);
+        
+        return this.random.nextFloat() < (effectivePercentage / 100.0f);
+    }
+    
+    /**
+     * Awards experience points to the buddy
+     * 
+     * @param source The source of the experience (for cooldown tracking)
+     * @param amount The base amount of experience to award
+     * @param cooldownMs The cooldown in milliseconds before this source can award XP again
+     */
+    public void gainExperience(String source, int amount, long cooldownMs) {
+        if (levelingManager == null) return;
+        
+        // Check if this source is on cooldown
+        long now = System.currentTimeMillis();
+        Long lastAwardTime = xpCooldowns.get(source);
+        if (lastAwardTime != null && (now - lastAwardTime < cooldownMs)) {
+            return;
+        }
+        
+        // Apply intelligence bonus to experience gain
+        float finalAmount = amount * experienceMultiplier;
+        
+        // Award the experience
+        List<Integer> newLevels = levelingManager.addExperience(Math.round(finalAmount));
+        
+        // Update cooldown
+        xpCooldowns.put(source, now);
+        
+        // If leveled up, show a special animation
+        if (!newLevels.isEmpty()) {
+            startLevelUpCelebration(newLevels);
+        }
+    }
+    
+    /**
+     * Starts a celebration animation for leveling up
+     * 
+     * @param newLevels The list of new levels achieved
+     */
+    private void startLevelUpCelebration(List<Integer> newLevels) {
+        // For now, just show excitement (we could add a special animation later)
+        startExcitement();
+        
+        // Log the level up
+        for (int level : newLevels) {
+            LOGGER.info("Buddy leveled up to level {}!", level);
+        }
+    }
+    
+    /**
+     * Checks for time-based achievements based on the current time
+     * 
+     * @param currentTime The current time in milliseconds
+     */
+    private void checkTimeBasedAchievements(long currentTime) {
+        if (levelingManager == null) return;
+        
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(currentTime);
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        
+        // Check for midnight companion achievement (between midnight and 4 AM)
+        if (hour >= 0 && hour < 4) {
+            levelingManager.unlockAchievement(BuddyAchievement.AchievementType.MIDNIGHT_COMPANION);
+        }
+    }
+    
+    /**
+     * Sets the attribute effect multipliers and bonuses from the leveling manager
+     * 
+     * @param hungerMultiplier The multiplier for hunger decrease rate
+     * @param happinessMultiplier The multiplier for happiness decrease rate
+     * @param energyMultiplier The multiplier for energy decrease rate
+     * @param happinessGainMultiplier The multiplier for happiness gain
+     * @param moveSpeedBonus The bonus to movement speed
+     * @param experienceMultiplier The multiplier for experience gain
+     * @param animationVarietyBonus The bonus to animation variety
+     * @param needsUnderstandingBonus The bonus to needs understanding
+     * @param luckBonus The bonus to luck
+     * @param skillEffectMultiplier The multiplier for skill effectiveness
+     */
+    public void setAttributeEffects(float hungerMultiplier, float happinessMultiplier, float energyMultiplier,
+                                   float happinessGainMultiplier, float moveSpeedBonus, float experienceMultiplier,
+                                   float animationVarietyBonus, float needsUnderstandingBonus, float luckBonus,
+                                   float skillEffectMultiplier) {
+        this.hungerMultiplier = hungerMultiplier;
+        this.happinessMultiplier = happinessMultiplier;
+        this.energyMultiplier = energyMultiplier;
+        this.happinessGainMultiplier = happinessGainMultiplier;
+        this.moveSpeedBonus = moveSpeedBonus;
+        this.experienceMultiplier = experienceMultiplier;
+        this.animationVarietyBonus = animationVarietyBonus;
+        this.needsUnderstandingBonus = needsUnderstandingBonus;
+        this.luckBonus = luckBonus;
+        this.skillEffectMultiplier = skillEffectMultiplier;
+    }
+    
+    /**
+     * Opens the leveling stats screen
+     */
+    public void openLevelingScreen() {
+        levelingScreen.show(screenWidth, screenHeight);
+    }
+    
+    /**
+     * Gets the leveling manager for this buddy
+     * 
+     * @return The leveling manager
+     */
+    public LevelingManager getLevelingManager() {
+        return levelingManager;
     }
 
 }
