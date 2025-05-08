@@ -3,24 +3,17 @@ package de.keksuccino.fancymenu.customization.layout.editor.buddy.gui;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddy;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.leveling.BuddyAttribute;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.leveling.BuddyAchievement;
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.leveling.BuddyLevel;
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.leveling.BuddySkill;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.leveling.LevelingManager;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.Tooltip;
-import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -41,15 +34,10 @@ public class LevelingStatsScreen {
     // GUI Texture
     private static final ResourceLocation GUI_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/leveling_gui.png");
     private static final ResourceLocation TABS_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/leveling_tabs.png");
-    private static final ResourceLocation XP_BAR_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/xp_bar.png");
-    private static final ResourceLocation SKILL_TREE_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/skill_tree.png");
-    private static final ResourceLocation ACHIEVEMENTS_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/achievements.png");
 
     // Tab Indices
     private static final int TAB_STATS = 0;
-    private static final int TAB_SKILLS = 1;
-    private static final int TAB_ACHIEVEMENTS = 2;
-    private static final int TAB_UNLOCKS = 3;
+    private static final int TAB_ACHIEVEMENTS = 1;
 
     // Reference to the buddy and its leveling manager
     private final TamagotchiBuddy buddy;
@@ -62,9 +50,11 @@ public class LevelingStatsScreen {
     private int currentTab = TAB_STATS;
     private final List<BuddyGuiButton> buttons = new ArrayList<>();
     private final List<AttributeButton> attributeButtons = new ArrayList<>();
-    private final List<SkillButton> skillButtons = new ArrayList<>();
-    private int skillTreeScrollOffset = 0;
+    // Removed skill buttons and scroll offset
     private int achievementsScrollOffset = 0;
+
+    // Mouse handling
+    private boolean isMouseClicked = false;
 
     /**
      * Creates a new leveling stats screen.
@@ -94,17 +84,14 @@ public class LevelingStatsScreen {
         for (BuddyAttribute.AttributeType type : BuddyAttribute.AttributeType.values()) {
             attributeButtons.add(new AttributeButton(type));
         }
-
-        // Initialize skill buttons
-        for (BuddySkill.SkillType type : BuddySkill.SkillType.values()) {
-            skillButtons.add(new SkillButton(type));
-        }
     }
 
     /**
      * Shows the GUI at the specified position
      */
     public void show(int screenWidth, int screenHeight) {
+
+        this.isMouseClicked = false;
         this.isVisible = true;
 
         // Calculate GUI position - centered on screen
@@ -151,20 +138,7 @@ public class LevelingStatsScreen {
             attributeButtons.get(i).setPosition(x, y);
         }
 
-        // Position skill buttons in a grid for the skill tree view
-        int skillStartX = guiX + 30;
-        int skillStartY = guiY + 60 - skillTreeScrollOffset;
-        int skillSpacingX = 130;
-        int skillSpacingY = 40;
-        int skillsPerRow = 2;
-
-        for (int i = 0; i < skillButtons.size(); i++) {
-            int row = i / skillsPerRow;
-            int col = i % skillsPerRow;
-            int x = skillStartX + (col * skillSpacingX);
-            int y = skillStartY + (row * skillSpacingY);
-            skillButtons.get(i).setPosition(x, y);
-        }
+        // Skill buttons removed
     }
 
     /**
@@ -196,14 +170,8 @@ public class LevelingStatsScreen {
             case TAB_STATS:
                 renderStatsTab(graphics, mouseX, mouseY);
                 break;
-            case TAB_SKILLS:
-                renderSkillsTab(graphics, mouseX, mouseY);
-                break;
             case TAB_ACHIEVEMENTS:
                 renderAchievementsTab(graphics, mouseX, mouseY);
-                break;
-            case TAB_UNLOCKS:
-                renderUnlocksTab(graphics, mouseX, mouseY);
                 break;
         }
 
@@ -226,7 +194,7 @@ public class LevelingStatsScreen {
         int tabStartX = guiX + 15;
         int tabY = guiY;
 
-        String[] tabNames = {"Stats", "Skills", "Achievements", "Unlocks"};
+        String[] tabNames = {"Stats", "Achievements"};
 
         for (int i = 0; i < tabNames.length; i++) {
             int tabX = tabStartX + (i * tabWidth);
@@ -299,9 +267,7 @@ public class LevelingStatsScreen {
         String attrPointsText = "Attribute Points: " + levelingManager.getUnspentAttributePoints();
         graphics.drawString(font, attrPointsText, contentStartX, contentStartY + 50, 0xFFFFFF);
 
-        // Draw skill points
-        String skillPointsText = "Skill Points: " + levelingManager.getUnspentSkillPoints();
-        graphics.drawString(font, skillPointsText, contentStartX + 180, contentStartY + 50, 0xFFFFFF);
+        // Skill points removed
 
         // Draw attributes
         String attributesTitle = "Attributes";
@@ -310,51 +276,6 @@ public class LevelingStatsScreen {
         // Render attribute buttons if in stats tab
         for (AttributeButton button : attributeButtons) {
             button.render(graphics, mouseX, mouseY);
-        }
-    }
-
-    /**
-     * Renders the skills tab content
-     */
-    private void renderSkillsTab(GuiGraphics graphics, int mouseX, int mouseY) {
-        Font font = Minecraft.getInstance().font;
-        int contentStartX = guiX + 20;
-        int contentStartY = guiY + 30;
-
-        // Draw title
-        String title = "Buddy Skills";
-        graphics.drawString(font, title, guiX + (SCREEN_WIDTH - font.width(title)) / 2, contentStartY, 0xFFFFFF);
-
-        // Draw skill points
-        String skillPointsText = "Skill Points: " + levelingManager.getUnspentSkillPoints();
-        graphics.drawString(font, skillPointsText, contentStartX, contentStartY + 20, 0xFFFFFF);
-
-        // Create a viewport for scrolling
-        int viewportX = guiX + 10;
-        int viewportY = contentStartY + 40;
-        int viewportWidth = SCREEN_WIDTH - 20;
-        int viewportHeight = SCREEN_HEIGHT - 100;
-
-        // Render skill tree background
-        graphics.blit(RenderType::guiTextured, SKILL_TREE_TEXTURE, viewportX, viewportY, 0, skillTreeScrollOffset, viewportWidth, viewportHeight, 512, 512);
-
-        // Draw skill buttons with appropriate offsets
-        for (SkillButton button : skillButtons) {
-            // Only render buttons that are in the viewport
-            if (button.y >= viewportY && button.y <= viewportY + viewportHeight) {
-                button.render(graphics, mouseX, mouseY);
-            }
-        }
-
-        // Draw scroll indicators if needed
-        boolean canScrollUp = skillTreeScrollOffset > 0;
-        boolean canScrollDown = skillTreeScrollOffset < 200; // Assuming the skill tree is 400px tall
-
-        if (canScrollUp) {
-            graphics.drawString(font, "▲", guiX + SCREEN_WIDTH - 20, viewportY + 5, 0xFFFFFF);
-        }
-        if (canScrollDown) {
-            graphics.drawString(font, "▼", guiX + SCREEN_WIDTH - 20, viewportY + viewportHeight - 15, 0xFFFFFF);
         }
     }
 
@@ -444,67 +365,12 @@ public class LevelingStatsScreen {
     }
 
     /**
-     * Renders the unlocks tab content
-     */
-    private void renderUnlocksTab(GuiGraphics graphics, int mouseX, int mouseY) {
-        Font font = Minecraft.getInstance().font;
-        int contentStartX = guiX + 20;
-        int contentStartY = guiY + 30;
-
-        // Draw title
-        String title = "Buddy Unlocks";
-        graphics.drawString(font, title, guiX + (SCREEN_WIDTH - font.width(title)) / 2, contentStartY, 0xFFFFFF);
-
-        // Draw unlocks
-        int unlockStartY = contentStartY + 20;
-        int unlockHeight = 20;
-        int unlockWidth = SCREEN_WIDTH - 40;
-        int maxUnlocksVisible = 8;
-
-        // Get unlocks
-        List<BuddyLevel.BuddyUnlock> unlockedFeatures = new ArrayList<>(levelingManager.getUnlocks());
-        
-        // Sort unlocks alphabetically
-        unlockedFeatures.sort((u1, u2) -> u1.getName().compareTo(u2.getName()));
-
-        // Draw unlock items
-        int unlocksDrawn = 0;
-        for (int i = 0; i < unlockedFeatures.size() && unlocksDrawn < maxUnlocksVisible; i++) {
-            BuddyLevel.BuddyUnlock unlock = unlockedFeatures.get(i);
-            
-            int itemY = unlockStartY + (unlocksDrawn * unlockHeight);
-            
-            // Draw item background
-            graphics.fill(contentStartX, itemY, contentStartX + unlockWidth, itemY + unlockHeight - 2, 0x8000FF00);
-            
-            // Draw unlock name
-            graphics.drawString(font, unlock.getName(), contentStartX + 5, itemY + 5, 0xFFFFFF);
-            
-            // Check if mouse is over this unlock for tooltip
-            if (mouseX >= contentStartX && mouseX <= contentStartX + unlockWidth &&
-                    mouseY >= itemY && mouseY <= itemY + unlockHeight) {
-                graphics.renderTooltip(font, Component.literal(unlock.getDescription()), mouseX, mouseY);
-            }
-            
-            unlocksDrawn++;
-        }
-
-        // If no unlocks
-        if (unlockedFeatures.isEmpty()) {
-            String noUnlocksText = "No unlocks yet. Level up to unlock features!";
-            graphics.drawString(font, noUnlocksText, contentStartX, unlockStartY + 20, 0xAAAAAA);
-        }
-    }
-
-    // Mouse handling
-    private boolean isMouseClicked = false;
-
-    /**
      * Handles mouse clicks on the GUI
      *
      * @return true if the click was handled by the GUI, false otherwise
      */
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+
         if (!isVisible) return false;
 
         // Mark mouse as clicked for tab selection
@@ -520,32 +386,6 @@ public class LevelingStatsScreen {
                     for (AttributeButton attributeButton : attributeButtons) {
                         if (attributeButton.isMouseOver(mouseX, mouseY)) {
                             attributeButton.onClick();
-                            return true;
-                        }
-                    }
-                    break;
-                    
-                case TAB_SKILLS:
-                    for (SkillButton skillButton : skillButtons) {
-                        if (skillButton.isMouseOver(mouseX, mouseY)) {
-                            skillButton.onClick();
-                            return true;
-                        }
-                    }
-                    
-                    // Check for scroll up/down clicks
-                    int viewportY = guiY + 70;
-                    int viewportHeight = SCREEN_HEIGHT - 100;
-                    if (mouseX >= guiX + SCREEN_WIDTH - 20) {
-                        if (mouseY >= viewportY && mouseY <= viewportY + 20) {
-                            // Scroll up
-                            skillTreeScrollOffset = Math.max(0, skillTreeScrollOffset - 20);
-                            updateButtonPositions();
-                            return true;
-                        } else if (mouseY >= viewportY + viewportHeight - 20 && mouseY <= viewportY + viewportHeight) {
-                            // Scroll down
-                            skillTreeScrollOffset += 20;
-                            updateButtonPositions();
                             return true;
                         }
                     }
@@ -588,6 +428,14 @@ public class LevelingStatsScreen {
         }
     }
 
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+
+        this.isMouseClicked = false;
+
+        return false;
+
+    }
+
     /**
      * Called when the mouse wheel is scrolled
      */
@@ -600,12 +448,6 @@ public class LevelingStatsScreen {
 
             // Handle scrolling based on current tab
             switch (currentTab) {
-                case TAB_SKILLS:
-                    // Scroll the skill tree
-                    skillTreeScrollOffset = Math.max(0, skillTreeScrollOffset - (int)(deltaY * 20));
-                    updateButtonPositions();
-                    return true;
-                    
                 case TAB_ACHIEVEMENTS:
                     // Scroll the achievements list
                     achievementsScrollOffset = Math.max(0, achievementsScrollOffset - (int)(deltaY * 20));
@@ -695,139 +537,5 @@ public class LevelingStatsScreen {
         }
     }
 
-    /**
-     * Button for skill unlocking and upgrading
-     */
-    private class SkillButton {
-        private final BuddySkill.SkillType type;
-        private int x;
-        private int y;
-        private static final int WIDTH = 120;
-        private static final int HEIGHT = 35;
-
-        public SkillButton(BuddySkill.SkillType type) {
-            this.type = type;
-        }
-
-        public void setPosition(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-
-        public boolean isMouseOver(double mouseX, double mouseY) {
-            return mouseX >= x && mouseX < x + WIDTH && mouseY >= y && mouseY < y + HEIGHT;
-        }
-
-        public void onClick() {
-            BuddySkill skill = levelingManager.getSkills().get(type);
-            if (skill == null) return;
-            
-            if (!skill.isUnlocked()) {
-                if (levelingManager.canUnlockSkill(type)) {
-                    levelingManager.unlockSkill(type);
-                }
-            } else if (skill.getSkillLevel() < skill.getMaxSkillLevel()) {
-                levelingManager.increaseSkillLevel(type);
-            }
-        }
-
-        public void render(GuiGraphics graphics, int mouseX, int mouseY) {
-            Font font = Minecraft.getInstance().font;
-            
-            // Get skill
-            BuddySkill skill = levelingManager.getSkills().get(type);
-            if (skill == null) return;
-            
-            boolean isUnlocked = skill.isUnlocked();
-            boolean canUnlock = levelingManager.canUnlockSkill(type);
-            boolean canUpgrade = isUnlocked && skill.getSkillLevel() < skill.getMaxSkillLevel() && 
-                                levelingManager.getUnspentSkillPoints() > 0;
-            
-            // Draw background
-            boolean hovered = isMouseOver(mouseX, mouseY);
-            
-            int bgColor;
-            if (isUnlocked) {
-                bgColor = hovered && canUpgrade ? 0x8000FF00 : 0x8000AA00;
-            } else {
-                bgColor = hovered && canUnlock ? 0x80FFFF00 : 0x80555500;
-            }
-            
-            graphics.fill(x, y, x + WIDTH, y + HEIGHT, bgColor);
-            
-            // Draw skill name
-            String name = type.getName();
-            graphics.drawString(font, name, x + 5, y + 2, isUnlocked ? 0xFFFFFF : 0xAAAAAA);
-            
-            // Draw skill level if unlocked
-            if (isUnlocked) {
-                String levelText = "Level: " + skill.getSkillLevel() + "/" + skill.getMaxSkillLevel();
-                graphics.drawString(font, levelText, x + 5, y + 18, 0xFFFFFF);
-            } else {
-                // Draw requirements if not unlocked
-                String reqText = "Lvl " + skill.getLevelRequirement() + " | " + 
-                                 skill.getPrimaryAttributeType().getName() + " " + skill.getPrimaryAttributeRequirement();
-                graphics.drawString(font, reqText, x + 5, y + 18, canUnlock ? 0x00FF00 : 0xFF0000);
-            }
-            
-            // Show tooltip on hover
-            if (hovered) {
-                List<Component> tooltipLines = new ArrayList<>();
-                tooltipLines.add(Component.literal(type.getName()));
-                tooltipLines.add(Component.literal(type.getShortDescription()));
-                
-                if (isUnlocked) {
-                    tooltipLines.add(Component.literal("Effectiveness: " + 
-                                    (int)(levelingManager.getSkillEffectiveness(type) * 100) + "%"));
-                    tooltipLines.add(Component.literal(type.getMaxLevelDescription()));
-                    
-                    if (canUpgrade) {
-                        tooltipLines.add(Component.literal("§aClick to upgrade"));
-                    } else if (skill.getSkillLevel() >= skill.getMaxSkillLevel()) {
-                        tooltipLines.add(Component.literal("§6Maximum level reached"));
-                    } else {
-                        tooltipLines.add(Component.literal("§cNot enough skill points"));
-                    }
-                } else {
-                    // Add prerequisites
-                    if (!skill.getPrerequisites().isEmpty()) {
-                        tooltipLines.add(Component.literal("§6Prerequisites:"));
-                        for (BuddySkill.SkillType prereq : skill.getPrerequisites()) {
-                            boolean hasPrereq = levelingManager.getSkills().get(prereq).isUnlocked();
-                            tooltipLines.add(Component.literal((hasPrereq ? "§a✓ " : "§c✗ ") + prereq.getName()));
-                        }
-                    }
-                    
-                    // Add attribute requirements
-                    tooltipLines.add(Component.literal("§6Requirements:"));
-                    
-                    boolean hasLevel = levelingManager.getCurrentLevel() >= skill.getLevelRequirement();
-                    tooltipLines.add(Component.literal((hasLevel ? "§a✓ " : "§c✗ ") + 
-                                   "Level " + skill.getLevelRequirement()));
-                    
-                    BuddyAttribute primaryAttr = levelingManager.getAttributes().get(skill.getPrimaryAttributeType());
-                    boolean hasPrimaryAttr = primaryAttr != null && 
-                                           primaryAttr.getTotalValue() >= skill.getPrimaryAttributeRequirement();
-                    tooltipLines.add(Component.literal((hasPrimaryAttr ? "§a✓ " : "§c✗ ") + 
-                                   skill.getPrimaryAttributeType().getName() + " " + 
-                                   skill.getPrimaryAttributeRequirement()));
-                    
-                    if (skill.getSecondaryAttributeType() != null) {
-                        BuddyAttribute secondaryAttr = levelingManager.getAttributes().get(skill.getSecondaryAttributeType());
-                        boolean hasSecondaryAttr = secondaryAttr != null && 
-                                                secondaryAttr.getTotalValue() >= skill.getSecondaryAttributeRequirement();
-                        tooltipLines.add(Component.literal((hasSecondaryAttr ? "§a✓ " : "§c✗ ") + 
-                                       skill.getSecondaryAttributeType().getName() + " " + 
-                                       skill.getSecondaryAttributeRequirement()));
-                    }
-                    
-                    if (canUnlock) {
-                        tooltipLines.add(Component.literal("§aClick to unlock"));
-                    }
-                }
-                
-                graphics.renderTooltip(font, tooltipLines, Optional.empty(), mouseX, mouseY);
-            }
-        }
-    }
+    // SkillButton class removed
 }

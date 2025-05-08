@@ -15,7 +15,6 @@ public class BuddyAchievement {
     private final int experienceReward;
     private final BuddyAttribute.AttributeType attributeRewardType;
     private final int attributeRewardPoints;
-    private final BuddyLevel.BuddyUnlock unlockReward;
     private final Consumer<LevelingManager> customRewardAction;
     private boolean unlocked;
     private long unlockTimestamp;
@@ -28,19 +27,16 @@ public class BuddyAchievement {
      * @param experienceReward The experience points awarded for completing this achievement
      * @param attributeRewardType The attribute type to reward (can be null)
      * @param attributeRewardPoints The number of attribute points to award
-     * @param unlockReward A special unlock awarded for completing this achievement (can be null)
      * @param customRewardAction A custom action to perform when the achievement is completed (can be null)
      */
     public BuddyAchievement(@NotNull AchievementType type, @NotNull String description, int experienceReward,
                            @Nullable BuddyAttribute.AttributeType attributeRewardType, int attributeRewardPoints,
-                           @Nullable BuddyLevel.BuddyUnlock unlockReward,
                            @Nullable Consumer<LevelingManager> customRewardAction) {
         this.type = type;
         this.description = description;
         this.experienceReward = Math.max(0, experienceReward);
         this.attributeRewardType = attributeRewardType;
         this.attributeRewardPoints = Math.max(0, attributeRewardPoints);
-        this.unlockReward = unlockReward;
         this.customRewardAction = customRewardAction;
         this.unlocked = false;
         this.unlockTimestamp = 0;
@@ -82,13 +78,6 @@ public class BuddyAchievement {
     }
     
     /**
-     * @return A special unlock awarded for completing this achievement (can be null)
-     */
-    public BuddyLevel.BuddyUnlock getUnlockReward() {
-        return unlockReward;
-    }
-    
-    /**
      * @return Whether this achievement has been unlocked
      */
     public boolean isUnlocked() {
@@ -124,11 +113,6 @@ public class BuddyAchievement {
         // Apply attribute reward
         if (attributeRewardType != null && attributeRewardPoints > 0) {
             levelingManager.addAttributePoints(attributeRewardType, attributeRewardPoints);
-        }
-        
-        // Apply unlock reward
-        if (unlockReward != null) {
-            levelingManager.addUnlock(unlockReward);
         }
         
         // Apply custom reward action

@@ -1271,7 +1271,8 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         
         // Handle the leveling screen first if it's visible
         if (levelingScreen.isVisible()) {
-            return true; // Just consume the event, mouseReleased is handled internally
+            levelingScreen.mouseReleased(mouseX, mouseY, button);
+            return true;
         }
 
         if (button == 0) {
@@ -1602,6 +1603,12 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
      */
     public void saveState() {
         TamagotchiBuddySerializer.saveBuddy(this);
+        
+        // Also save the leveling data
+        if (levelingManager != null) {
+            boolean levelingSaveResult = levelingManager.saveState();
+            LOGGER.info("Leveling data saving result: {}", levelingSaveResult);
+        }
     }
 
     /**
@@ -1610,6 +1617,12 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
      */
     public boolean loadState() {
         boolean result = TamagotchiBuddySerializer.loadBuddy(this);
+        
+        // Also load the leveling data
+        if (levelingManager != null) {
+            boolean levelingResult = levelingManager.loadState();
+            LOGGER.info("Leveling data loading result: {}", levelingResult);
+        }
 
         // After loading, clean up any poops that might be off-screen
         cleanupInvalidPoops();
