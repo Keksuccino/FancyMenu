@@ -7,7 +7,8 @@ import de.keksuccino.fancymenu.customization.layout.editor.buddy.gui.LevelingSta
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.FoodItem;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.PlayBall;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.Poop;
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.leveling.*;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.leveling.BuddyAchievement;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.leveling.LevelingManager;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
@@ -128,7 +129,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     // Leveling system
     private LevelingManager levelingManager;
     
-    // Attribute effect multipliers (set by leveling manager based on attribute values)
+    // Level effect multipliers (set by leveling manager based on level)
     private float hungerMultiplier = 1.0f;
     private float happinessMultiplier = 1.0f;
     private float energyMultiplier = 1.0f;
@@ -1100,8 +1101,9 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
      */
     public void eatFood() {
         isEating = true;
-        // Apply vitality bonus to food effectiveness
-        float foodEffectiveness = 1.0f + (levelingManager.getAttributeEffectPercentage(BuddyAttribute.AttributeType.VITALITY) * 0.5f);
+        // Apply level-based bonus to food effectiveness
+        float levelRatio = (float) Math.min(30, levelingManager.getCurrentLevel()) / 30f;
+        float foodEffectiveness = 1.0f + (levelRatio * 0.5f); // Up to 50% more effective at max level
         hunger = Math.min(100, hunger + (40 * foodEffectiveness));
         happiness = Math.min(100, happiness + (10 * happinessGainMultiplier));
     }
@@ -1215,10 +1217,10 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         }
 
         if (button == 1) { // Right click
-            // If clicked on buddy, open the GUI
+            // If clicked on buddy, open the stats screen directly
             if (isMouseOverBuddy(mouseX, mouseY)) {
-                gui.show(screenWidth, screenHeight);
-                LOGGER.info("Opening buddy GUI");
+                levelingScreen.show(screenWidth, screenHeight);
+                LOGGER.info("Opening buddy stats screen (on right-click)");
                 return true;
             }
         } else if (button == 0) { // Left click

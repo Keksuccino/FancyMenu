@@ -5,7 +5,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddy;
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.leveling.BuddyAttribute.AttributeType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -37,11 +36,9 @@ public class LevelingManager {
     // Leveling data
     private int currentLevel = 1;
     private int experience = 0;
-    private int unspentAttributePoints = 0;
     // Removed skill points and unlocks
 
-    // Attributes
-    private final Map<AttributeType, BuddyAttribute> attributes = new EnumMap<>(AttributeType.class);
+    // Attributes removed
 
     // Skills - removed
 
@@ -68,8 +65,7 @@ public class LevelingManager {
     public LevelingManager(@NotNull TamagotchiBuddy buddy) {
         this.buddy = buddy;
         
-        // Initialize attributes with default values
-        initializeAttributes();
+        // Attributes initialization removed
         
         // Initialize achievements
         initializeAchievements();
@@ -81,19 +77,7 @@ public class LevelingManager {
         this.lastSessionStart = System.currentTimeMillis();
     }
     
-    /**
-     * Initializes the attributes with default values.
-     */
-    private void initializeAttributes() {
-        attributes.put(AttributeType.VITALITY, new BuddyAttribute(AttributeType.VITALITY, 10));
-        attributes.put(AttributeType.AGILITY, new BuddyAttribute(AttributeType.AGILITY, 10));
-        attributes.put(AttributeType.INTELLIGENCE, new BuddyAttribute(AttributeType.INTELLIGENCE, 10));
-        attributes.put(AttributeType.CREATIVITY, new BuddyAttribute(AttributeType.CREATIVITY, 10));
-        attributes.put(AttributeType.CHARISMA, new BuddyAttribute(AttributeType.CHARISMA, 10));
-        attributes.put(AttributeType.EMPATHY, new BuddyAttribute(AttributeType.EMPATHY, 10));
-        attributes.put(AttributeType.LUCK, new BuddyAttribute(AttributeType.LUCK, 5));
-        attributes.put(AttributeType.WISDOM, new BuddyAttribute(AttributeType.WISDOM, 5));
-    }
+    // Attributes initialization method removed
     
     /**
      * Initializes the level experience requirements.
@@ -112,116 +96,90 @@ public class LevelingManager {
         achievements.put(BuddyAchievement.AchievementType.FIRST_STEPS, new BuddyAchievement(
                 BuddyAchievement.AchievementType.FIRST_STEPS,
                 "Interact with your buddy for the first time",
-                50, null, 0, null));
+                50, null));
                 
         achievements.put(BuddyAchievement.AchievementType.FRIENDLY_TOUCH, new BuddyAchievement(
                 BuddyAchievement.AchievementType.FRIENDLY_TOUCH,
                 "Pet your buddy 10 times",
-                100, AttributeType.CHARISMA, 1, null));
+                100, null));
                 
         achievements.put(BuddyAchievement.AchievementType.CARETAKER, new BuddyAchievement(
                 BuddyAchievement.AchievementType.CARETAKER,
                 "Feed your buddy 5 times",
-                100, AttributeType.EMPATHY, 1, null));
+                100, null));
                 
         achievements.put(BuddyAchievement.AchievementType.PLAYFUL_FRIEND, new BuddyAchievement(
                 BuddyAchievement.AchievementType.PLAYFUL_FRIEND,
                 "Play with your buddy for the first time",
-                75, AttributeType.CREATIVITY, 1, null));
+                75, null));
                 
         achievements.put(BuddyAchievement.AchievementType.CLEANUP_CREW, new BuddyAchievement(
                 BuddyAchievement.AchievementType.CLEANUP_CREW,
                 "Clean up 5 poops",
-                75, AttributeType.VITALITY, 1, null));
+                75, null));
                 
         // Intermediate achievements
         achievements.put(BuddyAchievement.AchievementType.BEST_BUDDIES, new BuddyAchievement(
                 BuddyAchievement.AchievementType.BEST_BUDDIES,
                 "Reach maximum happiness with your buddy",
-                200, AttributeType.CHARISMA, 2, null));
+                200, null));
                 
         achievements.put(BuddyAchievement.AchievementType.WELL_FED, new BuddyAchievement(
                 BuddyAchievement.AchievementType.WELL_FED,
                 "Keep your buddy perfectly fed for a full session",
-                200, AttributeType.VITALITY, 2, null));
+                200, null));
                 
         achievements.put(BuddyAchievement.AchievementType.ENERGIZER, new BuddyAchievement(
                 BuddyAchievement.AchievementType.ENERGIZER,
                 "Keep your buddy's energy above 80% for an entire session",
-                200, AttributeType.VITALITY, 2, null));
+                200, null));
                 
         achievements.put(BuddyAchievement.AchievementType.FUN_TIMES, new BuddyAchievement(
                 BuddyAchievement.AchievementType.FUN_TIMES,
                 "Reach maximum fun level with your buddy",
-                200, AttributeType.CREATIVITY, 2, null));
+                200, null));
                 
         achievements.put(BuddyAchievement.AchievementType.MARATHON_SESSION, new BuddyAchievement(
                 BuddyAchievement.AchievementType.MARATHON_SESSION,
                 "Spend over an hour with your buddy in a single session",
-                300, AttributeType.INTELLIGENCE, 2, null));
+                300, null));
                 
         // Advanced achievements
         achievements.put(BuddyAchievement.AchievementType.MASTER_TRAINER, new BuddyAchievement(
                 BuddyAchievement.AchievementType.MASTER_TRAINER,
                 "Reach level 10 with your buddy",
-                500, null, 0, null));
-                
-        achievements.put(BuddyAchievement.AchievementType.ATTRIBUTE_EXPERT, new BuddyAchievement(
-                BuddyAchievement.AchievementType.ATTRIBUTE_EXPERT,
-                "Get one attribute to maximum level",
-                500, null, 0, null));
+                500, null));
                 
         achievements.put(BuddyAchievement.AchievementType.COMPLETION_COLLECTOR, new BuddyAchievement(
                 BuddyAchievement.AchievementType.COMPLETION_COLLECTOR,
                 "Unlock all basic achievements",
-                750, AttributeType.WISDOM, 3, null));
+                750, null));
                 
         // Special achievements
         achievements.put(BuddyAchievement.AchievementType.MIDNIGHT_COMPANION, new BuddyAchievement(
                 BuddyAchievement.AchievementType.MIDNIGHT_COMPANION,
                 "Spend time with your buddy after midnight",
-                250, AttributeType.WISDOM, 1, null));
+                250, null));
                 
         achievements.put(BuddyAchievement.AchievementType.DESIGN_MARATHON, new BuddyAchievement(
                 BuddyAchievement.AchievementType.DESIGN_MARATHON,
                 "Spend extended time with your buddy",
-                500, AttributeType.CREATIVITY, 3, null));
+                500, null));
                 
         achievements.put(BuddyAchievement.AchievementType.LOYAL_FRIEND, new BuddyAchievement(
                 BuddyAchievement.AchievementType.LOYAL_FRIEND,
                 "Interact with your buddy every day for a week",
-                1000, AttributeType.CHARISMA, 3, null));
-                
-        achievements.put(BuddyAchievement.AchievementType.SECRET_DANCE, new BuddyAchievement(
-                BuddyAchievement.AchievementType.SECRET_DANCE,
-                "Discover the buddy's secret dance animation",
-                300, AttributeType.LUCK, 2, null));
-                
-        achievements.put(BuddyAchievement.AchievementType.TELEPATHIC_BOND, new BuddyAchievement(
-                BuddyAchievement.AchievementType.TELEPATHIC_BOND,
-                "Get your buddy to predict your actions correctly 5 times",
-                500, AttributeType.EMPATHY, 3, null));
-                
-        // Master achievements
-        achievements.put(BuddyAchievement.AchievementType.BUDDY_WHISPERER, new BuddyAchievement(
-                BuddyAchievement.AchievementType.BUDDY_WHISPERER,
-                "Max out all attributes",
-                2000, null, 0, null));
-                
-        achievements.put(BuddyAchievement.AchievementType.SKILL_MASTER, new BuddyAchievement(
-                BuddyAchievement.AchievementType.SKILL_MASTER,
-                "Unlock all skills",
-                2000, null, 0, null));
+                1000, null));
                 
         achievements.put(BuddyAchievement.AchievementType.PERFECT_HARMONY, new BuddyAchievement(
                 BuddyAchievement.AchievementType.PERFECT_HARMONY,
                 "Keep all buddy stats above 90% for an entire session",
-                1500, null, 0, null));
+                1500, null));
                 
         achievements.put(BuddyAchievement.AchievementType.ACHIEVEMENT_HUNTER, new BuddyAchievement(
                 BuddyAchievement.AchievementType.ACHIEVEMENT_HUNTER,
                 "Unlock all other achievements",
-                5000, null, 0, null));
+                5000, null));
     }
     
     // Level initialization moved to initializeLevelExperience
@@ -288,8 +246,7 @@ public class LevelingManager {
             currentLevel++;
             levelsGained.add(currentLevel);
             
-            // Award attribute points for leveling up
-            unspentAttributePoints += ATTRIBUTE_POINTS_PER_LEVEL;
+            // Attribute points award removed
             
             LOGGER.info("Buddy leveled up to level {}!", currentLevel);
             
@@ -315,74 +272,33 @@ public class LevelingManager {
         buddy.lookChancePercentage = Math.min(0.8f, 0.2f + (currentLevel * 0.02f));
         buddy.stretchChancePercentage = Math.min(0.5f, 0.1f + (currentLevel * 0.01f));
         buddy.excitedChancePercentage = Math.min(0.5f, 0.1f + (currentLevel * 0.01f));
+        buddy.poopingInterval = Math.max(1000, 1500 - (int)(100 * Math.min(5, currentLevel)));
+        buddy.hopAnimationSpeed = 0.3f + (0.01f * Math.min(30, currentLevel));
         
-        // Vitality affects health-related stats
-        float vitalityBonus = getAttributeEffectPercentage(AttributeType.VITALITY);
-        buddy.poopingInterval = Math.max(1000, 1500 - (int)(500 * vitalityBonus));
-        
-        // Agility affects movement speed
-        float agilityBonus = getAttributeEffectPercentage(AttributeType.AGILITY);
-        buddy.hopAnimationSpeed = 0.3f + (0.3f * agilityBonus);
-        
-        // Apply other attribute effects when the buddy needs updating
-        applyAttributeEffects();
+        // Apply buddy effects based on level only
+        applyLevelEffects();
     }
     
     /**
-     * Applies effects from the current attribute values to the buddy.
+     * Applies effects to the buddy based on level instead of attributes.
      */
-    public void applyAttributeEffects() {
-        // Get the effect percentages for each attribute (0.0 - 1.0)
-        float vitalityEffect = getAttributeEffectPercentage(AttributeType.VITALITY);
-        float agilityEffect = getAttributeEffectPercentage(AttributeType.AGILITY);
-        float intelligenceEffect = getAttributeEffectPercentage(AttributeType.INTELLIGENCE);
-        float creativityEffect = getAttributeEffectPercentage(AttributeType.CREATIVITY);
-        float charismaEffect = getAttributeEffectPercentage(AttributeType.CHARISMA);
-        float empathyEffect = getAttributeEffectPercentage(AttributeType.EMPATHY);
-        float luckEffect = getAttributeEffectPercentage(AttributeType.LUCK);
-        float wisdomEffect = getAttributeEffectPercentage(AttributeType.WISDOM);
+    public void applyLevelEffects() {
+        // Calculate level-based effects (0.0 - 1.0 scale)
+        float levelProgress = Math.min(currentLevel, MAX_LEVEL) / (float)MAX_LEVEL;
         
-        // Apply effects to the buddy
+        // Derive effects from level
+        float hungerMultiplier = 1.0f - (levelProgress * 0.5f); // Up to 50% slower hunger decrease
+        float happinessMultiplier = 1.0f - (levelProgress * 0.5f); // Up to 50% slower happiness decrease
+        float energyMultiplier = 1.0f - (levelProgress * 0.5f); // Up to 50% slower energy decrease
+        float happinessGainMultiplier = 1.0f + (levelProgress * 0.5f); // Up to 50% more happiness gain
+        float moveSpeedBonus = levelProgress * 2.0f; // Up to +2 move speed
+        float experienceMultiplier = 1.0f + (levelProgress * 0.3f); // Up to 30% more experience
+        float animationVarietyBonus = levelProgress * 0.5f; // Up to 50% more animation variety
+        float needsUnderstandingBonus = levelProgress * 0.5f; // Up to 50% better needs understanding
+        float luckBonus = levelProgress * 0.4f; // Up to 40% better luck
+        float skillEffectMultiplier = 1.0f; // No skills, so this is unused
         
-        // Vitality effects
-        // - Slower hunger decrease
-        float hungerMultiplier = 1.0f - (vitalityEffect * 0.5f); // Up to 50% slower hunger decrease
-        // - Slower energy decrease
-        float energyMultiplier = 1.0f - (vitalityEffect * 0.5f); // Up to 50% slower energy decrease
-        
-        // Agility effects
-        // - Faster movement
-        float moveSpeedBonus = agilityEffect * 2.0f; // Up to +2 move speed
-        
-        // Intelligence effects
-        // - Better memory (would be used in future features)
-        // - Faster learning (bonus experience gain)
-        float experienceMultiplier = 1.0f + (intelligenceEffect * 0.5f); // Up to 50% more experience
-        
-        // Creativity effects
-        // - More varied animations
-        float animationVarietyBonus = creativityEffect * 0.5f; // Up to 50% more animation variety
-        
-        // Charisma effects
-        // - Slower happiness decrease
-        float happinessMultiplier = 1.0f - (charismaEffect * 0.5f); // Up to 50% slower happiness decrease
-        // - Faster happiness increase
-        float happinessGainMultiplier = 1.0f + (charismaEffect * 0.5f); // Up to 50% more happiness gain
-        
-        // Empathy effects
-        // - Better understanding of needs
-        float needsUnderstandingBonus = empathyEffect * 0.5f; // Up to 50% better needs understanding
-        
-        // Luck effects
-        // - Better random events
-        float luckBonus = luckEffect * 0.5f; // Up to 50% better luck
-        
-        // Wisdom effects
-        // - Better advice (would be used in future features)
-        // - More efficient use of skills
-        float skillEffectMultiplier = 1.0f + (wisdomEffect * 0.3f); // Up to 30% more effective skills
-        
-        // Store these effects temporarily for the TamagotchiBuddy to use
+        // Store these effects for the TamagotchiBuddy to use
         buddy.setAttributeEffects(
                 hungerMultiplier,
                 happinessMultiplier,
@@ -397,48 +313,11 @@ public class LevelingManager {
         );
     }
     
-    /**
-     * Gets a percentage (0.0 - 1.0) representing the effectiveness of an attribute.
-     *
-     * @param type The attribute type
-     * @return The effect percentage (0.0 - 1.0)
-     */
-    public float getAttributeEffectPercentage(AttributeType type) {
-        BuddyAttribute attribute = attributes.get(type);
-        if (attribute == null) return 0.0f;
-        
-        return (float) attribute.getTotalValue() / BuddyAttribute.MAX_ATTRIBUTE_VALUE;
-    }
+    // Attribute effect percentage method removed
     
     // Skill-related methods removed
     
-    /**
-     * Adds attribute points to a specific attribute.
-     *
-     * @param type The attribute type to add points to
-     * @param points The number of points to add
-     * @return The actual number of points added
-     */
-    public int addAttributePoints(AttributeType type, int points) {
-        BuddyAttribute attribute = attributes.get(type);
-        if (attribute == null) return 0;
-        
-        int pointsToAdd = Math.min(points, unspentAttributePoints);
-        int pointsAdded = attribute.addBonusPoints(pointsToAdd);
-        
-        unspentAttributePoints -= pointsAdded;
-        
-        LOGGER.info("Added {} points to attribute: {}, now at {}/{}", 
-                pointsAdded, type.getName(), attribute.getTotalValue(), BuddyAttribute.MAX_ATTRIBUTE_VALUE);
-        
-        // After changing attributes, apply their effects
-        applyAttributeEffects();
-        
-        // Check for attribute-based achievements
-        checkAttributeAchievements();
-        
-        return pointsAdded;
-    }
+    // Attribute points method removed
     
     // Unlock methods removed
     
@@ -531,48 +410,6 @@ public class LevelingManager {
         // Level 10 achievement
         if (currentLevel >= 10) {
             unlockAchievement(BuddyAchievement.AchievementType.MASTER_TRAINER);
-        }
-    }
-    
-    /**
-     * Checks for attribute-based achievements.
-     */
-    private void checkAttributeAchievements() {
-        // Check for max attribute achievement
-        for (BuddyAttribute attribute : attributes.values()) {
-            if (attribute.getTotalValue() >= BuddyAttribute.MAX_ATTRIBUTE_VALUE) {
-                unlockAchievement(BuddyAchievement.AchievementType.ATTRIBUTE_EXPERT);
-                break;
-            }
-        }
-        
-        // Check if all attributes are maxed
-        boolean allMaxed = true;
-        for (BuddyAttribute attribute : attributes.values()) {
-            if (attribute.getTotalValue() < BuddyAttribute.MAX_ATTRIBUTE_VALUE) {
-                allMaxed = false;
-                break;
-            }
-        }
-        
-        if (allMaxed) {
-            unlockAchievement(BuddyAchievement.AchievementType.BUDDY_WHISPERER);
-        }
-    }
-    
-    /**
-     * Skills achievements have been simplified since skills were removed.
-     * This method now awards achievements based on level instead.
-     */
-    private void checkSkillAchievements() {
-        // Award achievement at level 15
-        if (currentLevel >= 15) {
-            unlockAchievement(BuddyAchievement.AchievementType.SKILL_SPECIALIST);
-        }
-        
-        // Award achievement at level 20
-        if (currentLevel >= 20) {
-            unlockAchievement(BuddyAchievement.AchievementType.SKILL_MASTER);
         }
     }
     
@@ -700,17 +537,8 @@ public class LevelingManager {
             // Save basic leveling data
             json.addProperty("level", currentLevel);
             json.addProperty("experience", experience);
-            json.addProperty("unspentAttributePoints", unspentAttributePoints);
             
-            // Save attributes
-            JsonObject attributesObj = new JsonObject();
-            for (Map.Entry<AttributeType, BuddyAttribute> entry : attributes.entrySet()) {
-                JsonObject attributeObj = new JsonObject();
-                attributeObj.addProperty("baseValue", entry.getValue().getBaseValue());
-                attributeObj.addProperty("bonusPoints", entry.getValue().getBonusPoints());
-                attributesObj.add(entry.getKey().name(), attributeObj);
-            }
-            json.add("attributes", attributesObj);
+            // Attribute saving removed
             
             // Skills removed
             
@@ -776,38 +604,7 @@ public class LevelingManager {
                 experience = Math.max(calculateExperienceForLevel(currentLevel), experience);
             }
             
-            if (json.has("unspentAttributePoints")) {
-                unspentAttributePoints = json.get("unspentAttributePoints").getAsInt();
-                unspentAttributePoints = Math.max(0, unspentAttributePoints);
-            }
-            
-            // Removed skill points and unlocks loading
-            
-            // Load attributes
-            if (json.has("attributes")) {
-                JsonObject attributesObj = json.getAsJsonObject("attributes");
-                for (AttributeType type : AttributeType.values()) {
-                    if (attributesObj.has(type.name())) {
-                        JsonObject attributeObj = attributesObj.getAsJsonObject(type.name());
-                        BuddyAttribute attribute = attributes.get(type);
-                        
-                        if (attribute != null) {
-                            if (attributeObj.has("baseValue")) {
-                                int baseValue = attributeObj.get("baseValue").getAsInt();
-                                // Reset and set new base value
-                                attribute = new BuddyAttribute(type, baseValue);
-                            }
-                            
-                            if (attributeObj.has("bonusPoints")) {
-                                int bonusPoints = attributeObj.get("bonusPoints").getAsInt();
-                                attribute.addBonusPoints(bonusPoints);
-                            }
-                            
-                            attributes.put(type, attribute);
-                        }
-                    }
-                }
-            }
+            // Attribute loading removed
             
             // Skills loading removed
             
@@ -861,8 +658,8 @@ public class LevelingManager {
             applyLevelStatBoosts();
             
             LOGGER.info("Loaded buddy leveling data from {}", saveFile.getAbsolutePath());
-            LOGGER.info("Current level: {}, Experience: {}, Attribute points: {}",
-                    currentLevel, experience, unspentAttributePoints);
+            LOGGER.info("Current level: {}, Experience: {}",
+                    currentLevel, experience);
             
             return true;
             
@@ -880,14 +677,6 @@ public class LevelingManager {
     
     public int getExperience() {
         return experience;
-    }
-    
-    public int getUnspentAttributePoints() {
-        return unspentAttributePoints;
-    }
-    
-    public Map<AttributeType, BuddyAttribute> getAttributes() {
-        return new EnumMap<>(attributes);
     }
     
     public Map<BuddyAchievement.AchievementType, BuddyAchievement> getAchievements() {
@@ -917,4 +706,5 @@ public class LevelingManager {
     public int getLayoutCreationCount() {
         return layoutCreationCount;
     }
+
 }

@@ -1,15 +1,17 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy.gui;
 
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddy;
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.leveling.BuddyAttribute;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.FoodItem;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.PlayBall;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.leveling.BuddyAchievement;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.leveling.LevelingManager;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,7 +19,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * A screen that displays and allows management of the buddy's leveling stats.
@@ -49,7 +50,8 @@ public class LevelingStatsScreen {
     private int guiY;
     private int currentTab = TAB_STATS;
     private final List<BuddyGuiButton> buttons = new ArrayList<>();
-    private final List<AttributeButton> attributeButtons = new ArrayList<>();
+    // Removed attribute buttons list
+    private final List<BuddyGuiButton> actionButtons = new ArrayList<>();
     // Removed skill buttons and scroll offset
     private int achievementsScrollOffset = 0;
 
@@ -72,6 +74,9 @@ public class LevelingStatsScreen {
      * Initializes the GUI buttons
      */
     private void initButtons() {
+
+        buttons.clear();
+
         // Close button
         buttons.add(new BuddyGuiButton(
                 this.buddy,
@@ -80,10 +85,52 @@ public class LevelingStatsScreen {
                 () -> true
         ));
 
-        // Initialize attribute buttons
-        for (BuddyAttribute.AttributeType type : BuddyAttribute.AttributeType.values()) {
-            attributeButtons.add(new AttributeButton(type));
-        }
+        actionButtons.clear();
+
+        // Create feed button
+        actionButtons.add(new BuddyGuiButton(
+                this.buddy,
+                buddy -> "Feed",
+                () -> {
+                    int mouseX = MouseInput.getMouseX();
+                    int mouseY = MouseInput.getMouseY();
+                    
+                    LOGGER.info("Creating food at screen coordinates: ({}, {})", mouseX, mouseY);
+
+                    // Create the food with drag mode already enabled
+                    FoodItem food = new FoodItem(mouseX, mouseY, buddy);
+                    buddy.setDroppedFood(food);
+                    food.stickToCursor = true;
+
+                    // Close the screen to let the player feed
+                    hide();
+                },
+                // Condition for button to be active
+                () -> (buddy.getDroppedFood() == null) && !buddy.isSleeping && !buddy.isPlaying && !buddy.isEating && !buddy.isPooping
+        ));
+
+        // Create play button
+        actionButtons.add(new BuddyGuiButton(
+                this.buddy,
+                buddy -> "Play",
+                () -> {
+                    int mouseX = MouseInput.getMouseX();
+                    int mouseY = MouseInput.getMouseY();
+                    
+                    LOGGER.info("Creating play ball at screen coordinates: ({}, {})", mouseX, mouseY);
+
+                    // Create the ball with drag mode already enabled
+                    PlayBall ball = new PlayBall(mouseX, mouseY, buddy);
+                    buddy.setPlayBall(ball);
+                    buddy.setChasingBall(true);
+                    ball.stickToCursor = true;
+
+                    // Close the screen to let the player give the ball to buddy
+                    hide();
+                },
+                // Condition for button to be active
+                () -> !buddy.isSleeping && (buddy.getEnergy() > 20) && (buddy.getPlayBall() == null) && !buddy.isEating && !buddy.isPooping
+        ));
     }
 
     /**
@@ -123,20 +170,18 @@ public class LevelingStatsScreen {
         if (!buttons.isEmpty()) {
             buttons.get(0).setPosition(closeButtonX, closeButtonY);
         }
-
-        // Position attribute buttons in a grid
-        int attributeStartX = guiX + 20;
-        int attributeStartY = guiY + 70;
-        int attributeSpacingX = 140;
-        int attributeSpacingY = 25;
-
-        for (int i = 0; i < attributeButtons.size(); i++) {
-            int row = i / 2;
-            int col = i % 2;
-            int x = attributeStartX + (col * attributeSpacingX);
-            int y = attributeStartY + (row * attributeSpacingY);
-            attributeButtons.get(i).setPosition(x, y);
+        
+        // Position action buttons (feed and play) next to status bars
+        int actionButtonStartX = guiX + 190;
+        int actionButtonStartY = guiY + 50;
+        int actionButtonSpacing = 35;
+        
+        for (int i = 0; i < actionButtons.size(); i++) {
+            int y = actionButtonStartY + (i * actionButtonSpacing);
+            actionButtons.get(i).setPosition(actionButtonStartX, y);
         }
+
+        // Removed attribute button positioning
 
         // Skill buttons removed
     }
@@ -231,16 +276,29 @@ public class LevelingStatsScreen {
         int contentStartY = guiY + 30;
 
         // Draw title
-        String title = "Buddy Statistics";
+        String title = "Buddy Status & Stats";
         graphics.drawString(font, title, guiX + (SCREEN_WIDTH - font.width(title)) / 2, contentStartY, 0xFFFFFF);
+
+        // Draw status bars (moved from BuddyGui)
+        renderStatusBars(graphics, contentStartX, contentStartY + 20);
+        
+        // Render action buttons (feed and play)
+        for (BuddyGuiButton button : actionButtons) {
+            // Update button active state before rendering
+            button.updateActiveState();
+            button.render(graphics, mouseX, mouseY);
+        }
+        
+        // Draw separator line
+        graphics.fill(contentStartX, contentStartY + 100, contentStartX + SCREEN_WIDTH - 40, contentStartY + 101, 0x80FFFFFF);
 
         // Draw level and XP
         String levelText = "Level: " + levelingManager.getCurrentLevel();
-        graphics.drawString(font, levelText, contentStartX, contentStartY + 20, 0xFFFFFF);
+        graphics.drawString(font, levelText, contentStartX, contentStartY + 110, 0xFFFFFF);
 
         // Draw XP bar
         int xpBarX = contentStartX + 80;
-        int xpBarY = contentStartY + 20;
+        int xpBarY = contentStartY + 110;
         int xpBarWidth = 150;
         int xpBarHeight = 10;
 
@@ -261,22 +319,9 @@ public class LevelingStatsScreen {
         } else {
             xpText += " (Max Level)";
         }
-        graphics.drawString(font, xpText, contentStartX, contentStartY + 35, 0xFFFFFF);
+        graphics.drawString(font, xpText, contentStartX, contentStartY + 125, 0xFFFFFF);
 
-        // Draw attribute points
-        String attrPointsText = "Attribute Points: " + levelingManager.getUnspentAttributePoints();
-        graphics.drawString(font, attrPointsText, contentStartX, contentStartY + 50, 0xFFFFFF);
-
-        // Skill points removed
-
-        // Draw attributes
-        String attributesTitle = "Attributes";
-        graphics.drawString(font, attributesTitle, contentStartX, contentStartY + 65, 0xFFFFFF);
-
-        // Render attribute buttons if in stats tab
-        for (AttributeButton button : attributeButtons) {
-            button.render(graphics, mouseX, mouseY);
-        }
+        // Removed attribute points, titles and buttons
     }
 
     /**
@@ -383,12 +428,7 @@ public class LevelingStatsScreen {
             // Handle clicks based on current tab
             switch (currentTab) {
                 case TAB_STATS:
-                    for (AttributeButton attributeButton : attributeButtons) {
-                        if (attributeButton.isMouseOver(mouseX, mouseY)) {
-                            attributeButton.onClick();
-                            return true;
-                        }
-                    }
+                    // Removed attribute button click handling
                     break;
                     
                 case TAB_ACHIEVEMENTS:
@@ -411,6 +451,17 @@ public class LevelingStatsScreen {
                     break;
             }
 
+            // Check if in stats tab and clicked on action buttons
+            if (currentTab == TAB_STATS) {
+                for (BuddyGuiButton actionButton : actionButtons) {
+                    actionButton.updateActiveState();
+                    if (actionButton.isActive() && actionButton.isMouseOver(mouseX, mouseY)) {
+                        actionButton.onClick();
+                        return true;
+                    }
+                }
+            }
+            
             // Check for button clicks
             for (BuddyGuiButton button2 : buttons) {
                 if (button2.isMouseOver(mouseX, mouseY)) {
@@ -467,75 +518,91 @@ public class LevelingStatsScreen {
         return isVisible;
     }
 
+    // Removed AttributeButton class
+
+    // SkillButton class removed
+    
     /**
-     * Button for attribute points allocation
+     * Renders the buddy's status bars in the stats screen
+     * Adapted from BuddyGui.renderStatusBars()
      */
-    private class AttributeButton {
-        private final BuddyAttribute.AttributeType type;
-        private int x;
-        private int y;
-        private static final int WIDTH = 130;
-        private static final int HEIGHT = 20;
+    private void renderStatusBars(GuiGraphics graphics, int startX, int startY) {
+        int barWidth = 150;
+        int barHeight = 10;
+        Font font = Minecraft.getInstance().font;
 
-        public AttributeButton(BuddyAttribute.AttributeType type) {
-            this.type = type;
-        }
+        // Calculate spacing using font line height
+        int labelHeight = font.lineHeight;
+        int verticalGap = 4; // Gap between components
+        int totalItemHeight = labelHeight + barHeight + verticalGap;
 
-        public void setPosition(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
+        // Draw each status bar with proper spacing
+        for (int i = 0; i < 4; i++) {
+            int currentY = startY + (totalItemHeight * i);
 
-        public boolean isMouseOver(double mouseX, double mouseY) {
-            return mouseX >= x && mouseX < x + WIDTH && mouseY >= y && mouseY < y + HEIGHT;
-        }
+            // Draw the label
+            String label;
+            int color;
 
-        public void onClick() {
-            if (levelingManager.getUnspentAttributePoints() > 0) {
-                levelingManager.addAttributePoints(type, 1);
+            switch (i) {
+                case 0:
+                    label = "Hunger";
+                    color = 0xFFFF5050; // Red
+                    break;
+                case 1:
+                    label = "Happiness";
+                    color = 0xFF50FF50; // Green
+                    break;
+                case 2:
+                    label = "Energy";
+                    color = 0xFF5050FF; // Blue
+                    break;
+                case 3:
+                    label = "Fun";
+                    color = 0xFFC850FF; // Purple
+                    break;
+                default:
+                    label = "";
+                    color = 0xFFFFFFFF;
             }
-        }
 
-        public void render(GuiGraphics graphics, int mouseX, int mouseY) {
-            Font font = Minecraft.getInstance().font;
-            
-            // Get attribute value
-            BuddyAttribute attribute = levelingManager.getAttributes().get(type);
-            if (attribute == null) return;
-            
-            int value = attribute.getTotalValue();
-            int maxValue = BuddyAttribute.MAX_ATTRIBUTE_VALUE;
-            
-            // Draw background
-            boolean hovered = isMouseOver(mouseX, mouseY);
-            boolean canImprove = levelingManager.getUnspentAttributePoints() > 0;
-            
-            int bgColor = hovered && canImprove ? 0x80FFFFFF : 0x80000000;
-            graphics.fill(x, y, x + WIDTH, y + HEIGHT, bgColor);
-            
-            // Draw attribute name
-            String name = type.getName();
-            graphics.drawString(font, name, x + 5, y + 2, 0xFFFFFF);
-            
-            // Draw attribute value
-            String valueText = value + "/" + maxValue;
-            int valueColor = (value == maxValue) ? 0x00FF00 : 0xFFFFFF;
-            graphics.drawString(font, valueText, x + WIDTH - font.width(valueText) - 5, y + 2, valueColor);
-            
-            // Show tooltip on hover
-            if (hovered) {
-                List<Component> tooltipLines = new ArrayList<>();
-                tooltipLines.add(Component.literal(type.getName() + ": " + type.getShortDescription()));
-                tooltipLines.add(Component.literal(type.getDetailedDescription()));
-                
-                if (canImprove) {
-                    tooltipLines.add(Component.literal("§aClick to add a point"));
-                }
-                
-                graphics.renderTooltip(font, tooltipLines, Optional.empty(), mouseX, mouseY);
+            graphics.drawString(font, label, startX, currentY, color);
+
+            // Draw the bar below its label
+            int barY = currentY + labelHeight + 2;
+            float fillAmount = 0;
+            DrawableColor barColor;
+
+            switch (i) {
+                case 0:
+                    fillAmount = buddy.getHunger() / 100f;
+                    barColor = DrawableColor.of(255, 80, 80);
+                    break;
+                case 1:
+                    fillAmount = buddy.getHappiness() / 100f;
+                    barColor = DrawableColor.of(80, 255, 80);
+                    break;
+                case 2:
+                    fillAmount = buddy.getEnergy() / 100f;
+                    barColor = DrawableColor.of(80, 80, 255);
+                    break;
+                case 3:
+                    fillAmount = buddy.getFunLevel() / 100f;
+                    barColor = DrawableColor.of(200, 80, 255);
+                    break;
+                default:
+                    fillAmount = 0;
+                    barColor = DrawableColor.of(255, 255, 255);
+            }
+
+            // Bar background
+            graphics.fill(startX, barY, startX + barWidth, barY + barHeight, 0x80000000);
+
+            // Bar fill
+            int fillWidth = Math.max(1, (int)(barWidth * fillAmount));
+            if (fillWidth > 0) {
+                graphics.fill(startX, barY, startX + fillWidth, barY + barHeight, barColor.getColorInt());
             }
         }
     }
-
-    // SkillButton class removed
 }

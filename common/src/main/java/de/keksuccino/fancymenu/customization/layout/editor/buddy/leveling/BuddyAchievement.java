@@ -13,8 +13,6 @@ public class BuddyAchievement {
     private final AchievementType type;
     private final String description;
     private final int experienceReward;
-    private final BuddyAttribute.AttributeType attributeRewardType;
-    private final int attributeRewardPoints;
     private final Consumer<LevelingManager> customRewardAction;
     private boolean unlocked;
     private long unlockTimestamp;
@@ -25,18 +23,13 @@ public class BuddyAchievement {
      * @param type The achievement type
      * @param description A description of the achievement
      * @param experienceReward The experience points awarded for completing this achievement
-     * @param attributeRewardType The attribute type to reward (can be null)
-     * @param attributeRewardPoints The number of attribute points to award
      * @param customRewardAction A custom action to perform when the achievement is completed (can be null)
      */
     public BuddyAchievement(@NotNull AchievementType type, @NotNull String description, int experienceReward,
-                           @Nullable BuddyAttribute.AttributeType attributeRewardType, int attributeRewardPoints,
                            @Nullable Consumer<LevelingManager> customRewardAction) {
         this.type = type;
         this.description = description;
         this.experienceReward = Math.max(0, experienceReward);
-        this.attributeRewardType = attributeRewardType;
-        this.attributeRewardPoints = Math.max(0, attributeRewardPoints);
         this.customRewardAction = customRewardAction;
         this.unlocked = false;
         this.unlockTimestamp = 0;
@@ -61,20 +54,6 @@ public class BuddyAchievement {
      */
     public int getExperienceReward() {
         return experienceReward;
-    }
-    
-    /**
-     * @return The attribute type to reward (can be null)
-     */
-    public BuddyAttribute.AttributeType getAttributeRewardType() {
-        return attributeRewardType;
-    }
-    
-    /**
-     * @return The number of attribute points to award
-     */
-    public int getAttributeRewardPoints() {
-        return attributeRewardPoints;
     }
     
     /**
@@ -110,11 +89,6 @@ public class BuddyAchievement {
             levelingManager.addExperience(experienceReward);
         }
         
-        // Apply attribute reward
-        if (attributeRewardType != null && attributeRewardPoints > 0) {
-            levelingManager.addAttributePoints(attributeRewardType, attributeRewardPoints);
-        }
-        
         // Apply custom reward action
         if (customRewardAction != null) {
             customRewardAction.accept(levelingManager);
@@ -135,6 +109,7 @@ public class BuddyAchievement {
      * The different types of achievements that a buddy can earn.
      */
     public enum AchievementType {
+
         // Basic achievements
         FIRST_STEPS("First Steps", "First interaction with your buddy", 1),
         FRIENDLY_TOUCH("Friendly Touch", "Pet your buddy 10 times", 1),
@@ -151,20 +126,14 @@ public class BuddyAchievement {
         
         // Advanced achievements
         MASTER_TRAINER("Master Trainer", "Reach level 10 with your buddy", 3),
-        ATTRIBUTE_EXPERT("Attribute Expert", "Get one attribute to maximum level", 3),
-        SKILL_SPECIALIST("Skill Specialist", "Master any skill to its highest level", 3),
         COMPLETION_COLLECTOR("Completion Collector", "Unlock all basic achievements", 3),
         
         // Special achievements
         MIDNIGHT_COMPANION("Midnight Companion", "Work with your buddy after midnight", 4),
         DESIGN_MARATHON("Design Marathon", "Create 10 layouts with your buddy present", 4),
         LOYAL_FRIEND("Loyal Friend", "Interact with your buddy every day for a week", 4),
-        SECRET_DANCE("Secret Dance", "Discover the buddy's secret dance animation", 4),
-        TELEPATHIC_BOND("Telepathic Bond", "Get your buddy to predict your actions correctly 5 times", 4),
         
         // Master achievements
-        BUDDY_WHISPERER("Buddy Whisperer", "Max out all attributes", 5),
-        SKILL_MASTER("Skill Master", "Unlock all skills", 5),
         PERFECT_HARMONY("Perfect Harmony", "Keep all buddy stats above 90% for an entire session", 5),
         ACHIEVEMENT_HUNTER("Achievement Hunter", "Unlock all other achievements", 5);
         
@@ -189,5 +158,7 @@ public class BuddyAchievement {
         public int getTier() {
             return tier;
         }
+
     }
+
 }
