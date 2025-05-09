@@ -77,10 +77,10 @@ public class LevelingStatsScreen {
 
         buttons.clear();
 
-        // Close button
+        // Close button (X icon)
         buttons.add(new BuddyGuiButton(
                 this.buddy,
-                buddy -> "Close",
+                buddy -> "X",
                 this::hide,
                 () -> true
         ));
@@ -163,9 +163,9 @@ public class LevelingStatsScreen {
      * Updates the positions of all buttons within the GUI
      */
     private void updateButtonPositions() {
-        // Position close button in bottom right
-        int closeButtonX = guiX + SCREEN_WIDTH - 60;
-        int closeButtonY = guiY + SCREEN_HEIGHT - 30;
+        // Position close button (X) in top right
+        int closeButtonX = guiX + SCREEN_WIDTH - 25;
+        int closeButtonY = guiY + 5;
 
         if (!buttons.isEmpty()) {
             buttons.get(0).setPosition(closeButtonX, closeButtonY);
@@ -289,16 +289,16 @@ public class LevelingStatsScreen {
             button.render(graphics, mouseX, mouseY);
         }
         
-        // Draw separator line
-        graphics.fill(contentStartX, contentStartY + 100, contentStartX + SCREEN_WIDTH - 40, contentStartY + 101, 0x80FFFFFF);
+        // Draw separator line - moved further down to avoid overlapping with status bars
+        graphics.fill(contentStartX, contentStartY + 130, contentStartX + SCREEN_WIDTH - 40, contentStartY + 131, 0x80FFFFFF);
 
-        // Draw level and XP
+        // Draw level and XP - moved further down
         String levelText = "Level: " + levelingManager.getCurrentLevel();
-        graphics.drawString(font, levelText, contentStartX, contentStartY + 110, 0xFFFFFF);
+        graphics.drawString(font, levelText, contentStartX, contentStartY + 140, 0xFFFFFF);
 
-        // Draw XP bar
+        // Draw XP bar - moved further down
         int xpBarX = contentStartX + 80;
-        int xpBarY = contentStartY + 110;
+        int xpBarY = contentStartY + 140;
         int xpBarWidth = 150;
         int xpBarHeight = 10;
 
@@ -312,14 +312,14 @@ public class LevelingStatsScreen {
             graphics.fill(xpBarX, xpBarY, xpBarX + fillWidth, xpBarY + xpBarHeight, 0xFF00FF00);
         }
 
-        // XP text
+        // XP text - moved further down
         String xpText = levelingManager.getExperience() + " XP";
         if (levelingManager.getCurrentLevel() < 30) {
             xpText += " / Next Level: " + levelingManager.getExperienceForNextLevel() + " XP";
         } else {
             xpText += " (Max Level)";
         }
-        graphics.drawString(font, xpText, contentStartX, contentStartY + 125, 0xFFFFFF);
+        graphics.drawString(font, xpText, contentStartX, contentStartY + 155, 0xFFFFFF);
 
         // Removed attribute points, titles and buttons
     }

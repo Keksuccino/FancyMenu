@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.layout.editor.buddy;
 
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.animation.AnimationState;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.animation.AnimationStates;
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.gui.BuddyGui;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.gui.LevelingStatsScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.FoodItem;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.PlayBall;
@@ -123,7 +122,6 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     public boolean wasDisabled = true;
     public boolean wasOffScreen = false;
 
-    public BuddyGui gui;
     public LevelingStatsScreen levelingScreen;
     
     // Leveling system
@@ -175,7 +173,6 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         this.levelingManager = new LevelingManager(this);
         
         // Initialize GUI
-        this.gui = new BuddyGui(this);
         this.levelingScreen = new LevelingStatsScreen(this, levelingManager);
     }
 
@@ -294,9 +291,6 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         if (droppedFood != null) {
             droppedFood.render(graphics);
         }
-
-        // Render the GUI
-        gui.render(graphics, mouseX, mouseY);
         
         // Render the leveling screen if visible
         if (levelingScreen.isVisible()) {
@@ -1211,11 +1205,6 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             }
         }
 
-        // Handle the GUI if it's visible
-        if (gui.isVisible()) {
-            return gui.mouseClicked(mouseX, mouseY, button);
-        }
-
         if (button == 1) { // Right click
             // If clicked on buddy, open the stats screen directly
             if (isMouseOverBuddy(mouseX, mouseY)) {
@@ -1402,11 +1391,6 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
 
         // Clean up any poops that might now be invalid
         cleanupInvalidPoops();
-
-        // If GUI is visible, update its position based on new screen size
-        if (gui.isVisible()) {
-            gui.show(width, height);
-        }
 
         LOGGER.info("Updated buddy position to y={}", this.buddyPosY);
     }
