@@ -20,6 +20,7 @@ import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.renderer.PanoramaRenderer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -35,6 +36,7 @@ public abstract class MixinTitleScreen extends Screen {
     @Shadow @Final private static Component COPYRIGHT_TEXT;
     @Shadow public boolean fading;
 
+    @Shadow @Final private static ResourceLocation PANORAMA_OVERLAY;
     @Unique private GuiGraphics cached_graphics_FancyMenu = null;
 
     //unused dummy constructor
@@ -110,6 +112,22 @@ public abstract class MixinTitleScreen extends Screen {
             original.call(instance, p_110004_, p_110005_);
         }
         EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, this.cached_graphics_FancyMenu));
+    }
+
+    /**
+     * @reason Cancel panorama overlay rendering when a custom background is active.
+     */
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lnet/minecraft/resources/ResourceLocation;IIIIFFIIII)V"))
+    private boolean wrap_blit_in_render_FancyMenu(GuiGraphics instance, ResourceLocation location, int p_283671_, int p_282377_, int p_282058_, int p_281939_, float p_282285_, float p_283199_, int p_282186_, int p_282322_, int p_282481_, int p_281887_) {
+        if (location == PANORAMA_OVERLAY) {
+            ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen(this);
+            if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this)) {
+                if (!l.layoutBase.menuBackgrounds.isEmpty()) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/realmsclient/gui/screens/RealmsNotificationsScreen;render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
