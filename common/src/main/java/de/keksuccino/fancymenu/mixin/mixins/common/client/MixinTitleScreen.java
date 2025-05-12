@@ -115,6 +115,22 @@ public abstract class MixinTitleScreen extends Screen {
         EventHandler.INSTANCE.postEvent(new RenderedScreenBackgroundEvent(this, GuiGraphics.currentGraphics().pose()));
     }
 
+    /**
+     * @reason Cancel panorama overlay rendering when a custom background is active.
+     */
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/TitleScreen;blit(Lcom/mojang/blaze3d/vertex/PoseStack;IIIIFFIIII)V"))
+    private boolean wrap_blit_in_render_FancyMenu(PoseStack pose, int i1, int i2, int i3, int i4, float v5, float v6, int i7, int i8, int i9, int i0) {
+        if (i0 == 128) {
+            ScreenCustomizationLayer l = ScreenCustomizationLayerHandler.getLayerOfScreen(this);
+            if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this)) {
+                if (!l.layoutBase.menuBackgrounds.isEmpty()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/realmsclient/gui/screens/RealmsNotificationsScreen;render(Lcom/mojang/blaze3d/vertex/PoseStack;IIF)V"))
     private boolean cancel_VanillaRealmsNotificationRendering_FancyMenu(RealmsNotificationsScreen instance, PoseStack p_88837_, int p_88838_, int p_88839_, float p_88840_) {
         return false;
