@@ -1,4 +1,13 @@
 
+CHANGELOG | FANCYMENU v3.5.2
+
+- Fixed a bug in 1.18.2, 1.19.2 and 1.20.1 that made custom menu backgrounds in the Title screen sometimes look washed out (foggy) because of a gradient that got rendered over it (#1139)
+ 
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.5.1
 
 - Ported mod to MC 1.21.5
