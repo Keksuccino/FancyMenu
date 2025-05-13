@@ -58,18 +58,16 @@ public class McefVideoElement extends AbstractElement {
 
         if (this.shouldRender()) {
 
+            // Create player with proper size and position from the start
+            int x = this.getAbsoluteX();
+            int y = this.getAbsoluteY();
+            int w = this.getAbsoluteWidth();
+            int h = this.getAbsoluteHeight();
+
             if (!this.initialized) {
                 this.initialized = true;
-                
-                // Create player with proper size and position from the start
-                int x = this.getAbsoluteX();
-                int y = this.getAbsoluteY();
-                int w = Math.max(100, this.getAbsoluteWidth());  // Ensure minimum size
-                int h = Math.max(100, this.getAbsoluteHeight());
-                
                 LOGGER.info("[FANCYMENU] Creating video player with dimensions: " + w + "x" + h + " at " + x + "," + y);
                 playerId = videoManager.createPlayer(x, y, w, h);
-                
                 if (playerId != null) {
                     videoPlayer = videoManager.getPlayer(playerId);
                     if (videoPlayer != null) {
@@ -79,113 +77,30 @@ public class McefVideoElement extends AbstractElement {
                         videoPlayer.setVolume(0.1f);
                         videoPlayer.setLooping(true);
                         videoPlayer.setFillScreen(true);
-                        
-                        // Make sure these initial values are tracked
-                        this.lastAbsoluteX = x;
-                        this.lastAbsoluteY = y;
-                        this.lastAbsoluteWidth = w;
-                        this.lastAbsoluteHeight = h;
-                        
-                        // Process video URL right away - don't wait for next render
-                        String finalVideoUrl = null;
-                        if (this.rawVideoUrlSource != null) {
-                            finalVideoUrl = PlaceholderParser.replacePlaceholders(this.rawVideoUrlSource.getSourceWithoutPrefix());
-                            if (finalVideoUrl != null && !finalVideoUrl.isEmpty()) {
-                                LOGGER.info("[FANCYMENU] Loading new video during initialization: " + finalVideoUrl);
-                                this.lastFinalUrl = finalVideoUrl;
-                                hasLoadedVideo = true;
-                                
-                                // Directly use the URI format for most reliable loading
-                                try {
-                                    File videoFile = new File(finalVideoUrl);
-                                    if (videoFile.exists()) {
-                                        // Convert to URI format which is more reliable
-                                        final String videoUri = videoFile.toURI().toString();
-                                        LOGGER.info("[FANCYMENU] Using video URI: " + videoUri);
-                                        
-                                        // First, stop any existing playback
-                                        videoPlayer.stop();
-                                        
-                                        // Just load the video - play will happen on a delay
-                                        videoPlayer.loadVideo(videoUri);
-                                        
-                                        // Schedule a play attempt with a good delay
-                                        new Thread(() -> {
-                                            try {
-                                                Thread.sleep(1500); // Longer delay for first load
-                                                LOGGER.info("[FANCYMENU] First play attempt after initialization");
-                                                videoPlayer.play();
-                                                
-                                                // Try again after another delay if first attempt fails
-                                                Thread.sleep(2000);
-                                                LOGGER.info("[FANCYMENU] Second play attempt after initialization");
-                                                videoPlayer.play();
-                                            } catch (Exception e) {
-                                                LOGGER.error("[FANCYMENU] Error in delayed play", e);
-                                            }
-                                        }).start();
-                                    } else {
-                                        // Try loading the URL as-is
-                                        LOGGER.info("[FANCYMENU] File not found, trying URL directly: " + finalVideoUrl);
-                                        videoPlayer.loadVideo(finalVideoUrl);
-                                        
-                                        // Play with a delay
-                                        new Thread(() -> {
-                                            try {
-                                                Thread.sleep(1500);
-                                                LOGGER.info("[FANCYMENU] First play attempt after initialization");
-                                                videoPlayer.play();
-                                                
-                                                // Try again after another delay if first attempt fails
-                                                Thread.sleep(2000);
-                                                LOGGER.info("[FANCYMENU] Second play attempt after initialization");
-                                                videoPlayer.play();
-                                            } catch (Exception e) {
-                                                LOGGER.error("[FANCYMENU] Error in delayed play", e);
-                                            }
-                                        }).start();
-                                    }
-                                } catch (Exception e) {
-                                    LOGGER.error("[FANCYMENU] Error processing video URL during initialization", e);
-                                }
-                            }
-                        }
                     }
                 }
-                
-                // We've handled everything during initialization, so return from this render pass
-                return;
             }
 
             if (this.videoPlayer == null) return;
 
-            // First update position and size, regardless of video URL
-            int x = this.getAbsoluteX();
-            int y = this.getAbsoluteY();
-            int w = Math.max(100, this.getAbsoluteWidth());
-            int h = Math.max(100, this.getAbsoluteHeight());
-
-            if ((this.lastAbsoluteX != x) || (this.lastAbsoluteY != y)) {
+            // Update size and position of player
+            if ((this.lastAbsoluteX != x) || (this.lastAbsoluteY != y) || (this.lastAbsoluteWidth != w) || (this.lastAbsoluteHeight != h)) {
                 this.videoPlayer.setPosition(x, y);
-                this.lastAbsoluteX = x;
-                this.lastAbsoluteY = y;
-            }
-            
-            if ((this.lastAbsoluteWidth != w) || (this.lastAbsoluteHeight != h)) {
                 this.videoPlayer.resizeToFill(w, h);
-                this.lastAbsoluteWidth = w;
-                this.lastAbsoluteHeight = h;
             }
-            
-            // Process video URL if it hasn't been processed yet
+            this.lastAbsoluteX = x;
+            this.lastAbsoluteY = y;
+            this.lastAbsoluteWidth = w;
+            this.lastAbsoluteHeight = h;
+
             String finalVideoUrl = null;
             if (this.rawVideoUrlSource != null) {
                 finalVideoUrl = PlaceholderParser.replacePlaceholders(this.rawVideoUrlSource.getSourceWithoutPrefix());
             }
-            
             // Check if the video URL has changed since last time
             boolean videoUrlChanged = !Objects.equals(finalVideoUrl, this.lastFinalUrl);
-            if (videoUrlChanged && finalVideoUrl != null) {
+            this.lastFinalUrl = finalVideoUrl;
+            if (videoUrlChanged && (finalVideoUrl != null)) {
                 LOGGER.info("[FANCYMENU] Video URL changed to: " + finalVideoUrl);
                 
                 // Stop any existing video before loading new one
@@ -203,41 +118,43 @@ public class McefVideoElement extends AbstractElement {
                         // Load the video
                         this.videoPlayer.loadVideo(videoUri);
                         hasLoadedVideo = true;
+                        videoPlayer.play();
+                        videoPlayRequested = true;
                         
-                        // Play with a delay
-                        new Thread(() -> {
-                            try {
-                                Thread.sleep(1000);
-                                LOGGER.info("[FANCYMENU] Playing video after URL change");
-                                videoPlayer.play();
-                                videoPlayRequested = true;
-                            } catch (Exception e) {
-                                LOGGER.error("[FANCYMENU] Error in delayed play", e);
-                            }
-                        }).start();
+//                        // Play with a delay
+//                        new Thread(() -> {
+//                            try {
+//                                Thread.sleep(1000);
+//                                LOGGER.info("[FANCYMENU] Playing video after URL change");
+//                                videoPlayer.play();
+//                                videoPlayRequested = true;
+//                            } catch (Exception e) {
+//                                LOGGER.error("[FANCYMENU] Error in delayed play", e);
+//                            }
+//                        }).start();
                     } else {
                         // Try loading the URL as-is
                         LOGGER.info("[FANCYMENU] File not found, trying URL directly: " + finalVideoUrl);
                         this.videoPlayer.loadVideo(finalVideoUrl);
                         hasLoadedVideo = true;
+                        videoPlayer.play();
+                        videoPlayRequested = true;
                         
-                        // Play with a delay
-                        new Thread(() -> {
-                            try {
-                                Thread.sleep(1000);
-                                LOGGER.info("[FANCYMENU] Playing video after URL change");
-                                videoPlayer.play();
-                                videoPlayRequested = true;
-                            } catch (Exception e) {
-                                LOGGER.error("[FANCYMENU] Error in delayed play", e);
-                            }
-                        }).start();
+//                        // Play with a delay
+//                        new Thread(() -> {
+//                            try {
+//                                Thread.sleep(1000);
+//                                LOGGER.info("[FANCYMENU] Playing video after URL change");
+//                                videoPlayer.play();
+//                                videoPlayRequested = true;
+//                            } catch (Exception e) {
+//                                LOGGER.error("[FANCYMENU] Error in delayed play", e);
+//                            }
+//                        }).start();
                     }
                 } catch (Exception e) {
                     LOGGER.error("[FANCYMENU] Error processing video URL", e);
                 }
-                
-                this.lastFinalUrl = finalVideoUrl;
             }
             
             // If we have a video loaded but haven't requested play, try to play it periodically

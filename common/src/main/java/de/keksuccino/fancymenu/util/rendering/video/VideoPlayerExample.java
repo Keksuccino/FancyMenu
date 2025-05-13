@@ -21,7 +21,6 @@ public class VideoPlayerExample extends Screen {
     private final VideoManager videoManager;
     private String playerId;
     private MCEFVideoPlayer videoPlayer;
-    private WrappedMCEFBrowser testBrowser;
     
     public VideoPlayerExample() {
         super(Component.literal("Video Player Example"));
@@ -63,12 +62,6 @@ public class VideoPlayerExample extends Screen {
                 LOGGER.info("[FANCYMENU] Ready to load videos - press 1, 2, or 3 to try different loading methods");
             }
         }
-        
-        if (videoPlayer == null) {
-            // Try fallback to test browser
-            LOGGER.info("[FANCYMENU] Using fallback test browser");
-            testBrowser = VideoDebugger.createTestBrowser(x, y, videoWidth, videoHeight);
-        }
     }
     
     @Override
@@ -80,11 +73,6 @@ public class VideoPlayerExample extends Screen {
         if (videoPlayer != null) {
             videoPlayer.render(graphics, mouseX, mouseY, partialTick);
         }
-        
-        // Render the test browser if we're using it
-        if (testBrowser != null) {
-            testBrowser.render(graphics, mouseX, mouseY, partialTick);
-        }
     }
     
     @Override
@@ -93,16 +81,6 @@ public class VideoPlayerExample extends Screen {
         if (playerId != null) {
             videoManager.removePlayer(playerId);
             videoPlayer = null;
-        }
-        
-        // Clean up the test browser if we created one
-        if (testBrowser != null) {
-            try {
-                testBrowser.close();
-            } catch (Exception e) {
-                LOGGER.error("[FANCYMENU] Error closing test browser", e);
-            }
-            testBrowser = null;
         }
         
         super.onClose();
@@ -128,10 +106,6 @@ public class VideoPlayerExample extends Screen {
                     
                 case 76: // L key - toggle loop
                     videoPlayer.setLooping(!videoPlayer.isLooping());
-                    return true;
-                    
-                case 84: // T key - load simple test page
-                    videoPlayer.loadSimpleTest();
                     return true;
                     
                 case 49: // 1 key - try loading video with method 1

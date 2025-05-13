@@ -23,26 +23,24 @@ import java.util.concurrent.TimeUnit;
 public class MCEFVideoPlayer {
 
     protected static final Logger LOGGER = LogManager.getLogger();
-    
-    // The browser instance wrapped by MCEF
-    protected WrappedMCEFBrowser browser;
-    
-    // Video options
+
+    protected volatile WrappedMCEFBrowser browser;
+
     protected volatile float volume = 1.0f;
     protected volatile boolean looping = false;
     protected volatile boolean fillScreen = false;
     protected volatile String currentVideoPath = null;
     protected volatile boolean isCurrentlyPlaying = false;
-    
-    // Browser dimensions
+    protected volatile boolean isMuted = false;
+
     protected volatile int posX = 0;
     protected volatile int posY = 0;
     protected volatile int width = 200;
     protected volatile int height = 200;
-    
-    // Initialization state
+
     protected volatile boolean initialized = false;
     protected final CompletableFuture<Boolean> initFuture = new CompletableFuture<>();
+    private volatile boolean stateVerified = false;
     
     /**
      * Creates a new video player instance.
@@ -198,73 +196,75 @@ public class MCEFVideoPlayer {
      * @param videoPath The path or URL to the video
      */
     public void loadVideo(@NotNull String videoPath) {
-        if (!initialized) {
-            waitForInitialization(() -> loadVideo(videoPath));
-            return;
-        }
-        
-        try {
-            this.currentVideoPath = videoPath;
-            LOGGER.info("[FANCYMENU] Loading video: " + videoPath);
-            
-            // Try a more direct approach to load the video - directly set the video src
-            // Convert file path to URI if needed
-            String finalPath = videoPath;
-            if (!videoPath.startsWith("http") && !videoPath.startsWith("file:")) {
-                File videoFile = new File(videoPath);
-                if (videoFile.exists()) {
-                    finalPath = videoFile.toURI().toString();
-                    LOGGER.info("[FANCYMENU] Converted video path to: " + finalPath);
-                }
+        VideoManager.EXECUTOR.execute(() -> {
+            if (!initialized) {
+                waitForInitialization(() -> loadVideo(videoPath));
+                return;
             }
-            
-            // Direct, simplified approach that bypasses most of the API layer
-            String loadScript = 
-                "try {\n" +
-                "  console.log('[FANCYMENU] Loading video with direct method: " + finalPath + "');\n" +
-                "  var video = document.getElementById('videoPlayer');\n" +
-                "  if (video) {\n" +
-                "    // Reset video state\n" +
-                "    video.pause();\n" +
-                "    video.currentTime = 0;\n" +
-                "    video.removeAttribute('src');\n" +
-                "    video.load();\n" +
-                "    \n" +
-                "    // Set new source\n" +
-                "    video.src = '" + finalPath.replace("'", "\\'") + "';\n" +
-                "    \n" +
-                "    // Force preload\n" +
-                "    video.preload = 'auto';\n" +
-                "    \n" +
-                "    // Set proper attributes\n" +
-                "    video.setAttribute('playsinline', '');\n" +
-                "    video.setAttribute('webkit-playsinline', '');\n" +
-                "    video.crossOrigin = 'anonymous';\n" +
-                "    \n" +
-                "    // Apply settings\n" +
-                "    video.volume = " + volume + ";\n" +
-                "    video.loop = " + looping + ";\n" +
-                "    video.muted = " + isMuted + ";\n" +
-                "    \n" +
-                "    // Start loading\n" +
-                "    video.load();\n" +
-                "    console.log('[FANCYMENU] Video element configured with source: ' + video.src);\n" +
-                "    \n" +
-                "    // Store in API if it exists\n" +
-                "    if (window.videoPlayerAPI) {\n" +
-                "      window.videoPlayerAPI.currentSettings.videoLoaded = true;\n" +
-                "    }\n" +
-                "  } else {\n" +
-                "    console.error('[FANCYMENU] Video element not found');\n" +
-                "  }\n" +
-                "} catch(e) {\n" +
-                "  console.error('[FANCYMENU] Error in direct video loading: ' + e.message);\n" +
-                "}";
-            
-            executeJavaScript(loadScript);
-        } catch (Exception e) {
-            LOGGER.error("[FANCYMENU] Failed to load video: " + videoPath, e);
-        }
+
+            try {
+                this.currentVideoPath = videoPath;
+                LOGGER.info("[FANCYMENU] Loading video: " + videoPath);
+
+                // Try a more direct approach to load the video - directly set the video src
+                // Convert file path to URI if needed
+                String finalPath = videoPath;
+                if (!videoPath.startsWith("http") && !videoPath.startsWith("file:")) {
+                    File videoFile = new File(videoPath);
+                    if (videoFile.exists()) {
+                        finalPath = videoFile.toURI().toString();
+                        LOGGER.info("[FANCYMENU] Converted video path to: " + finalPath);
+                    }
+                }
+
+                // Direct, simplified approach that bypasses most of the API layer
+                String loadScript =
+                        "try {\n" +
+                                "  console.log('[FANCYMENU] Loading video with direct method: " + finalPath + "');\n" +
+                                "  var video = document.getElementById('videoPlayer');\n" +
+                                "  if (video) {\n" +
+                                "    // Reset video state\n" +
+                                "    video.pause();\n" +
+                                "    video.currentTime = 0;\n" +
+                                "    video.removeAttribute('src');\n" +
+                                "    video.load();\n" +
+                                "    \n" +
+                                "    // Set new source\n" +
+                                "    video.src = '" + finalPath.replace("'", "\\'") + "';\n" +
+                                "    \n" +
+                                "    // Force preload\n" +
+                                "    video.preload = 'auto';\n" +
+                                "    \n" +
+                                "    // Set proper attributes\n" +
+                                "    video.setAttribute('playsinline', '');\n" +
+                                "    video.setAttribute('webkit-playsinline', '');\n" +
+                                "    video.crossOrigin = 'anonymous';\n" +
+                                "    \n" +
+                                "    // Apply settings\n" +
+                                "    video.volume = " + volume + ";\n" +
+                                "    video.loop = " + looping + ";\n" +
+                                "    video.muted = " + isMuted + ";\n" +
+                                "    \n" +
+                                "    // Start loading\n" +
+                                "    video.load();\n" +
+                                "    console.log('[FANCYMENU] Video element configured with source: ' + video.src);\n" +
+                                "    \n" +
+                                "    // Store in API if it exists\n" +
+                                "    if (window.videoPlayerAPI) {\n" +
+                                "      window.videoPlayerAPI.currentSettings.videoLoaded = true;\n" +
+                                "    }\n" +
+                                "  } else {\n" +
+                                "    console.error('[FANCYMENU] Video element not found');\n" +
+                                "  }\n" +
+                                "} catch(e) {\n" +
+                                "  console.error('[FANCYMENU] Error in direct video loading: ' + e.message);\n" +
+                                "}";
+
+                executeJavaScript(loadScript);
+            } catch (Exception e) {
+                LOGGER.error("[FANCYMENU] Failed to load video: " + videoPath, e);
+            }
+        });
     }
     
     /**
@@ -391,9 +391,6 @@ public class MCEFVideoPlayer {
         applySettingsAfterLoad(isCurrentlyPlaying);
     }
     
-    // Track muted state locally
-    protected boolean isMuted = false;
-    
     /**
      * Sets whether the audio is muted.
      *
@@ -431,135 +428,141 @@ public class MCEFVideoPlayer {
      * Plays the currently loaded video.
      */
     public void play() {
-        if (!initialized) {
-            waitForInitialization(this::play);
-            return;
-        }
-        
-        LOGGER.info("[FANCYMENU] Playing video");
-        
-        // Use the most direct approach possible to play the video
-        String playScript = 
-            "try {\n" +
-            "  console.log('[FANCYMENU] Attempting to play video directly');\n" +
-            "  var video = document.getElementById('videoPlayer');\n" +
-            "  if (video) {\n" +
-            "    // First ensure the video has a source\n" +
-            "    if (!video.src && '" + currentVideoPath + "' != 'null') {\n" +
-            "      console.log('[FANCYMENU] Setting missing video source: " + currentVideoPath + "');\n" +
-            "      video.src = '" + (currentVideoPath != null ? currentVideoPath.replace("'", "\\'") : "") + "';\n" +
-            "      video.load();\n" +
-            "    }\n" +
-            "    \n" +
-            "    // Multiple play attempts with different approaches\n" +
-            "    var playPromise = video.play();\n" +
-            "    \n" +
-            "    if (playPromise !== undefined) {\n" +
-            "      playPromise.then(function() {\n" +
-            "        console.log('[FANCYMENU] Video playback started successfully');\n" +
-            "      }).catch(function(error) {\n" +
-            "        console.error('[FANCYMENU] Play failed: ' + error);\n" +
-            "        \n" +
-            "        // First fallback: try with muted\n" +
-            "        console.log('[FANCYMENU] Trying muted autoplay...');\n" +
-            "        video.muted = true;\n" +
-            "        \n" +
-            "        video.play().then(function() {\n" +
-            "          console.log('[FANCYMENU] Muted playback succeeded');\n" +
-            "          // Try to unmute after a moment\n" +
-            "          setTimeout(function() {\n" +
-            "            video.muted = " + isMuted + ";\n" +
-            "          }, 1000);\n" +
-            "        }).catch(function(error2) {\n" +
-            "          console.error('[FANCYMENU] Even muted playback failed: ' + error2);\n" +
-            "          \n" +
-            "          // Try inline attribute as last resort\n" +
-            "          video.setAttribute('playsinline', '');\n" +
-            "          video.setAttribute('webkit-playsinline', '');\n" +
-            "          video.setAttribute('autoplay', '');\n" +
-            "          video.load(); // Reload to apply autoplay attribute\n" +
-            "        });\n" +
-            "      });\n" +
-            "    } else {\n" +
-            "      console.log('[FANCYMENU] Play method did not return a promise');\n" +
-            "    }\n" +
-            "  } else {\n" +
-            "    console.error('[FANCYMENU] Video element not found');\n" +
-            "  }\n" +
-            "} catch(e) {\n" +
-            "  console.error('[FANCYMENU] Error during play attempt: ' + e);\n" +
-            "}";
-        
-        executeJavaScript(playScript);
-        isCurrentlyPlaying = true;
+        VideoManager.EXECUTOR.execute(() -> {
+            if (!initialized) {
+                waitForInitialization(this::play);
+                return;
+            }
+
+            LOGGER.info("[FANCYMENU] Playing video");
+
+            // Use the most direct approach possible to play the video
+            String playScript =
+                    "try {\n" +
+                            "  console.log('[FANCYMENU] Attempting to play video directly');\n" +
+                            "  var video = document.getElementById('videoPlayer');\n" +
+                            "  if (video) {\n" +
+                            "    // First ensure the video has a source\n" +
+                            "    if (!video.src && '" + currentVideoPath + "' != 'null') {\n" +
+                            "      console.log('[FANCYMENU] Setting missing video source: " + currentVideoPath + "');\n" +
+                            "      video.src = '" + (currentVideoPath != null ? currentVideoPath.replace("'", "\\'") : "") + "';\n" +
+                            "      video.load();\n" +
+                            "    }\n" +
+                            "    \n" +
+                            "    // Multiple play attempts with different approaches\n" +
+                            "    var playPromise = video.play();\n" +
+                            "    \n" +
+                            "    if (playPromise !== undefined) {\n" +
+                            "      playPromise.then(function() {\n" +
+                            "        console.log('[FANCYMENU] Video playback started successfully');\n" +
+                            "      }).catch(function(error) {\n" +
+                            "        console.error('[FANCYMENU] Play failed: ' + error);\n" +
+                            "        \n" +
+                            "        // First fallback: try with muted\n" +
+                            "        console.log('[FANCYMENU] Trying muted autoplay...');\n" +
+                            "        video.muted = true;\n" +
+                            "        \n" +
+                            "        video.play().then(function() {\n" +
+                            "          console.log('[FANCYMENU] Muted playback succeeded');\n" +
+                            "          // Try to unmute after a moment\n" +
+                            "          setTimeout(function() {\n" +
+                            "            video.muted = " + isMuted + ";\n" +
+                            "          }, 1000);\n" +
+                            "        }).catch(function(error2) {\n" +
+                            "          console.error('[FANCYMENU] Even muted playback failed: ' + error2);\n" +
+                            "          \n" +
+                            "          // Try inline attribute as last resort\n" +
+                            "          video.setAttribute('playsinline', '');\n" +
+                            "          video.setAttribute('webkit-playsinline', '');\n" +
+                            "          video.setAttribute('autoplay', '');\n" +
+                            "          video.load(); // Reload to apply autoplay attribute\n" +
+                            "        });\n" +
+                            "      });\n" +
+                            "    } else {\n" +
+                            "      console.log('[FANCYMENU] Play method did not return a promise');\n" +
+                            "    }\n" +
+                            "  } else {\n" +
+                            "    console.error('[FANCYMENU] Video element not found');\n" +
+                            "  }\n" +
+                            "} catch(e) {\n" +
+                            "  console.error('[FANCYMENU] Error during play attempt: ' + e);\n" +
+                            "}";
+
+            executeJavaScript(playScript);
+            isCurrentlyPlaying = true;
+        });
     }
     
     /**
      * Pauses the currently playing video.
      */
     public void pause() {
-        if (!initialized) {
-            waitForInitialization(this::pause);
-            return;
-        }
-        
-        LOGGER.info("[FANCYMENU] Pausing video");
-        executeJavaScript("window.videoPlayerAPI.pause()");
-        isCurrentlyPlaying = false;
+        VideoManager.EXECUTOR.execute(() -> {
+            if (!initialized) {
+                waitForInitialization(this::pause);
+                return;
+            }
+            LOGGER.info("[FANCYMENU] Pausing video");
+            executeJavaScript("window.videoPlayerAPI.pause()");
+            isCurrentlyPlaying = false;
+        });
     }
     
     /**
      * Toggles the play/pause state of the video.
      */
     public void togglePlayPause() {
-        if (!initialized) {
-            waitForInitialization(this::togglePlayPause);
-            return;
-        }
-        
-        // For the first toggle, check the actual state from the video element
-        String script = "try {" +
-                      "  const video = document.getElementById('videoPlayer');" +
-                      "  if (video) {" +
-                      "    return video.paused ? 'paused' : 'playing';" +
-                      "  }" +
-                      "  return 'unknown';" +
-                      "} catch(e) { return 'error'; }";
-        
-        String result = executeJavaScriptWithResult("(function() { " + script + " })()");
-        
-        if (result != null) {
-            // Update our state based on the actual video state
-            boolean actuallyPlaying = "playing".equals(result);
-            
-            // Only log if there's a mismatch
-            if (actuallyPlaying != isCurrentlyPlaying) {
-                LOGGER.info("[FANCYMENU] Correcting play state mismatch: was " + 
-                           isCurrentlyPlaying + ", actually " + actuallyPlaying);
-                isCurrentlyPlaying = actuallyPlaying;
+        VideoManager.EXECUTOR.execute(() -> {
+            if (!initialized) {
+                waitForInitialization(this::togglePlayPause);
+                return;
             }
-        }
-        
-        // Now toggle based on the corrected state
-        if (isCurrentlyPlaying) {
-            pause();
-        } else {
-            play();
-        }
+
+            // For the first toggle, check the actual state from the video element
+            String script = "try {" +
+                    "  const video = document.getElementById('videoPlayer');" +
+                    "  if (video) {" +
+                    "    return video.paused ? 'paused' : 'playing';" +
+                    "  }" +
+                    "  return 'unknown';" +
+                    "} catch(e) { return 'error'; }";
+
+            String result = executeJavaScriptWithResult("(function() { " + script + " })()");
+
+            if (result != null) {
+                // Update our state based on the actual video state
+                boolean actuallyPlaying = "playing".equals(result);
+
+                // Only log if there's a mismatch
+                if (actuallyPlaying != isCurrentlyPlaying) {
+                    LOGGER.info("[FANCYMENU] Correcting play state mismatch: was " +
+                            isCurrentlyPlaying + ", actually " + actuallyPlaying);
+                    isCurrentlyPlaying = actuallyPlaying;
+                }
+            }
+
+            // Now toggle based on the corrected state
+            if (isCurrentlyPlaying) {
+                pause();
+            } else {
+                play();
+            }
+        });
     }
     
     /**
      * Stops the currently playing video and resets it to the beginning.
      */
     public void stop() {
-        if (!initialized) {
-            waitForInitialization(this::stop);
-            return;
-        }
-        
-        LOGGER.info("[FANCYMENU] Stopping video");
-        executeJavaScript("window.videoPlayerAPI.stop()");
-        isCurrentlyPlaying = false;
+        VideoManager.EXECUTOR.execute(() -> {
+            if (!initialized) {
+                waitForInitialization(this::stop);
+                return;
+            }
+            LOGGER.info("[FANCYMENU] Stopping video");
+            executeJavaScript("window.videoPlayerAPI.stop()");
+            isCurrentlyPlaying = false;
+        });
     }
     
     /**
@@ -599,15 +602,16 @@ public class MCEFVideoPlayer {
      * @param volume A value between 0.0 (mute) and 1.0 (full volume)
      */
     public void setVolume(float volume) {
-        if (!initialized) {
-            this.volume = volume;
-            waitForInitialization(() -> setVolume(volume));
-            return;
-        }
-        
-        this.volume = Math.max(0.0f, Math.min(1.0f, volume));
-        browser.setVolume(this.volume);
-        executeJavaScript("window.videoPlayerAPI.setVolume(" + this.volume + ")");
+        VideoManager.EXECUTOR.execute(() -> {
+            if (!initialized) {
+                this.volume = volume;
+                waitForInitialization(() -> setVolume(volume));
+                return;
+            }
+            this.volume = Math.max(0.0f, Math.min(1.0f, volume));
+            browser.setVolume(this.volume);
+            executeJavaScript("window.videoPlayerAPI.setVolume(" + this.volume + ")");
+        });
     }
     
     /**
@@ -625,15 +629,16 @@ public class MCEFVideoPlayer {
      * @param looping True to enable looping, false to disable
      */
     public void setLooping(boolean looping) {
-        if (!initialized) {
+        VideoManager.EXECUTOR.execute(() -> {
+            if (!initialized) {
+                this.looping = looping;
+                waitForInitialization(() -> setLooping(looping));
+                return;
+            }
             this.looping = looping;
-            waitForInitialization(() -> setLooping(looping));
-            return;
-        }
-        
-        this.looping = looping;
-        browser.setLoopAllVideos(looping);
-        executeJavaScript("window.videoPlayerAPI.setLoop(" + looping + ")");
+            browser.setLoopAllVideos(looping);
+            executeJavaScript("window.videoPlayerAPI.setLoop(" + looping + ")");
+        });
     }
     
     /**
@@ -651,14 +656,15 @@ public class MCEFVideoPlayer {
      * @param fillScreen True to enable fill screen mode, false to disable
      */
     public void setFillScreen(boolean fillScreen) {
-        if (!initialized) {
+        VideoManager.EXECUTOR.execute(() -> {
+            if (!initialized) {
+                this.fillScreen = fillScreen;
+                waitForInitialization(() -> setFillScreen(fillScreen));
+                return;
+            }
             this.fillScreen = fillScreen;
-            waitForInitialization(() -> setFillScreen(fillScreen));
-            return;
-        }
-        
-        this.fillScreen = fillScreen;
-        executeJavaScript("window.videoPlayerAPI.setFillScreen(" + fillScreen + ")");
+            executeJavaScript("window.videoPlayerAPI.setFillScreen(" + fillScreen + ")");
+        });
     }
     
     /**
@@ -679,7 +685,6 @@ public class MCEFVideoPlayer {
         if (!initialized) {
             return 0;
         }
-        
         String result = executeJavaScriptWithResult("(function() { return window.videoPlayerAPI ? window.videoPlayerAPI.getDuration() : 0; })()");
         try {
             return Double.parseDouble(result);
@@ -706,7 +711,6 @@ public class MCEFVideoPlayer {
         if (!initialized) {
             return 0;
         }
-        
         String result = executeJavaScriptWithResult("(function() { return window.videoPlayerAPI ? window.videoPlayerAPI.getCurrentTime() : 0; })()");
         try {
             return Double.parseDouble(result);
@@ -730,31 +734,30 @@ public class MCEFVideoPlayer {
      * @param seconds The position to seek to, in seconds
      */
     public void setCurrentTime(double seconds) {
-        if (!initialized) {
-            double finalSeconds = seconds;
-            waitForInitialization(() -> setCurrentTime(finalSeconds));
-            return;
-        }
-        
-        LOGGER.info("[FANCYMENU] Setting video position to " + seconds + " seconds");
-        
-        // Make sure we have a valid value
-        seconds = Math.max(0, seconds);
-        
-        // Use a more direct approach to set the video time
-        String script = "try {" +
-                        "  const videoElement = document.getElementById('videoPlayer');" +
-                        "  if (videoElement) {" +
-                        "    videoElement.currentTime = " + seconds + ";" +
-                        "    console.log('[FANCYMENU] Video time set to: " + seconds + "');" +
-                        "  } else {" +
-                        "    console.error('[FANCYMENU] Video element not found');" +
-                        "  }" +
-                        "} catch(e) {" +
-                        "  console.error('[FANCYMENU] Error setting time: ' + e.message);" +
-                        "}";
-        
-        executeJavaScript(script);
+        final double secondsFinal = Math.max(0, seconds);
+        VideoManager.EXECUTOR.execute(() -> {
+            if (!initialized) {
+                waitForInitialization(() -> setCurrentTime(secondsFinal));
+                return;
+            }
+
+            LOGGER.info("[FANCYMENU] Setting video position to " + secondsFinal + " seconds");
+
+            // Use a more direct approach to set the video time
+            String script = "try {" +
+                    "  const videoElement = document.getElementById('videoPlayer');" +
+                    "  if (videoElement) {" +
+                    "    videoElement.currentTime = " + secondsFinal + ";" +
+                    "    console.log('[FANCYMENU] Video time set to: " + secondsFinal + "');" +
+                    "  } else {" +
+                    "    console.error('[FANCYMENU] Video element not found');" +
+                    "  }" +
+                    "} catch(e) {" +
+                    "  console.error('[FANCYMENU] Error setting time: ' + e.message);" +
+                    "}";
+
+            executeJavaScript(script);
+        });
     }
     
     /**
@@ -772,23 +775,25 @@ public class MCEFVideoPlayer {
      * @param seconds The number of seconds to seek forward
      */
     public void seekForward(double seconds) {
-        if (!initialized) return;
-        
-        // Use a direct approach to seek forward
-        String script = "try {" +
-                        "  const video = document.getElementById('videoPlayer');" +
-                        "  if (video) {" +
-                        "    const currentTime = video.currentTime;" +
-                        "    const duration = video.duration || 0;" +
-                        "    const newTime = Math.min(currentTime + " + seconds + ", duration);" +
-                        "    video.currentTime = newTime;" +
-                        "    console.log('[FANCYMENU] Seeking forward to: ' + newTime);" +
-                        "  }" +
-                        "} catch(e) {" +
-                        "  console.error('[FANCYMENU] Error seeking forward: ' + e.message);" +
-                        "}";
-        
-        executeJavaScript(script);
+        VideoManager.EXECUTOR.execute(() -> {
+            if (!initialized) return;
+
+            // Use a direct approach to seek forward
+            String script = "try {" +
+                    "  const video = document.getElementById('videoPlayer');" +
+                    "  if (video) {" +
+                    "    const currentTime = video.currentTime;" +
+                    "    const duration = video.duration || 0;" +
+                    "    const newTime = Math.min(currentTime + " + seconds + ", duration);" +
+                    "    video.currentTime = newTime;" +
+                    "    console.log('[FANCYMENU] Seeking forward to: ' + newTime);" +
+                    "  }" +
+                    "} catch(e) {" +
+                    "  console.error('[FANCYMENU] Error seeking forward: ' + e.message);" +
+                    "}";
+
+            executeJavaScript(script);
+        });
     }
     
     /**
@@ -797,22 +802,24 @@ public class MCEFVideoPlayer {
      * @param seconds The number of seconds to seek backward
      */
     public void seekBackward(double seconds) {
-        if (!initialized) return;
-        
-        // Use a direct approach to seek backward
-        String script = "try {" +
-                        "  const video = document.getElementById('videoPlayer');" +
-                        "  if (video) {" +
-                        "    const currentTime = video.currentTime;" +
-                        "    const newTime = Math.max(currentTime - " + seconds + ", 0);" +
-                        "    video.currentTime = newTime;" +
-                        "    console.log('[FANCYMENU] Seeking backward to: ' + newTime);" +
-                        "  }" +
-                        "} catch(e) {" +
-                        "  console.error('[FANCYMENU] Error seeking backward: ' + e.message);" +
-                        "}";
-        
-        executeJavaScript(script);
+        VideoManager.EXECUTOR.execute(() -> {
+            if (!initialized) return;
+
+            // Use a direct approach to seek backward
+            String script = "try {" +
+                    "  const video = document.getElementById('videoPlayer');" +
+                    "  if (video) {" +
+                    "    const currentTime = video.currentTime;" +
+                    "    const newTime = Math.max(currentTime - " + seconds + ", 0);" +
+                    "    video.currentTime = newTime;" +
+                    "    console.log('[FANCYMENU] Seeking backward to: ' + newTime);" +
+                    "  }" +
+                    "} catch(e) {" +
+                    "  console.error('[FANCYMENU] Error seeking backward: ' + e.message);" +
+                    "}";
+
+            executeJavaScript(script);
+        });
     }
     
     /**
@@ -879,7 +886,6 @@ public class MCEFVideoPlayer {
     public int getProgressPercentage() {
         double duration = getDuration();
         if (duration <= 0) return 0;
-        
         return (int)((getCurrentTime() / duration) * 100);
     }
     
@@ -893,7 +899,6 @@ public class MCEFVideoPlayer {
         int totalSeconds = (int)Math.floor(seconds);
         int minutes = totalSeconds / 60;
         int remainingSeconds = totalSeconds % 60;
-        
         return String.format("%d:%02d", minutes, remainingSeconds);
     }
     
@@ -908,7 +913,6 @@ public class MCEFVideoPlayer {
         int hours = totalSeconds / 3600;
         int minutes = (totalSeconds % 3600) / 60;
         int remainingSeconds = totalSeconds % 60;
-        
         if (hours > 0) {
             return String.format("%d:%02d:%02d", hours, minutes, remainingSeconds);
         } else {
@@ -924,18 +928,13 @@ public class MCEFVideoPlayer {
     public boolean isPlaying() {
         // Return local state, which should be kept in sync
         if (!initialized) return false;
-        
         // This is a lightweight call - we only check the actual state occasionally
         if (!stateVerified && initialized) {
             syncPlayState();
             stateVerified = true;
         }
-        
         return isCurrentlyPlaying;
     }
-    
-    // Flag to track if we've verified the state at least once
-    private boolean stateVerified = false;
     
     /**
      * Gets the natural width of the video.
@@ -946,7 +945,6 @@ public class MCEFVideoPlayer {
         if (!initialized) {
             return 0;
         }
-        
         String result = executeJavaScriptWithResult("(function() { return window.videoPlayerAPI ? window.videoPlayerAPI.getVideoWidth() : 0; })()");
         try {
             return Integer.parseInt(result);
@@ -964,7 +962,6 @@ public class MCEFVideoPlayer {
         if (!initialized) {
             return 0;
         }
-        
         String result = executeJavaScriptWithResult("(function() { return window.videoPlayerAPI ? window.videoPlayerAPI.getVideoHeight() : 0; })()");
         try {
             return Integer.parseInt(result);
@@ -982,9 +979,8 @@ public class MCEFVideoPlayer {
     public void setPosition(int x, int y) {
         this.posX = x;
         this.posY = y;
-        
         if (browser != null && initialized) {
-            browser.setPosition(x, y);
+            VideoManager.EXECUTOR.execute(() -> browser.setPosition(x, y));
         }
     }
     
@@ -1015,9 +1011,8 @@ public class MCEFVideoPlayer {
     public void setSize(int width, int height) {
         this.width = width;
         this.height = height;
-        
         if (browser != null && initialized) {
-            browser.setSize(width, height);
+            VideoManager.EXECUTOR.execute(() -> browser.setSize(width, height));
         }
     }
     
@@ -1139,7 +1134,7 @@ public class MCEFVideoPlayer {
      */
     public void setOpacity(float opacity) {
         if (browser != null && initialized) {
-            browser.setOpacity(Math.max(0.0F, Math.min(1.0F, opacity)));
+            VideoManager.EXECUTOR.execute(() -> browser.setOpacity(Math.max(0.0F, Math.min(1.0F, opacity))));
         }
     }
     
@@ -1316,53 +1311,15 @@ public class MCEFVideoPlayer {
     }
     
     /**
-     * Loads the simple test HTML file for debugging purposes.
-     * This can help determine if the HTML files are loading correctly.
-     */
-    public void loadSimpleTest() {
-        if (!initialized) {
-            waitForInitialization(this::loadSimpleTest);
-            return;
-        }
-        
-        try {
-            // Try using a data URL instead of a file URL
-            String htmlContent = "<!DOCTYPE html><html><head><style>body{background:red;color:white;font-size:30px;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;}</style></head><body>MCEF TEST PAGE</body></html>";
-            String dataUrl = "data:text/html;charset=utf-8," + java.net.URLEncoder.encode(htmlContent, "UTF-8");
-            
-            LOGGER.info("[FANCYMENU] Loading inline test page with data URL");
-            browser.setUrl(dataUrl);
-            
-            // Also try to load a direct file URL as backup
-            File testFile = new File(FancyMenu.TEMP_DATA_DIR, "web/videoplayer/simple_test.html");
-            if (testFile.exists()) {
-                LOGGER.info("[FANCYMENU] File exists at: " + testFile.getAbsolutePath());
-                String testUrl = "file:///" + testFile.getAbsolutePath().replace('\\', '/');
-                
-                // Add a delayed load of the file URL as backup
-                new Thread(() -> {
-                    try {
-                        Thread.sleep(5000); // Wait 5 seconds
-                        LOGGER.info("[FANCYMENU] Trying backup method with direct file URL: " + testUrl);
-                        browser.setUrl(testUrl);
-                    } catch (Exception e) {
-                        LOGGER.error("[FANCYMENU] Error in delayed URL load", e);
-                    }
-                }).start();
-            } else {
-                LOGGER.error("[FANCYMENU] Test file does not exist at: " + testFile.getAbsolutePath());
-            }
-            
-        } catch (Exception e) {
-            LOGGER.error("[FANCYMENU] Failed to load simple test page", e);
-        }
-    }
-    
-    /**
      * Disposes of resources used by the video player.
      * Call this when the player is no longer needed.
      */
     public void dispose() {
+        try {
+            this.stop();
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Error while trying to close MCEFVideoPlayer instance (Failed to stop video before closing)", ex);
+        }
         if (browser != null) {
             try {
                 browser.close();
@@ -1371,4 +1328,5 @@ public class MCEFVideoPlayer {
             }
         }
     }
+
 }

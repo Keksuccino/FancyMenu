@@ -15,6 +15,8 @@ import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Manages video player instances for the mod.
@@ -24,6 +26,8 @@ public class VideoManager {
 
     protected static final Logger LOGGER = LogManager.getLogger();
     protected static final VideoManager INSTANCE = new VideoManager();
+
+    protected static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
     
     // Map to track all active video players
     protected final Map<String, MCEFVideoPlayer> players = new HashMap<>();
@@ -169,30 +173,6 @@ public class VideoManager {
             LOGGER.error("[FANCYMENU] Failed to create video player", e);
             return null;
         }
-    }
-    
-    /**
-     * Creates a test player with simple HTML for debugging.
-     * This is useful for verifying if the HTML loading works at all.
-     *
-     * @param x The X position of the player
-     * @param y The Y position of the player
-     * @param width The width of the player
-     * @param height The height of the player
-     * @return A unique identifier for the created player, or null if creation failed
-     */
-    @Nullable
-    public String createTestPlayer(int x, int y, int width, int height) {
-        String playerId = createPlayer(x, y, width, height);
-        if (playerId != null) {
-            MCEFVideoPlayer player = getPlayer(playerId);
-            if (player != null) {
-                player.loadSimpleTest();
-                LOGGER.info("[FANCYMENU] Created test player with ID: " + playerId);
-                return playerId;
-            }
-        }
-        return null;
     }
     
     /**
