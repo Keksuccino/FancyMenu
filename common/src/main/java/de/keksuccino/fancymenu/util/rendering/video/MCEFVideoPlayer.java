@@ -368,6 +368,15 @@ public class MCEFVideoPlayer {
     }
     
     /**
+     * Gets the duration of the current video in milliseconds.
+     *
+     * @return The video duration in milliseconds, or 0 if unknown
+     */
+    public long getDurationMillis() {
+        return (long)(getDuration() * 1000);
+    }
+    
+    /**
      * Gets the current playback position in seconds.
      *
      * @return The current position in seconds
@@ -386,6 +395,15 @@ public class MCEFVideoPlayer {
     }
     
     /**
+     * Gets the current playback position in milliseconds.
+     *
+     * @return The current position in milliseconds
+     */
+    public long getCurrentTimeMillis() {
+        return (long)(getCurrentTime() * 1000);
+    }
+    
+    /**
      * Sets the current playback position.
      *
      * @param seconds The position to seek to, in seconds
@@ -396,7 +414,145 @@ public class MCEFVideoPlayer {
             return;
         }
         
+        LOGGER.info("[FANCYMENU] Setting video position to " + seconds + " seconds");
         executeJavaScript("window.videoPlayerAPI.setCurrentTime(" + seconds + ")");
+    }
+    
+    /**
+     * Sets the current playback position in milliseconds.
+     *
+     * @param milliseconds The position to seek to, in milliseconds
+     */
+    public void setCurrentTimeMillis(long milliseconds) {
+        setCurrentTime(milliseconds / 1000.0);
+    }
+    
+    /**
+     * Seeks forward in the video by the specified number of seconds.
+     *
+     * @param seconds The number of seconds to seek forward
+     */
+    public void seekForward(double seconds) {
+        if (!initialized) return;
+        
+        double currentTime = getCurrentTime();
+        double duration = getDuration();
+        double newTime = Math.min(currentTime + seconds, duration);
+        setCurrentTime(newTime);
+    }
+    
+    /**
+     * Seeks backward in the video by the specified number of seconds.
+     *
+     * @param seconds The number of seconds to seek backward
+     */
+    public void seekBackward(double seconds) {
+        if (!initialized) return;
+        
+        double currentTime = getCurrentTime();
+        double newTime = Math.max(currentTime - seconds, 0);
+        setCurrentTime(newTime);
+    }
+    
+    /**
+     * Gets a formatted string of the current playback position in MM:SS format.
+     *
+     * @return Formatted time string (e.g., "1:45")
+     */
+    public String getFormattedCurrentTime() {
+        return formatTime(getCurrentTime());
+    }
+    
+    /**
+     * Gets a formatted string of the video duration in MM:SS format.
+     *
+     * @return Formatted time string (e.g., "3:30")
+     */
+    public String getFormattedDuration() {
+        return formatTime(getDuration());
+    }
+    
+    /**
+     * Gets a more detailed formatted string of the current playback position in HH:MM:SS format.
+     * Hours are only shown if the time is at least 1 hour.
+     *
+     * @return Formatted time string (e.g., "1:45:30" or "12:20")
+     */
+    public String getDetailedFormattedCurrentTime() {
+        return formatTimeDetailed(getCurrentTime());
+    }
+    
+    /**
+     * Gets a more detailed formatted string of the video duration in HH:MM:SS format.
+     * Hours are only shown if the time is at least 1 hour.
+     *
+     * @return Formatted time string (e.g., "1:45:30" or "12:20")
+     */
+    public String getDetailedFormattedDuration() {
+        return formatTimeDetailed(getDuration());
+    }
+    
+    /**
+     * Gets a formatted string showing both current position and total duration.
+     *
+     * @return Formatted time string (e.g., "1:45 / 3:30")
+     */
+    public String getFormattedTimeInfo() {
+        return getFormattedCurrentTime() + " / " + getFormattedDuration();
+    }
+    
+    /**
+     * Gets a detailed formatted string showing both current position and total duration.
+     *
+     * @return Formatted time string (e.g., "1:45:30 / 3:20:15")
+     */
+    public String getDetailedFormattedTimeInfo() {
+        return getDetailedFormattedCurrentTime() + " / " + getDetailedFormattedDuration();
+    }
+    
+    /**
+     * Gets the playback progress as a percentage (0-100).
+     *
+     * @return Percentage of playback progress
+     */
+    public int getProgressPercentage() {
+        double duration = getDuration();
+        if (duration <= 0) return 0;
+        
+        return (int)((getCurrentTime() / duration) * 100);
+    }
+    
+    /**
+     * Formats a time value in seconds to MM:SS format.
+     *
+     * @param seconds Time in seconds
+     * @return Formatted time string
+     */
+    private String formatTime(double seconds) {
+        int totalSeconds = (int)Math.floor(seconds);
+        int minutes = totalSeconds / 60;
+        int remainingSeconds = totalSeconds % 60;
+        
+        return String.format("%d:%02d", minutes, remainingSeconds);
+    }
+    
+    /**
+     * Formats a time value in seconds to HH:MM:SS format (hours only shown if ≥ 1 hour).
+     *
+     * @param seconds Time in seconds
+     * @return Formatted time string
+     */
+    private String formatTimeDetailed(double seconds) {
+        int totalSeconds = (int)Math.floor(seconds);
+        int hours = totalSeconds / 3600;
+        int minutes = (totalSeconds % 3600) / 60;
+        int remainingSeconds = totalSeconds % 60;
+        
+        if (hours > 0) {
+            return String.format("%d:%02d:%02d", hours, minutes, remainingSeconds);
+        } else {
+            return String.format("%d:%02d", minutes, remainingSeconds);
+        }
     }
     
     /**

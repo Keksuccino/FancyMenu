@@ -114,24 +114,24 @@ public class VideoPlayerExample extends Screen {
         if (videoPlayer != null) {
             switch (keyCode) {
                 case 32: // Spacebar - toggle play/pause
-                    if (videoPlayer.isPlaying()) {
-                        videoPlayer.pause();
-                    } else {
-                        videoPlayer.play();
-                    }
+                    videoPlayer.togglePlayPause();
+                    logVideoInfo("Toggled play/pause");
                     return true;
                 
                 case 82: // R key - restart video
                     videoPlayer.setCurrentTime(0);
                     videoPlayer.play();
+                    logVideoInfo("Restarted video");
                     return true;
                     
                 case 70: // F key - toggle fill screen mode
                     videoPlayer.setFillScreen(!videoPlayer.isFillScreen());
+                    logVideoInfo("Toggled fill screen mode");
                     return true;
                     
                 case 76: // L key - toggle loop
                     videoPlayer.setLooping(!videoPlayer.isLooping());
+                    logVideoInfo("Toggled loop: " + videoPlayer.isLooping());
                     return true;
                     
                 case 84: // T key - load simple test page
@@ -150,18 +150,78 @@ public class VideoPlayerExample extends Screen {
                     tryLoadVideoMethod3();
                     return true;
                     
-                // Volume controls
-                case 263: // Arrow left - volume down
-                    videoPlayer.setVolume(Math.max(0, videoPlayer.getVolume() - 0.1f));
+                case 73: // I key - show video info
+                    logVideoInfo("Video info requested");
                     return true;
                     
-                case 262: // Arrow right - volume up
+                // Seek controls
+                case 261: // Arrow right - seek forward 10 seconds
+                    videoPlayer.seekForward(10);
+                    logVideoInfo("Seek forward 10s");
+                    return true;
+                    
+                case 260: // Arrow left - seek backward 10 seconds
+                    videoPlayer.seekBackward(10);
+                    logVideoInfo("Seek backward 10s");
+                    return true;
+                    
+                case 265: // Arrow up - seek forward 60 seconds
+                    videoPlayer.seekForward(60);
+                    logVideoInfo("Seek forward 60s");
+                    return true;
+                    
+                case 264: // Arrow down - seek backward 60 seconds
+                    videoPlayer.seekBackward(60);
+                    logVideoInfo("Seek backward 60s");
+                    return true;
+                    
+                // Volume controls
+                case 263: // Minus - volume down
+                    videoPlayer.setVolume(Math.max(0, videoPlayer.getVolume() - 0.1f));
+                    logVideoInfo("Volume: " + Math.round(videoPlayer.getVolume() * 100) + "%");
+                    return true;
+                    
+                case 262: // Plus - volume up
                     videoPlayer.setVolume(Math.min(1, videoPlayer.getVolume() + 0.1f));
+                    logVideoInfo("Volume: " + Math.round(videoPlayer.getVolume() * 100) + "%");
+                    return true;
+                    
+                case 77: // M key - toggle mute
+                    boolean muted = !videoPlayer.getMuted();
+                    videoPlayer.setMuted(muted);
+                    logVideoInfo("Mute: " + muted);
                     return true;
             }
         }
         
         return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+    
+    /**
+     * Log detailed video information
+     */
+    private void logVideoInfo(String action) {
+        if (videoPlayer == null) return;
+        
+        // Basic info
+        LOGGER.info("[FANCYMENU] === Video Player Info ===");
+        LOGGER.info("[FANCYMENU] Action: " + action);
+        LOGGER.info("[FANCYMENU] Playing: " + videoPlayer.isPlaying());
+        LOGGER.info("[FANCYMENU] Duration: " + videoPlayer.getFormattedDuration() + " (" + videoPlayer.getDurationMillis() + "ms)");
+        LOGGER.info("[FANCYMENU] Position: " + videoPlayer.getFormattedCurrentTime() + " (" + videoPlayer.getCurrentTimeMillis() + "ms)");
+        LOGGER.info("[FANCYMENU] Progress: " + videoPlayer.getProgressPercentage() + "%");
+        LOGGER.info("[FANCYMENU] Time: " + videoPlayer.getFormattedTimeInfo());
+        LOGGER.info("[FANCYMENU] Detailed time: " + videoPlayer.getDetailedFormattedTimeInfo());
+        
+        // Player settings
+        LOGGER.info("[FANCYMENU] Volume: " + Math.round(videoPlayer.getVolume() * 100) + "%");
+        LOGGER.info("[FANCYMENU] Muted: " + videoPlayer.getMuted());
+        LOGGER.info("[FANCYMENU] Loop: " + videoPlayer.isLooping());
+        LOGGER.info("[FANCYMENU] Fill Screen: " + videoPlayer.isFillScreen());
+        
+        // Video properties
+        LOGGER.info("[FANCYMENU] Video dimensions: " + videoPlayer.getVideoWidth() + "x" + videoPlayer.getVideoHeight());
+        LOGGER.info("[FANCYMENU] ======================");
     }
     
     /**
