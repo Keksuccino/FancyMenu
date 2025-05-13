@@ -207,89 +207,61 @@ public class MCEFVideoPlayer {
             this.currentVideoPath = videoPath;
             LOGGER.info("[FANCYMENU] Loading video: " + videoPath);
             
-            // When loading a new video, we reset the playing state until we confirm it's playing
-            boolean wasPlaying = isCurrentlyPlaying;
-            
-            // If it's a file path and not already a URL, convert to proper file:/// URL
+            // Try a more direct approach to load the video - directly set the video src
+            // Convert file path to URI if needed
+            String finalPath = videoPath;
             if (!videoPath.startsWith("http") && !videoPath.startsWith("file:")) {
                 File videoFile = new File(videoPath);
                 if (videoFile.exists()) {
-                    String fileUrl = videoFile.toURI().toString();
-                    LOGGER.info("[FANCYMENU] Converted video path to: " + fileUrl);
-                    
-                    // Use a more direct method for loading videos
-                    String loadScript = "try {" +
-                                       "  const videoElement = document.getElementById('videoPlayer');" +
-                                       "  if (videoElement) {" +
-                                       "    videoElement.src = '" + fileUrl.replace("'", "\\'") + "';" +
-                                       "    videoElement.load();" +
-                                       "    console.log('[FANCYMENU] Direct video load: " + fileUrl.replace("'", "\\'") + "');" +
-                                       "    if (window.videoPlayerAPI) {" +
-                                       "      window.videoPlayerAPI.playAfterLoad = true;" +
-                                       "    }" +
-                                       "    videoElement.play().catch(e => console.error('Autoplay failed:', e));" +
-                                       "  }" +
-                                       "} catch(e) {" +
-                                       "  console.error('Error loading video:', e);" +
-                                       "}";
-                    
-                    executeJavaScript(loadScript);
-                    
-                    // Force autoplay after a delay to ensure the video is loaded
-                    CompletableFuture.runAsync(() -> {
-                        try {
-                            // Wait for video to start loading
-                            Thread.sleep(500);
-                            play(); // Force play after initial load
-                        } catch (Exception e) {
-                            LOGGER.error("[FANCYMENU] Error in delayed play", e);
-                        }
-                    });
-                    
-                    // Apply current settings after a short delay
-                    applySettingsAfterLoad(true); // Force autoplay
-                    return;
-                } else {
-                    LOGGER.error("[FANCYMENU] Video file does not exist: " + videoFile.getAbsolutePath());
+                    finalPath = videoFile.toURI().toString();
+                    LOGGER.info("[FANCYMENU] Converted video path to: " + finalPath);
                 }
             }
             
-            // For URLs, escape any single quotes to avoid breaking the JavaScript
-            String escapedPath = videoPath.replace("'", "\\'");
-            LOGGER.info("[FANCYMENU] Loading video URL: " + escapedPath);
-            
-            // Use direct method for URLs too
-            String loadScript = "try {" +
-                               "  const videoElement = document.getElementById('videoPlayer');" +
-                               "  if (videoElement) {" +
-                               "    videoElement.src = '" + escapedPath + "';" +
-                               "    videoElement.load();" +
-                               "    console.log('[FANCYMENU] Direct video load: " + escapedPath + "');" +
-                               "    if (window.videoPlayerAPI) {" +
-                               "      window.videoPlayerAPI.playAfterLoad = true;" +
-                               "    }" +
-                               "    videoElement.play().catch(e => console.error('Autoplay failed:', e));" +
-                               "  }" +
-                               "} catch(e) {" +
-                               "  console.error('Error loading video:', e);" +
-                               "}";
+            // Direct, simplified approach that bypasses most of the API layer
+            String loadScript = 
+                "try {\n" +
+                "  console.log('[FANCYMENU] Loading video with direct method: " + finalPath + "');\n" +
+                "  var video = document.getElementById('videoPlayer');\n" +
+                "  if (video) {\n" +
+                "    // Reset video state\n" +
+                "    video.pause();\n" +
+                "    video.currentTime = 0;\n" +
+                "    video.removeAttribute('src');\n" +
+                "    video.load();\n" +
+                "    \n" +
+                "    // Set new source\n" +
+                "    video.src = '" + finalPath.replace("'", "\\'") + "';\n" +
+                "    \n" +
+                "    // Force preload\n" +
+                "    video.preload = 'auto';\n" +
+                "    \n" +
+                "    // Set proper attributes\n" +
+                "    video.setAttribute('playsinline', '');\n" +
+                "    video.setAttribute('webkit-playsinline', '');\n" +
+                "    video.crossOrigin = 'anonymous';\n" +
+                "    \n" +
+                "    // Apply settings\n" +
+                "    video.volume = " + volume + ";\n" +
+                "    video.loop = " + looping + ";\n" +
+                "    video.muted = " + isMuted + ";\n" +
+                "    \n" +
+                "    // Start loading\n" +
+                "    video.load();\n" +
+                "    console.log('[FANCYMENU] Video element configured with source: ' + video.src);\n" +
+                "    \n" +
+                "    // Store in API if it exists\n" +
+                "    if (window.videoPlayerAPI) {\n" +
+                "      window.videoPlayerAPI.currentSettings.videoLoaded = true;\n" +
+                "    }\n" +
+                "  } else {\n" +
+                "    console.error('[FANCYMENU] Video element not found');\n" +
+                "  }\n" +
+                "} catch(e) {\n" +
+                "  console.error('[FANCYMENU] Error in direct video loading: ' + e.message);\n" +
+                "}";
             
             executeJavaScript(loadScript);
-            
-            // Force autoplay after a delay
-            CompletableFuture.runAsync(() -> {
-                try {
-                    // Wait for video to start loading
-                    Thread.sleep(500);
-                    play(); // Force play after initial load
-                } catch (Exception e) {
-                    LOGGER.error("[FANCYMENU] Error in delayed play", e);
-                }
-            });
-            
-            // Apply current settings after a short delay
-            applySettingsAfterLoad(true); // Force autoplay
-            
         } catch (Exception e) {
             LOGGER.error("[FANCYMENU] Failed to load video: " + videoPath, e);
         }
@@ -308,6 +280,26 @@ public class MCEFVideoPlayer {
                 // Wait for video to start loading
                 Thread.sleep(500);
                 
+                // Check if video element exists and has a source
+                executeJavaScript(
+                    "try {\n" +
+                    "  console.log('[FANCYMENU] Checking video element status');\n" +
+                    "  var video = document.getElementById('videoPlayer');\n" +
+                    "  if (video) {\n" +
+                    "    console.log('[FANCYMENU] Video element exists, src: ' + (video.src || 'none') + ', readyState: ' + video.readyState);\n" +
+                    "    // Try to force a proper load if src is set but readyState is 0\n" +
+                    "    if (video.src && video.readyState === 0) {\n" +
+                    "      console.log('[FANCYMENU] Forcing video load');\n" +
+                    "      video.load();\n" +
+                    "    }\n" +
+                    "  } else {\n" +
+                    "    console.error('[FANCYMENU] Video element not found');\n" +
+                    "  }\n" +
+                    "} catch(e) {\n" +
+                    "  console.error('[FANCYMENU] Error checking video status: ' + e);\n" +
+                    "}"
+                );
+                
                 // Re-apply all current settings
                 LOGGER.info("[FANCYMENU] Re-applying settings to newly loaded video");
                 setVolume(volume);
@@ -315,51 +307,72 @@ public class MCEFVideoPlayer {
                 setFillScreen(fillScreen);
                 setMuted(isMuted);
                 
-                // Check the current play state from the browser
-                String playStateCheck = "(function() { try { const video = document.getElementById('videoPlayer'); return video && !video.paused; } catch(e) { return false; } })()";
-                String result = executeJavaScriptWithResult(playStateCheck);
-                
-                try {
-                    if (result != null && !result.isEmpty()) {
-                        boolean isActuallyPlaying = Boolean.parseBoolean(result);
-                        // Update our local state to match the browser
-                        isCurrentlyPlaying = isActuallyPlaying;
-                        LOGGER.info("[FANCYMENU] Video playing state from browser: " + isActuallyPlaying);
-                    }
-                } catch (Exception e) {
-                    LOGGER.error("[FANCYMENU] Error parsing play state from browser", e);
-                }
-                
                 // If we should autoplay but the video isn't playing, try more aggressively
-                if (shouldAutoPlay && !isCurrentlyPlaying) {
+                if (shouldAutoPlay) {
                     LOGGER.info("[FANCYMENU] Auto-playing video after load (delayed attempt)");
                     
                     // Try additional direct method
-                    executeJavaScript("try { " +
-                                     "  const video = document.getElementById('videoPlayer'); " +
-                                     "  if (video) { " +
-                                     "    video.play().catch(e => { " +
-                                     "      video.muted = true; " + // Try muted as fallback
-                                     "      video.play().catch(e2 => console.error('All play attempts failed: ' + e2)); " +
-                                     "    }); " +
-                                     "  } " +
-                                     "} catch(e) { console.error(e); }");
+                    executeJavaScript(
+                        "try {\n" +
+                        "  console.log('[FANCYMENU] Direct play attempt...');\n" +
+                        "  var video = document.getElementById('videoPlayer');\n" +
+                        "  if (video) {\n" +
+                        "    if (!video.src) {\n" +
+                        "      console.log('[FANCYMENU] No source set yet, skipping play attempt');\n" +
+                        "    } else {\n" +
+                        "      console.log('[FANCYMENU] Source exists: ' + video.src);\n" +
+                        "      video.load();\n" +
+                        "      video.play().catch(e => {\n" +
+                        "        console.error('[FANCYMENU] Play attempt 1 failed: ' + e);\n" +
+                        "        // Try muted play\n" +
+                        "        video.muted = true;\n" +
+                        "        video.play().catch(e2 => {\n" +
+                        "          console.error('[FANCYMENU] Muted play failed: ' + e2);\n" +
+                        "          // Try with additional attributes\n" +
+                        "          video.setAttribute('playsinline', '');\n" +
+                        "          video.setAttribute('webkit-playsinline', '');\n" +
+                        "          video.play();\n" +
+                        "        });\n" +
+                        "      });\n" +
+                        "    }\n" +
+                        "  } else {\n" +
+                        "    console.error('[FANCYMENU] Video element not found in direct play attempt');\n" +
+                        "  }\n" +
+                        "} catch(e) {\n" +
+                        "  console.error('[FANCYMENU] Error in direct play: ' + e);\n" +
+                        "}"
+                    );
                     
                     // Also call the regular play method
                     play();
                     
                     // Try once more after another delay with a more direct approach
-                    Thread.sleep(1000);
+                    Thread.sleep(2000);
                     
-                    executeJavaScript("try { " +
-                                     "  const video = document.getElementById('videoPlayer'); " +
-                                     "  if (video && video.paused) { " +
-                                     "    console.log('[FANCYMENU] Final direct play attempt'); " +
-                                     "    video.muted = true; " + // Start muted to bypass autoplay restrictions
-                                     "    video.play(); " +
-                                     "    setTimeout(() => { video.muted = " + isMuted + "; }, 500); " + // Restore mute state after playback starts
-                                     "  } " +
-                                     "} catch(e) { console.error(e); }");
+                    LOGGER.info("[FANCYMENU] Final play attempt");
+                    executeJavaScript(
+                        "try {\n" +
+                        "  var video = document.getElementById('videoPlayer');\n" +
+                        "  if (video && video.paused) {\n" +
+                        "    console.log('[FANCYMENU] Final direct play attempt');\n" +
+                        "    // For final attempt, set autoplay attribute and reload\n" +
+                        "    video.setAttribute('autoplay', '');\n" +
+                        "    video.muted = true;\n" +
+                        "    // Store current time\n" +
+                        "    var currentTime = video.currentTime;\n" +
+                        "    var currentSrc = video.src;\n" +
+                        "    // Force a reload\n" +
+                        "    video.src = currentSrc;\n" +
+                        "    video.load();\n" +
+                        "    video.play();\n" +
+                        "    setTimeout(function() {\n" +
+                        "      video.muted = " + isMuted + ";\n" +
+                        "    }, 1000);\n" +
+                        "  }\n" +
+                        "} catch(e) {\n" +
+                        "  console.error('[FANCYMENU] Error in final play attempt: ' + e);\n" +
+                        "}"
+                    );
                     
                     // Update our state to match what we expect
                     isCurrentlyPlaying = true;
@@ -425,35 +438,59 @@ public class MCEFVideoPlayer {
         
         LOGGER.info("[FANCYMENU] Playing video");
         
-        // Use a direct approach to force play
-        String playScript = "try {" +
-                          "  const video = document.getElementById('videoPlayer');" +
-                          "  if (video) {" +
-                          "    const playPromise = video.play();" +
-                          "    if (playPromise) {" +
-                          "      playPromise.catch(error => {" +
-                          "        console.error('Play failed:', error);" +
-                          "        // Try muted autoplay as fallback" +
-                          "        video.muted = true;" +
-                          "        video.play().then(() => {" +
-                          "          console.log('Muted autoplay succeeded');" +
-                          "          // Restore volume after playback started" +
-                          "          setTimeout(() => {" +
-                          "            video.muted = false;" +
-                          "          }, 100);" +
-                          "        }).catch(e => console.error('Even muted autoplay failed:', e));" +
-                          "      });" +
-                          "    }" +
-                          "  }" +
-                          "} catch(e) {" +
-                          "  console.error('Error playing video:', e);" +
-                          "}";
+        // Use the most direct approach possible to play the video
+        String playScript = 
+            "try {\n" +
+            "  console.log('[FANCYMENU] Attempting to play video directly');\n" +
+            "  var video = document.getElementById('videoPlayer');\n" +
+            "  if (video) {\n" +
+            "    // First ensure the video has a source\n" +
+            "    if (!video.src && '" + currentVideoPath + "' != 'null') {\n" +
+            "      console.log('[FANCYMENU] Setting missing video source: " + currentVideoPath + "');\n" +
+            "      video.src = '" + (currentVideoPath != null ? currentVideoPath.replace("'", "\\'") : "") + "';\n" +
+            "      video.load();\n" +
+            "    }\n" +
+            "    \n" +
+            "    // Multiple play attempts with different approaches\n" +
+            "    var playPromise = video.play();\n" +
+            "    \n" +
+            "    if (playPromise !== undefined) {\n" +
+            "      playPromise.then(function() {\n" +
+            "        console.log('[FANCYMENU] Video playback started successfully');\n" +
+            "      }).catch(function(error) {\n" +
+            "        console.error('[FANCYMENU] Play failed: ' + error);\n" +
+            "        \n" +
+            "        // First fallback: try with muted\n" +
+            "        console.log('[FANCYMENU] Trying muted autoplay...');\n" +
+            "        video.muted = true;\n" +
+            "        \n" +
+            "        video.play().then(function() {\n" +
+            "          console.log('[FANCYMENU] Muted playback succeeded');\n" +
+            "          // Try to unmute after a moment\n" +
+            "          setTimeout(function() {\n" +
+            "            video.muted = " + isMuted + ";\n" +
+            "          }, 1000);\n" +
+            "        }).catch(function(error2) {\n" +
+            "          console.error('[FANCYMENU] Even muted playback failed: ' + error2);\n" +
+            "          \n" +
+            "          // Try inline attribute as last resort\n" +
+            "          video.setAttribute('playsinline', '');\n" +
+            "          video.setAttribute('webkit-playsinline', '');\n" +
+            "          video.setAttribute('autoplay', '');\n" +
+            "          video.load(); // Reload to apply autoplay attribute\n" +
+            "        });\n" +
+            "      });\n" +
+            "    } else {\n" +
+            "      console.log('[FANCYMENU] Play method did not return a promise');\n" +
+            "    }\n" +
+            "  } else {\n" +
+            "    console.error('[FANCYMENU] Video element not found');\n" +
+            "  }\n" +
+            "} catch(e) {\n" +
+            "  console.error('[FANCYMENU] Error during play attempt: ' + e);\n" +
+            "}";
         
         executeJavaScript(playScript);
-        
-        // Also use the API method as backup
-        executeJavaScript("if (window.videoPlayerAPI) window.videoPlayerAPI.play();");
-        
         isCurrentlyPlaying = true;
     }
     
