@@ -115,23 +115,19 @@ public class VideoPlayerExample extends Screen {
             switch (keyCode) {
                 case 32: // Spacebar - toggle play/pause
                     videoPlayer.togglePlayPause();
-                    logVideoInfo("Toggled play/pause");
                     return true;
                 
                 case 82: // R key - restart video
                     videoPlayer.setCurrentTime(0);
                     videoPlayer.play();
-                    logVideoInfo("Restarted video");
                     return true;
                     
                 case 70: // F key - toggle fill screen mode
                     videoPlayer.setFillScreen(!videoPlayer.isFillScreen());
-                    logVideoInfo("Toggled fill screen mode");
                     return true;
                     
                 case 76: // L key - toggle loop
                     videoPlayer.setLooping(!videoPlayer.isLooping());
-                    logVideoInfo("Toggled loop: " + videoPlayer.isLooping());
                     return true;
                     
                 case 84: // T key - load simple test page
@@ -151,44 +147,36 @@ public class VideoPlayerExample extends Screen {
                     return true;
                     
                 case 73: // I key - show video info
-                    logVideoInfo("Video info requested");
                     return true;
                     
                 // Seek controls
                 case 261: // Arrow right - seek forward 10 seconds
                     videoPlayer.seekForward(10);
-                    logVideoInfo("Seek forward 10s");
                     return true;
                     
                 case 260: // Arrow left - seek backward 10 seconds
                     videoPlayer.seekBackward(10);
-                    logVideoInfo("Seek backward 10s");
                     return true;
                     
                 case 265: // Arrow up - seek forward 60 seconds
                     videoPlayer.seekForward(60);
-                    logVideoInfo("Seek forward 60s");
                     return true;
                     
                 case 264: // Arrow down - seek backward 60 seconds
                     videoPlayer.seekBackward(60);
-                    logVideoInfo("Seek backward 60s");
                     return true;
                     
                 // Volume controls
                 case 263: // Minus - volume down
                     videoPlayer.setVolume(Math.max(0, videoPlayer.getVolume() - 0.1f));
-                    logVideoInfo("Volume: " + Math.round(videoPlayer.getVolume() * 100) + "%");
                     return true;
                     
                 case 262: // Plus - volume up
                     videoPlayer.setVolume(Math.min(1, videoPlayer.getVolume() + 0.1f));
-                    logVideoInfo("Volume: " + Math.round(videoPlayer.getVolume() * 100) + "%");
                     return true;
                     
                 case 77: // M key - toggle mute
                     videoPlayer.toggleMuted();
-                    logVideoInfo("Toggled mute: " + videoPlayer.getMuted());
                     return true;
             }
         }

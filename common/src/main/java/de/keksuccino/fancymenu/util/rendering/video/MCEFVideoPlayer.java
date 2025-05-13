@@ -100,11 +100,24 @@ public class MCEFVideoPlayer {
             browser.setVolume(volume);
             browser.setLoopAllVideos(looping);
             
-            // Add logging script to help debug
-            String debugScript = "console.log('FancyMenu Video Player loaded'); " +
-                                "document.body.style.backgroundColor = 'blue'; " +
-                                "document.body.insertAdjacentHTML('beforeend', '<div style=\"color:white;padding:20px;\">Video Player Debug</div>');";
-            browser.getBrowser().executeJavaScript(debugScript, browser.getUrl(), 0);
+            // Initialize JavaScript API settings after a short delay to ensure browser is ready
+            CompletableFuture.runAsync(() -> {
+                try {
+                    Thread.sleep(500);
+                    
+                    // Set initial API state to match our Java-side settings
+                    String initScript = "if (window.videoPlayerAPI) { " +
+                                       "  window.videoPlayerAPI.currentSettings.volume = " + volume + "; " +
+                                       "  window.videoPlayerAPI.currentSettings.loop = " + looping + "; " +
+                                       "  window.videoPlayerAPI.currentSettings.fillScreen = " + fillScreen + "; " + 
+                                       "  window.videoPlayerAPI.currentSettings.muted = " + isMuted + "; " +
+                                       "  console.log('Initial settings stored in API'); " +
+                                       "}";
+                    browser.getBrowser().executeJavaScript(initScript, browser.getUrl(), 0);
+                } catch (Exception e) {
+                    LOGGER.error("[FANCYMENU] Error setting initial API state", e);
+                }
+            });
             
             initialized = true;
             initFuture.complete(true);
@@ -197,6 +210,9 @@ public class MCEFVideoPlayer {
                     String fileUrl = videoFile.toURI().toString();
                     LOGGER.info("[FANCYMENU] Converted video path to: " + fileUrl);
                     executeJavaScript("window.videoPlayerAPI.loadVideo('" + fileUrl + "')");
+                    
+                    // Apply current settings after a short delay to ensure they take effect after video loads
+                    applySettingsAfterLoad();
                     return;
                 } else {
                     LOGGER.error("[FANCYMENU] Video file does not exist: " + videoFile.getAbsolutePath());
@@ -208,9 +224,40 @@ public class MCEFVideoPlayer {
             LOGGER.info("[FANCYMENU] Loading video URL: " + escapedPath);
             executeJavaScript("window.videoPlayerAPI.loadVideo('" + escapedPath + "')");
             
+            // Apply current settings after a short delay to ensure they take effect after video loads
+            applySettingsAfterLoad();
+            
         } catch (Exception e) {
             LOGGER.error("[FANCYMENU] Failed to load video: " + videoPath, e);
         }
+    }
+    
+    /**
+     * Applies all current settings to the video player after a video is loaded.
+     * This ensures settings are properly applied to newly loaded videos.
+     */
+    protected void applySettingsAfterLoad() {
+        // Use a small delay to ensure the video is actually loaded
+        CompletableFuture.runAsync(() -> {
+            try {
+                // Wait for video to start loading
+                Thread.sleep(300);
+                
+                // Re-apply all current settings
+                LOGGER.info("[FANCYMENU] Re-applying settings to newly loaded video");
+                setVolume(volume);
+                setLooping(looping);
+                setFillScreen(fillScreen);
+                setMuted(isMuted);
+                
+                // If the video was playing before, restart playback
+                if (isCurrentlyPlaying) {
+                    play();
+                }
+            } catch (Exception e) {
+                LOGGER.error("[FANCYMENU] Error applying settings after video load", e);
+            }
+        });
     }
     
     // Track muted state locally

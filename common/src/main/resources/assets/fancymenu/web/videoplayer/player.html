@@ -245,6 +245,14 @@
         
         // Functions that can be called from Java
         window.videoPlayerAPI = {
+            // Store current settings so they can be applied to new videos
+            currentSettings: {
+                volume: initialVolume,
+                loop: initialLoop,
+                fillScreen: initialFillScreen,
+                muted: false
+            },
+            
             loadVideo: function(path) {
                 log(`API called: loadVideo(${path})`);
                 loadVideo(path);
@@ -273,26 +281,32 @@
             setVolume: function(volume) {
                 volume = Math.max(0, Math.min(1, volume));
                 log(`API called: setVolume(${Math.round(volume * 100)}%)`);
+                // Store the setting for future videos
+                this.currentSettings.volume = volume;
                 videoPlayer.volume = volume;
                 return true;
             },
             
             getVolume: function() {
-                return videoPlayer.volume;
+                return this.currentSettings.volume;
             },
             
             setLoop: function(shouldLoop) {
                 log(`API called: setLoop(${shouldLoop})`);
+                // Store the setting for future videos
+                this.currentSettings.loop = shouldLoop;
                 videoPlayer.loop = shouldLoop;
                 return true;
             },
             
             isLooping: function() {
-                return videoPlayer.loop;
+                return this.currentSettings.loop;
             },
             
             setFillScreen: function(shouldFill) {
                 log(`API called: setFillScreen(${shouldFill})`);
+                // Store the setting for future videos
+                this.currentSettings.fillScreen = shouldFill;
                 if (shouldFill) {
                     videoContainer.classList.add('fill-screen');
                 } else {
@@ -302,7 +316,7 @@
             },
             
             isFillScreen: function() {
-                return videoContainer.classList.contains('fill-screen');
+                return this.currentSettings.fillScreen;
             },
             
             getDuration: function() {
@@ -324,11 +338,13 @@
             },
             
             getMuted: function() {
-                return videoPlayer.muted;
+                return this.currentSettings.muted;
             },
             
             setMuted: function(muted) {
                 log(`API called: setMuted(${muted})`);
+                // Store the setting for future videos
+                this.currentSettings.muted = muted;
                 videoPlayer.muted = muted;
                 return true;
             },
@@ -351,12 +367,18 @@
             log(`Video metadata loaded: ${videoPlayer.videoWidth}x${videoPlayer.videoHeight}`);
             // Hide loader once metadata is loaded
             loader.style.display = 'none';
+            
+            // Apply current player settings to the new video
+            applyStoredSettings();
         });
         
         videoPlayer.addEventListener('canplay', function() {
             log('Video can play now');
             // Hide loader
             loader.style.display = 'none';
+            
+            // Apply settings one more time to be sure
+            applyStoredSettings();
         });
         
         videoPlayer.addEventListener('playing', function() {
@@ -364,6 +386,30 @@
             // Hide loader
             loader.style.display = 'none';
         });
+        
+        // Function to apply all stored settings to the video element
+        function applyStoredSettings() {
+            if (!window.videoPlayerAPI || !window.videoPlayerAPI.currentSettings) {
+                log('No stored settings found, using defaults');
+                return;
+            }
+            
+            // Get current settings from stored settings object
+            const settings = window.videoPlayerAPI.currentSettings;
+            log(`Applying stored settings to new video: volume=${settings.volume}, loop=${settings.loop}, fillScreen=${settings.fillScreen}, muted=${settings.muted}`);
+            
+            // Apply all settings
+            videoPlayer.volume = settings.volume;
+            videoPlayer.loop = settings.loop;
+            videoPlayer.muted = settings.muted;
+            
+            // Apply fillScreen setting
+            if (settings.fillScreen) {
+                videoContainer.classList.add('fill-screen');
+            } else {
+                videoContainer.classList.remove('fill-screen');
+            }
+        }
         
         videoPlayer.addEventListener('waiting', function() {
             log('Video buffering...');
