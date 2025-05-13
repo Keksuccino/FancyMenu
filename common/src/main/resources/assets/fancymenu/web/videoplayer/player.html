@@ -39,24 +39,65 @@
             height: 100%;
         }
 
-        /* Custom JavaScript interface for Java communication */
-        #javaInterface {
-            display: none;
+        #debugInfo {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            color: #00ff00;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 100;
+        }
+        
+        #loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-family: sans-serif;
+            text-align: center;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid white;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
     <div id="videoContainer">
-        <video id="videoPlayer"></video>
+        <video id="videoPlayer" playsinline></video>
     </div>
-    <div id="javaInterface"></div>
+    
+    <div id="loader">
+        <div class="spinner"></div>
+        <div id="loaderText">Loading video...</div>
+    </div>
+    
+    <div id="debugInfo"></div>
 
     <script>
         // Initialize player
         const videoPlayer = document.getElementById('videoPlayer');
         const videoContainer = document.getElementById('videoContainer');
-        const javaInterface = document.getElementById('javaInterface');
+        const debugInfo = document.getElementById('debugInfo');
+        const loader = document.getElementById('loader');
+        const loaderText = document.getElementById('loaderText');
         let videoSource = '';
+        let videoBlob = null;
         
         // Parse URL parameters
         const urlParams = new URLSearchParams(window.location.search);
@@ -65,6 +106,18 @@
         const initialFillScreen = urlParams.get('fillScreen') === 'true';
         const autoPlay = urlParams.get('autoPlay') !== 'false'; // Default to true
         const videoPath = urlParams.get('video') || '';
+        
+        // Log function that also shows on screen
+        function log(message) {
+            console.log(message);
+            const time = new Date().toLocaleTimeString();
+            debugInfo.innerHTML += `<div>[${time}] ${message}</div>`;
+            // Keep only last 10 messages
+            const lines = debugInfo.getElementsByTagName('div');
+            if (lines.length > 10) {
+                debugInfo.removeChild(lines[0]);
+            }
+        }
         
         // Setup player with initial settings
         videoPlayer.volume = initialVolume;
@@ -77,36 +130,150 @@
             videoContainer.classList.add('fill-screen');
         }
         
-        // Load video if provided in URL
-        if (videoPath) {
-            loadVideo(videoPath);
+        // Functions to load files in different ways
+        
+        // Method 1: Direct src attribute (works for some videos)
+        function loadVideoDirectly(path) {
+            log(`Loading video directly: ${path}`);
+            videoPlayer.src = path;
+            videoPlayer.load();
+        }
+        
+        // Method 2: XHR + Blob approach (works for local files)
+        function loadVideoAsBlob(path) {
+            log(`Loading video as blob: ${path}`);
+            
+            // Show loader
+            loader.style.display = 'block';
+            loaderText.textContent = 'Loading video...';
+            
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', path, true);
+            xhr.responseType = 'blob';
+            
+            xhr.onprogress = function(event) {
+                if (event.lengthComputable) {
+                    const percentComplete = Math.round((event.loaded / event.total) * 100);
+                    loaderText.textContent = `Loading video: ${percentComplete}%`;
+                    log(`Loading progress: ${percentComplete}%`);
+                }
+            };
+            
+            xhr.onload = function() {
+                if (this.status === 200) {
+                    // Release previous blob
+                    if (videoBlob) {
+                        URL.revokeObjectURL(videoPlayer.src);
+                    }
+                    
+                    // Create blob URL
+                    videoBlob = this.response;
+                    const blobUrl = URL.createObjectURL(videoBlob);
+                    log(`Created blob URL: ${blobUrl}`);
+                    
+                    // Set video source
+                    videoPlayer.src = blobUrl;
+                    videoPlayer.load();
+                    
+                    // Attempt to play
+                    if (autoPlay) {
+                        tryPlayVideo();
+                    }
+                } else {
+                    log(`XHR failed with status: ${this.status}`);
+                    loaderText.textContent = `Error: Failed to load video (status ${this.status})`;
+                }
+            };
+            
+            xhr.onerror = function() {
+                log('XHR network error');
+                loaderText.textContent = 'Error: Network error loading video';
+                
+                // Try direct loading as fallback
+                log('Trying direct loading as fallback');
+                loadVideoDirectly(path);
+            };
+            
+            xhr.send();
+        }
+        
+        // Try multiple methods to play video (for autoplay policies)
+        function tryPlayVideo() {
+            log('Attempting to play video...');
+            videoPlayer.play().catch(e => {
+                log(`Standard play failed: ${e.message}`);
+                
+                // Try with muted (browsers often allow muted autoplay)
+                log('Trying muted playback...');
+                videoPlayer.muted = true;
+                videoPlayer.play().catch(e2 => {
+                    log(`Muted play also failed: ${e2.message}`);
+                });
+            });
+        }
+        
+        // Main load function that decides which method to use
+        function loadVideo(path) {
+            if (!path) {
+                log('No video path provided');
+                return;
+            }
+            
+            // Store the current source
+            videoSource = path;
+            log(`Loading video from path: ${path}`);
+            
+            // Show loader
+            loader.style.display = 'block';
+            
+            // For local file paths, use the blob approach
+            if (path.startsWith('file://')) {
+                loadVideoAsBlob(path);
+            } else {
+                // For other URLs, try direct loading
+                loadVideoDirectly(path);
+                
+                // If direct loading doesn't work after a short time, try blob approach
+                setTimeout(function() {
+                    if (!videoPlayer.duration && videoPlayer.readyState < 2) {
+                        log('Direct loading not working, trying blob approach');
+                        loadVideoAsBlob(path);
+                    }
+                }, 2000);
+            }
         }
         
         // Functions that can be called from Java
         window.videoPlayerAPI = {
             loadVideo: function(path) {
+                log(`API called: loadVideo(${path})`);
                 loadVideo(path);
                 return true;
             },
             
             play: function() {
-                videoPlayer.play();
+                log('API called: play()');
+                tryPlayVideo();
                 return true;
             },
             
             pause: function() {
+                log('API called: pause()');
                 videoPlayer.pause();
                 return true;
             },
             
             stop: function() {
+                log('API called: stop()');
                 videoPlayer.pause();
                 videoPlayer.currentTime = 0;
                 return true;
             },
             
             setVolume: function(volume) {
-                videoPlayer.volume = Math.max(0, Math.min(1, volume));
+                volume = Math.max(0, Math.min(1, volume));
+                log(`API called: setVolume(${Math.round(volume * 100)}%)`);
+                videoPlayer.volume = volume;
                 return true;
             },
             
@@ -115,6 +282,7 @@
             },
             
             setLoop: function(shouldLoop) {
+                log(`API called: setLoop(${shouldLoop})`);
                 videoPlayer.loop = shouldLoop;
                 return true;
             },
@@ -124,6 +292,7 @@
             },
             
             setFillScreen: function(shouldFill) {
+                log(`API called: setFillScreen(${shouldFill})`);
                 if (shouldFill) {
                     videoContainer.classList.add('fill-screen');
                 } else {
@@ -149,7 +318,7 @@
                     videoPlayer.currentTime = time;
                     return true;
                 } catch (e) {
-                    console.error("Error setting time:", e);
+                    log(`Error setting time: ${e.message}`);
                     return false;
                 }
             },
@@ -159,6 +328,7 @@
             },
             
             setMuted: function(muted) {
+                log(`API called: setMuted(${muted})`);
                 videoPlayer.muted = muted;
                 return true;
             },
@@ -176,31 +346,74 @@
             }
         };
         
-        // Function to load video
-        function loadVideo(path) {
-            if (path === videoSource) return;
-            
-            videoSource = path;
-            videoPlayer.src = path;
-            videoPlayer.load();
-            
-            // If autoplay was set, start playing
-            if (autoPlay) {
-                videoPlayer.play().catch(e => {
-                    console.warn("Autoplay prevented:", e);
-                });
-            }
-        }
-        
         // Event listeners for video player
+        videoPlayer.addEventListener('loadedmetadata', function() {
+            log(`Video metadata loaded: ${videoPlayer.videoWidth}x${videoPlayer.videoHeight}`);
+            // Hide loader once metadata is loaded
+            loader.style.display = 'none';
+        });
+        
+        videoPlayer.addEventListener('canplay', function() {
+            log('Video can play now');
+            // Hide loader
+            loader.style.display = 'none';
+        });
+        
+        videoPlayer.addEventListener('playing', function() {
+            log('Video started playing');
+            // Hide loader
+            loader.style.display = 'none';
+        });
+        
+        videoPlayer.addEventListener('waiting', function() {
+            log('Video buffering...');
+            // Show loader while buffering
+            loader.style.display = 'block';
+            loaderText.textContent = 'Buffering...';
+        });
+        
         videoPlayer.addEventListener('ended', function() {
-            // This can be used to notify Java when the video ends
-            // The Java code will check the state via function calls
+            log('Video ended');
         });
         
         videoPlayer.addEventListener('error', function(e) {
-            console.error("Video error:", e);
+            // Show error details
+            let errorMessage = "Unknown error";
+            
+            if (videoPlayer.error) {
+                switch(videoPlayer.error.code) {
+                    case 1: errorMessage = "Video loading aborted"; break;
+                    case 2: errorMessage = "Network error"; break;
+                    case 3: errorMessage = "Video decoding failed"; break;
+                    case 4: errorMessage = "Video format not supported"; break;
+                }
+                
+                errorMessage += ` (${videoPlayer.error.code})`;
+            }
+            
+            log(`Video error: ${errorMessage}`);
+            loader.style.display = 'block';
+            loaderText.textContent = `Error: ${errorMessage}`;
+            
+            // Try to provide more detailed error info
+            const videoSrc = videoPlayer.currentSrc || videoSource || "(unknown)";
+            log(`Source: ${videoSrc}`);
         });
+        
+        // Load video if provided in URL
+        if (videoPath) {
+            log(`Initial video from URL param: ${videoPath}`);
+            loadVideo(videoPath);
+        } else {
+            log('No initial video provided');
+        }
+        
+        // Log initial settings
+        log('FancyMenu Video Player initialized');
+        log(`Volume: ${Math.round(initialVolume * 100)}%`);
+        log(`Loop: ${initialLoop}`);
+        log(`Fill screen: ${initialFillScreen}`);
+        log(`Autoplay: ${autoPlay}`);
     </script>
 </body>
 </html>

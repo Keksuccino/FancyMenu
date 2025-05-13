@@ -228,12 +228,20 @@ public class VideoManager {
      */
     public boolean loadVideo(@NotNull String playerId, @NotNull File videoFile) {
         MCEFVideoPlayer player = getPlayer(playerId);
-        if (player == null || !videoFile.exists()) {
+        if (player == null) {
+            return false;
+        }
+        
+        if (!videoFile.exists()) {
+            LOGGER.error("[FANCYMENU] Video file does not exist: " + videoFile.getAbsolutePath());
             return false;
         }
         
         try {
-            player.loadVideo(videoFile.toURI().toString());
+            // Convert to URI format for better compatibility
+            String fileUri = videoFile.toURI().toString();
+            LOGGER.info("[FANCYMENU] Loading video file (via URI): " + fileUri);
+            player.loadVideo(fileUri);
             return true;
         } catch (Exception e) {
             LOGGER.error("[FANCYMENU] Failed to load video: " + videoFile.getAbsolutePath(), e);

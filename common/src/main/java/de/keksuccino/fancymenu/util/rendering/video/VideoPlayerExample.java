@@ -47,33 +47,27 @@ public class VideoPlayerExample extends Screen {
         int x = (this.width - videoWidth) / 2;
         int y = (this.height - videoHeight) / 2;
         
-        // Try both approaches: regular player and direct browser
-        playerId = videoManager.createTestPlayer(x, y, videoWidth, videoHeight);
+        // Create the player with some special settings
+        playerId = videoManager.createPlayer(x, y, videoWidth, videoHeight);
         if (playerId != null) {
             videoPlayer = videoManager.getPlayer(playerId);
             if (videoPlayer != null) {
-                LOGGER.info("[FANCYMENU] Created video test player");
-                VideoDebugger.writeDebugInfo("Video test player created");
+                LOGGER.info("[FANCYMENU] Created video player");
+                
+                // Set player options
+                videoPlayer.setVolume(0.5f);
+                videoPlayer.setLooping(true);
+                videoPlayer.setFillScreen(true);
+                
+                // Don't load a video immediately
+                LOGGER.info("[FANCYMENU] Ready to load videos - press 1, 2, or 3 to try different loading methods");
             }
         }
         
-        // Try a direct browser test as a fallback
         if (videoPlayer == null) {
-            LOGGER.info("[FANCYMENU] Trying direct browser approach");
-            testBrowser = VideoDebugger.createTestBrowser(x, y + 400, videoWidth, videoHeight);
-            VideoDebugger.writeDebugInfo("Direct test browser created");
-        }
-        
-        // Try loading a video only if regular player works
-        if (videoPlayer != null) {
-            // Load a video file
-            File videoFile = new File("video.mp4");
-            if (videoFile.exists()) {
-                LOGGER.info("[FANCYMENU] Loading video file: " + videoFile.getAbsolutePath());
-                videoManager.loadVideo(playerId, videoFile);
-            } else {
-                LOGGER.error("[FANCYMENU] Video file does not exist: " + videoFile.getAbsolutePath());
-            }
+            // Try fallback to test browser
+            LOGGER.info("[FANCYMENU] Using fallback test browser");
+            testBrowser = VideoDebugger.createTestBrowser(x, y, videoWidth, videoHeight);
         }
     }
     
@@ -144,6 +138,18 @@ public class VideoPlayerExample extends Screen {
                     videoPlayer.loadSimpleTest();
                     return true;
                     
+                case 49: // 1 key - try loading video with method 1
+                    tryLoadVideoMethod1();
+                    return true;
+                    
+                case 50: // 2 key - try loading video with method 2
+                    tryLoadVideoMethod2();
+                    return true;
+                    
+                case 51: // 3 key - try loading video with method 3
+                    tryLoadVideoMethod3();
+                    return true;
+                    
                 // Volume controls
                 case 263: // Arrow left - volume down
                     videoPlayer.setVolume(Math.max(0, videoPlayer.getVolume() - 0.1f));
@@ -156,5 +162,53 @@ public class VideoPlayerExample extends Screen {
         }
         
         return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+    
+    /**
+     * Try to load the video using method 1: Direct absolute path
+     */
+    private void tryLoadVideoMethod1() {
+        if (videoPlayer == null) return;
+        
+        File videoFile = new File("video.mp4");
+        if (videoFile.exists()) {
+            LOGGER.info("[FANCYMENU] Loading video via absolute path, method 1");
+            
+            // Absolute path with forward slashes
+            String absolutePath = videoFile.getAbsolutePath().replace('\\', '/');
+            videoPlayer.loadVideo(absolutePath);
+        } else {
+            LOGGER.error("[FANCYMENU] Video file not found at: " + videoFile.getAbsolutePath());
+        }
+    }
+    
+    /**
+     * Try to load the video using method 2: URI format
+     */
+    private void tryLoadVideoMethod2() {
+        if (videoPlayer == null) return;
+        
+        File videoFile = new File("video.mp4");
+        if (videoFile.exists()) {
+            LOGGER.info("[FANCYMENU] Loading video via URI, method 2");
+            
+            // URI format
+            String fileUri = videoFile.toURI().toString();
+            videoPlayer.loadVideo(fileUri);
+        } else {
+            LOGGER.error("[FANCYMENU] Video file not found at: " + videoFile.getAbsolutePath());
+        }
+    }
+    
+    /**
+     * Try to load the video using method 3: Relative path
+     */
+    private void tryLoadVideoMethod3() {
+        if (videoPlayer == null) return;
+        
+        LOGGER.info("[FANCYMENU] Loading video via relative path, method 3");
+        
+        // Simple relative path
+        videoPlayer.loadVideo("video.mp4");
     }
 }

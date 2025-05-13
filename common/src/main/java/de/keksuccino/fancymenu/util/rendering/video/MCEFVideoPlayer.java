@@ -191,25 +191,33 @@ public class MCEFVideoPlayer {
         
         try {
             this.currentVideoPath = videoPath;
+            LOGGER.info("[FANCYMENU] Loading video: " + videoPath);
             
-            // If it's a file path, convert to proper file:/// URL
-            if (!videoPath.startsWith("http")) {
+            // If it's a file path and not already a URL, convert to proper file:/// URL
+            if (!videoPath.startsWith("http") && !videoPath.startsWith("file:")) {
                 File videoFile = new File(videoPath);
                 if (videoFile.exists()) {
-                    URI uri = videoFile.toURI();
-                    String fileUrl = uri.toURL().toString();
+                    String fileUrl = videoFile.toURI().toString();
+                    LOGGER.info("[FANCYMENU] Converted video path to: " + fileUrl);
                     executeJavaScript("window.videoPlayerAPI.loadVideo('" + fileUrl + "')");
                     return;
+                } else {
+                    LOGGER.error("[FANCYMENU] Video file does not exist: " + videoFile.getAbsolutePath());
                 }
             }
             
-            // Otherwise, assume it's already a valid URL
-            executeJavaScript("window.videoPlayerAPI.loadVideo('" + videoPath + "')");
+            // For URLs, escape any single quotes to avoid breaking the JavaScript
+            String escapedPath = videoPath.replace("'", "\\'");
+            LOGGER.info("[FANCYMENU] Loading video URL: " + escapedPath);
+            executeJavaScript("window.videoPlayerAPI.loadVideo('" + escapedPath + "')");
             
         } catch (Exception e) {
             LOGGER.error("[FANCYMENU] Failed to load video: " + videoPath, e);
         }
     }
+    
+    // Track playing state locally to avoid JavaScript calls
+    private boolean isCurrentlyPlaying = false;
     
     /**
      * Plays the currently loaded video.
@@ -220,7 +228,9 @@ public class MCEFVideoPlayer {
             return;
         }
         
+        LOGGER.info("[FANCYMENU] Playing video");
         executeJavaScript("window.videoPlayerAPI.play()");
+        isCurrentlyPlaying = true;
     }
     
     /**
@@ -232,7 +242,20 @@ public class MCEFVideoPlayer {
             return;
         }
         
+        LOGGER.info("[FANCYMENU] Pausing video");
         executeJavaScript("window.videoPlayerAPI.pause()");
+        isCurrentlyPlaying = false;
+    }
+    
+    /**
+     * Toggles the play/pause state of the video.
+     */
+    public void togglePlayPause() {
+        if (isPlaying()) {
+            pause();
+        } else {
+            play();
+        }
     }
     
     /**
@@ -244,7 +267,9 @@ public class MCEFVideoPlayer {
             return;
         }
         
+        LOGGER.info("[FANCYMENU] Stopping video");
         executeJavaScript("window.videoPlayerAPI.stop()");
+        isCurrentlyPlaying = false;
     }
     
     /**
@@ -380,12 +405,8 @@ public class MCEFVideoPlayer {
      * @return True if playing, false if paused or stopped
      */
     public boolean isPlaying() {
-        if (!initialized) {
-            return false;
-        }
-        
-        String result = executeJavaScriptWithResult("return window.videoPlayerAPI.isPlaying()");
-        return Boolean.parseBoolean(result);
+        // Use local state instead of relying on JavaScript calls
+        return isCurrentlyPlaying;
     }
     
     /**
