@@ -187,9 +187,8 @@ public class VideoPlayerExample extends Screen {
                     return true;
                     
                 case 77: // M key - toggle mute
-                    boolean muted = !videoPlayer.getMuted();
-                    videoPlayer.setMuted(muted);
-                    logVideoInfo("Mute: " + muted);
+                    videoPlayer.toggleMuted();
+                    logVideoInfo("Toggled mute: " + videoPlayer.getMuted());
                     return true;
             }
         }

@@ -6,7 +6,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
@@ -23,14 +22,14 @@ import java.util.UUID;
  */
 public class VideoManager {
 
-    private static final Logger LOGGER = LogManager.getLogger();
-    private static final VideoManager INSTANCE = new VideoManager();
+    protected static final Logger LOGGER = LogManager.getLogger();
+    protected static final VideoManager INSTANCE = new VideoManager();
     
     // Map to track all active video players
-    private final Map<String, MCEFVideoPlayer> players = new HashMap<>();
+    protected final Map<String, MCEFVideoPlayer> players = new HashMap<>();
     
     // Flag to track if web resources have been registered
-    private boolean webResourcesRegistered = false;
+    protected boolean webResourcesRegistered = false;
     
     /**
      * Gets the singleton instance of the VideoManager.
@@ -61,7 +60,7 @@ public class VideoManager {
     /**
      * Extracts the web resources from the mod JAR to FancyMenu's temp directory.
      */
-    private void extractWebResources() {
+    protected void extractWebResources() {
         try {
             // Use FancyMenu's temp directory
             File webDir = new File(FancyMenu.TEMP_DATA_DIR, "web/videoplayer");

@@ -3,22 +3,18 @@ package de.keksuccino.fancymenu.util.rendering.video;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.io.File;
-import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 /**
  * A Minecraft video player using MCEF (Minecraft Chromium Embedded Framework).
@@ -26,26 +22,27 @@ import java.util.function.Consumer;
  */
 public class MCEFVideoPlayer {
 
-    private static final Logger LOGGER = LogManager.getLogger();
+    protected static final Logger LOGGER = LogManager.getLogger();
     
     // The browser instance wrapped by MCEF
-    private WrappedMCEFBrowser browser;
+    protected WrappedMCEFBrowser browser;
     
     // Video options
-    private float volume = 1.0f;
-    private boolean looping = false;
-    private boolean fillScreen = false;
-    private String currentVideoPath = null;
+    protected float volume = 1.0f;
+    protected boolean looping = false;
+    protected boolean fillScreen = false;
+    protected String currentVideoPath = null;
+    protected boolean isCurrentlyPlaying = false;
     
     // Browser dimensions
-    private int posX = 0;
-    private int posY = 0;
-    private int width = 200;
-    private int height = 200;
+    protected int posX = 0;
+    protected int posY = 0;
+    protected int width = 200;
+    protected int height = 200;
     
     // Initialization state
-    private boolean initialized = false;
-    private final CompletableFuture<Boolean> initFuture = new CompletableFuture<>();
+    protected boolean initialized = false;
+    protected final CompletableFuture<Boolean> initFuture = new CompletableFuture<>();
     
     /**
      * Creates a new video player instance.
@@ -123,7 +120,7 @@ public class MCEFVideoPlayer {
      *
      * @return The URL to load in the browser
      */
-    private String buildPlayerUrl() {
+    protected String buildPlayerUrl() {
         // Use a file:// URL to access the player HTML from FancyMenu's temp directory
         File playerFile = new File(FancyMenu.TEMP_DATA_DIR, "web/videoplayer/player.html");
         String basePath = "file:///" + playerFile.getAbsolutePath().replace('\\', '/');
@@ -148,7 +145,7 @@ public class MCEFVideoPlayer {
      * @param params The parameters to include
      * @return The URL-encoded query string
      */
-    private String buildQueryString(Map<String, String> params) {
+    protected String buildQueryString(Map<String, String> params) {
         StringBuilder result = new StringBuilder();
         
         for (Map.Entry<String, String> entry : params.entrySet()) {
@@ -216,8 +213,41 @@ public class MCEFVideoPlayer {
         }
     }
     
-    // Track playing state locally to avoid JavaScript calls
-    private boolean isCurrentlyPlaying = false;
+    // Track muted state locally
+    protected boolean isMuted = false;
+    
+    /**
+     * Sets whether the audio is muted.
+     *
+     * @param muted True to mute audio, false to unmute
+     */
+    public void setMuted(boolean muted) {
+        if (!initialized) {
+            this.isMuted = muted;
+            waitForInitialization(() -> setMuted(muted));
+            return;
+        }
+        
+        this.isMuted = muted;
+        LOGGER.info("[FANCYMENU] Setting muted state to: " + muted);
+        executeJavaScript("window.videoPlayerAPI.setMuted(" + muted + ")");
+    }
+    
+    /**
+     * Checks if the audio is muted.
+     *
+     * @return True if audio is muted, false otherwise
+     */
+    public boolean getMuted() {
+        return this.isMuted;
+    }
+    
+    /**
+     * Toggles the muted state of the audio.
+     */
+    public void toggleMuted() {
+        setMuted(!getMuted());
+    }
     
     /**
      * Plays the currently loaded video.
@@ -528,7 +558,7 @@ public class MCEFVideoPlayer {
      * @param seconds Time in seconds
      * @return Formatted time string
      */
-    private String formatTime(double seconds) {
+    protected String formatTime(double seconds) {
         int totalSeconds = (int)Math.floor(seconds);
         int minutes = totalSeconds / 60;
         int remainingSeconds = totalSeconds % 60;
@@ -542,7 +572,7 @@ public class MCEFVideoPlayer {
      * @param seconds Time in seconds
      * @return Formatted time string
      */
-    private String formatTimeDetailed(double seconds) {
+    protected String formatTimeDetailed(double seconds) {
         int totalSeconds = (int)Math.floor(seconds);
         int hours = totalSeconds / 3600;
         int minutes = (totalSeconds % 3600) / 60;
@@ -617,6 +647,24 @@ public class MCEFVideoPlayer {
     }
     
     /**
+     * Gets the current X position of the player.
+     * 
+     * @return The X position
+     */
+    public int getX() {
+        return this.posX;
+    }
+    
+    /**
+     * Gets the current Y position of the player.
+     * 
+     * @return The Y position
+     */
+    public int getY() {
+        return this.posY;
+    }
+    
+    /**
      * Sets the size of the video player.
      *
      * @param width The new width
@@ -628,6 +676,128 @@ public class MCEFVideoPlayer {
         
         if (browser != null && initialized) {
             browser.setSize(width, height);
+        }
+    }
+    
+    /**
+     * Gets the current width of the player.
+     * 
+     * @return The width
+     */
+    public int getWidth() {
+        return this.width;
+    }
+    
+    /**
+     * Gets the current height of the player.
+     * 
+     * @return The height
+     */
+    public int getHeight() {
+        return this.height;
+    }
+    
+    /**
+     * Resizes the player to fit the specified dimensions while maintaining aspect ratio.
+     * The player will be sized to fit entirely within the specified dimensions.
+     * 
+     * @param containerWidth The width of the container
+     * @param containerHeight The height of the container
+     */
+    public void resizeToFit(int containerWidth, int containerHeight) {
+        if (browser == null || !initialized) return;
+        
+        int videoWidth = getVideoWidth();
+        int videoHeight = getVideoHeight();
+        
+        // If video dimensions are not available, use the container dimensions
+        if (videoWidth <= 0 || videoHeight <= 0) {
+            setSize(containerWidth, containerHeight);
+            setPosition(0, 0);
+            return;
+        }
+        
+        // Calculate the scaling factors
+        float scaleWidth = (float)containerWidth / videoWidth;
+        float scaleHeight = (float)containerHeight / videoHeight;
+        
+        // Use the smaller scale factor to ensure the video fits within the container
+        float scale = Math.min(scaleWidth, scaleHeight);
+        
+        // Calculate the new dimensions
+        int newWidth = (int)(videoWidth * scale);
+        int newHeight = (int)(videoHeight * scale);
+        
+        // Calculate position to center the video
+        int x = (containerWidth - newWidth) / 2;
+        int y = (containerHeight - newHeight) / 2;
+        
+        // Set the new size and position
+        setSize(newWidth, newHeight);
+        setPosition(x, y);
+    }
+    
+    /**
+     * Resizes the player to fill the specified dimensions while maintaining aspect ratio.
+     * The player will be sized to fill the entire container, which might crop some content.
+     * 
+     * @param containerWidth The width of the container
+     * @param containerHeight The height of the container
+     */
+    public void resizeToFill(int containerWidth, int containerHeight) {
+        if (browser == null || !initialized) return;
+        
+        int videoWidth = getVideoWidth();
+        int videoHeight = getVideoHeight();
+        
+        // If video dimensions are not available, use the container dimensions
+        if (videoWidth <= 0 || videoHeight <= 0) {
+            setSize(containerWidth, containerHeight);
+            setPosition(0, 0);
+            return;
+        }
+        
+        // Calculate the scaling factors
+        float scaleWidth = (float)containerWidth / videoWidth;
+        float scaleHeight = (float)containerHeight / videoHeight;
+        
+        // Use the larger scale factor to ensure the video fills the container
+        float scale = Math.max(scaleWidth, scaleHeight);
+        
+        // Calculate the new dimensions
+        int newWidth = (int)(videoWidth * scale);
+        int newHeight = (int)(videoHeight * scale);
+        
+        // Calculate position to center the video
+        int x = (containerWidth - newWidth) / 2;
+        int y = (containerHeight - newHeight) / 2;
+        
+        // Set the new size and position
+        setSize(newWidth, newHeight);
+        setPosition(x, y);
+    }
+    
+    /**
+     * Resizes the player to exactly match the container dimensions.
+     * This will stretch/squash the video if the aspect ratios don't match.
+     * 
+     * @param containerWidth The width of the container
+     * @param containerHeight The height of the container
+     */
+    public void resizeToStretch(int containerWidth, int containerHeight) {
+        setSize(containerWidth, containerHeight);
+        setPosition(0, 0);
+    }
+    
+    /**
+     * Sets the opacity/alpha value of the video player.
+     * Useful for creating semi-transparent background videos.
+     * 
+     * @param opacity Value between 0.0F (transparent) and 1.0F (opaque)
+     */
+    public void setOpacity(float opacity) {
+        if (browser != null && initialized) {
+            browser.setOpacity(Math.max(0.0F, Math.min(1.0F, opacity)));
         }
     }
     
@@ -646,7 +816,7 @@ public class MCEFVideoPlayer {
      *
      * @param code The JavaScript code to execute
      */
-    private void executeJavaScript(String code) {
+    protected void executeJavaScript(String code) {
         if (browser != null && initialized) {
             browser.getBrowser().executeJavaScript(code, browser.getUrl(), 0);
         }
@@ -659,7 +829,7 @@ public class MCEFVideoPlayer {
      * @param code The JavaScript code to execute
      * @return The result as a string, or null if execution failed
      */
-    private String executeJavaScriptWithResult(String code) {
+    protected String executeJavaScriptWithResult(String code) {
         if (browser == null) {
             return null;
         }
@@ -790,7 +960,7 @@ public class MCEFVideoPlayer {
      *
      * @param action The action to perform after initialization
      */
-    private void waitForInitialization(Runnable action) {
+    protected void waitForInitialization(Runnable action) {
         CompletableFuture.runAsync(() -> {
             try {
                 boolean success = initFuture.get(5, TimeUnit.SECONDS);
