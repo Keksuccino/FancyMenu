@@ -167,16 +167,19 @@ public class VideoPlayerExample extends Screen {
                     return true;
                     
                 // Volume controls
-                case 263: // Minus - volume down
+                case 45: // Minus key - volume down
                     videoPlayer.setVolume(Math.max(0, videoPlayer.getVolume() - 0.1f));
+                    logVideoInfo("Volume: " + Math.round(videoPlayer.getVolume() * 100) + "%");
                     return true;
                     
-                case 262: // Plus - volume up
+                case 61: // Plus/equals key - volume up
                     videoPlayer.setVolume(Math.min(1, videoPlayer.getVolume() + 0.1f));
+                    logVideoInfo("Volume: " + Math.round(videoPlayer.getVolume() * 100) + "%");
                     return true;
                     
                 case 77: // M key - toggle mute
                     videoPlayer.toggleMuted();
+                    logVideoInfo("Toggled mute: " + videoPlayer.getMuted());
                     return true;
             }
         }

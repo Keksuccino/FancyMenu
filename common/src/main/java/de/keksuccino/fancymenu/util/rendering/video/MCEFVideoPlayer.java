@@ -147,6 +147,7 @@ public class MCEFVideoPlayer {
         params.put("volume", String.valueOf(volume));
         params.put("loop", String.valueOf(looping));
         params.put("fillScreen", String.valueOf(fillScreen));
+        params.put("autoPlay", String.valueOf(isCurrentlyPlaying)); // Set autoPlay based on current play state
         
         if (currentVideoPath != null) {
             params.put("video", currentVideoPath);
@@ -362,7 +363,36 @@ public class MCEFVideoPlayer {
      * Toggles the play/pause state of the video.
      */
     public void togglePlayPause() {
-        if (isPlaying()) {
+        if (!initialized) {
+            waitForInitialization(this::togglePlayPause);
+            return;
+        }
+        
+        // For the first toggle, check the actual state from the video element
+        String script = "try {" +
+                      "  const video = document.getElementById('videoPlayer');" +
+                      "  if (video) {" +
+                      "    return video.paused ? 'paused' : 'playing';" +
+                      "  }" +
+                      "  return 'unknown';" +
+                      "} catch(e) { return 'error'; }";
+        
+        String result = executeJavaScriptWithResult("(function() { " + script + " })()");
+        
+        if (result != null) {
+            // Update our state based on the actual video state
+            boolean actuallyPlaying = "playing".equals(result);
+            
+            // Only log if there's a mismatch
+            if (actuallyPlaying != isCurrentlyPlaying) {
+                LOGGER.info("[FANCYMENU] Correcting play state mismatch: was " + 
+                           isCurrentlyPlaying + ", actually " + actuallyPlaying);
+                isCurrentlyPlaying = actuallyPlaying;
+            }
+        }
+        
+        // Now toggle based on the corrected state
+        if (isCurrentlyPlaying) {
             pause();
         } else {
             play();
@@ -390,9 +420,17 @@ public class MCEFVideoPlayer {
     public void syncPlayState() {
         if (!initialized) return;
         
-        // Use a self-executing function to avoid 'return' syntax error
-        String jsQuery = "(function() { return !window.videoPlayerAPI.isPlaying ? false : !document.getElementById('videoPlayer').paused; })()";
-        String result = executeJavaScriptWithResult(jsQuery);
+        // Use a simple script to check if the video is playing or paused
+        String script = "try {" +
+                      "  const video = document.getElementById('videoPlayer');" +
+                      "  if (video) {" +
+                      "    return !video.paused;" +
+                      "  }" +
+                      "  return false;" +
+                      "} catch(e) { return false; }";
+        
+        String result = executeJavaScriptWithResult("(function() { " + script + " })()");
+        
         try {
             if (result != null && !result.isEmpty()) {
                 boolean actuallyPlaying = Boolean.parseBoolean(result);
@@ -544,12 +582,30 @@ public class MCEFVideoPlayer {
      */
     public void setCurrentTime(double seconds) {
         if (!initialized) {
-            waitForInitialization(() -> setCurrentTime(seconds));
+            double finalSeconds = seconds;
+            waitForInitialization(() -> setCurrentTime(finalSeconds));
             return;
         }
         
         LOGGER.info("[FANCYMENU] Setting video position to " + seconds + " seconds");
-        executeJavaScript("window.videoPlayerAPI.setCurrentTime(" + seconds + ")");
+        
+        // Make sure we have a valid value
+        seconds = Math.max(0, seconds);
+        
+        // Use a more direct approach to set the video time
+        String script = "try {" +
+                        "  const videoElement = document.getElementById('videoPlayer');" +
+                        "  if (videoElement) {" +
+                        "    videoElement.currentTime = " + seconds + ";" +
+                        "    console.log('[FANCYMENU] Video time set to: " + seconds + "');" +
+                        "  } else {" +
+                        "    console.error('[FANCYMENU] Video element not found');" +
+                        "  }" +
+                        "} catch(e) {" +
+                        "  console.error('[FANCYMENU] Error setting time: ' + e.message);" +
+                        "}";
+        
+        executeJavaScript(script);
     }
     
     /**
@@ -569,10 +625,21 @@ public class MCEFVideoPlayer {
     public void seekForward(double seconds) {
         if (!initialized) return;
         
-        double currentTime = getCurrentTime();
-        double duration = getDuration();
-        double newTime = Math.min(currentTime + seconds, duration);
-        setCurrentTime(newTime);
+        // Use a direct approach to seek forward
+        String script = "try {" +
+                        "  const video = document.getElementById('videoPlayer');" +
+                        "  if (video) {" +
+                        "    const currentTime = video.currentTime;" +
+                        "    const duration = video.duration || 0;" +
+                        "    const newTime = Math.min(currentTime + " + seconds + ", duration);" +
+                        "    video.currentTime = newTime;" +
+                        "    console.log('[FANCYMENU] Seeking forward to: ' + newTime);" +
+                        "  }" +
+                        "} catch(e) {" +
+                        "  console.error('[FANCYMENU] Error seeking forward: ' + e.message);" +
+                        "}";
+        
+        executeJavaScript(script);
     }
     
     /**
@@ -583,9 +650,20 @@ public class MCEFVideoPlayer {
     public void seekBackward(double seconds) {
         if (!initialized) return;
         
-        double currentTime = getCurrentTime();
-        double newTime = Math.max(currentTime - seconds, 0);
-        setCurrentTime(newTime);
+        // Use a direct approach to seek backward
+        String script = "try {" +
+                        "  const video = document.getElementById('videoPlayer');" +
+                        "  if (video) {" +
+                        "    const currentTime = video.currentTime;" +
+                        "    const newTime = Math.max(currentTime - " + seconds + ", 0);" +
+                        "    video.currentTime = newTime;" +
+                        "    console.log('[FANCYMENU] Seeking backward to: ' + newTime);" +
+                        "  }" +
+                        "} catch(e) {" +
+                        "  console.error('[FANCYMENU] Error seeking backward: ' + e.message);" +
+                        "}";
+        
+        executeJavaScript(script);
     }
     
     /**
@@ -695,9 +773,20 @@ public class MCEFVideoPlayer {
      * @return True if playing, false if paused or stopped
      */
     public boolean isPlaying() {
-        // Use local state instead of relying on JavaScript calls
+        // Return local state, which should be kept in sync
+        if (!initialized) return false;
+        
+        // This is a lightweight call - we only check the actual state occasionally
+        if (!stateVerified && initialized) {
+            syncPlayState();
+            stateVerified = true;
+        }
+        
         return isCurrentlyPlaying;
     }
+    
+    // Flag to track if we've verified the state at least once
+    private boolean stateVerified = false;
     
     /**
      * Gets the natural width of the video.

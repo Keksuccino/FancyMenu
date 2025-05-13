@@ -330,7 +330,29 @@
             
             setCurrentTime: function(time) {
                 try {
+                    log(`API called: setCurrentTime(${time})`);
+                    
+                    // Make sure we have a valid time
+                    time = Math.max(0, time);
+                    
+                    if (videoPlayer.readyState === 0) {
+                        log("Warning: Video not ready yet, seeking may fail");
+                    }
+                    
+                    // Store original time in case of error
+                    const originalTime = videoPlayer.currentTime;
+                    
+                    // Set the time
                     videoPlayer.currentTime = time;
+                    
+                    // Verify the time was actually set (some browsers restrict seeking)
+                    setTimeout(() => {
+                        if (Math.abs(videoPlayer.currentTime - time) > 0.5 && 
+                            Math.abs(videoPlayer.currentTime - originalTime) < 0.1) {
+                            log(`Seek verification failed. Target: ${time}, Actual: ${videoPlayer.currentTime}`);
+                        }
+                    }, 50);
+                    
                     return true;
                 } catch (e) {
                     log(`Error setting time: ${e.message}`);
@@ -484,6 +506,11 @@
         if (videoPath) {
             log(`Initial video from URL param: ${videoPath}`);
             loadVideo(videoPath);
+            
+            // Set initial playing state correctly for autoplay
+            if (window.videoPlayerAPI) {
+                window.videoPlayerAPI.currentSettings.playing = autoPlay;
+            }
         } else {
             log('No initial video provided');
         }
