@@ -106,13 +106,17 @@ public class MCEFVideoPlayer {
                     Thread.sleep(500);
                     
                     // Set initial API state to match our Java-side settings
-                    String initScript = "if (window.videoPlayerAPI) { " +
-                                       "  window.videoPlayerAPI.currentSettings.volume = " + volume + "; " +
-                                       "  window.videoPlayerAPI.currentSettings.loop = " + looping + "; " +
-                                       "  window.videoPlayerAPI.currentSettings.fillScreen = " + fillScreen + "; " + 
-                                       "  window.videoPlayerAPI.currentSettings.muted = " + isMuted + "; " +
-                                       "  console.log('Initial settings stored in API'); " +
-                                       "}";
+                    String initScript = 
+                        "if (window.videoPlayerAPI) {" +
+                        "  console.log('[FANCYMENU] Initializing video player API settings');" +
+                        "  window.videoPlayerAPI.currentSettings.volume = " + volume + ";" +
+                        "  window.videoPlayerAPI.currentSettings.loop = " + looping + ";" + 
+                        "  window.videoPlayerAPI.currentSettings.fillScreen = " + fillScreen + ";" +
+                        "  window.videoPlayerAPI.currentSettings.muted = " + isMuted + ";" +
+                        "  console.log('[FANCYMENU] Initial settings stored in API');" +
+                        "} else {" +
+                        "  console.log('[FANCYMENU] Warning: videoPlayerAPI not available yet');" +
+                        "}";
                     browser.getBrowser().executeJavaScript(initScript, browser.getUrl(), 0);
                 } catch (Exception e) {
                     LOGGER.error("[FANCYMENU] Error setting initial API state", e);
@@ -203,6 +207,10 @@ public class MCEFVideoPlayer {
             this.currentVideoPath = videoPath;
             LOGGER.info("[FANCYMENU] Loading video: " + videoPath);
             
+            // When loading a new video, we reset the playing state until we confirm it's playing
+            boolean wasPlaying = isCurrentlyPlaying;
+            isCurrentlyPlaying = false;
+            
             // If it's a file path and not already a URL, convert to proper file:/// URL
             if (!videoPath.startsWith("http") && !videoPath.startsWith("file:")) {
                 File videoFile = new File(videoPath);
@@ -212,7 +220,7 @@ public class MCEFVideoPlayer {
                     executeJavaScript("window.videoPlayerAPI.loadVideo('" + fileUrl + "')");
                     
                     // Apply current settings after a short delay to ensure they take effect after video loads
-                    applySettingsAfterLoad();
+                    applySettingsAfterLoad(wasPlaying);
                     return;
                 } else {
                     LOGGER.error("[FANCYMENU] Video file does not exist: " + videoFile.getAbsolutePath());
@@ -225,7 +233,7 @@ public class MCEFVideoPlayer {
             executeJavaScript("window.videoPlayerAPI.loadVideo('" + escapedPath + "')");
             
             // Apply current settings after a short delay to ensure they take effect after video loads
-            applySettingsAfterLoad();
+            applySettingsAfterLoad(wasPlaying);
             
         } catch (Exception e) {
             LOGGER.error("[FANCYMENU] Failed to load video: " + videoPath, e);
@@ -235,8 +243,10 @@ public class MCEFVideoPlayer {
     /**
      * Applies all current settings to the video player after a video is loaded.
      * This ensures settings are properly applied to newly loaded videos.
+     * 
+     * @param shouldAutoPlay Whether to automatically start playing the video after loading
      */
-    protected void applySettingsAfterLoad() {
+    protected void applySettingsAfterLoad(boolean shouldAutoPlay) {
         // Use a small delay to ensure the video is actually loaded
         CompletableFuture.runAsync(() -> {
             try {
@@ -250,14 +260,38 @@ public class MCEFVideoPlayer {
                 setFillScreen(fillScreen);
                 setMuted(isMuted);
                 
-                // If the video was playing before, restart playback
-                if (isCurrentlyPlaying) {
+                // Check the current play state from the browser
+                String playStateCheck = "(function() { return window.videoPlayerAPI ? window.videoPlayerAPI.isPlaying() : false; })()";
+                String result = executeJavaScriptWithResult(playStateCheck);
+                
+                try {
+                    if (result != null && !result.isEmpty()) {
+                        boolean isActuallyPlaying = Boolean.parseBoolean(result);
+                        // Update our local state to match the browser
+                        isCurrentlyPlaying = isActuallyPlaying;
+                        LOGGER.info("[FANCYMENU] Video playing state from browser: " + isActuallyPlaying);
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("[FANCYMENU] Error parsing play state from browser", e);
+                }
+                
+                // If the video was playing before or we want it to autoplay, start playback
+                if (shouldAutoPlay && !isCurrentlyPlaying) {
+                    LOGGER.info("[FANCYMENU] Auto-playing video after load");
                     play();
                 }
             } catch (Exception e) {
                 LOGGER.error("[FANCYMENU] Error applying settings after video load", e);
             }
         });
+    }
+    
+    /**
+     * Applies all current settings to the video player after a video is loaded.
+     * Keeps the previous playing state.
+     */
+    protected void applySettingsAfterLoad() {
+        applySettingsAfterLoad(isCurrentlyPlaying);
     }
     
     // Track muted state locally
@@ -350,6 +384,29 @@ public class MCEFVideoPlayer {
     }
     
     /**
+     * Synchronizes the play state with the actual browser state.
+     * Call this periodically to ensure the Java state matches the browser.
+     */
+    public void syncPlayState() {
+        if (!initialized) return;
+        
+        // Use a self-executing function to avoid 'return' syntax error
+        String jsQuery = "(function() { return !window.videoPlayerAPI.isPlaying ? false : !document.getElementById('videoPlayer').paused; })()";
+        String result = executeJavaScriptWithResult(jsQuery);
+        try {
+            if (result != null && !result.isEmpty()) {
+                boolean actuallyPlaying = Boolean.parseBoolean(result);
+                if (isCurrentlyPlaying != actuallyPlaying) {
+                    LOGGER.debug("[FANCYMENU] Syncing play state: Java=" + isCurrentlyPlaying + ", Browser=" + actuallyPlaying);
+                    isCurrentlyPlaying = actuallyPlaying;
+                }
+            }
+        } catch (Exception e) {
+            // Silently ignore parsing errors
+        }
+    }
+    
+    /**
      * Sets the player volume.
      *
      * @param volume A value between 0.0 (mute) and 1.0 (full volume)
@@ -436,7 +493,7 @@ public class MCEFVideoPlayer {
             return 0;
         }
         
-        String result = executeJavaScriptWithResult("return window.videoPlayerAPI.getDuration()");
+        String result = executeJavaScriptWithResult("(function() { return window.videoPlayerAPI ? window.videoPlayerAPI.getDuration() : 0; })()");
         try {
             return Double.parseDouble(result);
         } catch (Exception e) {
@@ -463,7 +520,7 @@ public class MCEFVideoPlayer {
             return 0;
         }
         
-        String result = executeJavaScriptWithResult("return window.videoPlayerAPI.getCurrentTime()");
+        String result = executeJavaScriptWithResult("(function() { return window.videoPlayerAPI ? window.videoPlayerAPI.getCurrentTime() : 0; })()");
         try {
             return Double.parseDouble(result);
         } catch (Exception e) {
@@ -652,7 +709,7 @@ public class MCEFVideoPlayer {
             return 0;
         }
         
-        String result = executeJavaScriptWithResult("return window.videoPlayerAPI.getVideoWidth()");
+        String result = executeJavaScriptWithResult("(function() { return window.videoPlayerAPI ? window.videoPlayerAPI.getVideoWidth() : 0; })()");
         try {
             return Integer.parseInt(result);
         } catch (Exception e) {
@@ -670,7 +727,7 @@ public class MCEFVideoPlayer {
             return 0;
         }
         
-        String result = executeJavaScriptWithResult("return window.videoPlayerAPI.getVideoHeight()");
+        String result = executeJavaScriptWithResult("(function() { return window.videoPlayerAPI ? window.videoPlayerAPI.getVideoHeight() : 0; })()");
         try {
             return Integer.parseInt(result);
         } catch (Exception e) {

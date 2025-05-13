@@ -250,7 +250,8 @@
                 volume: initialVolume,
                 loop: initialLoop,
                 fillScreen: initialFillScreen,
-                muted: false
+                muted: false,
+                playing: autoPlay // Track initial play state
             },
             
             loadVideo: function(path) {
@@ -359,6 +360,15 @@
             
             getVideoHeight: function() {
                 return videoPlayer.videoHeight;
+            },
+            
+            // Function to notify Java about play state changes
+            notifyPlayStateChange: function(isPlaying) {
+                // This is just a placeholder - the real communication 
+                // happens by Java polling the isPlaying() method
+                log(`Play state changed: ${isPlaying ? 'playing' : 'paused/stopped'}`);
+                this.currentSettings.playing = isPlaying;
+                return true;
             }
         };
         
@@ -385,6 +395,22 @@
             log('Video started playing');
             // Hide loader
             loader.style.display = 'none';
+            // Update the playing state in the API
+            if (window.videoPlayerAPI) {
+                window.videoPlayerAPI.currentSettings.playing = true;
+                // Send a message to Java about the play state change
+                window.videoPlayerAPI.notifyPlayStateChange(true);
+            }
+        });
+        
+        videoPlayer.addEventListener('pause', function() {
+            log('Video paused');
+            // Update the playing state in the API
+            if (window.videoPlayerAPI) {
+                window.videoPlayerAPI.currentSettings.playing = false;
+                // Send a message to Java about the play state change
+                window.videoPlayerAPI.notifyPlayStateChange(false);
+            }
         });
         
         // Function to apply all stored settings to the video element
@@ -420,6 +446,14 @@
         
         videoPlayer.addEventListener('ended', function() {
             log('Video ended');
+            // Update the playing state in the API unless looping
+            if (window.videoPlayerAPI) {
+                if (!videoPlayer.loop) {
+                    window.videoPlayerAPI.currentSettings.playing = false;
+                    // Send a message to Java about the play state change
+                    window.videoPlayerAPI.notifyPlayStateChange(false);
+                }
+            }
         });
         
         videoPlayer.addEventListener('error', function(e) {
