@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FancyMenu Video Player</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            background-color: #000000;
+        }
+
+        #videoContainer {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        video {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* When fillScreen is enabled */
+        .fill-screen video {
+            object-fit: cover;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Custom JavaScript interface for Java communication */
+        #javaInterface {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="videoContainer">
+        <video id="videoPlayer"></video>
+    </div>
+    <div id="javaInterface"></div>
+
+    <script>
+        // Initialize player
+        const videoPlayer = document.getElementById('videoPlayer');
+        const videoContainer = document.getElementById('videoContainer');
+        const javaInterface = document.getElementById('javaInterface');
+        let videoSource = '';
+        
+        // Parse URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialVolume = parseFloat(urlParams.get('volume')) || 1.0;
+        const initialLoop = urlParams.get('loop') === 'true';
+        const initialFillScreen = urlParams.get('fillScreen') === 'true';
+        const autoPlay = urlParams.get('autoPlay') !== 'false'; // Default to true
+        const videoPath = urlParams.get('video') || '';
+        
+        // Setup player with initial settings
+        videoPlayer.volume = initialVolume;
+        videoPlayer.loop = initialLoop;
+        videoPlayer.controls = false; // Hide controls by default
+        videoPlayer.autoplay = autoPlay;
+        
+        // Set fill screen mode if enabled
+        if (initialFillScreen) {
+            videoContainer.classList.add('fill-screen');
+        }
+        
+        // Load video if provided in URL
+        if (videoPath) {
+            loadVideo(videoPath);
+        }
+        
+        // Functions that can be called from Java
+        window.videoPlayerAPI = {
+            loadVideo: function(path) {
+                loadVideo(path);
+                return true;
+            },
+            
+            play: function() {
+                videoPlayer.play();
+                return true;
+            },
+            
+            pause: function() {
+                videoPlayer.pause();
+                return true;
+            },
+            
+            stop: function() {
+                videoPlayer.pause();
+                videoPlayer.currentTime = 0;
+                return true;
+            },
+            
+            setVolume: function(volume) {
+                videoPlayer.volume = Math.max(0, Math.min(1, volume));
+                return true;
+            },
+            
+            getVolume: function() {
+                return videoPlayer.volume;
+            },
+            
+            setLoop: function(shouldLoop) {
+                videoPlayer.loop = shouldLoop;
+                return true;
+            },
+            
+            isLooping: function() {
+                return videoPlayer.loop;
+            },
+            
+            setFillScreen: function(shouldFill) {
+                if (shouldFill) {
+                    videoContainer.classList.add('fill-screen');
+                } else {
+                    videoContainer.classList.remove('fill-screen');
+                }
+                return true;
+            },
+            
+            isFillScreen: function() {
+                return videoContainer.classList.contains('fill-screen');
+            },
+            
+            getDuration: function() {
+                return videoPlayer.duration || 0;
+            },
+            
+            getCurrentTime: function() {
+                return videoPlayer.currentTime || 0;
+            },
+            
+            setCurrentTime: function(time) {
+                try {
+                    videoPlayer.currentTime = time;
+                    return true;
+                } catch (e) {
+                    console.error("Error setting time:", e);
+                    return false;
+                }
+            },
+            
+            getMuted: function() {
+                return videoPlayer.muted;
+            },
+            
+            setMuted: function(muted) {
+                videoPlayer.muted = muted;
+                return true;
+            },
+            
+            isPlaying: function() {
+                return !videoPlayer.paused;
+            },
+            
+            getVideoWidth: function() {
+                return videoPlayer.videoWidth;
+            },
+            
+            getVideoHeight: function() {
+                return videoPlayer.videoHeight;
+            }
+        };
+        
+        // Function to load video
+        function loadVideo(path) {
+            if (path === videoSource) return;
+            
+            videoSource = path;
+            videoPlayer.src = path;
+            videoPlayer.load();
+            
+            // If autoplay was set, start playing
+            if (autoPlay) {
+                videoPlayer.play().catch(e => {
+                    console.warn("Autoplay prevented:", e);
+                });
+            }
+        }
+        
+        // Event listeners for video player
+        videoPlayer.addEventListener('ended', function() {
+            // This can be used to notify Java when the video ends
+            // The Java code will check the state via function calls
+        });
+        
+        videoPlayer.addEventListener('error', function(e) {
+            console.error("Video error:", e);
+        });
+    </script>
+</body>
+</html>

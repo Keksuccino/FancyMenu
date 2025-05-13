@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.rendering.text.color.colors.TextColorFormatters;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
+import de.keksuccino.fancymenu.util.rendering.video.VideoManager;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.fancymenu.customization.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.customization.server.ServerCache;
@@ -55,7 +56,10 @@ public class FancyMenu {
 
 			FileTypes.registerAll();
 
-			if (MCEFUtil.isMCEFLoaded()) BrowserHandler.init();
+			if (MCEFUtil.isMCEFLoaded()) {
+				BrowserHandler.init();
+				VideoManager.getInstance().initialize();
+			}
 
 			UIColorThemes.registerAll();
 
