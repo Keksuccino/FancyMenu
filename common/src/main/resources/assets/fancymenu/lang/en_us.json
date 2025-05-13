@@ -1627,5 +1627,8 @@
   "fancymenu.editor.text_editor.single_line_warning.indicator": "SINGLE-LINE MODE ENABLED!",
   "fancymenu.editor.menu_bar.unsaved_warning": "* Unsaved Changes! *",
   "fancymenu.actions.back_to_last_screen": "Back to Last Screen",
-  "fancymenu.actions.back_to_last_screen.desc": "Opens the last screen that was open before the current one."
+  "fancymenu.actions.back_to_last_screen.desc": "Opens the last screen that was open before the current one.",
+  "fancymenu.elements.video_mcef": "Video [MCEF]",
+  "fancymenu.elements.video_mcef.desc": "A video player powered by MCEF.\nYou need to install the MCEF mod to use this element.",
+  "fancymenu.elements.video_mcef.set_source": "Video Source"
 }
