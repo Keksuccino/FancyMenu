@@ -90,12 +90,128 @@
     <div id="debugInfo"></div>
 
     <script>
-        // Initialize player
-        const videoPlayer = document.getElementById('videoPlayer');
-        const videoContainer = document.getElementById('videoContainer');
-        const debugInfo = document.getElementById('debugInfo');
-        const loader = document.getElementById('loader');
-        const loaderText = document.getElementById('loaderText');
+        // Log function that also shows on screen
+        function log(message) {
+            console.log(message);
+            
+            // Make sure debugInfo element exists
+            if (!document.getElementById('debugInfo')) {
+                const debugDiv = document.createElement('div');
+                debugDiv.id = 'debugInfo';
+                debugDiv.style.position = 'absolute';
+                debugDiv.style.bottom = '10px';
+                debugDiv.style.left = '10px';
+                debugDiv.style.color = '#00ff00';
+                debugDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                debugDiv.style.padding = '5px';
+                debugDiv.style.fontFamily = 'monospace';
+                debugDiv.style.fontSize = '12px';
+                debugDiv.style.zIndex = '100';
+                document.body.appendChild(debugDiv);
+            }
+            
+            const debugInfo = document.getElementById('debugInfo');
+            if (debugInfo) {
+                const time = new Date().toLocaleTimeString();
+                debugInfo.innerHTML += `<div>[${time}] ${message}</div>`;
+                // Keep only last 10 messages
+                const lines = debugInfo.getElementsByTagName('div');
+                if (lines.length > 10) {
+                    debugInfo.removeChild(lines[0]);
+                }
+            }
+        }
+        
+        // Ensure all required elements exist
+        function ensureElementsExist() {
+            // Ensure video container exists
+            if (!document.getElementById('videoContainer')) {
+                const container = document.createElement('div');
+                container.id = 'videoContainer';
+                container.style.width = '100%';
+                container.style.height = '100%';
+                container.style.display = 'flex';
+                container.style.justifyContent = 'center';
+                container.style.alignItems = 'center';
+                container.style.position = 'relative';
+                document.body.appendChild(container);
+                log("Created missing videoContainer element");
+            }
+            
+            // Ensure video player exists
+            if (!document.getElementById('videoPlayer')) {
+                const videoElement = document.createElement('video');
+                videoElement.id = 'videoPlayer';
+                videoElement.setAttribute('playsinline', '');
+                videoElement.setAttribute('webkit-playsinline', '');
+                document.getElementById('videoContainer').appendChild(videoElement);
+                log("Created missing videoPlayer element");
+                
+                // Setup initial settings for newly created video element
+                videoElement.volume = initialVolume;
+                videoElement.loop = initialLoop;
+                videoElement.controls = false;
+                videoElement.autoplay = autoPlay;
+            }
+            
+            // Ensure loader exists
+            if (!document.getElementById('loader')) {
+                const loader = document.createElement('div');
+                loader.id = 'loader';
+                loader.style.position = 'absolute';
+                loader.style.top = '50%';
+                loader.style.left = '50%';
+                loader.style.transform = 'translate(-50%, -50%)';
+                loader.style.color = 'white';
+                loader.style.fontFamily = 'sans-serif';
+                loader.style.textAlign = 'center';
+                
+                const spinner = document.createElement('div');
+                spinner.className = 'spinner';
+                spinner.style.width = '40px';
+                spinner.style.height = '40px';
+                spinner.style.margin = '0 auto';
+                spinner.style.border = '4px solid rgba(255, 255, 255, 0.3)';
+                spinner.style.borderRadius = '50%';
+                spinner.style.borderTop = '4px solid white';
+                spinner.style.animation = 'spin 1s linear infinite';
+                
+                const loaderText = document.createElement('div');
+                loaderText.id = 'loaderText';
+                loaderText.textContent = 'Loading video...';
+                
+                loader.appendChild(spinner);
+                loader.appendChild(loaderText);
+                document.body.appendChild(loader);
+                log("Created missing loader element");
+                
+                // Add keyframe animation for spinner
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            return {
+                videoContainer: document.getElementById('videoContainer'),
+                videoPlayer: document.getElementById('videoPlayer'),
+                loader: document.getElementById('loader'),
+                loaderText: document.getElementById('loaderText')
+            };
+        }
+        
+        // Call function to ensure all elements exist
+        const elements = ensureElementsExist();
+        const videoContainer = elements.videoContainer;
+        const videoPlayer = elements.videoPlayer;
+        const loader = elements.loader;
+        const loaderText = elements.loaderText;
+        
+        // Initialize variables
         let videoSource = '';
         let videoBlob = null;
         
@@ -106,18 +222,6 @@
         const initialFillScreen = urlParams.get('fillScreen') === 'true';
         const autoPlay = urlParams.get('autoPlay') !== 'false'; // Default to true
         const videoPath = urlParams.get('video') || '';
-        
-        // Log function that also shows on screen
-        function log(message) {
-            console.log(message);
-            const time = new Date().toLocaleTimeString();
-            debugInfo.innerHTML += `<div>[${time}] ${message}</div>`;
-            // Keep only last 10 messages
-            const lines = debugInfo.getElementsByTagName('div');
-            if (lines.length > 10) {
-                debugInfo.removeChild(lines[0]);
-            }
-        }
         
         // Setup player with initial settings
         videoPlayer.volume = initialVolume;
@@ -200,14 +304,43 @@
         // Try multiple methods to play video (for autoplay policies)
         function tryPlayVideo() {
             log('Attempting to play video...');
-            videoPlayer.play().catch(e => {
+            
+            // First try to play normally
+            videoPlayer.play().then(() => {
+                log('Video playback started successfully');
+                // Store the playing state
+                if (window.videoPlayerAPI) {
+                    window.videoPlayerAPI.currentSettings.playing = true;
+                }
+            }).catch(e => {
                 log(`Standard play failed: ${e.message}`);
                 
                 // Try with muted (browsers often allow muted autoplay)
                 log('Trying muted playback...');
                 videoPlayer.muted = true;
-                videoPlayer.play().catch(e2 => {
+                videoPlayer.play().then(() => {
+                    log('Muted playback started successfully');
+                    // Unmute after a short delay (browsers often allow if user already interacted)
+                    setTimeout(() => {
+                        if (window.videoPlayerAPI && !window.videoPlayerAPI.currentSettings.muted) {
+                            log('Attempting to unmute after successful autoplay');
+                            videoPlayer.muted = false;
+                        }
+                    }, 1000);
+                    
+                    // Store the playing state
+                    if (window.videoPlayerAPI) {
+                        window.videoPlayerAPI.currentSettings.playing = true;
+                    }
+                }).catch(e2 => {
                     log(`Muted play also failed: ${e2.message}`);
+                    
+                    // As a last resort, try to play inline
+                    videoPlayer.setAttribute('playsinline', '');
+                    videoPlayer.setAttribute('webkit-playsinline', '');
+                    videoPlayer.play().catch(e3 => {
+                        log(`All play attempts failed: ${e3.message}`);
+                    });
                 });
             });
         }
@@ -262,6 +395,11 @@
             
             play: function() {
                 log('API called: play()');
+                
+                // Use this to track if we need to play after loading
+                this.currentSettings.playing = true;
+                
+                // Try multiple methods to play
                 tryPlayVideo();
                 return true;
             },
@@ -402,6 +540,12 @@
             
             // Apply current player settings to the new video
             applyStoredSettings();
+            
+            // Try to play if autoplay is enabled
+            if (autoPlay || (window.videoPlayerAPI && window.videoPlayerAPI.currentSettings.playing)) {
+                log('Auto-playing video on loadedmetadata event');
+                tryPlayVideo();
+            }
         });
         
         videoPlayer.addEventListener('canplay', function() {
@@ -411,6 +555,12 @@
             
             // Apply settings one more time to be sure
             applyStoredSettings();
+            
+            // If autoplay is enabled or API requested play
+            if (autoPlay || (window.videoPlayerAPI && window.videoPlayerAPI.currentSettings.playing)) {
+                log('Auto-playing video on canplay event');
+                tryPlayVideo();
+            }
         });
         
         videoPlayer.addEventListener('playing', function() {

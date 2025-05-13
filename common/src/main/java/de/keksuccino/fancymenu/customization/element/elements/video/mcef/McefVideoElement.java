@@ -17,6 +17,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.util.Objects;
 
 public class McefVideoElement extends AbstractElement {
@@ -42,6 +43,10 @@ public class McefVideoElement extends AbstractElement {
     protected int lastAbsoluteHeight = -10000;
     protected int lastAbsoluteX = -10000;
     protected int lastAbsoluteY = -10000;
+    
+    // Additional fields to track player state
+    protected boolean isInitialCreation = true;
+    protected boolean hasLoadedVideo = false;
 
     public McefVideoElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -52,9 +57,17 @@ public class McefVideoElement extends AbstractElement {
 
         if (this.shouldRender()) {
 
+            int x = this.getAbsoluteX();
+            int y = this.getAbsoluteY();
+            int w = this.getAbsoluteWidth();
+            int h = this.getAbsoluteHeight();
+
             if (!this.initialized) {
                 this.initialized = true;
-                playerId = videoManager.createPlayer(0, 0, 10, 10);
+                
+                LOGGER.info("[FANCYMENU] Creating video player with dimensions: " + w + "x" + h + " at " + x + "," + y);
+                playerId = videoManager.createPlayer(x, y, w, h);
+                
                 if (playerId != null) {
                     videoPlayer = videoManager.getPlayer(playerId);
                     if (videoPlayer != null) {
@@ -64,46 +77,106 @@ public class McefVideoElement extends AbstractElement {
                         videoPlayer.setVolume(0.1f);
                         videoPlayer.setLooping(true);
                         videoPlayer.setFillScreen(true);
-                        videoPlayer.play();
-
-                        // Don't load a video immediately
-                        LOGGER.info("[FANCYMENU] Ready to load videos - press 1, 2, or 3 to try different loading methods");
+                        
+                        // Make sure these initial values are tracked
+                        this.lastAbsoluteX = x;
+                        this.lastAbsoluteY = y;
+                        this.lastAbsoluteWidth = w;
+                        this.lastAbsoluteHeight = h;
                     }
                 }
             }
 
             if (this.videoPlayer == null) return;
 
+            if ((this.lastAbsoluteX != x) || (this.lastAbsoluteY != y)) {
+                this.videoPlayer.setPosition(x, y);
+            }
+            this.lastAbsoluteX = x;
+            this.lastAbsoluteY = y;
+            
+            if ((this.lastAbsoluteWidth != w) || (this.lastAbsoluteHeight != h)) {
+                this.videoPlayer.resizeToFill(w, h);
+            }
+            this.lastAbsoluteWidth = w;
+            this.lastAbsoluteHeight = h;
+
+            // Process video URL
             String finalVideoUrl = null;
             if (this.rawVideoUrlSource != null) {
                 finalVideoUrl = PlaceholderParser.replacePlaceholders(this.rawVideoUrlSource.getSourceWithoutPrefix());
             }
-            if (!Objects.equals(finalVideoUrl, this.lastFinalUrl)) {
-                if (finalVideoUrl != null) {
-                    this.videoPlayer.loadVideo(finalVideoUrl);
-                    this.videoPlayer.play();
-                } else {
+            
+            // Check if the video URL has changed
+            boolean videoUrlChanged = !Objects.equals(finalVideoUrl, this.lastFinalUrl);
+            if (videoUrlChanged || !hasLoadedVideo) {
+                if (finalVideoUrl != null && !finalVideoUrl.isEmpty()) {
+                    LOGGER.info("[FANCYMENU] Loading new video: " + finalVideoUrl);
+                    hasLoadedVideo = true;
+                    
+                    // Stop any existing video before loading new one
                     this.videoPlayer.stop();
+                    
+                    // Load and play the new video with a clean file URL format
+                    try {
+                        // Make sure it's a proper absolute path
+                        File videoFile = new File(finalVideoUrl);
+                        if (videoFile.exists()) {
+                            // Convert to URI format which is more reliable
+                            final String videoUri = videoFile.toURI().toString();
+                            LOGGER.info("[FANCYMENU] Using video URI: " + videoUri);
+                            
+                            // Load the video
+                            this.videoPlayer.loadVideo(videoUri);
+                            
+                            // Play with a delay to ensure loading completes
+                            new Thread(() -> {
+                                try {
+                                    Thread.sleep(500);
+                                    LOGGER.info("[FANCYMENU] Playing video after delay");
+                                    videoPlayer.play();
+                                } catch (Exception e) {
+                                    LOGGER.error("[FANCYMENU] Error in delayed play", e);
+                                }
+                            }).start();
+                        } else {
+                            // Try loading the URL as-is
+                            LOGGER.info("[FANCYMENU] File not found, trying URL directly: " + finalVideoUrl);
+                            this.videoPlayer.loadVideo(finalVideoUrl);
+                            
+                            // Play with a delay
+                            new Thread(() -> {
+                                try {
+                                    Thread.sleep(500);
+                                    LOGGER.info("[FANCYMENU] Playing video after delay");
+                                    videoPlayer.play();
+                                } catch (Exception e) {
+                                    LOGGER.error("[FANCYMENU] Error in delayed play", e);
+                                }
+                            }).start();
+                        }
+                    } catch (Exception e) {
+                        LOGGER.error("[FANCYMENU] Error processing video URL", e);
+                        // Fallback to direct loading
+                        this.videoPlayer.loadVideo(finalVideoUrl);
+                        
+                        // Play with a delay
+                        new Thread(() -> {
+                            try {
+                                Thread.sleep(500);
+                                LOGGER.info("[FANCYMENU] Playing video after delay (fallback)");
+                                videoPlayer.play();
+                            } catch (Exception err) {
+                                LOGGER.error("[FANCYMENU] Error in delayed play", err);
+                            }
+                        }).start();
+                    }
+                } else {
+                    LOGGER.info("[FANCYMENU] No video URL provided, stopping playback");
+                    this.videoPlayer.stop();
+                    hasLoadedVideo = false;
                 }
-            }
-            this.lastFinalUrl = finalVideoUrl;
-
-            int x = this.getAbsoluteX();
-            int y = this.getAbsoluteY();
-            int w = this.getAbsoluteWidth();
-            int h = this.getAbsoluteHeight();
-
-            if (finalVideoUrl != null) {
-                if ((this.lastAbsoluteX != x) || (this.lastAbsoluteY != y)) {
-                    this.videoPlayer.setPosition(x, y);
-                }
-                this.lastAbsoluteX = x;
-                this.lastAbsoluteY = y;
-                if ((this.lastAbsoluteWidth != w) || (this.lastAbsoluteHeight != h)) {
-                    this.videoPlayer.resizeToFill(w, h);
-                }
-                this.lastAbsoluteWidth = w;
-                this.lastAbsoluteHeight = h;
+                this.lastFinalUrl = finalVideoUrl;
             }
 
             RenderSystem.enableBlend();
@@ -111,13 +184,12 @@ public class McefVideoElement extends AbstractElement {
             if (finalVideoUrl != null) {
                 this.videoPlayer.render(graphics, mouseX, mouseY, partial);
             } else {
+                // Draw black background if no video
                 graphics.fill(x, y, x + w, y + h, DrawableColor.BLACK.getColorInt());
             }
 
             RenderSystem.disableBlend();
-
         }
-
     }
 
     @Override
@@ -132,5 +204,4 @@ public class McefVideoElement extends AbstractElement {
 //        AspectRatio ratio = (t != null) ? t.getAspectRatio() : new AspectRatio(10, 10);
 //        this.baseWidth = ratio.getAspectRatioWidth(this.getAbsoluteHeight());
     }
-
 }
