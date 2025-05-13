@@ -28,20 +28,20 @@ public class MCEFVideoPlayer {
     protected WrappedMCEFBrowser browser;
     
     // Video options
-    protected float volume = 1.0f;
-    protected boolean looping = false;
-    protected boolean fillScreen = false;
-    protected String currentVideoPath = null;
-    protected boolean isCurrentlyPlaying = false;
+    protected volatile float volume = 1.0f;
+    protected volatile boolean looping = false;
+    protected volatile boolean fillScreen = false;
+    protected volatile String currentVideoPath = null;
+    protected volatile boolean isCurrentlyPlaying = false;
     
     // Browser dimensions
-    protected int posX = 0;
-    protected int posY = 0;
-    protected int width = 200;
-    protected int height = 200;
+    protected volatile int posX = 0;
+    protected volatile int posY = 0;
+    protected volatile int width = 200;
+    protected volatile int height = 200;
     
     // Initialization state
-    protected boolean initialized = false;
+    protected volatile boolean initialized = false;
     protected final CompletableFuture<Boolean> initFuture = new CompletableFuture<>();
     
     /**

@@ -81,6 +81,7 @@ public class McefVideoElement extends AbstractElement {
             if (!Objects.equals(finalVideoUrl, this.lastFinalUrl)) {
                 if (finalVideoUrl != null) {
                     this.videoPlayer.loadVideo(finalVideoUrl);
+                    this.videoPlayer.play();
                 } else {
                     this.videoPlayer.stop();
                 }
