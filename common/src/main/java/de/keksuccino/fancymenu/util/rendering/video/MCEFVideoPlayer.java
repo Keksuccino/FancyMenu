@@ -7,10 +7,6 @@ import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
 import net.minecraft.client.gui.GuiGraphics;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.cef.browser.CefBrowser;
-import org.cef.browser.CefFrame;
-import org.cef.handler.CefLoadHandler;
-import org.cef.handler.CefLoadHandlerAdapter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
@@ -682,7 +678,8 @@ public class MCEFVideoPlayer {
     }
     
     /**
-     * Sets the position of the video player.
+     * Sets the position of the browser element on the screen.
+     * This positions the entire browser element, not the video content within it.
      *
      * @param x The X position
      * @param y The Y position
@@ -694,27 +691,30 @@ public class MCEFVideoPlayer {
             VideoManager.EXECUTOR.execute(() -> browser.setPosition(x, y));
         }
     }
-    
+
     /**
-     * Gets the current X position of the player.
-     * 
+     * Gets the current X position of the browser element.
+     *
      * @return The X position
      */
     public int getX() {
         return this.posX;
     }
-    
+
     /**
-     * Gets the current Y position of the player.
-     * 
+     * Gets the current Y position of the browser element.
+     *
      * @return The Y position
      */
     public int getY() {
         return this.posY;
     }
-    
+
     /**
-     * Sets the size of the video player.
+     * Sets the size of the browser element.
+     * This sets the overall size of the browser element in the GUI.
+     * If fillScreen is enabled, the video will automatically adjust to fill the browser
+     * while maintaining aspect ratio.
      *
      * @param width The new width
      * @param height The new height
@@ -723,118 +723,106 @@ public class MCEFVideoPlayer {
         this.width = width;
         this.height = height;
         if (browser != null && initialized) {
-            VideoManager.EXECUTOR.execute(() -> browser.setSize(width, height));
+            VideoManager.EXECUTOR.execute(() -> {
+                browser.setSize(width, height);
+                
+                // If we're in fill screen mode, ensure the video content fills the browser
+                // This is now handled directly by the HTML/CSS based on the fillScreen flag
+                // No need to manually calculate aspect ratio or position - the browser handles it
+            });
         }
     }
-    
+
     /**
-     * Gets the current width of the player.
-     * 
+     * Gets the current width of the browser element.
+     *
      * @return The width
      */
     public int getWidth() {
         return this.width;
     }
-    
+
     /**
-     * Gets the current height of the player.
-     * 
+     * Gets the current height of the browser element.
+     *
      * @return The height
      */
     public int getHeight() {
         return this.height;
     }
-    
+
     /**
      * Resizes the player to fit the specified dimensions while maintaining aspect ratio.
      * The player will be sized to fit entirely within the specified dimensions.
      * 
+     * Note: This is an internal method primarily used for backwards compatibility.
+     * It's generally recommended to use setSize() and setFillScreen() instead.
+     *
      * @param containerWidth The width of the container
      * @param containerHeight The height of the container
      */
-    public void resizeToFit(int containerWidth, int containerHeight) {
+    protected void resizeToFit(int containerWidth, int containerHeight) {
         if (browser == null || !initialized) return;
-        
+
         int videoWidth = getVideoWidth();
         int videoHeight = getVideoHeight();
-        
+
         // If video dimensions are not available, use the container dimensions
         if (videoWidth <= 0 || videoHeight <= 0) {
             setSize(containerWidth, containerHeight);
             setPosition(0, 0);
             return;
         }
-        
+
         // Calculate the scaling factors
         float scaleWidth = (float)containerWidth / videoWidth;
         float scaleHeight = (float)containerHeight / videoHeight;
-        
+
         // Use the smaller scale factor to ensure the video fits within the container
         float scale = Math.min(scaleWidth, scaleHeight);
-        
+
         // Calculate the new dimensions
         int newWidth = (int)(videoWidth * scale);
         int newHeight = (int)(videoHeight * scale);
-        
+
         // Calculate position to center the video
         int x = (containerWidth - newWidth) / 2;
         int y = (containerHeight - newHeight) / 2;
-        
+
         // Set the new size and position
         setSize(newWidth, newHeight);
         setPosition(x, y);
     }
-    
+
     /**
      * Resizes the player to fill the specified dimensions while maintaining aspect ratio.
      * The player will be sized to fill the entire container, which might crop some content.
      * 
+     * Note: This is an internal method primarily used for backwards compatibility.
+     * For new code, it's recommended to use setSize() and setFillScreen(true) instead.
+     *
      * @param containerWidth The width of the container
      * @param containerHeight The height of the container
      */
-    public void resizeToFill(int containerWidth, int containerHeight) {
-        if (browser == null || !initialized) return;
-        
-        int videoWidth = getVideoWidth();
-        int videoHeight = getVideoHeight();
-        
-        // If video dimensions are not available, use the container dimensions
-        if (videoWidth <= 0 || videoHeight <= 0) {
-            setSize(containerWidth, containerHeight);
-            setPosition(0, 0);
-            return;
-        }
-        
-        // Calculate the scaling factors
-        float scaleWidth = (float)containerWidth / videoWidth;
-        float scaleHeight = (float)containerHeight / videoHeight;
-        
-        // Use the larger scale factor to ensure the video fills the container
-        float scale = Math.max(scaleWidth, scaleHeight);
-        
-        // Calculate the new dimensions
-        int newWidth = (int)(videoWidth * scale);
-        int newHeight = (int)(videoHeight * scale);
-        
-        // Calculate position to center the video
-        int x = (containerWidth - newWidth) / 2;
-        int y = (containerHeight - newHeight) / 2;
-        
-        // Set the new size and position
-        setSize(newWidth, newHeight);
-        setPosition(x, y);
+    protected void resizeToFill(int containerWidth, int containerHeight) {
+        setSize(containerWidth, containerHeight);
+        setFillScreen(true);
     }
-    
+
     /**
      * Resizes the player to exactly match the container dimensions.
      * This will stretch/squash the video if the aspect ratios don't match.
      * 
+     * Note: This is an internal method primarily used for backwards compatibility.
+     * For new code, it's recommended to use setSize() directly.
+     *
      * @param containerWidth The width of the container
      * @param containerHeight The height of the container
      */
-    public void resizeToStretch(int containerWidth, int containerHeight) {
+    protected void resizeToStretch(int containerWidth, int containerHeight) {
         setSize(containerWidth, containerHeight);
         setPosition(0, 0);
+        setFillScreen(false);
     }
     
     /**

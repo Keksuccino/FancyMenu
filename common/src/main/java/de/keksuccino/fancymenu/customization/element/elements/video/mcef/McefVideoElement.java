@@ -53,7 +53,7 @@ public class McefVideoElement extends AbstractElement {
 
         if (this.shouldRender()) {
 
-            // Create player with proper size and position from the start
+            // Get the current dimensions and position
             int x = this.getAbsoluteX();
             int y = this.getAbsoluteY();
             int w = this.getAbsoluteWidth();
@@ -71,19 +71,19 @@ public class McefVideoElement extends AbstractElement {
                         // Set player options immediately
                         videoPlayer.setVolume(0.1f);
                         videoPlayer.setLooping(true);
-                        videoPlayer.setFillScreen(true);
+                        videoPlayer.setFillScreen(true); // Enable fill screen by default
                     }
                 }
             }
 
             if (this.videoPlayer == null) return;
 
-            // Update size and position of player
+            // Update size and position of player if needed
             if ((this.lastAbsoluteX != x) || (this.lastAbsoluteY != y) || (this.lastAbsoluteWidth != w) || (this.lastAbsoluteHeight != h)) {
-                VideoManager.EXECUTOR.execute(() -> {
-                    this.videoPlayer.setPosition(x, y);
-                    this.videoPlayer.resizeToFill(w, h);
-                });
+                // Just update position and size directly - fillScreen is handled automatically
+                this.videoPlayer.setPosition(x, y);
+                this.videoPlayer.setSize(w, h);
+                // The video content layout is now handled by the HTML/CSS based on the fillScreen flag
             }
             this.lastAbsoluteX = x;
             this.lastAbsoluteY = y;
