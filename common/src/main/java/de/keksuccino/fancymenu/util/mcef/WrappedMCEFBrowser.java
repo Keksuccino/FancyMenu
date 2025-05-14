@@ -42,6 +42,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     protected volatile boolean loopAllVideos = false;
     protected volatile boolean hideVideoControls = false;
     protected UUID genericIdentifier = UUID.randomUUID();
+    private CefLoadHandlerAdapter instanceLoadHandler; // Store handler for removal
 
     @NotNull
     public static WrappedMCEFBrowser build(@NotNull String url, boolean transparent, boolean autoHandle) {
@@ -68,20 +69,31 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         this.setSize(200, 200);
         this.setPosition(0, 0);
 
-        MCEF.getClient().addLoadHandler(new CefLoadHandlerAdapter() {
-            @Override
-            public void onLoadEnd(CefBrowser browser, CefFrame frame, int httpStatusCode) {
-                //Update video/audio stuff after loading completed
-                WrappedMCEFBrowser.this.setVolume(WrappedMCEFBrowser.this.volume);
-                WrappedMCEFBrowser.this.setFullscreenAllVideos(WrappedMCEFBrowser.this.fullscreenAllVideos);
-                WrappedMCEFBrowser.this.setAutoPlayAllVideosOnLoad(WrappedMCEFBrowser.this.autoPlayAllVideosOnLoad);
-                WrappedMCEFBrowser.this.setMuteAllMediaOnLoad(WrappedMCEFBrowser.this.muteAllMediaOnLoad);
-                WrappedMCEFBrowser.this.setLoopAllVideos(WrappedMCEFBrowser.this.loopAllVideos);
-                WrappedMCEFBrowser.this.setHideVideoControls(WrappedMCEFBrowser.this.hideVideoControls);
-                super.onLoadEnd(browser, frame, httpStatusCode);
-            }
-        });
+        // IMPORTANT: Fix for Load Handler
+        // The handler should only act if the event is for THIS browser instance.
+        // And it should be removed when this WrappedMCEFBrowser is closed.
+        if (this.browser != null && this.browser.getClient() != null) { // Check if we can get client for this browser
+            final int browserId = this.browser.getIdentifier(); // Get ID of this MCEFBrowser instance
 
+            this.instanceLoadHandler = new CefLoadHandlerAdapter() {
+                @Override
+                public void onLoadEnd(CefBrowser eventBrowser, CefFrame frame, int httpStatusCode) {
+                    if (eventBrowser.getIdentifier() == browserId && frame.isMain()) {
+                        // This load event is for this specific browser instance's main frame.
+                        LOGGER.debug("[FANCYMENU] WrappedMCEFBrowser [ID:{}]: onLoadEnd for URL: {}, Status: {}", browserId, frame.getURL(), httpStatusCode);
+                        WrappedMCEFBrowser.this.setVolume(WrappedMCEFBrowser.this.volume); // Apply volume on load
+                        // Apply other initial settings if needed for generic pages
+                        WrappedMCEFBrowser.this.setLoopAllVideos(WrappedMCEFBrowser.this.loopAllVideos);
+                        WrappedMCEFBrowser.this.setHideVideoControls(WrappedMCEFBrowser.this.hideVideoControls);
+                        WrappedMCEFBrowser.this.setAutoPlayAllVideosOnLoad(WrappedMCEFBrowser.this.autoPlayAllVideosOnLoad);
+                        WrappedMCEFBrowser.this.setMuteAllMediaOnLoad(WrappedMCEFBrowser.this.muteAllMediaOnLoad);
+                    }
+                }
+            };
+            this.browser.getClient().addLoadHandler(this.instanceLoadHandler);
+        } else {
+            LOGGER.warn("[FANCYMENU] Could not attach instance-specific load handler to WrappedMCEFBrowser. Settings on page load may be unreliable.");
+        }
     }
 
     @Override
@@ -393,6 +405,15 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     public MCEFBrowser getBrowser() {
         return this.browser;
     }
+    
+    /**
+     * Get the browser identifier
+     * 
+     * @return The browser identifier
+     */
+    public int getIdentifier() {
+        return this.browser.getIdentifier();
+    }
 
     @Override
     public boolean isFocusable() {
@@ -414,7 +435,11 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
     @Override
     public void close() throws IOException {
+        // Remove the instance-specific load handler
+        if (this.browser != null && this.browser.getClient() != null && this.instanceLoadHandler != null) {
+            this.browser.getClient().removeLoadHandler(this.instanceLoadHandler);
+            this.instanceLoadHandler = null;
+        }
         this.browser.close(true);
     }
-
 }

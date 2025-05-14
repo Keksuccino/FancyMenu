@@ -43,11 +43,6 @@ public class McefVideoElement extends AbstractElement {
     protected int lastAbsoluteHeight = -10000;
     protected int lastAbsoluteX = -10000;
     protected int lastAbsoluteY = -10000;
-    
-    // Additional fields to track player state
-    protected boolean isInitialCreation = true;
-    protected boolean hasLoadedVideo = false;
-    protected boolean videoPlayRequested = false;
 
     public McefVideoElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -105,8 +100,6 @@ public class McefVideoElement extends AbstractElement {
                 
                 // Stop any existing video before loading new one
                 this.videoPlayer.stop();
-                videoPlayRequested = false;
-                hasLoadedVideo = false;
                 
                 // Convert to URI format if it's a file
                 try {
@@ -117,60 +110,25 @@ public class McefVideoElement extends AbstractElement {
                         
                         // Load the video
                         this.videoPlayer.loadVideo(videoUri);
-                        hasLoadedVideo = true;
-                        videoPlayer.play();
-                        videoPlayRequested = true;
                         
-//                        // Play with a delay
-//                        new Thread(() -> {
-//                            try {
-//                                Thread.sleep(1000);
-//                                LOGGER.info("[FANCYMENU] Playing video after URL change");
-//                                videoPlayer.play();
-//                                videoPlayRequested = true;
-//                            } catch (Exception e) {
-//                                LOGGER.error("[FANCYMENU] Error in delayed play", e);
-//                            }
-//                        }).start();
+                        // With the improved player, we can call play() immediately after loadVideo()
+                        // The JS will queue the play request and execute it when the video is ready
+                        this.videoPlayer.play();
                     } else {
                         // Try loading the URL as-is
                         LOGGER.info("[FANCYMENU] File not found, trying URL directly: " + finalVideoUrl);
                         this.videoPlayer.loadVideo(finalVideoUrl);
-                        hasLoadedVideo = true;
-                        videoPlayer.play();
-                        videoPlayRequested = true;
-                        
-//                        // Play with a delay
-//                        new Thread(() -> {
-//                            try {
-//                                Thread.sleep(1000);
-//                                LOGGER.info("[FANCYMENU] Playing video after URL change");
-//                                videoPlayer.play();
-//                                videoPlayRequested = true;
-//                            } catch (Exception e) {
-//                                LOGGER.error("[FANCYMENU] Error in delayed play", e);
-//                            }
-//                        }).start();
+                        this.videoPlayer.play();
                     }
                 } catch (Exception e) {
                     LOGGER.error("[FANCYMENU] Error processing video URL", e);
-                }
-            }
-            
-            // If we have a video loaded but haven't requested play, try to play it periodically
-            if (hasLoadedVideo && !videoPlayRequested && finalVideoUrl != null) {
-                // Periodically try to play if we haven't successfully started
-                if (System.currentTimeMillis() % 5000 < 50) { // Try every 5 seconds (roughly)
-                    LOGGER.info("[FANCYMENU] Periodic play attempt for unstarted video");
-                    this.videoPlayer.play();
-                    videoPlayRequested = true;
                 }
             }
 
             // Render the player or a black background
             RenderSystem.enableBlend();
             
-            if (finalVideoUrl != null && hasLoadedVideo) {
+            if (finalVideoUrl != null) {
                 this.videoPlayer.render(graphics, mouseX, mouseY, partial);
             } else {
                 // Draw black background if no video

@@ -65,56 +65,48 @@ public class VideoManager {
      * Extracts the web resources from the mod JAR to FancyMenu's temp directory.
      */
     protected void extractWebResources() {
-        try {
-            // Use FancyMenu's temp directory
-            File webDir = new File(FancyMenu.TEMP_DATA_DIR, "web/videoplayer");
-            webDir.mkdirs();
-            
-            // Extract the player.html file
-            try (InputStream is = FancyMenu.class.getResourceAsStream("/assets/fancymenu/web/videoplayer/player.html")) {
-                if (is != null) {
-                    File playerFile = new File(webDir, "player.html");
-                    Files.copy(is, playerFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                    LOGGER.info("[FANCYMENU] Extracted player.html to " + playerFile.getAbsolutePath());
-                } else {
-                    LOGGER.error("[FANCYMENU] Could not find player.html resource in mod JAR");
+        File webDir = new File(FancyMenu.TEMP_DATA_DIR, "web/videoplayer");
+        if (!webDir.exists() && !webDir.mkdirs()) {
+            LOGGER.error("[FANCYMENU] Failed to create web resource directory: {}", webDir.getAbsolutePath());
+            // This is critical, further extractions will fail.
+            return;
+        }
+
+        // Helper method for extraction
+        extractResourceInternal("/assets/fancymenu/web/videoplayer/player.html", new File(webDir, "player.html"), true);
+        extractResourceInternal("/assets/fancymenu/web/videoplayer/simple_test.html", new File(webDir, "simple_test.html"), false);
+        extractResourceInternal("/assets/fancymenu/web/videoplayer/standalone_test.html", new File(webDir, "standalone_test.html"), false);
+        extractResourceInternal("/assets/fancymenu/web/videoplayer/README.txt", new File(webDir, "README.txt"), false);
+    }
+
+    /**
+     * Helper method to extract a resource file from the JAR to a destination file.
+     * 
+     * @param resourcePath Path to the resource in the JAR
+     * @param destinationFile Destination file to extract to
+     * @param isCritical Whether this resource is critical for operation
+     */
+    private void extractResourceInternal(String resourcePath, File destinationFile, boolean isCritical) {
+        try (InputStream is = FancyMenu.class.getResourceAsStream(resourcePath)) {
+            if (is != null) {
+                Files.copy(is, destinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                LOGGER.info("[FANCYMENU] Extracted {} to {}", destinationFile.getName(), destinationFile.getAbsolutePath());
+            } else {
+                String message = "[FANCYMENU] Could not find resource {} in mod JAR";
+                if (isCritical) LOGGER.error(message + " (CRITICAL)", resourcePath);
+                else LOGGER.warn(message, resourcePath);
+                if (isCritical && resourcePath.endsWith("player.html")) {
+                     // If player.html is critical and not found, video playback will fail.
+                     this.webResourcesRegistered = false; // Mark as failed if player.html is missing
                 }
-            }
-            
-            // Extract the simple_test.html file
-            try (InputStream is = FancyMenu.class.getResourceAsStream("/assets/fancymenu/web/videoplayer/simple_test.html")) {
-                if (is != null) {
-                    File testFile = new File(webDir, "simple_test.html");
-                    Files.copy(is, testFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                    LOGGER.info("[FANCYMENU] Extracted simple_test.html to " + testFile.getAbsolutePath());
-                }
-            } catch (Exception e) {
-                LOGGER.error("[FANCYMENU] Could not extract simple_test.html: " + e.getMessage());
-            }
-            
-            // Extract the standalone_test.html file
-            try (InputStream is = FancyMenu.class.getResourceAsStream("/assets/fancymenu/web/videoplayer/standalone_test.html")) {
-                if (is != null) {
-                    File testFile = new File(webDir, "standalone_test.html");
-                    Files.copy(is, testFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                    LOGGER.info("[FANCYMENU] Extracted standalone_test.html to " + testFile.getAbsolutePath());
-                }
-            } catch (Exception e) {
-                LOGGER.error("[FANCYMENU] Could not extract standalone_test.html: " + e.getMessage());
-            }
-            
-            // Extract the README.txt file (not critical)
-            try (InputStream is = FancyMenu.class.getResourceAsStream("/assets/fancymenu/web/videoplayer/README.txt")) {
-                if (is != null) {
-                    File readmeFile = new File(webDir, "README.txt");
-                    Files.copy(is, readmeFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                }
-            } catch (Exception e) {
-                // Non-critical if README extraction fails
-                LOGGER.debug("[FANCYMENU] Could not extract README.txt: " + e.getMessage());
             }
         } catch (Exception e) {
-            LOGGER.error("[FANCYMENU] Failed to extract web resources", e);
+            String message = "[FANCYMENU] Failed to extract resource {}: {}";
+            if (isCritical) LOGGER.error(message + " (CRITICAL)", resourcePath, e.getMessage(), e);
+            else LOGGER.warn(message, resourcePath, e.getMessage());
+             if (isCritical && resourcePath.endsWith("player.html")) {
+                 this.webResourcesRegistered = false;
+            }
         }
     }
     
@@ -155,11 +147,12 @@ public class VideoManager {
             return null;
         }
         
-        // Make sure web resources are registered
+        // Ensure web resources are initialized.
+        // initialize() itself handles the webResourcesRegistered flag.
         if (!webResourcesRegistered) {
-            initialize();
-            if (!webResourcesRegistered) {
-                LOGGER.error("[FANCYMENU] Failed to register web resources for video player");
+            initialize(); // This will attempt extraction and set webResourcesRegistered
+            if (!webResourcesRegistered) { // Check again after attempt
+                LOGGER.error("[FANCYMENU] Failed to initialize/verify web resources for video player. Cannot create player.");
                 return null;
             }
         }
@@ -265,28 +258,33 @@ public class VideoManager {
      * Loads a video from a path string into a player.
      *
      * @param playerId The player's unique identifier
-     * @param videoPath The path to the video file
+     * @param videoPathStr The path to the video file
      * @return True if the video was loaded successfully, false otherwise
      */
-    public boolean loadVideo(@NotNull String playerId, @NotNull String videoPath) {
+    public boolean loadVideo(@NotNull String playerId, @NotNull String videoPathStr) {
         MCEFVideoPlayer player = getPlayer(playerId);
         if (player == null) {
+            LOGGER.warn("[FANCYMENU] loadVideo: Player not found for ID: {}", playerId);
             return false;
         }
         
         try {
-            // If it looks like a file path, convert to a proper URI
-            if (videoPath.matches("^[a-zA-Z]:[/\\\\].*") || videoPath.startsWith("/")) {
-                File file = new File(videoPath);
-                if (file.exists()) {
-                    videoPath = file.toURI().toString();
+            String effectiveVideoPath = videoPathStr;
+            // If it doesn't look like a URL (http, https, file), treat as a potential local file path.
+            if (!videoPathStr.matches("^[a-zA-Z][a-zA-Z0-9+.-]*://.*")) {
+                File file = new File(videoPathStr);
+                if (file.exists() && file.isFile()) {
+                    effectiveVideoPath = file.toURI().toString();
+                    LOGGER.info("[FANCYMENU] Converted video path to URI: {}", effectiveVideoPath);
+                } else {
+                    LOGGER.warn("[FANCYMENU] Video path does not seem to be a URL and file not found locally: {}. Passing as is.", videoPathStr);
+                    // Let player.html try to resolve it, might be relative to player.html itself if not absolute.
                 }
             }
-            
-            player.loadVideo(videoPath);
+            player.loadVideo(effectiveVideoPath);
             return true;
         } catch (Exception e) {
-            LOGGER.error("[FANCYMENU] Failed to load video from path: " + videoPath, e);
+            LOGGER.error("[FANCYMENU] Failed to load video from path: {}", videoPathStr, e);
             return false;
         }
     }

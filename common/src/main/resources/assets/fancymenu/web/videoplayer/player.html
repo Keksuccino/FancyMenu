@@ -79,7 +79,7 @@
 </head>
 <body>
     <div id="videoContainer">
-        <video id="videoPlayer" playsinline></video>
+        <video id="videoPlayer" playsinline webkit-playsinline></video>
     </div>
     
     <div id="loader">
@@ -220,18 +220,206 @@
         const initialVolume = parseFloat(urlParams.get('volume')) || 1.0;
         const initialLoop = urlParams.get('loop') === 'true';
         const initialFillScreen = urlParams.get('fillScreen') === 'true';
-        const autoPlay = urlParams.get('autoPlay') !== 'false'; // Default to true
-        const videoPath = urlParams.get('video') || '';
-        
-        // Setup player with initial settings
+        // 'autoPlay' param means "should this video attempt to play as soon as it's loaded?"
+        const wantsAutoplay = urlParams.get('autoPlay') !== 'false'; // Default to true if not specified or not 'false'
+        const initialVideoPath = urlParams.get('video') || '';
+
         videoPlayer.volume = initialVolume;
         videoPlayer.loop = initialLoop;
         videoPlayer.controls = false; // Hide controls by default
-        videoPlayer.autoplay = autoPlay;
-        
-        // Set fill screen mode if enabled
+        // videoPlayer.autoplay = wantsAutoplay; // We'll handle autoplay more explicitly
+
         if (initialFillScreen) {
             videoContainer.classList.add('fill-screen');
+        }
+
+        window.videoPlayerAPI = {
+            currentSettings: {
+                volume: initialVolume,
+                loop: initialLoop,
+                fillScreen: initialFillScreen,
+                muted: videoPlayer.muted, // Reflect actual initial muted state (browsers might force mute for autoplay)
+                videoLoadedAndReady: false, // True when video can actually start playing
+                playRequestPending: wantsAutoplay, // If initially wants autoplay, treat as a pending play request
+                currentVideoSrc: initialVideoPath // Store the src for reference
+            },
+
+            loadVideo: function(path) {
+                log(`API called: loadVideo(${path})`);
+                this.currentSettings.currentVideoSrc = path;
+                this.currentSettings.videoLoadedAndReady = false;
+                // If a new video is loaded, and the original intent was to autoplay,
+                // or if a play was requested before this load, keep playRequestPending.
+                // Let's assume a new loadVideo implies a new context for autoplay.
+                // The caller (Java) can call play() after loadVideo if desired.
+                // For now, loadVideo itself won't automatically set playRequestPending unless wantsAutoplay was true from URL.
+                // This means if Java calls loadVideo then play, play() will set playRequestPending.
+
+                videoPlayer.pause();
+                if (videoPlayer.src) { // Revoke old blob URL if one was used
+                    URL.revokeObjectURL(videoPlayer.src);
+                }
+                videoPlayer.removeAttribute('src');
+                videoPlayer.load(); // Important to reset the video element's state
+
+                loader.style.display = 'block';
+                loaderText.textContent = 'Loading video...';
+                
+                // Use the existing loadVideo (renamed to internalLoadVideo)
+                internalLoadVideo(path); 
+                return true;
+            },
+
+            play: function() {
+                log('API called: play()');
+                this.currentSettings.playRequestPending = true;
+                if (this.currentSettings.videoLoadedAndReady) {
+                    log('Video ready, attempting to play immediately.');
+                    tryPlayVideo();
+                } else {
+                    log('Video not ready, play request queued.');
+                    // If src is set but not loading, try to kickstart it
+                    if (videoPlayer.currentSrc && videoPlayer.readyState < HTMLMediaElement.HAVE_METADATA) {
+                        log('Kicking video.load() as src is present but not ready.');
+                        videoPlayer.load();
+                    }
+                }
+                return true;
+            },
+
+            pause: function() {
+                log('API called: pause()');
+                this.currentSettings.playRequestPending = false; // Cancel any pending play request
+                videoPlayer.pause();
+                return true;
+            },
+
+            stop: function() {
+                log('API called: stop()');
+                this.currentSettings.playRequestPending = false;
+                videoPlayer.pause();
+                videoPlayer.currentTime = 0;
+                return true;
+            },
+            
+            togglePlayPause: function() {
+                log('API called: togglePlayPause()');
+                if (videoPlayer.paused) {
+                    this.play();
+                } else {
+                    this.pause();
+                }
+                return true;
+            },
+
+            setVolume: function(volume) {
+                volume = Math.max(0, Math.min(1, volume));
+                log(`API called: setVolume(${Math.round(volume * 100)}%)`);
+                this.currentSettings.volume = volume;
+                videoPlayer.volume = volume;
+                return true;
+            },
+            
+            setLoop: function(shouldLoop) {
+                log(`API called: setLoop(${shouldLoop})`);
+                this.currentSettings.loop = shouldLoop;
+                videoPlayer.loop = shouldLoop;
+                return true;
+            },
+
+            setFillScreen: function(shouldFill) {
+                log(`API called: setFillScreen(${shouldFill})`);
+                this.currentSettings.fillScreen = shouldFill;
+                if (shouldFill) {
+                    videoContainer.classList.add('fill-screen');
+                } else {
+                    videoContainer.classList.remove('fill-screen');
+                }
+                return true;
+            },
+
+            setMuted: function(muted) {
+                log(`API called: setMuted(${muted})`);
+                this.currentSettings.muted = muted;
+                videoPlayer.muted = muted;
+                return true;
+            },
+            
+            // isPlaying should reflect videoPlayer.paused directly
+            isPlaying: function() {
+                return videoPlayer && !videoPlayer.paused && videoPlayer.readyState > HTMLMediaElement.HAVE_CURRENT_DATA;
+            },
+
+            // For getters, ensure videoPlayer exists and has meaningful data
+            getDuration: function() { return videoPlayer && !isNaN(videoPlayer.duration) ? videoPlayer.duration : 0; },
+            getCurrentTime: function() { return videoPlayer ? videoPlayer.currentTime : 0; },
+            getVideoWidth: function() { return videoPlayer ? videoPlayer.videoWidth : 0; },
+            getVideoHeight: function() { return videoPlayer ? videoPlayer.videoHeight : 0; },
+
+            setCurrentTime: function(time) {
+                log(`API called: setCurrentTime(${time})`);
+                time = Math.max(0, time);
+                if (videoPlayer && videoPlayer.readyState > 0) { // HAVE_NOTHING = 0
+                    videoPlayer.currentTime = time;
+                } else {
+                    log("Warning: Video not ready yet for setCurrentTime, command might be ignored.");
+                    // Optionally, queue this if critical, but usually seeking requires some metadata.
+                }
+                return true;
+            }
+        };
+
+        function tryPlayVideo() {
+            log('Attempting to play video (tryPlayVideo)...');
+            if (!videoPlayer.currentSrc) {
+                log('tryPlayVideo: No src. Aborting play attempt.');
+                // Keep playRequestPending true if it was set
+                return;
+            }
+
+            const playPromise = videoPlayer.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    log('Video playback started successfully (tryPlayVideo)');
+                    window.videoPlayerAPI.currentSettings.playRequestPending = false;
+                }).catch(e => {
+                    log(`Standard play failed (tryPlayVideo): ${e.message}. Muted: ${videoPlayer.muted}, ReadyState: ${videoPlayer.readyState}`);
+                    // Autoplay policies often require muted. Try with muted.
+                    if (!videoPlayer.muted) {
+                        log('Trying muted playback (tryPlayVideo)...');
+                        const originallyMutedByUser = window.videoPlayerAPI.currentSettings.muted;
+                        videoPlayer.muted = true; // Force mute for this attempt
+                        window.videoPlayerAPI.currentSettings.muted = true; // Reflect this forced mute
+
+                        videoPlayer.play().then(() => {
+                            log('Muted playback started successfully (tryPlayVideo)');
+                            window.videoPlayerAPI.currentSettings.playRequestPending = false;
+                            // If the user didn't intend to mute, try unmuting after a bit.
+                            // This is a common pattern to satisfy autoplay-with-sound policies after user interaction.
+                            if (!originallyMutedByUser) {
+                                setTimeout(() => {
+                                    log('Attempting to unmute after successful muted autoplay.');
+                                    videoPlayer.muted = false;
+                                    window.videoPlayerAPI.currentSettings.muted = false;
+                                }, 500);
+                            }
+                        }).catch(e2 => {
+                            log(`Muted play also failed (tryPlayVideo): ${e2.message}`);
+                            // Restore intended muted state if muted play failed
+                            videoPlayer.muted = originallyMutedByUser;
+                            window.videoPlayerAPI.currentSettings.muted = originallyMutedByUser;
+                            // Keep playRequestPending true so that further 'canplay' events might trigger it
+                        });
+                    } else {
+                         // Already muted and failed, keep playRequestPending.
+                         log('Play failed while already muted (tryPlayVideo). Keeping request pending.');
+                    }
+                });
+            } else {
+                log("video.play() did not return a promise. This browser might be older. Relying on events.");
+                // For older browsers/contexts, the 'playing' event will be the confirmation.
+                // If it plays, playRequestPending will be cleared by the 'playing' event handler.
+            }
         }
         
         // Functions to load files in different ways
@@ -278,11 +466,7 @@
                     // Set video source
                     videoPlayer.src = blobUrl;
                     videoPlayer.load();
-                    
-                    // Attempt to play
-                    if (autoPlay) {
-                        tryPlayVideo();
-                    }
+                    // No direct play here, will let events handle it
                 } else {
                     log(`XHR failed with status: ${this.status}`);
                     loaderText.textContent = `Error: Failed to load video (status ${this.status})`;
@@ -301,52 +485,8 @@
             xhr.send();
         }
         
-        // Try multiple methods to play video (for autoplay policies)
-        function tryPlayVideo() {
-            log('Attempting to play video...');
-            
-            // First try to play normally
-            videoPlayer.play().then(() => {
-                log('Video playback started successfully');
-                // Store the playing state
-                if (window.videoPlayerAPI) {
-                    window.videoPlayerAPI.currentSettings.playing = true;
-                }
-            }).catch(e => {
-                log(`Standard play failed: ${e.message}`);
-                
-                // Try with muted (browsers often allow muted autoplay)
-                log('Trying muted playback...');
-                videoPlayer.muted = true;
-                videoPlayer.play().then(() => {
-                    log('Muted playback started successfully');
-                    // Unmute after a short delay (browsers often allow if user already interacted)
-                    setTimeout(() => {
-                        if (window.videoPlayerAPI && !window.videoPlayerAPI.currentSettings.muted) {
-                            log('Attempting to unmute after successful autoplay');
-                            videoPlayer.muted = false;
-                        }
-                    }, 1000);
-                    
-                    // Store the playing state
-                    if (window.videoPlayerAPI) {
-                        window.videoPlayerAPI.currentSettings.playing = true;
-                    }
-                }).catch(e2 => {
-                    log(`Muted play also failed: ${e2.message}`);
-                    
-                    // As a last resort, try to play inline
-                    videoPlayer.setAttribute('playsinline', '');
-                    videoPlayer.setAttribute('webkit-playsinline', '');
-                    videoPlayer.play().catch(e3 => {
-                        log(`All play attempts failed: ${e3.message}`);
-                    });
-                });
-            });
-        }
-        
         // Main load function that decides which method to use
-        function loadVideo(path) {
+        function internalLoadVideo(path) {
             if (!path) {
                 log('No video path provided');
                 return;
@@ -375,239 +515,51 @@
                 }, 2000);
             }
         }
-        
-        // Functions that can be called from Java
-        window.videoPlayerAPI = {
-            // Store current settings so they can be applied to new videos
-            currentSettings: {
-                volume: initialVolume,
-                loop: initialLoop,
-                fillScreen: initialFillScreen,
-                muted: false,
-                playing: autoPlay // Track initial play state
-            },
-            
-            loadVideo: function(path) {
-                log(`API called: loadVideo(${path})`);
-                loadVideo(path);
-                return true;
-            },
-            
-            play: function() {
-                log('API called: play()');
-                
-                // Use this to track if we need to play after loading
-                this.currentSettings.playing = true;
-                
-                // Try multiple methods to play
-                tryPlayVideo();
-                return true;
-            },
-            
-            pause: function() {
-                log('API called: pause()');
-                videoPlayer.pause();
-                return true;
-            },
-            
-            stop: function() {
-                log('API called: stop()');
-                videoPlayer.pause();
-                videoPlayer.currentTime = 0;
-                return true;
-            },
-            
-            setVolume: function(volume) {
-                volume = Math.max(0, Math.min(1, volume));
-                log(`API called: setVolume(${Math.round(volume * 100)}%)`);
-                // Store the setting for future videos
-                this.currentSettings.volume = volume;
-                videoPlayer.volume = volume;
-                return true;
-            },
-            
-            getVolume: function() {
-                return this.currentSettings.volume;
-            },
-            
-            setLoop: function(shouldLoop) {
-                log(`API called: setLoop(${shouldLoop})`);
-                // Store the setting for future videos
-                this.currentSettings.loop = shouldLoop;
-                videoPlayer.loop = shouldLoop;
-                return true;
-            },
-            
-            isLooping: function() {
-                return this.currentSettings.loop;
-            },
-            
-            setFillScreen: function(shouldFill) {
-                log(`API called: setFillScreen(${shouldFill})`);
-                // Store the setting for future videos
-                this.currentSettings.fillScreen = shouldFill;
-                if (shouldFill) {
-                    videoContainer.classList.add('fill-screen');
-                } else {
-                    videoContainer.classList.remove('fill-screen');
-                }
-                return true;
-            },
-            
-            isFillScreen: function() {
-                return this.currentSettings.fillScreen;
-            },
-            
-            getDuration: function() {
-                return videoPlayer.duration || 0;
-            },
-            
-            getCurrentTime: function() {
-                return videoPlayer.currentTime || 0;
-            },
-            
-            setCurrentTime: function(time) {
-                try {
-                    log(`API called: setCurrentTime(${time})`);
-                    
-                    // Make sure we have a valid time
-                    time = Math.max(0, time);
-                    
-                    if (videoPlayer.readyState === 0) {
-                        log("Warning: Video not ready yet, seeking may fail");
-                    }
-                    
-                    // Store original time in case of error
-                    const originalTime = videoPlayer.currentTime;
-                    
-                    // Set the time
-                    videoPlayer.currentTime = time;
-                    
-                    // Verify the time was actually set (some browsers restrict seeking)
-                    setTimeout(() => {
-                        if (Math.abs(videoPlayer.currentTime - time) > 0.5 && 
-                            Math.abs(videoPlayer.currentTime - originalTime) < 0.1) {
-                            log(`Seek verification failed. Target: ${time}, Actual: ${videoPlayer.currentTime}`);
-                        }
-                    }, 50);
-                    
-                    return true;
-                } catch (e) {
-                    log(`Error setting time: ${e.message}`);
-                    return false;
-                }
-            },
-            
-            getMuted: function() {
-                return this.currentSettings.muted;
-            },
-            
-            setMuted: function(muted) {
-                log(`API called: setMuted(${muted})`);
-                // Store the setting for future videos
-                this.currentSettings.muted = muted;
-                videoPlayer.muted = muted;
-                return true;
-            },
-            
-            isPlaying: function() {
-                return !videoPlayer.paused;
-            },
-            
-            getVideoWidth: function() {
-                return videoPlayer.videoWidth;
-            },
-            
-            getVideoHeight: function() {
-                return videoPlayer.videoHeight;
-            },
-            
-            // Function to notify Java about play state changes
-            notifyPlayStateChange: function(isPlaying) {
-                // This is just a placeholder - the real communication 
-                // happens by Java polling the isPlaying() method
-                log(`Play state changed: ${isPlaying ? 'playing' : 'paused/stopped'}`);
-                this.currentSettings.playing = isPlaying;
-                return true;
-            }
-        };
-        
-        // Event listeners for video player
+
         videoPlayer.addEventListener('loadedmetadata', function() {
-            log(`Video metadata loaded: ${videoPlayer.videoWidth}x${videoPlayer.videoHeight}`);
-            // Hide loader once metadata is loaded
+            log(`Video metadata loaded: ${videoPlayer.videoWidth}x${videoPlayer.videoHeight}, duration: ${videoPlayer.duration}, readyState: ${videoPlayer.readyState}`);
+            window.videoPlayerAPI.currentSettings.videoLoadedAndReady = (videoPlayer.readyState >= HTMLMediaElement.HAVE_METADATA);
             loader.style.display = 'none';
+            applyStoredSettings(); // Apply volume, loop etc.
             
-            // Apply current player settings to the new video
-            applyStoredSettings();
-            
-            // Try to play if autoplay is enabled
-            if (autoPlay || (window.videoPlayerAPI && window.videoPlayerAPI.currentSettings.playing)) {
-                log('Auto-playing video on loadedmetadata event');
+            if (window.videoPlayerAPI.currentSettings.playRequestPending && window.videoPlayerAPI.currentSettings.videoLoadedAndReady) {
+                log('Playing video due to pending request (on loadedmetadata).');
                 tryPlayVideo();
             }
         });
-        
+
         videoPlayer.addEventListener('canplay', function() {
-            log('Video can play now');
-            // Hide loader
+            log(`Video can play now. readyState: ${videoPlayer.readyState}`);
+            window.videoPlayerAPI.currentSettings.videoLoadedAndReady = (videoPlayer.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA);
             loader.style.display = 'none';
-            
-            // Apply settings one more time to be sure
-            applyStoredSettings();
-            
-            // If autoplay is enabled or API requested play
-            if (autoPlay || (window.videoPlayerAPI && window.videoPlayerAPI.currentSettings.playing)) {
-                log('Auto-playing video on canplay event');
+            applyStoredSettings(); 
+
+            if (window.videoPlayerAPI.currentSettings.playRequestPending && window.videoPlayerAPI.currentSettings.videoLoadedAndReady) {
+                log('Playing video due to pending request (on canplay).');
                 tryPlayVideo();
             }
         });
         
+        videoPlayer.addEventListener('canplaythrough', function() {
+            log(`Video can play through. readyState: ${videoPlayer.readyState}`);
+            window.videoPlayerAPI.currentSettings.videoLoadedAndReady = true; // Definitely ready
+            if (window.videoPlayerAPI.currentSettings.playRequestPending) {
+                log('Playing video due to pending request (on canplaythrough).');
+                tryPlayVideo();
+            }
+        });
+
         videoPlayer.addEventListener('playing', function() {
-            log('Video started playing');
-            // Hide loader
+            log('Video event: playing');
             loader.style.display = 'none';
-            // Update the playing state in the API
-            if (window.videoPlayerAPI) {
-                window.videoPlayerAPI.currentSettings.playing = true;
-                // Send a message to Java about the play state change
-                window.videoPlayerAPI.notifyPlayStateChange(true);
-            }
+            window.videoPlayerAPI.currentSettings.playRequestPending = false; // Clear flag as it's now playing
         });
-        
+
         videoPlayer.addEventListener('pause', function() {
-            log('Video paused');
-            // Update the playing state in the API
-            if (window.videoPlayerAPI) {
-                window.videoPlayerAPI.currentSettings.playing = false;
-                // Send a message to Java about the play state change
-                window.videoPlayerAPI.notifyPlayStateChange(false);
-            }
+            log('Video event: pause');
+            // Don't automatically clear playRequestPending here, as a pause could be transient (buffering)
+            // or user-initiated. The API's pause() already clears it.
         });
-        
-        // Function to apply all stored settings to the video element
-        function applyStoredSettings() {
-            if (!window.videoPlayerAPI || !window.videoPlayerAPI.currentSettings) {
-                log('No stored settings found, using defaults');
-                return;
-            }
-            
-            // Get current settings from stored settings object
-            const settings = window.videoPlayerAPI.currentSettings;
-            log(`Applying stored settings to new video: volume=${settings.volume}, loop=${settings.loop}, fillScreen=${settings.fillScreen}, muted=${settings.muted}`);
-            
-            // Apply all settings
-            videoPlayer.volume = settings.volume;
-            videoPlayer.loop = settings.loop;
-            videoPlayer.muted = settings.muted;
-            
-            // Apply fillScreen setting
-            if (settings.fillScreen) {
-                videoContainer.classList.add('fill-screen');
-            } else {
-                videoContainer.classList.remove('fill-screen');
-            }
-        }
         
         videoPlayer.addEventListener('waiting', function() {
             log('Video buffering...');
@@ -619,12 +571,8 @@
         videoPlayer.addEventListener('ended', function() {
             log('Video ended');
             // Update the playing state in the API unless looping
-            if (window.videoPlayerAPI) {
-                if (!videoPlayer.loop) {
-                    window.videoPlayerAPI.currentSettings.playing = false;
-                    // Send a message to Java about the play state change
-                    window.videoPlayerAPI.notifyPlayStateChange(false);
-                }
+            if (window.videoPlayerAPI && !videoPlayer.loop) {
+                window.videoPlayerAPI.currentSettings.playRequestPending = false;
             }
         });
         
@@ -651,26 +599,29 @@
             const videoSrc = videoPlayer.currentSrc || videoSource || "(unknown)";
             log(`Source: ${videoSrc}`);
         });
-        
-        // Load video if provided in URL
-        if (videoPath) {
-            log(`Initial video from URL param: ${videoPath}`);
-            loadVideo(videoPath);
-            
-            // Set initial playing state correctly for autoplay
-            if (window.videoPlayerAPI) {
-                window.videoPlayerAPI.currentSettings.playing = autoPlay;
+
+        function applyStoredSettings() {
+            log(`Applying settings: Vol=${window.videoPlayerAPI.currentSettings.volume}, Loop=${window.videoPlayerAPI.currentSettings.loop}, Muted=${window.videoPlayerAPI.currentSettings.muted}`);
+            videoPlayer.volume = window.videoPlayerAPI.currentSettings.volume;
+            videoPlayer.loop = window.videoPlayerAPI.currentSettings.loop;
+            videoPlayer.muted = window.videoPlayerAPI.currentSettings.muted; // Apply JS-side muted state
+            if (window.videoPlayerAPI.currentSettings.fillScreen) {
+                videoContainer.classList.add('fill-screen');
+            } else {
+                videoContainer.classList.remove('fill-screen');
             }
-        } else {
-            log('No initial video provided');
         }
         
-        // Log initial settings
-        log('FancyMenu Video Player initialized');
-        log(`Volume: ${Math.round(initialVolume * 100)}%`);
-        log(`Loop: ${initialLoop}`);
-        log(`Fill screen: ${initialFillScreen}`);
-        log(`Autoplay: ${autoPlay}`);
+        // Initial load if path provided in URL
+        if (initialVideoPath) {
+            log(`Initial video from URL param: ${initialVideoPath}. Wants autoplay: ${wantsAutoplay}`);
+            // `wantsAutoplay` already set `playRequestPending` in currentSettings initialization.
+            window.videoPlayerAPI.loadVideo(initialVideoPath); // Use API to load
+        } else {
+            log('No initial video provided via URL.');
+            loader.style.display = 'none'; // Hide loader if no video
+        }
+        log('FancyMenu Video Player HTML initialized.');
     </script>
 </body>
 </html>
