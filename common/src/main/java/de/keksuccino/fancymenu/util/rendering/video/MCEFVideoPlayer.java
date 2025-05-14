@@ -830,80 +830,6 @@ public class MCEFVideoPlayer {
     public int getHeight() {
         return this.height;
     }
-
-    /**
-     * Resizes the player to fit the specified dimensions while maintaining aspect ratio.
-     * The player will be sized to fit entirely within the specified dimensions.
-     * 
-     * Note: This is an internal method primarily used for backwards compatibility.
-     * It's generally recommended to use setSize() and setFillScreen() instead.
-     *
-     * @param containerWidth The width of the container
-     * @param containerHeight The height of the container
-     */
-    protected void resizeToFit(int containerWidth, int containerHeight) {
-        if (browser == null || !initialized) return;
-
-        int videoWidth = getVideoWidth();
-        int videoHeight = getVideoHeight();
-
-        // If video dimensions are not available, use the container dimensions
-        if (videoWidth <= 0 || videoHeight <= 0) {
-            setSize(containerWidth, containerHeight);
-            setPosition(0, 0);
-            return;
-        }
-
-        // Calculate the scaling factors
-        float scaleWidth = (float)containerWidth / videoWidth;
-        float scaleHeight = (float)containerHeight / videoHeight;
-
-        // Use the smaller scale factor to ensure the video fits within the container
-        float scale = Math.min(scaleWidth, scaleHeight);
-
-        // Calculate the new dimensions
-        int newWidth = (int)(videoWidth * scale);
-        int newHeight = (int)(videoHeight * scale);
-
-        // Calculate position to center the video
-        int x = (containerWidth - newWidth) / 2;
-        int y = (containerHeight - newHeight) / 2;
-
-        // Set the new size and position
-        setSize(newWidth, newHeight);
-        setPosition(x, y);
-    }
-
-    /**
-     * Resizes the player to fill the specified dimensions while maintaining aspect ratio.
-     * The player will be sized to fill the entire container, which might crop some content.
-     * 
-     * Note: This is an internal method primarily used for backwards compatibility.
-     * For new code, it's recommended to use setSize() and setFillScreen(true) instead.
-     *
-     * @param containerWidth The width of the container
-     * @param containerHeight The height of the container
-     */
-    protected void resizeToFill(int containerWidth, int containerHeight) {
-        setSize(containerWidth, containerHeight);
-        setFillScreen(true);
-    }
-
-    /**
-     * Resizes the player to exactly match the container dimensions.
-     * This will stretch/squash the video if the aspect ratios don't match.
-     * 
-     * Note: This is an internal method primarily used for backwards compatibility.
-     * For new code, it's recommended to use setSize() directly.
-     *
-     * @param containerWidth The width of the container
-     * @param containerHeight The height of the container
-     */
-    protected void resizeToStretch(int containerWidth, int containerHeight) {
-        setSize(containerWidth, containerHeight);
-        setPosition(0, 0);
-        setFillScreen(false);
-    }
     
     /**
      * Sets the opacity/alpha value of the video player.
@@ -912,8 +838,8 @@ public class MCEFVideoPlayer {
      * @param opacity Value between 0.0F (transparent) and 1.0F (opaque)
      */
     public void setOpacity(float opacity) {
-        if (browser != null && initialized) {
-            VideoManager.EXECUTOR.execute(() -> browser.setOpacity(Math.max(0.0F, Math.min(1.0F, opacity))));
+        if (browser != null) {
+            browser.setOpacity(Math.max(0.0F, Math.min(1.0F, opacity)));
         }
     }
     

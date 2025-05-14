@@ -1630,5 +1630,9 @@
   "fancymenu.actions.back_to_last_screen.desc": "Opens the last screen that was open before the current one.",
   "fancymenu.elements.video_mcef": "Video [MCEF]",
   "fancymenu.elements.video_mcef.desc": "A video player powered by MCEF.\nYou need to install the MCEF mod to use this element.",
-  "fancymenu.elements.video_mcef.set_source": "Video Source"
+  "fancymenu.elements.video_mcef.set_source": "Video Source",
+  "fancymenu.elements.video_mcef.loop": "Loop Video: %s",
+  "fancymenu.elements.video_mcef.sound_channel": "Sound Channel: %s",
+  "fancymenu.elements.video_mcef.volume": "Volume",
+  "fancymenu.elements.video_mcef.volume.invalid_value": "§rThe volume needs to be a valid decimal value between 0.0 (0%%) and 1.0 (100%%)."
 }

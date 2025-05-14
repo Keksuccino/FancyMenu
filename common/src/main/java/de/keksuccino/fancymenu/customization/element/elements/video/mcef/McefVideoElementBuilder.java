@@ -5,9 +5,9 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -38,13 +38,10 @@ public class McefVideoElementBuilder extends ElementBuilder<McefVideoElement, Mc
 
         String source = serialized.getValue("source");
         element.rawVideoUrlSource = (source != null) ? ResourceSource.of(source) : null;
-
-//        element.repeat = deserializeBoolean(element.repeat, serialized.getValue("repeat_texture"));
-//        element.nineSlice = deserializeBoolean(element.nineSlice, serialized.getValue("nine_slice_texture"));
-//        element.nineSliceBorderX = deserializeNumber(Integer.class, element.nineSliceBorderX, serialized.getValue("nine_slice_texture_border_x"));
-//        element.nineSliceBorderY = deserializeNumber(Integer.class, element.nineSliceBorderY, serialized.getValue("nine_slice_texture_border_y"));
-//        String tint = serialized.getValue("image_tint");
-//        if (tint != null) element.imageTint = DrawableColor.of(tint);
+        element.loop = deserializeBoolean(element.loop, serialized.getValue("loop"));
+        element.volume = deserializeNumber(Float.class, element.volume, serialized.getValue("volume"));
+        String soundSource = serialized.getValue("sound_source");
+        if (soundSource != null) element.soundSource = Objects.requireNonNullElse(getSoundSourceByName(soundSource), SoundSource.MASTER);
 
         return element;
 
@@ -56,12 +53,9 @@ public class McefVideoElementBuilder extends ElementBuilder<McefVideoElement, Mc
         if (element.rawVideoUrlSource != null) {
             serializeTo.putProperty("source", element.rawVideoUrlSource.getSerializationSource());
         }
-
-//        serializeTo.putProperty("repeat_texture", "" + element.repeat);
-//        serializeTo.putProperty("nine_slice_texture", "" + element.nineSlice);
-//        serializeTo.putProperty("nine_slice_texture_border_x", "" + element.nineSliceBorderX);
-//        serializeTo.putProperty("nine_slice_texture_border_y", "" + element.nineSliceBorderY);
-//        serializeTo.putProperty("image_tint", element.imageTint.getHex());
+        serializeTo.putProperty("loop", "" + element.loop);
+        serializeTo.putProperty("volume", "" + element.volume);
+        serializeTo.putProperty("sound_source", element.soundSource.getName());
 
         return serializeTo;
 
@@ -80,6 +74,14 @@ public class McefVideoElementBuilder extends ElementBuilder<McefVideoElement, Mc
     @Override
     public @Nullable Component[] getDescription(@Nullable AbstractElement element) {
         return LocalizationUtils.splitLocalizedLines("fancymenu.elements.video_mcef.desc");
+    }
+
+    @Nullable
+    protected static SoundSource getSoundSourceByName(@NotNull String name) {
+        for (SoundSource source : SoundSource.values()) {
+            if (source.getName().equals(name)) return source;
+        }
+        return null;
     }
 
 }
