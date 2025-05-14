@@ -5,24 +5,25 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.video.MCEFVideoPlayer;
 import de.keksuccino.fancymenu.util.rendering.video.VideoManager;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
-import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.io.File;
 import java.util.Objects;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class McefVideoElement extends AbstractElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
 
     @Nullable
     public ResourceSource rawVideoUrlSource = null;
@@ -33,7 +34,7 @@ public class McefVideoElement extends AbstractElement {
     public int nineSliceBorderX = 5;
     public int nineSliceBorderY = 5;
 
-    protected boolean initialized = false;
+    protected volatile boolean initialized = false;
     protected final VideoManager videoManager = VideoManager.getInstance();
     protected MCEFVideoPlayer videoPlayer = null;
     protected String playerId = null;
@@ -43,6 +44,12 @@ public class McefVideoElement extends AbstractElement {
     protected int lastAbsoluteHeight = -10000;
     protected int lastAbsoluteX = -10000;
     protected int lastAbsoluteY = -10000;
+    protected volatile long lastRenderTickTime = -1L;
+    protected final ScheduledFuture<?> garbageChecker = EXECUTOR.scheduleAtFixedRate(() -> {
+        if (this.initialized && (this.lastRenderTickTime != -1) && ((this.lastRenderTickTime + 2000) < System.currentTimeMillis())) {
+            this.resetElement();
+        }
+    }, 0, 100, TimeUnit.MILLISECONDS);
 
     public McefVideoElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -52,6 +59,8 @@ public class McefVideoElement extends AbstractElement {
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (this.shouldRender()) {
+
+            this.lastRenderTickTime = System.currentTimeMillis();
 
             // Get the current dimensions and position
             int x = this.getAbsoluteX();
@@ -67,11 +76,15 @@ public class McefVideoElement extends AbstractElement {
                     videoPlayer = videoManager.getPlayer(playerId);
                     if (videoPlayer != null) {
                         LOGGER.info("[FANCYMENU] Created video player");
-
                         // Set player options immediately
                         videoPlayer.setVolume(0.1f);
                         videoPlayer.setLooping(true);
                         videoPlayer.setFillScreen(true); // Enable fill screen by default
+                        EXECUTOR.scheduleAtFixedRate(() -> {
+                            if (this.initialized && (this.lastRenderTickTime != -1) && ((this.lastRenderTickTime + 2000) < System.currentTimeMillis())) {
+                                this.resetElement();
+                            }
+                        }, 0, 100, TimeUnit.MILLISECONDS);
                     }
                 }
             }
@@ -148,6 +161,11 @@ public class McefVideoElement extends AbstractElement {
 
     @Override
     public void onDestroyElement() {
+        this.disposePlayer();
+        this.garbageChecker.cancel(true);
+    }
+
+    public void disposePlayer() {
         if ((this.videoManager != null) && (this.playerId != null) && (this.videoPlayer != null)) {
             this.videoPlayer.stop();
             this.videoManager.removePlayer(this.playerId);
@@ -156,7 +174,7 @@ public class McefVideoElement extends AbstractElement {
 
     public void resetElement() {
         if (this.initialized) {
-            this.onDestroyElement();
+            this.disposePlayer();
         }
         this.initialized = false;
         this.videoPlayer = null;
