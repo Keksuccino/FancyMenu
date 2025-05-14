@@ -6,6 +6,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import de.keksuccino.fancymenu.util.rendering.video.VideoManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -23,11 +24,16 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("unused")
 public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, NavigatableWidget {
 
     protected static final Logger LOGGER = LogManager.getLogger();
+    protected static final ScheduledExecutorService EXECUTOR = Executors. newSingleThreadScheduledExecutor();
 
     protected final MCEFBrowser browser;
     protected final Minecraft minecraft = Minecraft.getInstance();
@@ -42,7 +48,10 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     protected volatile boolean loopAllVideos = false;
     protected volatile boolean hideVideoControls = false;
     protected UUID genericIdentifier = UUID.randomUUID();
-    private CefLoadHandlerAdapter instanceLoadHandler; // Store handler for removal
+    
+    // Track if initialization is complete for this browser
+    private volatile boolean initialized = false;
+    private final CompletableFuture<Boolean> initFuture = new CompletableFuture<>();
 
     @NotNull
     public static WrappedMCEFBrowser build(@NotNull String url, boolean transparent, boolean autoHandle) {
@@ -60,7 +69,6 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     }
 
     protected WrappedMCEFBrowser(@NotNull String url, boolean transparent) {
-
         super(0, 0, 0, 0, Component.empty());
 
         this.browser = MCEF.createBrowser(url, transparent);
@@ -69,38 +77,94 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         this.setSize(200, 200);
         this.setPosition(0, 0);
 
-        // IMPORTANT: Fix for Load Handler
-        // The handler should only act if the event is for THIS browser instance.
-        // And it should be removed when this WrappedMCEFBrowser is closed.
-        if (this.browser != null && this.browser.getClient() != null) { // Check if we can get client for this browser
-            final int browserId = this.browser.getIdentifier(); // Get ID of this MCEFBrowser instance
-
-            this.instanceLoadHandler = new CefLoadHandlerAdapter() {
-                @Override
-                public void onLoadEnd(CefBrowser eventBrowser, CefFrame frame, int httpStatusCode) {
-                    if (eventBrowser.getIdentifier() == browserId && frame.isMain()) {
-                        // This load event is for this specific browser instance's main frame.
-                        LOGGER.debug("[FANCYMENU] WrappedMCEFBrowser [ID:{}]: onLoadEnd for URL: {}, Status: {}", browserId, frame.getURL(), httpStatusCode);
-                        WrappedMCEFBrowser.this.setVolume(WrappedMCEFBrowser.this.volume); // Apply volume on load
-                        // Apply other initial settings if needed for generic pages
-                        WrappedMCEFBrowser.this.setLoopAllVideos(WrappedMCEFBrowser.this.loopAllVideos);
-                        WrappedMCEFBrowser.this.setHideVideoControls(WrappedMCEFBrowser.this.hideVideoControls);
-                        WrappedMCEFBrowser.this.setAutoPlayAllVideosOnLoad(WrappedMCEFBrowser.this.autoPlayAllVideosOnLoad);
-                        WrappedMCEFBrowser.this.setMuteAllMediaOnLoad(WrappedMCEFBrowser.this.muteAllMediaOnLoad);
+        // Register with the global handler manager instead of creating our own
+        if (this.browser != null && this.browser.getClient() != null) {
+            final int browserId = this.browser.getIdentifier();
+            
+            LOGGER.debug("[FANCYMENU] WrappedMCEFBrowser browser ID: {}", browserId);
+            
+            // Check if the browser ID is valid (should be > 0)
+            if (browserId <= 0) {
+                LOGGER.error("[FANCYMENU] WrappedMCEFBrowser has invalid browser ID: {}. Falling back to manual initialization.", browserId);
+                
+                // We can't use the global handler, so we'll set up a direct initialization after a delay
+                EXECUTOR.schedule(() -> {
+                    if (!initFuture.isDone()) {
+                        LOGGER.info("[FANCYMENU] WrappedMCEFBrowser manual initialization fallback completed");
+                        initialized = true;
+                        initFuture.complete(true);
+                        applyInitialSettings();
                     }
-                }
-            };
-            this.browser.getClient().addLoadHandler(this.instanceLoadHandler);
+                }, 2000, TimeUnit.MILLISECONDS);
+                
+                return; // Exit early since we can't register properly
+            }
+            
+            // Register this browser with the global handler manager
+            if (GlobalLoadHandlerManager.getInstance().registerBrowser(browserId, initFuture)) {
+                LOGGER.info("[FANCYMENU] WrappedMCEFBrowser registered with global handler, browser ID: {}", browserId);
+                
+                // Make sure the global handler is registered with the CefClient
+                // This only needs to happen once, but it's safe to call multiple times
+                // as the CefClient will only set it if there's no handler yet
+                this.browser.getClient().addLoadHandler(
+                    GlobalLoadHandlerManager.getInstance().getGlobalHandler());
+                
+                // Listen for completion of the future
+                initFuture.thenAccept(success -> {
+                    if (success) {
+                        LOGGER.debug("[FANCYMENU] WrappedMCEFBrowser browser page loaded successfully (ID: {})", browserId);
+                        initialized = true;
+                        
+                        // Apply settings once the page is loaded
+                        applyInitialSettings();
+                    } else {
+                        LOGGER.error("[FANCYMENU] WrappedMCEFBrowser browser page failed to load (ID: {})", browserId);
+                        initialized = false;
+                    }
+                });
+            } else {
+                LOGGER.warn("[FANCYMENU] WrappedMCEFBrowser failed to register with global handler (ID: {}). Falling back to manual initialization.", browserId);
+                
+                // Fallback initialization after a delay if registration failed
+                EXECUTOR.schedule(() -> {
+                    if (!initFuture.isDone()) {
+                        LOGGER.info("[FANCYMENU] WrappedMCEFBrowser manual initialization fallback completed");
+                        initialized = true;
+                        initFuture.complete(true);
+                        applyInitialSettings();
+                    }
+                }, 2000, TimeUnit.MILLISECONDS);
+            }
         } else {
-            LOGGER.warn("[FANCYMENU] Could not attach instance-specific load handler to WrappedMCEFBrowser. Settings on page load may be unreliable.");
+            LOGGER.warn("[FANCYMENU] Could not attach to global load handler for WrappedMCEFBrowser. Settings on page load may be unreliable.");
+            
+            // Fallback for browser without client
+            EXECUTOR.schedule(() -> {
+                if (!initFuture.isDone()) {
+                    LOGGER.info("[FANCYMENU] WrappedMCEFBrowser manual initialization fallback completed (no client)");
+                    initialized = true;
+                    initFuture.complete(true);
+                    applyInitialSettings();
+                }
+            }, 2000, TimeUnit.MILLISECONDS);
         }
+    }
+    
+    /**
+     * Apply all initial settings once the page is loaded
+     */
+    protected void applyInitialSettings() {
+        this.setVolume(this.volume);
+        this.setLoopAllVideos(this.loopAllVideos);
+        this.setHideVideoControls(this.hideVideoControls);
+        this.setAutoPlayAllVideosOnLoad(this.autoPlayAllVideosOnLoad);
+        this.setMuteAllMediaOnLoad(this.muteAllMediaOnLoad);
     }
 
     @Override
     protected void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-
         try {
-
             if (this.autoHandle) BrowserHandler.notifyHandler(this.genericIdentifier.toString(), this);
 
             RenderSystem.disableDepthTest();
@@ -135,13 +199,9 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
             RenderSystem.setShaderTexture(0, 0);
             RenderSystem.enableDepthTest();
             graphics.flush();
-
         } catch (Exception ex) {
-
             LOGGER.error("[FANCYMENU] Failed to render MCEFBrowser!", ex);
-
         }
-
     }
 
     public void onVolumeUpdated(@NotNull SoundSource soundSource, float newVolume) {
@@ -253,8 +313,10 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
      */
     public void setVolume(float volume) {
         this.volume = volume;
-        String code = "document.querySelectorAll('audio, video').forEach(el => el.volume = " + this.getActualVolume() + ");";
-        this.browser.executeJavaScript(code, this.browser.getURL(), 0);
+        if (initialized) {
+            String code = "document.querySelectorAll('audio, video').forEach(el => el.volume = " + this.getActualVolume() + ");";
+            this.browser.executeJavaScript(code, this.browser.getURL(), 0);
+        }
     }
 
     public float getVolume() {
@@ -290,18 +352,20 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
     public void setFullscreenAllVideos(boolean fullscreenAllVideos) {
         this.fullscreenAllVideos = fullscreenAllVideos;
-        String code = """
-                document.querySelectorAll('video').forEach(video => {
-                    if (video.requestFullscreen) {
-                        video.requestFullscreen().catch(err => console.error('Fullscreen error:', err));
-                    } else if (video.webkitRequestFullscreen) { // Safari compatibility
-                        video.webkitRequestFullscreen().catch(err => console.error('Fullscreen error (webkit):', err));
-                    } else if (video.msRequestFullscreen) { // IE/Edge compatibility
-                        video.msRequestFullscreen().catch(err => console.error('Fullscreen error (ms):', err));
-                    }
-                });
-                """;
-        if (this.fullscreenAllVideos) this.browser.executeJavaScript(code, this.browser.getURL(), 0);
+        if (initialized) {
+            String code = """
+                    document.querySelectorAll('video').forEach(video => {
+                        if (video.requestFullscreen) {
+                            video.requestFullscreen().catch(err => console.error('Fullscreen error:', err));
+                        } else if (video.webkitRequestFullscreen) { // Safari compatibility
+                            video.webkitRequestFullscreen().catch(err => console.error('Fullscreen error (webkit):', err));
+                        } else if (video.msRequestFullscreen) { // IE/Edge compatibility
+                            video.msRequestFullscreen().catch(err => console.error('Fullscreen error (ms):', err));
+                        }
+                    });
+                    """;
+            if (this.fullscreenAllVideos) this.browser.executeJavaScript(code, this.browser.getURL(), 0);
+        }
     }
 
     public boolean isFullscreenAllVideos() {
@@ -310,12 +374,14 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
     public void setAutoPlayAllVideosOnLoad(boolean autoPlayAllVideosOnLoad) {
         this.autoPlayAllVideosOnLoad = autoPlayAllVideosOnLoad;
-        String code = """
-                document.querySelectorAll('video').forEach(video => {
-                    video.play(); // Start playing the video
-                });
-                """;
-        if (this.autoPlayAllVideosOnLoad) this.browser.executeJavaScript(code, this.browser.getURL(), 0);
+        if (initialized) {
+            String code = """
+                    document.querySelectorAll('video').forEach(video => {
+                        video.play(); // Start playing the video
+                    });
+                    """;
+            if (this.autoPlayAllVideosOnLoad) this.browser.executeJavaScript(code, this.browser.getURL(), 0);
+        }
     }
 
     public boolean isAutoPlayAllVideosOnLoad() {
@@ -324,12 +390,14 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
     public void setMuteAllMediaOnLoad(boolean muteAllMediaOnLoad) {
         this.muteAllMediaOnLoad = muteAllMediaOnLoad;
-        String code = """
-                document.querySelectorAll('audio, video').forEach(media => {
-                    media.muted = %muted%; // Mute media
-                });
-                """.replace("%muted%", "" + this.muteAllMediaOnLoad);
-        this.browser.executeJavaScript(code, this.browser.getURL(), 0);
+        if (initialized) {
+            String code = """
+                    document.querySelectorAll('audio, video').forEach(media => {
+                        media.muted = %muted%; // Mute media
+                    });
+                    """.replace("%muted%", "" + this.muteAllMediaOnLoad);
+            this.browser.executeJavaScript(code, this.browser.getURL(), 0);
+        }
     }
 
     public boolean isMuteAllMediaOnLoad() {
@@ -338,12 +406,14 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
     public void setLoopAllVideos(boolean loopAllVideos) {
         this.loopAllVideos = loopAllVideos;
-        String code = """
-                document.querySelectorAll('video').forEach(video => {
-                    video.loop = %loop%; // Set video to loop
-                });
-                """.replace("%loop%", "" + this.loopAllVideos);
-        this.browser.executeJavaScript(code, this.browser.getURL(), 0);
+        if (initialized) {
+            String code = """
+                    document.querySelectorAll('video').forEach(video => {
+                        video.loop = %loop%; // Set video to loop
+                    });
+                    """.replace("%loop%", "" + this.loopAllVideos);
+            this.browser.executeJavaScript(code, this.browser.getURL(), 0);
+        }
     }
 
     public boolean isLoopAllVideos() {
@@ -352,19 +422,21 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
     public void setHideVideoControls(boolean hideVideoControls) {
         this.hideVideoControls = hideVideoControls;
-        String codeRemove = """
-                document.querySelectorAll('video').forEach(video => {
-                    video.removeAttribute('controls'); // Hide video controls
-                });
-                """;
-        String codeAdd = """
-                document.querySelectorAll('video').forEach(video => {
-                    if (!video.hasAttribute('controls')) {
-                        video.setAttribute('controls', 'controls'); // Add controls
-                    }
-                });
-                """;
-        this.browser.executeJavaScript(this.hideVideoControls ? codeRemove : codeAdd, this.browser.getURL(), 0);
+        if (initialized) {
+            String codeRemove = """
+                    document.querySelectorAll('video').forEach(video => {
+                        video.removeAttribute('controls'); // Hide video controls
+                    });
+                    """;
+            String codeAdd = """
+                    document.querySelectorAll('video').forEach(video => {
+                        if (!video.hasAttribute('controls')) {
+                            video.setAttribute('controls', 'controls'); // Add controls
+                        }
+                    });
+                    """;
+            this.browser.executeJavaScript(this.hideVideoControls ? codeRemove : codeAdd, this.browser.getURL(), 0);
+        }
     }
 
     public boolean isHideVideoControls() {
@@ -373,12 +445,16 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
     public void goBack() {
         if (this.browser.canGoBack()) this.browser.goBack();
-        this.setVolume(this.volume);
+        if (initialized) {
+            this.setVolume(this.volume);
+        }
     }
 
     public void goForward() {
         if (this.browser.canGoForward()) this.browser.goForward();
-        this.setVolume(this.volume);
+        if (initialized) {
+            this.setVolume(this.volume);
+        }
     }
 
     public String getUrl() {
@@ -391,7 +467,9 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
     public void reload() {
         this.browser.reload();
-        this.setVolume(this.volume);
+        if (initialized) {
+            this.setVolume(this.volume);
+        }
     }
 
     /**
@@ -435,11 +513,16 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
     @Override
     public void close() throws IOException {
-        // Remove the instance-specific load handler
-        if (this.browser != null && this.browser.getClient() != null && this.instanceLoadHandler != null) {
-            this.browser.getClient().removeLoadHandler(this.instanceLoadHandler);
-            this.instanceLoadHandler = null;
+        // Unregister from the global handler manager
+        if (this.browser != null) {
+            int browserId = this.browser.getIdentifier();
+            
+            // Only unregister if the browser ID is valid
+            if (browserId > 0) {
+                GlobalLoadHandlerManager.getInstance().unregisterBrowser(browserId);
+            }
+            
+            this.browser.close(true);
         }
-        this.browser.close(true);
     }
 }

@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.video;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.util.mcef.GlobalLoadHandlerManager;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
 import net.minecraft.client.gui.GuiGraphics;
@@ -8,8 +9,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
+import org.cef.handler.CefLoadHandler;
 import org.cef.handler.CefLoadHandlerAdapter;
-import org.cef.network.CefLoadHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
@@ -45,7 +46,6 @@ public class MCEFVideoPlayer {
     protected volatile boolean initialized = false;
     protected final CompletableFuture<Boolean> initFuture = new CompletableFuture<>();
     private final String instanceId = UUID.randomUUID().toString(); // For unique JS communication if needed
-    private CefLoadHandler instanceSpecificLoadHandler; // To manage its lifecycle
     
     /**
      * Creates a new video player instance.
@@ -105,61 +105,69 @@ public class MCEFVideoPlayer {
                 return;
             }
 
-            final int browserId = browser.getIdentifier(); // Get ID of this browser instance
-
-            instanceSpecificLoadHandler = new CefLoadHandlerAdapter() {
-                private boolean handled = false;
-
-                @Override
-                public void onLoadEnd(CefBrowser cefBrowser, CefFrame frame, int httpStatusCode) {
-                    if (cefBrowser.getIdentifier() == browserId && frame.isMain() && !handled) {
-                        boolean success = (httpStatusCode >= 200 && httpStatusCode < 300) || // Typical success
-                                          (frame.getURL() != null && frame.getURL().startsWith("file:") && httpStatusCode == 0); // File success
-
-                        if (success) {
-                            LOGGER.info("[FANCYMENU] MCEFVideoPlayer [{}] browser page loaded: {}", instanceId, frame.getURL());
-                            initialized = true;
-                            initFuture.complete(true);
-                        } else {
-                            LOGGER.error("[FANCYMENU] MCEFVideoPlayer [{}] browser page failed to load: {}, Status: {}", instanceId, frame.getURL(), httpStatusCode);
-                            initialized = false; // Ensure it's marked as not initialized
-                            initFuture.complete(false);
-                        }
-                        handled = true;
-                        // Clean up this specific handler after first main frame load
-                        if (browser != null && browser.getBrowser() != null && browser.getBrowser().getClient() != null) {
-                            browser.getBrowser().getClient().removeLoadHandler(this);
-                        }
-                    }
-                }
-
-                @Override
-                public void onLoadError(CefBrowser cefBrowser, CefFrame frame, CefLoadHandler.ErrorCode errorCode, String errorText, String failedUrl) {
-                    if (cefBrowser.getIdentifier() == browserId && frame.isMain() && !handled) {
-                        LOGGER.error("[FANCYMENU] MCEFVideoPlayer [{}] browser page load error: {}, {}, URL: {}", instanceId, errorCode, errorText, failedUrl);
-                        initialized = false;
-                        initFuture.complete(false);
-                        handled = true;
-                        if (browser != null && browser.getBrowser() != null && browser.getBrowser().getClient() != null) {
-                           browser.getBrowser().getClient().removeLoadHandler(this);
-                        }
-                    }
-                }
-            };
+            // Register with the global handler instead of creating our own
+            int browserId = browser.getIdentifier();
             
-            // Add the instance-specific load handler
-            // This assumes browser.getBrowser() gives the CefBrowser and getClient() is available.
-            // The MCEF library's structure for this is crucial.
-            if (browser.getBrowser().getClient() != null) {
-                 browser.getBrowser().getClient().addLoadHandler(instanceSpecificLoadHandler);
-            } else {
-                LOGGER.error("[FANCYMENU] Cannot get CefClient for MCEFVideoPlayer [{}]. Initialization will be unreliable.", instanceId);
-                // Fallback: complete future optimistically after a delay, or mark as failed.
-                // This is a last resort and indicates a problem with MCEF wrapper access.
+            LOGGER.debug("[FANCYMENU] MCEFVideoPlayer [{}] browser ID: {}", instanceId, browserId);
+            
+            // Check if the browser ID is valid (should be > 0)
+            if (browserId <= 0) {
+                LOGGER.error("[FANCYMENU] MCEFVideoPlayer [{}] has invalid browser ID: {}. Falling back to manual initialization.", instanceId, browserId);
+                
+                // We can't use the global handler, so we'll set up a direct initialization after a delay
                 VideoManager.EXECUTOR.schedule(() -> {
                     if (!initFuture.isDone()) {
-                        LOGGER.warn("[FANCYMENU] Fallback: Assuming player [{}] initialized after delay due to no CefClient access.", instanceId);
-                        initialized = true; initFuture.complete(true);
+                        LOGGER.info("[FANCYMENU] MCEFVideoPlayer [{}] manual initialization fallback completed", instanceId);
+                        initialized = true;
+                        initFuture.complete(true);
+                    }
+                }, 2000, TimeUnit.MILLISECONDS);
+                
+                return; // Exit early since we can't register properly
+            }
+            
+            // Register this browser with the global handler manager
+            if (GlobalLoadHandlerManager.getInstance().registerBrowser(browserId, initFuture)) {
+                LOGGER.info("[FANCYMENU] MCEFVideoPlayer [{}] registered with global handler, browser ID: {}", instanceId, browserId);
+                
+                // Make sure the global handler is registered with the CefClient
+                // This only needs to happen once, but it's safe to call multiple times
+                // as the CefClient will only set it if there's no handler yet
+                if (browser.getBrowser().getClient() != null) {
+                    browser.getBrowser().getClient().addLoadHandler(
+                        GlobalLoadHandlerManager.getInstance().getGlobalHandler());
+                } else {
+                    LOGGER.error("[FANCYMENU] Cannot get CefClient for MCEFVideoPlayer [{}]. Initialization will be unreliable.", instanceId);
+                    
+                    // Fallback: complete future optimistically after a delay, or mark as failed.
+                    VideoManager.EXECUTOR.schedule(() -> {
+                        if (!initFuture.isDone()) {
+                            LOGGER.warn("[FANCYMENU] Fallback: Assuming player [{}] initialized after delay due to no CefClient access.", instanceId);
+                            initialized = true;
+                            initFuture.complete(true);
+                        }
+                    }, 2000, TimeUnit.MILLISECONDS);
+                }
+                
+                // Listen for completion of the future
+                initFuture.thenAccept(success -> {
+                    if (success) {
+                        LOGGER.info("[FANCYMENU] MCEFVideoPlayer [{}] browser page loaded successfully", instanceId);
+                        initialized = true;
+                    } else {
+                        LOGGER.error("[FANCYMENU] MCEFVideoPlayer [{}] browser page failed to load", instanceId);
+                        initialized = false;
+                    }
+                });
+            } else {
+                LOGGER.error("[FANCYMENU] MCEFVideoPlayer [{}] failed to register with global handler. Falling back to manual initialization.", instanceId);
+                
+                // Fallback initialization after a delay if registration failed
+                VideoManager.EXECUTOR.schedule(() -> {
+                    if (!initFuture.isDone()) {
+                        LOGGER.info("[FANCYMENU] MCEFVideoPlayer [{}] manual initialization fallback completed", instanceId);
+                        initialized = true;
+                        initFuture.complete(true);
                     }
                 }, 2000, TimeUnit.MILLISECONDS);
             }
@@ -1039,13 +1047,15 @@ public class MCEFVideoPlayer {
              }
         }, "dispose.stopVideo");
 
-        // Clean up the load handler if it's still attached (e.g., if onLoadEnd/Error never fired)
-        if (browser != null && browser.getBrowser() != null && browser.getBrowser().getClient() != null && instanceSpecificLoadHandler != null) {
-            browser.getBrowser().getClient().removeLoadHandler(instanceSpecificLoadHandler);
-            instanceSpecificLoadHandler = null;
-        }
-
+        // Unregister from the global handler if the browser exists
         if (browser != null) {
+            int browserId = browser.getIdentifier();
+            
+            // Only unregister if the browser ID is valid
+            if (browserId > 0) {
+                GlobalLoadHandlerManager.getInstance().unregisterBrowser(browserId);
+            }
+            
             try {
                 browser.close(); // This should handle MCEF browser closure
             } catch (Exception e) { // Catch IOException from close()
