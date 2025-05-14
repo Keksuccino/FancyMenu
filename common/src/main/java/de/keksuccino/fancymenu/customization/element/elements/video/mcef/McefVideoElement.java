@@ -80,8 +80,10 @@ public class McefVideoElement extends AbstractElement {
 
             // Update size and position of player
             if ((this.lastAbsoluteX != x) || (this.lastAbsoluteY != y) || (this.lastAbsoluteWidth != w) || (this.lastAbsoluteHeight != h)) {
-                this.videoPlayer.setPosition(x, y);
-                this.videoPlayer.resizeToFill(w, h);
+                VideoManager.EXECUTOR.execute(() -> {
+                    this.videoPlayer.setPosition(x, y);
+                    this.videoPlayer.resizeToFill(w, h);
+                });
             }
             this.lastAbsoluteX = x;
             this.lastAbsoluteY = y;
@@ -125,30 +127,45 @@ public class McefVideoElement extends AbstractElement {
                 }
             }
 
-            // Render the player or a black background
             RenderSystem.enableBlend();
-            
+
+            // Always draw black background
+            graphics.fill(x, y, x + w, y + h, DrawableColor.BLACK.getColorInt());
+
             if (finalVideoUrl != null) {
                 this.videoPlayer.render(graphics, mouseX, mouseY, partial);
-            } else {
-                // Draw black background if no video
-                graphics.fill(x, y, x + w, y + h, DrawableColor.BLACK.getColorInt());
             }
 
             RenderSystem.disableBlend();
+
+        } else {
+
+            this.resetElement();
+
         }
+
     }
 
     @Override
     public void onDestroyElement() {
-        if ((this.videoManager != null) && (this.playerId != null)) {
+        if ((this.videoManager != null) && (this.playerId != null) && (this.videoPlayer != null)) {
+            this.videoPlayer.stop();
             this.videoManager.removePlayer(this.playerId);
         }
     }
 
-    public void restoreAspectRatio() {
-//        ITexture t = this.getTextureResource();
-//        AspectRatio ratio = (t != null) ? t.getAspectRatio() : new AspectRatio(10, 10);
-//        this.baseWidth = ratio.getAspectRatioWidth(this.getAbsoluteHeight());
+    public void resetElement() {
+        if (this.initialized) {
+            this.onDestroyElement();
+        }
+        this.initialized = false;
+        this.videoPlayer = null;
+        this.playerId = null;
+        this.lastFinalUrl = null;
+        this.lastAbsoluteWidth = -10000;
+        this.lastAbsoluteHeight = -10000;
+        this.lastAbsoluteX = -10000;
+        this.lastAbsoluteY = -10000;
     }
+
 }

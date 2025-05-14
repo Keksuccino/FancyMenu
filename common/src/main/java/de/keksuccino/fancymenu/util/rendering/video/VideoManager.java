@@ -27,7 +27,7 @@ public class VideoManager {
     protected static final Logger LOGGER = LogManager.getLogger();
     protected static final VideoManager INSTANCE = new VideoManager();
 
-    protected static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
+    public static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
     
     // Map to track all active video players
     protected final Map<String, MCEFVideoPlayer> players = new HashMap<>();

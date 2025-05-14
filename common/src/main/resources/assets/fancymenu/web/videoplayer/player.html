@@ -31,6 +31,18 @@
             max-height: 100%;
             object-fit: contain;
         }
+        
+        /* Explicitly hide any video controls immediately */
+        video::-webkit-media-controls,
+        video::-webkit-media-controls-enclosure,
+        video::-webkit-media-controls-panel,
+        video::-webkit-media-controls-panel-container,
+        video::-webkit-media-controls-play-button,
+        video::-webkit-media-controls-overlay-play-button {
+            display: none !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
 
         /* When fillScreen is enabled */
         .fill-screen video {
@@ -79,7 +91,7 @@
 </head>
 <body>
     <div id="videoContainer">
-        <video id="videoPlayer" playsinline webkit-playsinline></video>
+        <video id="videoPlayer" playsinline webkit-playsinline controlslist="nodownload nofullscreen noremoteplayback" nocontrols></video>
     </div>
     
     <div id="loader">
@@ -150,6 +162,8 @@
                 // Setup initial settings for newly created video element
                 videoElement.volume = initialVolume;
                 videoElement.loop = initialLoop;
+                videoElement.setAttribute('controlslist', 'nodownload nofullscreen noremoteplayback');
+                videoElement.setAttribute('nocontrols', '');
                 videoElement.controls = false;
                 videoElement.autoplay = autoPlay;
             }
@@ -428,6 +442,13 @@
         function loadVideoDirectly(path) {
             log(`Loading video directly: ${path}`);
             videoPlayer.src = path;
+            
+            // Ensure controls are disabled
+            videoPlayer.removeAttribute('controls');
+            videoPlayer.setAttribute('nocontrols', '');
+            videoPlayer.setAttribute('controlslist', 'nodownload nofullscreen noremoteplayback');
+            videoPlayer.controls = false;
+            
             videoPlayer.load();
         }
         
@@ -465,6 +486,13 @@
                     
                     // Set video source
                     videoPlayer.src = blobUrl;
+                    
+                    // Ensure controls are disabled
+                    videoPlayer.removeAttribute('controls');
+                    videoPlayer.setAttribute('nocontrols', '');
+                    videoPlayer.setAttribute('controlslist', 'nodownload nofullscreen noremoteplayback');
+                    videoPlayer.controls = false;
+                    
                     videoPlayer.load();
                     // No direct play here, will let events handle it
                 } else {

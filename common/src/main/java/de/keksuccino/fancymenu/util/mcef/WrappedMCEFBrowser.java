@@ -423,15 +423,45 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     public void setHideVideoControls(boolean hideVideoControls) {
         this.hideVideoControls = hideVideoControls;
         if (initialized) {
+            // More aggressive approach to hiding controls
             String codeRemove = """
                     document.querySelectorAll('video').forEach(video => {
-                        video.removeAttribute('controls'); // Hide video controls
+                        // Multiple methods to ensure controls are hidden
+                        video.removeAttribute('controls');
+                        video.setAttribute('nocontrols', '');
+                        video.setAttribute('controlslist', 'nodownload nofullscreen noremoteplayback');
+                        video.controls = false;
+                        
+                        // Add style to hide controls
+                        const style = document.createElement('style');
+                        style.textContent = `
+                            video::-webkit-media-controls,
+                            video::-webkit-media-controls-enclosure,
+                            video::-webkit-media-controls-panel,
+                            video::-webkit-media-controls-panel-container,
+                            video::-webkit-media-controls-play-button,
+                            video::-webkit-media-controls-overlay-play-button {
+                                display: none !important;
+                                opacity: 0 !important;
+                                pointer-events: none !important;
+                            }
+                        `;
+                        if (!document.head.querySelector('style#hide-video-controls')) {
+                            style.id = 'hide-video-controls';
+                            document.head.appendChild(style);
+                        }
                     });
                     """;
             String codeAdd = """
                     document.querySelectorAll('video').forEach(video => {
                         if (!video.hasAttribute('controls')) {
                             video.setAttribute('controls', 'controls'); // Add controls
+                        }
+                        video.removeAttribute('nocontrols');
+                        // Remove style if it exists
+                        const style = document.head.querySelector('style#hide-video-controls');
+                        if (style) {
+                            document.head.removeChild(style);
                         }
                     });
                     """;
