@@ -546,39 +546,42 @@
 
         videoPlayer.addEventListener('loadedmetadata', function() {
             log(`Video metadata loaded: ${videoPlayer.videoWidth}x${videoPlayer.videoHeight}, duration: ${videoPlayer.duration}, readyState: ${videoPlayer.readyState}`);
-            window.videoPlayerAPI.currentSettings.videoLoadedAndReady = (videoPlayer.readyState >= HTMLMediaElement.HAVE_METADATA);
-            loader.style.display = 'none';
-            applyStoredSettings(); // Apply volume, loop etc.
-            
-            if (window.videoPlayerAPI.currentSettings.playRequestPending && window.videoPlayerAPI.currentSettings.videoLoadedAndReady) {
-                log('Playing video due to pending request (on loadedmetadata).');
-                tryPlayVideo();
-            }
+            // DO NOT set videoLoadedAndReady or attempt play here.
+            // Metadata loaded is good for hiding the "Loading video..." text if it was generic.
+            // However, the 'waiting' event will show "Buffering..." if needed.
+            // loader.style.display = 'none'; // Loader handled by canplay / playing / waiting
+            applyStoredSettings(); // Apply volume, loop etc. as they don't depend on play readiness
         });
 
         videoPlayer.addEventListener('canplay', function() {
-            log(`Video can play now. readyState: ${videoPlayer.readyState}`);
-            window.videoPlayerAPI.currentSettings.videoLoadedAndReady = (videoPlayer.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA);
-            loader.style.display = 'none';
+            log(`Video can play. ReadyState=${videoPlayer.readyState}`);
+            // Consider ready if we have at least HAVE_FUTURE_DATA, but HAVE_ENOUGH_DATA is safer.
+            if (videoPlayer.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) { // HAVE_FUTURE_DATA = 3, HAVE_ENOUGH_DATA = 4
+                window.videoPlayerAPI.currentSettings.videoLoadedAndReady = true;
+                log('Set videoLoadedAndReady = true (on canplay)');
+            }
+            loader.style.display = 'none'; // Hide loader as video is somewhat ready
             applyStoredSettings(); 
 
             if (window.videoPlayerAPI.currentSettings.playRequestPending && window.videoPlayerAPI.currentSettings.videoLoadedAndReady) {
-                log('Playing video due to pending request (on canplay).');
+                log('Attempting play due to pending request (on canplay).');
                 tryPlayVideo();
             }
         });
         
         videoPlayer.addEventListener('canplaythrough', function() {
-            log(`Video can play through. readyState: ${videoPlayer.readyState}`);
+            log(`Video can play through. ReadyState=${videoPlayer.readyState}`);
             window.videoPlayerAPI.currentSettings.videoLoadedAndReady = true; // Definitely ready
+            log('Set videoLoadedAndReady = true (on canplaythrough)');
+            loader.style.display = 'none'; // Hide loader
             if (window.videoPlayerAPI.currentSettings.playRequestPending) {
-                log('Playing video due to pending request (on canplaythrough).');
+                log('Attempting play due to pending request (on canplaythrough).');
                 tryPlayVideo();
             }
         });
 
         videoPlayer.addEventListener('playing', function() {
-            log('Video event: playing');
+            log('Video event: playing. ReadyState=' + videoPlayer.readyState);
             loader.style.display = 'none';
             window.videoPlayerAPI.currentSettings.playRequestPending = false; // Clear flag as it's now playing
         });
