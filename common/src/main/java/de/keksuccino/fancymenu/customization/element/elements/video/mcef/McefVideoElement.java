@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
-import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoManager;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoPlayer;
@@ -53,7 +52,7 @@ public class MCEFVideoElement extends AbstractElement {
     protected float lastCachedActualVolume = -11000F;
     protected volatile long lastRenderTickTime = -1L;
     protected volatile ScheduledFuture<?> garbageChecker = EXECUTOR.scheduleAtFixedRate(() -> {
-        if (this.initialized && (this.lastRenderTickTime != -1) && ((this.lastRenderTickTime + 2000) < System.currentTimeMillis())) {
+        if (this.initialized && (this.lastRenderTickTime != -1) && ((this.lastRenderTickTime + 11000) < System.currentTimeMillis())) {
             this.resetElement();
         }
     }, 0, 100, TimeUnit.MILLISECONDS);
