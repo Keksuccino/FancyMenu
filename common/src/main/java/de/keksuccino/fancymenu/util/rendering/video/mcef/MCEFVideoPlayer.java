@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.util.rendering.video.mcef;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.ObjectHolder;
-import de.keksuccino.fancymenu.util.mcef.GlobalLoadHandlerManager;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
 import net.minecraft.client.gui.GuiGraphics;
@@ -183,7 +182,6 @@ public class MCEFVideoPlayer {
     public void loadVideo(@NotNull String videoPath) {
         executeWhenInitialized(() -> {
             this.currentVideoPath = videoPath;
-            LOGGER.info("[FANCYMENU] Player [{}]: Requesting JS to load video: {}", instanceId, videoPath);
             String escapedVideoPath = videoPath.replace("\\", "\\\\").replace("'", "\\'");
             String script = String.format("if(window.videoPlayerAPI && window.videoPlayerAPI.loadVideo) { window.videoPlayerAPI.loadVideo('%s'); } else { console.error('[FANCYMENU] videoPlayerAPI.loadVideo not found!'); }", escapedVideoPath);
             executeJavaScript(script);
@@ -195,7 +193,6 @@ public class MCEFVideoPlayer {
      */
     public void play() {
         executeWhenInitialized(() -> {
-            LOGGER.info("[FANCYMENU] Player [{}]: Requesting JS to play video.", instanceId);
             executeJavaScript("if(window.videoPlayerAPI && window.videoPlayerAPI.play) { window.videoPlayerAPI.play(); } else { console.error('[FANCYMENU] videoPlayerAPI.play not found!'); }");
         });
     }
@@ -205,7 +202,6 @@ public class MCEFVideoPlayer {
      */
     public void pause() {
         executeWhenInitialized(() -> {
-            LOGGER.info("[FANCYMENU] Player [{}]: Requesting JS to pause video.", instanceId);
             executeJavaScript("if(window.videoPlayerAPI && window.videoPlayerAPI.pause) { window.videoPlayerAPI.pause(); } else { console.error('[FANCYMENU] videoPlayerAPI.pause not found!'); }");
         });
     }
@@ -215,7 +211,6 @@ public class MCEFVideoPlayer {
      */
     public void togglePlayPause() {
         executeWhenInitialized(() -> {
-            LOGGER.info("[FANCYMENU] Player [{}]: Requesting JS to toggle play/pause.", instanceId);
             executeJavaScript("if(window.videoPlayerAPI && window.videoPlayerAPI.togglePlayPause) { window.videoPlayerAPI.togglePlayPause(); } else { console.error('[FANCYMENU] videoPlayerAPI.togglePlayPause not found!'); }");
         });
     }
@@ -225,7 +220,6 @@ public class MCEFVideoPlayer {
      */
     public void stop() {
         executeWhenInitialized(() -> {
-            LOGGER.info("[FANCYMENU] Player [{}]: Requesting JS to stop video.", instanceId);
             executeJavaScript("if(window.videoPlayerAPI && window.videoPlayerAPI.stop) { window.videoPlayerAPI.stop(); } else { console.error('[FANCYMENU] videoPlayerAPI.stop not found!'); }");
         });
     }
@@ -238,7 +232,6 @@ public class MCEFVideoPlayer {
     public void setMuted(boolean muted) {
         this.isMuted = muted;
         executeWhenInitialized(() -> {
-            LOGGER.info("[FANCYMENU] Player [{}]: Setting muted state to {}.", instanceId, muted);
             executeJavaScript("if(window.videoPlayerAPI) { window.videoPlayerAPI.setMuted(" + muted + "); }");
         });
     }
@@ -267,7 +260,6 @@ public class MCEFVideoPlayer {
     public void setVolume(float volume) {
         this.volume = Math.max(0.0f, Math.min(1.0f, volume)); // Store new desired volume
         executeWhenInitialized(() -> {
-            LOGGER.info("[FANCYMENU] Player [{}]: Setting volume to {}.", instanceId, this.volume);
             executeJavaScript("if(window.videoPlayerAPI) { window.videoPlayerAPI.setVolume(" + this.volume + "); }");
         });
     }
@@ -289,7 +281,6 @@ public class MCEFVideoPlayer {
     public void setLooping(boolean looping) {
         this.looping = looping;
         executeWhenInitialized(() -> {
-            LOGGER.info("[FANCYMENU] Player [{}]: Setting looping to {}.", instanceId, looping);
             executeJavaScript("if(window.videoPlayerAPI) { window.videoPlayerAPI.setLoop(" + looping + "); }");
         });
     }
@@ -311,7 +302,6 @@ public class MCEFVideoPlayer {
     public void setFillScreen(boolean fillScreen) {
         this.fillScreen = fillScreen;
         executeWhenInitialized(() -> {
-            LOGGER.info("[FANCYMENU] Player [{}]: Setting fillScreen to {}.", instanceId, fillScreen);
             executeJavaScript("if(window.videoPlayerAPI) { window.videoPlayerAPI.setFillScreen(" + fillScreen + "); }");
         });
     }
@@ -385,7 +375,6 @@ public class MCEFVideoPlayer {
     public void setCurrentTime(double seconds) {
         final double secondsFinal = Math.max(0, seconds);
         executeWhenInitialized(() -> {
-            LOGGER.info("[FANCYMENU] Player [{}]: Setting video position to {} seconds.", instanceId, secondsFinal);
             executeJavaScript("if(window.videoPlayerAPI) { window.videoPlayerAPI.setCurrentTime(" + secondsFinal + "); }");
         });
     }
@@ -406,7 +395,6 @@ public class MCEFVideoPlayer {
      */
     public void seekForward(double seconds) {
         executeWhenInitialized(() -> {
-            LOGGER.info("[FANCYMENU] Player [{}]: Seeking forward {} seconds.", instanceId, seconds);
             executeJavaScript(
                 "if(window.videoPlayerAPI) { " +
                 "  var currentTime = window.videoPlayerAPI.getCurrentTime();" +
@@ -424,7 +412,6 @@ public class MCEFVideoPlayer {
      */
     public void seekBackward(double seconds) {
         executeWhenInitialized(() -> {
-            LOGGER.info("[FANCYMENU] Player [{}]: Seeking backward {} seconds.", instanceId, seconds);
             executeJavaScript(
                 "if(window.videoPlayerAPI) { " +
                 "  var currentTime = window.videoPlayerAPI.getCurrentTime();" +
@@ -543,7 +530,7 @@ public class MCEFVideoPlayer {
         try {
             return Boolean.parseBoolean(result);
         } catch (Exception e) {
-            LOGGER.warn("[FANCYMENU] Player [{}]: Could not parse isPlaying state: {}", instanceId, result, e);
+            LOGGER.error("[FANCYMENU] Player [{}]: Could not parse isPlaying state: {}", instanceId, result, e);
             return false; // Default to false on error
         }
     }
@@ -596,7 +583,6 @@ public class MCEFVideoPlayer {
         // Use the executeWhenInitialized pattern to ensure it gets applied
         // even if called before the browser is ready
         executeWhenInitialized(() -> {
-            LOGGER.debug("[FANCYMENU] Player [{}]: Setting position to ({}, {})", instanceId, x, y);
             browser.setPosition(x, y);
         });
     }
@@ -635,7 +621,6 @@ public class MCEFVideoPlayer {
         // Use the executeWhenInitialized pattern to ensure it gets applied
         // even if called before the browser is ready
         executeWhenInitialized(() -> {
-            LOGGER.debug("[FANCYMENU] Player [{}]: Setting size to {}x{}", instanceId, width, height);
             browser.setSize(width, height);
         });
     }
@@ -668,7 +653,6 @@ public class MCEFVideoPlayer {
     public void setOpacity(float opacity) {
         final float finalOpacity = Math.max(0.0F, Math.min(1.0F, opacity));
         executeWhenInitialized(() -> {
-            LOGGER.debug("[FANCYMENU] Player [{}]: Setting opacity to {}", instanceId, finalOpacity);
             if (browser != null) {
                 browser.setOpacity(finalOpacity);
             }
@@ -837,11 +821,11 @@ public class MCEFVideoPlayer {
             }
             
             // If we get here, we couldn't get a result
-            LOGGER.debug("[FANCYMENU] Could not get JavaScript result after multiple attempts");
+            LOGGER.info("[FANCYMENU] Could not get JavaScript result after multiple attempts");
             return null;
             
         } catch (Exception e) {
-            LOGGER.debug("[FANCYMENU] Error in JavaScript execution", e);
+            LOGGER.info("[FANCYMENU] Error in JavaScript execution", e);
             return null;
         }
     }
@@ -851,28 +835,16 @@ public class MCEFVideoPlayer {
      * Call this when the player is no longer needed.
      */
     public void dispose() {
-        executeWhenInitialized(() -> { // Ensure it's initialized before trying to stop
-             LOGGER.info("[FANCYMENU] Player [{}]: Disposing.", instanceId);
-             try {
-                 // Call JS stop, then close browser.
-                 executeJavaScript("if(window.videoPlayerAPI && window.videoPlayerAPI.stop) { window.videoPlayerAPI.stop(); }");
-             } catch (Exception ex) {
-                 LOGGER.error("[FANCYMENU] Player [{}]: Error stopping video during dispose", instanceId, ex);
-             }
-        });
-
-        // Unregister from the global handler if the browser exists
+        this.stop();
         if (browser != null) {
-            String browserId = browser.getIdentifier();
-            GlobalLoadHandlerManager.getInstance().unregisterAllListenersForBrowser(browserId);
             try {
-                browser.close(); // This should handle MCEF browser closure
-            } catch (Exception e) { // Catch IOException from close()
+                browser.close();
+            } catch (Exception e) {
                 LOGGER.error("[FANCYMENU] Player [{}]: Error closing MCEFVideoPlayer browser", instanceId, e);
             }
-            browser = null;
         }
-        initialized = false; // Mark as not initialized
+        browser = null;
+        initialized = false;
     }
 
     protected static void executeWithCondition(@NotNull Runnable task, @NotNull Supplier<Boolean> condition) {

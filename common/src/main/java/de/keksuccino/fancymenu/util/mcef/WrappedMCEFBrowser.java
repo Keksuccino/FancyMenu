@@ -17,7 +17,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Objects;
@@ -68,39 +67,30 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
         super(0, 0, 0, 0, Component.empty());
 
-        MCEF.getClient().addLoadHandler(GlobalLoadHandlerManager.getInstance().getGlobalHandler());
+        // Register the custom load listener handler to later register multiple load listeners.
+        // Calling this method multiple times is fine, because there can only be one default listener active.
+        MCEF.getClient().addLoadHandler(BrowserLoadEventListenerManager.getInstance().getGlobalHandler());
+
         this.browser = MCEF.createBrowser(url, transparent);
 
-        // Register with the global handler manager instead of creating our own
-        if (this.browser.getClient() != null) {
+        String browserId = this.getIdentifier();
 
-            String browserId = this.getIdentifier();
-            
-            LOGGER.info("[FANCYMENU] WrappedMCEFBrowser browser ID: {}", browserId);
+        LOGGER.info("[FANCYMENU] WrappedMCEFBrowser browser ID: {}", browserId);
 
-            // Make sure the global handler is registered with the CefClient
-            // This only needs to happen once, but it's safe to call multiple times
-            // as the CefClient will only set it if there's no handler yet
-            this.browser.getClient().addLoadHandler(GlobalLoadHandlerManager.getInstance().getGlobalHandler());
-
-            GlobalLoadHandlerManager.getInstance().registerListenerForBrowser(this, success -> {
-                if (success) {
-                    LOGGER.info("[FANCYMENU] WrappedMCEFBrowser browser page loaded successfully (ID: {})", browserId);
-                    initialized = true;
-                    // Apply settings once the page is loaded
-                    applyInitialSettings();
-                } else {
-                    LOGGER.error("[FANCYMENU] WrappedMCEFBrowser browser page failed to load (ID: {})", browserId, new Exception());
-                    initialized = false;
-                }
-            });
-
-            if (loadListener != null) {
-                GlobalLoadHandlerManager.getInstance().registerListenerForBrowser(this, loadListener);
+        BrowserLoadEventListenerManager.getInstance().registerListenerForBrowser(this, success -> {
+            if (success) {
+                LOGGER.info("[FANCYMENU] WrappedMCEFBrowser browser page loaded successfully (ID: {})", browserId);
+                initialized = true;
+                // Apply settings once the page is loaded
+                applyInitialSettings();
+            } else {
+                LOGGER.error("[FANCYMENU] WrappedMCEFBrowser browser page failed to load (ID: {})", browserId, new Exception());
+                initialized = false;
             }
+        });
 
-        } else {
-            LOGGER.error("[FANCYMENU] Could not attach to global load handler for WrappedMCEFBrowser.", new NullPointerException("CefClient was NULL!"));
+        if (loadListener != null) {
+            BrowserLoadEventListenerManager.getInstance().registerListenerForBrowser(this, loadListener);
         }
 
         this.setVolume(this.volume);
@@ -503,7 +493,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     public void close() throws IOException {
         // Unregister from the global handler manager
         if (this.browser != null) {
-            GlobalLoadHandlerManager.getInstance().unregisterAllListenersForBrowser(this.getIdentifier());
+            BrowserLoadEventListenerManager.getInstance().unregisterAllListenersForBrowser(this.getIdentifier());
             this.browser.close(true);
         }
     }

@@ -19,9 +19,10 @@ import java.util.function.Consumer;
  * A centralized manager for browser load events.
  * Works around the limitation that CefClient can only have one load handler at a time.
  */
-public class GlobalLoadHandlerManager {
+public class BrowserLoadEventListenerManager {
+
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final GlobalLoadHandlerManager INSTANCE = new GlobalLoadHandlerManager();
+    private static final BrowserLoadEventListenerManager INSTANCE = new BrowserLoadEventListenerManager();
     
     // Maps browser IDs to their initialization futures
     private final Map<String, List<BrowserLoadListener>> browserMap = new ConcurrentHashMap<>();
@@ -34,10 +35,7 @@ public class GlobalLoadHandlerManager {
             if (!frame.isMain()) return; // Only care about main frame loads
 
             String browserId = getIdByCefBrowser(cefBrowser);
-            if (browserId == null) {
-                LOGGER.error("[FANCYMENU] Unable to process onLoadEnd because browser ID was NULL!", new NullPointerException());
-                return;
-            }
+            if (browserId == null) return;
 
             LOGGER.info("[FANCYMENU] GlobalLoadHandler: onLoadEnd for browser ID {} with status {}", browserId, httpStatusCode);
             
@@ -62,10 +60,7 @@ public class GlobalLoadHandlerManager {
             if (!frame.isMain()) return;
 
             String browserId = getIdByCefBrowser(cefBrowser);
-            if (browserId == null) {
-                LOGGER.error("[FANCYMENU] Unable to process onLoadError because browser ID was NULL!", new NullPointerException());
-                return;
-            }
+            if (browserId == null) return;
 
             LOGGER.info("[FANCYMENU] GlobalLoadHandler: onLoadError for browser ID {} with error {}", browserId, errorCode);
 
@@ -85,14 +80,14 @@ public class GlobalLoadHandlerManager {
         }
     };
     
-    private GlobalLoadHandlerManager() {
+    private BrowserLoadEventListenerManager() {
         // Private constructor for singleton
     }
     
     /**
      * Gets the singleton instance of the handler manager.
      */
-    public static GlobalLoadHandlerManager getInstance() {
+    public static BrowserLoadEventListenerManager getInstance() {
         return INSTANCE;
     }
     
@@ -121,17 +116,10 @@ public class GlobalLoadHandlerManager {
      */
     public void unregisterAllListenersForBrowser(String browserId) {
         if (browserMap.remove(browserId) != null) {
-            LOGGER.info("[FANCYMENU] Unregistered browser with ID: {}", browserId);
+            LOGGER.info("[FANCYMENU] Unregistered all load listeners for browser with ID: {}", browserId);
         } else {
-            LOGGER.info("[FANCYMENU] No browser found with ID: {} for unregistration", browserId);
+            LOGGER.info("[FANCYMENU] No listeners found to unregister for browser with ID: {}", browserId);
         }
-    }
-    
-    /**
-     * Gets the number of registered browsers.
-     */
-    public int getRegisteredBrowserCount() {
-        return browserMap.size();
     }
 
     @Nullable
