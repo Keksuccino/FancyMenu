@@ -17,9 +17,9 @@ import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 
-public class McefVideoEditorElement extends AbstractEditorElement {
+public class MCEFVideoEditorElement extends AbstractEditorElement {
 
-    public McefVideoEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
+    public MCEFVideoEditorElement(@NotNull AbstractElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
     }
 
@@ -39,7 +39,7 @@ public class McefVideoEditorElement extends AbstractEditorElement {
                 }).setIcon(ContextMenu.IconFactory.getIcon("image"))
                 .setStackable(false);
 
-        this.addToggleContextMenuEntryTo(this.rightClickMenu, "toggle_loop", McefVideoEditorElement.class,
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "toggle_loop", MCEFVideoEditorElement.class,
                         element -> element.getElement().loop,
                         (element, aBoolean) -> element.getElement().loop = aBoolean,
                         "fancymenu.elements.video_mcef.loop")
@@ -47,16 +47,16 @@ public class McefVideoEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("separator_after_toggle_loop");
 
-        this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "set_volume", McefVideoEditorElement.class,
+        this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "set_volume", MCEFVideoEditorElement.class,
                 consumes -> consumes.getElement().volume,
                 (element1, aFloat) -> element1.getElement().volume = aFloat,
                 Component.translatable("fancymenu.elements.video_mcef.volume"), true, 1.0F,
-                McefVideoEditorElement::validVolume,
+                MCEFVideoEditorElement::validVolume,
                 consumes -> validVolume(consumes) ? null : Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.video_mcef.volume.invalid_value")));
 
         this.addCycleContextMenuEntryTo(this.rightClickMenu, "sound_channel",
                         Arrays.asList(SoundSource.values()),
-                        McefVideoEditorElement.class,
+                        MCEFVideoEditorElement.class,
                         consumes -> consumes.getElement().soundSource,
                         (audioEditorElement, soundSource) -> audioEditorElement.getElement().soundSource = soundSource,
                         (menu, entry, switcherValue) -> Component.translatable("fancymenu.elements.video_mcef.sound_channel", Component.translatable("soundCategory." + switcherValue.getName()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()))))
@@ -64,8 +64,8 @@ public class McefVideoEditorElement extends AbstractEditorElement {
 
     }
 
-    public McefVideoElement getElement() {
-        return (McefVideoElement) this.element;
+    public MCEFVideoElement getElement() {
+        return (MCEFVideoElement) this.element;
     }
 
     private static boolean validVolume(String volume) {

@@ -1,28 +1,33 @@
 package de.keksuccino.fancymenu.customization.element.elements.video.mcef;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.video.MCEFVideoPlayer;
-import de.keksuccino.fancymenu.util.rendering.video.VideoManager;
+import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoManager;
+import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoPlayer;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.io.Closeable;
 import java.io.File;
+import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-public class McefVideoElement extends AbstractElement {
+public class MCEFVideoElement extends AbstractElement implements Closeable {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
@@ -36,7 +41,7 @@ public class McefVideoElement extends AbstractElement {
     public SoundSource soundSource = SoundSource.MASTER;
 
     protected volatile boolean initialized = false;
-    protected final VideoManager videoManager = VideoManager.getInstance();
+    protected final MCEFVideoManager videoManager = MCEFVideoManager.getInstance();
     protected MCEFVideoPlayer videoPlayer = null;
     protected String playerId = null;
 
@@ -49,18 +54,25 @@ public class McefVideoElement extends AbstractElement {
     protected float cachedActualVolume = -10000F;
     protected float lastCachedActualVolume = -11000F;
     protected volatile long lastRenderTickTime = -1L;
-    protected final ScheduledFuture<?> garbageChecker = EXECUTOR.scheduleAtFixedRate(() -> {
+    protected volatile ScheduledFuture<?> garbageChecker = EXECUTOR.scheduleAtFixedRate(() -> {
         if (this.initialized && (this.lastRenderTickTime != -1) && ((this.lastRenderTickTime + 2000) < System.currentTimeMillis())) {
             this.resetElement();
         }
     }, 0, 100, TimeUnit.MILLISECONDS);
+    protected boolean triedRestore = false;
+    protected volatile boolean closed = false;
 
-    public McefVideoElement(@NotNull ElementBuilder<?, ?> builder) {
+    public MCEFVideoElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
     }
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+        if (this.closed) {
+            LOGGER.error("[FANCYMENU] Tried to render closed MCEFVideoElement: " + this.getInstanceIdentifier());
+            return;
+        }
 
         if (this.shouldRender()) {
 
@@ -72,6 +84,11 @@ public class McefVideoElement extends AbstractElement {
             int w = this.getAbsoluteWidth();
             int h = this.getAbsoluteHeight();
 
+            if (!this.triedRestore) {
+                this.triedRestore = true;
+                this.tryRestoreFromMemory();
+            }
+
             if (!this.initialized) {
                 this.initialized = true;
                 LOGGER.info("[FANCYMENU] Creating video player with dimensions: " + w + "x" + h + " at " + x + "," + y);
@@ -81,11 +98,6 @@ public class McefVideoElement extends AbstractElement {
                     if (videoPlayer != null) {
                         LOGGER.info("[FANCYMENU] Created video player");
                         videoPlayer.setFillScreen(true); // Enable fill screen by default
-                        EXECUTOR.scheduleAtFixedRate(() -> {
-                            if (this.initialized && (this.lastRenderTickTime != -1) && ((this.lastRenderTickTime + 2000) < System.currentTimeMillis())) {
-                                this.resetElement();
-                            }
-                        }, 0, 100, TimeUnit.MILLISECONDS);
                     }
                 }
             }
@@ -165,18 +177,79 @@ public class McefVideoElement extends AbstractElement {
 
             RenderSystem.disableBlend();
 
-        } else {
-
-            this.resetElement();
-
         }
 
+    }
+
+    protected void tryRestoreFromMemory() {
+        if (this.getMemory().hasProperty("video_player") && this.getMemory().hasProperty("player_id") && this.getMemory().hasProperty("last_final_url") && (this.getMemory().hasProperty("save_timestamp"))) {
+            Long saveTimestamp = Objects.requireNonNullElse(this.getMemory().getProperty("save_timestamp", Long.class), -1L);
+            if ((saveTimestamp + 10000L) > System.currentTimeMillis()) {
+                this.videoPlayer = this.getMemory().getProperty("video_player", MCEFVideoPlayer.class);
+                this.playerId = this.getMemory().getStringProperty("player_id");
+                this.lastFinalUrl = this.getMemory().getStringProperty("last_final_url");
+                this.initialized = true;
+            } else {
+                this.getMemory().clear();
+            }
+        } else {
+            this.getMemory().clear();
+        }
+    }
+
+    protected void trySaveToMemory() {
+        if ((this.videoPlayer != null) && (this.playerId != null) && this.initialized) {
+            this.getMemory().putProperty("save_timestamp", System.currentTimeMillis());
+            this.getMemory().putProperty("video_player", this.videoPlayer);
+            this.getMemory().putProperty("player_id", this.playerId);
+            this.getMemory().putProperty("last_final_url", this.lastFinalUrl);
+        } else {
+            this.getMemory().clear();
+            this.disposePlayer();
+        }
+    }
+
+    @Override
+    public void onBeforeResizeScreen() {
+        super.onBeforeResizeScreen();
+        LOGGER.info("######################################## VIDEO ELEMENT BEFORE RESIZE SCREEN !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        this.garbageChecker.cancel(true);
+        this.trySaveToMemory();
+    }
+
+    @Override
+    public void onCloseScreen(@Nullable Screen closedScreen, @Nullable Screen newScreen) {
+        super.onCloseScreen(closedScreen, newScreen);
+        LOGGER.info("######################################## VIDEO ELEMENT CLOSE SCREEN !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        if ((closedScreen instanceof CustomGuiBaseScreen c1) && (newScreen instanceof CustomGuiBaseScreen c2)) {
+            if (Objects.equals(c1.getIdentifier(), c2.getIdentifier())) {
+                this.garbageChecker.cancel(true);
+                this.trySaveToMemory();
+                return;
+            }
+        } else if ((closedScreen != null) && (newScreen != null) && Objects.equals(closedScreen.getClass(), newScreen.getClass())) {
+            this.garbageChecker.cancel(true);
+            this.trySaveToMemory();
+            return;
+        }
+        this.closeQuietly();
+    }
+
+    @Override
+    public void onBecomeInvisible() {
+        super.onBecomeInvisible();
+        LOGGER.info("######################################## VIDEO ELEMENT BECOMES INVISIBLE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        this.resetElement();
     }
 
     /**
      * @param volume Value between 0.0 and 1.0.
      */
     protected void setVolume(float volume, boolean updatePlayer) {
+        if (this.closed) {
+            LOGGER.error("[FANCYMENU] Tried to set volume of closed MCEFVideoElement: " + this.getInstanceIdentifier());
+            return;
+        }
         if (volume > 1.0F) volume = 1.0F;
         if (volume < 0.0F) volume = 0.0F;
         this.volume = volume;
@@ -199,12 +272,6 @@ public class McefVideoElement extends AbstractElement {
         this.setVolume(this.volume, false);
     }
 
-    @Override
-    public void onDestroyElement() {
-        this.disposePlayer();
-        this.garbageChecker.cancel(true);
-    }
-
     public void disposePlayer() {
         if ((this.videoManager != null) && (this.playerId != null) && (this.videoPlayer != null)) {
             this.videoPlayer.stop();
@@ -213,6 +280,10 @@ public class McefVideoElement extends AbstractElement {
     }
 
     public void resetElement() {
+        if (this.closed) {
+            LOGGER.error("[FANCYMENU] Tried to reset closed MCEFVideoElement: " + this.getInstanceIdentifier());
+            return;
+        }
         if (this.initialized) {
             this.disposePlayer();
         }
@@ -224,6 +295,22 @@ public class McefVideoElement extends AbstractElement {
         this.lastAbsoluteHeight = -10000;
         this.lastAbsoluteX = -10000;
         this.lastAbsoluteY = -10000;
+    }
+
+    public boolean isClosed() {
+        return this.closed;
+    }
+
+    @Override
+    public void close() throws IOException {
+        this.closed = true;
+        this.getMemory().clear();
+        this.garbageChecker.cancel(true);
+        this.disposePlayer();
+    }
+
+    public void closeQuietly() {
+        CloseableUtils.closeQuietly(this);
     }
 
 }

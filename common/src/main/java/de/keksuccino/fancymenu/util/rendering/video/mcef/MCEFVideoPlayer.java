@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util.rendering.video;
+package de.keksuccino.fancymenu.util.rendering.video.mcef;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.mcef.GlobalLoadHandlerManager;
@@ -27,25 +27,21 @@ import java.util.concurrent.TimeUnit;
  */
 public class MCEFVideoPlayer {
 
-    protected static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LogManager.getLogger();
 
     protected volatile WrappedMCEFBrowser browser;
-
     protected volatile float volume = 1.0f;
     protected volatile boolean looping = false;
     protected volatile boolean fillScreen = false;
     protected volatile String currentVideoPath = null;
     protected volatile boolean isMuted = false;
-
     protected volatile int posX = 0;
     protected volatile int posY = 0;
     protected volatile int width = 200;
     protected volatile int height = 200;
-
     protected volatile boolean initialized = false;
     protected final CompletableFuture<Boolean> initFuture = new CompletableFuture<>();
     private final String instanceId = UUID.randomUUID().toString(); // For unique JS communication if needed
-    
     protected final List<Pair<Runnable, String>> queuedActions = new ArrayList<>();
     protected volatile boolean isProcessingQueuedActions = false; // To prevent re-entrancy
     
@@ -91,7 +87,7 @@ public class MCEFVideoPlayer {
             File playerFile = new File(FancyMenu.TEMP_DATA_DIR, "web/videoplayer/player.html");
             if (!playerFile.exists()) {
                 LOGGER.warn("[FANCYMENU] Player HTML file not found. Attempting to extract resources.");
-                VideoManager.getInstance().initialize(); // Try to extract if missing
+                MCEFVideoManager.getInstance().initialize(); // Try to extract if missing
                 if (!playerFile.exists()) {
                     LOGGER.error("[FANCYMENU] CRITICAL: Player HTML file does not exist at: " + playerFile.getAbsolutePath() + ". Video player will fail.");
                     initFuture.complete(false);
@@ -122,14 +118,14 @@ public class MCEFVideoPlayer {
                 LOGGER.error("[FANCYMENU] MCEFVideoPlayer [{}] has invalid browser ID: {}. Falling back to manual initialization.", instanceId, browserId);
                 
                 // We can't use the global handler, so we'll set up a direct initialization after a delay
-                VideoManager.EXECUTOR.schedule(() -> {
+                MCEFVideoManager.EXECUTOR.schedule(() -> {
                     if (!initFuture.isDone()) {
                         LOGGER.info("[FANCYMENU] MCEFVideoPlayer [{}] manual initialization fallback completed", instanceId);
                         initialized = true;
                         initFuture.complete(true);
                         
                         // Process queued actions immediately - don't wait for the future handler
-                        VideoManager.EXECUTOR.execute(() -> {
+                        MCEFVideoManager.EXECUTOR.execute(() -> {
                             synchronized (queuedActions) {
                                 if (!queuedActions.isEmpty()) {
                                     LOGGER.info("[FANCYMENU] MCEFVideoPlayer [{}] Processing {} queued actions after manual init", instanceId, queuedActions.size());
@@ -165,14 +161,14 @@ public class MCEFVideoPlayer {
                     LOGGER.error("[FANCYMENU] Cannot get CefClient for MCEFVideoPlayer [{}]. Initialization will be unreliable.", instanceId);
                     
                     // Fallback: complete future optimistically after a delay, or mark as failed.
-                    VideoManager.EXECUTOR.schedule(() -> {
+                    MCEFVideoManager.EXECUTOR.schedule(() -> {
                         if (!initFuture.isDone()) {
                             LOGGER.warn("[FANCYMENU] Fallback: Assuming player [{}] initialized after delay due to no CefClient access.", instanceId);
                             initialized = true;
                             initFuture.complete(true);
                             
                             // Process queued actions immediately - don't wait for the future handler
-                            VideoManager.EXECUTOR.execute(() -> {
+                            MCEFVideoManager.EXECUTOR.execute(() -> {
                                 synchronized (queuedActions) {
                                     if (!queuedActions.isEmpty()) {
                                         LOGGER.info("[FANCYMENU] MCEFVideoPlayer [{}] Processing {} queued actions after CefClient fallback init", instanceId, queuedActions.size());
@@ -194,7 +190,7 @@ public class MCEFVideoPlayer {
                 
                 // Listen for completion of the future
                 initFuture.thenAccept(success -> {
-                    VideoManager.EXECUTOR.execute(() -> { // Process on the VideoManager's executor for consistency
+                    MCEFVideoManager.EXECUTOR.execute(() -> { // Process on the VideoManager's executor for consistency
                         synchronized (queuedActions) { // Synchronize access to shared state
                             if (isProcessingQueuedActions && success) {
                                  // This can happen if a fallback completes the future while another thread is already in thenAccept.
@@ -230,14 +226,14 @@ public class MCEFVideoPlayer {
                 LOGGER.error("[FANCYMENU] MCEFVideoPlayer [{}] failed to register with global handler. Falling back to manual initialization.", instanceId);
                 
                 // Fallback initialization after a delay if registration failed
-                VideoManager.EXECUTOR.schedule(() -> {
+                MCEFVideoManager.EXECUTOR.schedule(() -> {
                     if (!initFuture.isDone()) {
                         LOGGER.info("[FANCYMENU] MCEFVideoPlayer [{}] manual initialization fallback completed", instanceId);
                         initialized = true;
                         initFuture.complete(true);
                         
                         // Process queued actions immediately - don't wait for the future handler
-                        VideoManager.EXECUTOR.execute(() -> {
+                        MCEFVideoManager.EXECUTOR.execute(() -> {
                             synchronized (queuedActions) {
                                 if (!queuedActions.isEmpty()) {
                                     LOGGER.info("[FANCYMENU] MCEFVideoPlayer [{}] Processing {} queued actions after registration fallback init", instanceId, queuedActions.size());
@@ -311,7 +307,7 @@ public class MCEFVideoPlayer {
      * Helper to ensure initialization and run on executor
      */
     private void executeWhenInitialized(Runnable action, String actionName) {
-        VideoManager.EXECUTOR.execute(() -> {
+        MCEFVideoManager.EXECUTOR.execute(() -> {
             synchronized (queuedActions) {
                 if (initialized) {
                     try {
@@ -768,7 +764,7 @@ public class MCEFVideoPlayer {
         this.posX = x;
         this.posY = y;
         if (browser != null && initialized) {
-            VideoManager.EXECUTOR.execute(() -> browser.setPosition(x, y));
+            MCEFVideoManager.EXECUTOR.execute(() -> browser.setPosition(x, y));
         }
     }
 
@@ -803,7 +799,7 @@ public class MCEFVideoPlayer {
         this.width = width;
         this.height = height;
         if (browser != null && initialized) {
-            VideoManager.EXECUTOR.execute(() -> {
+            MCEFVideoManager.EXECUTOR.execute(() -> {
                 browser.setSize(width, height);
                 
                 // If we're in fill screen mode, ensure the video content fills the browser

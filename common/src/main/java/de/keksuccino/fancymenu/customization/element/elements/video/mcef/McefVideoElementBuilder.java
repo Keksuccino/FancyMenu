@@ -15,26 +15,26 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
-public class McefVideoElementBuilder extends ElementBuilder<McefVideoElement, McefVideoEditorElement> {
+public class MCEFVideoElementBuilder extends ElementBuilder<MCEFVideoElement, MCEFVideoEditorElement> {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public McefVideoElementBuilder() {
+    public MCEFVideoElementBuilder() {
         super("video_mcef");
     }
 
     @Override
-    public @NotNull McefVideoElement buildDefaultInstance() {
-        McefVideoElement i = new McefVideoElement(this);
+    public @NotNull MCEFVideoElement buildDefaultInstance() {
+        MCEFVideoElement i = new MCEFVideoElement(this);
         i.baseWidth = 400;
         i.baseHeight = 200;
         return i;
     }
 
     @Override
-    public McefVideoElement deserializeElement(@NotNull SerializedElement serialized) {
+    public MCEFVideoElement deserializeElement(@NotNull SerializedElement serialized) {
 
-        McefVideoElement element = this.buildDefaultInstance();
+        MCEFVideoElement element = this.buildDefaultInstance();
 
         String source = serialized.getValue("source");
         element.rawVideoUrlSource = (source != null) ? ResourceSource.of(source) : null;
@@ -48,7 +48,7 @@ public class McefVideoElementBuilder extends ElementBuilder<McefVideoElement, Mc
     }
 
     @Override
-    protected SerializedElement serializeElement(@NotNull McefVideoElement element, @NotNull SerializedElement serializeTo) {
+    protected SerializedElement serializeElement(@NotNull MCEFVideoElement element, @NotNull SerializedElement serializeTo) {
 
         if (element.rawVideoUrlSource != null) {
             serializeTo.putProperty("source", element.rawVideoUrlSource.getSerializationSource());
@@ -62,8 +62,8 @@ public class McefVideoElementBuilder extends ElementBuilder<McefVideoElement, Mc
     }
 
     @Override
-    public @NotNull McefVideoEditorElement wrapIntoEditorElement(@NotNull McefVideoElement element, @NotNull LayoutEditorScreen editor) {
-        return new McefVideoEditorElement(element, editor);
+    public @NotNull MCEFVideoEditorElement wrapIntoEditorElement(@NotNull MCEFVideoElement element, @NotNull LayoutEditorScreen editor) {
+        return new MCEFVideoEditorElement(element, editor);
     }
 
     @Override

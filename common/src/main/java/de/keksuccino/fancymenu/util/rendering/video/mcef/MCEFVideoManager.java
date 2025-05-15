@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util.rendering.video;
+package de.keksuccino.fancymenu.util.rendering.video.mcef;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
@@ -8,9 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.InputStream;
-import java.net.URL;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,16 +20,14 @@ import java.util.concurrent.ScheduledExecutorService;
  * Manages video player instances for the mod.
  * This class handles creation, tracking, and cleanup of video players.
  */
-public class VideoManager {
+public class MCEFVideoManager {
 
     protected static final Logger LOGGER = LogManager.getLogger();
-    protected static final VideoManager INSTANCE = new VideoManager();
-
+    protected static final MCEFVideoManager INSTANCE = new MCEFVideoManager();
     public static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
     
     // Map to track all active video players
     protected final Map<String, MCEFVideoPlayer> players = new HashMap<>();
-    
     // Flag to track if web resources have been registered
     protected boolean webResourcesRegistered = false;
     
@@ -40,7 +36,7 @@ public class VideoManager {
      *
      * @return The VideoManager instance
      */
-    public static VideoManager getInstance() {
+    public static MCEFVideoManager getInstance() {
         return INSTANCE;
     }
     
@@ -71,12 +67,9 @@ public class VideoManager {
             // This is critical, further extractions will fail.
             return;
         }
-
         // Helper method for extraction
         extractResourceInternal("/assets/fancymenu/web/videoplayer/player.html", new File(webDir, "player.html"), true);
-        extractResourceInternal("/assets/fancymenu/web/videoplayer/simple_test.html", new File(webDir, "simple_test.html"), false);
-        extractResourceInternal("/assets/fancymenu/web/videoplayer/standalone_test.html", new File(webDir, "standalone_test.html"), false);
-        extractResourceInternal("/assets/fancymenu/web/videoplayer/README.txt", new File(webDir, "README.txt"), false);
+//        extractResourceInternal("/assets/fancymenu/web/videoplayer/README.txt", new File(webDir, "README.txt"), false);
     }
 
     /**
@@ -93,8 +86,11 @@ public class VideoManager {
                 LOGGER.info("[FANCYMENU] Extracted {} to {}", destinationFile.getName(), destinationFile.getAbsolutePath());
             } else {
                 String message = "[FANCYMENU] Could not find resource {} in mod JAR";
-                if (isCritical) LOGGER.error(message + " (CRITICAL)", resourcePath);
-                else LOGGER.warn(message, resourcePath);
+                if (isCritical) {
+                    LOGGER.error(message + " (CRITICAL)", resourcePath);
+                } else {
+                    LOGGER.warn(message, resourcePath);
+                }
                 if (isCritical && resourcePath.endsWith("player.html")) {
                      // If player.html is critical and not found, video playback will fail.
                      this.webResourcesRegistered = false; // Mark as failed if player.html is missing
@@ -102,9 +98,12 @@ public class VideoManager {
             }
         } catch (Exception e) {
             String message = "[FANCYMENU] Failed to extract resource {}: {}";
-            if (isCritical) LOGGER.error(message + " (CRITICAL)", resourcePath, e.getMessage(), e);
-            else LOGGER.warn(message, resourcePath, e.getMessage());
-             if (isCritical && resourcePath.endsWith("player.html")) {
+            if (isCritical) {
+                LOGGER.error(message + " (CRITICAL)", resourcePath, e.getMessage(), e);
+            } else {
+                LOGGER.warn(message, resourcePath, e.getMessage());
+            }
+            if (isCritical && resourcePath.endsWith("player.html")) {
                  this.webResourcesRegistered = false;
             }
         }
@@ -188,104 +187,6 @@ public class VideoManager {
         MCEFVideoPlayer player = players.remove(playerId);
         if (player != null) {
             player.dispose();
-        }
-    }
-    
-    /**
-     * Loads a video file into a player.
-     *
-     * @param playerId The player's unique identifier
-     * @param videoFile The video file to load
-     * @return True if the video was loaded successfully, false otherwise
-     */
-    public boolean loadVideo(@NotNull String playerId, @NotNull File videoFile) {
-        MCEFVideoPlayer player = getPlayer(playerId);
-        if (player == null) {
-            return false;
-        }
-        
-        if (!videoFile.exists()) {
-            LOGGER.error("[FANCYMENU] Video file does not exist: " + videoFile.getAbsolutePath());
-            return false;
-        }
-        
-        try {
-            // Convert to URI format for better compatibility
-            String fileUri = videoFile.toURI().toString();
-            LOGGER.info("[FANCYMENU] Loading video file (via URI): " + fileUri);
-            player.loadVideo(fileUri);
-            return true;
-        } catch (Exception e) {
-            LOGGER.error("[FANCYMENU] Failed to load video: " + videoFile.getAbsolutePath(), e);
-            return false;
-        }
-    }
-    
-    /**
-     * Loads a video from a URL into a player.
-     *
-     * @param playerId The player's unique identifier
-     * @param videoUrl The URL of the video to load
-     * @return True if the video was loaded successfully, false otherwise
-     */
-    public boolean loadVideo(@NotNull String playerId, @NotNull URL videoUrl) {
-        MCEFVideoPlayer player = getPlayer(playerId);
-        if (player == null) {
-            return false;
-        }
-        
-        try {
-            player.loadVideo(videoUrl.toString());
-            return true;
-        } catch (Exception e) {
-            LOGGER.error("[FANCYMENU] Failed to load video from URL: " + videoUrl, e);
-            return false;
-        }
-    }
-    
-    /**
-     * Loads a video from a path into a player.
-     *
-     * @param playerId The player's unique identifier
-     * @param videoPath The path to the video file
-     * @return True if the video was loaded successfully, false otherwise
-     */
-    public boolean loadVideo(@NotNull String playerId, @NotNull Path videoPath) {
-        return loadVideo(playerId, videoPath.toFile());
-    }
-    
-    /**
-     * Loads a video from a path string into a player.
-     *
-     * @param playerId The player's unique identifier
-     * @param videoPathStr The path to the video file
-     * @return True if the video was loaded successfully, false otherwise
-     */
-    public boolean loadVideo(@NotNull String playerId, @NotNull String videoPathStr) {
-        MCEFVideoPlayer player = getPlayer(playerId);
-        if (player == null) {
-            LOGGER.warn("[FANCYMENU] loadVideo: Player not found for ID: {}", playerId);
-            return false;
-        }
-        
-        try {
-            String effectiveVideoPath = videoPathStr;
-            // If it doesn't look like a URL (http, https, file), treat as a potential local file path.
-            if (!videoPathStr.matches("^[a-zA-Z][a-zA-Z0-9+.-]*://.*")) {
-                File file = new File(videoPathStr);
-                if (file.exists() && file.isFile()) {
-                    effectiveVideoPath = file.toURI().toString();
-                    LOGGER.info("[FANCYMENU] Converted video path to URI: {}", effectiveVideoPath);
-                } else {
-                    LOGGER.warn("[FANCYMENU] Video path does not seem to be a URL and file not found locally: {}. Passing as is.", videoPathStr);
-                    // Let player.html try to resolve it, might be relative to player.html itself if not absolute.
-                }
-            }
-            player.loadVideo(effectiveVideoPath);
-            return true;
-        } catch (Exception e) {
-            LOGGER.error("[FANCYMENU] Failed to load video from path: {}", videoPathStr, e);
-            return false;
         }
     }
     

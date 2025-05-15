@@ -19,7 +19,7 @@ import de.keksuccino.fancymenu.customization.element.elements.splash.SplashTextE
 import de.keksuccino.fancymenu.customization.element.elements.ticker.TickerElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.text.v2.TextElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.slider.v2.SliderElementBuilder;
-import de.keksuccino.fancymenu.customization.element.elements.video.mcef.McefVideoElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.video.mcef.MCEFVideoElementBuilder;
 
 public class Elements {
 
@@ -41,7 +41,7 @@ public class Elements {
     public static final BrowserElementBuilder BROWSER = new BrowserElementBuilder();
     public static final ItemElementBuilder ITEM = new ItemElementBuilder();
     public static final AnimationControllerElementBuilder ANIMATION_CONTROLLER = new AnimationControllerElementBuilder();
-    public static final McefVideoElementBuilder MCEF_VIDEO = new McefVideoElementBuilder();
+    public static final MCEFVideoElementBuilder MCEF_VIDEO = new MCEFVideoElementBuilder();
 
     public static void registerAll() {
 
