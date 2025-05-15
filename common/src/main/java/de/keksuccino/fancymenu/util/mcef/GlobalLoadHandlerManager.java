@@ -6,10 +6,14 @@ import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.handler.CefLoadHandler;
 import org.cef.handler.CefLoadHandlerAdapter;
-
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 /**
  * A centralized manager for browser load events.
@@ -20,50 +24,63 @@ public class GlobalLoadHandlerManager {
     private static final GlobalLoadHandlerManager INSTANCE = new GlobalLoadHandlerManager();
     
     // Maps browser IDs to their initialization futures
-    private final Map<Integer, BrowserLoadInfo> browserMap = new ConcurrentHashMap<>();
+    private final Map<String, List<BrowserLoadListener>> browserMap = new ConcurrentHashMap<>();
     
     // The single load handler that will be registered with CefClient
     private final CefLoadHandlerAdapter globalHandler = new CefLoadHandlerAdapter() {
+
         @Override
         public void onLoadEnd(CefBrowser cefBrowser, CefFrame frame, int httpStatusCode) {
             if (!frame.isMain()) return; // Only care about main frame loads
+
+            String browserId = getIdByCefBrowser(cefBrowser);
+            if (browserId == null) {
+                LOGGER.error("[FANCYMENU] Unable to process onLoadEnd because browser ID was NULL!", new NullPointerException());
+                return;
+            }
+
+            LOGGER.info("[FANCYMENU] GlobalLoadHandler: onLoadEnd for browser ID {} with status {}", browserId, httpStatusCode);
             
-            int browserId = cefBrowser.getIdentifier();
-            LOGGER.debug("[FANCYMENU] GlobalLoadHandler: onLoadEnd for browser ID {} with status {}", browserId, httpStatusCode);
-            
-            BrowserLoadInfo loadInfo = browserMap.get(browserId);
-            
-            if (loadInfo != null && !loadInfo.isHandled()) {
-                boolean success = (httpStatusCode >= 200 && httpStatusCode < 300) || 
-                                  (frame.getURL() != null && frame.getURL().startsWith("file:") && httpStatusCode == 0);
-                
+            List<BrowserLoadListener> loadListeners = browserMap.get(browserId);
+            if (loadListeners != null) {
+                boolean success = (httpStatusCode >= 200 && httpStatusCode < 300) || (frame.getURL() != null && frame.getURL().startsWith("file:") && httpStatusCode == 0);
                 LOGGER.info("[FANCYMENU] Browser [ID:{}] page loaded: {}, Success: {}", browserId, frame.getURL(), success);
-                
-                loadInfo.setHandled(true);
-                loadInfo.getFuture().complete(success);
-            } else if (loadInfo == null) {
-                LOGGER.warn("[FANCYMENU] onLoadEnd: No load info found for browser ID: {}", browserId);
+                loadListeners.forEach(loadListener -> {
+                    if (!loadListener.isHandled()) {
+                        loadListener.setHandled(true);
+                        loadListener.getOnLoadCompletedTask().accept(success);
+                    }
+                });
+                loadListeners.clear();
+            } else {
+                LOGGER.warn("[FANCYMENU] onLoadEnd: No load listeners found for browser ID: {}", browserId);
             }
         }
         
         @Override
-        public void onLoadError(CefBrowser cefBrowser, CefFrame frame, CefLoadHandler.ErrorCode errorCode, 
-                               String errorText, String failedUrl) {
+        public void onLoadError(CefBrowser cefBrowser, CefFrame frame, CefLoadHandler.ErrorCode errorCode, String errorText, String failedUrl) {
             if (!frame.isMain()) return;
-            
-            int browserId = cefBrowser.getIdentifier();
-            LOGGER.debug("[FANCYMENU] GlobalLoadHandler: onLoadError for browser ID {} with error {}", browserId, errorCode);
-            
-            BrowserLoadInfo loadInfo = browserMap.get(browserId);
-            
-            if (loadInfo != null && !loadInfo.isHandled()) {
-                LOGGER.error("[FANCYMENU] Browser [ID:{}] load error: {}, {}, URL: {}", 
-                             browserId, errorCode, errorText, failedUrl);
-                             
-                loadInfo.setHandled(true);
-                loadInfo.getFuture().complete(false);
-            } else if (loadInfo == null) {
-                LOGGER.warn("[FANCYMENU] onLoadError: No load info found for browser ID: {}", browserId);
+
+            String browserId = getIdByCefBrowser(cefBrowser);
+            if (browserId == null) {
+                LOGGER.error("[FANCYMENU] Unable to process onLoadError because browser ID was NULL!", new NullPointerException());
+                return;
+            }
+
+            LOGGER.info("[FANCYMENU] GlobalLoadHandler: onLoadError for browser ID {} with error {}", browserId, errorCode);
+
+            List<BrowserLoadListener> loadListeners = browserMap.get(browserId);
+            if (loadListeners != null) {
+                loadListeners.forEach(loadListener -> {
+                    if (!loadListener.isHandled()) {
+                        LOGGER.error("[FANCYMENU] Browser [ID:{}] load error: {}, {}, URL: {}", browserId, errorCode, errorText, failedUrl);
+                        loadListener.setHandled(true);
+                        loadListener.getOnLoadCompletedTask().accept(false);
+                    }
+                });
+                loadListeners.clear();
+            } else {
+                LOGGER.warn("[FANCYMENU] onLoadError: No load listeners found for browser ID: {}", browserId);
             }
         }
     };
@@ -87,29 +104,14 @@ public class GlobalLoadHandlerManager {
     }
     
     /**
-     * Registers a browser for load event tracking.
-     * 
-     * @param browserId The ID of the browser to track
-     * @param future The future to complete when the load completes
-     * @return True if registration was successful, false if already registered or invalid ID
+     * Registers a browser load listener for load event tracking.
      */
-    public boolean registerBrowser(int browserId, CompletableFuture<Boolean> future) {
-        // Check if the browser ID is valid
-        if (browserId <= 0) {
-            LOGGER.error("[FANCYMENU] Cannot register browser with invalid ID: {}", browserId);
-            // Complete the future immediately as a failure
-            future.complete(false);
-            return false;
+    public void registerListenerForBrowser(@NotNull WrappedMCEFBrowser browser, @NotNull Consumer<Boolean> onLoadListener) {
+        if (!browserMap.containsKey(browser.getIdentifier())) {
+            browserMap.put(browser.getIdentifier(), new ArrayList<>());
         }
-        
-        if (browserMap.containsKey(browserId)) {
-            LOGGER.warn("[FANCYMENU] Browser with ID {} is already registered", browserId);
-            return false;
-        }
-        
-        LOGGER.debug("[FANCYMENU] Registering browser with ID: {}", browserId);
-        browserMap.put(browserId, new BrowserLoadInfo(future));
-        return true;
+        LOGGER.info("[FANCYMENU] Registering load listener for browser ID: {}", browser.getIdentifier());
+        browserMap.get(browser.getIdentifier()).add(new BrowserLoadListener(browser, onLoadListener));
     }
     
     /**
@@ -117,11 +119,11 @@ public class GlobalLoadHandlerManager {
      * 
      * @param browserId The ID of the browser to unregister
      */
-    public void unregisterBrowser(int browserId) {
+    public void unregisterAllListenersForBrowser(String browserId) {
         if (browserMap.remove(browserId) != null) {
-            LOGGER.debug("[FANCYMENU] Unregistered browser with ID: {}", browserId);
+            LOGGER.info("[FANCYMENU] Unregistered browser with ID: {}", browserId);
         } else {
-            LOGGER.debug("[FANCYMENU] No browser found with ID: {} for unregistration", browserId);
+            LOGGER.info("[FANCYMENU] No browser found with ID: {} for unregistration", browserId);
         }
     }
     
@@ -131,28 +133,44 @@ public class GlobalLoadHandlerManager {
     public int getRegisteredBrowserCount() {
         return browserMap.size();
     }
-    
-    /**
-     * Information about a browser's load state.
-     */
-    private static class BrowserLoadInfo {
-        private final CompletableFuture<Boolean> future;
+
+    @Nullable
+    public String getIdByCefBrowser(@NotNull CefBrowser cefBrowser) {
+        for (Map.Entry<String, List<BrowserLoadListener>> m : this.browserMap.entrySet()) {
+            if (m.getValue().isEmpty()) continue;
+            BrowserLoadListener listener1 = m.getValue().get(0);
+            if (Objects.equals(listener1.getBrowser().getBrowser(), cefBrowser)) return m.getKey();
+        }
+        return null;
+    }
+
+    private static class BrowserLoadListener {
+
+        private final Consumer<Boolean> onLoadCompleted;
+        private final WrappedMCEFBrowser browser;
         private volatile boolean handled = false;
         
-        public BrowserLoadInfo(CompletableFuture<Boolean> future) {
-            this.future = future;
+        public BrowserLoadListener(WrappedMCEFBrowser browser, Consumer<Boolean> onLoadCompleted) {
+            this.onLoadCompleted = onLoadCompleted;
+            this.browser = browser;
         }
         
-        public CompletableFuture<Boolean> getFuture() {
-            return future;
+        public Consumer<Boolean> getOnLoadCompletedTask() {
+            return this.onLoadCompleted;
+        }
+
+        public WrappedMCEFBrowser getBrowser() {
+            return this.browser;
         }
         
         public boolean isHandled() {
-            return handled;
+            return this.handled;
         }
         
         public void setHandled(boolean handled) {
             this.handled = handled;
         }
+
     }
+
 }

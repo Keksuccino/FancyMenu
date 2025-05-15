@@ -14,7 +14,6 @@ import java.io.File;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -38,9 +37,8 @@ public class MCEFVideoPlayer {
     protected volatile int width = 200;
     protected volatile int height = 200;
     protected volatile boolean initialized = false;
-    protected final CompletableFuture<Boolean> initFuture = new CompletableFuture<>();
     private final String instanceId = UUID.randomUUID().toString(); // For unique JS communication if needed
-    
+
     /**
      * Creates a new video player instance.
      * Note: This requires MCEF to be loaded to function.
@@ -70,9 +68,9 @@ public class MCEFVideoPlayer {
      * This is called automatically upon construction.
      */
     public void initialize() {
+
         if (!MCEFUtil.isMCEFLoaded()) {
             LOGGER.error("[FANCYMENU] Failed to initialize MCEFVideoPlayer: MCEF is not loaded");
-            initFuture.complete(false);
             return;
         }
         
@@ -86,81 +84,29 @@ public class MCEFVideoPlayer {
                 MCEFVideoManager.getInstance().initialize(); // Try to extract if missing
                 if (!playerFile.exists()) {
                     LOGGER.error("[FANCYMENU] CRITICAL: Player HTML file does not exist at: " + playerFile.getAbsolutePath() + ". Video player will fail.");
-                    initFuture.complete(false);
                     return;
                 }
             }
             
             // Important: autoHandle should be false if VideoManager explicitly manages lifecycle
-            browser = WrappedMCEFBrowser.build(playerUrl, false, false, posX, posY, width, height);
-            if (browser == null) { // MCEF might fail to create browser
-                LOGGER.error("[FANCYMENU] Failed to build WrappedMCEFBrowser or get underlying MCEFBrowser for player [{}].", instanceId);
-                initFuture.complete(false);
-                return;
-            }
+            this.browser = WrappedMCEFBrowser.build(playerUrl, false, false, posX, posY, width, height, success -> {
+                if (success) {
+                    LOGGER.info("[FANCYMENU] Successfully initialized MCEFVideoPlayer for browser with ID: " + this.browser.getIdentifier());
+                    initialized = true;
+                } else {
+                    LOGGER.error("[FANCYMENU] Failed to initialize MCEFVideoPlayer for bwoser with ID: " + this.browser.getIdentifier());
+                    initialized = false;
+                }
+            });
 
             // CRITICAL: Disable generic autoplay/mute features of WrappedMCEFBrowser
             // MCEFVideoPlayer uses specific controls via player.html API.
-            browser.setAutoPlayAllVideosOnLoad(false);
-            browser.setMuteAllMediaOnLoad(false); // Muting is handled by player.html and this class's API
-
-            // Register with the global handler instead of creating our own
-            int browserId = browser.getIdentifier();
-            
-            LOGGER.debug("[FANCYMENU] MCEFVideoPlayer [{}] browser ID: {}", instanceId, browserId);
-            
-            // Check if the browser ID is valid (should be > 0)
-            if (browserId <= 0) {
-                LOGGER.error("[FANCYMENU] MCEFVideoPlayer [{}] has invalid browser ID: {}. Falling back to manual initialization.", instanceId, browserId);
-                
-                // We can't use the global handler, so we'll set up a direct initialization after a delay
-                MCEFVideoManager.EXECUTOR.schedule(() -> {
-                    if (!initFuture.isDone()) {
-                        LOGGER.info("[FANCYMENU] MCEFVideoPlayer [{}] manual initialization fallback completed", instanceId);
-                        initialized = true;
-                        initFuture.complete(true);
-                    }
-                }, 2000, TimeUnit.MILLISECONDS);
-                
-                return; // Exit early since we can't register properly
-            }
-            
-            // Register this browser with the global handler manager
-            if (GlobalLoadHandlerManager.getInstance().registerBrowser(browserId, initFuture)) {
-                LOGGER.info("[FANCYMENU] MCEFVideoPlayer [{}] registered with global handler, browser ID: {}", instanceId, browserId);
-                
-                // Make sure the global handler is registered with the CefClient
-                // This only needs to happen once, but it's safe to call multiple times
-                // as the CefClient will only set it if there's no handler yet
-                if (browser.getBrowser().getClient() != null) {
-                    browser.getBrowser().getClient().addLoadHandler(
-                        GlobalLoadHandlerManager.getInstance().getGlobalHandler());
-                } else {
-                    LOGGER.error("[FANCYMENU] Cannot get CefClient for MCEFVideoPlayer [{}]. Initialization will be unreliable.", instanceId);
-                    // Fallback: complete future optimistically after a delay, or mark as failed.
-                    MCEFVideoManager.EXECUTOR.schedule(() -> {
-                        if (!initFuture.isDone()) {
-                            LOGGER.warn("[FANCYMENU] Fallback: Assuming player [{}] initialized after delay due to no CefClient access.", instanceId);
-                            initialized = true;
-                            initFuture.complete(true);
-                        }
-                    }, 2000, TimeUnit.MILLISECONDS);
-                }
-            } else {
-                LOGGER.error("[FANCYMENU] MCEFVideoPlayer [{}] failed to register with global handler. Falling back to manual initialization.", instanceId);
-                // Fallback initialization after a delay if registration failed
-                MCEFVideoManager.EXECUTOR.schedule(() -> {
-                    if (!initFuture.isDone()) {
-                        LOGGER.info("[FANCYMENU] MCEFVideoPlayer [{}] manual initialization fallback completed", instanceId);
-                        initialized = true;
-                        initFuture.complete(true);
-                    }
-                }, 2000, TimeUnit.MILLISECONDS);
-            }
+            this.browser.setAutoPlayAllVideosOnLoad(false);
+            this.browser.setMuteAllMediaOnLoad(false); // Muting is handled by player.html and this class's API
             
         } catch (Exception e) {
             LOGGER.error("[FANCYMENU] Failed to initialize MCEFVideoPlayer [{}]", instanceId, e);
-            initFuture.complete(false); // Ensure future is completed on exception
+            initialized = false;
         }
     }
     
@@ -917,13 +863,8 @@ public class MCEFVideoPlayer {
 
         // Unregister from the global handler if the browser exists
         if (browser != null) {
-            int browserId = browser.getIdentifier();
-            
-            // Only unregister if the browser ID is valid
-            if (browserId > 0) {
-                GlobalLoadHandlerManager.getInstance().unregisterBrowser(browserId);
-            }
-            
+            String browserId = browser.getIdentifier();
+            GlobalLoadHandlerManager.getInstance().unregisterAllListenersForBrowser(browserId);
             try {
                 browser.close(); // This should handle MCEF browser closure
             } catch (Exception e) { // Catch IOException from close()
@@ -932,10 +873,6 @@ public class MCEFVideoPlayer {
             browser = null;
         }
         initialized = false; // Mark as not initialized
-        // initFuture might already be completed. If not, complete it as failure.
-        if (!initFuture.isDone()) {
-            initFuture.complete(false);
-        }
     }
 
     protected static void executeWithCondition(@NotNull Runnable task, @NotNull Supplier<Boolean> condition) {

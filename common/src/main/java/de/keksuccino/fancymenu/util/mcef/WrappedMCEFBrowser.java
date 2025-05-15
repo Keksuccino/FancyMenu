@@ -16,14 +16,15 @@ import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, NavigatableWidget {
@@ -47,104 +48,65 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     
     // Track if initialization is complete for this browser
     private volatile boolean initialized = false;
-    private final CompletableFuture<Boolean> initFuture = new CompletableFuture<>();
 
     @NotNull
-    public static WrappedMCEFBrowser build(@NotNull String url, boolean transparent, boolean autoHandle) {
-        WrappedMCEFBrowser b = new WrappedMCEFBrowser(url, transparent);
+    public static WrappedMCEFBrowser build(@NotNull String url, boolean transparent, boolean autoHandle, @Nullable Consumer<Boolean> loadListener) {
+        WrappedMCEFBrowser b = new WrappedMCEFBrowser(url, transparent, loadListener);
         b.autoHandle = autoHandle;
         return b;
     }
 
     @NotNull
-    public static WrappedMCEFBrowser build(@NotNull String url, boolean transparent, boolean autoHandle, int x, int y, int width, int height) {
-        WrappedMCEFBrowser b = build(url, transparent, autoHandle);
+    public static WrappedMCEFBrowser build(@NotNull String url, boolean transparent, boolean autoHandle, int x, int y, int width, int height, @Nullable Consumer<Boolean> loadListener) {
+        WrappedMCEFBrowser b = build(url, transparent, autoHandle, loadListener);
         b.setSize(width, height);
         b.setPosition(x, y);
         return b;
     }
 
-    protected WrappedMCEFBrowser(@NotNull String url, boolean transparent) {
+    protected WrappedMCEFBrowser(@NotNull String url, boolean transparent, @Nullable Consumer<Boolean> loadListener) {
+
         super(0, 0, 0, 0, Component.empty());
 
+        MCEF.getClient().addLoadHandler(GlobalLoadHandlerManager.getInstance().getGlobalHandler());
         this.browser = MCEF.createBrowser(url, transparent);
+
+        // Register with the global handler manager instead of creating our own
+        if (this.browser.getClient() != null) {
+
+            String browserId = this.getIdentifier();
+            
+            LOGGER.info("[FANCYMENU] WrappedMCEFBrowser browser ID: {}", browserId);
+
+            // Make sure the global handler is registered with the CefClient
+            // This only needs to happen once, but it's safe to call multiple times
+            // as the CefClient will only set it if there's no handler yet
+            this.browser.getClient().addLoadHandler(GlobalLoadHandlerManager.getInstance().getGlobalHandler());
+
+            GlobalLoadHandlerManager.getInstance().registerListenerForBrowser(this, success -> {
+                if (success) {
+                    LOGGER.info("[FANCYMENU] WrappedMCEFBrowser browser page loaded successfully (ID: {})", browserId);
+                    initialized = true;
+                    // Apply settings once the page is loaded
+                    applyInitialSettings();
+                } else {
+                    LOGGER.error("[FANCYMENU] WrappedMCEFBrowser browser page failed to load (ID: {})", browserId, new Exception());
+                    initialized = false;
+                }
+            });
+
+            if (loadListener != null) {
+                GlobalLoadHandlerManager.getInstance().registerListenerForBrowser(this, loadListener);
+            }
+
+        } else {
+            LOGGER.error("[FANCYMENU] Could not attach to global load handler for WrappedMCEFBrowser.", new NullPointerException("CefClient was NULL!"));
+        }
 
         this.setVolume(this.volume);
         this.setSize(200, 200);
         this.setPosition(0, 0);
 
-        // Register with the global handler manager instead of creating our own
-        if (this.browser != null && this.browser.getClient() != null) {
-            final int browserId = this.browser.getIdentifier();
-            
-            LOGGER.debug("[FANCYMENU] WrappedMCEFBrowser browser ID: {}", browserId);
-            
-            // Check if the browser ID is valid (should be > 0)
-            if (browserId <= 0) {
-                LOGGER.error("[FANCYMENU] WrappedMCEFBrowser has invalid browser ID: {}. Falling back to manual initialization.", browserId);
-                
-                // We can't use the global handler, so we'll set up a direct initialization after a delay
-                EXECUTOR.schedule(() -> {
-                    if (!initFuture.isDone()) {
-                        LOGGER.info("[FANCYMENU] WrappedMCEFBrowser manual initialization fallback completed");
-                        initialized = true;
-                        initFuture.complete(true);
-                        applyInitialSettings();
-                    }
-                }, 2000, TimeUnit.MILLISECONDS);
-                
-                return; // Exit early since we can't register properly
-            }
-            
-            // Register this browser with the global handler manager
-            if (GlobalLoadHandlerManager.getInstance().registerBrowser(browserId, initFuture)) {
-                LOGGER.info("[FANCYMENU] WrappedMCEFBrowser registered with global handler, browser ID: {}", browserId);
-                
-                // Make sure the global handler is registered with the CefClient
-                // This only needs to happen once, but it's safe to call multiple times
-                // as the CefClient will only set it if there's no handler yet
-                this.browser.getClient().addLoadHandler(
-                    GlobalLoadHandlerManager.getInstance().getGlobalHandler());
-                
-                // Listen for completion of the future
-                initFuture.thenAccept(success -> {
-                    if (success) {
-                        LOGGER.debug("[FANCYMENU] WrappedMCEFBrowser browser page loaded successfully (ID: {})", browserId);
-                        initialized = true;
-                        
-                        // Apply settings once the page is loaded
-                        applyInitialSettings();
-                    } else {
-                        LOGGER.error("[FANCYMENU] WrappedMCEFBrowser browser page failed to load (ID: {})", browserId);
-                        initialized = false;
-                    }
-                });
-            } else {
-                LOGGER.warn("[FANCYMENU] WrappedMCEFBrowser failed to register with global handler (ID: {}). Falling back to manual initialization.", browserId);
-                
-                // Fallback initialization after a delay if registration failed
-                EXECUTOR.schedule(() -> {
-                    if (!initFuture.isDone()) {
-                        LOGGER.info("[FANCYMENU] WrappedMCEFBrowser manual initialization fallback completed");
-                        initialized = true;
-                        initFuture.complete(true);
-                        applyInitialSettings();
-                    }
-                }, 2000, TimeUnit.MILLISECONDS);
-            }
-        } else {
-            LOGGER.warn("[FANCYMENU] Could not attach to global load handler for WrappedMCEFBrowser. Settings on page load may be unreliable.");
-            
-            // Fallback for browser without client
-            EXECUTOR.schedule(() -> {
-                if (!initFuture.isDone()) {
-                    LOGGER.info("[FANCYMENU] WrappedMCEFBrowser manual initialization fallback completed (no client)");
-                    initialized = true;
-                    initFuture.complete(true);
-                    applyInitialSettings();
-                }
-            }, 2000, TimeUnit.MILLISECONDS);
-        }
     }
     
     /**
@@ -515,8 +477,8 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
      * 
      * @return The browser identifier
      */
-    public int getIdentifier() {
-        return this.browser.getIdentifier();
+    public String getIdentifier() {
+        return this.genericIdentifier.toString();
     }
 
     @Override
@@ -541,13 +503,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     public void close() throws IOException {
         // Unregister from the global handler manager
         if (this.browser != null) {
-            int browserId = this.browser.getIdentifier();
-            
-            // Only unregister if the browser ID is valid
-            if (browserId > 0) {
-                GlobalLoadHandlerManager.getInstance().unregisterBrowser(browserId);
-            }
-            
+            GlobalLoadHandlerManager.getInstance().unregisterAllListenersForBrowser(this.getIdentifier());
             this.browser.close(true);
         }
     }
