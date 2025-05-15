@@ -1,10 +1,10 @@
 package de.keksuccino.fancymenu.util.rendering.video.mcef;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.util.ObjectHolder;
 import de.keksuccino.fancymenu.util.mcef.GlobalLoadHandlerManager;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
-import de.keksuccino.fancymenu.util.Pair;
 import net.minecraft.client.gui.GuiGraphics;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,13 +13,11 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /**
  * A Minecraft video player using MCEF (Minecraft Chromium Embedded Framework).
@@ -42,8 +40,6 @@ public class MCEFVideoPlayer {
     protected volatile boolean initialized = false;
     protected final CompletableFuture<Boolean> initFuture = new CompletableFuture<>();
     private final String instanceId = UUID.randomUUID().toString(); // For unique JS communication if needed
-    protected final List<Pair<Runnable, String>> queuedActions = new ArrayList<>();
-    protected volatile boolean isProcessingQueuedActions = false; // To prevent re-entrancy
     
     /**
      * Creates a new video player instance.
@@ -97,7 +93,7 @@ public class MCEFVideoPlayer {
             
             // Important: autoHandle should be false if VideoManager explicitly manages lifecycle
             browser = WrappedMCEFBrowser.build(playerUrl, false, false, posX, posY, width, height);
-            if (browser == null || browser.getBrowser() == null) { // MCEF might fail to create browser
+            if (browser == null) { // MCEF might fail to create browser
                 LOGGER.error("[FANCYMENU] Failed to build WrappedMCEFBrowser or get underlying MCEFBrowser for player [{}].", instanceId);
                 initFuture.complete(false);
                 return;
@@ -123,24 +119,6 @@ public class MCEFVideoPlayer {
                         LOGGER.info("[FANCYMENU] MCEFVideoPlayer [{}] manual initialization fallback completed", instanceId);
                         initialized = true;
                         initFuture.complete(true);
-                        
-                        // Process queued actions immediately - don't wait for the future handler
-                        MCEFVideoManager.EXECUTOR.execute(() -> {
-                            synchronized (queuedActions) {
-                                if (!queuedActions.isEmpty()) {
-                                    LOGGER.info("[FANCYMENU] MCEFVideoPlayer [{}] Processing {} queued actions after manual init", instanceId, queuedActions.size());
-                                    for (Pair<Runnable, String> entry : queuedActions) {
-                                        LOGGER.info("[FANCYMENU] MCEFVideoPlayer [{}]: Running queued action: {}", instanceId, entry.getValue());
-                                        try {
-                                            entry.getKey().run();
-                                        } catch (Exception e) {
-                                            LOGGER.error("[FANCYMENU] Error running queued action '{}' for player [{}]", entry.getValue(), instanceId, e);
-                                        }
-                                    }
-                                    queuedActions.clear();
-                                }
-                            }
-                        });
                     }
                 }, 2000, TimeUnit.MILLISECONDS);
                 
@@ -159,96 +137,23 @@ public class MCEFVideoPlayer {
                         GlobalLoadHandlerManager.getInstance().getGlobalHandler());
                 } else {
                     LOGGER.error("[FANCYMENU] Cannot get CefClient for MCEFVideoPlayer [{}]. Initialization will be unreliable.", instanceId);
-                    
                     // Fallback: complete future optimistically after a delay, or mark as failed.
                     MCEFVideoManager.EXECUTOR.schedule(() -> {
                         if (!initFuture.isDone()) {
                             LOGGER.warn("[FANCYMENU] Fallback: Assuming player [{}] initialized after delay due to no CefClient access.", instanceId);
                             initialized = true;
                             initFuture.complete(true);
-                            
-                            // Process queued actions immediately - don't wait for the future handler
-                            MCEFVideoManager.EXECUTOR.execute(() -> {
-                                synchronized (queuedActions) {
-                                    if (!queuedActions.isEmpty()) {
-                                        LOGGER.info("[FANCYMENU] MCEFVideoPlayer [{}] Processing {} queued actions after CefClient fallback init", instanceId, queuedActions.size());
-                                        for (Pair<Runnable, String> entry : queuedActions) {
-                                            LOGGER.info("[FANCYMENU] MCEFVideoPlayer [{}]: Running queued action: {}", instanceId, entry.getValue());
-                                            try {
-                                                entry.getKey().run();
-                                            } catch (Exception e) {
-                                                LOGGER.error("[FANCYMENU] Error running queued action '{}' for player [{}]", entry.getValue(), instanceId, e);
-                                            }
-                                        }
-                                        queuedActions.clear();
-                                    }
-                                }
-                            });
                         }
                     }, 2000, TimeUnit.MILLISECONDS);
                 }
-                
-                // Listen for completion of the future
-                initFuture.thenAccept(success -> {
-                    MCEFVideoManager.EXECUTOR.execute(() -> { // Process on the VideoManager's executor for consistency
-                        synchronized (queuedActions) { // Synchronize access to shared state
-                            if (isProcessingQueuedActions && success) {
-                                 // This can happen if a fallback completes the future while another thread is already in thenAccept.
-                                 // The first one to acquire the lock and set isProcessingQueuedActions will handle it.
-                                LOGGER.debug("[FANCYMENU] Player [{}]: Initialization already being processed, skipping redundant processing.", instanceId);
-                                return;
-                            }
-                            isProcessingQueuedActions = true;
-
-                            if (success) {
-                                LOGGER.info("[FANCYMENU] MCEFVideoPlayer [{}] browser page loaded successfully. Initialized flag set. Processing {} queued actions.", instanceId, queuedActions.size());
-                                initialized = true; // Set the main 'initialized' flag here
-                                
-                                // Process any actions queued before initialization was complete
-                                for (Pair<Runnable, String> entry : queuedActions) {
-                                    LOGGER.info("[FANCYMENU] MCEFVideoPlayer [{}]: Running queued action: {}", instanceId, entry.getValue());
-                                    try {
-                                        entry.getKey().run();
-                                    } catch (Exception e) {
-                                        LOGGER.error("[FANCYMENU] Error running queued action '{}' for player [{}]", entry.getValue(), instanceId, e);
-                                    }
-                                }
-                            } else {
-                                LOGGER.error("[FANCYMENU] MCEFVideoPlayer [{}] browser page failed to load. Initialized flag false. Clearing {} queued actions.", instanceId, queuedActions.size());
-                                initialized = false;
-                            }
-                            queuedActions.clear(); // Clear queue after processing or on failure
-                            isProcessingQueuedActions = false;
-                        }
-                    });
-                });
             } else {
                 LOGGER.error("[FANCYMENU] MCEFVideoPlayer [{}] failed to register with global handler. Falling back to manual initialization.", instanceId);
-                
                 // Fallback initialization after a delay if registration failed
                 MCEFVideoManager.EXECUTOR.schedule(() -> {
                     if (!initFuture.isDone()) {
                         LOGGER.info("[FANCYMENU] MCEFVideoPlayer [{}] manual initialization fallback completed", instanceId);
                         initialized = true;
                         initFuture.complete(true);
-                        
-                        // Process queued actions immediately - don't wait for the future handler
-                        MCEFVideoManager.EXECUTOR.execute(() -> {
-                            synchronized (queuedActions) {
-                                if (!queuedActions.isEmpty()) {
-                                    LOGGER.info("[FANCYMENU] MCEFVideoPlayer [{}] Processing {} queued actions after registration fallback init", instanceId, queuedActions.size());
-                                    for (Pair<Runnable, String> entry : queuedActions) {
-                                        LOGGER.info("[FANCYMENU] MCEFVideoPlayer [{}]: Running queued action: {}", instanceId, entry.getValue());
-                                        try {
-                                            entry.getKey().run();
-                                        } catch (Exception e) {
-                                            LOGGER.error("[FANCYMENU] Error running queued action '{}' for player [{}]", entry.getValue(), instanceId, e);
-                                        }
-                                    }
-                                    queuedActions.clear();
-                                }
-                            }
-                        });
                     }
                 }, 2000, TimeUnit.MILLISECONDS);
             }
@@ -306,30 +211,8 @@ public class MCEFVideoPlayer {
     /**
      * Helper to ensure initialization and run on executor
      */
-    private void executeWhenInitialized(Runnable action, String actionName) {
-        MCEFVideoManager.EXECUTOR.execute(() -> {
-            synchronized (queuedActions) {
-                if (initialized) {
-                    try {
-                        LOGGER.debug("[FANCYMENU] Player [{}]: Executing action '{}' (already initialized).", instanceId, actionName);
-                        action.run();
-                    } catch (Exception e) {
-                        LOGGER.error("[FANCYMENU] Error executing action '{}' for player [{}]", actionName, instanceId, e);
-                    }
-                } else {
-                    // If initialization already failed, log and potentially don't queue.
-                    if (initFuture.isDone()) {
-                        Boolean initState = initFuture.getNow(null); // Check completed state without blocking
-                        if (initState != null && !initState) {
-                            LOGGER.warn("[FANCYMENU] Player [{}]: Action '{}' not queued/run because initialization previously failed.", instanceId, actionName);
-                            return; // Don't queue if known to have failed
-                        }
-                    }
-                    LOGGER.info("[FANCYMENU] Player [{}]: Queuing action '{}' (player not initialized yet).", instanceId, actionName);
-                    queuedActions.add(Pair.of(action, actionName));
-                }
-            }
-        });
+    private void executeWhenInitialized(@NotNull Runnable task) {
+        executeWithCondition(task, () -> this.initialized && (this.browser != null));
     }
     
     /**
@@ -358,7 +241,7 @@ public class MCEFVideoPlayer {
             String escapedVideoPath = videoPath.replace("\\", "\\\\").replace("'", "\\'");
             String script = String.format("if(window.videoPlayerAPI && window.videoPlayerAPI.loadVideo) { window.videoPlayerAPI.loadVideo('%s'); } else { console.error('[FANCYMENU] videoPlayerAPI.loadVideo not found!'); }", escapedVideoPath);
             executeJavaScript(script);
-        }, "loadVideo");
+        });
     }
     
     /**
@@ -368,7 +251,7 @@ public class MCEFVideoPlayer {
         executeWhenInitialized(() -> {
             LOGGER.info("[FANCYMENU] Player [{}]: Requesting JS to play video.", instanceId);
             executeJavaScript("if(window.videoPlayerAPI && window.videoPlayerAPI.play) { window.videoPlayerAPI.play(); } else { console.error('[FANCYMENU] videoPlayerAPI.play not found!'); }");
-        }, "play");
+        });
     }
     
     /**
@@ -378,7 +261,7 @@ public class MCEFVideoPlayer {
         executeWhenInitialized(() -> {
             LOGGER.info("[FANCYMENU] Player [{}]: Requesting JS to pause video.", instanceId);
             executeJavaScript("if(window.videoPlayerAPI && window.videoPlayerAPI.pause) { window.videoPlayerAPI.pause(); } else { console.error('[FANCYMENU] videoPlayerAPI.pause not found!'); }");
-        }, "pause");
+        });
     }
     
     /**
@@ -388,7 +271,7 @@ public class MCEFVideoPlayer {
         executeWhenInitialized(() -> {
             LOGGER.info("[FANCYMENU] Player [{}]: Requesting JS to toggle play/pause.", instanceId);
             executeJavaScript("if(window.videoPlayerAPI && window.videoPlayerAPI.togglePlayPause) { window.videoPlayerAPI.togglePlayPause(); } else { console.error('[FANCYMENU] videoPlayerAPI.togglePlayPause not found!'); }");
-        }, "togglePlayPause");
+        });
     }
     
     /**
@@ -398,7 +281,7 @@ public class MCEFVideoPlayer {
         executeWhenInitialized(() -> {
             LOGGER.info("[FANCYMENU] Player [{}]: Requesting JS to stop video.", instanceId);
             executeJavaScript("if(window.videoPlayerAPI && window.videoPlayerAPI.stop) { window.videoPlayerAPI.stop(); } else { console.error('[FANCYMENU] videoPlayerAPI.stop not found!'); }");
-        }, "stop");
+        });
     }
     
     /**
@@ -411,7 +294,7 @@ public class MCEFVideoPlayer {
         executeWhenInitialized(() -> {
             LOGGER.info("[FANCYMENU] Player [{}]: Setting muted state to {}.", instanceId, muted);
             executeJavaScript("if(window.videoPlayerAPI) { window.videoPlayerAPI.setMuted(" + muted + "); }");
-        }, "setMuted");
+        });
     }
     
     /**
@@ -440,7 +323,7 @@ public class MCEFVideoPlayer {
         executeWhenInitialized(() -> {
             LOGGER.info("[FANCYMENU] Player [{}]: Setting volume to {}.", instanceId, this.volume);
             executeJavaScript("if(window.videoPlayerAPI) { window.videoPlayerAPI.setVolume(" + this.volume + "); }");
-        }, "setVolume");
+        });
     }
     
     /**
@@ -462,7 +345,7 @@ public class MCEFVideoPlayer {
         executeWhenInitialized(() -> {
             LOGGER.info("[FANCYMENU] Player [{}]: Setting looping to {}.", instanceId, looping);
             executeJavaScript("if(window.videoPlayerAPI) { window.videoPlayerAPI.setLoop(" + looping + "); }");
-        }, "setLooping");
+        });
     }
     
     /**
@@ -484,7 +367,7 @@ public class MCEFVideoPlayer {
         executeWhenInitialized(() -> {
             LOGGER.info("[FANCYMENU] Player [{}]: Setting fillScreen to {}.", instanceId, fillScreen);
             executeJavaScript("if(window.videoPlayerAPI) { window.videoPlayerAPI.setFillScreen(" + fillScreen + "); }");
-        }, "setFillScreen");
+        });
     }
     
     /**
@@ -558,7 +441,7 @@ public class MCEFVideoPlayer {
         executeWhenInitialized(() -> {
             LOGGER.info("[FANCYMENU] Player [{}]: Setting video position to {} seconds.", instanceId, secondsFinal);
             executeJavaScript("if(window.videoPlayerAPI) { window.videoPlayerAPI.setCurrentTime(" + secondsFinal + "); }");
-        }, "setCurrentTime");
+        });
     }
     
     /**
@@ -585,7 +468,7 @@ public class MCEFVideoPlayer {
                 "  window.videoPlayerAPI.setCurrentTime(Math.min(currentTime + " + seconds + ", duration));" +
                 "}"
             );
-        }, "seekForward");
+        });
     }
     
     /**
@@ -602,7 +485,7 @@ public class MCEFVideoPlayer {
                 "  window.videoPlayerAPI.setCurrentTime(Math.max(currentTime - " + seconds + ", 0));" +
                 "}"
             );
-        }, "seekBackward");
+        });
     }
     
     /**
@@ -730,7 +613,7 @@ public class MCEFVideoPlayer {
         }
         String result = executeJavaScriptWithResult("(function() { try { return window.videoPlayerAPI && window.videoPlayerAPI.getVideoWidth(); } catch(e) { return 0; } })()");
         try {
-            return Integer.parseInt(result);
+            return Integer.parseInt(Objects.requireNonNull(result));
         } catch (Exception e) {
             return 0;
         }
@@ -747,7 +630,7 @@ public class MCEFVideoPlayer {
         }
         String result = executeJavaScriptWithResult("(function() { try { return window.videoPlayerAPI && window.videoPlayerAPI.getVideoHeight(); } catch(e) { return 0; } })()");
         try {
-            return Integer.parseInt(result);
+            return Integer.parseInt(Objects.requireNonNull(result));
         } catch (Exception e) {
             return 0;
         }
@@ -756,6 +639,7 @@ public class MCEFVideoPlayer {
     /**
      * Sets the position of the browser element on the screen.
      * This positions the entire browser element, not the video content within it.
+     * Can be called before initialization - will be queued and applied when ready.
      *
      * @param x The X position
      * @param y The Y position
@@ -763,9 +647,12 @@ public class MCEFVideoPlayer {
     public void setPosition(int x, int y) {
         this.posX = x;
         this.posY = y;
-        if (browser != null && initialized) {
-            MCEFVideoManager.EXECUTOR.execute(() -> browser.setPosition(x, y));
-        }
+        // Use the executeWhenInitialized pattern to ensure it gets applied
+        // even if called before the browser is ready
+        executeWhenInitialized(() -> {
+            LOGGER.debug("[FANCYMENU] Player [{}]: Setting position to ({}, {})", instanceId, x, y);
+            browser.setPosition(x, y);
+        });
     }
 
     /**
@@ -791,6 +678,7 @@ public class MCEFVideoPlayer {
      * This sets the overall size of the browser element in the GUI.
      * If fillScreen is enabled, the video will automatically adjust to fill the browser
      * while maintaining aspect ratio.
+     * Can be called before initialization - will be queued and applied when ready.
      *
      * @param width The new width
      * @param height The new height
@@ -798,15 +686,12 @@ public class MCEFVideoPlayer {
     public void setSize(int width, int height) {
         this.width = width;
         this.height = height;
-        if (browser != null && initialized) {
-            MCEFVideoManager.EXECUTOR.execute(() -> {
-                browser.setSize(width, height);
-                
-                // If we're in fill screen mode, ensure the video content fills the browser
-                // This is now handled directly by the HTML/CSS based on the fillScreen flag
-                // No need to manually calculate aspect ratio or position - the browser handles it
-            });
-        }
+        // Use the executeWhenInitialized pattern to ensure it gets applied
+        // even if called before the browser is ready
+        executeWhenInitialized(() -> {
+            LOGGER.debug("[FANCYMENU] Player [{}]: Setting size to {}x{}", instanceId, width, height);
+            browser.setSize(width, height);
+        });
     }
 
     /**
@@ -830,13 +715,18 @@ public class MCEFVideoPlayer {
     /**
      * Sets the opacity/alpha value of the video player.
      * Useful for creating semi-transparent background videos.
+     * Can be called before initialization - will be queued and applied when ready.
      * 
      * @param opacity Value between 0.0F (transparent) and 1.0F (opaque)
      */
     public void setOpacity(float opacity) {
-        if (browser != null) {
-            browser.setOpacity(Math.max(0.0F, Math.min(1.0F, opacity)));
-        }
+        final float finalOpacity = Math.max(0.0F, Math.min(1.0F, opacity));
+        executeWhenInitialized(() -> {
+            LOGGER.debug("[FANCYMENU] Player [{}]: Setting opacity to {}", instanceId, finalOpacity);
+            if (browser != null) {
+                browser.setOpacity(finalOpacity);
+            }
+        });
     }
     
     /**
@@ -854,7 +744,7 @@ public class MCEFVideoPlayer {
      * Ensures it runs on the VideoManager's executor for thread safety if called from other threads.
      */
     protected void executeJavaScript(String code) {
-        if (browser != null && browser.getBrowser() != null && initialized) {
+        if ((browser != null) && initialized) {
             try {
                 // If called from a thread other than MCEF's or main rendering thread, ensure proper dispatch.
                 // Assuming VideoManager.EXECUTOR is suitable for MCEF interactions or MCEF handles it.
@@ -863,9 +753,7 @@ public class MCEFVideoPlayer {
                 LOGGER.error("[FANCYMENU] Player [{}]: Error executing JavaScript: {}", instanceId, e.getMessage(), e);
             }
         } else {
-            String reason = browser == null ? "browser is null" : 
-                           (browser.getBrowser() == null ? "browser.getBrowser() is null" : 
-                           "initialized is false");
+            String reason = (browser == null) ? "browser is null" : "initialized is false";
             LOGGER.warn("[FANCYMENU] Player [{}]: Attempted to execute JS when not ready. Reason: {}. Code: {}", 
                 instanceId, reason, code.substring(0, Math.min(50, code.length())));
         }
@@ -880,7 +768,7 @@ public class MCEFVideoPlayer {
      */
     @Nullable
     protected String executeJavaScriptWithResult(String code) {
-        if (browser == null || browser.getBrowser() == null || !initialized) {
+        if ((browser == null) || !initialized) {
             LOGGER.warn("[FANCYMENU] Player [{}]: executeJavaScriptWithResult called when not ready.", instanceId);
             return null;
         }
@@ -1013,24 +901,6 @@ public class MCEFVideoPlayer {
     }
     
     /**
-     * Waits for the player to initialize before executing an action.
-     *
-     * @param action The action to perform after initialization
-     */
-    protected void waitForInitialization(Runnable action) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                boolean success = initFuture.get(5, TimeUnit.SECONDS);
-                if (success) {
-                    action.run();
-                }
-            } catch (Exception e) {
-                LOGGER.error("[FANCYMENU] Timeout waiting for MCEFVideoPlayer initialization", e);
-            }
-        });
-    }
-    
-    /**
      * Disposes of resources used by the video player.
      * Call this when the player is no longer needed.
      */
@@ -1043,7 +913,7 @@ public class MCEFVideoPlayer {
              } catch (Exception ex) {
                  LOGGER.error("[FANCYMENU] Player [{}]: Error stopping video during dispose", instanceId, ex);
              }
-        }, "dispose.stopVideo");
+        });
 
         // Unregister from the global handler if the browser exists
         if (browser != null) {
@@ -1067,4 +937,17 @@ public class MCEFVideoPlayer {
             initFuture.complete(false);
         }
     }
+
+    protected static void executeWithCondition(@NotNull Runnable task, @NotNull Supplier<Boolean> condition) {
+        final ScheduledFuture<?>[] futureHolder = new ScheduledFuture<?>[1];
+        final ObjectHolder<Boolean> executed = ObjectHolder.of(false);
+        futureHolder[0] = MCEFVideoManager.EXECUTOR.scheduleAtFixedRate(() -> {
+            if (!executed.get() && condition.get()) {
+                task.run();
+                futureHolder[0].cancel(true);
+                executed.set(true);
+            }
+        }, 0, 50, TimeUnit.MILLISECONDS);
+    }
+
 }
