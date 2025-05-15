@@ -18,16 +18,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.io.Closeable;
 import java.io.File;
-import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-public class MCEFVideoElement extends AbstractElement implements Closeable {
+public class MCEFVideoElement extends AbstractElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
@@ -60,7 +58,6 @@ public class MCEFVideoElement extends AbstractElement implements Closeable {
         }
     }, 0, 100, TimeUnit.MILLISECONDS);
     protected boolean triedRestore = false;
-    protected volatile boolean closed = false;
 
     public MCEFVideoElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -68,11 +65,6 @@ public class MCEFVideoElement extends AbstractElement implements Closeable {
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-
-        if (this.closed) {
-            LOGGER.error("[FANCYMENU] Tried to render closed MCEFVideoElement: " + this.getInstanceIdentifier());
-            return;
-        }
 
         if (this.shouldRender()) {
 
@@ -189,6 +181,7 @@ public class MCEFVideoElement extends AbstractElement implements Closeable {
                 this.playerId = this.getMemory().getStringProperty("player_id");
                 this.lastFinalUrl = this.getMemory().getStringProperty("last_final_url");
                 this.initialized = true;
+                LOGGER.info("############################################ VIDEO ELEMENT RESTORED FROM MEMORY: " + this.getInstanceIdentifier());
             } else {
                 this.getMemory().clear();
             }
@@ -204,7 +197,6 @@ public class MCEFVideoElement extends AbstractElement implements Closeable {
             this.getMemory().putProperty("player_id", this.playerId);
             this.getMemory().putProperty("last_final_url", this.lastFinalUrl);
         } else {
-            this.getMemory().clear();
             this.disposePlayer();
         }
     }
@@ -232,7 +224,9 @@ public class MCEFVideoElement extends AbstractElement implements Closeable {
             this.trySaveToMemory();
             return;
         }
-        this.closeQuietly();
+        this.getMemory().clear();
+        this.garbageChecker.cancel(true);
+        this.disposePlayer();
     }
 
     @Override
@@ -246,10 +240,6 @@ public class MCEFVideoElement extends AbstractElement implements Closeable {
      * @param volume Value between 0.0 and 1.0.
      */
     protected void setVolume(float volume, boolean updatePlayer) {
-        if (this.closed) {
-            LOGGER.error("[FANCYMENU] Tried to set volume of closed MCEFVideoElement: " + this.getInstanceIdentifier());
-            return;
-        }
         if (volume > 1.0F) volume = 1.0F;
         if (volume < 0.0F) volume = 0.0F;
         this.volume = volume;
@@ -280,10 +270,6 @@ public class MCEFVideoElement extends AbstractElement implements Closeable {
     }
 
     public void resetElement() {
-        if (this.closed) {
-            LOGGER.error("[FANCYMENU] Tried to reset closed MCEFVideoElement: " + this.getInstanceIdentifier());
-            return;
-        }
         if (this.initialized) {
             this.disposePlayer();
         }
@@ -295,22 +281,6 @@ public class MCEFVideoElement extends AbstractElement implements Closeable {
         this.lastAbsoluteHeight = -10000;
         this.lastAbsoluteX = -10000;
         this.lastAbsoluteY = -10000;
-    }
-
-    public boolean isClosed() {
-        return this.closed;
-    }
-
-    @Override
-    public void close() throws IOException {
-        this.closed = true;
-        this.getMemory().clear();
-        this.garbageChecker.cancel(true);
-        this.disposePlayer();
-    }
-
-    public void closeQuietly() {
-        CloseableUtils.closeQuietly(this);
     }
 
 }
