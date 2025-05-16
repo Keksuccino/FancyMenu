@@ -13,8 +13,11 @@ import java.io.File;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
 /**
@@ -24,6 +27,7 @@ import java.util.function.Supplier;
 public class MCEFVideoPlayer {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final long JS_RESULT_TIMEOUT_MS = 1000; // Timeout for waiting for JS result (e.g., 1 second)
 
     protected volatile WrappedMCEFBrowser browser;
     protected volatile float volume = 1.0f;
@@ -67,11 +71,13 @@ public class MCEFVideoPlayer {
      * This is called automatically upon construction.
      */
     public void initialize() {
-
         if (!MCEFUtil.isMCEFLoaded()) {
             LOGGER.error("[FANCYMENU] Failed to initialize MCEFVideoPlayer: MCEF is not loaded");
             return;
         }
+        
+        // Ensure MCEFVideoManager is initialized (which now also registers the JS result handler)
+        MCEFVideoManager.getInstance().initialize();
         
         try {
             String playerUrl = buildPlayerUrl();
@@ -93,15 +99,20 @@ public class MCEFVideoPlayer {
                     LOGGER.info("[FANCYMENU] Successfully initialized MCEFVideoPlayer for browser with ID: " + this.browser.getIdentifier());
                     initialized = true;
                 } else {
-                    LOGGER.error("[FANCYMENU] Failed to initialize MCEFVideoPlayer for bwoser with ID: " + this.browser.getIdentifier());
+                    LOGGER.error("[FANCYMENU] Failed to initialize MCEFVideoPlayer for browser with ID: " + (this.browser != null ? this.browser.getIdentifier() : "unknown"));
                     initialized = false;
                 }
             });
 
-            // CRITICAL: Disable generic autoplay/mute features of WrappedMCEFBrowser
-            // MCEFVideoPlayer uses specific controls via player.html API.
-            this.browser.setAutoPlayAllVideosOnLoad(false);
-            this.browser.setMuteAllMediaOnLoad(false); // Muting is handled by player.html and this class's API
+            if (this.browser != null) {
+                // CRITICAL: Disable generic autoplay/mute features of WrappedMCEFBrowser
+                // MCEFVideoPlayer uses specific controls via player.html API.
+                this.browser.setAutoPlayAllVideosOnLoad(false);
+                this.browser.setMuteAllMediaOnLoad(false); // Muting is handled by player.html and this class's API
+            } else {
+                LOGGER.error("[FANCYMENU] MCEFVideoPlayer: Browser was not created successfully. Player will not function.");
+                initialized = false; // Ensure initialized is false if browser is null
+            }
             
         } catch (Exception e) {
             LOGGER.error("[FANCYMENU] Failed to initialize MCEFVideoPlayer [{}]", instanceId, e);
@@ -157,7 +168,7 @@ public class MCEFVideoPlayer {
      * Helper to ensure initialization and run on executor
      */
     private void executeWhenInitialized(@NotNull Runnable task) {
-        executeWithCondition(task, () -> this.initialized && (this.browser != null));
+        executeWithCondition(task, () -> this.initialized && (this.browser != null) && (this.browser.getBrowser() != null)); // Added browser.getBrowser() check
     }
     
     /**
@@ -321,13 +332,14 @@ public class MCEFVideoPlayer {
      * @return The video duration in seconds, or 0 if unknown
      */
     public double getDuration() {
-        if (!initialized) {
-            return 0;
-        }
-        String result = executeJavaScriptWithResult("(function() { try { return window.videoPlayerAPI && window.videoPlayerAPI.getDuration(); } catch(e) { return 0; } })()");
+        if (!initialized) return 0;
+        String jsCode = "(function() { try { var dur = window.videoPlayerAPI.getDuration(); return (dur === undefined || dur === null || isNaN(dur)) ? 0 : dur; } catch(e) { console.error('Error in getDuration:', e); return 0; } })()";
+        String result = executeJavaScriptWithResult(jsCode);
+        if (result == null) return 0;
         try {
             return Double.parseDouble(result);
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
+            LOGGER.warn("[FANCYMENU] Player [{}]: Could not parse duration from JS result: '{}'. JS Code: {}", instanceId, result, jsCode);
             return 0;
         }
     }
@@ -347,13 +359,14 @@ public class MCEFVideoPlayer {
      * @return The current position in seconds
      */
     public double getCurrentTime() {
-        if (!initialized) {
-            return 0;
-        }
-        String result = executeJavaScriptWithResult("(function() { try { return window.videoPlayerAPI && window.videoPlayerAPI.getCurrentTime(); } catch(e) { return 0; } })()");
+        if (!initialized) return 0;
+        String jsCode = "(function() { try { var time = window.videoPlayerAPI.getCurrentTime(); return (time === undefined || time === null || isNaN(time)) ? 0 : time; } catch(e) { console.error('Error in getCurrentTime:', e); return 0; } })()";
+        String result = executeJavaScriptWithResult(jsCode);
+        if (result == null) return 0;
         try {
             return Double.parseDouble(result);
-        } catch (Exception e) {
+        } catch (NumberFormatException e) {
+            LOGGER.warn("[FANCYMENU] Player [{}]: Could not parse current time from JS result: '{}'. JS Code: {}", instanceId, result, jsCode);
             return 0;
         }
     }
@@ -526,12 +539,14 @@ public class MCEFVideoPlayer {
      */
     public boolean isPlaying() {
         if (!initialized) return false;
-        String result = executeJavaScriptWithResult("(function() { try { return window.videoPlayerAPI && window.videoPlayerAPI.isPlaying(); } catch(e) { return false; } })()");
+        String jsCode = "(function() { try { return !!(window.videoPlayerAPI && window.videoPlayerAPI.isPlaying()); } catch(e) { console.error('Error in isPlaying:', e); return false; } })()";
+        String result = executeJavaScriptWithResult(jsCode);
+        if (result == null) return false;
         try {
             return Boolean.parseBoolean(result);
         } catch (Exception e) {
-            LOGGER.error("[FANCYMENU] Player [{}]: Could not parse isPlaying state: {}", instanceId, result, e);
-            return false; // Default to false on error
+            LOGGER.warn("[FANCYMENU] Player [{}]: Could not parse isPlaying state from JS result: '{}'. JS Code: {}", instanceId, result, jsCode, e);
+            return false;
         }
     }
     
@@ -541,13 +556,14 @@ public class MCEFVideoPlayer {
      * @return The video width in pixels, or 0 if unknown
      */
     public int getVideoWidth() {
-        if (!initialized) {
-            return 0;
-        }
-        String result = executeJavaScriptWithResult("(function() { try { return window.videoPlayerAPI && window.videoPlayerAPI.getVideoWidth(); } catch(e) { return 0; } })()");
+        if (!initialized) return 0;
+        String jsCode = "(function() { try { var w = window.videoPlayerAPI.getVideoWidth(); return (w === undefined || w === null || isNaN(w)) ? 0 : w; } catch(e) { console.error('Error in getVideoWidth:', e); return 0; } })()";
+        String result = executeJavaScriptWithResult(jsCode);
+        if (result == null) return 0;
         try {
-            return Integer.parseInt(Objects.requireNonNull(result));
-        } catch (Exception e) {
+            return (int) Double.parseDouble(result);
+        } catch (NumberFormatException e) {
+            LOGGER.warn("[FANCYMENU] Player [{}]: Could not parse video width from JS result: '{}'. JS Code: {}", instanceId, result, jsCode);
             return 0;
         }
     }
@@ -558,13 +574,14 @@ public class MCEFVideoPlayer {
      * @return The video height in pixels, or 0 if unknown
      */
     public int getVideoHeight() {
-        if (!initialized) {
-            return 0;
-        }
-        String result = executeJavaScriptWithResult("(function() { try { return window.videoPlayerAPI && window.videoPlayerAPI.getVideoHeight(); } catch(e) { return 0; } })()");
+        if (!initialized) return 0;
+        String jsCode = "(function() { try { var h = window.videoPlayerAPI.getVideoHeight(); return (h === undefined || h === null || isNaN(h)) ? 0 : h; } catch(e) { console.error('Error in getVideoHeight:', e); return 0; } })()";
+        String result = executeJavaScriptWithResult(jsCode);
+        if (result == null) return 0;
         try {
-            return Integer.parseInt(Objects.requireNonNull(result));
-        } catch (Exception e) {
+            return (int) Double.parseDouble(result);
+        } catch (NumberFormatException e) {
+            LOGGER.warn("[FANCYMENU] Player [{}]: Could not parse video height from JS result: '{}'. JS Code: {}", instanceId, result, jsCode);
             return 0;
         }
     }
@@ -674,7 +691,7 @@ public class MCEFVideoPlayer {
      * Ensures it runs on the VideoManager's executor for thread safety if called from other threads.
      */
     protected void executeJavaScript(String code) {
-        if ((browser != null) && initialized) {
+        if ((browser != null) && browser.getBrowser() != null && initialized) {
             try {
                 // If called from a thread other than MCEF's or main rendering thread, ensure proper dispatch.
                 // Assuming VideoManager.EXECUTOR is suitable for MCEF interactions or MCEF handles it.
@@ -683,7 +700,7 @@ public class MCEFVideoPlayer {
                 LOGGER.error("[FANCYMENU] Player [{}]: Error executing JavaScript: {}", instanceId, e.getMessage(), e);
             }
         } else {
-            String reason = (browser == null) ? "browser is null" : "initialized is false";
+            String reason = (browser == null) ? "browser is null" : (!initialized ? "initialized is false" : "underlying MCEF browser is null");
             LOGGER.warn("[FANCYMENU] Player [{}]: Attempted to execute JS when not ready. Reason: {}. Code: {}", 
                 instanceId, reason, code.substring(0, Math.min(50, code.length())));
         }
@@ -691,141 +708,67 @@ public class MCEFVideoPlayer {
     
     /**
      * Synchronously executes JavaScript to check for a result.
-     * This implementation uses a DOM element to transfer the result back.
+     * This implementation uses console.log with a specific prefix to communicate results back to Java.
      *
-     * @param code The JavaScript code to execute
+     * @param jsCodeToEvaluate The JavaScript code to execute
      * @return The result as a string, or null if execution failed
      */
     @Nullable
-    protected String executeJavaScriptWithResult(String code) {
-        if ((browser == null) || !initialized) {
-            LOGGER.warn("[FANCYMENU] Player [{}]: executeJavaScriptWithResult called when not ready.", instanceId);
+    protected String executeJavaScriptWithResult(String jsCodeToEvaluate) {
+        if (browser == null || !initialized) {
+            LOGGER.warn("[FANCYMENU] Player [{}]: executeJavaScriptWithResult called when not ready (browser null or not initialized).", instanceId);
             return null;
         }
-        
-        try {
-            String resultVar = "_javaCallResult_" + System.nanoTime();
-            String fullScript = "try { window." + resultVar + " = JSON.stringify(" + code + "); } catch(e) { window." + resultVar + " = 'JS_ERROR:' + e.toString(); }";
-            browser.getBrowser().executeJavaScript(fullScript, browser.getUrl(), 0);
-
-            // THIS IS THE CORE PROBLEM: How to get window.resultVar back to Java?
-            // The original implementation using title hack or DOM attributes is problematic
-            // For now, we'll use a similar approach but acknowledge its limitations
-
-            // Create a unique identifier for this request
-            String requestId = "request_" + System.currentTimeMillis();
-            
-            // Create an element to hold the result if it doesn't exist
-            browser.getBrowser().executeJavaScript(
-                    "if (!document.getElementById('javaResultHolder')) {" +
-                    "  var holder = document.createElement('div');" +
-                    "  holder.id = 'javaResultHolder';" +
-                    "  holder.style.display = 'none';" +
-                    "  document.body.appendChild(holder);" +
-                    "}",
-                    browser.getUrl(), 0);
-            
-            // Execute the code and store the result with the request ID
-            browser.getBrowser().executeJavaScript(
-                    "try {" +
-                    "  document.getElementById('javaResultHolder').setAttribute('data-" + requestId + "', window." + resultVar + ");" +
-                    "} catch(e) {" +
-                    "  document.getElementById('javaResultHolder').setAttribute('data-" + requestId + "', 'ERROR:' + e.message);" +
-                    "}",
-                    browser.getUrl(), 0);
-            
-            // Give time for JavaScript to execute
-            try {
-                Thread.sleep(30);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-            
-            // Now retrieve the result
-            for (int attempt = 0; attempt < 3; attempt++) {
-                browser.getBrowser().executeJavaScript(
-                        "window._tempResult = document.getElementById('javaResultHolder').getAttribute('data-" + requestId + "');",
-                        browser.getUrl(), 0);
-                
-                // Wait a little more
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-                
-                // Check if result exists by setting a class on body
-                browser.getBrowser().executeJavaScript(
-                        "if (window._tempResult) {" +
-                        "  document.body.classList.add('has-result-" + requestId + "');" +
-                        "} else {" +
-                        "  document.body.classList.remove('has-result-" + requestId + "');" +
-                        "}",
-                        browser.getUrl(), 0);
-                
-                // Check if the class exists
-                browser.getBrowser().executeJavaScript(
-                        "window._hasResult = document.body.classList.contains('has-result-" + requestId + "');",
-                        browser.getUrl(), 0);
-                
-                // Wait again
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-                
-                // Now create a simple proxy that will add the result to document title temporarily
-                browser.getBrowser().executeJavaScript(
-                        "if (window._hasResult && window._tempResult) {" +
-                        "  var oldTitle = document.title;" +
-                        "  document.title = '[MCEF_RESULT]' + window._tempResult + '[/MCEF_RESULT]';" +
-                        "  setTimeout(function() { document.title = oldTitle; }, 50);" +
-                        "}",
-                        browser.getUrl(), 0);
-                
-                // Wait once more
-                try {
-                    Thread.sleep(20);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-                
-                // Get the title which should now contain our result
-                String title = browser.getBrowser().getURL(); // Using URL as a hack since we can get it
-                if (title != null && title.contains("[MCEF_RESULT]")) {
-                    int start = title.indexOf("[MCEF_RESULT]") + 13;
-                    int end = title.indexOf("[/MCEF_RESULT]");
-                    if (start >= 13 && end > start) {
-                        String result = title.substring(start, end);
-                        
-                        // Clean up
-                        browser.getBrowser().executeJavaScript(
-                                "document.getElementById('javaResultHolder').removeAttribute('data-" + requestId + "');" +
-                                "document.body.classList.remove('has-result-" + requestId + "');" +
-                                "delete window._tempResult;" +
-                                "delete window._hasResult;",
-                                browser.getUrl(), 0);
-                        
-                        // Return the result
-                        return result;
-                    }
-                }
-                
-                // If we didn't get a result, wait longer before next attempt
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-            
-            // If we get here, we couldn't get a result
-            LOGGER.info("[FANCYMENU] Could not get JavaScript result after multiple attempts");
+        if (browser.getBrowser() == null) {
+            LOGGER.warn("[FANCYMENU] Player [{}]: executeJavaScriptWithResult called but underlying MCEF browser is null.", instanceId);
             return null;
-            
-        } catch (Exception e) {
-            LOGGER.info("[FANCYMENU] Error in JavaScript execution", e);
+        }
+
+        String requestId = UUID.randomUUID().toString();
+        CompletableFuture<String> resultFuture = new CompletableFuture<>();
+        // Get the static map from MCEFVideoManager
+        MCEFVideoManager.getPendingJsResults().put(requestId, resultFuture);
+
+        // This JavaScript will execute the provided 'jsCodeToEvaluate',
+        // then take its result and send it back via a 'console.log' message
+        // with a specific prefix and the requestId.
+        String script = String.format(
+            "try {" +
+            "  var evalResult = (%s);" + // jsCodeToEvaluate is wrapped in parentheses to ensure it's an expression
+            "  console.log('MCEF_ASYNC_RESULT:%s:' + JSON.stringify(evalResult));" +
+            "} catch (e) {" +
+            "  console.log('MCEF_ASYNC_RESULT:%s:' + JSON.stringify({error: e.toString(), message: e.message, stack: e.stack}));" +
+            "}",
+            jsCodeToEvaluate, requestId, requestId // requestId is used for both success and error paths
+        );
+
+        try {
+            browser.getBrowser().executeJavaScript(script, browser.getUrl(), 0);
+            // Block and wait for the result from the CefDisplayHandler, with a timeout
+            String result = resultFuture.get(JS_RESULT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+
+            if (result != null && result.contains("\"error\":")) { // Check if the result is a JSON error object
+                LOGGER.warn("[FANCYMENU] Player [{}]: JavaScript execution for request {} resulted in an error. JS Response: {}", instanceId, requestId, result);
+                return null; // Or handle error more specifically
+            }
+            return result; // This is the JSON.stringified result from JS
+        } catch (TimeoutException e) {
+            LOGGER.warn("[FANCYMENU] Player [{}]: Timeout ({}ms) waiting for JavaScript result for request {}. Original log: Could not get JavaScript result after multiple attempts", 
+                         instanceId, JS_RESULT_TIMEOUT_MS, requestId);
+            MCEFVideoManager.getPendingJsResults().remove(requestId); // Clean up
+            return null;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            LOGGER.warn("[FANCYMENU] Player [{}]: executeJavaScriptWithResult interrupted for request {}", instanceId, requestId, e);
+            MCEFVideoManager.getPendingJsResults().remove(requestId); // Clean up
+            return null;
+        } catch (ExecutionException e) {
+            LOGGER.error("[FANCYMENU] Player [{}]: JavaScript execution future completed exceptionally for request {}", instanceId, requestId, e.getCause());
+            MCEFVideoManager.getPendingJsResults().remove(requestId); // Clean up
+            return null;
+        } catch (Exception e) { // Catch any other unexpected errors
+            LOGGER.error("[FANCYMENU] Player [{}]: Unexpected error in executeJavaScriptWithResult for request {}", instanceId, requestId, e);
+            MCEFVideoManager.getPendingJsResults().remove(requestId); // Clean up
             return null;
         }
     }
@@ -858,5 +801,4 @@ public class MCEFVideoPlayer {
             }
         }, 0, 50, TimeUnit.MILLISECONDS);
     }
-
 }

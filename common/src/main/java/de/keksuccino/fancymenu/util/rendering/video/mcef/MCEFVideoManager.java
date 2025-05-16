@@ -1,11 +1,16 @@
 package de.keksuccino.fancymenu.util.rendering.video.mcef;
 
+import com.cinemamod.mcef.MCEFClient;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cef.CefSettings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import com.cinemamod.mcef.MCEF;
+import org.cef.browser.CefBrowser;
+import org.cef.handler.CefDisplayHandlerAdapter;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -13,6 +18,8 @@ import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -31,6 +38,10 @@ public class MCEFVideoManager {
     // Flag to track if web resources have been registered
     protected boolean webResourcesRegistered = false;
     
+    // For handling JS results
+    private static volatile boolean jsResultHandlerRegistered = false;
+    private static final Map<String, CompletableFuture<String>> pendingJsResults = new ConcurrentHashMap<>();
+    
     /**
      * Gets the singleton instance of the VideoManager.
      *
@@ -41,19 +52,84 @@ public class MCEFVideoManager {
     }
     
     /**
+     * Public getter for MCEFVideoPlayer to access the pending results map
+     */
+    public static Map<String, CompletableFuture<String>> getPendingJsResults() {
+        return pendingJsResults;
+    }
+    
+    /**
      * Initializes the VideoManager by extracting web resources to the temp directory.
      * This should be called during mod initialization.
      */
     public void initialize() {
-        if (isVideoPlaybackAvailable() && !webResourcesRegistered) {
-            try {
-                // Extract the web resources to FancyMenu's temp directory
-                extractWebResources();
-                webResourcesRegistered = true;
-                LOGGER.info("[FANCYMENU] Successfully extracted video player web resources");
-            } catch (Exception e) {
-                LOGGER.error("[FANCYMENU] Failed to extract video player web resources", e);
+        if (isVideoPlaybackAvailable()) {
+            // Register JS result handler if not already done
+            if (!jsResultHandlerRegistered) {
+                registerJsResultHandlerInternal();
             }
+            
+            // Existing web resource extraction logic
+            if (!webResourcesRegistered) {
+                try {
+                    // Extract the web resources to FancyMenu's temp directory
+                    extractWebResources();
+                    webResourcesRegistered = true;
+                    LOGGER.info("[FANCYMENU] Successfully extracted video player web resources");
+                } catch (Exception e) {
+                    LOGGER.error("[FANCYMENU] Failed to extract video player web resources", e);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Registers the JavaScript result handler with MCEF
+     */
+    private static synchronized void registerJsResultHandlerInternal() {
+        if (jsResultHandlerRegistered) {
+            return;
+        }
+
+        try {
+            MCEFClient client = MCEF.getClient(); // Get MCEF's CefClient instance
+            // Add our custom display handler to intercept console messages
+            client.addDisplayHandler(new CefDisplayHandlerAdapter() {
+                @Override
+                public boolean onConsoleMessage(CefBrowser browser, CefSettings.LogSeverity level, String message, String source, int line) {
+                    if (message != null && message.startsWith("MCEF_ASYNC_RESULT:")) {
+                        try {
+                            String[] parts = message.split(":", 3); // Format: MCEF_ASYNC_RESULT:requestId:jsonData
+                            if (parts.length == 3) {
+                                String requestId = parts[1];
+                                String jsonData = parts[2];
+                                CompletableFuture<String> future = pendingJsResults.remove(requestId);
+                                if (future != null) {
+                                    if ("undefined".equals(jsonData)) { // JSON.stringify(undefined) results in "undefined"
+                                        future.complete(null); // Treat JS undefined as Java null
+                                    } else {
+                                        future.complete(jsonData);
+                                    }
+                                } else {
+                                    LOGGER.warn("[FANCYMENU] Received JS result for unknown or timed-out request ID: {}", requestId);
+                                }
+                            }
+                        } catch (Exception e) {
+                            LOGGER.error("[FANCYMENU] Error processing MCEF_ASYNC_RESULT: " + message, e);
+                        }
+                        return true; // Indicate message is handled
+                    }
+                    return false; // Message not handled by us, let MCEF process it further if needed
+                }
+            });
+            LOGGER.info("[FANCYMENU] Successfully registered JS result display handler with MCEF.");
+            jsResultHandlerRegistered = true;
+        } catch (Throwable t) { // Catch Throwable to include LinkageErrors etc. if JCEF classes are missing
+            LOGGER.error("[FANCYMENU] Failed to register JS result display handler with MCEF.", t);
+        }
+        
+        if (!jsResultHandlerRegistered) {
+            LOGGER.warn("[FANCYMENU] JS result handler NOT registered. Getting duration/playtime will likely fail.");
         }
     }
     
@@ -154,6 +230,14 @@ public class MCEFVideoManager {
                 LOGGER.error("[FANCYMENU] Failed to initialize/verify web resources for video player. Cannot create player.");
                 return null;
             }
+        }
+        
+        // Also ensure JS handler is registered (initialize() above should handle this)
+        if (!jsResultHandlerRegistered && isVideoPlaybackAvailable()) {
+             registerJsResultHandlerInternal(); // Attempt registration again if initialize() didn't set it
+             if (!jsResultHandlerRegistered) {
+                 LOGGER.error("[FANCYMENU] JS Result Handler not registered. Video info (duration, etc.) may not work.");
+             }
         }
         
         try {
