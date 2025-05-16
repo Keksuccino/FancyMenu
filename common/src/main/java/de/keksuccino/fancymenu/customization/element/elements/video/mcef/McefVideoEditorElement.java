@@ -2,13 +2,12 @@ package de.keksuccino.fancymenu.customization.element.elements.video.mcef;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
+import de.keksuccino.fancymenu.customization.element.elements.video.SetVideoVolumeScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -35,7 +34,7 @@ public class MCEFVideoEditorElement extends AbstractEditorElement {
                             this.getElement().rawVideoUrlSource = ResourceSource.of(source);
                         }
                         Minecraft.getInstance().setScreen(this.editor);
-                    }).setSource((this.getElement().rawVideoUrlSource != null) ? this.getElement().rawVideoUrlSource.getSourceWithPrefix() : null, false));
+                    }).setSource((this.getElement().rawVideoUrlSource != null) ? this.getElement().rawVideoUrlSource.getSerializationSource() : null, false));
                 }).setIcon(ContextMenu.IconFactory.getIcon("image"))
                 .setStackable(false);
 
@@ -43,16 +42,21 @@ public class MCEFVideoEditorElement extends AbstractEditorElement {
                         element -> element.getElement().loop,
                         (element, aBoolean) -> element.getElement().loop = aBoolean,
                         "fancymenu.elements.video_mcef.loop")
-                .setStackable(false);
+                .setStackable(false)
+                .setIcon(ContextMenu.IconFactory.getIcon("reload"));
 
         this.rightClickMenu.addSeparatorEntry("separator_after_toggle_loop");
 
-        this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "set_volume", MCEFVideoEditorElement.class,
-                consumes -> consumes.getElement().volume,
-                (element1, aFloat) -> element1.getElement().volume = aFloat,
-                Component.translatable("fancymenu.elements.video_mcef.volume"), true, 1.0F,
-                MCEFVideoEditorElement::validVolume,
-                consumes -> validVolume(consumes) ? null : Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.video_mcef.volume.invalid_value")));
+        this.rightClickMenu.addClickableEntry("set_volume", Component.translatable("fancymenu.elements.video_mcef.volume"), (menu, entry) -> {
+            Minecraft.getInstance().setScreen(new SetVideoVolumeScreen(this.getElement().volume, vol -> {
+                if (vol != null) {
+                    this.editor.history.saveSnapshot();
+                    this.getElement().volume = vol;
+                }
+                Minecraft.getInstance().setScreen(this.editor);
+            }));
+        }).setStackable(false)
+                .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
         this.addCycleContextMenuEntryTo(this.rightClickMenu, "sound_channel",
                         Arrays.asList(SoundSource.values()),
@@ -60,7 +64,8 @@ public class MCEFVideoEditorElement extends AbstractEditorElement {
                         consumes -> consumes.getElement().soundSource,
                         (audioEditorElement, soundSource) -> audioEditorElement.getElement().soundSource = soundSource,
                         (menu, entry, switcherValue) -> Component.translatable("fancymenu.elements.video_mcef.sound_channel", Component.translatable("soundCategory." + switcherValue.getName()).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()))))
-                .setStackable(false);
+                .setStackable(false)
+                .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
     }
 

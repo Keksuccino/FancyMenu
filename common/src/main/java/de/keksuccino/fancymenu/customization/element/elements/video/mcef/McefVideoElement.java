@@ -4,6 +4,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.video.IVideoElement;
+import de.keksuccino.fancymenu.customization.element.elements.video.VideoElementController;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoManager;
@@ -23,8 +25,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
-public class MCEFVideoElement extends AbstractElement {
+public class MCEFVideoElement extends AbstractElement implements IVideoElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
@@ -50,12 +53,21 @@ public class MCEFVideoElement extends AbstractElement {
     protected Boolean lastLoop = null;
     protected float cachedActualVolume = -10000F;
     protected float lastCachedActualVolume = -11000F;
+    protected Boolean lastPausedState = null;
     protected volatile long lastRenderTickTime = -1L;
+    protected final AtomicReference<Float> cachedDuration = new AtomicReference<>(0F);
+    protected final AtomicReference<Float> cachedPlayTime = new AtomicReference<>(0F);
     protected volatile ScheduledFuture<?> garbageChecker = EXECUTOR.scheduleAtFixedRate(() -> {
         if (this.initialized && (this.lastRenderTickTime != -1) && ((this.lastRenderTickTime + 11000) < System.currentTimeMillis())) {
             this.resetElement();
         }
     }, 0, 100, TimeUnit.MILLISECONDS);
+    protected volatile ScheduledFuture<?> asyncTicker = EXECUTOR.scheduleAtFixedRate(() -> {
+        if (this.initialized) {
+            this.cachedDuration.set(this._getDuration());
+            this.cachedPlayTime.set(this._getPlayTime());
+        }
+    }, 0, 900, TimeUnit.MILLISECONDS);
     protected boolean triedRestore = false;
 
     public MCEFVideoElement(@NotNull ElementBuilder<?, ?> builder) {
@@ -118,6 +130,8 @@ public class MCEFVideoElement extends AbstractElement {
             this.lastAbsoluteWidth = w;
             this.lastAbsoluteHeight = h;
 
+            boolean pausedState = this.getControllerPausedState();
+
             String finalVideoUrl = null;
             if (this.rawVideoUrlSource != null) {
                 finalVideoUrl = PlaceholderParser.replacePlaceholders(this.rawVideoUrlSource.getSourceWithoutPrefix());
@@ -137,23 +151,27 @@ public class MCEFVideoElement extends AbstractElement {
                     if (videoFile.exists()) {
                         String videoUri = videoFile.toURI().toString();
                         LOGGER.info("[FANCYMENU] Using video URI: " + videoUri);
-
-                        // Load the video
                         this.videoPlayer.loadVideo(videoUri);
-
-                        // With the improved player, we can call play() immediately after loadVideo()
-                        // The JS will queue the play request and execute it when the video is ready
-                        this.videoPlayer.play();
+                        if (!pausedState) this.videoPlayer.play();
                     } else {
                         // Try loading the URL as-is
                         LOGGER.info("[FANCYMENU] File not found, trying URL directly: " + finalVideoUrl);
                         this.videoPlayer.loadVideo(finalVideoUrl);
-                        this.videoPlayer.play();
+                        if (!pausedState) this.videoPlayer.play();
                     }
                 } catch (Exception e) {
                     LOGGER.error("[FANCYMENU] Error processing video URL", e);
                 }
             }
+
+            if ((this.lastPausedState == null) || !Objects.equals(pausedState, this.lastPausedState)) {
+                if (pausedState) {
+                    this.videoPlayer.pause();
+                } else {
+                    this.videoPlayer.play();
+                }
+            }
+            this.lastPausedState = pausedState;
 
             RenderSystem.enableBlend();
 
@@ -201,10 +219,16 @@ public class MCEFVideoElement extends AbstractElement {
     }
 
     @Override
+    public void afterConstruction() {
+        if (!VideoElementController.hasMetaFor(this.getInstanceIdentifier())) VideoElementController.putMeta(this.getInstanceIdentifier(), new VideoElementController.VideoElementMeta(this.getInstanceIdentifier(), 1.0F, false));
+    }
+
+    @Override
     public void onBeforeResizeScreen() {
         super.onBeforeResizeScreen();
         LOGGER.info("######################################## VIDEO ELEMENT BEFORE RESIZE SCREEN !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         this.garbageChecker.cancel(true);
+        this.asyncTicker.cancel(true);
         this.trySaveToMemory();
     }
 
@@ -215,16 +239,19 @@ public class MCEFVideoElement extends AbstractElement {
         if ((closedScreen instanceof CustomGuiBaseScreen c1) && (newScreen instanceof CustomGuiBaseScreen c2)) {
             if (Objects.equals(c1.getIdentifier(), c2.getIdentifier())) {
                 this.garbageChecker.cancel(true);
+                this.asyncTicker.cancel(true);
                 this.trySaveToMemory();
                 return;
             }
         } else if ((closedScreen != null) && (newScreen != null) && Objects.equals(closedScreen.getClass(), newScreen.getClass())) {
             this.garbageChecker.cancel(true);
+            this.asyncTicker.cancel(true);
             this.trySaveToMemory();
             return;
         }
         this.getMemory().clear();
         this.garbageChecker.cancel(true);
+        this.asyncTicker.cancel(true);
         this.disposePlayer();
     }
 
@@ -239,8 +266,7 @@ public class MCEFVideoElement extends AbstractElement {
      * @param volume Value between 0.0 and 1.0.
      */
     protected void setVolume(float volume, boolean updatePlayer) {
-        if (volume > 1.0F) volume = 1.0F;
-        if (volume < 0.0F) volume = 0.0F;
+        volume = Math.max(0.0F, Math.min(1.0F, volume));
         this.volume = volume;
         if ((this.videoPlayer != null)) {
             float actualVolume = this.volume;
@@ -250,6 +276,7 @@ public class MCEFVideoElement extends AbstractElement {
                 soundSourceVolume *= masterVolume;
             }
             actualVolume *= soundSourceVolume;
+            actualVolume *= this.getControllerVolume();
             this.cachedActualVolume = actualVolume;
             if (updatePlayer) {
                 this.videoPlayer.setVolume(Math.min(1.0F, Math.max(0.0F, actualVolume)));
@@ -259,6 +286,28 @@ public class MCEFVideoElement extends AbstractElement {
 
     protected void updateVolume() {
         this.setVolume(this.volume, false);
+    }
+
+    /**
+     * Returns the volume of this element that is set in the {@link VideoElementController}.<br>
+     * The controller volume is set by actions and similar things that are user-controlled in most cases.
+     */
+    public float getControllerVolume() {
+        if (!VideoElementController.hasMetaFor(this.getInstanceIdentifier())) VideoElementController.putMeta(this.getInstanceIdentifier(), new VideoElementController.VideoElementMeta(this.getInstanceIdentifier(), 1.0F, false));
+        VideoElementController.VideoElementMeta meta = VideoElementController.getMeta(this.getInstanceIdentifier());
+        if (meta != null) return Math.max(0.0F, Math.min(1.0F, meta.volume));
+        return 1.0F;
+    }
+
+    /**
+     * Returns the paused state of this element that is set in the {@link VideoElementController}.<br>
+     * The controller paused state is set by actions and similar things that are user-controlled in most cases.
+     */
+    public boolean getControllerPausedState() {
+        if (!VideoElementController.hasMetaFor(this.getInstanceIdentifier())) VideoElementController.putMeta(this.getInstanceIdentifier(), new VideoElementController.VideoElementMeta(this.getInstanceIdentifier(), 1.0F, false));
+        VideoElementController.VideoElementMeta meta = VideoElementController.getMeta(this.getInstanceIdentifier());
+        if (meta == null) return false;
+        return meta.paused;
     }
 
     public void disposePlayer() {
@@ -280,6 +329,26 @@ public class MCEFVideoElement extends AbstractElement {
         this.lastAbsoluteHeight = -10000;
         this.lastAbsoluteX = -10000;
         this.lastAbsoluteY = -10000;
+    }
+
+    protected float _getDuration() {
+        if (!this.initialized || (this.videoPlayer == null)) return 0;
+        return (float) this.videoPlayer.getDuration();
+    }
+
+    protected float _getPlayTime() {
+        if (!this.initialized || (this.videoPlayer == null)) return 0;
+        return (float) this.videoPlayer.getCurrentTime();
+    }
+
+    @Override
+    public float getDuration() {
+        return this.cachedDuration.get();
+    }
+
+    @Override
+    public float getPlayTime() {
+        return this.cachedPlayTime.get();
     }
 
 }

@@ -16,6 +16,10 @@ import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.ram.
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.ram.UsedRamPlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.player.PlayerNamePlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.player.PlayerUuidPlaceholder;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.video.VideoElementDurationPlaceholder;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.video.VideoElementPausedStatePlaceholder;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.video.VideoElementPlaytimePlaceholder;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.video.VideoElementVolumePlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.world.*;
 import de.keksuccino.fancymenu.customization.world.LastWorldHandler;
 
@@ -142,6 +146,10 @@ public class Placeholders {
     public static final MaxPlayerOxygenPlaceholder MAX_PLAYER_OXYGEN = new MaxPlayerOxygenPlaceholder();
     public static final CurrentPlayerOxygenPercentagePlaceholder CURRENT_PLAYER_OXYGEN_PERCENTAGE = new CurrentPlayerOxygenPercentagePlaceholder();
     public static final LastWorldOrServerPlaceholder LAST_WORLD_OR_SERVER = new LastWorldOrServerPlaceholder();
+    public static final VideoElementVolumePlaceholder VIDEO_ELEMENT_VOLUME = new VideoElementVolumePlaceholder();
+    public static final VideoElementDurationPlaceholder VIDEO_ELEMENT_DURATION = new VideoElementDurationPlaceholder();
+    public static final VideoElementPausedStatePlaceholder VIDEO_ELEMENT_PAUSED_STATE = new VideoElementPausedStatePlaceholder();
+    public static final VideoElementPlaytimePlaceholder VIDEO_ELEMENT_PLAYTIME = new VideoElementPlaytimePlaceholder();
 
     public static void registerAll() {
 
@@ -266,6 +274,12 @@ public class Placeholders {
         PlaceholderRegistry.register(AUDIO_ELEMENT_DURATION);
         PlaceholderRegistry.register(AUDIO_ELEMENT_PLAYTIME);
         PlaceholderRegistry.register(AUDIO_ELEMENT_PLAYING_STATE);
+
+        //Video
+        PlaceholderRegistry.register(VIDEO_ELEMENT_VOLUME);
+        PlaceholderRegistry.register(VIDEO_ELEMENT_DURATION);
+        PlaceholderRegistry.register(VIDEO_ELEMENT_PAUSED_STATE);
+        PlaceholderRegistry.register(VIDEO_ELEMENT_PLAYTIME);
 
         //Other
         PlaceholderRegistry.register(PERCENT_RAM);

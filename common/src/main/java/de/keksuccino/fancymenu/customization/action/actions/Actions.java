@@ -19,6 +19,8 @@ import de.keksuccino.fancymenu.customization.action.actions.screen.UpdateScreenA
 import de.keksuccino.fancymenu.customization.action.actions.variables.ClearVariablesAction;
 import de.keksuccino.fancymenu.customization.action.actions.variables.SetVariableAction;
 import de.keksuccino.fancymenu.customization.action.ActionRegistry;
+import de.keksuccino.fancymenu.customization.action.actions.video.SetVideoElementVolumeAction;
+import de.keksuccino.fancymenu.customization.action.actions.video.ToggleVideoElementPauseStateAction;
 
 public class Actions {
 
@@ -47,6 +49,8 @@ public class Actions {
     public static final PreviousTrackAction PREVIOUS_AUDIO_ELEMENT_TRACK = new PreviousTrackAction();
     public static final TogglePlayTrackAction TOGGLE_PLAY_AUDIO_ELEMENT_TRACK = new TogglePlayTrackAction();
     public static final BackToLastScreenAction BACK_TO_LAST_SCREEN = new BackToLastScreenAction();
+    public static final SetVideoElementVolumeAction SET_VIDEO_ELEMENT_VOLUME = new SetVideoElementVolumeAction();
+    public static final ToggleVideoElementPauseStateAction TOGGLE_VIDEO_ELEMENT_PAUSE_STATE = new ToggleVideoElementPauseStateAction();
 
     public static void registerAll() {
 
@@ -75,6 +79,8 @@ public class Actions {
         ActionRegistry.register(PREVIOUS_AUDIO_ELEMENT_TRACK);
         ActionRegistry.register(TOGGLE_PLAY_AUDIO_ELEMENT_TRACK);
         ActionRegistry.register(BACK_TO_LAST_SCREEN);
+        ActionRegistry.register(SET_VIDEO_ELEMENT_VOLUME);
+        ActionRegistry.register(TOGGLE_VIDEO_ELEMENT_PAUSE_STATE);
 
     }
 

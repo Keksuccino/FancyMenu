@@ -1634,5 +1634,19 @@
   "fancymenu.elements.video_mcef.loop": "Loop Video: %s",
   "fancymenu.elements.video_mcef.sound_channel": "Sound Channel: %s",
   "fancymenu.elements.video_mcef.volume": "Volume",
-  "fancymenu.elements.video_mcef.volume.invalid_value": "§rThe volume needs to be a valid decimal value between 0.0 (0%%) and 1.0 (100%%)."
+  "fancymenu.actions.video.set_video_element_volume": "Set Video Element Volume",
+  "fancymenu.actions.video.set_video_element_volume.desc": "Sets the volume of a Video element.\nThe volume has to be a valid decimal between 0.0 (0%%) and 1.0 (100%%).",
+  "fancymenu.actions.video.set_video_element_volume.value.desc": "Video Element Identifier + Volume [ Separated by : ]",
+  "fancymenu.placeholders.video_element_volume": "Video Element Volume",
+  "fancymenu.placeholders.video_element_volume.desc": "Returns the volume of a Video element.\nThe volume is a decimal between 0.0 (0%%) and 1.0 (100%%).",
+  "fancymenu.placeholders.categories.video": "Video",
+  "fancymenu.actions.video.toggle_paused_state": "Toggle Video Element Paused State",
+  "fancymenu.actions.video.toggle_paused_state.desc": "Toggles the paused state of a Video element.",
+  "fancymenu.actions.video.toggle_paused_state.value.desc": "Video Element Identifier",
+  "fancymenu.placeholders.video_element_duration": "Video Element Duration",
+  "fancymenu.placeholders.video_element_duration.desc": "Returns the total duration of a Video element in MM:SS format (e.g. '03:45').\nReturns '00:00' if the element is not ready yet or not video is set.\n\nRequired values:\n- element_identifier: The ID of the Video element to get the duration from",
+  "fancymenu.placeholders.video_element_playtime": "Video Element Play Time",
+  "fancymenu.placeholders.video_element_playtime.desc": "Returns either the current play time of a Video element\n(MM:SS format) or the play progress percentage (0-100).\nReturns '00:00' or '0' if the element is not ready yet or no video is set.\n\nRequired values:\n- element_identifier: The ID of the Video element\n- show_percentage: Set to 'true' to show percentage instead of time",
+  "fancymenu.placeholders.video_paused_state": "Video Element Paused State",
+  "fancymenu.placeholders.video_paused_state.desc": "Returns the paused state of a Video element.\nReturns 'true' when the element is paused, otherwise returns 'false'."
 }
