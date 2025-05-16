@@ -50,18 +50,6 @@
             width: 100%;
             height: 100%;
         }
-
-        #debugInfo {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            color: #00ff00;
-            background-color: rgba(0, 0, 0, 0.5);
-            padding: 5px;
-            font-family: monospace;
-            font-size: 12px;
-            z-index: 100;
-        }
         
         #loader {
             position: absolute;
@@ -98,40 +86,11 @@
         <div class="spinner"></div>
         <div id="loaderText">Loading video...</div>
     </div>
-    
-    <div id="debugInfo"></div>
 
     <script>
-        // Log function that also shows on screen
+        // Log function that only outputs to console, not UI
         function log(message) {
             console.log(message);
-            
-            // Make sure debugInfo element exists
-            if (!document.getElementById('debugInfo')) {
-                const debugDiv = document.createElement('div');
-                debugDiv.id = 'debugInfo';
-                debugDiv.style.position = 'absolute';
-                debugDiv.style.bottom = '10px';
-                debugDiv.style.left = '10px';
-                debugDiv.style.color = '#00ff00';
-                debugDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-                debugDiv.style.padding = '5px';
-                debugDiv.style.fontFamily = 'monospace';
-                debugDiv.style.fontSize = '12px';
-                debugDiv.style.zIndex = '100';
-                document.body.appendChild(debugDiv);
-            }
-            
-            const debugInfo = document.getElementById('debugInfo');
-            if (debugInfo) {
-                const time = new Date().toLocaleTimeString();
-                debugInfo.innerHTML += `<div>[${time}] ${message}</div>`;
-                // Keep only last 10 messages
-                const lines = debugInfo.getElementsByTagName('div');
-                if (lines.length > 10) {
-                    debugInfo.removeChild(lines[0]);
-                }
-            }
         }
         
         // Ensure all required elements exist
