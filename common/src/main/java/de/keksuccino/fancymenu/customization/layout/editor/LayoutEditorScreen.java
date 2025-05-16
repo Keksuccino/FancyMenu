@@ -119,6 +119,10 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		//Load all element instances before init, so the layout instance elements don't get wiped when updating it
 		this.constructElementInstances();
 
+		this.getAllElements().forEach(element -> {
+			element.element._onOpenScreen();
+		});
+
 	}
 
 	@Override
@@ -186,6 +190,11 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			this.width = m.getGuiScaledWidth();
 			this.height = m.getGuiScaledHeight();
 		}
+
+		this.getAllElements().forEach(element -> {
+			element.element.onBeforeResizeScreen();
+			element.element.onDestroyElement();
+		});
 
 		this.constructElementInstances();
 
@@ -1336,6 +1345,10 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public void closeEditor() {
 		this.saveWidgetSettings();
 		this.tamagotchiBuddyWidget.cleanup();
+		this.getAllElements().forEach(element -> {
+			element.element.onDestroyElement();
+			element.element.onCloseScreen(null, null);
+		});
 		currentInstance = null;
 		if (this.layoutTargetScreen != null) {
 			if (!((IMixinScreen)this.layoutTargetScreen).get_initialized_FancyMenu()) {
