@@ -459,9 +459,11 @@ public class LayoutEditorUI {
 						if (call != null) {
 							editor.history.saveSnapshot();
 							MenuBackground b = (call != ChooseMenuBackgroundScreen.NO_BACKGROUND) ? call : null;
+							editor.layout.menuBackgrounds.forEach(MenuBackground::onDisableOrRemove);
 							editor.layout.menuBackgrounds.clear();
 							if (b != null) {
 								editor.layout.menuBackgrounds.add(b);
+								b.onOpenScreen();
 							}
 						}
 						Minecraft.getInstance().setScreen(editor);

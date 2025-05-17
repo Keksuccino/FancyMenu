@@ -1629,7 +1629,7 @@
   "fancymenu.actions.back_to_last_screen": "Back to Last Screen",
   "fancymenu.actions.back_to_last_screen.desc": "Opens the last screen that was open before the current one.",
   "fancymenu.elements.video_mcef": "Video [MCEF]",
-  "fancymenu.elements.video_mcef.desc": "A video player powered by MCEF.\nYou need to install the MCEF mod to use this element.",
+  "fancymenu.elements.video_mcef.desc": "A video player powered by MCEF.\n§xThis element needs the MCEF mod to work!",
   "fancymenu.elements.video_mcef.set_source": "Video Source",
   "fancymenu.elements.video_mcef.loop": "Loop Video: %s",
   "fancymenu.elements.video_mcef.sound_channel": "Sound Channel: %s",
@@ -1648,5 +1648,9 @@
   "fancymenu.placeholders.video_element_playtime": "Video Element Play Time",
   "fancymenu.placeholders.video_element_playtime.desc": "Returns either the current play time of a Video element\n(MM:SS format) or the play progress percentage (0-100).\nReturns '00:00' or '0' if the element is not ready yet or no video is set.\n\nRequired values:\n- element_identifier: The ID of the Video element\n- show_percentage: Set to 'true' to show percentage instead of time",
   "fancymenu.placeholders.video_paused_state": "Video Element Paused State",
-  "fancymenu.placeholders.video_paused_state.desc": "Returns the paused state of a Video element.\nReturns 'true' when the element is paused, otherwise returns 'false'."
+  "fancymenu.placeholders.video_paused_state.desc": "Returns the paused state of a Video element.\nReturns 'true' when the element is paused, otherwise returns 'false'.",
+  "fancymenu.backgrounds.video_mcef": "Video [MCEF]",
+  "fancymenu.backgrounds.video_mcef.desc": "Plays a video file as menu background.\n§xThis background needs the MCEF mod to work!",
+  "fancymenu.backgrounds.video_mcef.configure": "Configure Video Background",
+  "fancymenu.backgrounds.video_mcef.configure.no_video": "§xYou need to choose a video first!"
 }

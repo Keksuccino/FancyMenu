@@ -123,6 +123,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			element.element._onOpenScreen();
 		});
 
+		this.layout.menuBackgrounds.forEach(MenuBackground::onOpenScreen);
+
 	}
 
 	@Override
@@ -196,7 +198,11 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			element.element.onDestroyElement();
 		});
 
+		this.layout.menuBackgrounds.forEach(MenuBackground::onBeforeResizeScreen);
+
 		this.constructElementInstances();
+
+		this.layout.menuBackgrounds.forEach(MenuBackground::onAfterResizeScreen);
 
 		for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
 			w.refresh();
@@ -226,29 +232,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		}
 
 		this.layout.menuBackgrounds.forEach(MenuBackground::tick);
-
-	}
-
-	@Override
-	public void removed() {
-
-		for (AbstractEditorElement e : this.getAllElements()) {
-			e.element.onCloseScreen(null, null);
-			e.element.onCloseScreen();
-		}
-
-		this.layout.menuBackgrounds.forEach(MenuBackground::onCloseScreen);
-
-	}
-
-	@Override
-	public void added() {
-
-		for (AbstractEditorElement e : this.getAllElements()) {
-			e.element._onOpenScreen();
-		}
-
-		this.layout.menuBackgrounds.forEach(MenuBackground::onOpenScreen);
 
 	}
 
@@ -1348,7 +1331,10 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		this.getAllElements().forEach(element -> {
 			element.element.onDestroyElement();
 			element.element.onCloseScreen(null, null);
+			element.element.onCloseScreen();
 		});
+		this.layout.menuBackgrounds.forEach(menuBackground -> menuBackground.onCloseScreen(null, null));
+		this.layout.menuBackgrounds.forEach(MenuBackground::onCloseScreen);
 		currentInstance = null;
 		if (this.layoutTargetScreen != null) {
 			if (!((IMixinScreen)this.layoutTargetScreen).get_initialized_FancyMenu()) {

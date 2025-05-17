@@ -142,6 +142,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			element.onDestroyElement();
 		});
 
+		this.layoutBase.menuBackgrounds.forEach(menuBackground -> menuBackground.onCloseScreen(e.getClosedScreen(), e.getNewScreen()));
 		this.layoutBase.menuBackgrounds.forEach(MenuBackground::onCloseScreen);
 
 		if (this.layoutBase.closeAudio != null) {
@@ -180,6 +181,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		if (e.getInitializationPhase() == InitOrResizeScreenEvent.InitializationPhase.RESIZE) {
 			this.layoutBase.menuBackgrounds.forEach(MenuBackground::onBeforeResizeScreen);
 		}
+
+		List<MenuBackground> oldMenuBackgrounds = new ArrayList<>(this.layoutBase.menuBackgrounds);
 
 		List<Layout> rawLayouts = LayoutHandler.getEnabledLayoutsForScreenIdentifier(this.getScreenIdentifier(), true);
 		List<Layout> normalLayouts = new ArrayList<>();
@@ -267,6 +270,10 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			e.getScreen().width = window.getGuiScaledWidth();
 			e.getScreen().height = window.getGuiScaledHeight();
 		}
+
+		oldMenuBackgrounds.forEach(menuBackground -> {
+			if (!this.layoutBase.menuBackgrounds.contains(menuBackground)) menuBackground.onDisableOrRemove();
+		});
 
 	}
 

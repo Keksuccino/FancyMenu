@@ -246,7 +246,7 @@ public class LayoutHandler {
 
 	public static void openLayoutEditor(@NotNull Layout layout, @Nullable Screen layoutTargetScreen) {
 		try {
-			// This probably was there for a reason, but I don't know anymore and it breaks some event triggers, so lets comment it out for now
+			// This probably was there for a reason, but I don't remember anymore and it breaks some event triggers, so lets comment it out for now
 //			GenericMessageScreen msgScreen = new GenericMessageScreen(Component.literal("Opening editor.."));
 //			msgScreen.init(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
 //			Minecraft.getInstance().screen = msgScreen;

@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.background;
 
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -7,6 +8,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Objects;
 import java.util.function.Consumer;
 
 @SuppressWarnings("all")
@@ -62,7 +65,13 @@ public abstract class MenuBackgroundBuilder<T extends MenuBackground> {
     public T deserializeBackgroundInternal(SerializedMenuBackground serializedMenuBackground) {
 
         try {
-            return this.deserializeBackground(serializedMenuBackground);
+
+            T background = this.deserializeBackground(serializedMenuBackground);
+
+            background.instanceIdentifier = Objects.requireNonNullElse(serializedMenuBackground.getValue("instance_identifier"), ScreenCustomization.generateUniqueIdentifier());
+
+            return background;
+
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to deserialize menu background: " + this.getIdentifier());
             ex.printStackTrace();
@@ -88,6 +97,7 @@ public abstract class MenuBackgroundBuilder<T extends MenuBackground> {
 
             SerializedMenuBackground b = this.serializedBackground((T) background);
 
+            b.putProperty("instance_identifier", background.getInstanceIdentifier());
             b.putProperty("background_type", this.getIdentifier());
 
             return b;
