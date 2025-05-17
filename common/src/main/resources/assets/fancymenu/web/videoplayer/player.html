@@ -51,24 +51,21 @@
             height: 100%;
         }
         
+        /* Hide the loader completely */
         #loader {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: white;
-            font-family: sans-serif;
-            text-align: center;
         }
         
         .spinner {
-            width: 40px;
-            height: 40px;
-            margin: 0 auto;
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top: 4px solid white;
-            animation: spin 1s linear infinite;
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
         }
         
         @keyframes spin {
@@ -82,9 +79,10 @@
         <video id="videoPlayer" playsinline webkit-playsinline controlslist="nodownload nofullscreen noremoteplayback" nocontrols></video>
     </div>
     
-    <div id="loader">
+    <!-- Loader is hidden but kept in DOM for JS functionality -->
+    <div id="loader" style="display:none !important;">
         <div class="spinner"></div>
-        <div id="loaderText">Loading video...</div>
+        <div id="loaderText"></div>
     </div>
 
     <script>
@@ -127,7 +125,7 @@
                 videoElement.autoplay = autoPlay;
             }
             
-            // Ensure loader exists
+            // Ensure loader exists (but stays hidden)
             if (!document.getElementById('loader')) {
                 const loader = document.createElement('div');
                 loader.id = 'loader';
@@ -135,38 +133,26 @@
                 loader.style.top = '50%';
                 loader.style.left = '50%';
                 loader.style.transform = 'translate(-50%, -50%)';
-                loader.style.color = 'white';
-                loader.style.fontFamily = 'sans-serif';
-                loader.style.textAlign = 'center';
+                loader.style.display = 'none';
+                loader.style.visibility = 'hidden';
+                loader.style.opacity = '0';
                 
                 const spinner = document.createElement('div');
                 spinner.className = 'spinner';
-                spinner.style.width = '40px';
-                spinner.style.height = '40px';
-                spinner.style.margin = '0 auto';
-                spinner.style.border = '4px solid rgba(255, 255, 255, 0.3)';
-                spinner.style.borderRadius = '50%';
-                spinner.style.borderTop = '4px solid white';
-                spinner.style.animation = 'spin 1s linear infinite';
+                spinner.style.display = 'none';
+                spinner.style.visibility = 'hidden';
+                spinner.style.opacity = '0';
                 
                 const loaderText = document.createElement('div');
                 loaderText.id = 'loaderText';
-                loaderText.textContent = 'Loading video...';
+                loaderText.style.display = 'none';
+                loaderText.style.visibility = 'hidden';
+                loaderText.style.opacity = '0';
                 
                 loader.appendChild(spinner);
                 loader.appendChild(loaderText);
                 document.body.appendChild(loader);
-                log("Created missing loader element");
-                
-                // Add keyframe animation for spinner
-                const style = document.createElement('style');
-                style.textContent = `
-                    @keyframes spin {
-                        0% { transform: rotate(0deg); }
-                        100% { transform: rotate(360deg); }
-                    }
-                `;
-                document.head.appendChild(style);
+                log("Created missing loader element (hidden)");
             }
             
             return {
@@ -206,6 +192,13 @@
             videoContainer.classList.add('fill-screen');
         }
 
+        // Make sure loader is always hidden
+        if (loader) {
+            loader.style.display = 'none';
+            loader.style.visibility = 'hidden';
+            loader.style.opacity = '0';
+        }
+
         window.videoPlayerAPI = {
             currentSettings: {
                 volume: initialVolume,
@@ -234,9 +227,6 @@
                 }
                 videoPlayer.removeAttribute('src');
                 videoPlayer.load(); // Important to reset the video element's state
-
-                loader.style.display = 'block';
-                loaderText.textContent = 'Loading video...';
                 
                 // Use the existing loadVideo (renamed to internalLoadVideo)
                 internalLoadVideo(path); 
@@ -415,10 +405,6 @@
         function loadVideoAsBlob(path) {
             log(`Loading video as blob: ${path}`);
             
-            // Show loader
-            loader.style.display = 'block';
-            loaderText.textContent = 'Loading video...';
-            
             const xhr = new XMLHttpRequest();
             xhr.open('GET', path, true);
             xhr.responseType = 'blob';
@@ -426,7 +412,6 @@
             xhr.onprogress = function(event) {
                 if (event.lengthComputable) {
                     const percentComplete = Math.round((event.loaded / event.total) * 100);
-                    loaderText.textContent = `Loading video: ${percentComplete}%`;
                     log(`Loading progress: ${percentComplete}%`);
                 }
             };
@@ -456,13 +441,11 @@
                     // No direct play here, will let events handle it
                 } else {
                     log(`XHR failed with status: ${this.status}`);
-                    loaderText.textContent = `Error: Failed to load video (status ${this.status})`;
                 }
             };
             
             xhr.onerror = function() {
                 log('XHR network error');
-                loaderText.textContent = 'Error: Network error loading video';
                 
                 // Try direct loading as fallback
                 log('Trying direct loading as fallback');
@@ -483,9 +466,6 @@
             videoSource = path;
             log(`Loading video from path: ${path}`);
             
-            // Show loader
-            loader.style.display = 'block';
-            
             // For local file paths, use the blob approach
             if (path.startsWith('file://')) {
                 loadVideoAsBlob(path);
@@ -505,10 +485,6 @@
 
         videoPlayer.addEventListener('loadedmetadata', function() {
             log(`Video metadata loaded: ${videoPlayer.videoWidth}x${videoPlayer.videoHeight}, duration: ${videoPlayer.duration}, readyState: ${videoPlayer.readyState}`);
-            // DO NOT set videoLoadedAndReady or attempt play here.
-            // Metadata loaded is good for hiding the "Loading video..." text if it was generic.
-            // However, the 'waiting' event will show "Buffering..." if needed.
-            // loader.style.display = 'none'; // Loader handled by canplay / playing / waiting
             applyStoredSettings(); // Apply volume, loop etc. as they don't depend on play readiness
         });
 
@@ -519,7 +495,6 @@
                 window.videoPlayerAPI.currentSettings.videoLoadedAndReady = true;
                 log('Set videoLoadedAndReady = true (on canplay)');
             }
-            loader.style.display = 'none'; // Hide loader as video is somewhat ready
             applyStoredSettings(); 
 
             if (window.videoPlayerAPI.currentSettings.playRequestPending && window.videoPlayerAPI.currentSettings.videoLoadedAndReady) {
@@ -532,7 +507,7 @@
             log(`Video can play through. ReadyState=${videoPlayer.readyState}`);
             window.videoPlayerAPI.currentSettings.videoLoadedAndReady = true; // Definitely ready
             log('Set videoLoadedAndReady = true (on canplaythrough)');
-            loader.style.display = 'none'; // Hide loader
+            
             if (window.videoPlayerAPI.currentSettings.playRequestPending) {
                 log('Attempting play due to pending request (on canplaythrough).');
                 tryPlayVideo();
@@ -541,7 +516,6 @@
 
         videoPlayer.addEventListener('playing', function() {
             log('Video event: playing. ReadyState=' + videoPlayer.readyState);
-            loader.style.display = 'none';
             window.videoPlayerAPI.currentSettings.playRequestPending = false; // Clear flag as it's now playing
         });
 
@@ -553,9 +527,7 @@
         
         videoPlayer.addEventListener('waiting', function() {
             log('Video buffering...');
-            // Show loader while buffering
-            loader.style.display = 'block';
-            loaderText.textContent = 'Buffering...';
+            // No need to show loading indicator
         });
         
         videoPlayer.addEventListener('ended', function() {
@@ -567,7 +539,7 @@
         });
         
         videoPlayer.addEventListener('error', function(e) {
-            // Show error details
+            // Just log the error details
             let errorMessage = "Unknown error";
             
             if (videoPlayer.error) {
@@ -582,8 +554,6 @@
             }
             
             log(`Video error: ${errorMessage}`);
-            loader.style.display = 'block';
-            loaderText.textContent = `Error: ${errorMessage}`;
             
             // Try to provide more detailed error info
             const videoSrc = videoPlayer.currentSrc || videoSource || "(unknown)";
@@ -607,10 +577,8 @@
             log(`Initial video from URL param: ${initialVideoPath}. Wants autoplay: ${wantsAutoplay}`);
             // `wantsAutoplay` already set `playRequestPending` in currentSettings initialization.
             window.videoPlayerAPI.loadVideo(initialVideoPath); // Use API to load
-        } else {
-            log('No initial video provided via URL.');
-            loader.style.display = 'none'; // Hide loader if no video
         }
+        
         log('FancyMenu Video Player HTML initialized.');
     </script>
 </body>
