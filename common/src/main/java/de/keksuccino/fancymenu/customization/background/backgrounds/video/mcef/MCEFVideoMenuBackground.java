@@ -4,7 +4,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.backgrounds.video.IVideoMenuBackground;
-import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.element.elements.video.VideoElementController;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -28,6 +27,19 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMenuBackground {
+
+
+
+
+    //TODO Video hintergrund fortsetzen, wenn teil einen universal layouts und es wird zu anderem screen mit selben Layout gesprungen
+
+    //TODO Video hintergrund stoppen, wenn layout disabled oder customizations von screen disabled werden
+
+
+
+
+
+
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
@@ -65,7 +77,7 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
     protected final AtomicReference<Float> cachedPlayTime = new AtomicReference<>(0F);
     protected volatile ScheduledFuture<?> garbageChecker = EXECUTOR.scheduleAtFixedRate(() -> {
         if (this.initialized && (this.lastRenderTickTime != -1) && ((this.lastRenderTickTime + 11000) < System.currentTimeMillis())) {
-            this.resetElement();
+            this.resetBackground();
         }
     }, 0, 100, TimeUnit.MILLISECONDS);
     protected volatile ScheduledFuture<?> asyncTicker = EXECUTOR.scheduleAtFixedRate(() -> {
@@ -102,10 +114,10 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
             y = -((h - getScreenHeight()) / 2) + (int)parallaxOffset[1];
         }
 
-        if (!this.triedRestore) {
-            this.triedRestore = true;
-            this.tryRestoreFromMemory();
-        }
+//        if (!this.triedRestore) {
+//            this.triedRestore = true;
+//            this.tryRestoreFromMemory();
+//        }
 
         if (!this.initialized) {
             this.initialized = true;
@@ -227,61 +239,64 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
     public void onCloseScreen(@Nullable Screen closedScreen, @Nullable Screen newScreen) {
         super.onCloseScreen(closedScreen, newScreen);
         LOGGER.info("######################################## VIDEO BACKGROUND CLOSE SCREEN !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-        if ((closedScreen instanceof CustomGuiBaseScreen c1) && (newScreen instanceof CustomGuiBaseScreen c2)) {
-            if (Objects.equals(c1.getIdentifier(), c2.getIdentifier())) {
-                this.garbageChecker.cancel(true);
-                this.asyncTicker.cancel(true);
-                this.trySaveToMemory();
-                return;
-            }
-        } else if ((closedScreen != null) && (newScreen != null) && Objects.equals(closedScreen.getClass(), newScreen.getClass())) {
-            this.garbageChecker.cancel(true);
-            this.asyncTicker.cancel(true);
-            this.trySaveToMemory();
-            return;
-        }
-        this.getMemory().clear();
-        this.garbageChecker.cancel(true);
-        this.asyncTicker.cancel(true);
-        this.disposePlayer();
+//        if ((closedScreen instanceof CustomGuiBaseScreen c1) && (newScreen instanceof CustomGuiBaseScreen c2)) {
+//            if (Objects.equals(c1.getIdentifier(), c2.getIdentifier())) {
+//                this.garbageChecker.cancel(true);
+//                this.asyncTicker.cancel(true);
+//                this.trySaveToMemory();
+//                return;
+//            }
+//        } else if ((closedScreen != null) && (newScreen != null) && Objects.equals(closedScreen.getClass(), newScreen.getClass())) {
+//            this.garbageChecker.cancel(true);
+//            this.asyncTicker.cancel(true);
+//            this.trySaveToMemory();
+//            return;
+//        }
+//        this.getMemory().clear();
+//        this.garbageChecker.cancel(true);
+//        this.asyncTicker.cancel(true);
+//        this.disposePlayer();
+
+        this.resetBackground();
+
     }
 
     @Override
     public void onBeforeResizeScreen() {
         super.onBeforeResizeScreen();
-        LOGGER.info("######################################## VIDEO BACKGROUND BEFORE RESIZE SCREEN !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-        this.garbageChecker.cancel(true);
-        this.asyncTicker.cancel(true);
-        this.trySaveToMemory();
+//        LOGGER.info("######################################## VIDEO BACKGROUND BEFORE RESIZE SCREEN !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+//        this.garbageChecker.cancel(true);
+//        this.asyncTicker.cancel(true);
+//        this.trySaveToMemory();
     }
 
-    protected void tryRestoreFromMemory() {
-        if (this.getMemory().hasProperty("video_player") && this.getMemory().hasProperty("player_id") && this.getMemory().hasProperty("last_final_url") && (this.getMemory().hasProperty("save_timestamp"))) {
-            Long saveTimestamp = Objects.requireNonNullElse(this.getMemory().getProperty("save_timestamp", Long.class), -1L);
-            if ((saveTimestamp + 10000L) > System.currentTimeMillis()) {
-                this.videoPlayer = this.getMemory().getProperty("video_player", MCEFVideoPlayer.class);
-                this.playerId = this.getMemory().getStringProperty("player_id");
-                this.lastFinalUrl = this.getMemory().getStringProperty("last_final_url");
-                this.initialized = true;
-                LOGGER.info("############################################ VIDEO BACKGROUND RESTORED FROM MEMORY: " + this.getInstanceIdentifier());
-            } else {
-                this.getMemory().clear();
-            }
-        } else {
-            this.getMemory().clear();
-        }
-    }
-
-    protected void trySaveToMemory() {
-        if ((this.videoPlayer != null) && (this.playerId != null) && this.initialized) {
-            this.getMemory().putProperty("save_timestamp", System.currentTimeMillis());
-            this.getMemory().putProperty("video_player", this.videoPlayer);
-            this.getMemory().putProperty("player_id", this.playerId);
-            this.getMemory().putProperty("last_final_url", this.lastFinalUrl);
-        } else {
-            this.disposePlayer();
-        }
-    }
+//    protected void tryRestoreFromMemory() {
+//        if (this.getMemory().hasProperty("video_player") && this.getMemory().hasProperty("player_id") && this.getMemory().hasProperty("last_final_url") && (this.getMemory().hasProperty("save_timestamp"))) {
+//            Long saveTimestamp = Objects.requireNonNullElse(this.getMemory().getProperty("save_timestamp", Long.class), -1L);
+//            if ((saveTimestamp + 10000L) > System.currentTimeMillis()) {
+//                this.videoPlayer = this.getMemory().getProperty("video_player", MCEFVideoPlayer.class);
+//                this.playerId = this.getMemory().getStringProperty("player_id");
+//                this.lastFinalUrl = this.getMemory().getStringProperty("last_final_url");
+//                this.initialized = true;
+//                LOGGER.info("############################################ VIDEO BACKGROUND RESTORED FROM MEMORY: " + this.getInstanceIdentifier());
+//            } else {
+//                this.getMemory().clear();
+//            }
+//        } else {
+//            this.getMemory().clear();
+//        }
+//    }
+//
+//    protected void trySaveToMemory() {
+//        if ((this.videoPlayer != null) && (this.playerId != null) && this.initialized) {
+//            this.getMemory().putProperty("save_timestamp", System.currentTimeMillis());
+//            this.getMemory().putProperty("video_player", this.videoPlayer);
+//            this.getMemory().putProperty("player_id", this.playerId);
+//            this.getMemory().putProperty("last_final_url", this.lastFinalUrl);
+//        } else {
+//            this.disposePlayer();
+//        }
+//    }
 
     /**
      * @param volume Value between 0.0 and 1.0.
@@ -338,10 +353,8 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
         }
     }
 
-    public void resetElement() {
-        if (this.initialized) {
-            this.disposePlayer();
-        }
+    public void resetBackground() {
+        this.disposePlayer();
         this.initialized = false;
         this.videoPlayer = null;
         this.playerId = null;
@@ -350,6 +363,11 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
         this.lastAbsoluteHeight = -10000;
         this.lastAbsoluteX = -10000;
         this.lastAbsoluteY = -10000;
+        this.lastLoop = null;
+        this.cachedActualVolume = -10000F;
+        this.lastCachedActualVolume = -11000F;
+        this.lastPausedState = null;
+        this.lastRenderTickTime = -1L;
     }
 
     protected float _getDuration() {
