@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.action.actions.video;
+package de.keksuccino.fancymenu.customization.action.actions.video.element;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.element.elements.video.VideoElementController;

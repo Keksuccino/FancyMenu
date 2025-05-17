@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.placeholder.placeholders.video;
+package de.keksuccino.fancymenu.customization.placeholder.placeholders.video.element;
 
 import de.keksuccino.fancymenu.customization.element.elements.video.VideoElementController;
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;

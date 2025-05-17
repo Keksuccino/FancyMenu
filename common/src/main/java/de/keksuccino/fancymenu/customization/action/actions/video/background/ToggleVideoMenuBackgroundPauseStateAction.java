@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.action.actions.video;
+package de.keksuccino.fancymenu.customization.action.actions.video.background;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.element.elements.video.VideoElementController;
@@ -9,12 +9,12 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ToggleVideoElementPauseStateAction extends Action {
+public class ToggleVideoMenuBackgroundPauseStateAction extends Action {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public ToggleVideoElementPauseStateAction() {
-        super("toggle_video_element_pause_state");
+    public ToggleVideoMenuBackgroundPauseStateAction() {
+        super("toggle_video_menu_background_pause_state");
     }
 
     @Override
@@ -36,28 +36,28 @@ public class ToggleVideoElementPauseStateAction extends Action {
                 VideoElementController.putMeta(id, meta);
             }
         } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to execute ToggleVideoElementPauseStateAction!", ex);
+            LOGGER.error("[FANCYMENU] Failed to execute ToggleVideoMenuBackgroundPauseStateAction!", ex);
         }
     }
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.actions.video.toggle_paused_state");
+        return Component.translatable("fancymenu.actions.video.background.toggle_paused_state");
     }
 
     @Override
     public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.video.toggle_paused_state.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.video.background.toggle_paused_state.desc");
     }
 
     @Override
     public Component getValueDisplayName() {
-        return Component.translatable("fancymenu.actions.video.toggle_paused_state.value.desc");
+        return Component.translatable("fancymenu.actions.video.background.toggle_paused_state.value.desc");
     }
 
     @Override
     public String getValueExample() {
-        return "element_identifier";
+        return "background_identifier";
     }
 
 }

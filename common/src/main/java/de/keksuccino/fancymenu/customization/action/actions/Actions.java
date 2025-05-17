@@ -19,8 +19,10 @@ import de.keksuccino.fancymenu.customization.action.actions.screen.UpdateScreenA
 import de.keksuccino.fancymenu.customization.action.actions.variables.ClearVariablesAction;
 import de.keksuccino.fancymenu.customization.action.actions.variables.SetVariableAction;
 import de.keksuccino.fancymenu.customization.action.ActionRegistry;
-import de.keksuccino.fancymenu.customization.action.actions.video.SetVideoElementVolumeAction;
-import de.keksuccino.fancymenu.customization.action.actions.video.ToggleVideoElementPauseStateAction;
+import de.keksuccino.fancymenu.customization.action.actions.video.background.SetVideoMenuBackgroundVolumeAction;
+import de.keksuccino.fancymenu.customization.action.actions.video.background.ToggleVideoMenuBackgroundPauseStateAction;
+import de.keksuccino.fancymenu.customization.action.actions.video.element.SetVideoElementVolumeAction;
+import de.keksuccino.fancymenu.customization.action.actions.video.element.ToggleVideoElementPauseStateAction;
 
 public class Actions {
 
@@ -51,6 +53,8 @@ public class Actions {
     public static final BackToLastScreenAction BACK_TO_LAST_SCREEN = new BackToLastScreenAction();
     public static final SetVideoElementVolumeAction SET_VIDEO_ELEMENT_VOLUME = new SetVideoElementVolumeAction();
     public static final ToggleVideoElementPauseStateAction TOGGLE_VIDEO_ELEMENT_PAUSE_STATE = new ToggleVideoElementPauseStateAction();
+    public static final SetVideoMenuBackgroundVolumeAction SET_VIDEO_MENU_BACKGROUND_VOLUME = new SetVideoMenuBackgroundVolumeAction();
+    public static final ToggleVideoMenuBackgroundPauseStateAction TOGGLE_VIDEO_MENU_BACKGROUND_PAUSE_STATE = new ToggleVideoMenuBackgroundPauseStateAction();
 
     public static void registerAll() {
 
@@ -81,6 +85,8 @@ public class Actions {
         ActionRegistry.register(BACK_TO_LAST_SCREEN);
         ActionRegistry.register(SET_VIDEO_ELEMENT_VOLUME);
         ActionRegistry.register(TOGGLE_VIDEO_ELEMENT_PAUSE_STATE);
+        ActionRegistry.register(SET_VIDEO_MENU_BACKGROUND_VOLUME);
+        ActionRegistry.register(TOGGLE_VIDEO_MENU_BACKGROUND_PAUSE_STATE);
 
     }
 

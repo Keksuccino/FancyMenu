@@ -582,6 +582,14 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		return null;
 	}
 
+	@Nullable
+	public MenuBackground getMenuBackgroundByInstanceIdentifier(@NotNull String identifier) {
+		for (MenuBackground b : this.layoutBase.menuBackgrounds) {
+			if (b.getInstanceIdentifier().equals(identifier)) return b;
+		}
+		return null;
+	}
+
 	@SuppressWarnings("all")
 	protected boolean shouldCustomize(@Nullable Screen screen) {
 		if (screen == null) return false;

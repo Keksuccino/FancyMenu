@@ -1652,5 +1652,19 @@
   "fancymenu.backgrounds.video_mcef": "Video [MCEF]",
   "fancymenu.backgrounds.video_mcef.desc": "Plays a video file as menu background.\n§xThis background needs the MCEF mod to work!",
   "fancymenu.backgrounds.video_mcef.configure": "Configure Video Background",
-  "fancymenu.backgrounds.video_mcef.configure.no_video": "§xYou need to choose a video first!"
+  "fancymenu.backgrounds.video_mcef.configure.no_video": "§xYou need to choose a video first!",
+  "fancymenu.actions.video.set_video_background_volume": "Set Video Background Volume",
+  "fancymenu.actions.video.set_video_background_volume.desc": "Sets the volume of a Video menu background by its identifier.\nThe volume has to be a valid decimal between 0.0 (0%%) and 1.0 (100%%).\n\nTo get the identifier of a background, right-click the\neditor background and click on 'Copy Background Identifier'.",
+  "fancymenu.actions.video.set_video_background_volume.value.desc": "Video Background Identifier + Volume [ Separated by : ]",
+  "fancymenu.actions.video.background.toggle_paused_state": "Toggle Video Background Paused State",
+  "fancymenu.actions.video.background.toggle_paused_state.desc": "Toggles the paused state of a Video menu background by its identifier.\n\nTo get the identifier of a background, right-click the\neditor background and click on 'Copy Background Identifier'.",
+  "fancymenu.actions.video.background.toggle_paused_state.value.desc": "Video Background Identifier",
+  "fancymenu.placeholders.video_background_duration": "Video Background Duration",
+  "fancymenu.placeholders.video_background_duration.desc": "Returns the total duration of a Video menu background in MM:SS format (e.g. '03:45') by its identifier.\nReturns '00:00' if the background is not ready yet or not video is set.\n\nTo get the identifier of a background, right-click the\neditor background and click on 'Copy Background Identifier'.",
+  "fancymenu.placeholders.video_background_paused_state": "Video Background Paused State",
+  "fancymenu.placeholders.video_background_paused_state.desc": "Returns the paused state of a Video menu background by its identifier.\nReturns 'true' when the element is paused, otherwise returns 'false'.\n\nTo get the identifier of a background, right-click the\neditor background and click on 'Copy Background Identifier'.",
+  "fancymenu.placeholders.video_background_playtime": "Video Background Play Time",
+  "fancymenu.placeholders.video_background_playtime.desc": "Returns either the current play time of a Video menu background\n(MM:SS format) or the play progress percentage (0-100).\nReturns '00:00' or '0' if the element is not ready yet or no video is set.\n\nRequired values:\n- background_identifier: The ID of the Video background\n- show_percentage: Set to 'true' to show percentage instead of time\n\nTo get the identifier of a background, right-click the\neditor background and click on 'Copy Background Identifier'.",
+  "fancymenu.placeholders.video_background_volume": "Video Background Volume",
+  "fancymenu.placeholders.video_background_volume.desc": "Returns the volume of a Video menu background by its identifier.\nThe volume is a decimal between 0.0 (0%%) and 1.0 (100%%).\n\nTo get the identifier of a background, right-click the\neditor background and click on 'Copy Background Identifier'."
 }
