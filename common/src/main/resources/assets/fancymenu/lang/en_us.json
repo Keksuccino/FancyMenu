@@ -1666,5 +1666,7 @@
   "fancymenu.placeholders.video_background_playtime": "Video Background Play Time",
   "fancymenu.placeholders.video_background_playtime.desc": "Returns either the current play time of a Video menu background\n(MM:SS format) or the play progress percentage (0-100).\nReturns '00:00' or '0' if the element is not ready yet or no video is set.\n\nRequired values:\n- background_identifier: The ID of the Video background\n- show_percentage: Set to 'true' to show percentage instead of time\n\nTo get the identifier of a background, right-click the\neditor background and click on 'Copy Background Identifier'.",
   "fancymenu.placeholders.video_background_volume": "Video Background Volume",
-  "fancymenu.placeholders.video_background_volume.desc": "Returns the volume of a Video menu background by its identifier.\nThe volume is a decimal between 0.0 (0%%) and 1.0 (100%%).\n\nTo get the identifier of a background, right-click the\neditor background and click on 'Copy Background Identifier'."
+  "fancymenu.placeholders.video_background_volume.desc": "Returns the volume of a Video menu background by its identifier.\nThe volume is a decimal between 0.0 (0%%) and 1.0 (100%%).\n\nTo get the identifier of a background, right-click the\neditor background and click on 'Copy Background Identifier'.",
+  "fancymenu.editor.background_options.copy_background_identifier": "Copy Background Identifier",
+  "fancymenu.editor.background_options.copy_background_identifier.desc": "This will copy the identifier of the\ncurrent menu background to the clipboard.\n\nThe background identifier is used by actions, placeholders\nand similar stuff to communicate with the background instance."
 }
