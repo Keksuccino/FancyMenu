@@ -81,7 +81,6 @@ public class MCEFVideoPlayer {
         
         try {
             String playerUrl = buildPlayerUrl();
-            LOGGER.info("[FANCYMENU] Initializing video player with URL: " + playerUrl);
             
             File playerFile = new File(FancyMenu.TEMP_DATA_DIR, "web/videoplayer/player.html");
             if (!playerFile.exists()) {
@@ -96,7 +95,6 @@ public class MCEFVideoPlayer {
             // Important: autoHandle should be false if VideoManager explicitly manages lifecycle
             this.browser = WrappedMCEFBrowser.build(playerUrl, false, false, posX, posY, width, height, success -> {
                 if (success) {
-                    LOGGER.info("[FANCYMENU] Successfully initialized MCEFVideoPlayer for browser with ID: " + this.browser.getIdentifier());
                     initialized = true;
                 } else {
                     LOGGER.error("[FANCYMENU] Failed to initialize MCEFVideoPlayer for browser with ID: " + (this.browser != null ? this.browser.getIdentifier() : "unknown"));
@@ -801,4 +799,5 @@ public class MCEFVideoPlayer {
             }
         }, 0, 50, TimeUnit.MILLISECONDS);
     }
+
 }

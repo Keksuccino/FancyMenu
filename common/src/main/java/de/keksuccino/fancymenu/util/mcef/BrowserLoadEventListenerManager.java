@@ -36,13 +36,10 @@ public class BrowserLoadEventListenerManager {
 
             String browserId = getIdByCefBrowser(cefBrowser);
             if (browserId == null) return;
-
-            LOGGER.info("[FANCYMENU] GlobalLoadHandler: onLoadEnd for browser ID {} with status {}", browserId, httpStatusCode);
             
             List<BrowserLoadListener> loadListeners = browserMap.get(browserId);
             if (loadListeners != null) {
                 boolean success = (httpStatusCode >= 200 && httpStatusCode < 300) || (frame.getURL() != null && frame.getURL().startsWith("file:") && httpStatusCode == 0);
-                LOGGER.info("[FANCYMENU] Browser [ID:{}] page loaded: {}, Success: {}", browserId, frame.getURL(), success);
                 loadListeners.forEach(loadListener -> {
                     if (!loadListener.isHandled()) {
                         loadListener.setHandled(true);
@@ -61,8 +58,6 @@ public class BrowserLoadEventListenerManager {
 
             String browserId = getIdByCefBrowser(cefBrowser);
             if (browserId == null) return;
-
-            LOGGER.info("[FANCYMENU] GlobalLoadHandler: onLoadError for browser ID {} with error {}", browserId, errorCode);
 
             List<BrowserLoadListener> loadListeners = browserMap.get(browserId);
             if (loadListeners != null) {
@@ -105,7 +100,6 @@ public class BrowserLoadEventListenerManager {
         if (!browserMap.containsKey(browser.getIdentifier())) {
             browserMap.put(browser.getIdentifier(), new ArrayList<>());
         }
-        LOGGER.info("[FANCYMENU] Registering load listener for browser ID: {}", browser.getIdentifier());
         browserMap.get(browser.getIdentifier()).add(new BrowserLoadListener(browser, onLoadListener));
     }
     
@@ -115,11 +109,7 @@ public class BrowserLoadEventListenerManager {
      * @param browserId The ID of the browser to unregister
      */
     public void unregisterAllListenersForBrowser(String browserId) {
-        if (browserMap.remove(browserId) != null) {
-            LOGGER.info("[FANCYMENU] Unregistered all load listeners for browser with ID: {}", browserId);
-        } else {
-            LOGGER.info("[FANCYMENU] No listeners found to unregister for browser with ID: {}", browserId);
-        }
+        browserMap.remove(browserId);
     }
 
     @Nullable

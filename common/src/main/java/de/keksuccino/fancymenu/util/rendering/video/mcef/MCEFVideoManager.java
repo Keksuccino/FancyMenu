@@ -122,7 +122,6 @@ public class MCEFVideoManager {
                     return false; // Message not handled by us, let MCEF process it further if needed
                 }
             });
-            LOGGER.info("[FANCYMENU] Successfully registered JS result display handler with MCEF.");
             jsResultHandlerRegistered = true;
         } catch (Throwable t) { // Catch Throwable to include LinkageErrors etc. if JCEF classes are missing
             LOGGER.error("[FANCYMENU] Failed to register JS result display handler with MCEF.", t);
@@ -145,7 +144,6 @@ public class MCEFVideoManager {
         }
         // Helper method for extraction
         extractResourceInternal("/assets/fancymenu/web/videoplayer/player.html", new File(webDir, "player.html"), true);
-//        extractResourceInternal("/assets/fancymenu/web/videoplayer/README.txt", new File(webDir, "README.txt"), false);
     }
 
     /**
@@ -159,7 +157,6 @@ public class MCEFVideoManager {
         try (InputStream is = FancyMenu.class.getResourceAsStream(resourcePath)) {
             if (is != null) {
                 Files.copy(is, destinationFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                LOGGER.info("[FANCYMENU] Extracted {} to {}", destinationFile.getName(), destinationFile.getAbsolutePath());
             } else {
                 String message = "[FANCYMENU] Could not find resource {} in mod JAR";
                 if (isCritical) {
@@ -288,4 +285,5 @@ public class MCEFVideoManager {
         }
         players.clear();
     }
+
 }

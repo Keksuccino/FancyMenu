@@ -75,11 +75,8 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
         String browserId = this.getIdentifier();
 
-        LOGGER.info("[FANCYMENU] WrappedMCEFBrowser browser ID: {}", browserId);
-
         BrowserLoadEventListenerManager.getInstance().registerListenerForBrowser(this, success -> {
             if (success) {
-                LOGGER.info("[FANCYMENU] WrappedMCEFBrowser browser page loaded successfully (ID: {})", browserId);
                 initialized = true;
                 // Apply settings once the page is loaded
                 applyInitialSettings();

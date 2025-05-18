@@ -103,12 +103,10 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
 
             if (!this.initialized) {
                 this.initialized = true;
-                LOGGER.info("[FANCYMENU] Creating video player with dimensions: " + w + "x" + h + " at " + x + "," + y);
                 playerId = videoManager.createPlayer(x, y, w, h);
                 if (playerId != null) {
                     videoPlayer = videoManager.getPlayer(playerId);
                     if (videoPlayer != null) {
-                        LOGGER.info("[FANCYMENU] Created video player");
                         videoPlayer.setFillScreen(true); // Enable fill screen by default
                     }
                 }
@@ -129,10 +127,8 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
 
             // Update size and position of player if needed
             if ((this.lastAbsoluteX != x) || (this.lastAbsoluteY != y) || (this.lastAbsoluteWidth != w) || (this.lastAbsoluteHeight != h)) {
-                // Just update position and size directly - fillScreen is handled automatically
                 this.videoPlayer.setPosition(x, y);
                 this.videoPlayer.setSize(w, h);
-                // The video content layout is now handled by the HTML/CSS based on the fillScreen flag
             }
             this.lastAbsoluteX = x;
             this.lastAbsoluteY = y;
@@ -149,27 +145,21 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
             boolean videoUrlChanged = !Objects.equals(finalVideoUrl, this.lastFinalUrl);
             this.lastFinalUrl = finalVideoUrl;
             if (videoUrlChanged && (finalVideoUrl != null)) {
-                LOGGER.info("[FANCYMENU] Video URL changed to: " + finalVideoUrl);
-
                 // Stop any existing video before loading new one
                 this.videoPlayer.stop();
-
                 // Convert to URI format if it's a file
                 try {
                     File videoFile = new File(finalVideoUrl);
                     if (videoFile.exists()) {
                         String videoUri = videoFile.toURI().toString();
-                        LOGGER.info("[FANCYMENU] Using video URI: " + videoUri);
                         this.videoPlayer.loadVideo(videoUri);
                         if (!pausedState) this.videoPlayer.play();
                     } else {
                         // Try loading the URL as-is
-                        LOGGER.info("[FANCYMENU] File not found, trying URL directly: " + finalVideoUrl);
                         this.videoPlayer.loadVideo(finalVideoUrl);
                         if (!pausedState) this.videoPlayer.play();
                     }
                 } catch (Exception e) {
-                    LOGGER.error("[FANCYMENU] Error processing video URL", e);
                 }
             }
 
@@ -207,7 +197,6 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
                 this.playerId = this.getMemory().getStringProperty("player_id");
                 this.lastFinalUrl = this.getMemory().getStringProperty("last_final_url");
                 this.initialized = true;
-                LOGGER.info("############################################ VIDEO ELEMENT RESTORED FROM MEMORY: " + this.getInstanceIdentifier());
             } else {
                 this.getMemory().clear();
             }
@@ -235,7 +224,6 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
     @Override
     public void onBeforeResizeScreen() {
         super.onBeforeResizeScreen();
-        LOGGER.info("######################################## VIDEO ELEMENT BEFORE RESIZE SCREEN !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         this.garbageChecker.cancel(true);
         this.asyncTicker.cancel(true);
         this.trySaveToMemory();
@@ -244,7 +232,6 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
     @Override
     public void onCloseScreen(@Nullable Screen closedScreen, @Nullable Screen newScreen) {
         super.onCloseScreen(closedScreen, newScreen);
-        LOGGER.info("######################################## VIDEO ELEMENT CLOSE SCREEN !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         if ((closedScreen instanceof CustomGuiBaseScreen c1) && (newScreen instanceof CustomGuiBaseScreen c2)) {
             if (Objects.equals(c1.getIdentifier(), c2.getIdentifier())) {
                 this.garbageChecker.cancel(true);
@@ -267,7 +254,6 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
     @Override
     public void onBecomeInvisible() {
         super.onBecomeInvisible();
-        LOGGER.info("######################################## VIDEO ELEMENT BECOMES INVISIBLE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         this.resetElement();
     }
 
