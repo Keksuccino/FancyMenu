@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.WelcomeScreen;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.element.elements.animationcontroller.AnimationControllerHandler;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.*;
@@ -106,7 +107,22 @@ public class MixinMinecraft {
 	}
 
 	@Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
-	private void headSetScreenFancyMenu(Screen screen, CallbackInfo info) {
+	private void before_setScreen_FancyMenu(Screen screen, CallbackInfo info) {
+
+		if ((Minecraft.getInstance().screen instanceof LayoutEditorScreen e) && !(screen instanceof LayoutEditorScreen)) {
+			e.layout.menuBackgrounds.forEach(menuBackground -> {
+				menuBackground.onCloseScreen(e, screen);
+				menuBackground.onDisableOrRemove();
+			});
+			e.getAllElements().forEach(element -> {
+				element.element.onCloseScreen(e, screen);
+				element.element.onDestroyElement();
+			});
+		}
+
+		if (screen instanceof LayoutEditorScreen e) {
+			e.justOpened = true;
+		}
 
 		this.lastScreen_FancyMenu = this.screen;
 

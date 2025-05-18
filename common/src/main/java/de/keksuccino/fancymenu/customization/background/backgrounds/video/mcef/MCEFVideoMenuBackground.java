@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.backgrounds.video.IVideoMenuBackground;
 import de.keksuccino.fancymenu.customization.element.elements.video.VideoElementController;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoManager;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoPlayer;
@@ -18,6 +19,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.awt.*;
 import java.io.File;
 import java.util.Objects;
 import java.util.concurrent.Executors;
@@ -28,21 +30,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMenuBackground {
 
-
-
-
-    //TODO Video hintergrund fortsetzen, wenn teil einen universal layouts und es wird zu anderem screen mit selben Layout gesprungen
-
-    //TODO Video hintergrund stoppen, wenn layout disabled oder customizations von screen disabled werden
-
-
-
-
-
-
-
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
+    private static final DrawableColor MISSING_MCEF_COLOR = DrawableColor.of(Color.RED);
 
     @Nullable
     public ResourceSource rawVideoUrlSource = null;
@@ -73,6 +63,7 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
     protected float lastCachedActualVolume = -11000F;
     protected Boolean lastPausedState = null;
     protected volatile long lastRenderTickTime = -1L;
+    protected boolean pausedBySystem = false;
     protected final AtomicReference<Float> cachedDuration = new AtomicReference<>(0F);
     protected final AtomicReference<Float> cachedPlayTime = new AtomicReference<>(0F);
     protected volatile ScheduledFuture<?> garbageChecker = EXECUTOR.scheduleAtFixedRate(() -> {
@@ -86,7 +77,6 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
             this.cachedPlayTime.set(this._getPlayTime());
         }
     }, 0, 900, TimeUnit.MILLISECONDS);
-    protected boolean triedRestore = false;
 
     public MCEFVideoMenuBackground(MenuBackgroundBuilder<MCEFVideoMenuBackground> builder) {
         super(builder);
@@ -94,6 +84,12 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+        if (!MCEFUtil.isMCEFLoaded()) {
+            graphics.fill(0, 0, getScreenWidth(), getScreenHeight(), MISSING_MCEF_COLOR.getColorInt());
+            graphics.drawCenteredString(Minecraft.getInstance().font, "§lMCEF IS NOT INSTALLED! PLEASE DOWNLOAD FROM CURSEFORGE!", getScreenWidth() / 2, getScreenHeight() / 2, -1);
+            return;
+        }
 
         this.lastRenderTickTime = System.currentTimeMillis();
 
@@ -114,19 +110,12 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
             y = -((h - getScreenHeight()) / 2) + (int)parallaxOffset[1];
         }
 
-//        if (!this.triedRestore) {
-//            this.triedRestore = true;
-//            this.tryRestoreFromMemory();
-//        }
-
         if (!this.initialized) {
             this.initialized = true;
-            LOGGER.info("[FANCYMENU] Creating video player with dimensions: " + w + "x" + h + " at " + x + "," + y);
             playerId = videoManager.createPlayer(x, y, w, h);
             if (playerId != null) {
                 videoPlayer = videoManager.getPlayer(playerId);
                 if (videoPlayer != null) {
-                    LOGGER.info("[FANCYMENU] Created video player");
                     videoPlayer.setFillScreen(true); // Enable fill screen by default
                 }
             }
@@ -147,17 +136,15 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
 
         // Update size and position of player if needed
         if ((this.lastAbsoluteX != x) || (this.lastAbsoluteY != y) || (this.lastAbsoluteWidth != w) || (this.lastAbsoluteHeight != h)) {
-            // Just update position and size directly - fillScreen is handled automatically
             this.videoPlayer.setPosition(x, y);
             this.videoPlayer.setSize(w, h);
-            // The video content layout is now handled by the HTML/CSS based on the fillScreen flag
         }
         this.lastAbsoluteX = x;
         this.lastAbsoluteY = y;
         this.lastAbsoluteWidth = w;
         this.lastAbsoluteHeight = h;
 
-        boolean pausedState = this.getControllerPausedState();
+        boolean pausedState = this._isPaused();
 
         String finalVideoUrl = null;
         if (this.rawVideoUrlSource != null) {
@@ -167,22 +154,17 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
         boolean videoUrlChanged = !Objects.equals(finalVideoUrl, this.lastFinalUrl);
         this.lastFinalUrl = finalVideoUrl;
         if (videoUrlChanged && (finalVideoUrl != null)) {
-            LOGGER.info("[FANCYMENU] Video URL changed to: " + finalVideoUrl);
-
             // Stop any existing video before loading new one
             this.videoPlayer.stop();
-
             // Convert to URI format if it's a file
             try {
                 File videoFile = new File(finalVideoUrl);
                 if (videoFile.exists()) {
                     String videoUri = videoFile.toURI().toString();
-                    LOGGER.info("[FANCYMENU] Using video URI: " + videoUri);
                     this.videoPlayer.loadVideo(videoUri);
                     if (!pausedState) this.videoPlayer.play();
                 } else {
                     // Try loading the URL as-is
-                    LOGGER.info("[FANCYMENU] File not found, trying URL directly: " + finalVideoUrl);
                     this.videoPlayer.loadVideo(finalVideoUrl);
                     if (!pausedState) this.videoPlayer.play();
                 }
@@ -216,6 +198,7 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
     }
 
     protected float[] calculateParallaxOffset(int mouseX, int mouseY) {
+
         if (!parallaxEnabled) {
             return new float[]{0, 0};
         }
@@ -236,67 +219,40 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
     }
 
     @Override
-    public void onCloseScreen(@Nullable Screen closedScreen, @Nullable Screen newScreen) {
-        super.onCloseScreen(closedScreen, newScreen);
-        LOGGER.info("######################################## VIDEO BACKGROUND CLOSE SCREEN !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-//        if ((closedScreen instanceof CustomGuiBaseScreen c1) && (newScreen instanceof CustomGuiBaseScreen c2)) {
-//            if (Objects.equals(c1.getIdentifier(), c2.getIdentifier())) {
-//                this.garbageChecker.cancel(true);
-//                this.asyncTicker.cancel(true);
-//                this.trySaveToMemory();
-//                return;
-//            }
-//        } else if ((closedScreen != null) && (newScreen != null) && Objects.equals(closedScreen.getClass(), newScreen.getClass())) {
-//            this.garbageChecker.cancel(true);
-//            this.asyncTicker.cancel(true);
-//            this.trySaveToMemory();
-//            return;
-//        }
-//        this.getMemory().clear();
-//        this.garbageChecker.cancel(true);
-//        this.asyncTicker.cancel(true);
-//        this.disposePlayer();
-
-        this.resetBackground();
-
+    public void onOpenScreen() {
+        super.onOpenScreen();
+        if (this.initialized && (this.videoPlayer != null) && this.pausedBySystem) {
+            this.pausedBySystem = false;
+            this.videoPlayer.play();
+        }
     }
 
     @Override
-    public void onBeforeResizeScreen() {
-        super.onBeforeResizeScreen();
-//        LOGGER.info("######################################## VIDEO BACKGROUND BEFORE RESIZE SCREEN !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-//        this.garbageChecker.cancel(true);
-//        this.asyncTicker.cancel(true);
-//        this.trySaveToMemory();
+    public void onCloseScreen(@Nullable Screen closedScreen, @Nullable Screen newScreen) {
+        super.onCloseScreen(closedScreen, newScreen);
+        if (this.initialized && (this.videoPlayer != null)) {
+            this.pausedBySystem = true;
+            this.videoPlayer.pause();
+        }
     }
 
-//    protected void tryRestoreFromMemory() {
-//        if (this.getMemory().hasProperty("video_player") && this.getMemory().hasProperty("player_id") && this.getMemory().hasProperty("last_final_url") && (this.getMemory().hasProperty("save_timestamp"))) {
-//            Long saveTimestamp = Objects.requireNonNullElse(this.getMemory().getProperty("save_timestamp", Long.class), -1L);
-//            if ((saveTimestamp + 10000L) > System.currentTimeMillis()) {
-//                this.videoPlayer = this.getMemory().getProperty("video_player", MCEFVideoPlayer.class);
-//                this.playerId = this.getMemory().getStringProperty("player_id");
-//                this.lastFinalUrl = this.getMemory().getStringProperty("last_final_url");
-//                this.initialized = true;
-//                LOGGER.info("############################################ VIDEO BACKGROUND RESTORED FROM MEMORY: " + this.getInstanceIdentifier());
-//            } else {
-//                this.getMemory().clear();
-//            }
-//        } else {
-//            this.getMemory().clear();
-//        }
-//    }
-//
-//    protected void trySaveToMemory() {
-//        if ((this.videoPlayer != null) && (this.playerId != null) && this.initialized) {
-//            this.getMemory().putProperty("save_timestamp", System.currentTimeMillis());
-//            this.getMemory().putProperty("video_player", this.videoPlayer);
-//            this.getMemory().putProperty("player_id", this.playerId);
-//            this.getMemory().putProperty("last_final_url", this.lastFinalUrl);
-//        } else {
-//            this.disposePlayer();
-//        }
-//    }
+    @Override
+    public void onAfterEnable() {
+        super.onAfterEnable();
+        if (this.initialized && (this.videoPlayer != null) && this.pausedBySystem) {
+            this.pausedBySystem = false;
+            this.videoPlayer.play();
+        }
+    }
+
+    @Override
+    public void onDisableOrRemove() {
+        super.onDisableOrRemove();
+        if (this.initialized && (this.videoPlayer != null)) {
+            this.pausedBySystem = true;
+            this.videoPlayer.pause();
+        }
+    }
 
     /**
      * @param volume Value between 0.0 and 1.0.
@@ -368,6 +324,7 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
         this.lastCachedActualVolume = -11000F;
         this.lastPausedState = null;
         this.lastRenderTickTime = -1L;
+        this.pausedBySystem = false;
     }
 
     protected float _getDuration() {
@@ -378,6 +335,10 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
     protected float _getPlayTime() {
         if (!this.initialized || (this.videoPlayer == null)) return 0;
         return (float) this.videoPlayer.getCurrentTime();
+    }
+
+    protected boolean _isPaused() {
+        return (this.getControllerPausedState() || this.pausedBySystem);
     }
 
     @Override

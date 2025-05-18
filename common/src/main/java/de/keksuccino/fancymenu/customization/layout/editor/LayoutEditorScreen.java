@@ -95,6 +95,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public final List<WidgetMeta> cachedVanillaWidgetMetas = new ArrayList<>();
 	public boolean unsavedChanges = false;
 	protected final TamagotchiBuddyWidget tamagotchiBuddyWidget = new TamagotchiBuddyWidget(0, 0);
+	public boolean justOpened = true;
 
 	public LayoutEditorScreen(@NotNull Layout layout) {
 		this(null, layout);
@@ -122,8 +123,6 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		this.getAllElements().forEach(element -> {
 			element.element._onOpenScreen();
 		});
-
-		this.layout.menuBackgrounds.forEach(MenuBackground::onOpenScreen);
 
 	}
 
@@ -194,15 +193,19 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		}
 
 		this.getAllElements().forEach(element -> {
-			element.element.onBeforeResizeScreen();
+			if (!this.justOpened) element.element.onBeforeResizeScreen();
 			element.element.onDestroyElement();
 		});
 
-		this.layout.menuBackgrounds.forEach(MenuBackground::onBeforeResizeScreen);
+		if (this.justOpened) this.layout.menuBackgrounds.forEach(MenuBackground::onOpenScreen);
+
+		if (!this.justOpened) this.layout.menuBackgrounds.forEach(MenuBackground::onBeforeResizeScreen);
 
 		this.constructElementInstances();
 
-		this.layout.menuBackgrounds.forEach(MenuBackground::onAfterResizeScreen);
+		if (!this.justOpened) this.layout.menuBackgrounds.forEach(MenuBackground::onAfterResizeScreen);
+
+		this.layout.menuBackgrounds.forEach(MenuBackground::onAfterEnable);
 
 		for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
 			w.refresh();
@@ -210,6 +213,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 //		this.addWidget(this.tamagotchiBuddyWidget);
 //		this.tamagotchiBuddyWidget.setScreenSize(this.width, this.height);
+
+		this.justOpened = false;
 
 	}
 

@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.*;
 import de.keksuccino.fancymenu.Compat;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.background.MenuBackground;
+import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementMemories;
 import de.keksuccino.fancymenu.customization.element.elements.animationcontroller.AnimationControllerHandler;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
@@ -129,6 +131,13 @@ public class ScreenCustomization {
 			enableCustomizationForScreen(screen);
 		} else {
 			disableCustomizationForScreen(screen);
+			if (screen != null) {
+				ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(screen);
+				if (layer != null) {
+					layer.layoutBase.menuBackgrounds.forEach(MenuBackground::onDisableOrRemove);
+					layer.allElements.forEach(AbstractElement::onDestroyElement);
+				}
+			}
 		}
 	}
 

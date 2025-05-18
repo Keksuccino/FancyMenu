@@ -275,6 +275,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			if (!this.layoutBase.menuBackgrounds.contains(menuBackground)) menuBackground.onDisableOrRemove();
 		});
 
+		this.layoutBase.menuBackgrounds.forEach(MenuBackground::onAfterEnable);
+
 	}
 
 	@EventListener

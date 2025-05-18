@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.video.IVideoElement;
 import de.keksuccino.fancymenu.customization.element.elements.video.VideoElementController;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoManager;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoPlayer;
@@ -19,6 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.awt.*;
 import java.io.File;
 import java.util.Objects;
 import java.util.concurrent.Executors;
@@ -31,6 +33,7 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
+    private static final DrawableColor MISSING_MCEF_COLOR = DrawableColor.of(Color.RED);
 
     @Nullable
     public ResourceSource rawVideoUrlSource = null;
@@ -78,6 +81,12 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (this.shouldRender()) {
+
+            if (!MCEFUtil.isMCEFLoaded()) {
+                graphics.fill(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), MISSING_MCEF_COLOR.getColorInt());
+                graphics.drawCenteredString(Minecraft.getInstance().font, "§lMCEF IS NOT INSTALLED! PLEASE DOWNLOAD FROM CURSEFORGE!", (this.getAbsoluteX() + this.getAbsoluteWidth()) / 2, (this.getAbsoluteY() + this.getAbsoluteHeight()) / 2, -1);
+                return;
+            }
 
             this.lastRenderTickTime = System.currentTimeMillis();
 
@@ -318,9 +327,7 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
     }
 
     public void resetElement() {
-        if (this.initialized) {
-            this.disposePlayer();
-        }
+        this.disposePlayer();
         this.initialized = false;
         this.videoPlayer = null;
         this.playerId = null;
@@ -329,6 +336,11 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
         this.lastAbsoluteHeight = -10000;
         this.lastAbsoluteX = -10000;
         this.lastAbsoluteY = -10000;
+        this.lastLoop = null;
+        this.cachedActualVolume = -10000F;
+        this.lastCachedActualVolume = -11000F;
+        this.lastPausedState = null;
+        this.lastRenderTickTime = -1L;
     }
 
     protected float _getDuration() {

@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementMemories;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
@@ -78,6 +79,13 @@ public abstract class MenuBackground implements Renderable, GuiEventListener, Na
     }
 
     /**
+     * Gets called right after the background got enabled in a layout.<br>
+     * This gets called whenever the background gets enabled, which means it will also trigger on every (re-)init and resize of the target {@link Screen}.
+     */
+    public void onAfterEnable() {
+    }
+
+    /**
      * Gets called before the background gets disabled or removed. This is the case when, for example, customizations get disabled
      * for the target {@link Screen}, when the parent {@link Layout} gets disabled or when the background gets removed/replaced in the editor.
      */
@@ -101,6 +109,17 @@ public abstract class MenuBackground implements Renderable, GuiEventListener, Na
     @NotNull
     public String getInstanceIdentifier() {
         return this.instanceIdentifier;
+    }
+
+    @Nullable
+    public Layout getParentLayout() {
+        ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getActiveLayer();
+        if (layer != null) {
+            for (Layout layout : layer.activeLayouts) {
+                if (layout.menuBackgrounds.contains(this)) return layout;
+            }
+        }
+        return null;
     }
 
     @Nullable
