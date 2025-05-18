@@ -86,9 +86,19 @@
     </div>
 
     <script>
-        // Log function that only outputs to console, not UI
+        // Debug mode flag - set to false to disable debug logging
+        const DEBUG_ENABLED = false;
+        
+        // Log function that only outputs to console if debug is enabled
         function log(message) {
-            console.log(message);
+            if (DEBUG_ENABLED) {
+                console.log(message);
+            }
+        }
+        
+        // Error logger - always logs regardless of debug setting
+        function logError(message) {
+            console.error("[FANCYMENU VIDEO] " + message);
         }
         
         // Ensure all required elements exist
@@ -313,11 +323,39 @@
                 return videoPlayer && !videoPlayer.paused && videoPlayer.readyState > HTMLMediaElement.HAVE_CURRENT_DATA;
             },
 
-            // For getters, ensure videoPlayer exists and has meaningful data
-            getDuration: function() { return videoPlayer && !isNaN(videoPlayer.duration) ? videoPlayer.duration : 0; },
-            getCurrentTime: function() { return videoPlayer ? videoPlayer.currentTime : 0; },
-            getVideoWidth: function() { return videoPlayer ? videoPlayer.videoWidth : 0; },
-            getVideoHeight: function() { return videoPlayer ? videoPlayer.videoHeight : 0; },
+        // For getters, ensure videoPlayer exists and has meaningful data
+            getDuration: function() { 
+                try {
+                    return videoPlayer && !isNaN(videoPlayer.duration) ? videoPlayer.duration : 0; 
+                } catch(e) {
+                    logError('Error in getDuration: ' + e.message);
+                    return 0;
+                }
+            },
+            getCurrentTime: function() { 
+                try {
+                    return videoPlayer ? videoPlayer.currentTime : 0; 
+                } catch(e) {
+                    logError('Error in getCurrentTime: ' + e.message);
+                    return 0;
+                }
+            },
+            getVideoWidth: function() { 
+                try {
+                    return videoPlayer ? videoPlayer.videoWidth : 0; 
+                } catch(e) {
+                    logError('Error in getVideoWidth: ' + e.message);
+                    return 0;
+                }
+            },
+            getVideoHeight: function() { 
+                try {
+                    return videoPlayer ? videoPlayer.videoHeight : 0; 
+                } catch(e) {
+                    logError('Error in getVideoHeight: ' + e.message);
+                    return 0;
+                }
+            },
 
             setCurrentTime: function(time) {
                 log(`API called: setCurrentTime(${time})`);
@@ -367,7 +405,7 @@
                                 }, 500);
                             }
                         }).catch(e2 => {
-                            log(`Muted play also failed (tryPlayVideo): ${e2.message}`);
+                            logError(`Muted play also failed (tryPlayVideo): ${e2.message}`);
                             // Restore intended muted state if muted play failed
                             videoPlayer.muted = originallyMutedByUser;
                             window.videoPlayerAPI.currentSettings.muted = originallyMutedByUser;
@@ -440,12 +478,12 @@
                     videoPlayer.load();
                     // No direct play here, will let events handle it
                 } else {
-                    log(`XHR failed with status: ${this.status}`);
+                    logError(`XHR failed with status: ${this.status}`);
                 }
             };
             
             xhr.onerror = function() {
-                log('XHR network error');
+                logError('XHR network error when loading video');
                 
                 // Try direct loading as fallback
                 log('Trying direct loading as fallback');
@@ -458,7 +496,7 @@
         // Main load function that decides which method to use
         function internalLoadVideo(path) {
             if (!path) {
-                log('No video path provided');
+                logError('No video path provided');
                 return;
             }
             
@@ -539,7 +577,7 @@
         });
         
         videoPlayer.addEventListener('error', function(e) {
-            // Just log the error details
+            // Always log the error details
             let errorMessage = "Unknown error";
             
             if (videoPlayer.error) {
@@ -553,11 +591,11 @@
                 errorMessage += ` (${videoPlayer.error.code})`;
             }
             
-            log(`Video error: ${errorMessage}`);
+            logError(`Video error: ${errorMessage}`);
             
             // Try to provide more detailed error info
             const videoSrc = videoPlayer.currentSrc || videoSource || "(unknown)";
-            log(`Source: ${videoSrc}`);
+            logError(`Source: ${videoSrc}`);
         });
 
         function applyStoredSettings() {

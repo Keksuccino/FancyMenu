@@ -735,7 +735,7 @@ public class MCEFVideoPlayer {
             "  var evalResult = (%s);" + // jsCodeToEvaluate is wrapped in parentheses to ensure it's an expression
             "  console.log('MCEF_ASYNC_RESULT:%s:' + JSON.stringify(evalResult));" +
             "} catch (e) {" +
-            "  console.log('MCEF_ASYNC_RESULT:%s:' + JSON.stringify({error: e.toString(), message: e.message, stack: e.stack}));" +
+            "  console.error('MCEF_ASYNC_RESULT:%s:' + JSON.stringify({error: e.toString(), message: e.message, stack: e.stack}));" +
             "}",
             jsCodeToEvaluate, requestId, requestId // requestId is used for both success and error paths
         );
