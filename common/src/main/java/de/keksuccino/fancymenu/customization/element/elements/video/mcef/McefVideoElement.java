@@ -44,7 +44,8 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
     public SoundSource soundSource = SoundSource.MASTER;
 
     protected volatile boolean initialized = false;
-    protected final MCEFVideoManager videoManager = MCEFVideoManager.getInstance();
+    @Nullable
+    protected MCEFVideoManager videoManager = null;
     protected MCEFVideoPlayer videoPlayer = null;
     protected String playerId = null;
 
@@ -75,6 +76,7 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
 
     public MCEFVideoElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+        if (MCEFUtil.isMCEFLoaded()) this.videoManager = MCEFVideoManager.getInstance();
     }
 
     @Override
@@ -84,7 +86,9 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
 
             if (!MCEFUtil.isMCEFLoaded()) {
                 graphics.fill(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), MISSING_MCEF_COLOR.getColorInt());
-                graphics.drawCenteredString(Minecraft.getInstance().font, "§lMCEF IS NOT INSTALLED! PLEASE DOWNLOAD FROM CURSEFORGE!", (this.getAbsoluteX() + this.getAbsoluteWidth()) / 2, (this.getAbsoluteY() + this.getAbsoluteHeight()) / 2, -1);
+                int xCenter = this.getAbsoluteX() + (this.getAbsoluteWidth() / 2);
+                int yCenter = this.getAbsoluteY() + (this.getAbsoluteHeight() / 2);
+                graphics.drawCenteredString(Minecraft.getInstance().font, "§lMCEF IS NOT INSTALLED! PLEASE DOWNLOAD FROM CURSEFORGE!", xCenter, yCenter, -1);
                 return;
             }
 

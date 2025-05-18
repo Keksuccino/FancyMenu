@@ -49,7 +49,8 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
     public boolean invertParallax = false;
 
     protected volatile boolean initialized = false;
-    protected final MCEFVideoManager videoManager = MCEFVideoManager.getInstance();
+    @Nullable
+    protected MCEFVideoManager videoManager = null;
     protected MCEFVideoPlayer videoPlayer = null;
     protected String playerId = null;
 
@@ -80,6 +81,7 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
 
     public MCEFVideoMenuBackground(MenuBackgroundBuilder<MCEFVideoMenuBackground> builder) {
         super(builder);
+        if (MCEFUtil.isMCEFLoaded()) this.videoManager = MCEFVideoManager.getInstance();
     }
 
     @Override
