@@ -8,7 +8,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 
-import java.awt.*;
 import java.util.Random;
 
 /**
@@ -115,8 +114,7 @@ public class PlayBall {
                 int trailX = x - (int)(velocityX * 0.5f * i);
                 int trailY = y - (int)(velocityY * 0.5f * i);
 
-                DrawableColor.of(new Color(trailColor)).setAsShaderColor(graphics);
-
+                DrawableColor.of(trailColor).setAsShaderColor(graphics);
                 graphics.blit(
                         TEXTURE_BALL,
                         trailX - size/2, trailY - size/2,
@@ -124,9 +122,7 @@ public class PlayBall {
                         size, size,
                         size, size
                 );
-
                 RenderingUtils.resetShaderColor(graphics);
-
             }
         }
 

@@ -12,6 +12,7 @@ import net.minecraft.client.gui.navigation.ScreenRectangle;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -81,14 +82,14 @@ public class TamagotchiBuddyWidget extends AbstractContainerEventHandler impleme
     
     public void tick() {
         buddy.tick();
-
+        
         // Handle auto-saving
         saveTimer++;
         if (saveTimer >= SAVE_INTERVAL) {
             saveTimer = 0;
             buddy.saveState();
             LOGGER.info("Auto-saved buddy state");
-
+            
             // Log current poop positions for debugging
             List<Poop> poops = buddy.getPoops();
             if (!poops.isEmpty()) {
@@ -159,6 +160,12 @@ public class TamagotchiBuddyWidget extends AbstractContainerEventHandler impleme
     public void cleanup() {
         LOGGER.info("TamagotchiEasterEgg cleanup - saving buddy state");
         buddy.saveState();
+        
+        // Also save leveling data if available
+        if (buddy.getLevelingManager() != null) {
+            LOGGER.info("Saving buddy leveling data");
+            buddy.getLevelingManager().saveState();
+        }
     }
 
 }

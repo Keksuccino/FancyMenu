@@ -7,8 +7,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 
-import java.awt.*;
-
 /**
  * Represents a poop object that appears after the buddy poops.
  * The poop stays on the ground until the user cleans it up.
@@ -61,9 +59,7 @@ public class Poop {
             // Fade out during cleaning animation
             float alpha = 1.0f - (cleaningAnimation / (float)CLEANING_DURATION);
             int color = (int)(alpha * 255) << 24 | 0xFFFFFF;
-
-            DrawableColor.of(new Color(color)).setAsShaderColor(graphics);
-
+            DrawableColor.of(color).setAsShaderColor(graphics);
             graphics.blit(
                 TEXTURE_POOP,
                 x - size/2, y - size/2,
@@ -71,9 +67,7 @@ public class Poop {
                 size, size,
                 size, size
             );
-
             RenderingUtils.resetShaderColor(graphics);
-
         } else {
             graphics.blit(
                 TEXTURE_POOP,
