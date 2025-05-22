@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy.gui;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddy;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.FoodItem;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.PlayBall;
@@ -11,12 +12,11 @@ import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -24,18 +24,17 @@ import java.util.Map;
 /**
  * A screen that displays and allows management of the buddy's leveling stats.
  */
-public class LevelingStatsScreen {
+public class BuddyStatusScreen implements Renderable {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
     // GUI Constants
     private static final int SCREEN_WIDTH = 320;
     private static final int SCREEN_HEIGHT = 240;
-    private static final int BORDER_SIZE = 7;
 
     // GUI Texture
-    private static final ResourceLocation GUI_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/leveling_gui.png");
-    private static final ResourceLocation TABS_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/leveling_tabs.png");
+    private static final ResourceLocation BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/status_screen_background.png");
+    private static final ResourceLocation TABS_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/screen_tab_background.png");
 
     // Tab Indices
     private static final int TAB_STATS = 0;
@@ -51,9 +50,7 @@ public class LevelingStatsScreen {
     private int guiY;
     private int currentTab = TAB_STATS;
     private final List<BuddyGuiButton> buttons = new ArrayList<>();
-    // Removed attribute buttons list
     private final List<BuddyGuiButton> actionButtons = new ArrayList<>();
-    // Removed skill buttons and scroll offset
     private int achievementsScrollOffset = 0;
 
     // Mouse handling
@@ -65,7 +62,7 @@ public class LevelingStatsScreen {
      * @param buddy The buddy this screen is for
      * @param levelingManager The leveling manager to display stats from
      */
-    public LevelingStatsScreen(@NotNull TamagotchiBuddy buddy, @NotNull LevelingManager levelingManager) {
+    public BuddyStatusScreen(@NotNull TamagotchiBuddy buddy, @NotNull LevelingManager levelingManager) {
         this.buddy = buddy;
         this.levelingManager = levelingManager;
         initButtons();
@@ -81,10 +78,11 @@ public class LevelingStatsScreen {
         // Close button (X icon)
         buttons.add(new BuddyGuiButton(
                 this.buddy,
-                buddy -> "X",
+                0, 0, 20, 20,
+                buddy -> "",
                 this::hide,
                 () -> true
-        ));
+        ).setCloseButtonTextures());
 
         actionButtons.clear();
 
@@ -181,58 +179,52 @@ public class LevelingStatsScreen {
             int y = actionButtonStartY + (i * actionButtonSpacing);
             actionButtons.get(i).setPosition(actionButtonStartX, y);
         }
-
-        // Removed attribute button positioning
-
-        // Skill buttons removed
     }
 
     /**
      * Renders the GUI if it's visible
      */
-    public void render(GuiGraphics graphics, int mouseX, int mouseY) {
+    @Override
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
         if (!isVisible) return;
+
+        RenderSystem.enableBlend();
 
         // Push pose stack and move to z=400 for rendering on top of everything
         graphics.pose().pushPose();
         graphics.pose().translate(0, 0, 400); // Use z=400 (same as tooltips)
 
-        // Use nine-slice rendering for the background
-        RenderingUtils.blitNineSlicedTexture(
-                graphics,
-                GUI_TEXTURE,
-                guiX, guiY,
-                SCREEN_WIDTH, SCREEN_HEIGHT,
-                256, 256,  // Texture dimensions
-                BORDER_SIZE, BORDER_SIZE, BORDER_SIZE, BORDER_SIZE  // Border sizes
-        );
+        // Render background
+        graphics.blit(BACKGROUND_TEXTURE, this.guiX, this.guiY, 0.0F, 0.0F, SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT);
 
         // Render tabs
-        renderTabs(graphics, mouseX, mouseY);
+        renderTabs(graphics, mouseX, mouseY, partial);
 
         // Render content based on current tab
         switch (currentTab) {
             case TAB_STATS:
-                renderStatsTab(graphics, mouseX, mouseY);
+                renderStatsTab(graphics, mouseX, mouseY, partial);
                 break;
             case TAB_ACHIEVEMENTS:
-                renderAchievementsTab(graphics, mouseX, mouseY);
+                renderAchievementsTab(graphics, mouseX, mouseY, partial);
                 break;
         }
 
         // Render close button
         for (BuddyGuiButton button : buttons) {
-            button.render(graphics, mouseX, mouseY);
+            button.render(graphics, mouseX, mouseY, partial);
         }
 
         // Pop pose stack
         graphics.pose().popPose();
+
     }
 
     /**
      * Renders the tabs at the top of the screen
      */
-    private void renderTabs(GuiGraphics graphics, int mouseX, int mouseY) {
+    private void renderTabs(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         Font font = Minecraft.getInstance().font;
         int tabWidth = 70;
         int tabHeight = 20;
@@ -270,13 +262,13 @@ public class LevelingStatsScreen {
     /**
      * Renders the stats tab content
      */
-    private void renderStatsTab(GuiGraphics graphics, int mouseX, int mouseY) {
+    private void renderStatsTab(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         Font font = Minecraft.getInstance().font;
         int contentStartX = guiX + 20;
         int contentStartY = guiY + 30;
 
         // Draw title
-        String title = "Buddy Status & Stats";
+        String title = "Status & Stats";
         graphics.drawString(font, title, guiX + (SCREEN_WIDTH - font.width(title)) / 2, contentStartY, 0xFFFFFF);
 
         // Draw status bars (moved from BuddyGui)
@@ -286,7 +278,7 @@ public class LevelingStatsScreen {
         for (BuddyGuiButton button : actionButtons) {
             // Update button active state before rendering
             button.updateActiveState();
-            button.render(graphics, mouseX, mouseY);
+            button.render(graphics, mouseX, mouseY, partial);
         }
         
         // Draw separator line - moved further down to avoid overlapping with status bars
@@ -327,13 +319,13 @@ public class LevelingStatsScreen {
     /**
      * Renders the achievements tab content
      */
-    private void renderAchievementsTab(GuiGraphics graphics, int mouseX, int mouseY) {
+    private void renderAchievementsTab(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         Font font = Minecraft.getInstance().font;
         int contentStartX = guiX + 20;
         int contentStartY = guiY + 30;
 
         // Draw title
-        String title = "Buddy Achievements";
+        String title = "Achievements";
         graphics.drawString(font, title, guiX + (SCREEN_WIDTH - font.width(title)) / 2, contentStartY, 0xFFFFFF);
 
         // Create a scrollable list of achievements

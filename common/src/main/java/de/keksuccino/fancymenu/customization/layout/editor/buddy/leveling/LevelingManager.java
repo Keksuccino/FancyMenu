@@ -29,7 +29,6 @@ public class LevelingManager {
     private static final int MAX_LEVEL = 30;
     private static final int BASE_XP_PER_LEVEL = 100;
     private static final float LEVEL_SCALING_FACTOR = 1.5f;
-    private static final int ATTRIBUTE_POINTS_PER_LEVEL = 2;
 
     // Reference to the buddy
     private final TamagotchiBuddy buddy;
@@ -37,11 +36,6 @@ public class LevelingManager {
     // Leveling data
     private int currentLevel = 1;
     private int experience = 0;
-    // Removed skill points and unlocks
-
-    // Attributes removed
-
-    // Skills - removed
 
     // Achievements
     private final Map<BuddyAchievement.AchievementType, BuddyAchievement> achievements = new EnumMap<>(BuddyAchievement.AchievementType.class);
@@ -292,12 +286,9 @@ public class LevelingManager {
         float happinessMultiplier = 1.0f - (levelProgress * 0.5f); // Up to 50% slower happiness decrease
         float energyMultiplier = 1.0f - (levelProgress * 0.5f); // Up to 50% slower energy decrease
         float happinessGainMultiplier = 1.0f + (levelProgress * 0.5f); // Up to 50% more happiness gain
-        float moveSpeedBonus = levelProgress * 2.0f; // Up to +2 move speed
         float experienceMultiplier = 1.0f + (levelProgress * 0.3f); // Up to 30% more experience
-        float animationVarietyBonus = levelProgress * 0.5f; // Up to 50% more animation variety
         float needsUnderstandingBonus = levelProgress * 0.5f; // Up to 50% better needs understanding
         float luckBonus = levelProgress * 0.4f; // Up to 40% better luck
-        float skillEffectMultiplier = 1.0f; // No skills, so this is unused
         
         // Store these effects for the TamagotchiBuddy to use
         buddy.setAttributeEffects(
@@ -305,22 +296,11 @@ public class LevelingManager {
                 happinessMultiplier,
                 energyMultiplier,
                 happinessGainMultiplier,
-                moveSpeedBonus,
                 experienceMultiplier,
-                animationVarietyBonus,
                 needsUnderstandingBonus,
-                luckBonus,
-                skillEffectMultiplier
+                luckBonus
         );
     }
-    
-    // Attribute effect percentage method removed
-    
-    // Skill-related methods removed
-    
-    // Attribute points method removed
-    
-    // Unlock methods removed
     
     /**
      * Updates the session time tracking and checks for time-based achievements.
@@ -539,10 +519,6 @@ public class LevelingManager {
             json.addProperty("level", currentLevel);
             json.addProperty("experience", experience);
             
-            // Attribute saving removed
-            
-            // Skills removed
-            
             // Save achievements
             JsonObject achievementsObj = new JsonObject();
             for (Map.Entry<BuddyAchievement.AchievementType, BuddyAchievement> entry : achievements.entrySet()) {
@@ -605,10 +581,6 @@ public class LevelingManager {
                 experience = Math.max(calculateExperienceForLevel(currentLevel), experience);
             }
             
-            // Attribute loading removed
-            
-            // Skills loading removed
-            
             // Load achievements
             if (json.has("achievements")) {
                 JsonObject achievementsObj = json.getAsJsonObject("achievements");
@@ -669,8 +641,6 @@ public class LevelingManager {
             return false;
         }
     }
-    
-    // Getters and setters
     
     public int getCurrentLevel() {
         return currentLevel;

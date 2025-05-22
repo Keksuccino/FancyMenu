@@ -1,8 +1,9 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.animation.AnimationState;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.animation.AnimationStates;
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.gui.LevelingStatsScreen;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.gui.BuddyStatusScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.FoodItem;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.PlayBall;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.Poop;
@@ -16,7 +17,6 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -118,30 +118,24 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     public boolean wasDisabled = true;
     public boolean wasOffScreen = false;
 
-    public LevelingStatsScreen levelingScreen;
+    public BuddyStatusScreen statusScreen;
     
     // Leveling system
-    private LevelingManager levelingManager;
+    private final LevelingManager levelingManager;
     
     // Level effect multipliers (set by leveling manager based on level)
     private float hungerMultiplier = 1.0f;
     private float happinessMultiplier = 1.0f;
     private float energyMultiplier = 1.0f;
     private float happinessGainMultiplier = 1.0f;
-    private float moveSpeedBonus = 0.0f;
     private float experienceMultiplier = 1.0f;
-    private float animationVarietyBonus = 0.0f;
     private float needsUnderstandingBonus = 0.0f;
     private float luckBonus = 0.0f;
-    private float skillEffectMultiplier = 1.0f;
     
     // XP Sources tracking
     private long lastXpGainTime = 0;
-    private Map<String, Long> xpCooldowns = new HashMap<>();
-    private static final long DEFAULT_XP_COOLDOWN = 60000; // 1 minute cooldown for most XP sources
-    
-    // Activity tracking for achievements
-    private long sessionStartTime;
+    private final Map<String, Long> xpCooldowns = new HashMap<>();
+
     private long lastSessionUpdateTime;
     
     // Event listeners
@@ -162,18 +156,20 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         this.stateChangeTimer = random.nextInt(200) + 100;
 
         // Initialize session timers
-        this.sessionStartTime = System.currentTimeMillis();
-        this.lastSessionUpdateTime = this.sessionStartTime;
+        // Activity tracking for achievements
+        this.lastSessionUpdateTime = System.currentTimeMillis();
 
         // Initialize leveling manager
         this.levelingManager = new LevelingManager(this);
         
         // Initialize GUI
-        this.levelingScreen = new LevelingStatsScreen(this, levelingManager);
+        this.statusScreen = new BuddyStatusScreen(this, levelingManager);
     }
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+
+        RenderSystem.enableBlend();
 
         // Log disabled changes
         if (wasDisabled != isDisabled) {
@@ -286,9 +282,9 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             droppedFood.render(graphics);
         }
         
-        // Render the leveling screen if visible
-        if (levelingScreen.isVisible()) {
-            levelingScreen.render(graphics, mouseX, mouseY);
+        // Render the status screen if visible
+        if (statusScreen.isVisible()) {
+            statusScreen.render(graphics, mouseX, mouseY, partialTick);
         }
     }
 
@@ -1051,8 +1047,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         poopY = Math.max(10, Math.min(screenHeight - 10, poopY));
 
         // Safety check for invalid coordinates
-        if (poopX < 0 || poopX > screenWidth || poopY < 0 || poopY > screenHeight ||
-                poopX == Integer.MAX_VALUE || poopY == Integer.MAX_VALUE) {
+        if (poopX > screenWidth || poopY > screenHeight || poopX == Integer.MAX_VALUE || poopY == Integer.MAX_VALUE) {
             LOGGER.warn("Attempted to create poop with invalid coordinates: ({}, {}), skipping", poopX, poopY);
             return;
         }
@@ -1144,8 +1139,8 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         if (!isDisabled) return false;
         
         // First handle the leveling screen if it's visible (highest priority)
-        if (levelingScreen.isVisible()) {
-            return levelingScreen.mouseClicked(mouseX, mouseY, button);
+        if (statusScreen.isVisible()) {
+            return statusScreen.mouseClicked(mouseX, mouseY, button);
         }
 
         if ((droppedFood != null) && !droppedFood.justCreated) {
@@ -1200,7 +1195,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         if (button == 1) { // Right click
             // If clicked on buddy, open the stats screen directly
             if (isMouseOverBuddy(mouseX, mouseY)) {
-                levelingScreen.show(screenWidth, screenHeight);
+                statusScreen.show(screenWidth, screenHeight);
                 LOGGER.info("Opening buddy stats screen (on right-click)");
                 return true;
             }
@@ -1253,8 +1248,8 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         if (!isDisabled) return false;
         
         // Handle the leveling screen first if it's visible
-        if (levelingScreen.isVisible()) {
-            levelingScreen.mouseReleased(mouseX, mouseY, button);
+        if (statusScreen.isVisible()) {
+            statusScreen.mouseReleased(mouseX, mouseY, button);
             return true;
         }
 
@@ -1311,8 +1306,8 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double deltaX, double deltaY) {
         // Handle mouse scroll for leveling screen if visible
-        if (levelingScreen.isVisible()) {
-            return levelingScreen.mouseScrolled(mouseX, mouseY, deltaX, deltaY);
+        if (statusScreen.isVisible()) {
+            return statusScreen.mouseScrolled(mouseX, mouseY, deltaX, deltaY);
         }
         return false;
     }
@@ -1734,34 +1729,26 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
      * @param happinessMultiplier The multiplier for happiness decrease rate
      * @param energyMultiplier The multiplier for energy decrease rate
      * @param happinessGainMultiplier The multiplier for happiness gain
-     * @param moveSpeedBonus The bonus to movement speed
      * @param experienceMultiplier The multiplier for experience gain
-     * @param animationVarietyBonus The bonus to animation variety
      * @param needsUnderstandingBonus The bonus to needs understanding
      * @param luckBonus The bonus to luck
-     * @param skillEffectMultiplier The multiplier for skill effectiveness
      */
     public void setAttributeEffects(float hungerMultiplier, float happinessMultiplier, float energyMultiplier,
-                                   float happinessGainMultiplier, float moveSpeedBonus, float experienceMultiplier,
-                                   float animationVarietyBonus, float needsUnderstandingBonus, float luckBonus,
-                                   float skillEffectMultiplier) {
+                                   float happinessGainMultiplier, float experienceMultiplier, float needsUnderstandingBonus, float luckBonus) {
         this.hungerMultiplier = hungerMultiplier;
         this.happinessMultiplier = happinessMultiplier;
         this.energyMultiplier = energyMultiplier;
         this.happinessGainMultiplier = happinessGainMultiplier;
-        this.moveSpeedBonus = moveSpeedBonus;
         this.experienceMultiplier = experienceMultiplier;
-        this.animationVarietyBonus = animationVarietyBonus;
         this.needsUnderstandingBonus = needsUnderstandingBonus;
         this.luckBonus = luckBonus;
-        this.skillEffectMultiplier = skillEffectMultiplier;
     }
     
     /**
      * Opens the leveling stats screen
      */
     public void openLevelingScreen() {
-        levelingScreen.show(screenWidth, screenHeight);
+        statusScreen.show(screenWidth, screenHeight);
     }
     
     /**
