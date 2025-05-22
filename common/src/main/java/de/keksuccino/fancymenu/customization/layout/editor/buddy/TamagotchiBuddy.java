@@ -638,20 +638,25 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         } else {
             energy = Math.max(0, energy - (0.002f * energyMultiplier));
 
-            // Playing increases fun but drains energy faster
+            // Playing increases fun but drains energy much faster (3x normal rate)
+            // This makes playing a strategic choice - great for fun but exhausting
             if (isPlaying) {
-                energy = Math.max(0, energy - (0.01f * energyMultiplier));
+                energy = Math.max(0, energy - (0.03f * energyMultiplier)); // Increased 3x from 0.01f
                 funLevel = Math.min(100, funLevel + 0.05f);  // Playing significantly increases fun
+                happiness = Math.min(100, happiness + (0.01f * happinessGainMultiplier)); // Playing also makes buddy happy!
+                hunger = Math.max(0, hunger - (0.01f * hungerMultiplier)); // Playing makes buddy hungrier (2x normal rate)
             }
 
-            // Chasing drains energy faster
+            // Chasing drains energy faster (3x normal rate when actively chasing)
             if (isChasingBall) {
-                energy = Math.max(0, energy - (0.008f * energyMultiplier));
+                energy = Math.max(0, energy - (0.024f * energyMultiplier)); // Increased 3x from 0.008f
+                hunger = Math.max(0, hunger - (0.005f * hungerMultiplier)); // Chasing makes even hungrier (3x normal rate total)
             }
 
             // Hopping drains energy faster
             if (isHopping) {
                 energy = Math.max(0, energy - (0.005f * energyMultiplier));
+                hunger = Math.max(0, hunger - (0.002f * hungerMultiplier)); // Slight hunger increase from activity
             }
 
             // Excitement drains energy faster
@@ -659,11 +664,13 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
                 energy = Math.max(0, energy - (0.01f * energyMultiplier));
                 // But it also increases happiness!
                 happiness = Math.min(100, happiness + (0.01f * happinessGainMultiplier));
+                hunger = Math.max(0, hunger - (0.003f * hungerMultiplier)); // Excitement burns calories too
             }
 
             // Running drains energy faster
             if (this.currentState == RUNNING) {
                 energy = Math.max(0, energy - (0.01f * energyMultiplier));
+                hunger = Math.max(0, hunger - (0.005f * hungerMultiplier)); // Running also makes buddy hungrier
             }
 
         }
@@ -673,7 +680,11 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         needsFood = hunger < needThreshold;
         needsPet = happiness < needThreshold;
         needsPlay = funLevel < needThreshold;
-        isSleepy = energy < needThreshold && energy >= (needThreshold / 3);
+        
+        // Energy thresholds (with slower stat decay, adjusted for better gameplay):
+        // - Energy < 10: Sleepy walk animation (was < 20)
+        // - Energy < 6.7: Auto-sleep triggers (same as before)
+        isSleepy = energy < (needThreshold * 0.5f) && energy >= (needThreshold / 3); // Sleepy triggers at 10 instead of 20, critical at ~6.7
 
         // Auto-sleep if energy is critically low
         if (energy < (needThreshold / 3) && !isSleeping) {
@@ -864,7 +875,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         }
 
         // Chance to yawn when tired
-        if ((energy < 60) && this.chanceCheck(2.0f)) {
+        if ((energy < 30) && this.chanceCheck(2.0f)) {
             startYawning();
             return;
         }
@@ -1300,6 +1311,22 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         // Set grumpy state
         isGrumpy = true;
     }
+    
+    /**
+     * Makes buddy grumpy without negative effects (used for sleep refusal)
+     */
+    public void refuseSleep() {
+        LOGGER.info("Buddy refuses to sleep and gets grumpy");
+        
+        // Clear other states
+        isHopping = false;
+        isLookingAround = false;
+        isStretching = false;
+        isExcited = false;
+        
+        // Set grumpy state without any stat penalties
+        isGrumpy = true;
+    }
 
     public boolean isSad() {
         if (isPlaying || isChasingBall) return false;
@@ -1700,7 +1727,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     public void setEnergy(float energy) {
         this.energy = energy;
         // Handle auto-sleep if energy is critically low
-        if (energy < 10 && !isSleeping) {
+        if (energy < 6.7f && !isSleeping) {
             this.startSleeping();
         }
     }

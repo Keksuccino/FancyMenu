@@ -209,7 +209,7 @@ public class AnimationStates {
             .priority(1)
             .animationSpeed((buddy, state) -> 3)
             .walkingSpeed((buddy, state) -> 7)
-            .activationCondition(buddy -> (buddy.energy >= 70) && buddy.chanceCheck(0.02f)) // 0.02% chance to trigger RUNNING when energy is high enough
+            .activationCondition(buddy -> (buddy.energy >= 50) && buddy.chanceCheck(0.02f)) // Adjusted from 70 to 50 for new energy scale
             .preventionCondition(buddy -> buddy.isSad() || buddy.isSleepy)
             .temporaryState(true)
             .duration(30, 50)
@@ -219,7 +219,7 @@ public class AnimationStates {
 
     public static final AnimationState WALKING = registerState(new AnimationState.Builder("WALKING", ATLAS_INDEX_IDLE_WALK)
             .priority(0)
-            .walkingSpeed((buddy, state) -> (buddy.energy < 45) ? 1 : 2) // Walks slower when tired
+            .walkingSpeed((buddy, state) -> (buddy.energy < 10) ? 1 : 2) // Walks slower when very tired (adjusted from 45)
             .activationCondition(buddy -> true) // Always valid if no other state applies
             .preventionCondition(buddy -> buddy.isSleepy)
             .build());

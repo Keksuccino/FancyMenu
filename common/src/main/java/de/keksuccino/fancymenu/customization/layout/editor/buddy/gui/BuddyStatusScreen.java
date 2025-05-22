@@ -53,6 +53,9 @@ public class BuddyStatusScreen implements Renderable {
     private final List<BuddyGuiButton> buttons = new ArrayList<>();
     private final List<BuddyGuiButton> actionButtons = new ArrayList<>();
     private int achievementsScrollOffset = 0;
+    
+    // Sleep button cooldown
+    public long sleepButtonCooldownEnd = 0;
 
     // Mouse handling
     private boolean isMouseClicked = false;
@@ -135,8 +138,50 @@ public class BuddyStatusScreen implements Renderable {
                     // Close the screen to let the player give the ball to buddy
                     hide();
                 },
-                // Condition for button to be active
-                () -> !buddy.isSleeping && (buddy.getEnergy() > 20) && (buddy.getPlayBall() == null) && !buddy.isEating && !buddy.isPooping
+                // Condition for button to be active - disable when buddy enters sleepy walk (energy <= 10)
+                () -> !buddy.isSleeping && (buddy.getEnergy() > 10) && (buddy.getPlayBall() == null) && !buddy.isEating && !buddy.isPooping
+        ));
+        
+        // Create sleep button
+        actionButtons.add(new BuddyGuiButton(
+                this.buddy,
+                buddy -> {
+                    // Show cooldown time if on cooldown
+                    if (System.currentTimeMillis() < sleepButtonCooldownEnd) {
+                        long secondsLeft = (sleepButtonCooldownEnd - System.currentTimeMillis()) / 1000;
+                        return "Sleep (" + secondsLeft + "s)";
+                    }
+                    return "Sleep";
+                },
+                () -> {
+                    // Only allow if not awakened
+                    if (!buddy.hasBeenAwakened) return;
+                    
+                    // Check if buddy refuses to sleep (30% chance)
+                    if (buddy.chanceCheck(30f)) {
+                        LOGGER.info("Buddy refuses to go to sleep!");
+                        
+                        // Start grumpy animation without negative effects
+                        buddy.refuseSleep();
+                        
+                        // Set cooldown for sleep button (60 seconds)
+                        sleepButtonCooldownEnd = System.currentTimeMillis() + 60000;
+                        
+                        // Close the screen
+                        hide();
+                    } else {
+                        LOGGER.info("Buddy agrees to go to sleep");
+                        
+                        // Start sleeping
+                        buddy.startSleeping();
+                        
+                        // Close the screen
+                        hide();
+                    }
+                },
+                // Condition for button to be active - energy must be below 20 and not on cooldown
+                () -> !buddy.isSleeping && (buddy.getEnergy() < 20) && !buddy.isEating && !buddy.isPooping && 
+                      (System.currentTimeMillis() >= sleepButtonCooldownEnd)
         ));
     }
 
@@ -290,6 +335,11 @@ public class BuddyStatusScreen implements Renderable {
 
         // Draw status bars (moved from BuddyGui)
         renderStatusBars(graphics, contentStartX, contentStartY + 20);
+        
+        // Update button states before rendering
+        for (BuddyGuiButton button : actionButtons) {
+            button.updateActiveState();
+        }
         
         // Render action buttons (feed and play)
         for (BuddyGuiButton button : actionButtons) {
