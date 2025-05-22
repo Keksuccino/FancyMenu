@@ -150,10 +150,6 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
 
-        // Position at edge of screen for peeking
-        this.buddyPosX = screenWidth - (SPRITE_WIDTH / 3); // Only show 1/3 of buddy when peeking
-        this.buddyPosY = screenHeight - SPRITE_HEIGHT - 10;
-
         // Initialize with random timer
         this.stateChangeTimer = random.nextInt(200) + 100;
 
@@ -169,6 +165,20 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         
         // Start in peeking state
         this.isPeeking = true;
+        
+        // Randomly choose which side to peek from initially
+        if (random.nextBoolean()) {
+            // Peek from left side
+            this.buddyPosX = -(int)(SPRITE_WIDTH * 0.1f);
+            this.facingLeft = false; // Face right when peeking from left
+            LOGGER.info("Buddy starting peeking from the left side");
+        } else {
+            // Peek from right side  
+            this.buddyPosX = screenWidth - (int)(SPRITE_WIDTH * 0.9f);
+            this.facingLeft = true; // Face left when peeking from right
+            LOGGER.info("Buddy starting peeking from the right side");
+        }
+        this.buddyPosY = screenHeight - SPRITE_HEIGHT - 10;
         
         // Start with full stats since buddy is dormant until awakened
         this.hunger = 100.0f;
@@ -218,17 +228,6 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         // Calculate texture coordinates
         int texX = currentFrame * SPRITE_WIDTH;
         int texY = currentState.getAtlasIndex() * SPRITE_HEIGHT;
-        
-        // Apply peeking offset if buddy is peeking
-        int renderX = buddyPosX;
-        if (isPeeking) {
-            // Render partially off-screen when peeking
-            if (facingLeft) {
-                renderX = buddyPosX; // Already positioned correctly
-            } else {
-                renderX = buddyPosX; // Already positioned correctly
-            }
-        }
 
         // Render the play ball if it exists (non-dragged balls render before buddy)
         if (playBall != null && !playBall.isBeingDragged()) {
@@ -250,7 +249,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
                 RenderingUtils.blitMirrored(
                         graphics,
                         TEXTURE_ATLAS,
-                        renderX, renderY,
+                        buddyPosX, renderY,
                         texX, texY,
                         SPRITE_WIDTH, SPRITE_HEIGHT,
                         SPRITE_WIDTH * ATLAS_COLUMNS, SPRITE_HEIGHT * ATLAS_ROWS
@@ -259,7 +258,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
                 // Standard rendering
                 graphics.blit(
                         TEXTURE_ATLAS,
-                        renderX, renderY,
+                        buddyPosX, renderY,
                         texX, texY,
                         SPRITE_WIDTH, SPRITE_HEIGHT,
                         SPRITE_WIDTH * ATLAS_COLUMNS, SPRITE_HEIGHT * ATLAS_ROWS
@@ -272,7 +271,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
                 RenderingUtils.blitMirrored(
                         graphics,
                         TEXTURE_ATLAS,
-                        renderX, buddyPosY,
+                        buddyPosX, buddyPosY,
                         texX, texY,
                         SPRITE_WIDTH, SPRITE_HEIGHT,
                         SPRITE_WIDTH * ATLAS_COLUMNS, SPRITE_HEIGHT * ATLAS_ROWS
@@ -281,7 +280,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
                 // Standard rendering
                 graphics.blit(
                         TEXTURE_ATLAS,
-                        renderX, buddyPosY,
+                        buddyPosX, buddyPosY,
                         texX, texY,
                         SPRITE_WIDTH, SPRITE_HEIGHT,
                         SPRITE_WIDTH * ATLAS_COLUMNS, SPRITE_HEIGHT * ATLAS_ROWS
@@ -396,12 +395,24 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             if (needsFood || needsPet || needsPlay || isSleepy) {
                 isPeeking = false;
                 LOGGER.info("Buddy stopped peeking due to critical needs");
+                // Move away from edge
+                if (facingLeft) {
+                    buddyPosX = screenWidth - SPRITE_WIDTH - 50;
+                } else {
+                    buddyPosX = 50;
+                }
             }
             
             // Small chance to come out of peeking on its own (only after being awakened)
             if (this.chanceCheck(0.1f)) {
                 isPeeking = false;
                 LOGGER.info("Buddy came out of peeking on its own!");
+                // Move away from edge
+                if (facingLeft) {
+                    buddyPosX = screenWidth - SPRITE_WIDTH - 50;
+                } else {
+                    buddyPosX = 50;
+                }
             }
             
             // Update visual state for peeking
@@ -919,13 +930,13 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         isPeeking = true;
         // Move buddy to edge of screen
         if (buddyPosX < screenWidth / 2) {
-            // Peek from left edge
-            buddyPosX = -(SPRITE_WIDTH * 2 / 3);
-            facingLeft = false;
+            // Peek from left edge - hide only 10% of sprite
+            buddyPosX = -(int)(SPRITE_WIDTH * 0.1f);
+            facingLeft = false; // Face right when peeking from left
         } else {
-            // Peek from right edge
-            buddyPosX = screenWidth - (SPRITE_WIDTH / 3);
-            facingLeft = true;
+            // Peek from right edge - show 90% of sprite
+            buddyPosX = screenWidth - (int)(SPRITE_WIDTH * 0.9f);
+            facingLeft = true; // Face left when peeking from right
         }
         
         // Stop all other activities
@@ -1304,6 +1315,15 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
                 // If buddy is peeking, stop peeking and start walking
                 if (isPeeking) {
                     isPeeking = false;
+                    
+                    // Move buddy away from edge to a visible position
+                    if (facingLeft) {
+                        // Was peeking from right, move left a bit
+                        buddyPosX = screenWidth - SPRITE_WIDTH - 50;
+                    } else {
+                        // Was peeking from left, move right a bit
+                        buddyPosX = 50;
+                    }
                     
                     // First time being awakened?
                     if (!hasBeenAwakened) {

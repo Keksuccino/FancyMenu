@@ -32,7 +32,7 @@ public class AnimationStates {
     private static final int ATLAS_INDEX_SITTING = 14;
     private static final int ATLAS_INDEX_WAVING = 15;
     private static final int ATLAS_INDEX_YAWNING = 16;
-    private static final int ATLAS_INDEX_PEEKING = 6; // Reuse idle stand for peeking
+    private static final int ATLAS_INDEX_PEEKING = 17;
 
     public static final AnimationState PEEKING = registerState(new AnimationState.Builder("PEEKING", ATLAS_INDEX_PEEKING)
             .priority(110) // Highest priority

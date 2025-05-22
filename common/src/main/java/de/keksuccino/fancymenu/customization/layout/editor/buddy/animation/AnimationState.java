@@ -22,7 +22,7 @@ public class AnimationState {
     public static final int SPRITE_WIDTH = 32;
     public static final int SPRITE_HEIGHT = 32;
     public static final int ATLAS_COLUMNS = 4; // 4 animation frames per row
-    public static final int ATLAS_ROWS = 17; // Different states (idle, happy, eating, etc.) - now 17 rows with sitting, waving, and yawning animations
+    public static final int ATLAS_ROWS = 18; // Different states (idle, happy, eating, etc.) - now 18 rows with peeking animation
 
     private final String name;
     private final int atlasIndex;
