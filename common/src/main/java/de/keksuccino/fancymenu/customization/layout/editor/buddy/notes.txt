@@ -1,4 +1,8 @@
 
+- Make buddy way less likely to poop
+
+- Make stats decrease way slower (10 times slower maybe)
+
 - Buddy should peek first for some time before he actually comes out to walk around
   - Will peek from the left and right screen edges randomly
   - Will not have any needs and states and will not loose stats (hunger, energy, etc.)
