@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.PlayBall;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.leveling.BuddyAchievement;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.leveling.LevelingManager;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -34,7 +33,8 @@ public class BuddyStatusScreen implements Renderable {
 
     // GUI Texture
     private static final ResourceLocation BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/status_screen_background.png");
-    private static final ResourceLocation TABS_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/screen_tab_background.png");
+    private static final ResourceLocation TAB_BUTTON_TEXTURE_NORMAL = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/tab_button.png");
+    private static final ResourceLocation TAB_BUTTON_TEXTURE_SELECTED = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/tab_button_selected.png");
 
     // Tab Indices
     private static final int TAB_STATS = 0;
@@ -43,6 +43,7 @@ public class BuddyStatusScreen implements Renderable {
     // Reference to the buddy and its leveling manager
     private final TamagotchiBuddy buddy;
     private final LevelingManager levelingManager;
+    private final Font font;
 
     // GUI state
     private boolean isVisible = false;
@@ -65,6 +66,7 @@ public class BuddyStatusScreen implements Renderable {
     public BuddyStatusScreen(@NotNull TamagotchiBuddy buddy, @NotNull LevelingManager levelingManager) {
         this.buddy = buddy;
         this.levelingManager = levelingManager;
+        this.font = Minecraft.getInstance().font;
         initButtons();
     }
 
@@ -162,18 +164,26 @@ public class BuddyStatusScreen implements Renderable {
      * Updates the positions of all buttons within the GUI
      */
     private void updateButtonPositions() {
-        // Position close button (X) in top right
+        // Position close button (X) at the same height as tabs
         int closeButtonX = guiX + SCREEN_WIDTH - 25;
-        int closeButtonY = guiY + 5;
+        int closeButtonY = guiY; // Same height as tabs
 
         if (!buttons.isEmpty()) {
             buttons.get(0).setPosition(closeButtonX, closeButtonY);
         }
         
-        // Position action buttons (feed and play) next to status bars
-        int actionButtonStartX = guiX + 190;
-        int actionButtonStartY = guiY + 50;
-        int actionButtonSpacing = 35;
+        // Position action buttons centered between status bars and right edge
+        int statusBarsEndX = guiX + 20 + 150; // status bars start + bar width
+        int rightEdgeX = guiX + SCREEN_WIDTH - 20; // right edge minus padding
+        int actionButtonWidth = 80; // approximate button width
+        int actionButtonStartX = statusBarsEndX + ((rightEdgeX - statusBarsEndX - actionButtonWidth) / 2);
+        
+        // Vertically center the buttons to the status bars area
+        int statusBarsStartY = guiY + 50; // where status bars start
+        int statusBarsHeight = 4 * (font.lineHeight + 10 + 2 + 4); // 4 bars with spacing
+        int totalButtonsHeight = actionButtons.size() * 30 + (actionButtons.size() - 1) * 10; // buttons + spacing
+        int actionButtonStartY = statusBarsStartY + ((statusBarsHeight - totalButtonsHeight) / 2);
+        int actionButtonSpacing = 40;
         
         for (int i = 0; i < actionButtons.size(); i++) {
             int y = actionButtonStartY + (i * actionButtonSpacing);
@@ -237,10 +247,11 @@ public class BuddyStatusScreen implements Renderable {
             int tabX = tabStartX + (i * tabWidth);
             boolean isSelected = (i == currentTab);
 
-            // Draw tab background
-            int u = isSelected ? 0 : 70;
-            int v = 0;
-            graphics.blit(TABS_TEXTURE, tabX, tabY, u, v, tabWidth, tabHeight, 256, 256);
+            // Draw tab button background using proper button textures
+            ResourceLocation buttonTexture = isSelected ? TAB_BUTTON_TEXTURE_SELECTED : TAB_BUTTON_TEXTURE_NORMAL;
+            
+            // Render button background
+            graphics.blit(buttonTexture, tabX, tabY, 0.0F, 0.0F, tabWidth, tabHeight, tabWidth, tabHeight);
 
             // Draw tab text
             int textColor = isSelected ? 0xFFFFFF : 0xAAAAAA;
