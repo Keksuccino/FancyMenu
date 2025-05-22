@@ -32,6 +32,17 @@ public class AnimationStates {
     private static final int ATLAS_INDEX_SITTING = 14;
     private static final int ATLAS_INDEX_WAVING = 15;
     private static final int ATLAS_INDEX_YAWNING = 16;
+    private static final int ATLAS_INDEX_PEEKING = 6; // Reuse idle stand for peeking
+
+    public static final AnimationState PEEKING = registerState(new AnimationState.Builder("PEEKING", ATLAS_INDEX_PEEKING)
+            .priority(110) // Highest priority
+            .allowsMovement(false)
+            .allowsHopping(false)
+            .animationSpeed((buddy, state) -> 20) // Slow animation for peeking
+            .activationCondition(buddy -> buddy.isPeeking)
+            .preventionCondition(buddy -> !buddy.hasBeenAwakened ? false : (buddy.needsFood || buddy.needsPet || buddy.needsPlay || buddy.isSleepy))
+            .ignoresLockedState(true)
+            .build());
 
     public static final AnimationState POOPING_STANDING = registerState(new AnimationState.Builder("POOPING_STANDING", ATLAS_INDEX_POOPING_STANDING)
             .priority(100)

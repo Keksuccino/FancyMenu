@@ -78,7 +78,7 @@ public class TamagotchiBuddyWidget extends AbstractContainerEventHandler impleme
 
     // Auto-save timer
     private int saveTimer = 0;
-    private static final int SAVE_INTERVAL = 1200; // Save every minute (20 ticks/sec * 60 sec)
+    private static final int SAVE_INTERVAL = 2400; // Save every 2 minutes (20 ticks/sec * 120 sec) - increased from 1 minute
     
     public void tick() {
         buddy.tick();

@@ -267,7 +267,7 @@ public class LevelingManager {
         buddy.lookChancePercentage = Math.min(0.8f, 0.2f + (currentLevel * 0.02f));
         buddy.stretchChancePercentage = Math.min(0.5f, 0.1f + (currentLevel * 0.01f));
         buddy.excitedChancePercentage = Math.min(0.5f, 0.1f + (currentLevel * 0.01f));
-        buddy.poopingInterval = Math.max(1000, 1500 - (int)(100 * Math.min(5, currentLevel)));
+        buddy.poopingInterval = Math.max(4000, 6000 - (int)(200 * Math.min(10, currentLevel))); // Reduced from 1500-100 to 6000-200
         buddy.hopAnimationSpeed = 0.3f + (0.01f * Math.min(30, currentLevel));
         
         // Apply buddy effects based on level only
