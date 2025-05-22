@@ -166,7 +166,7 @@ public class BuddyStatusScreen implements Renderable {
     private void updateButtonPositions() {
         // Position close button (X) at the same height as tabs
         int closeButtonX = guiX + SCREEN_WIDTH - 25;
-        int closeButtonY = guiY; // Same height as tabs
+        int closeButtonY = guiY + 5; // Same height as tabs
 
         if (!buttons.isEmpty()) {
             buttons.get(0).setPosition(closeButtonX, closeButtonY);
@@ -238,8 +238,8 @@ public class BuddyStatusScreen implements Renderable {
         Font font = Minecraft.getInstance().font;
         int tabWidth = 70;
         int tabHeight = 20;
-        int tabStartX = guiX + 15;
-        int tabY = guiY;
+        int tabStartX = guiX + 5;
+        int tabY = guiY + 5;
 
         String[] tabNames = {"Stats", "Achievements"};
 
