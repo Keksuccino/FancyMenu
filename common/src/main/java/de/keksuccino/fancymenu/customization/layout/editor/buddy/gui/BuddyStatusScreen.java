@@ -33,7 +33,7 @@ public class BuddyStatusScreen implements Renderable {
 
     // GUI Texture
     private static final ResourceLocation BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/status_screen_background.png");
-    private static final ResourceLocation TAB_BUTTON_TEXTURE_NORMAL = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/tab_button.png");
+    private static final ResourceLocation TAB_BUTTON_TEXTURE_NORMAL = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/tab_button_normal.png");
     private static final ResourceLocation TAB_BUTTON_TEXTURE_SELECTED = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/tab_button_selected.png");
 
     // Tab Indices
@@ -157,8 +157,8 @@ public class BuddyStatusScreen implements Renderable {
                     // Only allow if not awakened
                     if (!buddy.hasBeenAwakened) return;
                     
-                    // Check if buddy refuses to sleep (30% chance)
-                    if (buddy.chanceCheck(30f)) {
+                    // Check if buddy refuses to sleep (8% chance)
+                    if (buddy.chanceCheck(8f)) {
                         LOGGER.info("Buddy refuses to go to sleep!");
                         
                         // Start grumpy animation without negative effects
@@ -232,9 +232,9 @@ public class BuddyStatusScreen implements Renderable {
         // Vertically center the buttons to the status bars area
         int statusBarsStartY = guiY + 50; // where status bars start
         int statusBarsHeight = 4 * (font.lineHeight + 10 + 2 + 4); // 4 bars with spacing
-        int totalButtonsHeight = actionButtons.size() * 30 + (actionButtons.size() - 1) * 10; // buttons + spacing
+        int totalButtonsHeight = actionButtons.size() * 20 + (actionButtons.size() - 1) * 5; // buttons + spacing
         int actionButtonStartY = statusBarsStartY + ((statusBarsHeight - totalButtonsHeight) / 2);
-        int actionButtonSpacing = 40;
+        int actionButtonSpacing = 25; // Reduced from 40 for tighter spacing
         
         for (int i = 0; i < actionButtons.size(); i++) {
             int y = actionButtonStartY + (i * actionButtonSpacing);
