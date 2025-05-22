@@ -1220,6 +1220,11 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	}
 
 	@Override
+	public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
+		return super.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
+	}
+
+	@Override
 	public boolean keyPressed(int keycode, int scancode, int modifiers) {
 
 		this.anchorPointOverlay.keyPressed(keycode, scancode, modifiers);

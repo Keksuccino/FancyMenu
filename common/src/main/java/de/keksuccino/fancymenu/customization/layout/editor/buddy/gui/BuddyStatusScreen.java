@@ -215,9 +215,9 @@ public class BuddyStatusScreen implements Renderable {
      * Updates the positions of all buttons within the GUI
      */
     private void updateButtonPositions() {
-        // Position close button (X) at the same height as tabs
+        // Position close button (X) in the top right corner
         int closeButtonX = guiX + SCREEN_WIDTH - 25;
-        int closeButtonY = guiY + 5; // Same height as tabs
+        int closeButtonY = guiY + 5;
 
         if (!buttons.isEmpty()) {
             buttons.get(0).setPosition(closeButtonX, closeButtonY);
@@ -287,10 +287,10 @@ public class BuddyStatusScreen implements Renderable {
      */
     private void renderTabs(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         Font font = Minecraft.getInstance().font;
-        int tabWidth = 70;
+        int tabWidth = 80;
         int tabHeight = 20;
         int tabStartX = guiX + 5;
-        int tabY = guiY + 5;
+        int tabY = guiY - 8; // Positioned 40% outside the GUI (8 pixels out of 20)
 
         String[] tabNames = {"Stats", "Achievements"};
 

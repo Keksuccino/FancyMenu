@@ -1,6 +1,1 @@
 
-- Make buddy way less likely to poop
-
-- Make stats decrease way slower (10 times slower maybe)
-
-- Buddy should peek first from time to time until the user left-clicks him while peeking, so he comes out to walk around
