@@ -89,6 +89,9 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     public boolean isYawning = false;
     public boolean isPeeking = true; // Start in peeking mode until user clicks
     public boolean hasBeenAwakened = false; // Track if buddy has been clicked for the first time ever
+    public boolean isActivelyPeeking = false; // Whether buddy is currently visible during a peek
+    public int peekTimer = 0; // Timer for when to peek next
+    public int peekDuration = 0; // How long the current peek should last
 
     // Timers and behaviors
     public int stateChangeTimer;
@@ -166,19 +169,15 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         // Start in peeking state
         this.isPeeking = true;
         
-        // Randomly choose which side to peek from initially
-        if (random.nextBoolean()) {
-            // Peek from left side
-            this.buddyPosX = -(int)(SPRITE_WIDTH * 0.1f);
-            this.facingLeft = false; // Face right when peeking from left
-            LOGGER.info("Buddy starting peeking from the left side");
-        } else {
-            // Peek from right side  
-            this.buddyPosX = screenWidth - (int)(SPRITE_WIDTH * 0.9f);
-            this.facingLeft = true; // Face left when peeking from right
-            LOGGER.info("Buddy starting peeking from the right side");
-        }
+        // Set initial peek timer (buddy will peek after 1-2 minutes initially)
+        this.peekTimer = (60 * 20) + MathUtils.getRandomNumberInRange(0, 1200); // 1-2 minutes in ticks
+        this.isActivelyPeeking = false; // Start hidden
+        
+        // Position buddy off-screen initially
+        this.buddyPosX = -SPRITE_WIDTH - 10;
         this.buddyPosY = screenHeight - SPRITE_HEIGHT - 10;
+        
+        LOGGER.info("Buddy created in hidden state, will peek in {} seconds", peekTimer / 20.0f);
         
         // Start with full stats since buddy is dormant until awakened
         this.hunger = 100.0f;
@@ -214,6 +213,12 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         }
 
         renderPoops(graphics);
+
+        // Don't render buddy if it's peeking but not actively showing
+        if (isPeeking && !isActivelyPeeking) {
+            // Buddy is hidden off-screen
+            return;
+        }
 
         animationRenderTicks++;
         
@@ -377,6 +382,29 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         if (isPeeking) {
             // First-time peeking - buddy is dormant until awakened
             if (!hasBeenAwakened) {
+                // Update peek timer
+                if (peekTimer > 0) {
+                    peekTimer--;
+                } else if (!isActivelyPeeking) {
+                    // Start peeking
+                    startActivelyPeeking();
+                    // Set duration for this peek (15 seconds +/- a few seconds)
+                    peekDuration = (15 * 20) + MathUtils.getRandomNumberInRange(-60, 60); // 14-16 seconds in ticks
+                    LOGGER.info("Buddy starting to peek for {} seconds", peekDuration / 20.0f);
+                }
+                
+                // Update peek duration if actively peeking
+                if (isActivelyPeeking && peekDuration > 0) {
+                    peekDuration--;
+                    if (peekDuration <= 0) {
+                        // Stop peeking and go back off-screen
+                        stopActivelyPeeking();
+                        // Set timer for next peek (5 minutes +/- 1-2 minutes)
+                        peekTimer = (5 * 60 * 20) + MathUtils.getRandomNumberInRange(-2400, 2400); // 3-7 minutes in ticks
+                        LOGGER.info("Buddy hiding again, will peek again in {} seconds", peekTimer / 20.0f);
+                    }
+                }
+                
                 // No stat changes, no needs, just wait for the player
                 updateVisualState();
                 return;
@@ -916,7 +944,43 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         isSitting = false;
         isWaving = false;
         isYawning = false;
-        isPeeking = false;
+        // Don't stop isPeeking here - it's handled separately
+    }
+
+    /**
+     * Starts actively showing the buddy during a peek
+     */
+    public void startActivelyPeeking() {
+        isActivelyPeeking = true;
+        
+        // Position buddy at edge for peeking
+        if (random.nextBoolean()) {
+            // Peek from left side
+            buddyPosX = -(int)(SPRITE_WIDTH * 0.1f);
+            facingLeft = false;
+        } else {
+            // Peek from right side  
+            buddyPosX = screenWidth - (int)(SPRITE_WIDTH * 0.9f);
+            facingLeft = true;
+        }
+        
+        LOGGER.info("Buddy actively peeking from {} side", facingLeft ? "right" : "left");
+    }
+    
+    /**
+     * Stops actively showing the buddy and hides it off-screen
+     */
+    public void stopActivelyPeeking() {
+        isActivelyPeeking = false;
+        
+        // Move buddy completely off-screen
+        if (facingLeft) {
+            buddyPosX = screenWidth + SPRITE_WIDTH;
+        } else {
+            buddyPosX = -SPRITE_WIDTH - 10;
+        }
+        
+        LOGGER.info("Buddy hiding off-screen");
     }
 
     /**
@@ -1313,8 +1377,11 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             // Normal petting if menu isn't open
             if (isMouseOverBuddy(mouseX, mouseY)) {
                 // If buddy is peeking, stop peeking and start walking
-                if (isPeeking) {
+                if (isPeeking && isActivelyPeeking) {
                     isPeeking = false;
+                    isActivelyPeeking = false;
+                    peekTimer = 0;
+                    peekDuration = 0;
                     
                     // Move buddy away from edge to a visible position
                     if (facingLeft) {

@@ -51,6 +51,9 @@ public class TamagotchiBuddySerializer {
             json.addProperty("funLevel", buddy.getFunLevel());
             json.addProperty("isPeeking", buddy.isPeeking);
             json.addProperty("hasBeenAwakened", buddy.hasBeenAwakened);
+            json.addProperty("isActivelyPeeking", buddy.isActivelyPeeking);
+            json.addProperty("peekTimer", buddy.peekTimer);
+            json.addProperty("peekDuration", buddy.peekDuration);
             
             // Save screen dimensions
             json.addProperty("screenWidth", buddy.getScreenWidth());
@@ -111,6 +114,15 @@ public class TamagotchiBuddySerializer {
             }
             if (json.has("hasBeenAwakened")) {
                 buddy.hasBeenAwakened = json.get("hasBeenAwakened").getAsBoolean();
+            }
+            if (json.has("isActivelyPeeking")) {
+                buddy.isActivelyPeeking = json.get("isActivelyPeeking").getAsBoolean();
+            }
+            if (json.has("peekTimer")) {
+                buddy.peekTimer = json.get("peekTimer").getAsInt();
+            }
+            if (json.has("peekDuration")) {
+                buddy.peekDuration = json.get("peekDuration").getAsInt();
             }
             
             // Load poop locations
