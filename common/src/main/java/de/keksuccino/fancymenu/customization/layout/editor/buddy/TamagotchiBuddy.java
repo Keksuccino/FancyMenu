@@ -335,8 +335,13 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         if (!hasBeenAwakened) return;
 
         int iconSize = 16;
-        int iconX = buddyPosX + (SPRITE_WIDTH / 2) - (iconSize / 2);
-        int iconY = buddyPosY - iconSize - 5;
+        int bubbleSize = 32; // Increased from 24 to give more breathing room
+        int bubbleX = buddyPosX + (SPRITE_WIDTH / 2) - (bubbleSize / 2);
+        int bubbleY = buddyPosY - bubbleSize - 5;
+        
+        // Calculate icon position - offset upward to account for bubble tail
+        int iconX = bubbleX + (bubbleSize - iconSize) / 2;
+        int iconY = bubbleY + 4; // Position icon in upper portion of bubble (was centered)
 
         ResourceLocation icon = null;
 
@@ -353,13 +358,13 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             // First render the thought bubble
             graphics.blit(
                     TEXTURE_THOUGHT_BUBBLE,
-                    iconX - 4, iconY - 4,
+                    bubbleX, bubbleY,
                     0, 0,
-                    iconSize + 8, iconSize + 8,
-                    iconSize + 8, iconSize + 8
+                    bubbleSize, bubbleSize,
+                    bubbleSize, bubbleSize
             );
 
-            // Then render the icon inside it
+            // Then render the icon inside it (positioned in upper portion)
             graphics.blit(
                     icon,
                     iconX, iconY,
