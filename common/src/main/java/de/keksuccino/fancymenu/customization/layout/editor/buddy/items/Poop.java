@@ -1,10 +1,9 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy.items;
 
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddy;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 
 /**
@@ -27,9 +26,9 @@ public class Poop {
     public float relativeY; // Position as percentage of screen height (NEW - replaces groundLevel)
     
     // Reference to the buddy
-    public final TamagotchiBuddy buddy;
+    public final Buddy buddy;
 
-    public Poop(int x, int y, TamagotchiBuddy buddy) {
+    public Poop(int x, int y, Buddy buddy) {
         this.x = x;
         this.y = y;
         this.buddy = buddy;

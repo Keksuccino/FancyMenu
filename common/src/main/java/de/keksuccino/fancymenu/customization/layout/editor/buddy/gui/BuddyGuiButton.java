@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy.gui;
 
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddy;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -31,7 +31,7 @@ public class BuddyGuiButton implements Renderable {
     @Nullable
     protected final BooleanSupplier activeCondition;
     @NotNull
-    protected final TamagotchiBuddy buddy;
+    protected final Buddy buddy;
     protected int x;
     protected int y;
     protected int width;
@@ -44,7 +44,7 @@ public class BuddyGuiButton implements Renderable {
     @Nullable
     protected ResourceLocation inactiveTexture = null;
 
-    public BuddyGuiButton(@NotNull TamagotchiBuddy buddy, int x, int y, int width, int height, @NotNull ButtonNameSupplier nameSupplier, @NotNull Runnable action, @Nullable BooleanSupplier activeCondition) {
+    public BuddyGuiButton(@NotNull Buddy buddy, int x, int y, int width, int height, @NotNull ButtonNameSupplier nameSupplier, @NotNull Runnable action, @Nullable BooleanSupplier activeCondition) {
         this.nameSupplier = nameSupplier;
         this.action = action;
         this.activeCondition = activeCondition;
@@ -56,11 +56,11 @@ public class BuddyGuiButton implements Renderable {
         this.setDefaultButtonTextures();
     }
 
-    public BuddyGuiButton(@NotNull TamagotchiBuddy buddy, int x, int y, @NotNull ButtonNameSupplier nameSupplier, @NotNull Runnable action, @Nullable BooleanSupplier activeCondition) {
+    public BuddyGuiButton(@NotNull Buddy buddy, int x, int y, @NotNull ButtonNameSupplier nameSupplier, @NotNull Runnable action, @Nullable BooleanSupplier activeCondition) {
         this(buddy, x, y, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT, nameSupplier, action, activeCondition);
     }
 
-    public BuddyGuiButton(@NotNull TamagotchiBuddy buddy, @NotNull ButtonNameSupplier nameSupplier, @NotNull Runnable action, @Nullable BooleanSupplier activeCondition) {
+    public BuddyGuiButton(@NotNull Buddy buddy, @NotNull ButtonNameSupplier nameSupplier, @NotNull Runnable action, @Nullable BooleanSupplier activeCondition) {
         this(buddy, 0, 0, DEFAULT_BUTTON_WIDTH, DEFAULT_BUTTON_HEIGHT, nameSupplier, action, activeCondition);
     }
 
@@ -170,7 +170,7 @@ public class BuddyGuiButton implements Renderable {
 
     @FunctionalInterface
     public interface ButtonNameSupplier {
-        String name(@NotNull TamagotchiBuddy buddy);
+        String name(@NotNull Buddy buddy);
     }
 
 }

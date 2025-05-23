@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy.animation;
 
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddy;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddy.MAX_POOPS_BEFORE_SAD;
+import static de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy.MAX_POOPS_BEFORE_SAD;
 
 public class AnimationStates {
 
@@ -249,7 +249,7 @@ public class AnimationStates {
     }
 
     @NotNull
-    public static AnimationState findFirstValidStateFor(@NotNull TamagotchiBuddy buddy) {
+    public static AnimationState findFirstValidStateFor(@NotNull Buddy buddy) {
         AnimationState selectedState = null;
         for (AnimationState state : AnimationStates.getStates()) {
             if (state.canActivate(buddy)) {

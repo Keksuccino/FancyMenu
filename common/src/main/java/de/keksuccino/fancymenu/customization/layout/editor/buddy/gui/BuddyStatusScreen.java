@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddy;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.FoodItem;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.PlayBall;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.leveling.BuddyAchievement;
@@ -41,7 +41,7 @@ public class BuddyStatusScreen implements Renderable {
     private static final int TAB_ACHIEVEMENTS = 1;
 
     // Reference to the buddy and its leveling manager
-    private final TamagotchiBuddy buddy;
+    private final Buddy buddy;
     private final LevelingManager levelingManager;
     private final Font font;
 
@@ -66,7 +66,7 @@ public class BuddyStatusScreen implements Renderable {
      * @param buddy The buddy this screen is for
      * @param levelingManager The leveling manager to display stats from
      */
-    public BuddyStatusScreen(@NotNull TamagotchiBuddy buddy, @NotNull LevelingManager levelingManager) {
+    public BuddyStatusScreen(@NotNull Buddy buddy, @NotNull LevelingManager levelingManager) {
         this.buddy = buddy;
         this.levelingManager = levelingManager;
         this.font = Minecraft.getInstance().font;
@@ -102,7 +102,7 @@ public class BuddyStatusScreen implements Renderable {
                     int mouseX = MouseInput.getMouseX();
                     int mouseY = MouseInput.getMouseY();
                     
-                    LOGGER.info("Creating food at screen coordinates: ({}, {})", mouseX, mouseY);
+                    LOGGER.debug("Creating food at screen coordinates: ({}, {})", mouseX, mouseY);
 
                     // Create the food with drag mode already enabled
                     FoodItem food = new FoodItem(mouseX, mouseY, buddy);
@@ -127,7 +127,7 @@ public class BuddyStatusScreen implements Renderable {
                     int mouseX = MouseInput.getMouseX();
                     int mouseY = MouseInput.getMouseY();
                     
-                    LOGGER.info("Creating play ball at screen coordinates: ({}, {})", mouseX, mouseY);
+                    LOGGER.debug("Creating play ball at screen coordinates: ({}, {})", mouseX, mouseY);
 
                     // Create the ball with drag mode already enabled
                     PlayBall ball = new PlayBall(mouseX, mouseY, buddy);
@@ -159,7 +159,7 @@ public class BuddyStatusScreen implements Renderable {
                     
                     // Check if buddy refuses to sleep (8% chance)
                     if (buddy.chanceCheck(8f)) {
-                        LOGGER.info("Buddy refuses to go to sleep!");
+                        LOGGER.debug("Buddy refuses to go to sleep!");
                         
                         // Start grumpy animation without negative effects
                         buddy.refuseSleep();
@@ -170,7 +170,7 @@ public class BuddyStatusScreen implements Renderable {
                         // Close the screen
                         hide();
                     } else {
-                        LOGGER.info("Buddy agrees to go to sleep");
+                        LOGGER.debug("Buddy agrees to go to sleep");
                         
                         // Start sleeping
                         buddy.startSleeping();
@@ -200,7 +200,7 @@ public class BuddyStatusScreen implements Renderable {
         // Update button positions
         updateButtonPositions();
 
-        LOGGER.info("Showing buddy leveling stats screen at ({}, {})", guiX, guiY);
+        LOGGER.debug("Showing buddy leveling stats screen at ({}, {})", guiX, guiY);
     }
 
     /**
@@ -208,7 +208,7 @@ public class BuddyStatusScreen implements Renderable {
      */
     public void hide() {
         this.isVisible = false;
-        LOGGER.info("Hiding buddy leveling stats screen");
+        LOGGER.debug("Hiding buddy leveling stats screen");
     }
 
     /**

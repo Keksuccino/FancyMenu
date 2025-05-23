@@ -1,11 +1,10 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy.items;
 
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddy;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.Random;
@@ -48,13 +47,13 @@ public class PlayBall {
     public boolean hasFullSamples = false;
 
     // Reference to the buddy
-    public final TamagotchiBuddy buddy;
+    public final Buddy buddy;
     public final Random random;
 
     public boolean stickToCursor = false;
     public boolean justCreated = true;
 
-    public PlayBall(int x, int y, TamagotchiBuddy buddy) {
+    public PlayBall(int x, int y, Buddy buddy) {
         this.x = x;
         this.y = y;
         this.buddy = buddy;
