@@ -61,10 +61,10 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
     public int hopAnimationDuration = 0;
 
     // Needs and stats
-    public float hunger = 100.0f;
-    public float happiness = 100.0f;
-    public float energy = 100.0f;
-    public float funLevel = 100.0f;
+    public float hunger;
+    public float happiness;
+    public float energy;
+    public float funLevel;
     public boolean needsFood = false;
     public boolean needsPet = false;
     public boolean needsPlay = false;
@@ -89,7 +89,7 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
     public boolean isPeeking = true; // Start in peeking mode until user clicks
     public boolean hasBeenAwakened = false; // Track if buddy has been clicked for the first time ever
     public boolean isActivelyPeeking = false; // Whether buddy is currently visible during a peek
-    public int peekTimer = 0; // Timer for when to peek next
+    public int peekTimer; // Timer for when to peek next
     public int peekDuration = 0; // How long the current peek should last
 
     // Timers and behaviors

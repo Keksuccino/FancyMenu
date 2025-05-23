@@ -54,7 +54,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
-
 import java.util.*;
 
 @SuppressWarnings("all")
@@ -211,8 +210,10 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			w.refresh();
 		}
 
-		this.addWidget(this.buddyWidget);
-		this.buddyWidget.setScreenSize(this.width, this.height);
+		if (FancyMenu.getOptions().enableBuddy.getValue()) {
+			this.addWidget(this.buddyWidget);
+			this.buddyWidget.setScreenSize(this.width, this.height);
+		}
 
 		this.justOpened = false;
 
@@ -226,7 +227,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	@Override
 	public void tick() {
 
-		this.buddyWidget.tick();
+		if (FancyMenu.getOptions().enableBuddy.getValue()) {
+			this.buddyWidget.tick();
+		}
 
 		for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
 			w.tick();
@@ -258,7 +261,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		this.renderLayoutEditorWidgets(graphics, mouseX, mouseY, partial);
 
-		this.buddyWidget.render(graphics, mouseX, mouseY, partial);
+		if (FancyMenu.getOptions().enableBuddy.getValue()) {
+			this.buddyWidget.render(graphics, mouseX, mouseY, partial);
+		}
 
 		this.menuBar.render(graphics, mouseX, mouseY, partial);
 
@@ -1221,7 +1226,10 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	@Override
 	public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
-		return this.buddyWidget.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
+		if (FancyMenu.getOptions().enableBuddy.getValue()) {
+			return this.buddyWidget.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
+		}
+		return false;
 	}
 
 	@Override

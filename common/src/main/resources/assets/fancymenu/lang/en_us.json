@@ -1668,5 +1668,7 @@
   "fancymenu.placeholders.video_background_volume": "Video Background Volume",
   "fancymenu.placeholders.video_background_volume.desc": "Returns the volume of a Video menu background by its identifier.\nThe volume is a decimal between 0.0 (0%%) and 1.0 (100%%).\n\nTo get the identifier of a background, right-click the\neditor background and click on 'Copy Background Identifier'.",
   "fancymenu.editor.background_options.copy_background_identifier": "Copy Background Identifier",
-  "fancymenu.editor.background_options.copy_background_identifier.desc": "This will copy the identifier of the\ncurrent menu background to the clipboard.\n\nThe background identifier is used by actions, placeholders\nand similar stuff to communicate with the background instance."
+  "fancymenu.editor.background_options.copy_background_identifier.desc": "This will copy the identifier of the\ncurrent menu background to the clipboard.\n\nThe background identifier is used by actions, placeholders\nand similar stuff to communicate with the background instance.",
+  "fancymenu.editor.buddy.enable": "Enable Buddy: %s",
+  "fancymenu.editor.buddy.enable.desc": "If a cute little pet creature should\nwalk around at the bottom of the editor screen."
 }
