@@ -309,15 +309,6 @@ public class BuddyStatusScreen implements Renderable {
             int textX = tabX + (tabWidth - font.width(tabNames[i])) / 2;
             int textY = tabY + (tabHeight - font.lineHeight) / 2;
             graphics.drawString(font, tabNames[i], textX, textY, textColor);
-
-            // Check for tab click
-            if (mouseX >= tabX && mouseX < tabX + tabWidth && mouseY >= tabY && mouseY < tabY + tabHeight) {
-                if (isMouseClicked) {
-                    currentTab = i;
-                    isMouseClicked = false;
-                    updateButtonPositions();
-                }
-            }
         }
     }
 
@@ -501,6 +492,23 @@ public class BuddyStatusScreen implements Renderable {
 
         // Mark mouse as clicked for tab selection
         isMouseClicked = true;
+
+        // First check if clicking on tabs (even if outside main GUI bounds)
+        int tabWidth = 80;
+        int tabHeight = 20;
+        int tabStartX = guiX + 5;
+        int tabY = guiY - 8; // Tabs are positioned outside GUI
+        
+        // Check each tab button
+        for (int i = 0; i < 2; i++) { // 2 tabs: Stats and Achievements
+            int tabX = tabStartX + (i * tabWidth);
+            if (mouseX >= tabX && mouseX < tabX + tabWidth && mouseY >= tabY && mouseY < tabY + tabHeight) {
+                // Tab was clicked, switch to it
+                currentTab = i;
+                updateButtonPositions();
+                return true; // Consume the click event
+            }
+        }
 
         // Check if click is within GUI bounds
         if (mouseX >= guiX && mouseX < guiX + SCREEN_WIDTH &&
