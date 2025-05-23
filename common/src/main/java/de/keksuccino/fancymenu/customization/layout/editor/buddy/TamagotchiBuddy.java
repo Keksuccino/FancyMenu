@@ -869,7 +869,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         }
         
         // Chance to wave when happy
-        if ((happiness > 60) && this.chanceCheck(1.0f) && !isSad() && !isSleepy) {
+        if ((happiness > 60) && this.chanceCheck(4.0f) && !isSad() && !isSleepy) {
             startWaving();
             return;
         }

@@ -118,6 +118,11 @@ public class TamagotchiBuddyWidget extends AbstractContainerEventHandler impleme
     }
 
     @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double deltaX, double deltaY) {
+        return this.buddy.mouseScrolled(mouseX, mouseY, deltaX, deltaY);
+    }
+
+    @Override
     public @NotNull List<? extends GuiEventListener> children() {
         return unusedDummyChildren;
     }

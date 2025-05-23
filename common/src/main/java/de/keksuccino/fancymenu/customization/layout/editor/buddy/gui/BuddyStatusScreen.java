@@ -398,7 +398,7 @@ public class BuddyStatusScreen implements Renderable {
         // Create a scrollable list of achievements
         int listStartY = contentStartY + 20;
         int listItemHeight = 25;
-        int listWidth = SCREEN_WIDTH - 40;
+        int listWidth = SCREEN_WIDTH - 45; // Reduced by 5 pixels
         int maxVisibleItems = 6;
 
         // Get achievements and sort by tier
@@ -421,12 +421,17 @@ public class BuddyStatusScreen implements Renderable {
         int maxScrollOffset = Math.max(0, achievementsList.size() - maxVisibleItems) * listItemHeight;
         achievementsScrollOffset = Math.min(achievementsScrollOffset, maxScrollOffset);
 
+        // Set up scissor area for the achievement list
+        int scissorY = listStartY;
+        int scissorHeight = maxVisibleItems * listItemHeight;
+        graphics.enableScissor(contentStartX - 5, scissorY, contentStartX + listWidth, scissorY + scissorHeight);
+
         // Draw achievement items
         for (int i = 0; i < achievementsList.size(); i++) {
             int itemY = listStartY + (i * listItemHeight) - achievementsScrollOffset;
             
-            // Skip if not visible
-            if (itemY < listStartY || itemY + listItemHeight > listStartY + (maxVisibleItems * listItemHeight)) {
+            // Only skip if completely out of view (with some margin for safety)
+            if (itemY + listItemHeight < scissorY - 50 || itemY > scissorY + scissorHeight + 50) {
                 continue;
             }
             
@@ -437,17 +442,31 @@ public class BuddyStatusScreen implements Renderable {
             int bgColor = isUnlocked ? 0x8000FF00 : 0x80FF0000;
             graphics.fill(contentStartX, itemY, contentStartX + listWidth, itemY + listItemHeight - 2, bgColor);
             
-            // Draw achievement name
+            // Draw achievement name with scrolling if needed
             String name = achievement.getType().getName();
             int nameColor = isUnlocked ? 0xFFFFFF : 0xAAAAAA;
-            graphics.drawString(font, name, contentStartX + 5, itemY + 2, nameColor);
             
-            // Draw achievement description
+            // Calculate available width for name
+            int nameMaxX = contentStartX + listWidth - 5;
+            
+            // Render name with scrolling if it's too long
+            renderScrollingString(graphics, font, name, contentStartX + 5, itemY + 2, nameMaxX, itemY + 2 + font.lineHeight, nameColor);
+            
+            // Draw achievement description with scrolling if needed
             String description = achievement.getDescription();
             if (!isUnlocked) {
                 description = "???" + (achievement.getType().getTier() > 2 ? " (Tier " + achievement.getType().getTier() + ")" : "");
             }
-            graphics.drawString(font, description, contentStartX + 5, itemY + 14, nameColor);
+            
+            // Calculate available width for description (leave space for reward text)
+            int descriptionMaxX = contentStartX + listWidth - 5;
+            if (isUnlocked && achievement.getExperienceReward() > 0) {
+                String rewardText = "+" + achievement.getExperienceReward() + " XP";
+                descriptionMaxX -= font.width(rewardText) + 10; // Leave space for reward text
+            }
+            
+            // Render description with scrolling if it's too long
+            renderScrollingString(graphics, font, description, contentStartX + 5, itemY + 14, descriptionMaxX, itemY + 14 + font.lineHeight, nameColor);
             
             // Draw reward info if unlocked
             if (isUnlocked && achievement.getExperienceReward() > 0) {
@@ -456,15 +475,18 @@ public class BuddyStatusScreen implements Renderable {
             }
         }
 
-        // Draw scroll indicators if needed
+        // Disable scissor after drawing all achievements
+        graphics.disableScissor();
+
+        // Draw scroll indicators if needed (outside scissor area)
         boolean canScrollUp = achievementsScrollOffset > 0;
         boolean canScrollDown = achievementsScrollOffset < maxScrollOffset;
 
         if (canScrollUp) {
-            graphics.drawString(font, "▲", guiX + SCREEN_WIDTH - 20, contentStartY + 25, 0xFFFFFF);
+            graphics.drawString(font, "▲", guiX + SCREEN_WIDTH - 20, listStartY - 5, 0xFFFFFF);
         }
         if (canScrollDown) {
-            graphics.drawString(font, "▼", guiX + SCREEN_WIDTH - 20, listStartY + (maxVisibleItems * listItemHeight) - 15, 0xFFFFFF);
+            graphics.drawString(font, "▼", guiX + SCREEN_WIDTH - 20, listStartY + (maxVisibleItems * listItemHeight) + 5, 0xFFFFFF);
         }
     }
 
@@ -496,12 +518,12 @@ public class BuddyStatusScreen implements Renderable {
                     int maxVisibleItems = 6;
                     int listItemHeight = 25;
                     if (mouseX >= guiX + SCREEN_WIDTH - 20) {
-                        if (mouseY >= listStartY && mouseY <= listStartY + 20) {
+                        if (mouseY >= listStartY - 10 && mouseY <= listStartY + 10) {
                             // Scroll up
                             achievementsScrollOffset = Math.max(0, achievementsScrollOffset - listItemHeight);
                             return true;
-                        } else if (mouseY >= listStartY + (maxVisibleItems * listItemHeight) - 20 && 
-                                  mouseY <= listStartY + (maxVisibleItems * listItemHeight)) {
+                        } else if (mouseY >= listStartY + (maxVisibleItems * listItemHeight) && 
+                                  mouseY <= listStartY + (maxVisibleItems * listItemHeight) + 20) {
                             // Scroll down
                             achievementsScrollOffset += listItemHeight;
                             return true;
@@ -575,6 +597,32 @@ public class BuddyStatusScreen implements Renderable {
      */
     public boolean isVisible() {
         return isVisible;
+    }
+
+    /**
+     * Renders a scrolling string when it's too long to fit in the given bounds.
+     * Adapted from AbstractWidget.renderScrollingString()
+     */
+    private static void renderScrollingString(GuiGraphics graphics, Font font, String text, int minX, int minY, int maxX, int maxY, int color) {
+        int textWidth = font.width(text);
+        int availableWidth = maxX - minX;
+        
+        if (textWidth > availableWidth) {
+            // Text is too long, apply scrolling
+            int overflow = textWidth - availableWidth;
+            double time = (double)System.currentTimeMillis() / 1000.0;
+            double scrollPeriod = Math.max((double)overflow * 0.5, 3.0);
+            double scrollProgress = Math.sin((Math.PI / 2) * Math.cos((Math.PI * 2) * time / scrollPeriod)) / 2.0 + 0.5;
+            double scrollOffset = scrollProgress * (double)overflow;
+            
+            // Enable scissor to clip the text
+            graphics.enableScissor(minX, minY, maxX, maxY);
+            graphics.drawString(font, text, minX - (int)scrollOffset, minY, color);
+            graphics.disableScissor();
+        } else {
+            // Text fits, just draw it normally
+            graphics.drawString(font, text, minX, minY, color);
+        }
     }
 
     // Removed AttributeButton class

@@ -1221,7 +1221,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	@Override
 	public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
-		return super.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
+		return this.tamagotchiBuddyWidget.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
 	}
 
 	@Override
