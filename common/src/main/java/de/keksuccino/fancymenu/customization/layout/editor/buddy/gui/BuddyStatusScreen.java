@@ -30,9 +30,12 @@ public class BuddyStatusScreen implements Renderable {
     // GUI Constants
     private static final int SCREEN_WIDTH = 320;
     private static final int SCREEN_HEIGHT = 240;
+    private static final int SCREEN_BORDER_WIDTH = 390;
+    private static final int SCREEN_BORDER_HEIGHT = 293;
 
     // GUI Texture
     private static final ResourceLocation BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/status_screen_background.png");
+    private static final ResourceLocation BACKGROUND_BORDER_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/status_screen_background_border.png");
     private static final ResourceLocation TAB_BUTTON_TEXTURE_NORMAL = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/tab_button_normal.png");
     private static final ResourceLocation TAB_BUTTON_TEXTURE_SELECTED = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/tab_button_selected.png");
 
@@ -257,7 +260,10 @@ public class BuddyStatusScreen implements Renderable {
         graphics.pose().translate(0, 0, 400); // Use z=400 (same as tooltips)
 
         // Render background
+        int borderXDiff = 35;
+        int borderYDiff = 27;
         graphics.blit(BACKGROUND_TEXTURE, this.guiX, this.guiY, 0.0F, 0.0F, SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT);
+        graphics.blit(BACKGROUND_BORDER_TEXTURE, this.guiX - borderXDiff, this.guiY - borderYDiff, 0.0F, 0.0F, SCREEN_BORDER_WIDTH, SCREEN_BORDER_HEIGHT, SCREEN_BORDER_WIDTH, SCREEN_BORDER_HEIGHT);
 
         // Render tabs
         renderTabs(graphics, mouseX, mouseY, partial);
