@@ -108,7 +108,7 @@ public class AnimationState {
         // If state is on cooldown, don't activate
         long now = System.currentTimeMillis();
         if ((this.cooldown > 0) && ((this.lastCountdownTriggerTime + this.cooldown) > now)) {
-            LOGGER.info("State on cooldown! Will not activate: " + this.getName());
+            LOGGER.debug("State on cooldown! Will not activate: " + this.getName());
             return false;
         }
         return true;
@@ -121,7 +121,7 @@ public class AnimationState {
      */
     public void onActivate(Buddy buddy) {
 
-        LOGGER.info("Activating state: {}", name);
+        LOGGER.debug("Activating state: {}", name);
 
         // Reset animation frame when changing state
         buddy.resetAnimationFrame();
@@ -141,7 +141,7 @@ public class AnimationState {
      * @param buddy The buddy instance
      */
     public void onDeactivate(Buddy buddy) {
-        LOGGER.info("Deactivating state: {}", name);
+        LOGGER.debug("Deactivating state: {}", name);
         if (this.onDeactivate != null) this.onDeactivate.onDeactivate(buddy, this);
     }
 

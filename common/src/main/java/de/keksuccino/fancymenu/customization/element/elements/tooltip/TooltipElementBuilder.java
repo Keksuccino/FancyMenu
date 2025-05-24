@@ -8,7 +8,6 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
 import de.keksuccino.konkrete.math.MathUtils;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,18 +23,17 @@ public class TooltipElementBuilder extends ElementBuilder<TooltipElement, Toolti
         TooltipElement element = new TooltipElement(this);
         element.baseWidth = 200;
         element.baseHeight = 40;
-        element.maxWidth = 200;
-        element.setSource(TooltipElement.SourceMode.DIRECT, I18n.get("fancymenu.customization.items.tooltip.placeholder"));
+        element.setSource(TooltipElement.SourceMode.DIRECT, "------------------");
         return element;
     }
 
     @Override
     public TooltipElement deserializeElement(@NotNull SerializedElement serialized) {
+
         // Don't use buildDefaultInstance() here, because updateContent() runs asynchronously and could override the deserialized content with the default one
         TooltipElement element = new TooltipElement(this);
         element.baseWidth = 200;
         element.baseHeight = 40;
-        element.maxWidth = 200;
 
         element.interactable = deserializeBoolean(element.interactable, serialized.getValue("interactable"));
         element.mouseFollowing = deserializeBoolean(element.mouseFollowing, serialized.getValue("mouse_following"));
@@ -49,11 +47,6 @@ public class TooltipElementBuilder extends ElementBuilder<TooltipElement, Toolti
             if (s != null) {
                 element.sourceMode = s;
             }
-        }
-
-        String maxWidthString = serialized.getValue("max_width");
-        if ((maxWidthString != null) && MathUtils.isInteger(maxWidthString)) {
-            element.maxWidth = Integer.parseInt(maxWidthString);
         }
 
         element.backgroundTexture = deserializeImageResourceSupplier(serialized.getValue("background_texture"));
@@ -190,13 +183,14 @@ public class TooltipElementBuilder extends ElementBuilder<TooltipElement, Toolti
         element.setSource(element.sourceMode, element.source);
 
         return element;
+
     }
 
     @Override
     protected SerializedElement serializeElement(@NotNull TooltipElement element, @NotNull SerializedElement serializeTo) {
+
         serializeTo.putProperty("interactable", "" + element.interactable);
         serializeTo.putProperty("mouse_following", "" + element.mouseFollowing);
-        serializeTo.putProperty("max_width", "" + element.maxWidth);
 
         if (element.source != null) {
             serializeTo.putProperty("source", element.source.replace("\n", "%n%"));
@@ -239,6 +233,7 @@ public class TooltipElementBuilder extends ElementBuilder<TooltipElement, Toolti
         serializeTo.putProperty("parse_markdown", "" + element.markdownRenderer.isParseMarkdown());
 
         return serializeTo;
+
     }
 
     @Override
@@ -248,11 +243,12 @@ public class TooltipElementBuilder extends ElementBuilder<TooltipElement, Toolti
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Component.translatable("fancymenu.customization.items.tooltip");
+        return Component.translatable("fancymenu.elements.tooltip");
     }
 
     @Override
     public @Nullable Component[] getDescription(@Nullable AbstractElement element) {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.tooltip.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.elements.tooltip.desc");
     }
+
 }

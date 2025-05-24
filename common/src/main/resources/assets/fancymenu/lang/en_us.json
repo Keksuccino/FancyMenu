@@ -1670,5 +1670,19 @@
   "fancymenu.editor.background_options.copy_background_identifier": "Copy Background Identifier",
   "fancymenu.editor.background_options.copy_background_identifier.desc": "This will copy the identifier of the\ncurrent menu background to the clipboard.\n\nThe background identifier is used by actions, placeholders\nand similar stuff to communicate with the background instance.",
   "fancymenu.editor.buddy.enable": "Enable Buddy: %s",
-  "fancymenu.editor.buddy.enable.desc": "If a cute little pet creature should\nwalk around at the bottom of the editor screen."
+  "fancymenu.editor.buddy.enable.desc": "If a cute little pet creature should\nwalk around at the bottom of the editor screen.",
+  "fancymenu.elements.tooltip": "Tooltip",
+  "fancymenu.elements.tooltip.desc": "Renders a tooltip at a specific position or the mouse position.\nHas full Markdown support, similar to Text elements.\nControl its visibility with loading requirements.",
+  "fancymenu.elements.tooltip.content": "Tooltip Text Content",
+  "fancymenu.elements.tooltip.background": "Tooltip Background",
+  "fancymenu.elements.tooltip.background_texture": "Custom Background Texture",
+  "fancymenu.elements.tooltip.background_texture.desc": "Set a custom background texture.\nUses nine-slicing to resize the texture for the current tooltip size.",
+  "fancymenu.elements.tooltip.nine_slice": "Nine-Slicing Settings",
+  "fancymenu.elements.tooltip.nine_slice.desc": "Here you can set settings related to the\nnine-slicing logic of the custom tooltip background.",
+  "fancymenu.elements.tooltip.nine_slice.border.top": "Top Border Size [Pixels]",
+  "fancymenu.elements.tooltip.nine_slice.border.right": "Right Border Size [Pixels]",
+  "fancymenu.elements.tooltip.nine_slice.border.bottom": "Bottom Border Size [Pixels]",
+  "fancymenu.elements.tooltip.nine_slice.border.left": "Left Border Size [Pixels]",
+  "fancymenu.elements.tooltip.mouse_following": "Follow Mouse: %s",
+  "fancymenu.elements.tooltip.mouse_following.desc": "If the tooltip should follow the mouse when outside the editor."
 }

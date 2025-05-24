@@ -3,19 +3,20 @@ package de.keksuccino.fancymenu.customization.element.elements.tooltip;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenRenderUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Style;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -24,6 +25,8 @@ import java.util.List;
 import java.util.Objects;
 
 public class TooltipElement extends AbstractElement {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     @NotNull
     protected SourceMode sourceMode = SourceMode.DIRECT;
@@ -41,7 +44,6 @@ public class TooltipElement extends AbstractElement {
     public int nineSliceBorderBottom = 5;
     public int nineSliceBorderLeft = 5;
     public boolean mouseFollowing = false;
-    public int maxWidth = 200;
     public boolean interactable = false;
     @NotNull
     public volatile MarkdownRenderer markdownRenderer = new MarkdownRenderer();
@@ -66,37 +68,20 @@ public class TooltipElement extends AbstractElement {
             return true;
         });
     }
-    
-    @Override
-    public int getAbsoluteX() {
-        if (this.mouseFollowing && !isEditor()) {
-            return this.cachedMouseX;
-        }
-        return super.getAbsoluteX();
-    }
-    
-    @Override
-    public int getAbsoluteY() {
-        if (this.mouseFollowing && !isEditor()) {
-            return this.cachedMouseY;
-        }
-        return super.getAbsoluteY();
-    }
-    
-    @Override
-    public int getAbsoluteWidth() {
-        // Use maxWidth as the width of the tooltip
-        return this.maxWidth;
-    }
-    
-    @Override
-    public int getAbsoluteHeight() {
-        // Always return the height needed to fit the markdown content
-        return Math.max(this.cachedRealHeight + 12, 20); // Add some padding
-    }
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        if (isEditor()) {
+            this._render(graphics, mouseX, mouseY, partial);
+        } else {
+            ScreenRenderUtils.postPostRenderTask((graphics1, mouseX1, mouseY1, partial1) -> {
+                this._render(graphics, mouseX, mouseY, partial);
+            });
+        }
+    }
+
+    protected void _render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
         if (!this.shouldRender()) return;
 
         try {
@@ -123,8 +108,10 @@ public class TooltipElement extends AbstractElement {
                     int textureWidth = Math.max(1, tex.getWidth());
                     int textureHeight = Math.max(1, tex.getHeight());
 
-                    graphics.pose().pushPose();
-                    graphics.pose().translate(0.0F, 0.0F, 400.0F);
+                    if (!isEditor()) {
+                        graphics.pose().pushPose();
+                        graphics.pose().translate(0.0F, 0.0F, 400.0F);
+                    }
 
                     // Render custom background texture with nine-slicing
                     RenderingUtils.blitNineSlicedTexture(graphics, tex.getResourceLocation(), 
@@ -133,7 +120,7 @@ public class TooltipElement extends AbstractElement {
                         this.nineSliceBorderTop, this.nineSliceBorderRight, 
                         this.nineSliceBorderBottom, this.nineSliceBorderLeft);
 
-                    graphics.pose().popPose();
+                    if (!isEditor()) graphics.pose().popPose();
 
                 } else {
                     // Render vanilla tooltip background
@@ -144,18 +131,20 @@ public class TooltipElement extends AbstractElement {
                 this.renderVanillaTooltipBackground(graphics, x, y, width, height);
             }
 
-            graphics.pose().pushPose();
-            graphics.pose().translate(0.0F, 0.0F, 400.0F);
-            
+            if (!isEditor()) {
+                graphics.pose().pushPose();
+                graphics.pose().translate(0.0F, 0.0F, 400.0F);
+            }
+
             // Render markdown content with padding
             this.markdownRenderer.setX(x + paddingX);
             this.markdownRenderer.setY(y + paddingY);
             this.markdownRenderer.render(graphics, mouseX, mouseY, partial);
 
-            graphics.pose().popPose();
+            if (!isEditor()) graphics.pose().popPose();
             
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("[FANCYMENU] Failed to render Tooltip element!", e);
         }
 
         RenderingUtils.resetShaderColor(graphics);
@@ -163,12 +152,7 @@ public class TooltipElement extends AbstractElement {
     
     private void renderVanillaTooltipBackground(GuiGraphics graphics, int x, int y, int width, int height) {
         // Use vanilla tooltip background rendering
-        TooltipRenderUtil.renderTooltipBackground(graphics, x, y, width, height, 400);
-    }
-
-    @Override
-    public @Nullable List<GuiEventListener> getWidgetsToRegister() {
-        return this.interactable ? ListUtils.of(this.markdownRenderer) : null;
+        TooltipRenderUtil.renderTooltipBackground(graphics, x, y, width, height, isEditor() ? 0 : 400);
     }
 
     protected void renderTick() {
@@ -199,9 +183,57 @@ public class TooltipElement extends AbstractElement {
         this.lastText = t;
     }
 
+    @Override
+    public int getAbsoluteX() {
+        if (this.mouseFollowing && !isEditor()) {
+            int x = this.cachedMouseX;
+            int tooltipWidth = this.getAbsoluteWidth();
+            int screenWidth = getScreenWidth();
+
+            // If tooltip would go off the right edge, move it left
+            if (x + tooltipWidth > screenWidth) {
+                x = screenWidth - tooltipWidth;
+            }
+            // If tooltip would go off the left edge, move it right
+            if (x < 0) {
+                x = 0;
+            }
+
+            return x;
+        }
+        return super.getAbsoluteX();
+    }
+
+    @Override
+    public int getAbsoluteY() {
+        if (this.mouseFollowing && !isEditor()) {
+            int y = this.cachedMouseY;
+            int tooltipHeight = this.getAbsoluteHeight();
+            int screenHeight = getScreenHeight();
+
+            // If tooltip would go off the bottom edge, move it up
+            if (y + tooltipHeight > screenHeight) {
+                y = screenHeight - tooltipHeight;
+            }
+            // If tooltip would go off the top edge, move it down
+            if (y < 0) {
+                y = 0;
+            }
+
+            return y;
+        }
+        return super.getAbsoluteY();
+    }
+
+    @Override
+    public int getAbsoluteHeight() {
+        // Always return the height needed to fit the markdown content
+        return Math.max(this.cachedRealHeight + 12, 20); // Add some padding
+    }
+
     public void updateContent() {
         if (this.source == null) {
-            this.markdownRenderer.setText(I18n.get("fancymenu.customization.items.tooltip.placeholder"));
+            this.markdownRenderer.setText("-------------------");
             return;
         }
 
@@ -223,7 +255,7 @@ public class TooltipElement extends AbstractElement {
                         linesRaw = (linesRaw != null) ? new ArrayList<>(linesRaw) : new ArrayList<>();
                     }
                 } else {
-                    linesRaw.add(I18n.get("fancymenu.customization.items.tooltip.placeholder"));
+                    linesRaw.add("-------------------");
                 }
             } catch (Exception ex) {
                 if (linesRaw == null) linesRaw = new ArrayList<>();
@@ -309,4 +341,5 @@ public class TooltipElement extends AbstractElement {
             return WARNING_TEXT_STYLE.get();
         }
     }
+
 }
