@@ -157,6 +157,8 @@ public class Placeholders {
     public static final VideoMenuBackgroundDurationPlaceholder VIDEO_MENU_BACKGROUND_DURATION = new VideoMenuBackgroundDurationPlaceholder();
     public static final VideoMenuBackgroundPausedStatePlaceholder VIDEO_MENU_BACKGROUND_PAUSED_STATE = new VideoMenuBackgroundPausedStatePlaceholder();
     public static final VideoMenuBackgroundPlaytimePlaceholder VIDEO_MENU_BACKGROUND_PLAYTIME = new VideoMenuBackgroundPlaytimePlaceholder();
+    public static final TextCharacterCountPlaceholder TEXT_CHARACTER_COUNT = new TextCharacterCountPlaceholder();
+    public static final TextWidthPlaceholder TEXT_WIDTH = new TextWidthPlaceholder();
 
     public static void registerAll() {
 
@@ -308,6 +310,8 @@ public class Placeholders {
         PlaceholderRegistry.register(JVM_NAME);
         PlaceholderRegistry.register(OPEN_GL_VERSION);
         PlaceholderRegistry.register(OS_NAME);
+        PlaceholderRegistry.register(TEXT_CHARACTER_COUNT);
+        PlaceholderRegistry.register(TEXT_WIDTH);
 
     }
 

@@ -1,6 +1,6 @@
 
-//Copyright (c) 2022-2023 Keksuccino.
-//This code is licensed under DSMSLv2.
+//Copyright (c) 2022-2025 Keksuccino.
+//This code is licensed under DSMSLv3.
 //For more information about the license, see this: https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md
 
 package de.keksuccino.fancymenu.customization.placeholder;
@@ -32,7 +32,7 @@ public class PlaceholderParser {
     private static final HashSet<String> TOO_LONG_TO_PARSE = new HashSet<>();
     private static final HashMap<String, Boolean> CONTAINS_PLACEHOLDERS = new HashMap<>();
     private static final HashMap<String, Pair<String, Long>> PLACEHOLDER_CACHE = new HashMap<>();
-    private static final Long PLACEHOLDER_CACHE_DURATION_MS = 30L;
+    private static final Long PLACEHOLDER_CACHE_DURATION_MS = 150L;
 
     private static final int MAX_TEXT_LENGTH = 17000;
     private static final String PLACEHOLDER_PREFIX = "{\"placeholder\":\"";
