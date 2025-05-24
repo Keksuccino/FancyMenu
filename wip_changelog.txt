@@ -1,8 +1,8 @@
 
 CHANGELOG | FANCYMENU v3.6.0 [ W I P !! Not public yet !! ]
 
-- Added "Video [MCEF]" element that plays a video file (powered by the MCEF mod, so you need that mod for it to work!)
-- Added "Video [MCEF]" menu background type that plays a video file (powered by the MCEF mod, so you need that mod for it to work!)
+- Added "Video [MCEF]" element that plays a video file (powered by the MCEF mod, so you need that mod for it to work!) (#685)
+- Added "Video [MCEF]" menu background type that plays a video file (powered by the MCEF mod, so you need that mod for it to work!) (#685)
   - Will continue playing across menus when used in a universal layout
 - Added "Set Video Element Volume" action to set the volume of a Video element
 - Added "Toggle Video Element Paused State" action to toggle the paused state of a Video element
@@ -16,12 +16,12 @@ CHANGELOG | FANCYMENU v3.6.0 [ W I P !! Not public yet !! ]
 - Added "Video Background Duration" placeholder to get the duration of a Video menu background
 - Added "Video Background Play Time" placeholder to get the current play time (progress) of a Video menu background
 - Added "Video Background Paused State" placeholder to get the paused state (true/false) of a Video menu background
-- Added "Tooltip" element to render a tooltip at a specific position or the mouse position
+- Added "Tooltip" element to render a tooltip at a specific position or the mouse position (#1135)
   - Supports custom background textures with nine-slicing
   - Full Markdown support, similar to Text elements
-- Added "Text Character Count" placeholder that returns the character count of the given text
-- Added "Text Width" placeholder that returns the width in pixels of the given text
-- Added new value "full_world_path" to the "Last World/Server" placeholder to control if the placeholder should return full world paths or only the world name (does not work for servers)
+- Added "Text Character Count" placeholder that returns the character count of the given text (#1160)
+- Added "Text Width" placeholder that returns the width in pixels of the given text (#1159)
+- Added new value "full_world_path" to the "Last World/Server" placeholder to control if the placeholder should return full world paths or only the world name (does not work for servers) (#1151)
   - Old placeholders should continue working, but if you want to use the new value, you should use the Placeholder menu to paste the new version of the placeholder to the text area
 - Loading requirement containers now cache their "requirements met" value for 150 milliseconds for performance optimization reasons
   - I don't think this will break any logic stuff in layouts, but if you notice something, tell me please! Thank you!
