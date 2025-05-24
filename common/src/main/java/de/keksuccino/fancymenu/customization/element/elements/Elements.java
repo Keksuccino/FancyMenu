@@ -19,6 +19,7 @@ import de.keksuccino.fancymenu.customization.element.elements.splash.SplashTextE
 import de.keksuccino.fancymenu.customization.element.elements.ticker.TickerElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.text.v2.TextElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.slider.v2.SliderElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.tooltip.TooltipElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.video.mcef.MCEFVideoElementBuilder;
 
 public class Elements {
@@ -27,6 +28,7 @@ public class Elements {
     public static final InputFieldElementBuilder INPUT_FIELD = new InputFieldElementBuilder();
     public static final SliderElementBuilder SLIDER_V2 = new SliderElementBuilder();
     public static final TextElementBuilder TEXT_V2 = new TextElementBuilder();
+    public static final TooltipElementBuilder TOOLTIP = new TooltipElementBuilder();
     public static final TickerElementBuilder TICKER = new TickerElementBuilder();
     public static final PlayerEntityElementBuilder PLAYER_ENTITY = new PlayerEntityElementBuilder();
     public static final ImageElementBuilder IMAGE = new ImageElementBuilder();
@@ -49,6 +51,7 @@ public class Elements {
         ElementRegistry.register(INPUT_FIELD);
         ElementRegistry.register(SLIDER_V2);
         ElementRegistry.register(TEXT_V2);
+        ElementRegistry.register(TOOLTIP);
         ElementRegistry.register(TICKER);
         ElementRegistry.register(PLAYER_ENTITY);
         ElementRegistry.register(IMAGE);
