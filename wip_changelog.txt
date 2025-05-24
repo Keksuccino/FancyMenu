@@ -19,7 +19,7 @@ CHANGELOG | FANCYMENU v3.6.0 [ W I P !! Not public yet !! ]
 - Added "Tooltip" element to render a tooltip at a specific position or the mouse position
   - Supports custom background textures with nine-slicing
   - Full Markdown support, similar to Text elements
-- Loading requirement containers now cache their "requirements met" value for 50 milliseconds for performance optimization reasons
+- Loading requirement containers now cache their "requirements met" value for 150 milliseconds for performance optimization reasons
   - I don't think this will break any logic stuff in layouts, but if you notice something, tell me please! Thank you!
 - 
  
