@@ -16,6 +16,10 @@ CHANGELOG | FANCYMENU v3.6.0 [ W I P !! Not public yet !! ]
 - Added "Video Background Duration" placeholder to get the duration of a Video menu background
 - Added "Video Background Play Time" placeholder to get the current play time (progress) of a Video menu background
 - Added "Video Background Paused State" placeholder to get the paused state (true/false) of a Video menu background
+- Added "Tooltip" element to render a tooltip at a specific position or the mouse position
+  - Supports custom background textures with nine-slicing
+  - Full Markdown support, similar to Text elements
+- 
  
 %changelog:end%
 
