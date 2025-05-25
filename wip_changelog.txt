@@ -27,7 +27,7 @@ CHANGELOG | FANCYMENU v3.6.0 [ W I P !! Not public yet !! ]
   - I don't think this will break any logic stuff in layouts, but if you notice something, tell me please! Thank you!
 - Placeholder replacements now get cached for 150 milliseconds (was 30 milliseconds before) for performance optimization reasons
   - I don't think this will break any logic stuff in layouts, but if you notice something, tell me please! Thank you!
-- Made it more clear that the source file of the "Random Text" placeholder needs to be in FancyMenu's assets folder (#1127)
+- Made it more clear that the source file of the "Random Text" placeholder needs to be in FancyMenu's assets folder (#1127, #1128)
 - 
  
 %changelog:end%
