@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.other;
 
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
+import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.konkrete.file.FileUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.resources.language.I18n;
@@ -9,7 +10,6 @@ import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.io.File;
 import java.util.*;
 
@@ -24,14 +24,14 @@ public class RandomTextPlaceholder extends Placeholder {
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         String pathString = dps.values.get("path");
-        String intervalString = dps.values.get("interval");
-        if ((pathString != null) && (intervalString != null)) {
+        long intervalRaw = SerializationUtils.deserializeNumber(Long.class, 10L, dps.values.get("interval"));
+        if (pathString != null) {
             File path = new File(pathString);
             if (!path.exists() || !path.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
                 path = new File(Minecraft.getInstance().gameDirectory, pathString);
             }
-            if (MathUtils.isLong(intervalString) && path.isFile() && path.getPath().toLowerCase().endsWith(".txt")) {
-                long interval = Long.parseLong(intervalString) * 1000;
+            if (path.isFile() && path.getPath().toLowerCase().endsWith(".txt")) {
+                long interval = intervalRaw * 1000;
                 if (interval < 0L) {
                     interval = 0L;
                 }
@@ -91,7 +91,7 @@ public class RandomTextPlaceholder extends Placeholder {
     public @NotNull DeserializedPlaceholderString getDefaultPlaceholderString() {
         DeserializedPlaceholderString dps = new DeserializedPlaceholderString();
         dps.placeholderIdentifier = this.getIdentifier();
-        dps.values.put("path", "randomtexts.txt");
+        dps.values.put("path", "/config/fancymenu/assets/<file_name.txt>");
         dps.values.put("interval", "10");
         return dps;
     }

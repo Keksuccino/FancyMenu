@@ -159,6 +159,7 @@ public class Placeholders {
     public static final VideoMenuBackgroundPlaytimePlaceholder VIDEO_MENU_BACKGROUND_PLAYTIME = new VideoMenuBackgroundPlaytimePlaceholder();
     public static final TextCharacterCountPlaceholder TEXT_CHARACTER_COUNT = new TextCharacterCountPlaceholder();
     public static final TextWidthPlaceholder TEXT_WIDTH = new TextWidthPlaceholder();
+    public static final ClipboardContentPlaceholder CLIPBOARD_CONTENT = new ClipboardContentPlaceholder();
 
     public static void registerAll() {
 
@@ -312,6 +313,7 @@ public class Placeholders {
         PlaceholderRegistry.register(OS_NAME);
         PlaceholderRegistry.register(TEXT_CHARACTER_COUNT);
         PlaceholderRegistry.register(TEXT_WIDTH);
+        PlaceholderRegistry.register(CLIPBOARD_CONTENT);
 
     }
 

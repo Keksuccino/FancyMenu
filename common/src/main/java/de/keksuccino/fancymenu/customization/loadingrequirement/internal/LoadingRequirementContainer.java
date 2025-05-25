@@ -145,6 +145,10 @@ public class LoadingRequirementContainer implements ValuePlaceholderHolder {
         return this;
     }
 
+    public boolean isEmpty() {
+        return this.groups.isEmpty() && this.instances.isEmpty();
+    }
+
     /**
      * Value placeholders are for replacing parts of the {@link LoadingRequirementInstance#value}.<br>
      * All placeholders added to containers get automatically added to its child {@link LoadingRequirementGroup}s and
