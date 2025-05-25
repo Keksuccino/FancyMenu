@@ -38,7 +38,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.util.List;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 public abstract class AbstractElement implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget {
 
@@ -702,29 +704,106 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	}
 
 	public void setAnchorPointElementIdentifier(@Nullable String anchorPointElementIdentifier) {
-		if (this.getInstanceIdentifier().equals(anchorPointElementIdentifier)) {
+
+		// Handle null or empty string - clear the anchor
+		if (anchorPointElementIdentifier == null || anchorPointElementIdentifier.trim().isEmpty()) {
 			this.anchorPointElementIdentifier = null;
 			this.cachedElementAnchorPointParent = null;
-			this.anchorPoint = ElementAnchorPoints.MID_CENTERED;
-			this.posOffsetX = 0;
-			this.posOffsetY = 0;
-			LOGGER.error("[FANCYMENU] Tried to anchor element to itself! (" + this.getInstanceIdentifier() + ")", new IllegalStateException("Anchoring element to itself."));
 			return;
 		}
-		AbstractElement parent = (anchorPointElementIdentifier != null) ? getElementByInstanceIdentifier(anchorPointElementIdentifier) : null;
-		if ((parent != null) && this.getInstanceIdentifier().equals(parent.anchorPointElementIdentifier)) {
-			this.anchorPointElementIdentifier = null;
-			this.cachedElementAnchorPointParent = null;
-			this.anchorPoint = ElementAnchorPoints.MID_CENTERED;
-			this.posOffsetX = 0;
-			this.posOffsetY = 0;
-			LOGGER.error("[FANCYMENU] Tried to anchor parent element to child of itself! (" + this.getInstanceIdentifier() + ")", new IllegalStateException("Anchoring parent element to child of itself."));
+		
+		// Normalize the identifier (remove potential prefixes)
+		String normalizedIdentifier = anchorPointElementIdentifier
+			.replace("vanillabtn:", "")
+			.replace("button_compatibility_id:", "");
+		
+		// Check for self-anchoring
+		if (this.getInstanceIdentifier().equals(normalizedIdentifier)) {
+			this.resetToDefaultAnchor();
+			LOGGER.error("[FANCYMENU] Tried to anchor element to itself! (Element: " + this.getInstanceIdentifier() + ")", 
+				new IllegalStateException("Anchoring element to itself"));
 			return;
 		}
-		this.anchorPointElementIdentifier = anchorPointElementIdentifier;
-		if (this.anchorPointElementIdentifier == null) {
-			this.cachedElementAnchorPointParent = null;
+		
+		// Try to get the target parent element (it might not exist yet, which is valid)
+		AbstractElement parent = getElementByInstanceIdentifier(normalizedIdentifier);
+		
+		// Only check for circular dependencies if parent exists
+		// If parent is null, it might be created later, which is a valid scenario
+		if (parent != null) {
+			// Check for circular dependencies (both direct and transitive)
+			if (detectCircularDependency(this, parent)) {
+				this.resetToDefaultAnchor();
+				LOGGER.error("[FANCYMENU] Detected circular anchor dependency! Cannot anchor '" + 
+					this.getInstanceIdentifier() + "' to '" + normalizedIdentifier + 
+					"' as it would create a circular reference chain.", 
+					new IllegalStateException("Circular anchor dependency detected"));
+				return;
+			}
 		}
+		
+		// Set the anchor identifier (parent might be null and resolved later)
+		this.anchorPointElementIdentifier = normalizedIdentifier;
+		this.cachedElementAnchorPointParent = parent;
+	}
+	
+	/**
+	 * Detects circular dependencies in the anchor chain.
+	 * @param child The element being anchored
+	 * @param proposedParent The element to anchor to
+	 * @return true if adding this anchor would create a circular dependency
+	 */
+	protected boolean detectCircularDependency(AbstractElement child, AbstractElement proposedParent) {
+		// Set a reasonable depth limit to prevent infinite loops
+		final int MAX_DEPTH = 100;
+		int depth = 0;
+		
+		Set<String> visitedElements = new HashSet<>();
+		visitedElements.add(child.getInstanceIdentifier());
+		
+		AbstractElement current = proposedParent;
+		while (current != null && depth < MAX_DEPTH) {
+			String currentId = current.getInstanceIdentifier();
+			
+			// Check if we've encountered the child element in the chain
+			if (visitedElements.contains(currentId)) {
+				return true; // Circular dependency detected
+			}
+			
+			visitedElements.add(currentId);
+			
+			// Move up the anchor chain
+			String parentId = current.getAnchorPointElementIdentifier();
+			if (parentId == null || parentId.trim().isEmpty()) {
+				break; // Reached the top of the chain
+			}
+			
+			// Normalize the parent ID
+			parentId = parentId.replace("vanillabtn:", "").replace("button_compatibility_id:", "");
+			
+			current = getElementByInstanceIdentifier(parentId);
+			depth++;
+		}
+		
+		// Check if we hit the depth limit (which might indicate an issue)
+		if (depth >= MAX_DEPTH) {
+			LOGGER.warn("[FANCYMENU] Anchor chain depth exceeded " + MAX_DEPTH + 
+				" levels while checking for circular dependencies. This might indicate a problem.");
+			return true; // Treat as circular to be safe
+		}
+		
+		return false; // No circular dependency found
+	}
+	
+	/**
+	 * Resets the element's anchor to default values.
+	 */
+	public void resetToDefaultAnchor() {
+		this.anchorPointElementIdentifier = null;
+		this.cachedElementAnchorPointParent = null;
+		this.anchorPoint = ElementAnchorPoints.MID_CENTERED;
+		this.posOffsetX = 0;
+		this.posOffsetY = 0;
 	}
 
 	/**
@@ -743,6 +822,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 * This is to set this element's PARENT element, if this element uses the {@link ElementAnchorPoints#ELEMENT} anchor.
 	 */
 	public void setElementAnchorPointParent(@Nullable AbstractElement element) {
+		if (this.anchorPointElementIdentifier == null) element = null;
 		this.cachedElementAnchorPointParent = element;
 	}
 
@@ -823,11 +903,12 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	}
 
 	protected static boolean isEditor() {
-		return (getScreen() instanceof LayoutEditorScreen);
+		return (LayoutEditorScreen.getCurrentInstance() != null);
 	}
 
 	@Nullable
 	public static Screen getScreen() {
+		if (LayoutEditorScreen.getCurrentInstance() != null) return LayoutEditorScreen.getCurrentInstance();
 		return Minecraft.getInstance().screen;
 	}
 
@@ -845,8 +926,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	@Nullable
 	public static AbstractElement getElementByInstanceIdentifier(String identifier) {
 		identifier = identifier.replace("vanillabtn:", "").replace("button_compatibility_id:", "");
-		if (isEditor()) {
-			AbstractEditorElement editorElement = ((LayoutEditorScreen)getScreen()).getElementByInstanceIdentifier(identifier);
+		if (LayoutEditorScreen.getCurrentInstance() != null) {
+			AbstractEditorElement editorElement = LayoutEditorScreen.getCurrentInstance().getElementByInstanceIdentifier(identifier);
 			if (editorElement != null) return editorElement.element;
 		} else {
 			ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getActiveLayer();
