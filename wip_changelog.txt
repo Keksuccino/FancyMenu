@@ -1,5 +1,5 @@
 
-## CHANGELOG | FANCYMENU v3.6.0 [ W I P !! Not public yet !! ]
+CHANGELOG | FANCYMENU v3.6.0 [ W I P !! Not public yet !! ]
 
 - Added "Video [MCEF]" element that plays a video file (powered by the MCEF mod, so you need that mod for it to work!) (#685)
 - Added "Video [MCEF]" menu background type that plays a video file (powered by the MCEF mod, so you need that mod for it to work!) (#685)
