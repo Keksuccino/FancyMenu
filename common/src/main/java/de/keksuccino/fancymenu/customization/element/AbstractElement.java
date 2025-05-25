@@ -51,7 +51,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	public final ElementBuilder<?,?> builder;
 	public ElementAnchorPoint anchorPoint = ElementAnchorPoints.MID_CENTERED;
-	public String anchorPointElementIdentifier = null;
+	protected String anchorPointElementIdentifier = null;
 	protected AbstractElement cachedElementAnchorPointParent = null;
 	/** Not the same as {@link AbstractElement#getAbsoluteX()}! This is the X-offset from the origin of its anchor! **/
 	public int posOffsetX = 0;
@@ -605,41 +605,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		return y;
 	}
 
-	public void setAutoSizingBaseWidthAndHeight() {
-		Window window = Minecraft.getInstance().getWindow();
-		double guiWidth = getScreenWidth() * window.getGuiScale();
-		double guiHeight = getScreenHeight() * window.getGuiScale();
-		this.autoSizingBaseScreenWidth = (int)guiWidth;
-		this.autoSizingBaseScreenHeight = (int)guiHeight;
-	}
-
-	public void updateAutoSizing(boolean ignoreLastTickScreenSize) {
-
-		Window window = Minecraft.getInstance().getWindow();
-		double guiWidth = getScreenWidth() * window.getGuiScale();
-		double guiHeight = getScreenHeight() * window.getGuiScale();
-
-		if (((this.autoSizingLastTickScreenWidth != guiWidth) || (this.autoSizingLastTickScreenHeight != guiHeight)) || ignoreLastTickScreenSize) {
-			if (this.autoSizing && (this.autoSizingBaseScreenWidth > 0) && (this.autoSizingBaseScreenHeight > 0)) {
-				double percentX = Math.max(1.0D, (guiWidth / (double) this.autoSizingBaseScreenWidth) * 100.0D);
-				double percentY = Math.max(1.0D, (guiHeight / (double) this.autoSizingBaseScreenHeight) * 100.0D);
-				double percent = Math.min(percentX, percentY);
-				this.autoSizingWidth = Math.max(1, (int) ((percent / 100.0D) * (double) this.baseWidth));
-				this.autoSizingHeight = Math.max(1, (int) ((percent / 100.0D) * (double) this.baseHeight));
-				if ((this.autoSizingBaseScreenWidth == guiWidth) && (this.autoSizingBaseScreenHeight == guiHeight)) {
-					this.autoSizingWidth = 0;
-					this.autoSizingHeight = 0;
-				}
-			} else {
-				this.autoSizingWidth = 0;
-				this.autoSizingHeight = 0;
-			}
-		}
-		this.autoSizingLastTickScreenWidth = guiWidth;
-		this.autoSizingLastTickScreenHeight = guiHeight;
-
-	}
-
 	/**
 	 * Returns the actual/final width the element will have when it gets rendered.
 	 */
@@ -694,6 +659,72 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			return this.autoSizingHeight;
 		}
 		return this.baseHeight;
+	}
+
+	public void setAutoSizingBaseWidthAndHeight() {
+		Window window = Minecraft.getInstance().getWindow();
+		double guiWidth = getScreenWidth() * window.getGuiScale();
+		double guiHeight = getScreenHeight() * window.getGuiScale();
+		this.autoSizingBaseScreenWidth = (int)guiWidth;
+		this.autoSizingBaseScreenHeight = (int)guiHeight;
+	}
+
+	public void updateAutoSizing(boolean ignoreLastTickScreenSize) {
+
+		Window window = Minecraft.getInstance().getWindow();
+		double guiWidth = getScreenWidth() * window.getGuiScale();
+		double guiHeight = getScreenHeight() * window.getGuiScale();
+
+		if (((this.autoSizingLastTickScreenWidth != guiWidth) || (this.autoSizingLastTickScreenHeight != guiHeight)) || ignoreLastTickScreenSize) {
+			if (this.autoSizing && (this.autoSizingBaseScreenWidth > 0) && (this.autoSizingBaseScreenHeight > 0)) {
+				double percentX = Math.max(1.0D, (guiWidth / (double) this.autoSizingBaseScreenWidth) * 100.0D);
+				double percentY = Math.max(1.0D, (guiHeight / (double) this.autoSizingBaseScreenHeight) * 100.0D);
+				double percent = Math.min(percentX, percentY);
+				this.autoSizingWidth = Math.max(1, (int) ((percent / 100.0D) * (double) this.baseWidth));
+				this.autoSizingHeight = Math.max(1, (int) ((percent / 100.0D) * (double) this.baseHeight));
+				if ((this.autoSizingBaseScreenWidth == guiWidth) && (this.autoSizingBaseScreenHeight == guiHeight)) {
+					this.autoSizingWidth = 0;
+					this.autoSizingHeight = 0;
+				}
+			} else {
+				this.autoSizingWidth = 0;
+				this.autoSizingHeight = 0;
+			}
+		}
+		this.autoSizingLastTickScreenWidth = guiWidth;
+		this.autoSizingLastTickScreenHeight = guiHeight;
+
+	}
+
+	@Nullable
+	public String getAnchorPointElementIdentifier() {
+		return this.anchorPointElementIdentifier;
+	}
+
+	public void setAnchorPointElementIdentifier(@Nullable String anchorPointElementIdentifier) {
+		if (this.getInstanceIdentifier().equals(anchorPointElementIdentifier)) {
+			this.anchorPointElementIdentifier = null;
+			this.cachedElementAnchorPointParent = null;
+			this.anchorPoint = ElementAnchorPoints.MID_CENTERED;
+			this.posOffsetX = 0;
+			this.posOffsetY = 0;
+			LOGGER.error("[FANCYMENU] Tried to anchor element to itself! (" + this.getInstanceIdentifier() + ")", new IllegalStateException("Anchoring element to itself."));
+			return;
+		}
+		AbstractElement parent = (anchorPointElementIdentifier != null) ? getElementByInstanceIdentifier(anchorPointElementIdentifier) : null;
+		if ((parent != null) && this.getInstanceIdentifier().equals(parent.anchorPointElementIdentifier)) {
+			this.anchorPointElementIdentifier = null;
+			this.cachedElementAnchorPointParent = null;
+			this.anchorPoint = ElementAnchorPoints.MID_CENTERED;
+			this.posOffsetX = 0;
+			this.posOffsetY = 0;
+			LOGGER.error("[FANCYMENU] Tried to anchor parent element to child of itself! (" + this.getInstanceIdentifier() + ")", new IllegalStateException("Anchoring parent element to child of itself."));
+			return;
+		}
+		this.anchorPointElementIdentifier = anchorPointElementIdentifier;
+		if (this.anchorPointElementIdentifier == null) {
+			this.cachedElementAnchorPointParent = null;
+		}
 	}
 
 	/**

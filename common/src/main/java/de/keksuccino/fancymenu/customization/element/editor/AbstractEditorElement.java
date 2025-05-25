@@ -216,7 +216,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 													this.editor.history.saveSnapshot();
 													for (AbstractEditorElement e : this.editor.getSelectedElements()) {
 														if (e.settings.isAnchorPointChangeable() && e.settings.isElementAnchorPointAllowed()) {
-															e.element.anchorPointElementIdentifier = editorElement.element.getInstanceIdentifier();
+															e.element.setAnchorPointElementIdentifier(editorElement.element.getInstanceIdentifier());
 															e.element.setElementAnchorPointParent(editorElement.element);
 															e.setAnchorPoint(ElementAnchorPoints.ELEMENT, true);
 														}
@@ -232,7 +232,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 											}
 										});
 										if (!entry.getStackMeta().isPartOfStack()) {
-											s.setText(this.element.anchorPointElementIdentifier);
+											s.setText(this.element.getAnchorPointElementIdentifier());
 										}
 										Minecraft.getInstance().setScreen(s);
 										menu.closeMenu();
@@ -798,7 +798,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 	/**
 	 * Sets the {@link ElementAnchorPoint} of the element.<br>
-	 * It is important to set {@link AbstractElement#anchorPointElementIdentifier} first before calling
+	 * It is important to set {@link AbstractElement#setAnchorPointElementIdentifier(String)} first before calling
 	 * this method, in case {@code newAnchor} is {@link ElementAnchorPoints#ELEMENT}.
 	 */
 	public void setAnchorPoint(ElementAnchorPoint newAnchor, boolean resetElementStates) {
@@ -813,14 +813,14 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 	/**
 	 * Sets the {@link ElementAnchorPoint} of the element.<br>
-	 * It is important to set {@link AbstractElement#anchorPointElementIdentifier} first before calling
+	 * It is important to set {@link AbstractElement#setAnchorPointElementIdentifier(String)} first before calling
 	 * this method, in case {@code newAnchor} is {@link ElementAnchorPoints#ELEMENT}.
 	 */
 	public void setAnchorPoint(ElementAnchorPoint newAnchor, int oldAbsX, int oldAbsY, boolean resetElementStates) {
 
 		if (!this.settings.isAnchorPointChangeable()) return;
 		if ((newAnchor == ElementAnchorPoints.ELEMENT) && !this.settings.isElementAnchorPointAllowed()) return;
-		if ((newAnchor == ElementAnchorPoints.ELEMENT) && (this.element.anchorPointElementIdentifier == null)) {
+		if ((newAnchor == ElementAnchorPoints.ELEMENT) && (this.element.getAnchorPointElementIdentifier() == null)) {
 			LOGGER.error("[FANCYMENU] Failed to set element's anchor to anchor point type 'ELEMENT'! Identifier was NULL!", new NullPointerException());
 			return;
 		}
@@ -836,7 +836,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		}
 
 		if (newAnchor == ElementAnchorPoints.ELEMENT) {
-			AbstractEditorElement ee = this.editor.getElementByInstanceIdentifier(Objects.requireNonNull(this.element.anchorPointElementIdentifier));
+			AbstractEditorElement ee = this.editor.getElementByInstanceIdentifier(Objects.requireNonNull(this.element.getAnchorPointElementIdentifier()));
 			if (ee != null) {
 				this.element.setElementAnchorPointParent(ee.element);
 			} else {
@@ -844,7 +844,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				LOGGER.error("[FANCYMENU] Failed to get parent element for 'ELEMENT' anchor type! Element was NULL!", new NullPointerException());
 			}
 		} else {
-			this.element.anchorPointElementIdentifier = null;
+			this.element.setAnchorPointElementIdentifier(null);
 			this.element.setElementAnchorPointParent(null);
 		}
 
@@ -868,7 +868,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		if (!this.settings.isAnchorPointChangeable()) return;
 		if ((anchor.anchorPoint == ElementAnchorPoints.ELEMENT) && !this.settings.isElementAnchorPointAllowed()) return;
 		if (anchor instanceof AnchorPointOverlay.ElementAnchorPointArea ea) {
-			this.element.anchorPointElementIdentifier = ea.elementIdentifier;
+			this.element.setAnchorPointElementIdentifier(ea.elementIdentifier);
 		}
 		this.setAnchorPoint(anchor.anchorPoint, false);
 		this.updateLeftMouseDownCachedValues(mouseX, mouseY);
@@ -913,8 +913,8 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	 */
 	public boolean isElementAnchorAndParentIsSelected() {
 		if (this.element.anchorPoint != ElementAnchorPoints.ELEMENT) return false;
-		if (this.element.anchorPointElementIdentifier == null) return false;
-		AbstractEditorElement parent = this.editor.getElementByInstanceIdentifier(this.element.anchorPointElementIdentifier);
+		if (this.element.getAnchorPointElementIdentifier() == null) return false;
+		AbstractEditorElement parent = this.editor.getElementByInstanceIdentifier(this.element.getAnchorPointElementIdentifier());
 		if (parent == null) return false;
 		return (parent.isSelected() || parent.isMultiSelected());
 	}

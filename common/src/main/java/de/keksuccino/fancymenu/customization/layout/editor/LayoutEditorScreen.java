@@ -1018,7 +1018,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	@Nullable
 	protected AbstractEditorElement getChildElementOf(@NotNull AbstractEditorElement element) {
 		for (AbstractEditorElement e : this.getAllElements()) {
-			String parentOfE = e.element.anchorPointElementIdentifier;
+			String parentOfE = e.element.getAnchorPointElementIdentifier();
 			if ((parentOfE != null) && parentOfE.equals(element.element.getInstanceIdentifier())) return e;
 		}
 		return null;
