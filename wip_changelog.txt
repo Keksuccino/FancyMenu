@@ -31,6 +31,8 @@ CHANGELOG | FANCYMENU v3.6.0 [ W I P !! Not public yet !! ]
 - Made it more clear that the source file of the "Random Text" placeholder needs to be in FancyMenu's assets folder (#1127, #1128)
 - Fixed inactive Vanilla buttons become active if customizations are enabled for the screen they're part of (#1161)
 - Fixed placeholders not working in the URL value of the "Browser" element (#1141)
+- It should now be at least more difficult to crash the game when anchoring elements to itself, child elements or similar (#1142)
+  - This anchor-ception shit is super difficult, so it will probably still crash in some cases, but at least less often lmao
 - 
  
 %changelog:end%
