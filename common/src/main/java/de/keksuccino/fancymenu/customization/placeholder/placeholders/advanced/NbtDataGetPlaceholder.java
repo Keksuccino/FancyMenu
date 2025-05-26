@@ -248,7 +248,7 @@ public class NbtDataGetPlaceholder extends Placeholder {
         values.put("source_type", "entity");
         values.put("entity_selector", "@s");
         values.put("block_pos", "");
-        values.put("nbt_path", "Health");
+        values.put("nbt_path", "foodLevel");
         values.put("scale", "1.0");
         values.put("return_type", "value");
         return new DeserializedPlaceholderString(this.getIdentifier(), values, "");
