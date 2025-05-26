@@ -37,6 +37,7 @@ CHANGELOG | FANCYMENU v3.6.0 [ W I P !! Not public yet !! ]
 - Added "Scoreboard Player Scores List" placeholder that returns a formatted list of all scores for a specific player
 - Added "Scoreboard Objective Count" placeholder that returns the total number of objectives in the scoreboard
 - Added "Replace Text" placeholder that replaces text in a string using literal text or regular expressions (regex)
+- Added "Get NBT Data" placeholder to get NBT data from entities and blocks (similar to '/data get' command) (will probably replace the now deprecated placeholder in SpiffyHUD)
 - Loading requirement containers now cache their "requirements met" value for 150 milliseconds for performance optimization reasons
   - I don't think this will break any logic stuff in layouts, but if you notice something, tell me please! Thank you!
 - Placeholder replacements now get cached for 150 milliseconds (was 30 milliseconds before) for performance optimization reasons
