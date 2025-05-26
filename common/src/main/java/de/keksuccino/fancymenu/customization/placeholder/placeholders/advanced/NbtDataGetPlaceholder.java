@@ -30,11 +30,16 @@ public class NbtDataGetPlaceholder extends Placeholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
+
         String sourceType = dps.values.get("source_type");
         String nbtPath = dps.values.get("nbt_path");
         String scaleStr = dps.values.get("scale");
         String returnType = dps.values.get("return_type");
-        
+
+        ClientLevel level = Minecraft.getInstance().level;
+
+        if (level == null) return "";
+
         if (sourceType == null || nbtPath == null) {
             return "";
         }
@@ -71,7 +76,7 @@ public class NbtDataGetPlaceholder extends Placeholder {
                 return tag.toString();
             } else if ("json".equalsIgnoreCase(returnType) && tag instanceof CompoundTag) {
                 // Return as JSON-formatted component
-                String json = Component.Serializer.toJson(NbtUtils.toPrettyComponent(tag), Minecraft.getInstance().level.registryAccess());
+                String json = Component.Serializer.toJson(NbtUtils.toPrettyComponent(tag), level.registryAccess());
                 if (json.startsWith("\"") && json.endsWith("\"")) {
                     json = json.substring(1, json.length() - 1);
                 }
@@ -93,19 +98,17 @@ public class NbtDataGetPlaceholder extends Placeholder {
             LOGGER.error("[FANCYMENU] Error in nbt_data_get placeholder: " + e.getMessage());
             return "";
         }
+
     }
 
     private CompoundTag getSourceData(String sourceType, DeserializedPlaceholderString dps) {
         ClientLevel level = Minecraft.getInstance().level;
         if (level == null) return null;
-
         switch (sourceType.toLowerCase()) {
             case "entity":
                 return getEntityData(dps);
             case "block":
                 return getBlockData(dps);
-            case "storage":
-                return getStorageData(dps);
             default:
                 return null;
         }
@@ -196,13 +199,6 @@ public class NbtDataGetPlaceholder extends Placeholder {
         return null;
     }
 
-    private CompoundTag getStorageData(DeserializedPlaceholderString dps) {
-        // Storage is not accessible on client side in the same way as server
-        // This would require server-side implementation
-        LOGGER.warn("[FANCYMENU] Storage data source is not supported on client side");
-        return null;
-    }
-
     private String getTagValue(Tag tag, double scale) {
         if (tag instanceof NumericTag numericTag) {
             // Numeric value with optional scaling
@@ -228,7 +224,7 @@ public class NbtDataGetPlaceholder extends Placeholder {
 
     @Override
     public @Nullable List<String> getValueNames() {
-        return List.of("source_type", "entity_selector", "block_pos", "storage_id", "nbt_path", "scale", "return_type");
+        return List.of("source_type", "entity_selector", "block_pos", "nbt_path", "scale", "return_type");
     }
 
     @Override
@@ -252,7 +248,6 @@ public class NbtDataGetPlaceholder extends Placeholder {
         values.put("source_type", "entity");
         values.put("entity_selector", "@s");
         values.put("block_pos", "");
-        values.put("storage_id", "");
         values.put("nbt_path", "Health");
         values.put("scale", "1.0");
         values.put("return_type", "value");
