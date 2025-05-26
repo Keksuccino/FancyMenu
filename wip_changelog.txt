@@ -25,6 +25,7 @@ CHANGELOG | FANCYMENU v3.6.0 [ W I P !! Not public yet !! ]
 - Added new value "full_world_path" to the "Last World/Server" placeholder to control if the placeholder should return full world paths or only the world name (does not work for servers) (#1151)
   - Old placeholders should continue working, but if you want to use the new value, you should use the Placeholder menu to paste the new version of the placeholder to the text area
 - Added "Player Team" placeholder that returns the current team of the given player (#1149)
+- Added "World Players List" placeholder that returns a list of all players currently in the world
 - Loading requirement containers now cache their "requirements met" value for 150 milliseconds for performance optimization reasons
   - I don't think this will break any logic stuff in layouts, but if you notice something, tell me please! Thank you!
 - Placeholder replacements now get cached for 150 milliseconds (was 30 milliseconds before) for performance optimization reasons
