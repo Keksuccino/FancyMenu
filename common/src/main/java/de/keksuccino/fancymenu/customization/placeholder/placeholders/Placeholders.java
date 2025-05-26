@@ -160,6 +160,7 @@ public class Placeholders {
     public static final TextCharacterCountPlaceholder TEXT_CHARACTER_COUNT = new TextCharacterCountPlaceholder();
     public static final TextWidthPlaceholder TEXT_WIDTH = new TextWidthPlaceholder();
     public static final ClipboardContentPlaceholder CLIPBOARD_CONTENT = new ClipboardContentPlaceholder();
+    public static final PlayerTeamPlaceholder PLAYER_TEAM = new PlayerTeamPlaceholder();
 
     public static void registerAll() {
 
@@ -234,6 +235,7 @@ public class Placeholders {
         PlaceholderRegistry.register(CURRENT_PLAYER_OXYGEN);
         PlaceholderRegistry.register(MAX_PLAYER_OXYGEN);
         PlaceholderRegistry.register(CURRENT_PLAYER_OXYGEN_PERCENTAGE);
+        PlaceholderRegistry.register(PLAYER_TEAM);
 
         //Server
         PlaceholderRegistry.register(SERVER_MOTD);

@@ -1690,5 +1690,7 @@
   "fancymenu.placeholders.text_width": "Text Width",
   "fancymenu.placeholders.text_width.desc": "Returns the width in pixels of the given text.\nUseful for calculating element positions or sizes based on text width.",
   "fancymenu.placeholders.clipboard_content": "Clipboard Content",
-  "fancymenu.placeholders.clipboard_content.desc": "Returns the current text content of the system's clipboard\nor an empty text if nothing is currently stored in the clipboard."
+  "fancymenu.placeholders.clipboard_content.desc": "Returns the current text content of the system's clipboard\nor an empty text if nothing is currently stored in the clipboard.",
+  "fancymenu.placeholders.player_team": "Player Team",
+  "fancymenu.placeholders.player_team.desc": "Returns the current team of the given player\nor an empty value if the player has no team."
 }
