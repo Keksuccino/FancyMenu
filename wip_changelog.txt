@@ -24,8 +24,8 @@ CHANGELOG | FANCYMENU v3.6.0 [ W I P !! Not public yet !! ]
 - Added "Clipboard Content" placeholder that returns the current text content stored in the system's clipboard (#1118)
 - Added new value "full_world_path" to the "Last World/Server" placeholder to control if the placeholder should return full world paths or only the world name (does not work for servers) (#1151)
   - Old placeholders should continue working, but if you want to use the new value, you should use the Placeholder menu to paste the new version of the placeholder to the text area
-- Added "Player Team" placeholder that returns the current team of the given player (#1149)
 - Added "World Players List" placeholder that returns a list of all players currently in the world
+- Added "Scoreboard Player Team" placeholder that returns the current team of the given player (#1149)
 - Added "Scoreboard Score" placeholder that returns the score value of a player for a specific objective
 - Added "Scoreboard Objectives List" placeholder that returns a list of all objectives in the scoreboard
 - Added "Scoreboard Tracked Players" placeholder that returns a list of all players tracked by the scoreboard
