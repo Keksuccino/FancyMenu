@@ -163,6 +163,7 @@ public class Placeholders {
     public static final TextWidthPlaceholder TEXT_WIDTH = new TextWidthPlaceholder();
     public static final ClipboardContentPlaceholder CLIPBOARD_CONTENT = new ClipboardContentPlaceholder();
     public static final ScoreboardPlayerTeamPlaceholder SCOREBOARD_PLAYER_TEAM = new ScoreboardPlayerTeamPlaceholder();
+    public static final NbtDataGetPlaceholder NBT_DATA_GET = new NbtDataGetPlaceholder();
     public static final WorldPlayersListPlaceholder WORLD_PLAYERS_LIST = new WorldPlayersListPlaceholder();
     public static final ScoreboardScorePlaceholder SCOREBOARD_SCORE = new ScoreboardScorePlaceholder();
     public static final ScoreboardObjectivesListPlaceholder SCOREBOARD_OBJECTIVES_LIST = new ScoreboardObjectivesListPlaceholder();
@@ -293,6 +294,7 @@ public class Placeholders {
         PlaceholderRegistry.register(MATH_SIGN);
         PlaceholderRegistry.register(SWITCH_CASE);
         PlaceholderRegistry.register(REPLACE_TEXT);
+        PlaceholderRegistry.register(NBT_DATA_GET);
 
         //Audio
         PlaceholderRegistry.register(AUDIO_ELEMENT_VOLUME);
