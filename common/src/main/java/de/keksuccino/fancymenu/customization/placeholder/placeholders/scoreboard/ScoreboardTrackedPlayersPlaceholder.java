@@ -1,62 +1,68 @@
-package de.keksuccino.fancymenu.customization.placeholder.placeholders.world;
+package de.keksuccino.fancymenu.customization.placeholder.placeholders.scoreboard;
 
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.world.scores.PlayerTeam;
+import net.minecraft.world.scores.ScoreHolder;
+import net.minecraft.world.scores.Scoreboard;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class PlayerTeamPlaceholder extends Placeholder {
+public class ScoreboardTrackedPlayersPlaceholder extends Placeholder {
 
-    public PlayerTeamPlaceholder() {
-        super("player_team");
+    public ScoreboardTrackedPlayersPlaceholder() {
+        super("scoreboard_tracked_players");
     }
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-        LocalPlayer player = Minecraft.getInstance().player;
         ClientLevel level = Minecraft.getInstance().level;
-        String playerName = dps.values.get("player_name");
-        if ((player != null) && (level != null) && (playerName != null)) {
-            PlayerTeam team = level.getScoreboard().getPlayersTeam(playerName);
-            if (team != null) return team.getName();
+        String separator = dps.values.get("separator");
+        if (separator == null) separator = ", ";
+        
+        if (level != null) {
+            Scoreboard scoreboard = level.getScoreboard();
+            Collection<ScoreHolder> trackedPlayers = scoreboard.getTrackedPlayers();
+            
+            return trackedPlayers.stream()
+                    .map(ScoreHolder::getScoreboardName)
+                    .collect(Collectors.joining(separator));
         }
         return "";
     }
 
     @Override
     public @Nullable List<String> getValueNames() {
-        return List.of("player_name");
+        return List.of("separator");
     }
 
     @Override
     public @NotNull String getDisplayName() {
-        return I18n.get("fancymenu.placeholders.player_team");
+        return I18n.get("fancymenu.placeholders.scoreboard.tracked_players");
     }
 
     @Override
     public @Nullable List<String> getDescription() {
-        return List.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.placeholders.player_team.desc"));
+        return List.of(LocalizationUtils.splitLocalizedStringLines("fancymenu.placeholders.scoreboard.tracked_players.desc"));
     }
 
     @Override
     public String getCategory() {
-        return I18n.get("fancymenu.placeholders.categories.world");
+        return I18n.get("fancymenu.placeholders.categories.scoreboard");
     }
 
     @Override
     public @NotNull DeserializedPlaceholderString getDefaultPlaceholderString() {
         HashMap<String, String> values = new LinkedHashMap<>();
-        values.put("player_name", "LadyAgnes");
+        values.put("separator", ", ");
         return new DeserializedPlaceholderString(this.getIdentifier(), values, "");
     }
-
 }

@@ -1,0 +1,33 @@
+{
+  "fancymenu.placeholders.categories.scoreboard": "Scoreboard",
+  
+  "fancymenu.placeholders.scoreboard.score": "Scoreboard Score",
+  "fancymenu.placeholders.scoreboard.score.desc": "Gets the score of a player for a specific objective. Returns empty if the score doesn't exist.",
+  
+  "fancymenu.placeholders.scoreboard.objectives_list": "Scoreboard Objectives List",
+  "fancymenu.placeholders.scoreboard.objectives_list.desc": "Lists all objectives in the scoreboard, separated by the specified separator.",
+  
+  "fancymenu.placeholders.scoreboard.tracked_players": "Scoreboard Tracked Players",
+  "fancymenu.placeholders.scoreboard.tracked_players.desc": "Lists all players tracked by the scoreboard, separated by the specified separator.",
+  
+  "fancymenu.placeholders.scoreboard.display_slot": "Scoreboard Display Slot",
+  "fancymenu.placeholders.scoreboard.display_slot.desc": "Gets the objective displayed in a specific slot (sidebar, list, below_name, etc.).",
+  
+  "fancymenu.placeholders.scoreboard.has_score": "Scoreboard Has Score",
+  "fancymenu.placeholders.scoreboard.has_score.desc": "Checks if a player has a score for a specific objective. Returns 'true' or 'false'.",
+  
+  "fancymenu.placeholders.scoreboard.objective_display_name": "Scoreboard Objective Display Name",
+  "fancymenu.placeholders.scoreboard.objective_display_name.desc": "Gets the display name of an objective. Can return as plain text or JSON.",
+  
+  "fancymenu.placeholders.scoreboard.objective_criteria": "Scoreboard Objective Criteria",
+  "fancymenu.placeholders.scoreboard.objective_criteria.desc": "Gets the criteria type of an objective (dummy, trigger, deathCount, etc.).",
+  
+  "fancymenu.placeholders.scoreboard.objective_render_type": "Scoreboard Objective Render Type",
+  "fancymenu.placeholders.scoreboard.objective_render_type.desc": "Gets the render type of an objective (integer or hearts).",
+  
+  "fancymenu.placeholders.scoreboard.player_scores_list": "Scoreboard Player Scores List",
+  "fancymenu.placeholders.scoreboard.player_scores_list.desc": "Lists all scores for a specific player. Use %objective% and %score% in the format value.",
+  
+  "fancymenu.placeholders.scoreboard.objective_count": "Scoreboard Objective Count",
+  "fancymenu.placeholders.scoreboard.objective_count.desc": "Gets the total number of objectives in the scoreboard."
+}
