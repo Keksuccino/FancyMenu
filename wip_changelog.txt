@@ -26,6 +26,16 @@ CHANGELOG | FANCYMENU v3.6.0 [ W I P !! Not public yet !! ]
   - Old placeholders should continue working, but if you want to use the new value, you should use the Placeholder menu to paste the new version of the placeholder to the text area
 - Added "Player Team" placeholder that returns the current team of the given player (#1149)
 - Added "World Players List" placeholder that returns a list of all players currently in the world
+- Added "Scoreboard Score" placeholder that returns the score value of a player for a specific objective
+- Added "Scoreboard Objectives List" placeholder that returns a list of all objectives in the scoreboard
+- Added "Scoreboard Tracked Players" placeholder that returns a list of all players tracked by the scoreboard
+- Added "Scoreboard Display Slot" placeholder that returns the objective displayed in a specific slot (sidebar, list, etc.)
+- Added "Scoreboard Has Score" placeholder that checks if a player has a score for a specific objective (true/false)
+- Added "Scoreboard Objective Display Name" placeholder that returns the display name of an objective (supports JSON format)
+- Added "Scoreboard Objective Criteria" placeholder that returns the criteria type of an objective (dummy, trigger, etc.)
+- Added "Scoreboard Objective Render Type" placeholder that returns how an objective is rendered (integer or hearts)
+- Added "Scoreboard Player Scores List" placeholder that returns a formatted list of all scores for a specific player
+- Added "Scoreboard Objective Count" placeholder that returns the total number of objectives in the scoreboard
 - Loading requirement containers now cache their "requirements met" value for 150 milliseconds for performance optimization reasons
   - I don't think this will break any logic stuff in layouts, but if you notice something, tell me please! Thank you!
 - Placeholder replacements now get cached for 150 milliseconds (was 30 milliseconds before) for performance optimization reasons
