@@ -175,6 +175,8 @@ public class Placeholders {
     public static final ScoreboardObjectiveRenderTypePlaceholder SCOREBOARD_OBJECTIVE_RENDER_TYPE = new ScoreboardObjectiveRenderTypePlaceholder();
     public static final ScoreboardPlayerScoresListPlaceholder SCOREBOARD_PLAYER_SCORES_LIST = new ScoreboardPlayerScoresListPlaceholder();
     public static final ScoreboardObjectiveCountPlaceholder SCOREBOARD_OBJECTIVE_COUNT = new ScoreboardObjectiveCountPlaceholder();
+    public static final PlayerHasTagPlaceholder PLAYER_HAS_TAG = new PlayerHasTagPlaceholder();
+    public static final PlayerTagsListPlaceholder PLAYER_TAGS_LIST = new PlayerTagsListPlaceholder();
 
     public static void registerAll() {
 
@@ -250,6 +252,8 @@ public class Placeholders {
         PlaceholderRegistry.register(MAX_PLAYER_OXYGEN);
         PlaceholderRegistry.register(CURRENT_PLAYER_OXYGEN_PERCENTAGE);
         PlaceholderRegistry.register(WORLD_PLAYERS_LIST);
+        PlaceholderRegistry.register(PLAYER_HAS_TAG);
+        PlaceholderRegistry.register(PLAYER_TAGS_LIST);
 
         //Server
         PlaceholderRegistry.register(SERVER_MOTD);
