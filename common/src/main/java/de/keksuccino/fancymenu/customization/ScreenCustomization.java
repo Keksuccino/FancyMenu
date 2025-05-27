@@ -368,6 +368,7 @@ public class ScreenCustomization {
 		addScreenBlacklistRule((screen) -> screen.startsWith("blusunrize.immersiveengineering."));
 		addScreenBlacklistRule((screen) -> screen.startsWith("net.dungeonz."));
 		addScreenBlacklistRule((screen) -> screen.startsWith("net.spellcraftgaming.rpghud."));
+		addScreenBlacklistRule((screen) -> screen.contains(".cobblemon."));
 
 	}
 
