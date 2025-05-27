@@ -51,6 +51,7 @@ CHANGELOG | FANCYMENU v3.6.0 [ W I P !! Not public yet !! ]
 - Fixed game crashing when setting nine-slicing borders of buttons/sliders to half the texture's size or larger (#1134)
 - Fixed game crashing when executing the "Join Server" action via a "Ticker" element (another attempt at fixing this) (#1157)
 - Fixed open/close screen audio not working when opening/closing the screen for the first time (#1148)
+- Disabled customization for Cobblemon screens, because they were causing problems (#1116)
 - It should now be at least more difficult to crash the game when anchoring elements to itself, child elements or similar (#1142)
   - This anchor-ception shit is super difficult, so it will probably still crash in some cases, but at least less often lmao
  
