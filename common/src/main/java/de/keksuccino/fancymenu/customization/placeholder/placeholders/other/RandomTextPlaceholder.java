@@ -42,15 +42,17 @@ public class RandomTextPlaceholder extends Placeholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-        String pathString = dps.values.get("path");
+
+        String sourceString = dps.values.get("source");
+        if (sourceString == null) sourceString = dps.values.get("path");
         long intervalRaw = SerializationUtils.deserializeNumber(Long.class, 10L, dps.values.get("interval"));
         
-        if (pathString == null) {
+        if (sourceString == null) {
             return null;
         }
         
         // Get cached content or trigger load
-        List<String> lines = getCachedOrLoadContent(pathString);
+        List<String> lines = getCachedOrLoadContent(sourceString);
         
         if (lines == null || lines.isEmpty()) {
             return "";
@@ -65,11 +67,11 @@ public class RandomTextPlaceholder extends Placeholder {
         long currentTime = System.currentTimeMillis();
         RandomTextPackage p;
         
-        if (randomTextIntervals.containsKey(pathString)) {
-            p = randomTextIntervals.get(pathString);
+        if (randomTextIntervals.containsKey(sourceString)) {
+            p = randomTextIntervals.get(sourceString);
         } else {
             p = new RandomTextPackage();
-            randomTextIntervals.put(pathString, p);
+            randomTextIntervals.put(sourceString, p);
         }
         
         if ((interval > 0) || (p.currentText == null)) {
@@ -88,6 +90,11 @@ public class RandomTextPlaceholder extends Placeholder {
         
         // Check if we have cached content
         if (cached != null) {
+            // For plain text, never expire the cache since it doesn't change
+            if (isPlainText(pathOrUrl)) {
+                return cached.getValue();
+            }
+            
             // If cache is still valid, return it
             if ((currentTime - cached.getKey()) < CONTENT_RELOAD_COOLDOWN_MS) {
                 return cached.getValue();
@@ -123,6 +130,9 @@ public class RandomTextPlaceholder extends Placeholder {
                 if (isUrl(pathOrUrl)) {
                     // Load from URL
                     lines = loadFromUrl(pathOrUrl);
+                } else if (isPlainText(pathOrUrl)) {
+                    // Parse plain text
+                    lines = parsePlainText(pathOrUrl);
                 } else {
                     // Load from local file
                     lines = loadFromFile(pathOrUrl);
@@ -189,11 +199,43 @@ public class RandomTextPlaceholder extends Placeholder {
             return new ArrayList<>();
         }
     }
+    
+    private boolean isPlainText(String path) {
+        // If it's a URL, it's not plain text
+        if (isUrl(path)) return false;
+        
+        // If it contains newline characters, it's likely plain text
+        if (path.contains("\\n")) return true;
+        
+        // Check if it looks like a file path
+        boolean looksLikeFilePath = path.trim().toLowerCase().endsWith(".txt");
+
+        return !looksLikeFilePath;
+    }
+    
+    private List<String> parsePlainText(String plainText) {
+        // Split by escaped \n
+        String[] lines = plainText.split("\\\\n");
+        List<String> result = new ArrayList<>();
+        
+        for (String line : lines) {
+            // Trim each line but keep empty lines if they exist
+            result.add(line);
+        }
+        
+        if (result.isEmpty()) {
+            // If splitting by \n didn't work, treat the whole text as one line
+            result.add(plainText);
+        }
+        
+        return result;
+    }
 
     @Override
     public @Nullable List<String> getValueNames() {
         List<String> l = new ArrayList<>();
         l.add("path");
+        l.add("source");
         l.add("interval");
         return l;
     }
@@ -216,7 +258,7 @@ public class RandomTextPlaceholder extends Placeholder {
     @Override
     public @NotNull DeserializedPlaceholderString getDefaultPlaceholderString() {
         LinkedHashMap<String, String> values = new LinkedHashMap<>();
-        values.put("path", "/config/fancymenu/assets/<file_name.txt>");
+        values.put("source", "/config/fancymenu/assets/<file_name.txt>");
         values.put("interval", "10");
         return new DeserializedPlaceholderString(this.getIdentifier(), values, "");
     }
