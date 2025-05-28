@@ -1723,5 +1723,7 @@
   "fancymenu.placeholders.player_has_tag": "Player Has Tag",
   "fancymenu.placeholders.player_has_tag.desc": "Checks if a specific player has a specific tag. Returns 'true' or 'false'.\n\nThese are the tags that you add via the '/tag' command.",
   "fancymenu.placeholders.player_tags_list": "Player Tags List",
-  "fancymenu.placeholders.player_tags_list.desc": "Returns a list of all tags for a specific player, separated by the specified separator.\n\nThese are the tags that you add via the '/tag' command."
+  "fancymenu.placeholders.player_tags_list.desc": "Returns a list of all tags for a specific player, separated by the specified separator.\n\nThese are the tags that you add via the '/tag' command.",
+  "fancymenu.placeholders.file_text": "File Text",
+  "fancymenu.placeholders.file_text.desc": "Reads text from a local file and returns it.\nSupports reading entire file content or only the last few lines.\nFiles are cached and only re-read every 1 second to improve performance.\n\nRequired values:\n- path: The file path to read from (absolute or relative)\n\nOptional values:\n- mode: How to read the file (default: 'all')\n  Options: 'all' (entire file), 'last' (last X lines)\n- separator: Text between lines when joining (default: '\\n')\n  Common options: '\\n' (newline), ' | ', ', ', ' '\n- last_lines: Number of lines to return in 'last' mode (default: 1)\n  Only used when mode is 'last'\n\nNote: When mode is 'last' with last_lines set to 1,\nthe single line is returned without any separator.\n\nReturns empty string if file doesn't exist or cannot be read."
 }

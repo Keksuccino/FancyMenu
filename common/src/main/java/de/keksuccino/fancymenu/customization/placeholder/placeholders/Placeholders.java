@@ -177,6 +177,7 @@ public class Placeholders {
     public static final ScoreboardObjectiveCountPlaceholder SCOREBOARD_OBJECTIVE_COUNT = new ScoreboardObjectiveCountPlaceholder();
     public static final PlayerHasTagPlaceholder PLAYER_HAS_TAG = new PlayerHasTagPlaceholder();
     public static final PlayerTagsListPlaceholder PLAYER_TAGS_LIST = new PlayerTagsListPlaceholder();
+    public static final FileTextPlaceholder FILE_TEXT = new FileTextPlaceholder();
 
     public static void registerAll() {
 
@@ -299,6 +300,7 @@ public class Placeholders {
         PlaceholderRegistry.register(SWITCH_CASE);
         PlaceholderRegistry.register(REPLACE_TEXT);
         PlaceholderRegistry.register(NBT_DATA_GET);
+        PlaceholderRegistry.register(FILE_TEXT);
 
         //Audio
         PlaceholderRegistry.register(AUDIO_ELEMENT_VOLUME);
