@@ -42,7 +42,9 @@ CHANGELOG | FANCYMENU v3.6.0 [ W I P !! Not public yet !! ]
 - Added "Player Has Tag" placeholder that returns true if a specific player has a specific tag (#1133)
 - Added "Player Tags List" placeholder that returns all tags a specific player has
 - The "Text" element now converts escaped newline codes (\\n) to real newline codes and displays text containing these as multiline text (works for placeholder replacements that contain escaped newlines)
-- The "Random Text" placeholder now accepts URLs as "path" value to get text content from remote/web files (#823)
+- The "path" value of the "Random Text" placeholder got renamed to "source" (old placeholders still work and see the old "path" value as "source" now)
+- The "Random Text" placeholder now accepts URLs as "source" value to get text content from remote/web files (#823)
+- The "Random Text" placeholder now accepts direct plain text as "source" value to get text lines (separate lines with "\n" for plain text)
 - The "JSON Parser" placeholder now accepts plain JSON text content as source
 - Loading requirement containers now cache their "requirements met" value for 150 milliseconds for performance optimization reasons
   - I don't think this will break any logic stuff in layouts, but if you notice something, tell me please! Thank you!
