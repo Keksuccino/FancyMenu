@@ -5,6 +5,8 @@ import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.Pair;
 import de.keksuccino.fancymenu.util.TaskExecutor;
+import de.keksuccino.fancymenu.util.resource.ResourceSource;
+import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import net.minecraft.client.resources.language.I18n;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,6 +43,9 @@ public class FileTextPlaceholder extends Placeholder {
         if (filePath == null || filePath.isEmpty()) {
             return "";
         }
+
+        // Converts the path to a valid local game directory path
+        filePath = ResourceSource.of(filePath, ResourceSourceType.LOCAL).getSourceWithoutPrefix();
         
         if (separator == null) {
             separator = "\\n"; // Default to newline
