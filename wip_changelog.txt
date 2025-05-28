@@ -41,6 +41,7 @@ CHANGELOG | FANCYMENU v3.6.0 [ W I P !! Not public yet !! ]
 - Added "Get NBT Data" placeholder to get NBT data from entities and blocks (similar to '/data get' command) (will probably replace the now deprecated placeholder in SpiffyHUD)
 - Added "Player Has Tag" placeholder that returns true if a specific player has a specific tag (#1133)
 - Added "Player Tags List" placeholder that returns all tags a specific player has
+- The "Text" element now converts escaped newline codes (\\n) to real newline codes and displays text containing these as multiline text (works for placeholder replacements that contain escaped newlines)
 - Loading requirement containers now cache their "requirements met" value for 150 milliseconds for performance optimization reasons
   - I don't think this will break any logic stuff in layouts, but if you notice something, tell me please! Thank you!
 - Placeholder replacements now get cached for 150 milliseconds (was 30 milliseconds before) for performance optimization reasons
