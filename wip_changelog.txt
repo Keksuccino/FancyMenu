@@ -21,7 +21,7 @@ CHANGELOG | FANCYMENU v3.6.0 [ W I P !! Not public yet !! ]
   - Full Markdown support, similar to Text elements
 - Added "Text Character Count" placeholder that returns the character count of the given text (#1160)
 - Added "Text Width" placeholder that returns the width in pixels of the given text (#1159)
-- Added "File Text" placeholder that returns text lines of the given file (returns either all lines or just the last X lines) (#1101)
+- Added "File Text" placeholder that returns text lines of the given file or URL (returns either all lines or just the last X lines) (#1101)
 - Added "Clipboard Content" placeholder that returns the current text content stored in the system's clipboard (#1118)
 - Added new value "full_world_path" to the "Last World/Server" placeholder to control if the placeholder should return full world paths or only the world name (does not work for servers) (#1151)
   - Old placeholders should continue working, but if you want to use the new value, you should use the Placeholder menu to paste the new version of the placeholder to the text area
