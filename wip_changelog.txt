@@ -41,7 +41,10 @@ CHANGELOG | FANCYMENU v3.6.0 [ W I P !! Not public yet !! ]
 - Added "Get NBT Data" placeholder to get NBT data from entities and blocks (similar to '/data get' command) (will probably replace the now deprecated placeholder in SpiffyHUD)
 - Added "Player Has Tag" placeholder that returns true if a specific player has a specific tag (#1133)
 - Added "Player Tags List" placeholder that returns all tags a specific player has
-- The "Text" element now converts escaped newline codes (\\n) to real newline codes and displays text containing these as multiline text (works for placeholder replacements that contain escaped newlines)
+- The "Text" element now converts newline codes written as normal text ("\n") to real newline codes and displays text containing these as multiline text
+  - Example: "This is text.\nSecond line." will get shown as two lines in the "Text" element with "This is text." on the first and "Second line." on the second line
+  - Works for placeholder replacements that contain "\n"
+  - And before that one guy pulls the "aKsHuaLLy" card again: I know that "\n" written as "normal text" is just a frickin escaped newline, but normal people don't know what a frickin escaped newline is
 - The "path" value of the "Random Text" placeholder got renamed to "source" (old placeholders still work and see the old "path" value as "source" now)
 - The "Random Text" placeholder now accepts URLs as "source" value to get text content from remote/web files (#823)
 - The "Random Text" placeholder now accepts direct plain text as "source" value to get text lines (separate lines with "\n" for plain text)
