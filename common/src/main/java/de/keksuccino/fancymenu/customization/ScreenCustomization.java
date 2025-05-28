@@ -369,6 +369,10 @@ public class ScreenCustomization {
 		addScreenBlacklistRule((screen) -> screen.startsWith("net.dungeonz."));
 		addScreenBlacklistRule((screen) -> screen.startsWith("net.spellcraftgaming.rpghud."));
 		addScreenBlacklistRule((screen) -> screen.contains(".cobblemon."));
+		addScreenBlacklistRule((screen) -> screen.contains(".mari_023."));
+		addScreenBlacklistRule((screen) -> screen.startsWith("appeng."));
+		addScreenBlacklistRule((screen) -> screen.startsWith("xaero."));
+		addScreenBlacklistRule((screen) -> screen.contains(".xaero."));
 
 	}
 

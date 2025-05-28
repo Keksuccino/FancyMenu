@@ -32,6 +32,8 @@ dependencies {
     modImplementation "maven.modrinth:konkrete:1.9.9-1.21-fabric"
     modImplementation "maven.modrinth:modmenu:11.0.0-beta.1"
     modCompileOnly 'com.cinemamod:mcef:2.1.6-1.21.1'
+    modImplementation "curse.maven:xaeros-world-map-317780:6538360"
+    modImplementation "curse.maven:xaeros-minimap-263420:6515046"
 
 }
 
