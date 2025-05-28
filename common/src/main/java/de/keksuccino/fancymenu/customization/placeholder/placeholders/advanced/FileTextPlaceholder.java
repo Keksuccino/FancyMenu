@@ -5,13 +5,15 @@ import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.Pair;
 import de.keksuccino.fancymenu.util.TaskExecutor;
+import de.keksuccino.fancymenu.util.WebUtils;
+import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
-import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import net.minecraft.client.resources.language.I18n;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -24,10 +26,12 @@ public class FileTextPlaceholder extends Placeholder {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final long FILE_READ_COOLDOWN_MS = 1000L;
-    // Cache structure: filePath -> Pair<lastReadTime, fileContent>
+    
+    // Cache structure: path/url -> Pair<lastReadTime, fileContent>
     private static final Map<String, Pair<Long, List<String>>> FILE_CACHE = new ConcurrentHashMap<>();
-    // Track files currently being loaded to prevent multiple simultaneous reads
-    private static final Set<String> LOADING_FILES = Collections.synchronizedSet(new HashSet<>());
+    
+    // Track files/urls currently being loaded to prevent multiple simultaneous reads
+    private static final Set<String> LOADING_SOURCES = Collections.synchronizedSet(new HashSet<>());
 
     public FileTextPlaceholder() {
         super("file_text");
@@ -35,17 +39,14 @@ public class FileTextPlaceholder extends Placeholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-        String filePath = dps.values.get("path");
+        String path = dps.values.get("path");
         String separator = dps.values.get("separator");
         String mode = dps.values.get("mode");
         String lastLinesStr = dps.values.get("last_lines");
         
-        if (filePath == null || filePath.isEmpty()) {
+        if (path == null || path.isEmpty()) {
             return "";
         }
-
-        // Converts the path to a valid local game directory path
-        filePath = ResourceSource.of(filePath, ResourceSourceType.LOCAL).getSourceWithoutPrefix();
         
         if (separator == null) {
             separator = "\\n"; // Default to newline
@@ -66,7 +67,7 @@ public class FileTextPlaceholder extends Placeholder {
         }
         
         // Get cached content or trigger async load
-        List<String> lines = getCachedOrLoadAsync(filePath);
+        List<String> lines = getCachedOrLoadAsync(path);
         
         if (lines == null || lines.isEmpty()) {
             return "";
@@ -92,8 +93,8 @@ public class FileTextPlaceholder extends Placeholder {
         return String.join(separator, resultLines);
     }
 
-    private List<String> getCachedOrLoadAsync(String filePath) {
-        Pair<Long, List<String>> cached = FILE_CACHE.get(filePath);
+    private List<String> getCachedOrLoadAsync(String path) {
+        Pair<Long, List<String>> cached = FILE_CACHE.get(path);
         long currentTime = System.currentTimeMillis();
         
         // Check if we have cached content
@@ -104,8 +105,8 @@ public class FileTextPlaceholder extends Placeholder {
             }
             
             // Cache expired, trigger async reload if not already loading
-            if (!LOADING_FILES.contains(filePath)) {
-                triggerAsyncFileLoad(filePath);
+            if (!LOADING_SOURCES.contains(path)) {
+                triggerAsyncLoad(path);
             }
             
             // Return existing cached content while reloading
@@ -113,49 +114,83 @@ public class FileTextPlaceholder extends Placeholder {
         }
         
         // No cache exists, trigger async load if not already loading
-        if (!LOADING_FILES.contains(filePath)) {
-            triggerAsyncFileLoad(filePath);
+        if (!LOADING_SOURCES.contains(path)) {
+            triggerAsyncLoad(path);
         }
         
         // Return empty for first load
         return null;
     }
     
-    private void triggerAsyncFileLoad(String filePath) {
-        // Mark file as loading
-        LOADING_FILES.add(filePath);
+    private void triggerAsyncLoad(String path) {
+        // Mark source as loading
+        LOADING_SOURCES.add(path);
         
-        // Execute file reading asynchronously
+        // Execute loading asynchronously
         TaskExecutor.execute(() -> {
             try {
-                Path path = Paths.get(filePath);
-                if (!Files.exists(path) || !Files.isRegularFile(path)) {
-                    LOGGER.warn("[FANCYMENU] File not found or is not a regular file: " + filePath);
-                    // Cache empty result to avoid repeated attempts
-                    FILE_CACHE.put(filePath, Pair.of(System.currentTimeMillis(), new ArrayList<>()));
-                    return;
-                }
+                List<String> lines;
                 
-                List<String> lines = new ArrayList<>();
-                try (BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        lines.add(line);
-                    }
+                if (isUrl(path)) {
+                    // Load from URL
+                    lines = loadFromUrl(path);
+                } else {
+                    // Load from local file
+                    lines = loadFromFile(path);
                 }
                 
                 // Update cache with new content
-                FILE_CACHE.put(filePath, Pair.of(System.currentTimeMillis(), lines));
+                FILE_CACHE.put(path, Pair.of(System.currentTimeMillis(), lines));
                 
             } catch (Exception e) {
-                LOGGER.error("[FANCYMENU] Failed to read file asynchronously: " + filePath, e);
+                LOGGER.error("[FANCYMENU] Failed to read source asynchronously: " + path, e);
                 // Cache empty result on error to avoid repeated attempts
-                FILE_CACHE.put(filePath, Pair.of(System.currentTimeMillis(), new ArrayList<>()));
+                FILE_CACHE.put(path, Pair.of(System.currentTimeMillis(), new ArrayList<>()));
             } finally {
                 // Always remove from loading set
-                LOADING_FILES.remove(filePath);
+                LOADING_SOURCES.remove(path);
             }
         }, false); // Execute in background thread, not main thread
+    }
+    
+    private boolean isUrl(String path) {
+        return path != null && (path.startsWith("http://") || path.startsWith("https://"));
+    }
+    
+    private List<String> loadFromUrl(String url) {
+        if (!WebUtils.isInternetAvailable()) {
+            LOGGER.warn("[FANCYMENU] No internet connection available for URL: " + url);
+            return new ArrayList<>();
+        }
+        
+        InputStream stream = WebUtils.openResourceStream(url);
+        if (stream == null) {
+            LOGGER.warn("[FANCYMENU] Failed to open URL stream: " + url);
+            return new ArrayList<>();
+        }
+        
+        // Use FileUtils to read lines from the stream
+        return FileUtils.readTextLinesFrom(stream);
+    }
+    
+    private List<String> loadFromFile(String filePath) throws IOException {
+        // Converts the path to a valid game directory path
+        filePath = ResourceSource.of(filePath).getSourceWithoutPrefix();
+        Path path = Paths.get(filePath);
+        if (!Files.exists(path) || !Files.isRegularFile(path)) {
+            LOGGER.warn("[FANCYMENU] File not found or is not a regular file: " + filePath);
+            return new ArrayList<>();
+        }
+        
+        List<String> lines = new ArrayList<>();
+        try (BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                lines.add(line);
+            }
+        }
+        
+        return lines;
     }
 
     @Override
@@ -181,11 +216,10 @@ public class FileTextPlaceholder extends Placeholder {
     @Override
     public @NotNull DeserializedPlaceholderString getDefaultPlaceholderString() {
         LinkedHashMap<String, String> values = new LinkedHashMap<>();
-        values.put("path", "/config/fancymenu/assets/some_file.txt");
+        values.put("path", "config/myfile.txt");
         values.put("mode", "all");
         values.put("separator", "\\n");
         values.put("last_lines", "1");
         return new DeserializedPlaceholderString(this.getIdentifier(), values, "");
     }
-
 }
