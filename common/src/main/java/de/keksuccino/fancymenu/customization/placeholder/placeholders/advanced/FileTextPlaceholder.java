@@ -26,10 +26,9 @@ public class FileTextPlaceholder extends Placeholder {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final long FILE_READ_COOLDOWN_MS = 1000L;
-    
+    private static final long URL_READ_COOLDOWN_MS = 10000L;
     // Cache structure: path/url -> Pair<lastReadTime, fileContent>
     private static final Map<String, Pair<Long, List<String>>> FILE_CACHE = new ConcurrentHashMap<>();
-    
     // Track files/urls currently being loaded to prevent multiple simultaneous reads
     private static final Set<String> LOADING_SOURCES = Collections.synchronizedSet(new HashSet<>());
 
@@ -39,12 +38,12 @@ public class FileTextPlaceholder extends Placeholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-        String path = dps.values.get("path");
+        String pathOrUrl = dps.values.get("path_or_url");
         String separator = dps.values.get("separator");
         String mode = dps.values.get("mode");
         String lastLinesStr = dps.values.get("last_lines");
         
-        if (path == null || path.isEmpty()) {
+        if (pathOrUrl == null || pathOrUrl.isEmpty()) {
             return "";
         }
         
@@ -67,7 +66,7 @@ public class FileTextPlaceholder extends Placeholder {
         }
         
         // Get cached content or trigger async load
-        List<String> lines = getCachedOrLoadAsync(path);
+        List<String> lines = getCachedOrLoadAsync(pathOrUrl);
         
         if (lines == null || lines.isEmpty()) {
             return "";
@@ -97,10 +96,13 @@ public class FileTextPlaceholder extends Placeholder {
         Pair<Long, List<String>> cached = FILE_CACHE.get(path);
         long currentTime = System.currentTimeMillis();
         
+        // Determine the appropriate cooldown based on source type
+        long cooldownMs = isUrl(path) ? URL_READ_COOLDOWN_MS : FILE_READ_COOLDOWN_MS;
+        
         // Check if we have cached content
         if (cached != null) {
             // If cache is still valid, return it
-            if ((currentTime - cached.getKey()) < FILE_READ_COOLDOWN_MS) {
+            if ((currentTime - cached.getKey()) < cooldownMs) {
                 return cached.getValue();
             }
             
@@ -195,7 +197,7 @@ public class FileTextPlaceholder extends Placeholder {
 
     @Override
     public @Nullable List<String> getValueNames() {
-        return Arrays.asList("path", "mode", "separator", "last_lines");
+        return Arrays.asList("path_or_url", "mode", "separator", "last_lines");
     }
 
     @Override
@@ -216,10 +218,11 @@ public class FileTextPlaceholder extends Placeholder {
     @Override
     public @NotNull DeserializedPlaceholderString getDefaultPlaceholderString() {
         LinkedHashMap<String, String> values = new LinkedHashMap<>();
-        values.put("path", "config/myfile.txt");
+        values.put("path_or_url", "/config/fancymenu/assets/some_file.txt");
         values.put("mode", "all");
         values.put("separator", "\\n");
         values.put("last_lines", "1");
         return new DeserializedPlaceholderString(this.getIdentifier(), values, "");
     }
+
 }
