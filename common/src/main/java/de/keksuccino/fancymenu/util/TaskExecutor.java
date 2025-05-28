@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 public class TaskExecutor {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor();
+    private static final ScheduledExecutorService EXECUTOR = Executors.newScheduledThreadPool(20);
 
     public static void scheduleAtFixedRate(@NotNull Task task, long initialDelay, long period, @NotNull TimeUnit unit, boolean executeInMainThread) {
         ScheduledFuture<?>[] future = new ScheduledFuture[1];
