@@ -161,7 +161,6 @@ public class FileTextPlaceholder extends Placeholder {
     
     private List<String> loadFromUrl(String url) {
         if (!WebUtils.isInternetAvailable()) {
-            LOGGER.warn("[FANCYMENU] No internet connection available for URL: " + url);
             return new ArrayList<>();
         }
         
