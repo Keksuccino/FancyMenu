@@ -41,8 +41,8 @@ CHANGELOG | FANCYMENU v3.6.0 [ W I P !! Not public yet !! ]
 - Added "Get NBT Data" placeholder to get NBT data from entities and blocks (similar to '/data get' command) (will probably replace the now deprecated placeholder in SpiffyHUD)
 - Added "Player Has Tag" placeholder that returns true if a specific player has a specific tag (#1133)
 - Added "Player Tags List" placeholder that returns all tags a specific player has
-- The parallax intensity value of menu backgrounds now supports placeholders
-- The parallax intensity value of elements now supports placeholders
+- The parallax intensity value of menu backgrounds now supports placeholders (#1164)
+- The parallax intensity value of elements now supports placeholders (#1164)
 - The "Text" element now converts newline codes written as normal text ("\n") to real newline codes and displays text containing these as multiline text
   - Example: "This is text.\nSecond line." will get shown as two lines in the "Text" element with "This is text." on the first and "Second line." on the second line
   - Works for placeholder replacements that contain "\n"
