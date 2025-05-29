@@ -50,7 +50,7 @@ public class MCEFVideoMenuBackgroundBuilder extends MenuBackgroundBuilder<MCEFVi
         if (soundSource != null) background.soundSource = Objects.requireNonNullElse(getSoundSourceByName(soundSource), SoundSource.MASTER);
 
         background.parallaxEnabled = SerializationUtils.deserializeBoolean(background.parallaxEnabled, serialized.getValue("parallax"));
-        background.parallaxIntensity = SerializationUtils.deserializeNumber(Float.class, background.parallaxIntensity, serialized.getValue("parallax_intensity"));
+        background.parallaxIntensityString = Objects.requireNonNullElse(serialized.getValue("parallax_intensity"), "0.02");
         background.invertParallax = SerializationUtils.deserializeBoolean(background.invertParallax, serialized.getValue("invert_parallax"));
 
         return background;
@@ -70,7 +70,7 @@ public class MCEFVideoMenuBackgroundBuilder extends MenuBackgroundBuilder<MCEFVi
         serialized.putProperty("sound_source", background.soundSource.getName());
 
         serialized.putProperty("parallax", "" + background.parallaxEnabled);
-        serialized.putProperty("parallax_intensity", "" + background.parallaxIntensity);
+        serialized.putProperty("parallax_intensity", background.parallaxIntensityString);
         serialized.putProperty("invert_parallax", "" + background.invertParallax);
 
         return serialized;

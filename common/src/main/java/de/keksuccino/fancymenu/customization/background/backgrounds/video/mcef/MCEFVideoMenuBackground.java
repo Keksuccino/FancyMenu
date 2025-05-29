@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.backgrounds.video.IVideoMenuBackground;
 import de.keksuccino.fancymenu.customization.element.elements.video.VideoElementController;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoManager;
@@ -44,7 +45,9 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
 
     public boolean parallaxEnabled = false;
     /** Value between 0.0 and 1.0, where 0.0 is no movement and 1.0 is maximum movement **/
-    public float parallaxIntensity = 0.02F;
+    @NotNull
+    public String parallaxIntensityString = "0.02";
+    public float lastParallaxIntensity = -10000.0F;
     /** When TRUE, the parallax effect will move in the SAME direction as the mouse, otherwise it moves in the opposite direction **/
     public boolean invertParallax = false;
 
@@ -87,6 +90,8 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
+        this.lastParallaxIntensity = SerializationUtils.deserializeNumber(Float.class, 0.02F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityString));
+
         if (!MCEFUtil.isMCEFLoaded()) {
             graphics.fill(0, 0, getScreenWidth(), getScreenHeight(), MISSING_MCEF_COLOR.getColorInt());
             graphics.drawCenteredString(Minecraft.getInstance().font, "§lMCEF IS NOT INSTALLED! PLEASE DOWNLOAD FROM CURSEFORGE!", getScreenWidth() / 2, getScreenHeight() / 2, -1);
@@ -105,8 +110,8 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
 
         if (parallaxEnabled) {
             // Reduce the expansion amount for parallax
-            w = (int)(getScreenWidth() * (1.0F + parallaxIntensity));
-            h = (int)(getScreenHeight() * (1.0F + parallaxIntensity));
+            w = (int)(getScreenWidth() * (1.0F + lastParallaxIntensity));
+            h = (int)(getScreenHeight() * (1.0F + lastParallaxIntensity));
             // Center the expanded area and apply parallax offset
             x = -((w - getScreenWidth()) / 2) + (int)parallaxOffset[0];
             y = -((h - getScreenHeight()) / 2) + (int)parallaxOffset[1];
@@ -213,8 +218,8 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
         float directionMultiplier = invertParallax ? 1.0f : -1.0f;
 
         // Calculate offset based on screen dimensions and center-adjusted mouse position
-        float xOffset = directionMultiplier * parallaxIntensity * mouseXPercent * getScreenWidth() * 0.5f;
-        float yOffset = directionMultiplier * parallaxIntensity * mouseYPercent * getScreenHeight() * 0.5f;
+        float xOffset = directionMultiplier * lastParallaxIntensity * mouseXPercent * getScreenWidth() * 0.5f;
+        float yOffset = directionMultiplier * lastParallaxIntensity * mouseYPercent * getScreenHeight() * 0.5f;
 
         return new float[]{xOffset, yOffset};
 

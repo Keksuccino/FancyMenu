@@ -661,29 +661,11 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 							"fancymenu.elements.parallax")
 					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.parallax.desc")));
 
-			this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "parallax_intensity", AbstractEditorElement.class,
-							consumes -> consumes.element.parallaxIntensity,
-							(abstractEditorElement, aFloat) -> abstractEditorElement.element.parallaxIntensity = aFloat,
-							Component.translatable("fancymenu.elements.parallax.intensity"), true, 0.5F,
-							consumes -> {
-								if (de.keksuccino.fancymenu.util.MathUtils.isFloat(consumes)) {
-									float f = Float.parseFloat(consumes);
-									if (f < 0.0F) return false;
-									if (f > 1.0F) return false;
-									return true;
-								}
-								return false;
-							}, consumes -> {
-								boolean valid = true;
-								if (de.keksuccino.fancymenu.util.MathUtils.isFloat(consumes)) {
-									float f = Float.parseFloat(consumes);
-									if (f < 0.0F) valid = false;
-									if (f > 1.0F) valid = false;
-								} else {
-									valid = false;
-								}
-								return !valid ? Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.parallax.intensity.invalid_value")) : null;
-							})
+			this.addStringInputContextMenuEntryTo(this.rightClickMenu, "parallax_intensity", AbstractEditorElement.class,
+							consumes -> consumes.element.parallaxIntensityString,
+							(element1, s) -> element1.element.parallaxIntensityString = s,
+							null, false, true, Component.translatable("fancymenu.elements.parallax.intensity"),
+							true, "0.5", null, null)
 					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.parallax.intensity.desc")));
 
 			this.addToggleContextMenuEntryTo(this.rightClickMenu, "invert_parallax", AbstractEditorElement.class,
