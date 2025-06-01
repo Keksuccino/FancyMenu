@@ -89,8 +89,6 @@ public class ScreenWidgetDiscoverer {
 
 			((IMixinScreen)screen).getRenderablesFancyMenu().forEach(renderable -> visitWidget(renderable, ids, widgetMetaList, screen));
 
-			widgetMetaList.forEach(widgetMeta -> LOGGER.info("+++++++++++++++++++++++ WIDGET DISCOVERY: " + widgetMeta.getIdentifier()));
-
 		} catch (Exception ex) {
 			LOGGER.error("[FANCYMENU] Failed to get widgets of screen!", ex);
 		}

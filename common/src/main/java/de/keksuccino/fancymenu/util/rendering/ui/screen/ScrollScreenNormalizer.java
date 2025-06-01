@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
-import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.options.OptionsSubScreen;
 import net.minecraft.network.chat.ComponentContents;
@@ -20,9 +19,6 @@ import java.util.List;
 import java.util.Map;
 
 public class ScrollScreenNormalizer {
-
-    //TODO Alles ab Zeile mit "Mipmap Level" fehlt in Editor
-    // - Werden nicht von Widget Discoverer gesehen
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final List<ScrollableScreenEvaluator> SCROLLABLE_SCREENS = new ArrayList<>();
@@ -42,7 +38,7 @@ public class ScrollScreenNormalizer {
 
         extractAllScrollListsOfScreen(screen).forEach(scroll -> {
 
-            scroll.updateSizeAndPosition(100000000, 100000000, 0);
+            scroll.updateSizeAndPosition(1000000, 1000000, 0);
 
             accessor.getChildrenFancyMenu().remove(scroll);
             accessor.getNarratablesFancyMenu().remove(scroll);
@@ -55,15 +51,20 @@ public class ScrollScreenNormalizer {
             accessor.getRenderablesFancyMenu().remove(widget);
         });
 
+        int pos = 50;
         Map<String, Integer> ids = new HashMap<>();
         for (AbstractWidget widget : extracted) {
 
+            widget.setX(pos);
+            widget.setY(pos);
+            pos++;
+
             if (screen instanceof OptionsSubScreen) {
                 if (widget instanceof UniqueWidget w) {
-                    StringBuilder id = new StringBuilder("scrollable_widget_options");
+                    StringBuilder id = new StringBuilder("options");
                     buildId(widget.getMessage().getContents(), id);
                     String idString = id.toString();
-                    if (idString.equals("scrollable_widget_options")) idString += "_generic";
+                    if (idString.equals("options")) idString += "_generic";
                     if (ids.containsKey(idString)) {
                         int count = ids.get(idString);
                         count++;
@@ -73,7 +74,6 @@ public class ScrollScreenNormalizer {
                         ids.put(idString, 0);
                     }
                     w.setWidgetIdentifierFancyMenu(idString);
-                    LOGGER.info("################ WIDGET FOUND IN SCROLL LIST: " + idString);
                 }
             }
 
@@ -81,25 +81,6 @@ public class ScrollScreenNormalizer {
             accessor.getRenderablesFancyMenu().add(widget);
             accessor.getNarratablesFancyMenu().add(widget);
 
-        }
-
-        LOGGER.info("---------------------------------------------------------------------------");
-
-        int pos = 50;
-        for (GuiEventListener guiEventListener : accessor.getChildrenFancyMenu()) {
-            if (guiEventListener instanceof AbstractWidget w) {
-                if (w instanceof UniqueWidget u) {
-                    if ((u.getWidgetIdentifierFancyMenu() != null) && u.getWidgetIdentifierFancyMenu().startsWith("scrollable_widget_options_")) {
-
-                        w.setX(pos);
-                        w.setY(pos);
-                        pos++;
-
-                        LOGGER.info("############################### UNIQUE SCREEN WIDGET: " + u.getWidgetIdentifierFancyMenu() + " | X" + w.getX() + " | Y" + w.getY() + " | visible=" + w.visible + " | active=" + w.active);
-
-                    }
-                }
-            }
         }
 
         return screen;
