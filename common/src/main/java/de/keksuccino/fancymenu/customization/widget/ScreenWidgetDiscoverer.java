@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.widget;
 import java.util.*;
 import de.keksuccino.fancymenu.customization.widget.identification.WidgetIdentifierHandler;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.ScrollScreenNormalizer;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
@@ -71,6 +72,8 @@ public class ScreenWidgetDiscoverer {
 
 		try {
 
+			ScrollScreenNormalizer.normalizeScrollableScreen(screen);
+
 			((IMixinScreen)screen).getRenderablesFancyMenu().forEach(renderable -> {
 				if (renderable instanceof CustomizableWidget w) w.resetWidgetCustomizationsFancyMenu();
 			});
@@ -81,6 +84,8 @@ public class ScreenWidgetDiscoverer {
 			} else {
 				screen.resize(Minecraft.getInstance(), screenWidth, screenHeight);
 			}
+
+			ScrollScreenNormalizer.normalizeScrollableScreen(screen);
 
 			((IMixinScreen)screen).getRenderablesFancyMenu().forEach(renderable -> visitWidget(renderable, ids, widgetMetaList, screen));
 
