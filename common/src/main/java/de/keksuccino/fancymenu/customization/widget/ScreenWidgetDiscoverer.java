@@ -46,6 +46,8 @@ public class ScreenWidgetDiscoverer {
 					WidgetMeta button = buttons.get(i);
 					if (!widgetMetas.containsKey(id.getLongIdentifier())) {
 						widgetMetas.put(id.getLongIdentifier(), new WidgetMeta(button.getWidget(), id.getLongIdentifier(), screen));
+					} else {
+						LOGGER.warn("[FANCYMENU] Duplicate widget ID found while discovering screen widgets: " + id.getLongIdentifier(), new IllegalStateException("There can't be multiple widgets with the same identifier!"));
 					}
 					i++;
 				}
@@ -72,8 +74,6 @@ public class ScreenWidgetDiscoverer {
 
 		try {
 
-			ScrollScreenNormalizer.normalizeScrollableScreen(screen);
-
 			((IMixinScreen)screen).getRenderablesFancyMenu().forEach(renderable -> {
 				if (renderable instanceof CustomizableWidget w) w.resetWidgetCustomizationsFancyMenu();
 			});
@@ -89,6 +89,8 @@ public class ScreenWidgetDiscoverer {
 
 			((IMixinScreen)screen).getRenderablesFancyMenu().forEach(renderable -> visitWidget(renderable, ids, widgetMetaList, screen));
 
+			widgetMetaList.forEach(widgetMeta -> LOGGER.info("+++++++++++++++++++++++ WIDGET DISCOVERY: " + widgetMeta.getIdentifier()));
+
 		} catch (Exception ex) {
 			LOGGER.error("[FANCYMENU] Failed to get widgets of screen!", ex);
 		}
@@ -103,6 +105,8 @@ public class ScreenWidgetDiscoverer {
 			long id = 0;
 			if (MathUtils.isLong(idRaw)) {
 				id = getAvailableIdFromBaseId(Long.parseLong(idRaw), ids);
+			} else {
+				LOGGER.error("[FANCYMENU] Widget ID is not a Long!", new NumberFormatException("Failed to parse widget identifier to Long!"));
 			}
 			ids.add(id);
 			widgetMetaList.add(new WidgetMeta(w, id, screen));
@@ -114,6 +118,8 @@ public class ScreenWidgetDiscoverer {
 			String newId = baseId + "1";
 			if (MathUtils.isLong(newId)) {
 				return getAvailableIdFromBaseId(Long.parseLong(newId), ids);
+			} else {
+				LOGGER.error("[FANCYMENU] Widget ID is not a Long!", new NumberFormatException("Failed to parse widget identifier to Long!"));
 			}
 		}
 		return baseId;

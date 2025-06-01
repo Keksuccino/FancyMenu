@@ -5,16 +5,24 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.options.OptionsSubScreen;
+import net.minecraft.network.chat.ComponentContents;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ScrollScreenNormalizer {
+
+    //TODO Alles ab Zeile mit "Mipmap Level" fehlt in Editor
+    // - Werden nicht von Widget Discoverer gesehen
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final List<ScrollableScreenEvaluator> SCROLLABLE_SCREENS = new ArrayList<>();
@@ -28,16 +36,18 @@ public class ScrollScreenNormalizer {
     @NotNull
     public static Screen normalizeScrollableScreen(@NotNull Screen screen) {
 
-        if (!isScrollableScreen(screen)) return screen;
-
         List<AbstractWidget> extracted = extractAllWidgetsFromScrollListsOfScreen(screen);
 
         IMixinScreen accessor = ((IMixinScreen)screen);
 
         extractAllScrollListsOfScreen(screen).forEach(scroll -> {
+
+            scroll.updateSizeAndPosition(100000000, 100000000, 0);
+
             accessor.getChildrenFancyMenu().remove(scroll);
             accessor.getNarratablesFancyMenu().remove(scroll);
             accessor.getRenderablesFancyMenu().remove(scroll);
+
         });
         extracted.forEach(widget -> {
             accessor.getChildrenFancyMenu().remove(widget);
@@ -45,17 +55,25 @@ public class ScrollScreenNormalizer {
             accessor.getRenderablesFancyMenu().remove(widget);
         });
 
-        extracted.forEach(widget -> {
-
-            widget.setX(50);
-            widget.setY(50);
+        Map<String, Integer> ids = new HashMap<>();
+        for (AbstractWidget widget : extracted) {
 
             if (screen instanceof OptionsSubScreen) {
                 if (widget instanceof UniqueWidget w) {
-                    if (widget.getMessage().getContents() instanceof TranslatableContents contents) {
-                        w.setWidgetIdentifierFancyMenu("options_" + contents.getKey());
-                        LOGGER.info("################ WIDGET FOUND IN SCROLL LIST: " + contents.getKey());
+                    StringBuilder id = new StringBuilder("scrollable_widget_options");
+                    buildId(widget.getMessage().getContents(), id);
+                    String idString = id.toString();
+                    if (idString.equals("scrollable_widget_options")) idString += "_generic";
+                    if (ids.containsKey(idString)) {
+                        int count = ids.get(idString);
+                        count++;
+                        ids.put(idString, count);
+                        idString = idString + "_" + count;
+                    } else {
+                        ids.put(idString, 0);
                     }
+                    w.setWidgetIdentifierFancyMenu(idString);
+                    LOGGER.info("################ WIDGET FOUND IN SCROLL LIST: " + idString);
                 }
             }
 
@@ -63,10 +81,47 @@ public class ScrollScreenNormalizer {
             accessor.getRenderablesFancyMenu().add(widget);
             accessor.getNarratablesFancyMenu().add(widget);
 
-        });
+        }
+
+        LOGGER.info("---------------------------------------------------------------------------");
+
+        int pos = 50;
+        for (GuiEventListener guiEventListener : accessor.getChildrenFancyMenu()) {
+            if (guiEventListener instanceof AbstractWidget w) {
+                if (w instanceof UniqueWidget u) {
+                    if ((u.getWidgetIdentifierFancyMenu() != null) && u.getWidgetIdentifierFancyMenu().startsWith("scrollable_widget_options_")) {
+
+                        w.setX(pos);
+                        w.setY(pos);
+                        pos++;
+
+                        LOGGER.info("############################### UNIQUE SCREEN WIDGET: " + u.getWidgetIdentifierFancyMenu() + " | X" + w.getX() + " | Y" + w.getY() + " | visible=" + w.visible + " | active=" + w.active);
+
+                    }
+                }
+            }
+        }
 
         return screen;
 
+    }
+
+    @NotNull
+    private static StringBuilder buildId(@NotNull ComponentContents contents, @NotNull StringBuilder builder) {
+        if (contents instanceof TranslatableContents t) {
+            builder.append("_");
+            Object[] args = t.getArgs();
+            if (args.length > 0) {
+                if (args[0] instanceof MutableComponent c) {
+                    if (c.getContents() instanceof TranslatableContents t2) {
+                        builder.append(t2.getKey());
+                        return builder;
+                    }
+                }
+            }
+            builder.append(t.getKey());
+        }
+        return builder;
     }
 
     public static boolean isScrollableScreen(@NotNull Screen screen) {
@@ -95,14 +150,23 @@ public class ScrollScreenNormalizer {
             if (o instanceof AbstractSelectionList<?> sel) {
                 sel.children().forEach(entry -> {
                     if (entry instanceof ContainerEventHandler h) {
-                        h.children().forEach(widget -> {
-                            if (widget instanceof AbstractWidget w) list.add(w);
-                        });
+                        extractWidgetsRecursively(h, list);
                     }
                 });
             }
         }
         return list;
+    }
+
+    private static void extractWidgetsRecursively(@NotNull ContainerEventHandler container, @NotNull List<AbstractWidget> list) {
+        container.children().forEach(child -> {
+            if (child instanceof ContainerEventHandler childContainer) {
+                // Recursively extract widgets from nested containers
+                extractWidgetsRecursively(childContainer, list);
+            } else if (child instanceof AbstractWidget widget) {
+                list.add(widget);
+            }
+        });
     }
 
     public static void addScrollableScreenEvaluator(@NotNull ScrollableScreenEvaluator evaluator) {
