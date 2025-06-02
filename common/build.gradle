@@ -14,6 +14,12 @@ minecraft {
     }
 }
 
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}
+
 dependencies {
     compileOnly(annotationProcessor('io.github.llamalad7:mixinextras-common:0.4.1'))
     compileOnly group:'org.spongepowered', name:'mixin', version:'0.8.5'
@@ -23,6 +29,8 @@ dependencies {
     compileOnly "maven.modrinth:melody:1.0.10-1.21-forge"
     compileOnly "maven.modrinth:konkrete:1.9.9-1.21-forge"
     compileOnly 'com.cinemamod:mcef:2.1.6-1.21.1'
+    compileOnly 'flatdir:essential-1.0.0'
+    compileOnly 'flatdir:sources-essential-1.0.0'
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
     implementation group: 'org.ow2.asm', name: 'asm-tree', version: '9.7'
 }
