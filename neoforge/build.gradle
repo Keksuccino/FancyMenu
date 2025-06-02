@@ -61,8 +61,6 @@ dependencies {
     }
 //    implementation "com.cinemamod:mcef:2.1.6-1.21.1"
     implementation "maven.modrinth:mcef:euXLgkSB"
-    compileOnly 'flatdir:essential-1.0.0'
-    compileOnly 'flatdir:sources-essential-1.0.0'
     compileOnly project(":common")
 }
 

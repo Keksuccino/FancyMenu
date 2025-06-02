@@ -32,8 +32,6 @@ dependencies {
     modImplementation "maven.modrinth:konkrete:1.9.9-1.21-fabric"
     modImplementation "maven.modrinth:modmenu:11.0.0-beta.1"
     modCompileOnly 'com.cinemamod:mcef:2.1.6-1.21.1'
-    modCompileOnly 'flatdir:essential-1.0.0'
-    modCompileOnly 'flatdir:sources-essential-1.0.0'
     modImplementation "curse.maven:xaeros-world-map-317780:6538360"
     modImplementation "curse.maven:xaeros-minimap-263420:6515046"
 
@@ -44,8 +42,6 @@ loom {
         accessWidenerPath.set(project(":common").file("src/main/resources/${mod_id}.accesswidener"))
     }
     mixin {
-        // Manually add late mixin config for generating refmap
-        //add sourceSets.main, "${mod_id}.late.mixins.json"
         defaultRefmapName.set("${mod_id}.refmap.json")
     }
     runs {
