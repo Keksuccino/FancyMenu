@@ -74,7 +74,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
         // Handle table rendering
         if (this.isTable()) {
-            renderTable(graphics);
+            renderTable(graphics, mouseX, mouseY, partial);
             return;
         }
 
@@ -112,7 +112,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
     }
 
-    protected void renderTable(@NotNull GuiGraphics graphics) {
+    protected void renderTable(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         if (this.tableContext == null) return;
         
         // Calculate column widths
@@ -173,7 +173,13 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                     
                     fragment.x = textX + alignmentOffset;
                     fragment.y = textY;
-                    fragment.render(graphics, 0, 0, 0); // Don't pass mouse coords to avoid hover effects
+                    fragment.render(graphics, mouseX, mouseY, partial); // Pass actual mouse coords for hover/click detection
+                    
+                    // Check if any hyperlink in the table is hovered
+                    if (fragment.hyperlink != null && fragment.hovered) {
+                        CursorHandler.setClientTickCursor(CursorHandler.CURSOR_POINTING_HAND);
+                    }
+                    
                     textX += fragment.getTextRenderWidth();
                 }
                 
@@ -531,6 +537,22 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        // Handle clicks on table cells
+        if (this.isTable() && this.tableContext != null) {
+            // Check all cell fragments for clicks
+            for (TableRow row : this.tableContext.rows) {
+                for (TableCell cell : row.cells) {
+                    for (MarkdownTextFragment fragment : cell.fragments) {
+                        if (fragment.isMouseOver(mouseX, mouseY) && fragment.mouseClicked(mouseX, mouseY, button)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+        
+        // Handle regular hyperlink clicks
         if ((this.hyperlink != null) && this.hovered) {
             WebUtils.openWebLink(this.hyperlink.link);
             return true;
