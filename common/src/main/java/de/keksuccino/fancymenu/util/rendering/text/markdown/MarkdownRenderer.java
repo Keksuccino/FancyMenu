@@ -83,6 +83,16 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     protected Float parentRenderScale = null;
     @NotNull
     protected Font font = Minecraft.getInstance().font;
+    @NotNull
+    protected DrawableColor tableLineColor = DrawableColor.of(new Color(200, 200, 200));
+    @NotNull
+    protected DrawableColor tableHeaderBackgroundColor = DrawableColor.of(new Color(240, 240, 240));
+    @NotNull
+    protected DrawableColor tableAlternateRowColor = DrawableColor.of(new Color(248, 248, 248));
+    protected float tableLineThickness = 1.0f;
+    protected float tableCellPadding = 8.0f;
+    protected boolean tableAlternateRowColors = true;
+    protected boolean tableShowHeader = true;
     protected boolean dragging;
     protected final List<MarkdownTextLine> lines = new ArrayList<>();
     protected final List<MarkdownTextFragment> fragments = new ArrayList<>();
@@ -540,6 +550,73 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     public MarkdownRenderer setBorder(float border) {
         this.border = border;
         this.refreshRenderer();
+        return this;
+    }
+
+    @NotNull
+    public DrawableColor getTableLineColor() {
+        return this.tableLineColor;
+    }
+
+    public MarkdownRenderer setTableLineColor(@NotNull DrawableColor tableLineColor) {
+        this.tableLineColor = tableLineColor;
+        return this;
+    }
+
+    @NotNull
+    public DrawableColor getTableHeaderBackgroundColor() {
+        return this.tableHeaderBackgroundColor;
+    }
+
+    public MarkdownRenderer setTableHeaderBackgroundColor(@NotNull DrawableColor tableHeaderBackgroundColor) {
+        this.tableHeaderBackgroundColor = tableHeaderBackgroundColor;
+        return this;
+    }
+
+    @NotNull
+    public DrawableColor getTableAlternateRowColor() {
+        return this.tableAlternateRowColor;
+    }
+
+    public MarkdownRenderer setTableAlternateRowColor(@NotNull DrawableColor tableAlternateRowColor) {
+        this.tableAlternateRowColor = tableAlternateRowColor;
+        return this;
+    }
+
+    public float getTableLineThickness() {
+        return this.tableLineThickness;
+    }
+
+    public MarkdownRenderer setTableLineThickness(float tableLineThickness) {
+        this.tableLineThickness = tableLineThickness;
+        return this;
+    }
+
+    public float getTableCellPadding() {
+        return this.tableCellPadding;
+    }
+
+    public MarkdownRenderer setTableCellPadding(float tableCellPadding) {
+        this.tableCellPadding = tableCellPadding;
+        this.refreshRenderer();
+        return this;
+    }
+
+    public boolean isTableAlternateRowColors() {
+        return this.tableAlternateRowColors;
+    }
+
+    public MarkdownRenderer setTableAlternateRowColors(boolean tableAlternateRowColors) {
+        this.tableAlternateRowColors = tableAlternateRowColors;
+        return this;
+    }
+
+    public boolean isTableShowHeader() {
+        return this.tableShowHeader;
+    }
+
+    public MarkdownRenderer setTableShowHeader(boolean tableShowHeader) {
+        this.tableShowHeader = tableShowHeader;
         return this;
     }
 

@@ -78,6 +78,8 @@ public class MarkdownParser {
         filter.addAllowedCharacters(MINUS_CHAR);
         return filter;
     });
+    private static final Pattern TABLE_SEPARATOR_PATTERN = Pattern.compile("^\\s*\\|?\\s*:?-+:?\\s*(\\|\\s*:?-+:?\\s*)*\\|?\\s*$");
+    private static final String COLON = ":";
 
     @NotNull
     public static List<MarkdownTextFragment> parse(@NotNull MarkdownRenderer renderer, @NotNull String markdownText, boolean parseMarkdown) {
@@ -86,6 +88,11 @@ public class MarkdownParser {
         Objects.requireNonNull(markdownText);
 
         List<MarkdownTextFragment> fragments = new ArrayList<>();
+
+        // Pre-process tables if markdown parsing is enabled
+        if (parseMarkdown) {
+            markdownText = preprocessTables(renderer, markdownText, fragments);
+        }
 
         FragmentBuilder builder = new FragmentBuilder(renderer);
         boolean queueNewLine = true;
@@ -112,6 +119,13 @@ public class MarkdownParser {
 
             //Update Current Line
             if (isStartOfLine) currentLine = getLine(subText);
+
+            // Check for table placeholder
+            if (isStartOfLine && StringUtils.startsWith(currentLine, "[TABLE_PLACEHOLDER_")) {
+                // Skip this line - table is already processed
+                skipLine = true;
+                continue;
+            }
 
             //Skip empty line under headline
             if ((c == NEWLINE_CHAR) && lastLineWasHeadline) {
@@ -776,6 +790,136 @@ public class MarkdownParser {
         return null;
     }
 
+    protected static boolean isTableSeparatorLine(@NotNull String line) {
+        return TABLE_SEPARATOR_PATTERN.matcher(line).matches();
+    }
+    
+    protected static boolean isTableRow(@NotNull String line) {
+        return line.contains(VERTICAL_BAR) && !isTableSeparatorLine(line);
+    }
+    
+    @NotNull
+    protected static List<String> parseTableRow(@NotNull String line) {
+        List<String> cells = new ArrayList<>();
+        String trimmed = line.trim();
+        if (trimmed.startsWith(VERTICAL_BAR)) {
+            trimmed = trimmed.substring(1);
+        }
+        if (trimmed.endsWith(VERTICAL_BAR)) {
+            trimmed = trimmed.substring(0, trimmed.length() - 1);
+        }
+        String[] parts = trimmed.split("\\|");
+        for (String part : parts) {
+            cells.add(part.trim());
+        }
+        return cells;
+    }
+    
+    @NotNull
+    protected static List<MarkdownTextFragment.TableCell.TableCellAlignment> parseTableAlignments(@NotNull String separatorLine) {
+        List<MarkdownTextFragment.TableCell.TableCellAlignment> alignments = new ArrayList<>();
+        String trimmed = separatorLine.trim();
+        if (trimmed.startsWith(VERTICAL_BAR)) {
+            trimmed = trimmed.substring(1);
+        }
+        if (trimmed.endsWith(VERTICAL_BAR)) {
+            trimmed = trimmed.substring(0, trimmed.length() - 1);
+        }
+        String[] parts = trimmed.split("\\|");
+        for (String part : parts) {
+            String cell = part.trim();
+            if (cell.startsWith(COLON) && cell.endsWith(COLON)) {
+                alignments.add(MarkdownTextFragment.TableCell.TableCellAlignment.CENTER);
+            } else if (cell.endsWith(COLON)) {
+                alignments.add(MarkdownTextFragment.TableCell.TableCellAlignment.RIGHT);
+            } else {
+                alignments.add(MarkdownTextFragment.TableCell.TableCellAlignment.LEFT);
+            }
+        }
+        return alignments;
+    }
+    
+    @NotNull
+    protected static String preprocessTables(@NotNull MarkdownRenderer renderer, @NotNull String markdownText, @NotNull List<MarkdownTextFragment> fragments) {
+        String[] lines = markdownText.split(NEWLINE);
+        StringBuilder result = new StringBuilder();
+        
+        for (int i = 0; i < lines.length; i++) {
+            String currentLine = lines[i];
+            String nextLine = (i + 1 < lines.length) ? lines[i + 1] : null;
+            
+            // Check if this is the start of a table
+            if (isTableRow(currentLine) && nextLine != null && isTableSeparatorLine(nextLine)) {
+                // Parse the table
+                MarkdownTextFragment.TableContext tableContext = new MarkdownTextFragment.TableContext();
+                List<MarkdownTextFragment.TableCell.TableCellAlignment> alignments = parseTableAlignments(nextLine);
+                
+                // Parse header row
+                List<String> headerCells = parseTableRow(currentLine);
+                MarkdownTextFragment.TableRow headerRow = new MarkdownTextFragment.TableRow(renderer);
+                headerRow.isHeader = true;
+                tableContext.hasHeader = true;
+                
+                for (int j = 0; j < headerCells.size(); j++) {
+                    MarkdownTextFragment.TableCell cell = new MarkdownTextFragment.TableCell();
+                    if (j < alignments.size()) {
+                        cell.alignment = alignments.get(j);
+                    }
+                    // Parse the cell content as markdown
+                    List<MarkdownTextFragment> cellFragments = parse(renderer, headerCells.get(j), true);
+                    for (MarkdownTextFragment frag : cellFragments) {
+                        frag.tableContext = tableContext;
+                    }
+                    cell.fragments.addAll(cellFragments);
+                    headerRow.cells.add(cell);
+                }
+                tableContext.rows.add(headerRow);
+                
+                // Skip the separator line
+                i += 2;
+                
+                // Parse data rows
+                while (i < lines.length && isTableRow(lines[i])) {
+                    List<String> dataCells = parseTableRow(lines[i]);
+                    MarkdownTextFragment.TableRow dataRow = new MarkdownTextFragment.TableRow(renderer);
+                    
+                    for (int j = 0; j < dataCells.size(); j++) {
+                        MarkdownTextFragment.TableCell cell = new MarkdownTextFragment.TableCell();
+                        if (j < alignments.size()) {
+                            cell.alignment = alignments.get(j);
+                        }
+                        // Parse the cell content as markdown
+                        List<MarkdownTextFragment> cellFragments = parse(renderer, dataCells.get(j), true);
+                        for (MarkdownTextFragment frag : cellFragments) {
+                            frag.tableContext = tableContext;
+                        }
+                        cell.fragments.addAll(cellFragments);
+                        dataRow.cells.add(cell);
+                    }
+                    tableContext.rows.add(dataRow);
+                    i++;
+                }
+                
+                // Create a placeholder fragment for the table
+                MarkdownTextFragment tablePlaceholder = new MarkdownTextFragment(renderer, "[TABLE]");
+                tablePlaceholder.tableContext = tableContext;
+                tablePlaceholder.naturalLineBreakAfter = true;
+                fragments.add(tablePlaceholder);
+                
+                // Add a placeholder line in the result
+                result.append("[TABLE_PLACEHOLDER_").append(fragments.size() - 1).append("]").append(NEWLINE);
+                i--; // Adjust because the loop will increment
+            } else {
+                result.append(currentLine);
+                if (i < lines.length - 1) {
+                    result.append(NEWLINE);
+                }
+            }
+        }
+        
+        return result.toString();
+    }
+
     protected static class FragmentBuilder {
 
         protected final MarkdownRenderer renderer;
@@ -797,6 +941,7 @@ public class MarkdownParser {
         protected CodeBlockContext codeBlockContext = null;
         protected ResourceLocation font = null;
         protected boolean plainText = false;
+        protected MarkdownTextFragment.TableContext tableContext = null;
 
         protected FragmentBuilder(MarkdownRenderer renderer) {
             this.renderer = renderer;
@@ -835,6 +980,7 @@ public class MarkdownParser {
                     codeBlockContext.codeBlockFragments.add(frag);
                 }
             }
+            frag.tableContext = tableContext;
             frag.naturalLineBreakAfter = naturalLineBreakAfter;
             frag.endOfWord = endOfWord;
             frag.updateWidth();

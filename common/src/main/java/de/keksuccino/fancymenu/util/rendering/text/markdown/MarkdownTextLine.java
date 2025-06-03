@@ -86,6 +86,10 @@ public class MarkdownTextLine implements Renderable {
             this.bulletListItemStartLine = first.bulletListItemStart;
             first.startOfRenderLine = true;
             last.autoLineBreakAfter = !last.naturalLineBreakAfter;
+            // Don't set autoLineBreakAfter for tables
+            if ((last.tableContext != null) && last.text.equals("[TABLE]")) {
+                last.autoLineBreakAfter = false;
+            }
         }
     }
 
