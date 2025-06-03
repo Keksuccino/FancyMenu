@@ -1,6 +1,10 @@
 
 CHANGELOG | FANCYMENU v3.6.0 [ W I P !! Not public yet !! ]
 
+- Added "Expose Scroll Area Content Of Current Screen" feature to extract buttons and sliders from scroll areas, so FancyMenu can see and customize them
+  - This is especially useful to make options screens (like the Video Settings screen) customizable
+  - This is experimental and will probably not work for all screens
+  - If scroll areas contain more than just buttons and sliders, the additional elements will get lost, because the scroll area gets removed from the screen (until you disable the feature for that screen)
 - Added "Video [MCEF]" element that plays a video file (powered by the MCEF mod, so you need that mod for it to work!) (#685)
 - Added "Video [MCEF]" menu background type that plays a video file (powered by the MCEF mod, so you need that mod for it to work!) (#685)
   - Will continue playing across menus when used in a universal layout
