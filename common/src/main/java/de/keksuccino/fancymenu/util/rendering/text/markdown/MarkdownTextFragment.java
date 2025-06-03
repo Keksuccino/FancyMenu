@@ -73,7 +73,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         }
 
         // Handle table rendering
-        if ((this.tableContext != null) && this.text.equals("[TABLE]")) {
+        if (this.isTable()) {
             renderTable(graphics);
             return;
         }
@@ -118,9 +118,13 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         // Calculate column widths
         this.tableContext.calculateColumnWidths(this.parent);
         
-        float tableX = this.x;
-        float tableY = this.y;
+        // Tables should start at the beginning of the line, not at the fragment's x position
+        float tableX = this.parent.x + this.parent.border;
+        float tableY = this.y + this.parent.tableMargin; // Add margin before table
         float currentY = tableY;
+        
+        // Use the actual table width for rendering (not the full area width)
+        float actualTableWidth = this.tableContext.totalWidth;
         
         RenderSystem.enableBlend();
         
@@ -133,11 +137,11 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             // Draw row background
             if (row.isHeader && this.parent.tableShowHeader) {
                 // Header background
-                RenderingUtils.fillF(graphics, tableX, currentY, tableX + this.tableContext.totalWidth, 
+                RenderingUtils.fillF(graphics, tableX, currentY, tableX + actualTableWidth, 
                     currentY + rowHeight, this.parent.tableHeaderBackgroundColor.getColorIntWithAlpha(this.parent.textOpacity));
             } else if (!row.isHeader && this.parent.tableAlternateRowColors && rowIndex % 2 == 0) {
                 // Alternate row background
-                RenderingUtils.fillF(graphics, tableX, currentY, tableX + this.tableContext.totalWidth, 
+                RenderingUtils.fillF(graphics, tableX, currentY, tableX + actualTableWidth, 
                     currentY + rowHeight, this.parent.tableAlternateRowColor.getColorIntWithAlpha(this.parent.textOpacity));
             }
             
@@ -186,7 +190,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         // Horizontal lines
         float y = tableY;
         for (int i = 0; i <= this.tableContext.rows.size(); i++) {
-            RenderingUtils.fillF(graphics, tableX, y, tableX + this.tableContext.totalWidth, y + lineThickness, lineColor);
+            RenderingUtils.fillF(graphics, tableX, y, tableX + actualTableWidth, y + lineThickness, lineColor);
             if (i < this.tableContext.rows.size()) {
                 y += this.tableContext.getRowHeight(this.tableContext.rows.get(i));
             }
@@ -195,7 +199,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         // Draw thicker line under header
         if (this.tableContext.hasHeader && this.parent.tableShowHeader && !this.tableContext.rows.isEmpty()) {
             float headerY = tableY + this.tableContext.getRowHeight(this.tableContext.rows.get(0));
-            RenderingUtils.fillF(graphics, tableX, headerY, tableX + this.tableContext.totalWidth, 
+            RenderingUtils.fillF(graphics, tableX, headerY, tableX + actualTableWidth, 
                 headerY + lineThickness * 2, lineColor);
         }
         
@@ -388,10 +392,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
     public float getRenderWidth() {
 
-        // Handle table width
-        if ((this.tableContext != null) && this.text.equals("[TABLE]")) {
-            this.tableContext.calculateColumnWidths(this.parent);
-            return this.tableContext.totalWidth;
+        // Handle table width - tables should use the full width of the markdown area
+        if (this.isTable()) {
+            return this.parent.getRealWidth() - this.parent.border - this.parent.border;
         }
 
         if (this.imageSupplier != null) {
@@ -433,13 +436,15 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     public float getRenderHeight() {
 
         // Handle table height
-        if ((this.tableContext != null) && this.text.equals("[TABLE]")) {
+        if (this.isTable()) {
             float totalHeight = 0;
             for (TableRow row : this.tableContext.rows) {
                 totalHeight += this.tableContext.getRowHeight(row);
             }
             // Add line thickness for borders
             totalHeight += this.parent.tableLineThickness * (this.tableContext.rows.size() + 1);
+            // Add margin above and below tables
+            totalHeight += this.parent.tableMargin * 2;
             return totalHeight;
         }
 
@@ -508,8 +513,14 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
     @Override
     public boolean isMouseOver(double mouseX, double mouseY) {
-        if ((this.tableContext != null) && this.text.equals("[TABLE]")) {
-            return RenderingUtils.isXYInArea(mouseX, mouseY, this.x, this.y, this.getRenderWidth(), this.getRenderHeight());
+        if (this.isTable()) {
+            // For tables, use the actual table rendering area
+            this.tableContext.calculateColumnWidths(this.parent);
+            float tableX = this.parent.x + this.parent.border;
+            float tableY = this.y + this.parent.tableMargin;
+            float tableWidth = this.tableContext.totalWidth;
+            float tableHeight = this.getRenderHeight() - (this.parent.tableMargin * 2); // Subtract the margin
+            return RenderingUtils.isXYInArea(mouseX, mouseY, tableX, tableY, tableWidth, tableHeight);
         }
         if ((this.imageSupplier != null) && (this.imageSupplier.get() != null)) {
             return RenderingUtils.isXYInArea(mouseX, mouseY, this.x, this.y, this.getRenderWidth(), this.getRenderHeight());
@@ -533,6 +544,10 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     @Override
     public boolean isFocused() {
         return false;
+    }
+    
+    public boolean isTable() {
+        return (this.tableContext != null) && this.text.equals("[TABLE]");
     }
 
     public static class Hyperlink {

@@ -88,10 +88,11 @@ public class MarkdownParser {
         Objects.requireNonNull(markdownText);
 
         List<MarkdownTextFragment> fragments = new ArrayList<>();
+        List<MarkdownTextFragment.TableContext> tableContexts = new ArrayList<>();
 
         // Pre-process tables if markdown parsing is enabled
         if (parseMarkdown) {
-            markdownText = preprocessTables(renderer, markdownText, fragments);
+            markdownText = preprocessTables(renderer, markdownText, tableContexts);
         }
 
         FragmentBuilder builder = new FragmentBuilder(renderer);
@@ -103,6 +104,7 @@ public class MarkdownParser {
         boolean lastLineWasHeadline = false;
 
         String currentLine = EMPTY_STRING;
+        int tableContextIndex = 0;
 
         int index = -1;
         for (char c : markdownText.toCharArray()) {
@@ -121,8 +123,24 @@ public class MarkdownParser {
             if (isStartOfLine) currentLine = getLine(subText);
 
             // Check for table placeholder
-            if (isStartOfLine && StringUtils.startsWith(currentLine, "[TABLE_PLACEHOLDER_")) {
-                // Skip this line - table is already processed
+            if (isStartOfLine && StringUtils.startsWith(currentLine, "[TABLE_")) {
+                // Extract table index from placeholder
+                String indexStr = StringUtils.substringBetween(currentLine, "[TABLE_", "]");
+                if (indexStr != null) {
+                    try {
+                        int tableIndex = Integer.parseInt(indexStr);
+                        if (tableIndex >= 0 && tableIndex < tableContexts.size()) {
+                            // Create table fragment
+                            MarkdownTextFragment tableFragment = new MarkdownTextFragment(renderer, "[TABLE]");
+                            tableFragment.tableContext = tableContexts.get(tableIndex);
+                            tableFragment.naturalLineBreakAfter = true;
+                            lastBuiltFragment = addFragment(fragments, tableFragment);
+                            skipLine = true;
+                            continue;
+                        }
+                    } catch (NumberFormatException ignored) {}
+                }
+                // If we couldn't parse the table index, skip the line
                 skipLine = true;
                 continue;
             }
@@ -840,7 +858,7 @@ public class MarkdownParser {
     }
     
     @NotNull
-    protected static String preprocessTables(@NotNull MarkdownRenderer renderer, @NotNull String markdownText, @NotNull List<MarkdownTextFragment> fragments) {
+    protected static String preprocessTables(@NotNull MarkdownRenderer renderer, @NotNull String markdownText, @NotNull List<MarkdownTextFragment.TableContext> tableContexts) {
         String[] lines = markdownText.split(NEWLINE);
         StringBuilder result = new StringBuilder();
         
@@ -900,14 +918,11 @@ public class MarkdownParser {
                     i++;
                 }
                 
-                // Create a placeholder fragment for the table
-                MarkdownTextFragment tablePlaceholder = new MarkdownTextFragment(renderer, "[TABLE]");
-                tablePlaceholder.tableContext = tableContext;
-                tablePlaceholder.naturalLineBreakAfter = true;
-                fragments.add(tablePlaceholder);
+                // Store the table context
+                tableContexts.add(tableContext);
                 
                 // Add a placeholder line in the result
-                result.append("[TABLE_PLACEHOLDER_").append(fragments.size() - 1).append("]").append(NEWLINE);
+                result.append("[TABLE_").append(tableContexts.size() - 1).append("]").append(NEWLINE);
                 i--; // Adjust because the loop will increment
             } else {
                 result.append(currentLine);

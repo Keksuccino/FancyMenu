@@ -87,7 +87,7 @@ public class MarkdownTextLine implements Renderable {
             first.startOfRenderLine = true;
             last.autoLineBreakAfter = !last.naturalLineBreakAfter;
             // Don't set autoLineBreakAfter for tables
-            if ((last.tableContext != null) && last.text.equals("[TABLE]")) {
+            if (last.isTable()) {
                 last.autoLineBreakAfter = false;
             }
         }

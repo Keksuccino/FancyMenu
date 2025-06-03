@@ -91,6 +91,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     protected DrawableColor tableAlternateRowColor = DrawableColor.of(new Color(248, 248, 248));
     protected float tableLineThickness = 1.0f;
     protected float tableCellPadding = 8.0f;
+    protected float tableMargin = 4.0f;
     protected boolean tableAlternateRowColors = true;
     protected boolean tableShowHeader = true;
     protected boolean dragging;
@@ -191,6 +192,42 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
             f.autoLineBreakAfter = false;
 
+            // Tables should always be on their own line
+            if (f.isTable()) {
+                // If there's content on the current line, finish it
+                if (!isStartOfLine && !line.fragments.isEmpty()) {
+                    line.prepareLine();
+                    this.lines.add(line);
+                    line = new MarkdownTextLine(this);
+                    totalHeight += currentLineHeight + this.lineSpacing;
+                    currentLineHeight = 0;
+                    currentLineWidth = this.border;
+                }
+                
+                // Add table as its own line
+                line.fragments.add(f);
+                f.startOfRenderLine = true;
+                line.offsetX = this.border;
+                line.offsetY = totalHeight;
+                line.prepareLine();
+                this.lines.add(line);
+                
+                // Update dimensions
+                float tableWidth = f.getRenderWidth() + this.border + this.border;
+                if (totalWidth < tableWidth) {
+                    totalWidth = tableWidth;
+                }
+                float tableHeight = f.getRenderHeight();
+                totalHeight += tableHeight + this.lineSpacing;
+                
+                // Reset for next line
+                line = new MarkdownTextLine(this);
+                currentLineHeight = 0;
+                currentLineWidth = this.border;
+                queueNewLine = true;
+                continue;
+            }
+
             //Handle Auto Line Break
             if (!isStartOfLine && this.isAutoLineBreakingEnabled()) {
                 f.startOfRenderLine = false;
@@ -241,7 +278,8 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
         }
 
-        if (this.lines.isEmpty()) {
+        if (this.lines.isEmpty() || !line.fragments.isEmpty()) {
+            line.prepareLine();
             this.lines.add(line);
         }
 
@@ -617,6 +655,15 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
     public MarkdownRenderer setTableShowHeader(boolean tableShowHeader) {
         this.tableShowHeader = tableShowHeader;
+        return this;
+    }
+
+    public float getTableMargin() {
+        return this.tableMargin;
+    }
+
+    public MarkdownRenderer setTableMargin(float tableMargin) {
+        this.tableMargin = tableMargin;
         return this;
     }
 
