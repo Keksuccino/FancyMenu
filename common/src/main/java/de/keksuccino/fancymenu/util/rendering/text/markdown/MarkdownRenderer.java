@@ -84,11 +84,13 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     @NotNull
     protected Font font = Minecraft.getInstance().font;
     @NotNull
-    protected DrawableColor tableLineColor = DrawableColor.of(new Color(200, 200, 200));
+    protected DrawableColor tableLineColor = DrawableColor.of(new Color(120, 120, 120));
     @NotNull
-    protected DrawableColor tableHeaderBackgroundColor = DrawableColor.of(new Color(240, 240, 240));
+    protected DrawableColor tableHeaderBackgroundColor = DrawableColor.of(new Color(50, 50, 50));
     @NotNull
-    protected DrawableColor tableAlternateRowColor = DrawableColor.of(new Color(248, 248, 248));
+    protected DrawableColor tableRowBackgroundColor = DrawableColor.of(new Color(40, 40, 40));
+    @NotNull
+    protected DrawableColor tableAlternateRowColor = DrawableColor.of(new Color(60, 60, 60));
     protected float tableLineThickness = 1.0f;
     protected float tableCellPadding = 8.0f;
     protected float tableMargin = 4.0f;
@@ -608,6 +610,16 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
     public MarkdownRenderer setTableHeaderBackgroundColor(@NotNull DrawableColor tableHeaderBackgroundColor) {
         this.tableHeaderBackgroundColor = tableHeaderBackgroundColor;
+        return this;
+    }
+
+    @NotNull
+    public DrawableColor getTableRowBackgroundColor() {
+        return this.tableRowBackgroundColor;
+    }
+
+    public MarkdownRenderer setTableRowBackgroundColor(@NotNull DrawableColor tableRowBackgroundColor) {
+        this.tableRowBackgroundColor = tableRowBackgroundColor;
         return this;
     }
 

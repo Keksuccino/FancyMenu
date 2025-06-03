@@ -129,6 +129,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         RenderSystem.enableBlend();
         
         // Render rows
+        int dataRowIndex = 0; // Track data rows separately for alternating colors
         for (int rowIndex = 0; rowIndex < this.tableContext.rows.size(); rowIndex++) {
             TableRow row = this.tableContext.rows.get(rowIndex);
             float rowHeight = this.tableContext.getRowHeight(row);
@@ -139,10 +140,18 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                 // Header background
                 RenderingUtils.fillF(graphics, tableX, currentY, tableX + actualTableWidth, 
                     currentY + rowHeight, this.parent.tableHeaderBackgroundColor.getColorIntWithAlpha(this.parent.textOpacity));
-            } else if (!row.isHeader && this.parent.tableAlternateRowColors && rowIndex % 2 == 0) {
-                // Alternate row background
-                RenderingUtils.fillF(graphics, tableX, currentY, tableX + actualTableWidth, 
-                    currentY + rowHeight, this.parent.tableAlternateRowColor.getColorIntWithAlpha(this.parent.textOpacity));
+            } else if (!row.isHeader) {
+                // Regular row background - alternate between two colors
+                if (this.parent.tableAlternateRowColors && dataRowIndex % 2 == 1) {
+                    // Alternate rows
+                    RenderingUtils.fillF(graphics, tableX, currentY, tableX + actualTableWidth, 
+                        currentY + rowHeight, this.parent.tableAlternateRowColor.getColorIntWithAlpha(this.parent.textOpacity));
+                } else {
+                    // Base rows
+                    RenderingUtils.fillF(graphics, tableX, currentY, tableX + actualTableWidth, 
+                        currentY + rowHeight, this.parent.tableRowBackgroundColor.getColorIntWithAlpha(this.parent.textOpacity));
+                }
+                dataRowIndex++;
             }
             
             // Render cells
