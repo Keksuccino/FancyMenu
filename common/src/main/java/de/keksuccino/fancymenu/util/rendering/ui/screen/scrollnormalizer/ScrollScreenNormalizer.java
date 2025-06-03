@@ -1,12 +1,17 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer;
 
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.options.OptionsSubScreen;
+import net.minecraft.client.gui.screens.packs.PackSelectionScreen;
+import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import net.minecraft.network.chat.ComponentContents;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.TranslatableContents;
@@ -21,29 +26,32 @@ import java.util.Map;
 public class ScrollScreenNormalizer {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final List<ScrollableScreenEvaluator> SCROLLABLE_SCREENS = new ArrayList<>();
+    private static final List<ScrollableScreenBlacklistRule> SCROLLABLE_SCREEN_BLACKLIST = new ArrayList<>();
 
     static {
 
-        addScrollableScreenEvaluator(screen -> screen instanceof OptionsSubScreen);
+        addScrollableScreenBlacklistRule(screen -> (screen instanceof SelectWorldScreen));
+        addScrollableScreenBlacklistRule(screen -> (screen instanceof JoinMultiplayerScreen));
+        addScrollableScreenBlacklistRule(screen -> (screen instanceof PackSelectionScreen));
+        addScrollableScreenBlacklistRule(screen -> (screen instanceof CustomGuiBaseScreen));
 
     }
 
     @NotNull
     public static Screen normalizeScrollableScreen(@NotNull Screen screen) {
 
-        List<AbstractWidget> extracted = extractAllWidgetsFromScrollListsOfScreen(screen);
+        if (isBlacklisted(screen)) return screen;
+        if (!ScrollScreenNormalizerHandler.shouldNormalize(screen)) return screen;
+        if (!ScreenCustomization.isCustomizationEnabledForScreen(screen)) return screen;
 
+        List<AbstractWidget> extracted = extractAllWidgetsFromScrollListsOfScreen(screen);
         IMixinScreen accessor = ((IMixinScreen)screen);
 
         extractAllScrollListsOfScreen(screen).forEach(scroll -> {
-
             scroll.updateSizeAndPosition(1000000, 1000000, 0);
-
             accessor.getChildrenFancyMenu().remove(scroll);
             accessor.getNarratablesFancyMenu().remove(scroll);
             accessor.getRenderablesFancyMenu().remove(scroll);
-
         });
         extracted.forEach(widget -> {
             accessor.getChildrenFancyMenu().remove(widget);
@@ -105,12 +113,9 @@ public class ScrollScreenNormalizer {
         return builder;
     }
 
-    public static boolean isScrollableScreen(@NotNull Screen screen) {
-        for (ScrollableScreenEvaluator e : SCROLLABLE_SCREENS) {
-            if (e.isScrollable(screen)) return true;
-        }
-        for (Object o : screen.children()) {
-            if (o instanceof AbstractSelectionList<?>) return true;
+    public static boolean isBlacklisted(@NotNull Screen screen) {
+        for (ScrollableScreenBlacklistRule e : SCROLLABLE_SCREEN_BLACKLIST) {
+            if (e.isBlacklisted(screen)) return true;
         }
         return false;
     }
@@ -150,13 +155,13 @@ public class ScrollScreenNormalizer {
         });
     }
 
-    public static void addScrollableScreenEvaluator(@NotNull ScrollableScreenEvaluator evaluator) {
-        SCROLLABLE_SCREENS.add(evaluator);
+    public static void addScrollableScreenBlacklistRule(@NotNull ScrollScreenNormalizer.ScrollableScreenBlacklistRule rule) {
+        SCROLLABLE_SCREEN_BLACKLIST.add(rule);
     }
 
     @FunctionalInterface
-    public interface ScrollableScreenEvaluator {
-        boolean isScrollable(@NotNull Screen screen);
+    public interface ScrollableScreenBlacklistRule {
+        boolean isBlacklisted(@NotNull Screen screen);
     }
 
 }
