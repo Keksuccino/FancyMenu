@@ -1727,5 +1727,19 @@
   "fancymenu.placeholders.file_text": "File Text",
   "fancymenu.placeholders.file_text.desc": "Reads text from a local file or remote URL and returns it.\nSupports reading entire content or only the last few lines.\nContent is cached to improve performance:\n- Local files: Re-read every 1 second\n- URLs: Re-read every 10 seconds\n\nRequired values:\n- path_or_url: The file path or URL to read from\n  Local files: Use relative paths (e.g. 'config/myfile.txt')\n  Remote files: Use HTTP/HTTPS URLs (e.g. 'https://example.com/data.txt')\n\nOptional values:\n- mode: How to read the content (default: 'all')\n  Options: 'all' (entire content), 'last' (last X lines)\n- separator: Text between lines when joining (default: '\\n')\n  Common options: '\\n' (newline), ' | ', ', ', ' '\n- last_lines: Number of lines to return in 'last' mode (default: 1)\n  Only used when mode is 'last'\n\nNote: When mode is 'last' with last_lines set to 1,\nthe single line is returned without any separator.\n\nReturns empty string if source is not cached yet, doesn't exist,\ncannot be read, or if there's no internet connection for URLs.",
   "fancymenu.scroll_screen_normalizer": "Expose Scroll Area Content Of Current Screen: %s",
-  "fancymenu.scroll_screen_normalizer.desc": "This will try to extract buttons and sliders from scroll areas\nof the current screen, if it contains scroll areas.\n\nThis is useful to make, for example, options screens customizable."
+  "fancymenu.scroll_screen_normalizer.desc": "This will try to extract buttons and sliders from scroll areas\nof the current screen, if it contains scroll areas.\n\nThis is useful to make, for example, options screens customizable.",
+  "fancymenu.customization.items.text.markdown.tables": "Tables",
+  "fancymenu.customization.items.text.markdown.tables.desc": "Customize the appearance of Markdown tables.",
+  "fancymenu.customization.items.text.markdown.tables.show_header": "Show Header: %s",
+  "fancymenu.customization.items.text.markdown.tables.alternate_row_colors": "Alternate Row Colors: %s",
+  "fancymenu.customization.items.text.markdown.tables.line_color": "Table Line Color",
+  "fancymenu.customization.items.text.markdown.tables.header_background_color": "Header Background Color",
+  "fancymenu.customization.items.text.markdown.tables.row_background_color": "Row Background Color",
+  "fancymenu.customization.items.text.markdown.tables.alternate_row_color": "Alternate Row Color",
+  "fancymenu.customization.items.text.markdown.tables.alternate_row_color.desc": "The color used for every second row when 'Alternate Row Colors' is enabled.",
+  "fancymenu.customization.items.text.markdown.tables.line_thickness": "Line Thickness",
+  "fancymenu.customization.items.text.markdown.tables.cell_padding": "Cell Padding",
+  "fancymenu.customization.items.text.markdown.tables.cell_padding.desc": "The padding inside table cells.\nHigher values create more space between content and cell borders.",
+  "fancymenu.customization.items.text.markdown.tables.margin": "Table Margin",
+  "fancymenu.customization.items.text.markdown.tables.margin.desc": "The margin around tables.\nAdds space above and below each table."
 }
