@@ -156,31 +156,69 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                 float textX = currentX + this.parent.tableCellPadding;
                 float textY = currentY + this.parent.tableCellPadding;
                 
-                // Render cell content
-                for (MarkdownTextFragment fragment : cell.fragments) {
-                    // Calculate alignment offset
-                    float totalTextWidth = 0;
-                    for (MarkdownTextFragment f : cell.fragments) {
-                        totalTextWidth += f.getTextRenderWidth();
-                    }
+                // Calculate alignment offset once for all fragments
+                float totalTextWidth = 0;
+                for (MarkdownTextFragment f : cell.fragments) {
+                    totalTextWidth += f.getTextRenderWidth();
+                }
+                
+                float alignmentOffset = 0;
+                if (cell.alignment == TableCell.TableCellAlignment.CENTER) {
+                    alignmentOffset = (cellWidth - this.parent.tableCellPadding * 2 - totalTextWidth) / 2;
+                } else if (cell.alignment == TableCell.TableCellAlignment.RIGHT) {
+                    alignmentOffset = cellWidth - this.parent.tableCellPadding * 2 - totalTextWidth;
+                }
+                
+                // First pass: position fragments and render code block backgrounds
+                float fragmentX = textX + alignmentOffset;
+                float codeBlockStartX = -1;
+                MarkdownTextFragment.CodeBlockContext currentCodeBlock = null;
+                
+                for (int fragIndex = 0; fragIndex < cell.fragments.size(); fragIndex++) {
+                    MarkdownTextFragment fragment = cell.fragments.get(fragIndex);
                     
-                    float alignmentOffset = 0;
-                    if (cell.alignment == TableCell.TableCellAlignment.CENTER) {
-                        alignmentOffset = (cellWidth - this.parent.tableCellPadding * 2 - totalTextWidth) / 2;
-                    } else if (cell.alignment == TableCell.TableCellAlignment.RIGHT) {
-                        alignmentOffset = cellWidth - this.parent.tableCellPadding * 2 - totalTextWidth;
-                    }
-                    
-                    fragment.x = textX + alignmentOffset;
+                    fragment.x = fragmentX;
                     fragment.y = textY;
+                    
+                    // Track and render code block backgrounds
+                    if (fragment.codeBlockContext != null && fragment.codeBlockContext.singleLine) {
+                        if (currentCodeBlock == null || currentCodeBlock != fragment.codeBlockContext) {
+                            // Start of a new code block
+                            currentCodeBlock = fragment.codeBlockContext;
+                            codeBlockStartX = fragment.x - 1;
+                        }
+                        
+                        // Check if this is the last fragment of the code block
+                        boolean isLastFragment = (fragIndex == cell.fragments.size() - 1) || 
+                                                (fragIndex + 1 < cell.fragments.size() && 
+                                                 cell.fragments.get(fragIndex + 1).codeBlockContext != currentCodeBlock);
+                        
+                        if (isLastFragment) {
+                            // Render the code block background
+                            float endX = fragment.x + fragment.getRenderWidth() + 1;
+                            if (fragment.text.endsWith(" ")) {
+                                endX -= (this.parent.font.width(" ") * fragment.getScale());
+                            }
+                            renderCodeBlockBackground(graphics, codeBlockStartX, fragment.y - 2, endX, 
+                                fragment.y + fragment.getTextRenderHeight(), 
+                                this.parent.codeBlockSingleLineColor.getColorIntWithAlpha(this.parent.textOpacity));
+                            currentCodeBlock = null;
+                        }
+                    } else {
+                        currentCodeBlock = null;
+                    }
+                    
+                    fragmentX += fragment.getTextRenderWidth();
+                }
+                
+                // Second pass: render the fragments
+                for (MarkdownTextFragment fragment : cell.fragments) {
                     fragment.render(graphics, mouseX, mouseY, partial); // Pass actual mouse coords for hover/click detection
                     
                     // Check if any hyperlink in the table is hovered
                     if (fragment.hyperlink != null && fragment.hovered) {
                         CursorHandler.setClientTickCursor(CursorHandler.CURSOR_POINTING_HAND);
                     }
-                    
-                    textX += fragment.getTextRenderWidth();
                 }
                 
                 currentX += cellWidth;
@@ -222,7 +260,19 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     }
 
     protected void renderCodeBlock(GuiGraphics graphics) {
-        if ((this.codeBlockContext != null) && (this.parentLine != null)) {
+        if (this.codeBlockContext == null) return;
+        
+        // Check if this fragment is inside a table cell (has tableContext but is not the table itself)
+        boolean isInTableCell = this.tableContext != null && !this.isTable();
+        
+        // Skip code block background rendering for fragments inside table cells
+        // (handled in renderTable method)
+        if (isInTableCell) {
+            return;
+        }
+        
+        // Normal code block rendering (outside tables)
+        if (this.parentLine != null) {
             MarkdownTextFragment start = this.codeBlockContext.getBlockStart();
             MarkdownTextFragment end = this.codeBlockContext.getBlockEnd();
             if (this.codeBlockContext.singleLine) {
