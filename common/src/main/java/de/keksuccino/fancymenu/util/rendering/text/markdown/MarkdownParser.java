@@ -397,7 +397,9 @@ public class MarkdownParser {
                         String hyperlink = getHyperlinkFromLine(subText);
                         if (hyperlink != null) {
                             if (isStartOfLine || !builder.text.isEmpty()) {
-                                lastBuiltFragment = addFragment(fragments, builder.build(false, false));
+                                // Check if current text ends with space to set endOfWord properly
+                                boolean endsWithSpace = builder.text.toString().endsWith(" ");
+                                lastBuiltFragment = addFragment(fragments, builder.build(false, endsWithSpace));
                             }
                             builder.hyperlink = new Hyperlink();
                             builder.hyperlink.link = hyperlink;
@@ -407,8 +409,15 @@ public class MarkdownParser {
                 }
                 if ((c == CLOSE_SQUARE_BRACKETS_CHAR) && (builder.hyperlink != null)) {
                     if (StringUtils.startsWith(subText, FORMATTING_CODE_HYPERLINK_INNER_PREFIX)) {
-                        lastBuiltFragment = addFragment(fragments, builder.build(false, false));
-                        charsToSkip = 2 + builder.hyperlink.link.length();
+                        // Check if there's whitespace after the closing parenthesis to determine endOfWord
+                        int skipLength = 2 + builder.hyperlink.link.length();
+                        boolean hasSpaceAfter = false;
+                        if (index + skipLength < markdownText.length()) {
+                            char afterChar = markdownText.charAt(index + skipLength);
+                            hasSpaceAfter = (afterChar == SPACE_CHAR) || (afterChar == NEWLINE_CHAR);
+                        }
+                        lastBuiltFragment = addFragment(fragments, builder.build(false, hasSpaceAfter));
+                        charsToSkip = skipLength;
                         builder.hyperlink = null;
                         continue;
                     }
