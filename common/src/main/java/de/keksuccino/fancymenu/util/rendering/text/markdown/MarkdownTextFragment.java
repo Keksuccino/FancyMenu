@@ -118,8 +118,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         // Calculate column widths
         this.tableContext.calculateColumnWidths(this.parent);
         
-        // Tables should start at the beginning of the line, not at the fragment's x position
-        float tableX = this.parent.x + this.parent.border;
+        // Use the fragment's x position which already includes alignment offset
+        float tableX = this.x;
         float tableY = this.y + this.parent.tableMargin; // Add margin before table
         float currentY = tableY;
         
@@ -392,9 +392,10 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
     public float getRenderWidth() {
 
-        // Handle table width - tables should use the full width of the markdown area
+        // Handle table width - return actual table width for proper alignment
         if (this.isTable()) {
-            return this.parent.getRealWidth() - this.parent.border - this.parent.border;
+            this.tableContext.calculateColumnWidths(this.parent);
+            return this.tableContext.totalWidth;
         }
 
         if (this.imageSupplier != null) {
@@ -516,7 +517,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if (this.isTable()) {
             // For tables, use the actual table rendering area
             this.tableContext.calculateColumnWidths(this.parent);
-            float tableX = this.parent.x + this.parent.border;
+            float tableX = this.x;
             float tableY = this.y + this.parent.tableMargin;
             float tableWidth = this.tableContext.totalWidth;
             float tableHeight = this.getRenderHeight() - (this.parent.tableMargin * 2); // Subtract the margin

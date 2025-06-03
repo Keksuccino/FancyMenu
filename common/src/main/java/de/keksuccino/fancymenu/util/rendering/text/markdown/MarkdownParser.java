@@ -134,6 +134,8 @@ public class MarkdownParser {
                             MarkdownTextFragment tableFragment = new MarkdownTextFragment(renderer, "[TABLE]");
                             tableFragment.tableContext = tableContexts.get(tableIndex);
                             tableFragment.naturalLineBreakAfter = true;
+                            // Inherit current alignment from builder
+                            tableFragment.alignment = builder.alignment;
                             lastBuiltFragment = addFragment(fragments, tableFragment);
                             skipLine = true;
                             continue;
