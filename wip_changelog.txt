@@ -66,6 +66,8 @@ CHANGELOG | FANCYMENU v3.6.0 [ W I P !! Not public yet !! ]
 - Fixed game crashing when setting nine-slicing borders of buttons/sliders to half the texture's size or larger (#1134)
 - Fixed game crashing when executing the "Join Server" action via a "Ticker" element (another attempt at fixing this) (#1157)
 - Fixed open/close screen audio not working when opening/closing the screen for the first time (#1148)
+- Fixed elements snapping to grid when multiple elements are selected in the editor (#1158)
+- Fixed preview element in keyframe editor screen (of the Element Animator) snapping to grid like a normal editor element instead of ignoring the grid (#1172)
 - Disabled customization for Cobblemon screens, because they were causing problems (#1116)
 - Disabled customization for "Applied Energistics 2" & "Applied Energistics 2 Wireless Terminals" screens as a potential fix for crashes some users experienced (#1092) 
 - Disabled customization for "Xareo's World Map" and "Xaero's Mini Map" to fix crashes related to them (#1063)
