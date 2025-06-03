@@ -259,7 +259,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         // Vertical lines
         float x = tableX;
         for (int i = 0; i <= this.tableContext.columnWidths.size(); i++) {
-            RenderingUtils.fillF(graphics, x, tableY, x + lineThickness, currentY, lineColor);
+            RenderingUtils.fillF(graphics, x, tableY, x + lineThickness, currentY + lineThickness, lineColor);
             if (i < this.tableContext.columnWidths.size()) {
                 x += this.tableContext.columnWidths.get(i);
             }
