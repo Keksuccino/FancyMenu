@@ -54,7 +54,7 @@ public class CheckboxEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("checkbox_separator_1");
 
-        this.addColorSettings();
+        this.addTextureSettings();
 
         this.rightClickMenu.addSeparatorEntry("checkbox_separator_3").setStackable(true);
 
@@ -105,44 +105,43 @@ public class CheckboxEditorElement extends AbstractEditorElement {
         
     }
 
-    protected void addColorSettings() {
+    protected void addTextureSettings() {
         
-        ContextMenu colorMenu = new ContextMenu();
-        this.rightClickMenu.addSubMenuEntry("checkbox_colors", Component.translatable("fancymenu.elements.checkbox.colors"), colorMenu)
+        ContextMenu texturesMenu = new ContextMenu();
+        this.rightClickMenu.addSubMenuEntry("checkbox_textures", Component.translatable("fancymenu.elements.checkbox.textures"), texturesMenu)
                 .setIcon(ContextMenu.IconFactory.getIcon("image"))
                 .setStackable(true);
 
-        this.addStringInputContextMenuEntryTo(colorMenu, "border_color",
+        this.addImageResourceChooserContextMenuEntryTo(texturesMenu, "background_texture_normal",
                         CheckboxEditorElement.class,
-                        consumes -> (consumes.getElement().borderColor != null) ? consumes.getElement().borderColor.getHex() : null,
-                        (element1, s) -> {
-                            if (s != null) {
-                                element1.getElement().borderColor = DrawableColor.of(s);
-                            } else {
-                                element1.getElement().borderColor = null;
-                            }
-                        },
-                        null, false, false, Component.translatable("fancymenu.elements.checkbox.border_color"),
-                        true, null, TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
+                        null,
+                        consumes -> consumes.getElement().backgroundTextureNormal,
+                        (checkboxEditorElement, iTextureResourceSupplier) -> checkboxEditorElement.getElement().backgroundTextureNormal = iTextureResourceSupplier,
+                        Component.translatable("fancymenu.elements.checkbox.background_texture_normal"), true, null, true, true, true)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.border_color.desc")));
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.background_texture_normal.desc")));
 
-        this.addStringInputContextMenuEntryTo(colorMenu, "background_color",
+        this.addImageResourceChooserContextMenuEntryTo(texturesMenu, "background_texture_hover",
                         CheckboxEditorElement.class,
-                        consumes -> (consumes.getElement().backgroundColor != null) ? consumes.getElement().backgroundColor.getHex() : null,
-                        (element1, s) -> {
-                            if (s != null) {
-                                element1.getElement().backgroundColor = DrawableColor.of(s);
-                            } else {
-                                element1.getElement().backgroundColor = null;
-                            }
-                        },
-                        null, false, false, Component.translatable("fancymenu.elements.checkbox.background_color"),
-                        true, null, TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
+                        null,
+                        consumes -> consumes.getElement().backgroundTextureHover,
+                        (checkboxEditorElement, iTextureResourceSupplier) -> checkboxEditorElement.getElement().backgroundTextureHover = iTextureResourceSupplier,
+                        Component.translatable("fancymenu.elements.checkbox.background_texture_hover"), true, null, true, true, true)
                 .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.background_color.desc")));
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.background_texture_hover.desc")));
 
-        this.addImageResourceChooserContextMenuEntryTo(colorMenu, "checkmark_texture",
+        this.addImageResourceChooserContextMenuEntryTo(texturesMenu, "background_texture_inactive",
+                        CheckboxEditorElement.class,
+                        null,
+                        consumes -> consumes.getElement().backgroundTextureInactive,
+                        (checkboxEditorElement, iTextureResourceSupplier) -> checkboxEditorElement.getElement().backgroundTextureInactive = iTextureResourceSupplier,
+                        Component.translatable("fancymenu.elements.checkbox.background_texture_inactive"), true, null, true, true, true)
+                .setStackable(true)
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.background_texture_inactive.desc")));
+
+        texturesMenu.addSeparatorEntry("separator_after_background_textures");
+
+        this.addImageResourceChooserContextMenuEntryTo(texturesMenu, "checkmark_texture",
                         CheckboxEditorElement.class,
                         null,
                         consumes -> consumes.getElement().checkmarkTexture,

@@ -6,7 +6,6 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ExecutableElement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
@@ -26,19 +25,6 @@ import java.util.List;
 
 public class CheckboxElement extends AbstractElement implements ExecutableElement {
 
-
-
-    //TODO hover & inactive colors/textures adden
-    //TODO hover & inactive colors/textures adden
-    //TODO hover & inactive colors/textures adden
-    //TODO hover & inactive colors/textures adden
-    //TODO hover & inactive colors/textures adden
-    //TODO hover & inactive colors/textures adden 
-    //TODO hover & inactive colors/textures adden
-    //TODO hover & inactive colors/textures adden
-
-
-
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Nullable
@@ -46,11 +32,13 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
     @Nullable
     public String tooltip;
     @Nullable
-    public DrawableColor borderColor = null;
-    @Nullable
-    public DrawableColor backgroundColor = null;
-    @Nullable
     public ResourceSupplier<ITexture> checkmarkTexture = null;
+    @Nullable
+    public ResourceSupplier<ITexture> backgroundTextureNormal = null;
+    @Nullable
+    public ResourceSupplier<ITexture> backgroundTextureHover = null;
+    @Nullable
+    public ResourceSupplier<ITexture> backgroundTextureInactive = null;
     public ResourceSupplier<IAudio> hoverSound;
     public ResourceSupplier<IAudio> clickSound;
     public boolean navigatable = true;
@@ -114,7 +102,7 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
         this.updateWidgetTooltip();
         this.updateWidgetHoverSound();
         this.updateWidgetClickSound();
-        this.updateWidgetColors();
+        this.updateWidgetTextures();
         this.updateWidgetSize();
         this.updateWidgetPosition();
         this.updateWidgetNavigatable();
@@ -174,11 +162,9 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
         }
     }
 
-    protected void updateWidgetColors() {
+    protected void updateWidgetTextures() {
+
         if (this.checkbox == null) return;
-        
-        this.checkbox.setCustomCheckboxBorderColor(this.borderColor);
-        this.checkbox.setCustomCheckboxBackgroundColor(this.backgroundColor);
         
         if (this.checkmarkTexture != null) {
             ITexture texture = this.checkmarkTexture.get();
@@ -188,6 +174,34 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
         } else {
             this.checkbox.setCustomCheckboxCheckmarkTexture(null);
         }
+
+        if (this.backgroundTextureNormal != null) {
+            ITexture texture = this.backgroundTextureNormal.get();
+            if (texture != null) {
+                this.checkbox.setCustomBackgroundTextureNormal(texture);
+            }
+        } else {
+            this.checkbox.setCustomBackgroundTextureNormal(null);
+        }
+
+        if (this.backgroundTextureHover != null) {
+            ITexture texture = this.backgroundTextureHover.get();
+            if (texture != null) {
+                this.checkbox.setCustomBackgroundTextureHover(texture);
+            }
+        } else {
+            this.checkbox.setCustomBackgroundTextureHover(null);
+        }
+
+        if (this.backgroundTextureInactive != null) {
+            ITexture texture = this.backgroundTextureInactive.get();
+            if (texture != null) {
+                this.checkbox.setCustomBackgroundTextureInactive(texture);
+            }
+        } else {
+            this.checkbox.setCustomBackgroundTextureInactive(null);
+        }
+
     }
 
     @Override

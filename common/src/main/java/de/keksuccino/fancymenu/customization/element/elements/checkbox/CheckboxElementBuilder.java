@@ -45,17 +45,10 @@ public class CheckboxElementBuilder extends ElementBuilder<CheckboxElement, Chec
         element.clickSound = deserializeAudioResourceSupplier(serialized.getValue("clicksound"));
         
         element.tooltip = serialized.getValue("description");
-        
-        String borderColorString = serialized.getValue("border_color");
-        if (borderColorString != null) {
-            element.borderColor = DrawableColor.of(borderColorString);
-        }
-        
-        String backgroundColorString = serialized.getValue("background_color");
-        if (backgroundColorString != null) {
-            element.backgroundColor = DrawableColor.of(backgroundColorString);
-        }
-        
+
+        element.backgroundTextureNormal = deserializeImageResourceSupplier(serialized.getValue("background_texture_normal"));
+        element.backgroundTextureHover = deserializeImageResourceSupplier(serialized.getValue("background_texture_hover"));
+        element.backgroundTextureInactive = deserializeImageResourceSupplier(serialized.getValue("background_texture_inactive"));
         element.checkmarkTexture = deserializeImageResourceSupplier(serialized.getValue("checkmark_texture"));
         
         element.navigatable = deserializeBoolean(element.navigatable, serialized.getValue("navigatable"));
@@ -98,15 +91,16 @@ public class CheckboxElementBuilder extends ElementBuilder<CheckboxElement, Chec
         if (element.tooltip != null) {
             serializeTo.putProperty("description", element.tooltip);
         }
-        
-        if (element.borderColor != null) {
-            serializeTo.putProperty("border_color", element.borderColor.getHex());
+
+        if (element.backgroundTextureNormal != null) {
+            serializeTo.putProperty("background_texture_normal", element.backgroundTextureNormal.getSourceWithPrefix());
         }
-        
-        if (element.backgroundColor != null) {
-            serializeTo.putProperty("background_color", element.backgroundColor.getHex());
+        if (element.backgroundTextureHover != null) {
+            serializeTo.putProperty("background_texture_hover", element.backgroundTextureHover.getSourceWithPrefix());
         }
-        
+        if (element.backgroundTextureInactive != null) {
+            serializeTo.putProperty("background_texture_inactive", element.backgroundTextureInactive.getSourceWithPrefix());
+        }
         if (element.checkmarkTexture != null) {
             serializeTo.putProperty("checkmark_texture", element.checkmarkTexture.getSourceWithPrefix());
         }

@@ -1,19 +1,17 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.button;
 
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.awt.*;
-import java.util.Objects;
 
 public class CheckboxButton extends ExtendedButton {
 
-    public static final DrawableColor CHECKBOX_BORDER_DEFAULT = DrawableColor.of(new Color(38, 38, 38,255));
-    public static final DrawableColor CHECKBOX_BACKGROUND_DEFAULT = DrawableColor.of(new Color(56, 56, 56,255));
+    public static final ResourceLocation CHECKBOX_BACKGROUND_TEXTURE_NORMAL_DEFAULT = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/widgets/checkbox/background_normal.png");
+    public static final ResourceLocation CHECKBOX_BACKGROUND_TEXTURE_HOVER_DEFAULT = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/widgets/checkbox/background_hover.png");
+    public static final ResourceLocation CHECKBOX_BACKGROUND_TEXTURE_INACTIVE_DEFAULT = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/widgets/checkbox/background_inactive.png");
     public static final ResourceLocation CHECKBOX_CHECKMARK_TEXTURE_DEFAULT = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/widgets/checkbox/checkmark.png");
 
     protected boolean checkboxState = false;
@@ -22,9 +20,11 @@ public class CheckboxButton extends ExtendedButton {
     @Nullable
     protected ITexture customCheckmarkTexture = null;
     @Nullable
-    protected DrawableColor customBorderColor = null;
+    protected ITexture customBackgroundTextureNormal = null;
     @Nullable
-    protected DrawableColor customBackgroundColor = null;
+    protected ITexture customBackgroundTextureHover = null;
+    @Nullable
+    protected ITexture customBackgroundTextureInactive = null;
 
     public CheckboxButton(int x, int y, int width, int height, @NotNull StateChangedAction onStateChanged) {
         super(x, y, width, height, Component.empty(), button -> {});
@@ -38,24 +38,24 @@ public class CheckboxButton extends ExtendedButton {
     @Override
     public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        this.setBackgroundColor(this.getCheckboxBackgroundColor(), this.getCheckboxBackgroundColor(), this.getCheckboxBackgroundColor(), this.getCheckboxBorderColor(), this.getCheckboxBorderColor(), this.getCheckboxBorderColor());
-
         super.renderWidget(graphics, mouseX, mouseY, partial);
 
-        if (this.checkboxState) {
+        if (this.checkboxState && this.isActive()) {
             graphics.blit(this.getCheckboxCheckmarkTexture(), this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
         }
 
     }
 
-    @NotNull
-    public DrawableColor getCheckboxBorderColor() {
-        return Objects.requireNonNullElse(this.customBorderColor, CHECKBOX_BORDER_DEFAULT);
+    @Override
+    protected void renderBackground(@NotNull GuiGraphics graphics) {
+
+        graphics.blit(this.getCheckboxBackground(), this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+
     }
 
-    @NotNull
-    public DrawableColor getCheckboxBackgroundColor() {
-        return Objects.requireNonNullElse(this.customBackgroundColor, CHECKBOX_BACKGROUND_DEFAULT);
+    @Override
+    protected void renderLabelText(@NotNull GuiGraphics graphics) {
+        // do nothing
     }
 
     @NotNull
@@ -71,12 +71,54 @@ public class CheckboxButton extends ExtendedButton {
         this.customCheckmarkTexture = customCheckmarkTexture;
     }
 
-    public void setCustomCheckboxBorderColor(@Nullable DrawableColor customBorderColor) {
-        this.customBorderColor = customBorderColor;
+    public void setCustomBackgroundTextureNormal(@Nullable ITexture customBackgroundTextureNormal) {
+        this.customBackgroundTextureNormal = customBackgroundTextureNormal;
     }
 
-    public void setCustomCheckboxBackgroundColor(@Nullable DrawableColor customBackgroundColor) {
-        this.customBackgroundColor = customBackgroundColor;
+    public void setCustomBackgroundTextureHover(@Nullable ITexture customBackgroundTextureHover) {
+        this.customBackgroundTextureHover = customBackgroundTextureHover;
+    }
+
+    public void setCustomBackgroundTextureInactive(@Nullable ITexture customBackgroundTextureInactive) {
+        this.customBackgroundTextureInactive = customBackgroundTextureInactive;
+    }
+
+    @NotNull
+    public ResourceLocation getCheckboxBackground() {
+        if (!this.isActive()) {
+            return this.getCheckboxBackgroundTextureInactive();
+        }
+        if (this.isHoveredOrFocused()) {
+            return this.getCheckboxBackgroundTextureHover();
+        }
+        return this.getCheckboxBackgroundTextureNormal();
+    }
+
+    @NotNull
+    public ResourceLocation getCheckboxBackgroundTextureNormal() {
+        if (this.customBackgroundTextureNormal != null) {
+            ResourceLocation loc = this.customBackgroundTextureNormal.getResourceLocation();
+            if (loc != null) return loc;
+        }
+        return CHECKBOX_BACKGROUND_TEXTURE_NORMAL_DEFAULT;
+    }
+
+    @NotNull
+    public ResourceLocation getCheckboxBackgroundTextureHover() {
+        if (this.customBackgroundTextureHover != null) {
+            ResourceLocation loc = this.customBackgroundTextureHover.getResourceLocation();
+            if (loc != null) return loc;
+        }
+        return CHECKBOX_BACKGROUND_TEXTURE_HOVER_DEFAULT;
+    }
+
+    @NotNull
+    public ResourceLocation getCheckboxBackgroundTextureInactive() {
+        if (this.customBackgroundTextureInactive != null) {
+            ResourceLocation loc = this.customBackgroundTextureInactive.getResourceLocation();
+            if (loc != null) return loc;
+        }
+        return CHECKBOX_BACKGROUND_TEXTURE_INACTIVE_DEFAULT;
     }
 
     public boolean getCheckboxState() {
