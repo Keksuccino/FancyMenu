@@ -52,24 +52,14 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
      * Call this after setting a new block instance.
      */
     public void prepareExecutableBlock() {
-        this.actionExecutor.addValuePlaceholder("value", () -> {
-            if (this.checkbox != null) {
-                return this.checkbox.getCheckboxState() ? "true" : "false";
-            }
-            return "false";
-        });
+        this.actionExecutor.addValuePlaceholder("value", () -> "" + this.persistentState);
     }
 
     /**
      * Call this after setting a new container instance.
      */
     public void prepareLoadingRequirementContainer() {
-        this.loadingRequirementContainer.addValuePlaceholder("value", () -> {
-            if (this.checkbox != null) {
-                return this.checkbox.getCheckboxState() ? "true" : "false";
-            }
-            return "false";
-        });
+        this.loadingRequirementContainer.addValuePlaceholder("value", () -> "" + this.persistentState);
     }
 
     @Override
