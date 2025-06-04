@@ -1,7 +1,7 @@
 
 CHANGELOG | FANCYMENU v3.6.0 [ W I P !! Not public yet !! ]
 
-- Added "Checkbox" element as an easy way to toggle settings
+- Added "Checkbox" element as an easy way to toggle settings (#940)
   - Executes its action script on click
   - Similar to sliders, the current checkbox state can be accessed with $$value in the action script and loading requirements
 - Added "Expose Scroll Area Content Of Current Screen" feature to extract buttons and sliders from scroll areas, so FancyMenu can see and customize them
