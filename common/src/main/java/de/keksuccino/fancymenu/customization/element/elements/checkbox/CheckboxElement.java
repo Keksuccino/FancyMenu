@@ -18,17 +18,33 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public class CheckboxElement extends AbstractElement implements ExecutableElement {
 
+
+
+    //TODO hover & inactive colors/textures adden
+    //TODO hover & inactive colors/textures adden
+    //TODO hover & inactive colors/textures adden
+    //TODO hover & inactive colors/textures adden
+    //TODO hover & inactive colors/textures adden
+    //TODO hover & inactive colors/textures adden 
+    //TODO hover & inactive colors/textures adden
+    //TODO hover & inactive colors/textures adden
+
+
+
+    private static final Logger LOGGER = LogManager.getLogger();
+
     @Nullable
     protected CheckboxButton checkbox;
     @Nullable
     public String tooltip;
-    public boolean persistentState = false;
     @Nullable
     public DrawableColor borderColor = null;
     @Nullable
@@ -52,23 +68,23 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
      * Call this after setting a new block instance.
      */
     public void prepareExecutableBlock() {
-        this.actionExecutor.addValuePlaceholder("value", () -> "" + this.persistentState);
+        this.actionExecutor.addValuePlaceholder("value", () -> "" + CheckboxStatesHandler.getForCheckboxElement(this));
     }
 
     /**
      * Call this after setting a new container instance.
      */
     public void prepareLoadingRequirementContainer() {
-        this.loadingRequirementContainer.addValuePlaceholder("value", () -> "" + this.persistentState);
+        this.loadingRequirementContainer.addValuePlaceholder("value", () -> "" + CheckboxStatesHandler.getForCheckboxElement(this));
     }
 
     @Override
     public void afterConstruction() {
         this.checkbox = new CheckboxButton(0, 0, 20, 20, (checkbox, state) -> {
-            this.persistentState = state;
+            CheckboxStatesHandler.setForCheckboxElement(this, state);
             this.actionExecutor.execute();
         });
-        this.checkbox.setCheckboxState(this.persistentState, false);
+        this.checkbox.setCheckboxState(CheckboxStatesHandler.getForCheckboxElement(this), false);
     }
 
     @Override

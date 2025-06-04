@@ -68,8 +68,6 @@ public class CheckboxElementBuilder extends ElementBuilder<CheckboxElement, Chec
             }
         }
 
-        element.persistentState = deserializeBoolean(element.persistentState, serialized.getValue("persistent_state"));
-
         element.prepareExecutableBlock();
         
         return element;
@@ -117,8 +115,6 @@ public class CheckboxElementBuilder extends ElementBuilder<CheckboxElement, Chec
         
         serializeTo.putProperty("widget_active_state_requirement_container_identifier", element.activeStateSupplier.identifier);
         element.activeStateSupplier.serializeToExistingPropertyContainer(serializeTo);
-
-        serializeTo.putProperty("persistent_state", "" + element.persistentState);
         
         return serializeTo;
         
