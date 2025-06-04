@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.element.elements.animationcontrolle
 import de.keksuccino.fancymenu.customization.element.elements.audio.AudioElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.browser.BrowserElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.checkbox.CheckboxElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.cursor.CursorElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.dragger.DraggerElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.image.ImageElementBuilder;
@@ -27,6 +28,7 @@ public class Elements {
     public static final ButtonElementBuilder BUTTON = new ButtonElementBuilder();
     public static final InputFieldElementBuilder INPUT_FIELD = new InputFieldElementBuilder();
     public static final SliderElementBuilder SLIDER_V2 = new SliderElementBuilder();
+    public static final CheckboxElementBuilder CHECKBOX = new CheckboxElementBuilder();
     public static final TextElementBuilder TEXT_V2 = new TextElementBuilder();
     public static final TooltipElementBuilder TOOLTIP = new TooltipElementBuilder();
     public static final TickerElementBuilder TICKER = new TickerElementBuilder();
@@ -50,6 +52,7 @@ public class Elements {
         ElementRegistry.register(BUTTON);
         ElementRegistry.register(INPUT_FIELD);
         ElementRegistry.register(SLIDER_V2);
+        ElementRegistry.register(CHECKBOX);
         ElementRegistry.register(TEXT_V2);
         ElementRegistry.register(TOOLTIP);
         ElementRegistry.register(TICKER);

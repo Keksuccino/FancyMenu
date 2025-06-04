@@ -1745,5 +1745,15 @@
   "fancymenu.placeholders.uppercase_text": "Uppercase Text",
   "fancymenu.placeholders.uppercase_text.desc": "Converts the input text to uppercase letters.\n\nExample:\nInput: Hello World\nOutput: HELLO WORLD",
   "fancymenu.placeholders.lowercase_text": "Lowercase Text",
-  "fancymenu.placeholders.lowercase_text.desc": "Converts the input text to lowercase letters.\n\nExample:\nInput: HELLO WORLD\nOutput: hello world"
+  "fancymenu.placeholders.lowercase_text.desc": "Converts the input text to lowercase letters.\n\nExample:\nInput: HELLO WORLD\nOutput: hello world",
+  "fancymenu.elements.checkbox": "Checkbox",
+  "fancymenu.elements.checkbox.desc": "A clickable checkbox that can execute actions when toggled.",
+  "fancymenu.elements.checkbox.colors": "Colors and Textures",
+  "fancymenu.elements.checkbox.border_color": "Border Color",
+  "fancymenu.elements.checkbox.border_color.desc": "The color of the checkbox border.\nLeave empty to use the default color.",
+  "fancymenu.elements.checkbox.background_color": "Background Color",
+  "fancymenu.elements.checkbox.background_color.desc": "The background color of the checkbox.\nLeave empty to use the default color.",
+  "fancymenu.elements.checkbox.checkmark_texture": "Checkmark Texture",
+  "fancymenu.elements.checkbox.checkmark_texture.desc": "The texture displayed when the checkbox is checked.\nLeave empty to use the default checkmark.\n\nThe default checkmark texture is 20x20 pixels.",
+  "fancymenu.editor.elements.checkbox.manage_actions.desc": "Actions will be executed when the checkbox is toggled.\n\nYou can use the '$$value' placeholder in actions\nto get the current checkbox state (true/false)."
 }
