@@ -136,6 +136,8 @@ public class Placeholders {
     public static final AudioElementVolumePlaceholder AUDIO_ELEMENT_VOLUME = new AudioElementVolumePlaceholder();
     public static final SplitTextPlaceholder SPLIT_TEXT = new SplitTextPlaceholder();
     public static final TrimTextPlaceholder TRIM_TEXT = new TrimTextPlaceholder();
+    public static final UppercaseTextPlaceholder UPPERCASE_TEXT = new UppercaseTextPlaceholder();
+    public static final LowercaseTextPlaceholder LOWERCASE_TEXT = new LowercaseTextPlaceholder();
     public static final CropTextPlaceholder CROP_TEXT = new CropTextPlaceholder();
     public static final MathCeilPlaceholder MATH_CEIL = new MathCeilPlaceholder();
     public static final MathFloorPlaceholder MATH_FLOOR = new MathFloorPlaceholder();
@@ -292,6 +294,8 @@ public class Placeholders {
         PlaceholderRegistry.register(MATH_TANH);
         PlaceholderRegistry.register(SPLIT_TEXT);
         PlaceholderRegistry.register(TRIM_TEXT);
+        PlaceholderRegistry.register(UPPERCASE_TEXT);
+        PlaceholderRegistry.register(LOWERCASE_TEXT);
         PlaceholderRegistry.register(CROP_TEXT);
         PlaceholderRegistry.register(MATH_CEIL);
         PlaceholderRegistry.register(MATH_FLOOR);

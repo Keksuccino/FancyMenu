@@ -1741,5 +1741,9 @@
   "fancymenu.customization.items.text.markdown.tables.cell_padding": "Cell Padding",
   "fancymenu.customization.items.text.markdown.tables.cell_padding.desc": "The padding inside table cells.\nHigher values create more space between content and cell borders.",
   "fancymenu.customization.items.text.markdown.tables.margin": "Table Margin",
-  "fancymenu.customization.items.text.markdown.tables.margin.desc": "The margin around tables.\nAdds space above and below each table."
+  "fancymenu.customization.items.text.markdown.tables.margin.desc": "The margin around tables.\nAdds space above and below each table.",
+  "fancymenu.placeholders.uppercase_text": "Uppercase Text",
+  "fancymenu.placeholders.uppercase_text.desc": "Converts the input text to uppercase letters.\n\nExample:\nInput: Hello World\nOutput: HELLO WORLD",
+  "fancymenu.placeholders.lowercase_text": "Lowercase Text",
+  "fancymenu.placeholders.lowercase_text.desc": "Converts the input text to lowercase letters.\n\nExample:\nInput: HELLO WORLD\nOutput: hello world"
 }
