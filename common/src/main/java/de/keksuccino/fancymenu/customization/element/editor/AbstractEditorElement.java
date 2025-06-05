@@ -963,9 +963,56 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				int diffY = (int)-(this.movingStartPosY - mouseY);
 				if (this.editor.allSelectedElementsMovable()) {
 					if (!this.isMultiSelected() || !this.isElementAnchorAndParentIsSelected()) {
-						// Apply normal offset calculation
-						this.element.posOffsetX = this.leftMouseDownBaseX + diffX;
-						this.element.posOffsetY = this.leftMouseDownBaseY + diffY;
+						// Calculate new positions
+						int newOffsetX = this.leftMouseDownBaseX + diffX;
+						int newOffsetY = this.leftMouseDownBaseY + diffY;
+						
+						// Check if stay on screen is enabled
+						if (this.element.stayOnScreen && !this.element.stickyAnchor) {
+							// Calculate what the absolute positions would be with the new offsets
+							int oldPosOffsetX = this.element.posOffsetX;
+							int oldPosOffsetY = this.element.posOffsetY;
+							
+							// Temporarily set new offsets to calculate absolute positions
+							this.element.posOffsetX = newOffsetX;
+							this.element.posOffsetY = newOffsetY;
+							
+							// Get the absolute positions (which include stay-on-screen clamping)
+							int absoluteX = this.element.getAbsoluteX();
+							int absoluteY = this.element.getAbsoluteY();
+							
+							// Restore old offsets
+							this.element.posOffsetX = oldPosOffsetX;
+							this.element.posOffsetY = oldPosOffsetY;
+							
+							// Check if X position would be clamped
+							int leftEdge = AbstractElement.STAY_ON_SCREEN_EDGE_ZONE_SIZE;
+							int rightEdge = AbstractElement.getScreenWidth() - AbstractElement.STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.element.getAbsoluteWidth();
+							
+							if (absoluteX <= leftEdge && diffX < 0) {
+								// Element is at left edge and trying to move further left
+								newOffsetX = this.element.posOffsetX;
+							} else if (absoluteX >= rightEdge && diffX > 0) {
+								// Element is at right edge and trying to move further right
+								newOffsetX = this.element.posOffsetX;
+							}
+							
+							// Check if Y position would be clamped
+							int topEdge = AbstractElement.STAY_ON_SCREEN_EDGE_ZONE_SIZE;
+							int bottomEdge = AbstractElement.getScreenHeight() - AbstractElement.STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.element.getAbsoluteHeight();
+							
+							if (absoluteY <= topEdge && diffY < 0) {
+								// Element is at top edge and trying to move further up
+								newOffsetY = this.element.posOffsetY;
+							} else if (absoluteY >= bottomEdge && diffY > 0) {
+								// Element is at bottom edge and trying to move further down
+								newOffsetY = this.element.posOffsetY;
+							}
+						}
+						
+						// Apply the potentially adjusted offsets
+						this.element.posOffsetX = newOffsetX;
+						this.element.posOffsetY = newOffsetY;
 
 						// Apply grid snapping if enabled
 						if (FancyMenu.getOptions().showLayoutEditorGrid.getValue() && FancyMenu.getOptions().layoutEditorGridSnapping.getValue() && !this.isMultiSelected() && !(Minecraft.getInstance().screen instanceof KeyframeManagerScreen)) {
