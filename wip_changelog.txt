@@ -76,6 +76,7 @@ CHANGELOG | FANCYMENU v3.6.0 [ W I P !! Not public yet !! ]
 - Fixed preview element in keyframe editor screen (of the Element Animator) snapping to grid like a normal editor element instead of ignoring the grid (#1172)
 - Fixed line wrapping in "Text" elements sometimes not working when the text contains hyperlinks with long URLs (#1166)
 - Fixed placeholder color formatting in text editor not working for placeholders without values (#1131)
+- Fixed element internally gets moved further out of screen when dragging it and "Stay on Screen" is enabled and the element has reached a screen edge (#860)
 - Disabled customization for Cobblemon screens, because they were causing problems (#1116)
 - Disabled customization for "Applied Energistics 2" & "Applied Energistics 2 Wireless Terminals" screens as a potential fix for crashes some users experienced (#1092) 
 - Disabled customization for "Xareo's World Map" and "Xaero's Mini Map" to fix crashes related to them (#1063)
