@@ -1,4 +1,3 @@
-
 //Copyright (c) 2022-2025 Keksuccino.
 //This code is licensed under DSMSLv3.
 //For more information about the license, see this: https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md
@@ -47,10 +46,18 @@ public class PlaceholderParser {
     private static final char APOSTROPHE_CHAR = '\"';
     private static final char NEWLINE_CHAR = '\n';
     private static final char BACKSLASH_CHAR = '\\';
+    private static final char SPACE_CHAR = ' ';
+    private static final char TAB_CHAR = '\t';
+    private static final char CARRIAGE_RETURN_CHAR = '\r';
+    private static final char COLON_CHAR = ':';
+    private static final char COMMA_CHAR = ',';
+    private static final char PERCENT_CHAR = '%';
+    private static final char LOWERCASE_N_CHAR = 'n';
     private static final String BACKSLASH = "\\";
     private static final String COMMA = ",";
     private static final String COMMA_WRAPPED_IN_APOSTROPHES = "\",\"";
     private static final String COLON_WRAPPED_IN_APOSTROPHES = "\":\"";
+    private static final String PERCENT_NEWLINE_CODE = "%n%";
     private static final String TOO_LONG_TO_PARSE_LOCALIZATION = "fancymenu.placeholders.error.text_too_long";
 
     /**
@@ -206,7 +213,6 @@ public class PlaceholderParser {
         boolean backslash = false;
         for (char c : placeholderStartSubString.toCharArray()) {
             if (currentIndex != startIndex) { //skip first char
-                if (c == NEWLINE_CHAR) return -1;
                 if ((c == OPEN_CURLY_BRACKETS_CHAR) && !backslash) {
                     depth++;
                 } else if ((c == CLOSE_CURLY_BRACKETS_CHAR) && !backslash) {
@@ -221,6 +227,97 @@ public class PlaceholderParser {
             currentIndex++;
         }
         return -1;
+    }
+
+    /**
+     * Normalizes a placeholder string by removing unnecessary whitespace while preserving quoted content.
+     * This allows multi-line placeholders to be parsed correctly.
+     */
+    @NotNull
+    private static String normalizePlaceholderString(@NotNull String placeholderString) {
+        StringBuilder result = new StringBuilder();
+        boolean inQuotes = false;
+        boolean backslash = false;
+        boolean lastWasWhitespace = false;
+        
+        for (int i = 0; i < placeholderString.length(); i++) {
+            char c = placeholderString.charAt(i);
+            
+            // Check for %n% newline code
+            if (i + 2 < placeholderString.length() && 
+                c == PERCENT_CHAR && 
+                placeholderString.charAt(i + 1) == LOWERCASE_N_CHAR && 
+                placeholderString.charAt(i + 2) == PERCENT_CHAR) {
+                
+                if (inQuotes) {
+                    // Inside quotes, preserve the %n% sequence
+                    result.append(PERCENT_NEWLINE_CODE);
+                } else {
+                    // Outside quotes, treat %n% as whitespace
+                    if (!lastWasWhitespace && result.length() > 0) {
+                        char lastChar = result.charAt(result.length() - 1);
+                        if (lastChar != OPEN_CURLY_BRACKETS_CHAR && lastChar != CLOSE_CURLY_BRACKETS_CHAR && 
+                            lastChar != COLON_CHAR && lastChar != COMMA_CHAR) {
+                            result.append(SPACE_CHAR);
+                        }
+                    }
+                    lastWasWhitespace = true;
+                }
+                i += 2; // Skip the 'n%' part
+                continue;
+            }
+            
+            if (backslash) {
+                // Always include escaped characters
+                result.append(c);
+                backslash = false;
+                lastWasWhitespace = false;
+            } else if (c == BACKSLASH_CHAR) {
+                result.append(c);
+                backslash = true;
+                lastWasWhitespace = false;
+            } else if (c == APOSTROPHE_CHAR) {
+                result.append(c);
+                inQuotes = !inQuotes;
+                lastWasWhitespace = false;
+            } else if (inQuotes) {
+                // Inside quotes, preserve everything
+                result.append(c);
+                lastWasWhitespace = false;
+            } else if (isWhitespace(c)) {
+                // Outside quotes, collapse multiple whitespace into single space
+                // and skip whitespace after structural characters
+                if (!lastWasWhitespace && result.length() > 0) {
+                    char lastChar = result.charAt(result.length() - 1);
+                    if (lastChar != OPEN_CURLY_BRACKETS_CHAR && lastChar != CLOSE_CURLY_BRACKETS_CHAR && 
+                        lastChar != COLON_CHAR && lastChar != COMMA_CHAR) {
+                        result.append(SPACE_CHAR);
+                    }
+                }
+                lastWasWhitespace = true;
+            } else {
+                // Remove whitespace before structural characters
+                if (lastWasWhitespace && result.length() > 0 && 
+                    (c == CLOSE_CURLY_BRACKETS_CHAR || c == COLON_CHAR || c == COMMA_CHAR)) {
+                    if (result.charAt(result.length() - 1) == SPACE_CHAR) {
+                        result.deleteCharAt(result.length() - 1);
+                    }
+                }
+                result.append(c);
+                lastWasWhitespace = false;
+            }
+        }
+        
+        // Remove trailing whitespace if any
+        while (result.length() > 0 && result.charAt(result.length() - 1) == SPACE_CHAR) {
+            result.deleteCharAt(result.length() - 1);
+        }
+        
+        return result.toString();
+    }
+    
+    private static boolean isWhitespace(char c) {
+        return c == SPACE_CHAR || c == TAB_CHAR || c == NEWLINE_CHAR || c == CARRIAGE_RETURN_CHAR;
     }
 
     @NotNull
@@ -273,6 +370,7 @@ public class PlaceholderParser {
         private boolean identifierFailed = false;
         private Placeholder placeholder;
         private boolean placeholderFailed = false;
+        private String normalizedString;
 
         protected ParsedPlaceholder(@NotNull String placeholderString, int startIndex, int endIndex, @NotNull HashMap<String, String> parsed, boolean replaceFormattingCodes) {
             this.placeholderString = placeholderString;
@@ -282,12 +380,24 @@ public class PlaceholderParser {
             this.replaceFormattingCodes = replaceFormattingCodes;
         }
 
+        /**
+         * Gets the normalized version of the placeholder string with whitespace cleaned up.
+         */
+        @NotNull
+        private String getNormalizedString() {
+            if (this.normalizedString == null) {
+                this.normalizedString = normalizePlaceholderString(this.placeholderString);
+            }
+            return this.normalizedString;
+        }
+
         @Nullable
         public String getIdentifier() {
             if (this.identifierFailed) return null;
             if (this.identifier != null) return this.identifier;
             try {
-                this.identifier = StringUtils.split(StringUtils.substring(this.placeholderString, PLACEHOLDER_PREFIX.length()), APOSTROPHE, 2)[0];
+                String normalized = this.getNormalizedString();
+                this.identifier = StringUtils.split(StringUtils.substring(normalized, PLACEHOLDER_PREFIX.length()), APOSTROPHE, 2)[0];
                 return this.identifier;
             } catch (Exception ex) {
                 logError("[FANCYMENU] Failed to parse identifier of placeholder: " + this.placeholderString, ex);
@@ -321,7 +431,8 @@ public class PlaceholderParser {
                 if ((placeholder == null) || !this.hasValues()) {
                     return null;
                 }
-                String valueString = COMMA + StringUtils.split(this.placeholderString, COMMA, 2)[1];
+                String normalized = this.getNormalizedString();
+                String valueString = COMMA + StringUtils.split(normalized, COMMA, 2)[1];
                 int currentIndex = 0;
                 int inValueDepth = 0;
                 String currentValueName = null;
