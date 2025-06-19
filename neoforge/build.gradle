@@ -51,8 +51,8 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
     implementation "net.neoforged:neoforge:${neoforge_version}"
     compileOnly project(":common")
-    implementation "maven.modrinth:konkrete:1.9.11-1.21.5-neoforge"
-    implementation "maven.modrinth:melody:1.0.11-1.21.5-neoforge"
+    implementation "maven.modrinth:konkrete:1.9.12-1.21.6-neoforge"
+    implementation "maven.modrinth:melody:1.0.12-1.21.6-neoforge"
     //Also needs to get added to the client run configuration (runs -> client -> dependencies) since it's a non-Minecraft library
     implementation(jarJar("com.github.Keksuccino:japng:0.5.3")) {
         jarJar.ranged(it, "[0.5.3,)")

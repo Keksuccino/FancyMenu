@@ -1,19 +1,12 @@
 package de.keksuccino.fancymenu.customization.panorama;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 import com.mojang.blaze3d.ProjectionType;
-import com.mojang.blaze3d.buffers.BufferType;
-import com.mojang.blaze3d.buffers.BufferUsage;
 import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
@@ -27,21 +20,33 @@ import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.renderer.CachedPerspectiveProjectionMatrixBuffer;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ARGB;
+import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
 
+/**
+ * Custom panorama renderer that uses six individual local textures to form a skybox,
+ * updated to be compatible with modern Minecraft rendering pipelines.
+ */
 @SuppressWarnings("unused")
-public class LocalTexturePanoramaRenderer implements Renderable {
+public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
@@ -63,6 +68,10 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 	protected volatile boolean tickerThreadRunning = false;
 	protected volatile float currentRotation = 0.0F; //0 - 360
 	protected volatile long lastRenderCall = -1L;
+
+	@Nullable
+	private CachedPerspectiveProjectionMatrixBuffer projectionMatrixUbo;
+
 	@Nullable
 	private GpuBuffer cubeMapBuffer = null;
 
@@ -121,7 +130,6 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 	}
 
 	protected void prepare() {
-
 		this.panoramaImageSuppliers.clear();
 		this.overlayTextureSupplier = null;
 
@@ -138,12 +146,9 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 		if ((this.overlayImageFile != null) && this.overlayImageFile.isFile()) {
 			this.overlayTextureSupplier = ResourceSupplier.image(ResourceSource.of(this.overlayImageFile.getAbsolutePath(), ResourceSourceType.LOCAL).getSourceWithPrefix());
 		}
-
 	}
 
-	@SuppressWarnings("all")
 	protected void startTickerThreadIfNeeded() {
-
 		if (this.tickerThreadRunning) return;
 
 		this.lastRenderCall = System.currentTimeMillis();
@@ -151,13 +156,9 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 
 		new Thread(() -> {
 			while ((this.lastRenderCall + 5000L) > System.currentTimeMillis()) {
-				try {
-					this.currentRotation += 0.03F;
-					if (this.currentRotation >= 360) {
-						this.currentRotation = 0;
-					}
-				} catch (Exception ex) {
-					LOGGER.error("[FANCYMENU] Error while ticking panorama!", ex);
+				this.currentRotation += 0.03F;
+				if (this.currentRotation >= 360) {
+					this.currentRotation = 0;
 				}
 				try {
 					Thread.sleep(Math.max(2, (int)(20 / this.speed)));
@@ -167,12 +168,10 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 			}
 			this.tickerThreadRunning = false;
 		}, "FancyMenu Panorama Ticker Thread").start();
-
 	}
 
 	@Override
 	public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-
 		this.lastRenderCall = System.currentTimeMillis();
 		this.startTickerThreadIfNeeded();
 
@@ -187,123 +186,145 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 			}
 		});
 
-		if ((this.panoramaImageSuppliers.size() < 6) || (this.sides.size() < 6)) {
-			graphics.blit(RenderType::guiTextured, ITexture.MISSING_TEXTURE_LOCATION, 0, 0, 0.0F, 0.0F, ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight(), ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight());
+		if (this.sides.size() < 6) {
+			graphics.blit(RenderPipelines.GUI_TEXTURED, ITexture.MISSING_TEXTURE_LOCATION, 0, 0, 0, 0, ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight(), ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight());
 		} else {
 			this._render(graphics, Minecraft.getInstance(), this.opacity);
 		}
-
 	}
 
 	private void _render(@NotNull GuiGraphics graphics, Minecraft mc, float alpha) {
-
 		int screenW = ScreenUtils.getScreenWidth();
 		int screenH = ScreenUtils.getScreenHeight();
 
-		float pitch = this.angle;
-		float yaw = -this.currentRotation;
-		float fovF = ((float)this.fov * ((float)Math.PI / 180));
-		
-		// Initialize cube map buffer if needed
+		if (this.projectionMatrixUbo == null) {
+			this.projectionMatrixUbo = new CachedPerspectiveProjectionMatrixBuffer("panorama_proj", 0.05F, 10.0F);
+		}
 		if (this.cubeMapBuffer == null) {
 			this.initializeVertices();
 		}
 
-		Matrix4f matrix4f = new Matrix4f().setPerspective(fovF, (float)mc.getWindow().getWidth() / (float)mc.getWindow().getHeight(), 0.05F, 10.0F);
-		RenderSystem.backupProjectionMatrix();
-		RenderSystem.setProjectionMatrix(matrix4f, ProjectionType.PERSPECTIVE);
-		Matrix4fStack matrix4fStack = RenderSystem.getModelViewStack();
-		matrix4fStack.pushMatrix();
-		matrix4fStack.rotationX((float) Math.PI);
+		RenderSystem.setProjectionMatrix(
+				this.projectionMatrixUbo.getBuffer(mc.getWindow().getWidth(), mc.getWindow().getHeight(), (float)this.fov), ProjectionType.PERSPECTIVE
+		);
+
 		RenderPipeline renderPipeline = RenderPipelines.PANORAMA;
-		RenderTarget renderTarget = Minecraft.getInstance().getMainRenderTarget();
-		GpuTexture gpuTexture = renderTarget.getColorTexture();
-		GpuTexture gpuTexture2 = renderTarget.getDepthTexture();
-		RenderSystem.AutoStorageIndexBuffer autoStorageIndexBuffer = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS);
-		GpuBuffer gpuBuffer = autoStorageIndexBuffer.getBuffer(36);
+		RenderTarget renderTarget = mc.getMainRenderTarget();
+
+		RenderSystem.AutoStorageIndexBuffer sequentialIndexBuffer = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS);
+		GpuBuffer indexBuffer = sequentialIndexBuffer.getBuffer(36);
+
+		Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();
+		modelViewStack.pushMatrix();
+		modelViewStack.rotationX((float) Math.PI);
+		modelViewStack.rotateX(this.angle * (float) (Math.PI / 180.0));
+		modelViewStack.rotateY(-this.currentRotation * (float) (Math.PI / 180.0));
 
 		try (RenderPass renderPass = RenderSystem.getDevice()
 				.createCommandEncoder()
-				.createRenderPass(gpuTexture, OptionalInt.empty(), gpuTexture2, OptionalDouble.empty())) {
+				.createRenderPass(() -> "Panorama", renderTarget.getColorTextureView(), OptionalInt.empty(), renderTarget.getDepthTextureView(), OptionalDouble.empty())) {
+
 			renderPass.setPipeline(renderPipeline);
+			RenderSystem.bindDefaultUniforms(renderPass);
 			renderPass.setVertexBuffer(0, this.cubeMapBuffer);
-			renderPass.setIndexBuffer(gpuBuffer, autoStorageIndexBuffer.type());
+			renderPass.setIndexBuffer(indexBuffer, sequentialIndexBuffer.type());
 
-			for (int j = 0; j < 4; j++) {
-				matrix4fStack.pushMatrix();
-				float f = (j % 2 / 2.0F - 0.5F) / 256.0F;
-				float g = (j / 2 / 2.0F - 0.5F) / 256.0F;
-				float h = 0.0F;
-				matrix4fStack.translate(f, g, 0.0F);
-				matrix4fStack.rotateX(pitch * (float) (Math.PI / 180.0));
-				matrix4fStack.rotateY(yaw * (float) (Math.PI / 180.0));
-				RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, alpha / (j + 1));
+			for (int i = 0; i < 6; i++) {
+				if (i < this.sides.size()) {
+					ResourceLocation location = this.sides.get(i);
+					if (location != null) {
+						GpuBufferSlice dynamicUniforms = RenderSystem.getDynamicUniforms()
+								.writeTransform(new Matrix4f(modelViewStack), new Vector4f(1.0F, 1.0F, 1.0F, alpha), new Vector3f(), new Matrix4f(), 0.0F);
+						renderPass.setUniform("DynamicTransforms", dynamicUniforms);
 
-				for (int k = 0; k < 6; k++) {
-					if (k < this.sides.size()) {
-						ResourceLocation location = this.sides.get(k);
-						if (location != null) {
-							renderPass.bindSampler("Sampler0", mc.getTextureManager().getTexture(location).getTexture());
-							renderPass.drawIndexed(6 * k, 6);
-						}
+						renderPass.bindSampler("Sampler0", mc.getTextureManager().getTexture(location).getTextureView());
+
+						renderPass.drawIndexed(i * 6, 0, 6, 1);
 					}
 				}
-
-				matrix4fStack.popMatrix();
 			}
 		}
 
-		RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+		modelViewStack.popMatrix();
 		RenderSystem.restoreProjectionMatrix();
-		matrix4fStack.popMatrix();
 
 		if (this.overlayTextureSupplier != null) {
 			ITexture texture = this.overlayTextureSupplier.get();
 			if (texture != null) {
 				ResourceLocation location = texture.getResourceLocation();
 				if (location != null) {
-					graphics.blit(RenderType::guiTextured, location, 0, 0, 0.0F, 0.0F, screenW, screenH, screenW, screenH, ARGB.white(this.opacity));
+					graphics.blit(RenderPipelines.GUI_TEXTURED, location, 0, 0, 0, 0, screenW, screenH, screenW, screenH, ARGB.color(Mth.clamp((int)(alpha * 255), 0, 255), 255, 255, 255));
 				}
 			}
 		}
-
 	}
 
+	/**
+	 * Initializes the vertex buffer with vertex and UV data for a 6-sided cube.
+	 * This method now correctly constructs the vertex data in memory and then uploads it to a new GpuBuffer.
+	 */
 	private void initializeVertices() {
-		this.cubeMapBuffer = RenderSystem.getDevice()
-			.createBuffer(() -> "Cube map vertex buffer", BufferType.VERTICES, BufferUsage.DYNAMIC_WRITE, 24 * DefaultVertexFormat.POSITION_TEX.getVertexSize());
+		if (this.cubeMapBuffer != null) {
+			this.cubeMapBuffer.close();
+		}
 
-		try (ByteBufferBuilder byteBufferBuilder = new ByteBufferBuilder(DefaultVertexFormat.POSITION_TEX.getVertexSize() * 4)) {
+		GpuBuffer newBuffer;
+
+		try (ByteBufferBuilder byteBufferBuilder = ByteBufferBuilder.exactlySized(DefaultVertexFormat.POSITION_TEX.getVertexSize() * 24)) {
 			BufferBuilder bufferBuilder = new BufferBuilder(byteBufferBuilder, VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-			bufferBuilder.addVertex(-1.0F, -1.0F, 1.0F).setUv(0.0F, 0.0F);
-			bufferBuilder.addVertex(-1.0F, 1.0F, 1.0F).setUv(0.0F, 1.0F);
-			bufferBuilder.addVertex(1.0F, 1.0F, 1.0F).setUv(1.0F, 1.0F);
-			bufferBuilder.addVertex(1.0F, -1.0F, 1.0F).setUv(1.0F, 0.0F);
-			bufferBuilder.addVertex(1.0F, -1.0F, 1.0F).setUv(0.0F, 0.0F);
-			bufferBuilder.addVertex(1.0F, 1.0F, 1.0F).setUv(0.0F, 1.0F);
-			bufferBuilder.addVertex(1.0F, 1.0F, -1.0F).setUv(1.0F, 1.0F);
-			bufferBuilder.addVertex(1.0F, -1.0F, -1.0F).setUv(1.0F, 0.0F);
-			bufferBuilder.addVertex(1.0F, -1.0F, -1.0F).setUv(0.0F, 0.0F);
-			bufferBuilder.addVertex(1.0F, 1.0F, -1.0F).setUv(0.0F, 1.0F);
-			bufferBuilder.addVertex(-1.0F, 1.0F, -1.0F).setUv(1.0F, 1.0F);
-			bufferBuilder.addVertex(-1.0F, -1.0F, -1.0F).setUv(1.0F, 0.0F);
-			bufferBuilder.addVertex(-1.0F, -1.0F, -1.0F).setUv(0.0F, 0.0F);
-			bufferBuilder.addVertex(-1.0F, 1.0F, -1.0F).setUv(0.0F, 1.0F);
-			bufferBuilder.addVertex(-1.0F, 1.0F, 1.0F).setUv(1.0F, 1.0F);
-			bufferBuilder.addVertex(-1.0F, -1.0F, 1.0F).setUv(1.0F, 0.0F);
-			bufferBuilder.addVertex(-1.0F, -1.0F, -1.0F).setUv(0.0F, 0.0F);
-			bufferBuilder.addVertex(-1.0F, -1.0F, 1.0F).setUv(0.0F, 1.0F);
-			bufferBuilder.addVertex(1.0F, -1.0F, 1.0F).setUv(1.0F, 1.0F);
-			bufferBuilder.addVertex(1.0F, -1.0F, -1.0F).setUv(1.0F, 0.0F);
-			bufferBuilder.addVertex(-1.0F, 1.0F, 1.0F).setUv(0.0F, 0.0F);
-			bufferBuilder.addVertex(-1.0F, 1.0F, -1.0F).setUv(0.0F, 1.0F);
-			bufferBuilder.addVertex(1.0F, 1.0F, -1.0F).setUv(1.0F, 1.0F);
-			bufferBuilder.addVertex(1.0F, 1.0F, 1.0F).setUv(1.0F, 0.0F);
+
+			// Z+ (Front) - Face 0
+			bufferBuilder.addVertex( -1.0F, -1.0F,  1.0F).setUv(0.0F, 0.0F);
+			bufferBuilder.addVertex( -1.0F,  1.0F,  1.0F).setUv(0.0F, 1.0F);
+			bufferBuilder.addVertex(  1.0F,  1.0F,  1.0F).setUv(1.0F, 1.0F);
+			bufferBuilder.addVertex(  1.0F, -1.0F,  1.0F).setUv(1.0F, 0.0F);
+			// X+ (Right) - Face 1
+			bufferBuilder.addVertex(  1.0F, -1.0F,  1.0F).setUv(0.0F, 0.0F);
+			bufferBuilder.addVertex(  1.0F,  1.0F,  1.0F).setUv(0.0F, 1.0F);
+			bufferBuilder.addVertex(  1.0F,  1.0F, -1.0F).setUv(1.0F, 1.0F);
+			bufferBuilder.addVertex(  1.0F, -1.0F, -1.0F).setUv(1.0F, 0.0F);
+			// Z- (Back) - Face 2
+			bufferBuilder.addVertex(  1.0F, -1.0F, -1.0F).setUv(0.0F, 0.0F);
+			bufferBuilder.addVertex(  1.0F,  1.0F, -1.0F).setUv(0.0F, 1.0F);
+			bufferBuilder.addVertex( -1.0F,  1.0F, -1.0F).setUv(1.0F, 1.0F);
+			bufferBuilder.addVertex( -1.0F, -1.0F, -1.0F).setUv(1.0F, 0.0F);
+			// X- (Left) - Face 3
+			bufferBuilder.addVertex( -1.0F, -1.0F, -1.0F).setUv(0.0F, 0.0F);
+			bufferBuilder.addVertex( -1.0F,  1.0F, -1.0F).setUv(0.0F, 1.0F);
+			bufferBuilder.addVertex( -1.0F,  1.0F,  1.0F).setUv(1.0F, 1.0F);
+			bufferBuilder.addVertex( -1.0F, -1.0F,  1.0F).setUv(1.0F, 0.0F);
+			// Y- (Bottom) - Face 4
+			bufferBuilder.addVertex( -1.0F, -1.0F, -1.0F).setUv(0.0F, 0.0F);
+			bufferBuilder.addVertex( -1.0F, -1.0F,  1.0F).setUv(0.0F, 1.0F);
+			bufferBuilder.addVertex(  1.0F, -1.0F,  1.0F).setUv(1.0F, 1.0F);
+			bufferBuilder.addVertex(  1.0F, -1.0F, -1.0F).setUv(1.0F, 0.0F);
+			// Y+ (Top) - Face 5
+			bufferBuilder.addVertex( -1.0F,  1.0F,  1.0F).setUv(0.0F, 0.0F);
+			bufferBuilder.addVertex( -1.0F,  1.0F, -1.0F).setUv(0.0F, 1.0F);
+			bufferBuilder.addVertex(  1.0F,  1.0F, -1.0F).setUv(1.0F, 1.0F);
+			bufferBuilder.addVertex(  1.0F,  1.0F,  1.0F).setUv(1.0F, 0.0F);
 
 			try (MeshData meshData = bufferBuilder.buildOrThrow()) {
-				CommandEncoder commandEncoder = RenderSystem.getDevice().createCommandEncoder();
-				commandEncoder.writeToBuffer(this.cubeMapBuffer, meshData.vertexBuffer(), 0);
+				newBuffer = RenderSystem.getDevice().createBuffer(
+						() -> "FancyMenu Panorama Vertex Buffer",
+						32, // BufferFlags.DYNAMIC_STORAGE_BIT
+						meshData.vertexBuffer()
+				);
 			}
+		}
+
+		this.cubeMapBuffer = newBuffer;
+	}
+
+	@Override
+	public void close() {
+		if (this.cubeMapBuffer != null) {
+			this.cubeMapBuffer.close();
+			this.cubeMapBuffer = null;
+		}
+		if (this.projectionMatrixUbo != null) {
+			this.projectionMatrixUbo.close();
+			this.projectionMatrixUbo = null;
 		}
 	}
 
@@ -312,17 +333,11 @@ public class LocalTexturePanoramaRenderer implements Renderable {
 	}
 
 	public void setSpeed(float speed) {
-		if (speed < 0.0F) {
-			speed = 0.0F;
-		}
-		this.speed = speed;
+		this.speed = Math.max(0.0F, speed);
 	}
 
 	public void setFov(double fov) {
-		if (fov > 179.0D) {
-			fov = 179.0D;
-		}
-		this.fov = fov;
+		this.fov = Math.min(fov, 179.0D);
 	}
 
 	public void setAngle(float angle) {

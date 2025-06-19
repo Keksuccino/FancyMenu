@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.playerentity.v2;
 
 import com.mojang.blaze3d.platform.Lighting;
-import de.keksuccino.fancymenu.customization.DummyLocalPlayer;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.v2.textures.CapeResourceSupplier;
@@ -238,52 +237,9 @@ public class PlayerEntityElement extends AbstractElement {
 
     protected void renderEntity(@NotNull GuiGraphics graphics) {
 
-        float scale = (float)this.getAbsoluteHeight() / 2.125F;
-
-        graphics.pose().pushPose();
-        graphics.pose().translate((float)this.getAbsoluteX() + (float)this.getAbsoluteWidth() / 2.0F, (float)(this.getAbsoluteY() + this.getAbsoluteHeight()), 100.0F);
-        graphics.pose().scale(scale, scale, scale);
-        graphics.pose().translate(0.0F, -0.0625F, 0.0F);
-        graphics.flush();
-        Lighting.setupForEntityInInventory();
-
-        graphics.pose().pushPose();
-        graphics.pose().scale(1.0F, 1.0F, -1.0F);
-        graphics.pose().translate(0.0F, -(1.501F + (1.501F / 2.0F)), 0.0F);
-        graphics.drawSpecial(multiBufferSource -> this.getActiveRenderer().render(this.renderState, graphics.pose(), multiBufferSource, 15728880));
-        graphics.pose().popPose();
-
-        graphics.flush();
-        Lighting.setupFor3DItems();
-        graphics.pose().popPose();
-
     }
 
     protected void renderNameTag(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-
-        if (!this.showPlayerName) return;
-
-        Component name = this.getDisplayName();
-        Font font = Minecraft.getInstance().font;
-
-        float scale = 1.2F;
-        int textWidth = (int) (font.width(name) * scale);
-        int textHeight = (int) (font.lineHeight * scale);
-        int headHeight = (int) ((float)this.getAbsoluteHeight() * 0.30F); // head height is roughly 30% of the element height
-        int nameTagOffsetY = 30 + (headHeight / 2);
-        int nameTagWidth = textWidth + 10;
-        int nameTagHeight = textHeight + 6;
-        int nameTagX = this.getAbsoluteX() + (this.getAbsoluteWidth() / 2) - (nameTagWidth / 2);
-        int nameTagY = this.getAbsoluteY() + (this.getAbsoluteHeight() / 2) - nameTagHeight - nameTagOffsetY;
-
-        graphics.fill(nameTagX, nameTagY, nameTagX + nameTagWidth, nameTagY + nameTagHeight, this.nameTagBackgroundColor.getColorIntWithAlpha(0.3F));
-
-        graphics.pose().pushPose();
-        graphics.pose().scale(scale, scale, scale);
-
-        graphics.drawString(font, name, (int)(nameTagX / scale) + 5, (int)(nameTagY / scale) + 3, -1, true);
-
-        graphics.pose().popPose();
 
     }
 

@@ -53,7 +53,7 @@ public class CustomGuiBaseScreen extends Screen {
 		if ((Minecraft.getInstance().level == null) || !this.gui.worldBackground) {
 			this.renderPanorama(graphics, partial);
 		}
-		this.renderBlurredBackground();
+		this.renderBlurredBackground(graphics);
 		this.renderMenuBackground(graphics);
 	}
 

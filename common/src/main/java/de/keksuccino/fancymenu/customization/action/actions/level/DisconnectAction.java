@@ -6,7 +6,6 @@ import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierH
 import de.keksuccino.fancymenu.customization.screen.ScreenInstanceFactory;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.GenericMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.network.chat.Component;
@@ -18,7 +17,6 @@ import org.jetbrains.annotations.Nullable;
 public class DisconnectAction extends Action {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final Component SAVING_LEVEL = Component.translatable("menu.savingLevel");
 
     public DisconnectAction() {
         super("disconnect_server_or_world");
@@ -48,11 +46,11 @@ public class DisconnectAction extends Action {
                         if (openAfter == null) {
                             openAfter = new TitleScreen();
                         }
-                        mc.level.disconnect();
+                        mc.level.disconnect(Component.empty());
                         if (isSinglePlayer) {
-                            mc.disconnect(new GenericMessageScreen(SAVING_LEVEL));
+                            mc.disconnectWithSavingScreen();
                         } else {
-                            mc.disconnect();
+                            mc.disconnectWithProgressScreen();
                         }
                         mc.setScreen(openAfter);
                     }

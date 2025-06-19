@@ -74,10 +74,10 @@ public class CreditsScreen extends Screen {
         }
 
         //Background
-        graphics.fill(RenderType.guiOverlay(), 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
 
         //Footer
-        graphics.fill(RenderType.guiOverlay(), 0, this.height - this.footerHeight, this.width, this.height, UIBase.getUIColorTheme().area_background_color.getColorInt());
+        graphics.fill(0, this.height - this.footerHeight, this.width, this.height, UIBase.getUIColorTheme().area_background_color.getColorInt());
 
         super.render(graphics, mouseX, mouseY, partial);
 

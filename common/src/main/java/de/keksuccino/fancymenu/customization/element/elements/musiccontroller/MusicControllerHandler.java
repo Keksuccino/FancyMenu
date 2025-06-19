@@ -73,7 +73,7 @@ public class MusicControllerHandler {
                 }
             } else {
                 if (!playWorldMusic && !worldMusicManuallyStopped) {
-                    Minecraft.getInstance().getSoundManager().pause();
+                    Minecraft.getInstance().getSoundManager().pauseAllExcept();
                     worldMusicManuallyStopped = true;
                     //LOGGER.info("############ WORLD MUSIC STOPPED!");
                 } else if (playWorldMusic && worldMusicManuallyStopped) {

@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
@@ -11,10 +11,10 @@ import de.keksuccino.fancymenu.events.screen.RenderedScreenBackgroundEvent;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
-import net.minecraft.client.renderer.RenderType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -39,7 +39,7 @@ public abstract class MixinScreen implements CustomizableScreen {
 
 	@Shadow @Final private List<GuiEventListener> children;
 
-	@WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderBackground(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
+	@WrapOperation(method = "renderWithTooltip", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;renderBackground(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"))
 	private void wrap_renderBackground_in_render_FancyMenu(Screen instance, GuiGraphics graphics, int mouseX, int mouseY, float partial, Operation<Void> original) {
 		//Don't fire the event in the TitleScreen, because it gets handled differently there
 		if (instance instanceof TitleScreen) {
@@ -50,7 +50,7 @@ public abstract class MixinScreen implements CustomizableScreen {
 		if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this.getScreen_FancyMenu())) {
 			if (!l.layoutBase.menuBackgrounds.isEmpty()) {
 				//Render a black background before the custom background gets rendered
-				graphics.fill(RenderType.guiOverlay(), 0, 0, this.getScreen_FancyMenu().width, this.getScreen_FancyMenu().height, 0);
+				graphics.fill(0, 0, this.getScreen_FancyMenu().width, this.getScreen_FancyMenu().height, 0);
 			} else {
 				original.call(instance, graphics, mouseX, mouseY, partial);
 			}
@@ -97,6 +97,17 @@ public abstract class MixinScreen implements CustomizableScreen {
 			filtered.removeIf(guiEventListener -> (guiEventListener instanceof NavigatableWidget n) && (!n.isFocusable() || !n.isNavigatable()));
 			info.setReturnValue(filtered);
 		}
+	}
+
+	/**
+	 * @reason This is to make the Title screen not constantly update the alpha of its widgets, so FancyMenu can properly handle it.
+	 */
+	@WrapWithCondition(method = "fadeWidgets", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractWidget;setAlpha(F)V"))
+	private boolean cancel_setAlpha_FancyMenu(AbstractWidget instance, float alpha) {
+		if (((Object)this) instanceof TitleScreen s) {
+			return !ScreenCustomization.isCustomizationEnabledForScreen(s);
+		}
+		return true;
 	}
 
 	@Unique

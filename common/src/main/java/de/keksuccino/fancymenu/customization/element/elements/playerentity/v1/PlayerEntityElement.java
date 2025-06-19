@@ -131,79 +131,7 @@ public class PlayerEntityElement extends AbstractElement {
     @SuppressWarnings("all")
     protected void innerRenderPlayerEntity(GuiGraphics graphics, int posX, int posY, int scale, float angleXComponent, float angleYComponent, PlayerEntityProperties props, PlayerEntityElementRenderer renderer) {
 
-        float bodyXRot = this.stringToFloat(this.bodyXRot);
-        float bodyYRot = this.stringToFloat(this.bodyYRot);
-        float headXRot = this.stringToFloat(this.headXRot);
-        float headYRot = this.stringToFloat(this.headYRot);
-        float headZRot = this.stringToFloat(this.headZRot);
-        float leftArmXRot = this.stringToFloat(this.leftArmXRot);
-        float leftArmYRot = this.stringToFloat(this.leftArmYRot);
-        float leftArmZRot = this.stringToFloat(this.leftArmZRot);
-        float rightArmXRot = this.stringToFloat(this.rightArmXRot);
-        float rightArmYRot = this.stringToFloat(this.rightArmYRot);
-        float rightArmZRot = this.stringToFloat(this.rightArmZRot);
-        float leftLegXRot = this.stringToFloat(this.leftLegXRot);
-        float leftLegYRot = this.stringToFloat(this.leftLegYRot);
-        float leftLegZRot = this.stringToFloat(this.leftLegZRot);
-        float rightLegXRot = this.stringToFloat(this.rightLegXRot);
-        float rightLegYRot = this.stringToFloat(this.rightLegYRot);
-        float rightLegZRot = this.stringToFloat(this.rightLegZRot);
 
-        graphics.pose().pushPose();
-        graphics.pose().translate((posX+((props.getDimensions().width() / 2) * scale)), (posY+(props.getDimensions().height() * scale)), 1050.0F);
-        graphics.pose().scale(1.0F, 1.0F, -1.0F);
-        graphics.pose().translate(0.0F, 0.0F, 1000.0F);
-        graphics.pose().scale((float)scale, (float)scale, (float)scale);
-
-        Quaternionf quat1 = this.bodyFollowsMouse ? new Quaternionf().rotateZ((float)Math.PI) : Axis.ZP.rotationDegrees(180.0F);
-        Quaternionf quat2 = this.bodyFollowsMouse ? new Quaternionf().rotateX(angleYComponent * 20.0F * ((float)Math.PI / 180F)) : Axis.XP.rotationDegrees(bodyYRot);
-        quat1.mul(quat2);
-        graphics.pose().mulPose(quat1);
-
-        //Apply follow-mouse values by default
-        props.yBodyRot = 180.0F + angleXComponent * 20.0F;
-        props.yRot = 180.0F + angleXComponent * 40.0F;
-        props.xRot = -angleYComponent * 20.0F;
-        props.yHeadRot = 180.0F + angleXComponent * 40.0F;
-        props.yHeadRotO = 180.0F + angleXComponent * 40.0F;
-        props.headZRot = 0;
-
-        if (!this.bodyFollowsMouse) {
-            props.yBodyRot = 180.0F + bodyXRot;
-        }
-        if (!this.headFollowsMouse) {
-            props.xRot = headYRot;
-            props.yRot = 0;
-            props.yHeadRot = 180.0F + headXRot;
-            props.yHeadRotO = 180.0F + headXRot;
-            props.headZRot = headZRot;
-        }
-        props.leftArmXRot = leftArmXRot;
-        props.leftArmYRot = leftArmYRot;
-        props.leftArmZRot = leftArmZRot;
-        props.rightArmXRot = rightArmXRot;
-        props.rightArmYRot = rightArmYRot;
-        props.rightArmZRot = rightArmZRot;
-        props.leftLegXRot = leftLegXRot;
-        props.leftLegYRot = leftLegYRot;
-        props.leftLegZRot = leftLegZRot;
-        props.rightLegXRot = rightLegXRot;
-        props.rightLegYRot = rightLegYRot;
-        props.rightLegZRot = rightLegZRot;
-
-        graphics.flush();
-        Lighting.setupForEntityInInventory();
-        EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
-        quat2.conjugate();
-        dispatcher.overrideCameraOrientation(quat2);
-        dispatcher.setRenderShadow(false);
-
-        graphics.drawSpecial(bufferSource1 -> renderer.renderPlayerEntity(0.0D, 0.0D, 0.0D, 0.0F, 1.0F, graphics.pose(), bufferSource1, 15728880));
-
-        graphics.flush();
-        dispatcher.setRenderShadow(true);
-        graphics.pose().popPose();
-        Lighting.setupFor3DItems();
     }
 
     protected float stringToFloat(@Nullable String s) {

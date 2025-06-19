@@ -31,6 +31,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
@@ -165,7 +166,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
          
 
-        graphics.fill(RenderType.gui(), 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
@@ -245,9 +246,9 @@ public abstract class AbstractFileBrowserScreen extends Screen {
                 int h = size[1];
                 int x = this.width - 20 - w;
                 int y = 50 + 15;
-                graphics.fill(RenderType.guiOverlay(), x, y, x + w, y + h, UIBase.getUIColorTheme().area_background_color.getColorInt());
+                graphics.fill(x, y, x + w, y + h, UIBase.getUIColorTheme().area_background_color.getColorInt());
                  
-                graphics.blit(RenderType::guiTextured, loc, x, y, 0.0F, 0.0F, w, h, w, h);
+                graphics.blit(RenderPipelines.GUI_TEXTURED, loc, x, y, 0.0F, 0.0F, w, h, w, h);
                 UIBase.renderBorder(graphics, x, y, x + w, y + h, UIBase.ELEMENT_BORDER_THICKNESS, UIBase.getUIColorTheme().element_border_color_normal.getColor(), true, true, true, true);
             }
         } else {
@@ -262,7 +263,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
     protected int renderCurrentDirectoryField(GuiGraphics graphics, int mouseX, int mouseY, float partial, int x, int y, int width, int height) {
         int xEnd = x + width;
         int yEnd = y + height;
-        graphics.fill(RenderType.guiOverlay(), x + 1, y + 1, xEnd - 1, yEnd - 1, UIBase.getUIColorTheme().area_background_color.getColorInt());
+        graphics.fill(x + 1, y + 1, xEnd - 1, yEnd - 1, UIBase.getUIColorTheme().area_background_color.getColorInt());
         UIBase.renderBorder(graphics, x, y, xEnd, yEnd, 1, UIBase.getUIColorTheme().element_border_color_normal.getColor(), true, true, true, true);
         this.currentDirectoryComponent.setX(x + 4);
         this.currentDirectoryComponent.setY(y + (height / 2) - (this.currentDirectoryComponent.getHeight() / 2));
@@ -705,7 +706,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
 
                 //Render icon
                 ResourceLocation loc = this.file.isFile() ? FILE_ICON_TEXTURE : FOLDER_ICON_TEXTURE;
-                graphics.blit(RenderType::guiTextured, loc, this.x + BORDER, this.y + BORDER, 0.0F, 0.0F, 20, 20, 20, 20, UIBase.getUIColorTheme().ui_texture_color.getColorInt());
+                graphics.blit(RenderPipelines.GUI_TEXTURED, loc, this.x + BORDER, this.y + BORDER, 0.0F, 0.0F, 20, 20, 20, 20, UIBase.getUIColorTheme().ui_texture_color.getColorInt());
 
                 //Render file name
                 int textColor = this.resourceUnfriendlyFileName ? UIBase.getUIColorTheme().error_text_color.getColorInt() : UIBase.getUIColorTheme().description_area_text_color.getColorInt();
@@ -753,7 +754,7 @@ public abstract class AbstractFileBrowserScreen extends Screen {
              
 
             //Render icon
-            graphics.blit(RenderType::guiTextured, GO_UP_ICON_TEXTURE, this.x + BORDER, this.y + BORDER, 0.0F, 0.0F, 20, 20, 20, 20, UIBase.getUIColorTheme().ui_texture_color.getColorInt());
+            graphics.blit(RenderPipelines.GUI_TEXTURED, GO_UP_ICON_TEXTURE, this.x + BORDER, this.y + BORDER, 0.0F, 0.0F, 20, 20, 20, 20, UIBase.getUIColorTheme().ui_texture_color.getColorInt());
 
             //Render file name
             graphics.drawString(this.font, this.labelComponent, this.x + BORDER + 20 + 3, this.y + (this.height / 2) - (this.font.lineHeight / 2) , -1, false);

@@ -42,11 +42,13 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.SaveFileScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.GenericMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -169,7 +171,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				newscale = 1;
 			}
 			Window m = Minecraft.getInstance().getWindow();
-			m.setGuiScale(newscale);
+			WindowHandler.setGuiScale(newscale);
 			this.width = m.getGuiScaledWidth();
 			this.height = m.getGuiScaledHeight();
 		}
@@ -184,7 +186,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			double newScaleX = (percentX / 100.0D) * m.getGuiScale();
 			double newScaleY = (percentY / 100.0D) * m.getGuiScale();
 			double newScale = Math.min(newScaleX, newScaleY);
-			m.setGuiScale(newScale);
+			WindowHandler.setGuiScale(newScale);
 			this.width = m.getGuiScaledWidth();
 			this.height = m.getGuiScaledHeight();
 		}
@@ -288,7 +290,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			int startY = Math.min(this.mouseSelectionStartY, mouseY);
 			int endX = Math.max(this.mouseSelectionStartX, mouseX);
 			int endY = Math.max(this.mouseSelectionStartY, mouseY);
-			graphics.fill(RenderType.guiOverlay(), startX, startY, endX, endY, RenderingUtils.replaceAlphaInColor(UIBase.getUIColorTheme().layout_editor_mouse_selection_rectangle_color.getColorInt(), 70));
+			graphics.fill(startX, startY, endX, endY, RenderingUtils.replaceAlphaInColor(UIBase.getUIColorTheme().layout_editor_mouse_selection_rectangle_color.getColorInt(), 70));
 			UIBase.renderBorder(graphics, startX, startY, endX, endY, 1, UIBase.getUIColorTheme().layout_editor_mouse_selection_rectangle_color.getColor(), true, true, true, true);
 		}
 	}
@@ -323,16 +325,13 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	@Override
 	public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-		graphics.fill(RenderType.guiOverlay(), 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
+		graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color_darker.getColorInt());
 
 		this.layout.menuBackgrounds.forEach(menuBackground -> {
 
 			menuBackground.keepBackgroundAspectRatio = this.layout.preserveBackgroundAspectRatio;
 			menuBackground.opacity = 1.0F;
 			menuBackground.render(graphics, mouseX, mouseY, partial);
-
-			//Restore render defaults
-			graphics.flush();
 
 		});
 
@@ -378,12 +377,12 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 						int headerX = x0 + (this.width / 2) - (headerWidth / 2);
 						int headerY = (y0 / 2) - (headerHeight / 2);
 						graphics.enableScissor(x0, 0, x0 + this.width, y0);
-						graphics.blit(RenderType::guiTextured, loc, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
+						graphics.blit(RenderPipelines.GUI_TEXTURED, loc, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
 						graphics.disableScissor();
 					} else if (this.layout.repeatScrollListHeaderTexture) {
 						RenderingUtils.blitRepeat(graphics, loc, x0, 0, this.width, y0, headerTexture.getWidth(), headerTexture.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
 					} else {
-						graphics.blit(RenderType::guiTextured, loc, x0, 0, 0.0F, 0.0F, this.width, y0, this.width, y0, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
+						graphics.blit(RenderPipelines.GUI_TEXTURED, loc, x0, 0, 0.0F, 0.0F, this.width, y0, this.width, y0, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
 					}
 				}
 			}
@@ -399,20 +398,20 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 						int footerX = x0 + (this.width / 2) - (footerWidth / 2);
 						int footerY = y1 + (footerOriginalHeight / 2) - (footerHeight / 2);
 						graphics.enableScissor(x0, y1, x0 + this.width, y1 + footerOriginalHeight);
-						graphics.blit(RenderType::guiTextured, loc, footerX, footerY, 0.0F, 0.0F, footerWidth, footerHeight, footerWidth, footerHeight);
+						graphics.blit(RenderPipelines.GUI_TEXTURED, loc, footerX, footerY, 0.0F, 0.0F, footerWidth, footerHeight, footerWidth, footerHeight);
 						graphics.disableScissor();
 					} else if (this.layout.repeatScrollListFooterTexture) {
 						int footerHeight = this.height - y1;
 						RenderingUtils.blitRepeat(graphics, loc, x0, y1, this.width, footerHeight, footerTexture.getWidth(), footerTexture.getHeight(), ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
 					} else {
 						int footerHeight = this.height - y1;
-						graphics.blit(RenderType::guiTextured, loc, x0, y1, 0.0F, 0.0F, this.width, footerHeight, this.width, footerHeight);
+						graphics.blit(RenderPipelines.GUI_TEXTURED, loc, x0, y1, 0.0F, 0.0F, this.width, footerHeight, this.width, footerHeight);
 					}
 				}
 			}
 
-			graphics.blit(RenderType::guiTextured, Screen.HEADER_SEPARATOR, 0, y0 - 2, 0.0F, 0.0F, this.width, 2, 32, 2);
-			graphics.blit(RenderType::guiTextured, Screen.FOOTER_SEPARATOR, 0, y1, 0.0F, 0.0F, this.width, 2, 32, 2);
+			graphics.blit(RenderPipelines.GUI_TEXTURED, Screen.HEADER_SEPARATOR, 0, y0 - 2, 0.0F, 0.0F, this.width, 2, 32, 2);
+			graphics.blit(RenderPipelines.GUI_TEXTURED, Screen.FOOTER_SEPARATOR, 0, y1, 0.0F, 0.0F, this.width, 2, 32, 2);
 
 		}
 
@@ -427,14 +426,14 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			int scaledWidth = (int)((float)this.width / scale);
 			int scaledHeight = (int)((float)this.height / scale);
 
-			graphics.pose().pushPose();
-			graphics.pose().scale(scale, scale, scale);
+			graphics.pose().pushMatrix();
+			graphics.pose().scale(scale, scale);
 
 			int gridSize = FancyMenu.getOptions().layoutEditorGridSize.getValue();
 			int lineThickness = 1;
 
 			//Draw centered vertical line
-			graphics.fill(RenderType.guiOverlay(), (scaledWidth / 2) - 1, 0, (scaledWidth / 2) + 1, scaledHeight, UIBase.getUIColorTheme().layout_editor_grid_color_center.getColorInt());
+			graphics.fill((scaledWidth / 2) - 1, 0, (scaledWidth / 2) + 1, scaledHeight, UIBase.getUIColorTheme().layout_editor_grid_color_center.getColorInt());
 
 			//Draw vertical lines center -> left
 			int linesVerticalToLeftPosX = (scaledWidth / 2) - gridSize - 1;
@@ -442,7 +441,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				int minY = 0;
 				int maxY = scaledHeight;
 				int maxX = linesVerticalToLeftPosX + lineThickness;
-				graphics.fill(RenderType.guiOverlay(), linesVerticalToLeftPosX, minY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
+				graphics.fill(linesVerticalToLeftPosX, minY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
 				linesVerticalToLeftPosX -= gridSize;
 			}
 
@@ -452,12 +451,12 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				int minY = 0;
 				int maxY = scaledHeight;
 				int maxX = linesVerticalToRightPosX + lineThickness;
-				graphics.fill(RenderType.guiOverlay(), linesVerticalToRightPosX, minY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
+				graphics.fill(linesVerticalToRightPosX, minY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
 				linesVerticalToRightPosX += gridSize;
 			}
 
 			//Draw centered horizontal line
-			graphics.fill(RenderType.guiOverlay(), 0, (scaledHeight / 2) - 1, scaledWidth, (scaledHeight / 2) + 1, UIBase.getUIColorTheme().layout_editor_grid_color_center.getColorInt());
+			graphics.fill(0, (scaledHeight / 2) - 1, scaledWidth, (scaledHeight / 2) + 1, UIBase.getUIColorTheme().layout_editor_grid_color_center.getColorInt());
 
 			//Draw horizontal lines center -> top
 			int linesHorizontalToTopPosY = (scaledHeight / 2) - gridSize - 1;
@@ -465,7 +464,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				int minX = 0;
 				int maxX = scaledWidth;
 				int maxY = linesHorizontalToTopPosY + lineThickness;
-				graphics.fill(RenderType.guiOverlay(), minX, linesHorizontalToTopPosY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
+				graphics.fill(minX, linesHorizontalToTopPosY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
 				linesHorizontalToTopPosY -= gridSize;
 			}
 
@@ -475,11 +474,11 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				int minX = 0;
 				int maxX = scaledWidth;
 				int maxY = linesHorizontalToBottomPosY + lineThickness;
-				graphics.fill(RenderType.guiOverlay(), minX, linesHorizontalToBottomPosY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
+				graphics.fill(minX, linesHorizontalToBottomPosY, maxX, maxY, UIBase.getUIColorTheme().layout_editor_grid_color_normal.getColorInt());
 				linesHorizontalToBottomPosY += gridSize;
 			}
 
-			graphics.pose().popPose();
+			graphics.pose().popMatrix();
 
 		}
 

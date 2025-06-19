@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
@@ -140,7 +141,7 @@ public class ProgressBarElement extends AbstractElement {
             if (texture != null) {
                 ResourceLocation loc = texture.getResourceLocation();
                 if (loc != null) {
-                    graphics.blit(RenderType::guiTextured, loc, progressX, progressY, offsetX, offsetY, progressWidth, progressHeight, fullWidth, fullHeight, DrawableColor.WHITE.getColorIntWithAlpha(opacity));
+                    graphics.blit(RenderPipelines.GUI_TEXTURED, loc, progressX, progressY, offsetX, offsetY, progressWidth, progressHeight, fullWidth, fullHeight, DrawableColor.WHITE.getColorIntWithAlpha(opacity));
                 }
             }
         }
@@ -150,7 +151,7 @@ public class ProgressBarElement extends AbstractElement {
             if (opacity <= colorAlpha) {
                 colorAlpha = opacity;
             }
-            graphics.fill(RenderType.guiOverlay(), progressX, progressY, progressX + progressWidth, progressY + progressHeight, barColor.getColorIntWithAlpha(colorAlpha));
+            graphics.fill(progressX, progressY, progressX + progressWidth, progressY + progressHeight, barColor.getColorIntWithAlpha(colorAlpha));
         }
 
         this.setSmoothedProgress(smoothedProgress);
@@ -164,14 +165,14 @@ public class ProgressBarElement extends AbstractElement {
          
         if (backgroundTextureSupplier != null) {
             backgroundTextureSupplier.forRenderable((texture, location) -> {
-                graphics.blit(RenderType::guiTextured, location, getAbsoluteX(), getAbsoluteY(), 0.0F, 0.0F, getAbsoluteWidth(), getAbsoluteHeight(), getAbsoluteWidth(), getAbsoluteHeight(), DrawableColor.WHITE.getColorIntWithAlpha(opacity));
+                graphics.blit(RenderPipelines.GUI_TEXTURED, location, getAbsoluteX(), getAbsoluteY(), 0.0F, 0.0F, getAbsoluteWidth(), getAbsoluteHeight(), getAbsoluteWidth(), getAbsoluteHeight(), DrawableColor.WHITE.getColorIntWithAlpha(opacity));
             });
         } else if (backgroundColor != null) {
             float colorAlpha = Math.min(1.0F, Math.max(0.0F, (float) ARGB.alpha(backgroundColor.getColorInt()) / 255.0F));
             if (opacity <= colorAlpha) {
                 colorAlpha = opacity;
             }
-            graphics.fill(RenderType.guiOverlay(), getAbsoluteX(), getAbsoluteY(), getAbsoluteX() + getAbsoluteWidth(), getAbsoluteY() + getAbsoluteHeight(), backgroundColor.getColorIntWithAlpha(colorAlpha));
+            graphics.fill(getAbsoluteX(), getAbsoluteY(), getAbsoluteX() + getAbsoluteWidth(), getAbsoluteY() + getAbsoluteHeight(), backgroundColor.getColorIntWithAlpha(colorAlpha));
         }
     }
 

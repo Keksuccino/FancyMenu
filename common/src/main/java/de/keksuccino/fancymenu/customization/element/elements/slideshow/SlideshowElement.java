@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -51,9 +52,7 @@ public class SlideshowElement extends AbstractElement {
             this.slideshow.width = this.getAbsoluteWidth();
             this.slideshow.height = this.getAbsoluteHeight();
 
-            graphics.flush();
             this.slideshow.render(graphics);
-            graphics.flush();
 
             this.slideshow.x = cachedX;
             this.slideshow.y = cachedY;
@@ -62,7 +61,7 @@ public class SlideshowElement extends AbstractElement {
             this.slideshow.slideshowOpacity = 1.0F;
 
         } else {
-            graphics.blit(RenderType::guiTextured, MISSING, this.getAbsoluteX(), this.getAbsoluteY(), 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+            graphics.blit(RenderPipelines.GUI_TEXTURED, MISSING, this.getAbsoluteX(), this.getAbsoluteY(), 0.0F, 0.0F, this.getAbsoluteWidth(), this.getAbsoluteHeight(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
         }
 
     }

@@ -32,13 +32,13 @@ public abstract class UIComponent extends UIBase implements FocuslessContainerEv
 
         this.hovered = this.isMouseOver();
 
-        graphics.pose().pushPose();
-        graphics.pose().scale(this.getFixedComponentScale(), this.getFixedComponentScale(), this.getFixedComponentScale());
-        graphics.pose().translate(this.getTranslatedX(), this.getTranslatedY(), this.posZ);
+        graphics.pose().pushMatrix();
+        graphics.pose().scale(this.getFixedComponentScale(), this.getFixedComponentScale());
+        graphics.pose().translate(this.getTranslatedX(), this.getTranslatedY());
 
         this.renderComponent(graphics, this.getRealMouseX(), this.getRealMouseY(), partial);
 
-        graphics.pose().popPose();
+        graphics.pose().popMatrix();
 
     }
 

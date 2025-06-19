@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import net.minecraft.client.Minecraft;
@@ -23,8 +24,8 @@ public abstract class MixinImageButton {
 
 	@Unique private float[] cachedShaderColor_FancyMenu;
 
-	@WrapWithCondition(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Ljava/util/function/Function;Lnet/minecraft/resources/ResourceLocation;IIII)V"))
-	private boolean wrapRenderTextureFancyMenu(GuiGraphics graphics, Function<ResourceLocation, RenderType> $$0, ResourceLocation $$1, int $$2, int $$3, int $$4, int $$5) {
+	@WrapWithCondition(method = "renderWidget", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blitSprite(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/resources/ResourceLocation;IIII)V"))
+	private boolean wrapRenderTextureFancyMenu(GuiGraphics graphics, RenderPipeline $$0, ResourceLocation $$1, int $$2, int $$3, int $$4, int $$5) {
 
 		ImageButton button = (ImageButton)((Object)this);
 		CustomizableWidget customizable = ((CustomizableWidget)this);

@@ -34,6 +34,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
@@ -44,6 +45,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.components.tabs.TabNavigationBar;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -249,7 +251,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			if (newscale <= 0) {
 				newscale = 1;
 			}
-			window.setGuiScale(newscale);
+			WindowHandler.setGuiScale(newscale);
 			e.getScreen().width = window.getGuiScaledWidth();
 			e.getScreen().height = window.getGuiScaledHeight();
 		}
@@ -263,7 +265,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			double newScaleX = (percentX / 100.0D) * window.getGuiScale();
 			double newScaleY = (percentY / 100.0D) * window.getGuiScale();
 			double newScale = Math.min(newScaleX, newScaleY);
-			window.setGuiScale(newScale);
+			WindowHandler.setGuiScale(newScale);
 			e.getScreen().width = window.getGuiScaledWidth();
 			e.getScreen().height = window.getGuiScaledHeight();
 		}
@@ -422,12 +424,12 @@ public class ScreenCustomizationLayer implements ElementFactory {
 						int headerX = list.getX() + (list.getWidth() / 2) - (headerWidth / 2);
 						int headerY = (list.getY() / 2) - (headerHeight / 2);
 						graphics.enableScissor(list.getX(), 0, list.getRight(), list.getY());
-						graphics.blit(RenderType::guiTextured, loc, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
+						graphics.blit(RenderPipelines.GUI_TEXTURED, loc, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
 						graphics.disableScissor();
 					} else if (this.layoutBase.repeatScrollListHeaderTexture) {
 						RenderingUtils.blitRepeat(graphics, loc, list.getX(), 0, list.getWidth(), list.getY(), headerTexture.getWidth(), headerTexture.getHeight(), -1);
 					} else {
-						graphics.blit(RenderType::guiTextured, loc, list.getX(), 0, 0.0F, 0.0F, list.getWidth(), list.getY(), list.getWidth(), list.getY());
+						graphics.blit(RenderPipelines.GUI_TEXTURED, loc, list.getX(), 0, 0.0F, 0.0F, list.getWidth(), list.getY(), list.getWidth(), list.getY());
 					}
 				}
 			}
@@ -444,7 +446,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 						int footerX = list.getX() + (list.getWidth() / 2) - (footerWidth / 2);
 						int footerY = list.getBottom() + (footerOriginalHeight / 2) - (footerHeight / 2);
 						graphics.enableScissor(list.getX(), list.getBottom(), list.getRight(), list.getBottom() + footerOriginalHeight);
-						graphics.blit(RenderType::guiTextured, loc, footerX, footerY, 0.0F, 0.0F, footerWidth, footerHeight, footerWidth, footerHeight);
+						graphics.blit(RenderPipelines.GUI_TEXTURED, loc, footerX, footerY, 0.0F, 0.0F, footerWidth, footerHeight, footerWidth, footerHeight);
 						graphics.disableScissor();
 					} else if (this.layoutBase.repeatScrollListFooterTexture) {
 						int footerHeight = ScreenUtils.getScreenHeight() - list.getBottom();
@@ -453,7 +455,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 					} else {
 						int footerHeight = ScreenUtils.getScreenHeight() - list.getBottom();
 						if (footerHeight <= 0) footerHeight = 1;
-						graphics.blit(RenderType::guiTextured, loc, list.getX(), list.getBottom(), 0.0F, 0.0F, list.getWidth(), footerHeight, list.getWidth(), footerHeight);
+						graphics.blit(RenderPipelines.GUI_TEXTURED, loc, list.getX(), list.getBottom(), 0.0F, 0.0F, list.getWidth(), footerHeight, list.getWidth(), footerHeight);
 					}
 				}
 			}
@@ -482,12 +484,12 @@ public class ScreenCustomizationLayer implements ElementFactory {
 						int headerX = (e.getHeaderWidth() / 2) - (headerWidth / 2);
 						int headerY = (e.getHeaderHeight() / 2) - (headerHeight / 2);
 						graphics.enableScissor(0, 0, e.getHeaderWidth(), e.getHeaderHeight());
-						graphics.blit(RenderType::guiTextured, loc, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
+						graphics.blit(RenderPipelines.GUI_TEXTURED, loc, headerX, headerY, 0.0F, 0.0F, headerWidth, headerHeight, headerWidth, headerHeight);
 						graphics.disableScissor();
 					} else if (this.layoutBase.repeatScrollListHeaderTexture) {
 						RenderingUtils.blitRepeat(graphics, loc, 0, 0, e.getHeaderWidth(), e.getHeaderHeight(), headerTexture.getWidth(), headerTexture.getHeight(), -1);
 					} else {
-						graphics.blit(RenderType::guiTextured, loc, 0, 0, 0.0F, 0.0F, e.getHeaderWidth(), e.getHeaderHeight(), e.getHeaderWidth(), e.getHeaderHeight());
+						graphics.blit(RenderPipelines.GUI_TEXTURED, loc, 0, 0, 0.0F, 0.0F, e.getHeaderWidth(), e.getHeaderHeight(), e.getHeaderWidth(), e.getHeaderHeight());
 					}
 				}
 			}
@@ -506,9 +508,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			menuBackground.opacity = this.backgroundOpacity;
 			menuBackground.render(graphics, mouseX, mouseY, partial);
 			menuBackground.opacity = 1.0F;
-
-			//Restore render defaults
-			graphics.flush();
 
 		});
 
@@ -541,7 +540,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 	public static void renderBackgroundOverlay(GuiGraphics graphics, int x, int y, int width, int height) {
 		ResourceLocation location = (Minecraft.getInstance().level == null) ? MENU_BACKGROUND : INWORLD_MENU_BACKGROUND;
-		graphics.blit(RenderType::guiTextured, location, x, y, 0, 0.0F, 0, width, height, 32, 32);
+		graphics.blit(RenderPipelines.GUI_TEXTURED, location, x, y, 0, 0.0F, 0, width, height, 32, 32);
 	}
 
 	@Nullable

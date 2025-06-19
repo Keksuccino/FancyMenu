@@ -408,7 +408,7 @@ public class TextEditorScreen extends Screen {
             }
 
             //Render placeholder menu background
-            graphics.fill(RenderType.gui(), this.width - this.borderRight - this.getPlaceholderAreaWidth(), this.getPlaceholderAreaY(), this.width - this.borderRight, this.getPlaceholderAreaY() + this.getPlaceholderAreaHeight(), this.editorAreaBackgroundColor.getRGB());
+            graphics.fill(this.width - this.borderRight - this.getPlaceholderAreaWidth(), this.getPlaceholderAreaY(), this.width - this.borderRight, this.getPlaceholderAreaY() + this.getPlaceholderAreaHeight(), this.editorAreaBackgroundColor.getRGB());
 
             //Don't render parts of placeholder entries outside of placeholder menu area
             graphics.enableScissor(this.width - this.borderRight - this.getPlaceholderAreaWidth(), this.getPlaceholderAreaY(), this.width - this.borderRight, this.getPlaceholderAreaY() + this.getPlaceholderAreaHeight());
@@ -622,7 +622,7 @@ public class TextEditorScreen extends Screen {
     }
 
     protected void renderLineNumberBackground(GuiGraphics graphics, int width) {
-        graphics.fill(RenderType.gui(), this.getEditorAreaX(), this.getEditorAreaY() - 1, this.getEditorAreaX() - width - 1, this.getEditorAreaY() + this.getEditorAreaHeight() + 1, this.sideBarColor.getRGB());
+        graphics.fill(this.getEditorAreaX(), this.getEditorAreaY() - 1, this.getEditorAreaX() - width - 1, this.getEditorAreaY() + this.getEditorAreaHeight() + 1, this.sideBarColor.getRGB());
     }
 
     protected void renderLineNumber(GuiGraphics graphics, TextEditorLine line) {
@@ -632,11 +632,11 @@ public class TextEditorScreen extends Screen {
     }
 
     protected void renderEditorAreaBackground(GuiGraphics graphics) {
-        graphics.fill(RenderType.gui(), this.getEditorAreaX(), this.getEditorAreaY(), this.getEditorAreaX() + this.getEditorAreaWidth(), this.getEditorAreaY() + this.getEditorAreaHeight(), this.editorAreaBackgroundColor.getRGB());
+        graphics.fill(this.getEditorAreaX(), this.getEditorAreaY(), this.getEditorAreaX() + this.getEditorAreaWidth(), this.getEditorAreaY() + this.getEditorAreaHeight(), this.editorAreaBackgroundColor.getRGB());
     }
 
     protected void renderScreenBackground(GuiGraphics graphics) {
-        graphics.fill(RenderType.gui(), 0, 0, this.width, this.height, this.screenBackgroundColor.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, this.screenBackgroundColor.getColorInt());
     }
 
     protected void tickMouseHighlighting() {

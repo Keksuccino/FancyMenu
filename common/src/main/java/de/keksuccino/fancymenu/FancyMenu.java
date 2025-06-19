@@ -98,7 +98,7 @@ public class FancyMenu {
 	}
 
 	public static String getMinecraftVersion() {
-		return SharedConstants.getCurrentVersion().getName();
+		return SharedConstants.getCurrentVersion().name();
 	}
 
 	private static File createDirectory(@NotNull File directory) {

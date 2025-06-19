@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.events.screen.ScreenMouseScrollEvent;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ARGB;
@@ -85,15 +86,15 @@ public class ScrollBar {
 
         if (this.isGrabberHovered() || this.isGrabberGrabbed()) {
             if (this.hoverBarTexture != null) {
-                graphics.blit(RenderType::guiTextured, this.hoverBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
+                graphics.blit(RenderPipelines.GUI_TEXTURED, this.hoverBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
             } else if (this.hoverBarColor != null) {
-                graphics.fill(RenderType.guiOverlay(), x, y, x + this.grabberWidth, y + this.grabberHeight, this.hoverBarColor.getRGB());
+                graphics.fill(x, y, x + this.grabberWidth, y + this.grabberHeight, this.hoverBarColor.getRGB());
             }
         } else {
             if (this.idleBarTexture != null) {
-                graphics.blit(RenderType::guiTextured, this.idleBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
+                graphics.blit(RenderPipelines.GUI_TEXTURED, this.idleBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight, ARGB.colorFromFloat(1.0F, 1.0F, 1.0F, 1.0F));
             } else if (this.idleBarColor != null) {
-                graphics.fill(RenderType.guiOverlay(), x, y, x + this.grabberWidth, y + this.grabberHeight, this.idleBarColor.getRGB());
+                graphics.fill(x, y, x + this.grabberWidth, y + this.grabberHeight, this.idleBarColor.getRGB());
             }
         }
 

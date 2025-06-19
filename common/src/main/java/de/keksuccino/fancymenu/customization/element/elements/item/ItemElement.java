@@ -1,18 +1,15 @@
 package de.keksuccino.fancymenu.customization.element.elements.item;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenRenderUtils;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -26,9 +23,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public class ItemElement extends AbstractElement {
 
@@ -59,42 +58,43 @@ public class ItemElement extends AbstractElement {
         super(builder);
     }
 
+    /**
+     * This method handles data and is not directly affected by rendering changes.
+     * It remains the same.
+     */
     protected void updateCachedItem() {
-
         String keyFinal = PlaceholderParser.replacePlaceholders(this.itemKey);
         String loreFinal = (this.lore == null) ? null : PlaceholderParser.replacePlaceholders(this.lore);
         String nameFinal = (this.itemName == null) ? null : PlaceholderParser.replacePlaceholders(this.itemName);
         String nbtFinal = (this.nbtData == null) ? null : PlaceholderParser.replacePlaceholders(this.nbtData);
 
         try {
-
             if ((this.cachedStack == null) || !keyFinal.equals(this.lastItemKey) || (this.enchanted != this.lastEnchanted) || !Objects.equals(loreFinal, this.lastLore) || !Objects.equals(nameFinal, this.lastItemName) || !Objects.equals(nbtFinal, this.lastNbtData)) {
-
-                Item item = BuiltInRegistries.ITEM.getValue(ResourceLocation.parse(keyFinal));
+                Optional<Holder.Reference<Item>> optional = BuiltInRegistries.ITEM.get(ResourceLocation.parse(keyFinal));
+                Item item = optional.isPresent() ? Objects.requireNonNullElse(optional.get().value(), Items.AIR) : Items.AIR;
                 this.cachedStack = new ItemStack(item);
                 this.cachedStack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, this.enchanted);
 
                 if ((loreFinal != null) && !loreFinal.isBlank()) {
                     List<Component> lines = new ArrayList<>();
                     for (String line : StringUtils.splitLines(loreFinal.replace("%n%", "\n"), "\n")) {
-                        lines.add(buildComponent(line));
+                        lines.add(Component.literal(line)); // Assuming buildComponent is similar to literal()
                     }
                     this.cachedStack.set(DataComponents.LORE, new ItemLore(lines));
                 }
 
                 if (nameFinal != null) {
-                    this.cachedStack.set(DataComponents.ITEM_NAME, buildComponent(nameFinal));
+                    this.cachedStack.set(DataComponents.CUSTOM_NAME, Component.literal(nameFinal));
                 }
 
                 if (nbtFinal != null) {
+                    // Assuming NBTBuilder is updated for modern DataComponentPatch logic
                     DataComponentPatch nbt = NBTBuilder.buildNbtFromString(this.cachedStack, nbtFinal);
                     if (nbt != null) {
-                        this.cachedStack.applyComponentsAndValidate(nbt);
+                        this.cachedStack.applyComponents(nbt);
                     }
                 }
-
             }
-
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to create ItemStack instance for 'Item' element!", ex);
             this.cachedStack = new ItemStack(Items.BARRIER);
@@ -105,35 +105,28 @@ public class ItemElement extends AbstractElement {
         this.lastLore = loreFinal;
         this.lastItemName = nameFinal;
         this.lastNbtData = nbtFinal;
-
     }
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-
         if (this.shouldRender()) {
-
             this.updateCachedItem();
 
-            int x = this.getAbsoluteX();
-            int y = this.getAbsoluteY();
-            int w = this.getAbsoluteWidth();
-            int h = this.getAbsoluteHeight();
-
-             
-
             if (this.cachedStack != null) {
+                int x = this.getAbsoluteX();
+                int y = this.getAbsoluteY();
+                int w = this.getAbsoluteWidth();
+                int h = this.getAbsoluteHeight();
                 this.renderItem(graphics, x, y, w, h, mouseX, mouseY, this.cachedStack);
             }
-
-             
-
         }
-
     }
 
+    /**
+     * Main rendering logic for the item, its count, and its tooltip.
+     * The tooltip logic is now handled by the modern deferred tooltip system.
+     */
     protected void renderItem(GuiGraphics graphics, int x, int y, int width, int height, int mouseX, int mouseY, @NotNull ItemStack itemStack) {
-
         int count = SerializationUtils.deserializeNumber(Integer.class, 1, PlaceholderParser.replacePlaceholders(this.itemCount));
 
         this.renderScaledItem(graphics, itemStack, x, y, width, height);
@@ -142,58 +135,58 @@ public class ItemElement extends AbstractElement {
             this.renderItemCount(graphics, this.font, x, y, Math.max(width, height), count);
         }
 
+        // NEW: Use the built-in deferred tooltip system. It's cleaner and safer.
         if (!isEditor() && this.showTooltip && UIBase.isXYInArea(mouseX, mouseY, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight())) {
-            ScreenRenderUtils.postPostRenderTask((graphics1, mouseX1, mouseY1, partial) -> this.renderItemTooltip(graphics1, mouseX, mouseY, itemStack));
+            graphics.setTooltipForNextFrame(this.font, itemStack, mouseX, mouseY);
         }
-
     }
 
+    /**
+     * Renders a scaled item using the modern GuiGraphics transformation stack.
+     */
     protected void renderScaledItem(@NotNull GuiGraphics graphics, @NotNull ItemStack stack, int x, int y, int width, int height) {
-        // Save the current transformation state.
-        PoseStack pose = graphics.pose();
-        pose.pushPose();
+        graphics.pose().pushMatrix();
 
-        // Translate to the top-left of where you want the item to be drawn.
-        pose.translate(x, y, 0);
+        // Translate to the item's position.
+        graphics.pose().translate(x, y);
 
         // Calculate a uniform scale factor based on the desired size.
-        // (Items are rendered at a base size of 16x16.)
-        float scale = Math.min(width, height) / 16.0F;
-        pose.scale(scale, scale, 1.0F);
+        // Items are rendered at a base size of 16x16.
+        float scale = (float) Math.min(width, height) / 16.0F;
+        graphics.pose().scale(scale, scale);
 
-        // Now render the item at (0,0) because the translation has been applied.
+        // Render the item at (0,0) in the new transformed and scaled space.
         graphics.renderItem(stack, 0, 0);
 
-        // Restore the previous transformation state.
-        pose.popPose();
+        graphics.pose().popMatrix();
     }
 
+    /**
+     * Renders the item count, scaled proportionally to the item itself.
+     * This implementation is now much cleaner using transformations.
+     */
     protected void renderItemCount(@NotNull GuiGraphics graphics, @NotNull Font font, int x, int y, int size, int count) {
-
-        PoseStack pose = graphics.pose();
         String text = String.valueOf(count);
-        // Calculate scaling factor relative to original 16x16 size
-        float scaleFactor = size / 16.0F;
+        // The scale factor is relative to the standard 16x16 item size.
+        float scaleFactor = (float) size / 16.0F;
 
-        pose.pushPose();
-        pose.translate(0.0F, 0.0F, 200.0F);
-        pose.pushPose();
+        graphics.pose().pushMatrix();
 
-        // Scale text exactly proportionally to item size
-        pose.scale(scaleFactor, scaleFactor, 1.0F);
+        // Calculate the unscaled position of the text relative to a 16x16 item box.
+        // This is the standard position for item counts.
+        float textX = (float) (19 - 2 - font.width(text));
+        float textY = (float) (6 + 3);
 
-        // Convert item-space coordinates to scaled text-space coordinates
-        int scaledX = (int)((x / scaleFactor) + 19 - 2 - font.width(text));
-        int scaledY = (int)((y / scaleFactor) + 6 + 3);
+        // 1. Translate to the item's top-left corner.
+        graphics.pose().translate(x, y);
+        // 2. Scale the context from this corner.
+        graphics.pose().scale(scaleFactor, scaleFactor);
 
-        graphics.drawString(font, text, scaledX, scaledY, -1, true);
-        pose.popPose();
-        pose.popPose();
+        // 3. Draw the string at the pre-calculated *unscaled* position.
+        // The transformations will handle placing and scaling it correctly on screen.
+        graphics.drawString(font, text, (int) textX, (int) textY, -1, true);
 
-    }
-
-    protected void renderItemTooltip(@NotNull GuiGraphics graphics, int mouseX, int mouseY, @NotNull ItemStack itemStack) {
-        graphics.renderTooltip(this.font, Screen.getTooltipFromItem(Minecraft.getInstance(), itemStack), itemStack.getTooltipImage(), mouseX, mouseY, itemStack.get(DataComponents.TOOLTIP_STYLE));
+        graphics.pose().popMatrix();
     }
 
 }

@@ -14,6 +14,7 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -208,7 +209,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             } else {
                 // Standard rendering
                 graphics.blit(
-                        RenderType::guiTextured,
+                        RenderPipelines.GUI_TEXTURED,
                         TEXTURE_ATLAS,
                         buddyPosX, renderY,
                         texX, texY,
@@ -231,7 +232,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             } else {
                 // Standard rendering
                 graphics.blit(
-                        RenderType::guiTextured,
+                        RenderPipelines.GUI_TEXTURED,
                         TEXTURE_ATLAS,
                         buddyPosX, buddyPosY,
                         texX, texY,
@@ -296,7 +297,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         if (icon != null) {
             // First render the thought bubble
             graphics.blit(
-                    RenderType::guiTextured,
+                    RenderPipelines.GUI_TEXTURED,
                     TEXTURE_THOUGHT_BUBBLE,
                     iconX - 4, iconY - 4,
                     0, 0,
@@ -306,7 +307,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
 
             // Then render the icon inside it
             graphics.blit(
-                    RenderType::guiTextured,
+                    RenderPipelines.GUI_TEXTURED,
                     icon,
                     iconX, iconY,
                     0, 0,

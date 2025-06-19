@@ -110,7 +110,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         if (!this.shouldRender()) return;
 
         if (isEditor()) {
-            net.minecraft.client.gui.components.Tooltip cachedVanillaTooltip = this.getWidget().getTooltip();
+            net.minecraft.client.gui.components.Tooltip cachedVanillaTooltip = ((IMixinAbstractWidget)this).get_tooltip_FancyMenu().get();
             boolean cachedVisible = this.getWidget().visible;
             boolean cachedActive = this.getWidget().active;
             this.getWidget().visible = true;

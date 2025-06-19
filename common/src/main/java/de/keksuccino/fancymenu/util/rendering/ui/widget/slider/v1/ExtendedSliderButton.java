@@ -13,6 +13,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -89,9 +90,9 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
         int handleX = this.getX() + (int)(this.value * (double)(this.width - 8));
         DrawableColor c = this.getHandleRenderColor();
         if (c == null) {
-            graphics.blitSprite(RenderType::guiTextured, this.getHandleSprite(), handleX, this.getY(), 8, this.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.alpha));
+            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, this.getHandleSprite(), handleX, this.getY(), 8, this.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.alpha));
         } else {
-            graphics.fill(RenderType.guiOverlay(), handleX, this.getY(), handleX + 8, this.getY() + this.getHeight(), c.getColorIntWithAlpha(this.alpha));
+            graphics.fill(handleX, this.getY(), handleX + 8, this.getY() + this.getHeight(), c.getColorIntWithAlpha(this.alpha));
         }
     }
 
@@ -103,10 +104,10 @@ public abstract class ExtendedSliderButton extends AbstractSliderButton implemen
 
     protected void renderBackground(@NotNull GuiGraphics graphics) {
         if (this.backgroundColor == null) {
-            graphics.blitSprite(RenderType::guiTextured, this.getSprite(), this.getX(), this.getY(), this.getWidth(), this.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.alpha));
+            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, this.getSprite(), this.getX(), this.getY(), this.getWidth(), this.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.alpha));
         } else {
             int borderOffset = (this.borderColor != null) ? 1 : 0;
-            graphics.fill(RenderType.guiOverlay(), this.getX() + borderOffset, this.getY() + borderOffset, this.getX() + this.getWidth() - borderOffset, this.getY() + this.getHeight() - borderOffset, RenderingUtils.replaceAlphaInColor(this.backgroundColor.getColorInt(), this.alpha));
+            graphics.fill(this.getX() + borderOffset, this.getY() + borderOffset, this.getX() + this.getWidth() - borderOffset, this.getY() + this.getHeight() - borderOffset, RenderingUtils.replaceAlphaInColor(this.backgroundColor.getColorInt(), this.alpha));
             if (this.borderColor != null) {
                 UIBase.renderBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.borderColor, true, true, true, true);
             }

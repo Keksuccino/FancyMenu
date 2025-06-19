@@ -92,38 +92,36 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Fan
 
             if (this.autoHandle) BrowserHandler.notifyHandler(this.genericIdentifier.toString(), this);
 
-            // We need to manually bind the texture since we have a raw OpenGL texture ID
-            GlStateManager._bindTexture(this.browser.getRenderer().getTextureID());
-            
-            // Use manual vertex rendering with the bound texture
-            graphics.drawSpecial(bufferSource -> {
-                Matrix4f matrix = graphics.pose().last().pose();
-                VertexConsumer vertexConsumer = bufferSource.getBuffer(RenderType.gui());
-                
-                int alpha = (int)(this.opacity * 255.0F);
-                
-                // Bottom left vertex
-                vertexConsumer.addVertex(matrix, this.getX(), this.getY() + this.getHeight(), 0.0F)
-                    .setUv(0.0F, 1.0F)
-                    .setColor(255, 255, 255, alpha);
-                
-                // Bottom right vertex
-                vertexConsumer.addVertex(matrix, this.getX() + this.getWidth(), this.getY() + this.getHeight(), 0.0F)
-                    .setUv(1.0F, 1.0F)
-                    .setColor(255, 255, 255, alpha);
-                
-                // Top right vertex
-                vertexConsumer.addVertex(matrix, this.getX() + this.getWidth(), this.getY(), 0.0F)
-                    .setUv(1.0F, 0.0F)
-                    .setColor(255, 255, 255, alpha);
-                
-                // Top left vertex
-                vertexConsumer.addVertex(matrix, this.getX(), this.getY(), 0.0F)
-                    .setUv(0.0F, 0.0F)
-                    .setColor(255, 255, 255, alpha);
-            });
-
-            graphics.flush();
+//            // We need to manually bind the texture since we have a raw OpenGL texture ID
+//            GlStateManager._bindTexture(this.browser.getRenderer().getTextureID());
+//
+//            // Use manual vertex rendering with the bound texture
+//            graphics.drawSpecial(bufferSource -> {
+//                Matrix4f matrix = graphics.pose().last().pose();
+//                VertexConsumer vertexConsumer = bufferSource.getBuffer(RenderType.gui());
+//
+//                int alpha = (int)(this.opacity * 255.0F);
+//
+//                // Bottom left vertex
+//                vertexConsumer.addVertex(matrix, this.getX(), this.getY() + this.getHeight(), 0.0F)
+//                    .setUv(0.0F, 1.0F)
+//                    .setColor(255, 255, 255, alpha);
+//
+//                // Bottom right vertex
+//                vertexConsumer.addVertex(matrix, this.getX() + this.getWidth(), this.getY() + this.getHeight(), 0.0F)
+//                    .setUv(1.0F, 1.0F)
+//                    .setColor(255, 255, 255, alpha);
+//
+//                // Top right vertex
+//                vertexConsumer.addVertex(matrix, this.getX() + this.getWidth(), this.getY(), 0.0F)
+//                    .setUv(1.0F, 0.0F)
+//                    .setColor(255, 255, 255, alpha);
+//
+//                // Top left vertex
+//                vertexConsumer.addVertex(matrix, this.getX(), this.getY(), 0.0F)
+//                    .setUv(0.0F, 0.0F)
+//                    .setColor(255, 255, 255, alpha);
+//            });
 
         } catch (Exception ex) {
 

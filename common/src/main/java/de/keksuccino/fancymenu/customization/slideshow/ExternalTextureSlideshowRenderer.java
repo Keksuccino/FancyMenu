@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ARGB;
@@ -229,7 +230,7 @@ public class ExternalTextureSlideshowRenderer {
 			ITexture t = this.previous.get();
 			ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
 			if (loc != null) {
-				graphics.blit(RenderType::guiTextured, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height, DrawableColor.WHITE.getColorIntWithAlpha(o));
+				graphics.blit(RenderPipelines.GUI_TEXTURED, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height, DrawableColor.WHITE.getColorIntWithAlpha(o));
 			}
 		}
 	}
@@ -239,7 +240,7 @@ public class ExternalTextureSlideshowRenderer {
 			ITexture t = this.current.get();
 			ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
 			if (loc != null) {
-				graphics.blit(RenderType::guiTextured, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height, DrawableColor.WHITE.getColorIntWithAlpha(this.slideshowOpacity));
+				graphics.blit(RenderPipelines.GUI_TEXTURED, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height, DrawableColor.WHITE.getColorIntWithAlpha(this.slideshowOpacity));
 			}
 		}
 	}
@@ -249,7 +250,7 @@ public class ExternalTextureSlideshowRenderer {
 			ITexture t = this.overlayTexture.get();
 			ResourceLocation loc = (t != null) ? t.getResourceLocation() : null;
 			if (loc != null) {
-				graphics.blit(RenderType::guiTextured, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height, -1);
+				graphics.blit(RenderPipelines.GUI_TEXTURED, loc, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height, -1);
 			}
 		}
 	}

@@ -177,7 +177,7 @@ public class MixinMinecraft {
 		EventHandler.INSTANCE.postEvent(new OpenScreenEvent(this.screen));
 	}
 
-	@Inject(method = "resizeDisplay", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;setGuiScale(D)V", shift = At.Shift.AFTER))
+	@Inject(method = "resizeDisplay", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;setGuiScale(I)V", shift = At.Shift.AFTER))
 	private void beforeResizeCurrentScreenFancyMenu(CallbackInfo info) {
 		if (this.screen != null) {
 			RenderingUtils.resetGuiScale();

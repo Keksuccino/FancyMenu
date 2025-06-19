@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.screen.identifier;
 
 import com.mojang.realmsclient.RealmsMainScreen;
 import com.mojang.realmsclient.gui.screens.*;
+import com.mojang.realmsclient.gui.screens.configuration.*;
 import net.minecraft.client.gui.components.PopupScreen;
 import net.minecraft.client.gui.screens.*;
 import net.minecraft.client.gui.screens.achievement.StatsScreen;
@@ -21,7 +22,6 @@ import net.minecraft.client.gui.screens.reporting.ReportReasonSelectionScreen;
 import net.minecraft.client.gui.screens.social.SocialInteractionsScreen;
 import net.minecraft.client.gui.screens.telemetry.TelemetryInfoScreen;
 import net.minecraft.client.gui.screens.worldselection.*;
-import net.minecraft.realms.DisconnectedRealmsScreen;
 import net.minecraft.realms.RealmsScreen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -49,19 +49,14 @@ public class UniversalScreenIdentifierRegistry {
         register("realms_download_latest_world_screen", RealmsDownloadLatestWorldScreen.class.getName());
         register("realms_generic_error_screen", RealmsGenericErrorScreen.class.getName());
         register("realms_invite_screen", RealmsInviteScreen.class.getName());
-        //register("realms_long_confirmation_screen", RealmsLongConfirmationScreen.class.getName());
         register("realms_long_running_mco_task_screen", RealmsLongRunningMcoTaskScreen.class.getName());
         register("realms_notifications_screen", RealmsNotificationsScreen.class.getName());
         register("realms_parental_consent_screen", RealmsParentalConsentScreen.class.getName());
         register("realms_pending_invites_screen", RealmsPendingInvitesScreen.class.getName());
-        register("realms_player_screen", RealmsPlayerScreen.class.getName());
-//        register("realms_reset_normal_world_screen", RealmsResetNormalWorldScreen.class.getName());
         register("realms_reset_world_screen", RealmsResetWorldScreen.class.getName());
         register("realms_select_file_to_upload_screen", RealmsSelectFileToUploadScreen.class.getName());
         register("realms_select_world_template_screen", RealmsSelectWorldTemplateScreen.class.getName());
-        register("realms_settings_screen", RealmsSettingsScreen.class.getName());
         register("realms_slot_options_screen", RealmsSlotOptionsScreen.class.getName());
-        register("realms_subscription_info_screen", RealmsSubscriptionInfoScreen.class.getName());
         register("realms_terms_screen", RealmsTermsScreen.class.getName());
         register("realms_upload_screen", RealmsUploadScreen.class.getName());
         register("accessibility_onboarding_screen", AccessibilityOnboardingScreen.class.getName());
@@ -121,7 +116,6 @@ public class UniversalScreenIdentifierRegistry {
         register("crafting_screen", CraftingScreen.class.getName());
         register("creative_mode_inventory_screen", CreativeModeInventoryScreen.class.getName());
         register("dispenser_screen", DispenserScreen.class.getName());
-//        register("effect_rendering_inventory_screen", EffectRenderingInventoryScreen.class.getName());
         register("enchantment_screen", EnchantmentScreen.class.getName());
         register("furnace_screen", FurnaceScreen.class.getName());
         register("grindstone_screen", GrindstoneScreen.class.getName());
@@ -157,7 +151,6 @@ public class UniversalScreenIdentifierRegistry {
         register("experiments_screen", ExperimentsScreen.class.getName());
         register("optimize_world_screen", OptimizeWorldScreen.class.getName());
         register("select_world_screen", SelectWorldScreen.class.getName());
-        register("disconnected_realms_screen", DisconnectedRealmsScreen.class.getName());
         register("realms_screen", RealmsScreen.class.getName());
 
     }

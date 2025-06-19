@@ -73,16 +73,14 @@ public class ModValidator {
         //Do not render the error in non-Minecraft screens
         if (!current.getClass().getName().startsWith("net.minecraft.")) return;
 
-        graphics.flush();
-        graphics.pose().pushPose();
-        graphics.pose().translate(0.0F, 0.0F, 400.0F);
+        graphics.pose().pushMatrix();
 
         graphics.fill(0, 0, current.width, current.height, DrawableColor.BLACK.getColorInt());
 
         graphics.drawCenteredString(Minecraft.getInstance().font, "MODIFIED FANCYMENU JAR FOUND!", current.width / 2, (current.height / 2) - 10, INVALID_COLOR.getColorInt());
         graphics.drawCenteredString(Minecraft.getInstance().font, "PLEASE DOWNLOAD A VALID BUILD FROM CURSEFORGE OR MODRINTH!", current.width / 2, (current.height / 2) + 5, INVALID_COLOR.getColorInt());
 
-        graphics.pose().popPose();
+        graphics.pose().popMatrix();
 
     }
 

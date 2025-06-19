@@ -12,6 +12,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -85,19 +86,19 @@ public class Tooltip implements Renderable {
             int x = this.calculateX(s, mouseX);
             int y = this.calculateY(s, mouseY);
 
-            graphics.pose().pushPose();
+            graphics.pose().pushMatrix();
 
             float scale = 1.0F;
             if (this.scale != null) {
                 scale = UIBase.calculateFixedScale(this.scale);
-                graphics.pose().scale(scale, scale, scale);
+                graphics.pose().scale(scale, scale);
             }
-            graphics.pose().translate(0.0F, 0.0F, 600.0F / scale);
+            graphics.pose().translate(0.0F, 0.0F);
 
             this.renderBackground(graphics, x, y);
             this.renderTextLines(graphics, x, y);
 
-            graphics.pose().popPose();
+            graphics.pose().popMatrix();
 
         }
     }
@@ -126,35 +127,33 @@ public class Tooltip implements Renderable {
         } else if (this.backgroundTexture != null) {
             ResourceLocation loc = this.backgroundTexture.getResourceLocation();
             if (loc != null) {
-                graphics.blit(RenderType::guiTextured, loc, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+                graphics.blit(RenderPipelines.GUI_TEXTURED, loc, x, y, 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
             }
         } else {
             if (this.borderColor != null) {
                 //BACKGROUND
-                graphics.fill(RenderType.guiOverlay(), x + 1, y + 1, x + this.getWidth() - 1, y + this.getHeight() - 1, this.backgroundColor.getColorInt());
+                graphics.fill(x + 1, y + 1, x + this.getWidth() - 1, y + this.getHeight() - 1, this.backgroundColor.getColorInt());
                 //TOP
-                graphics.fill(RenderType.guiOverlay(), x + 1, y, x + this.getWidth() - 1, y + 1, this.borderColor.getColorInt());
+                graphics.fill(x + 1, y, x + this.getWidth() - 1, y + 1, this.borderColor.getColorInt());
                 //BOTTOM
-                graphics.fill(RenderType.guiOverlay(), x + 1, y + this.getHeight() - 1, x + this.getWidth() - 1, y + this.getHeight(), this.borderColor.getColorInt());
+                graphics.fill(x + 1, y + this.getHeight() - 1, x + this.getWidth() - 1, y + this.getHeight(), this.borderColor.getColorInt());
                 //LEFT
-                graphics.fill(RenderType.guiOverlay(), x, y, x + 1, y + this.getHeight(), this.borderColor.getColorInt());
+                graphics.fill(x, y, x + 1, y + this.getHeight(), this.borderColor.getColorInt());
                 //RIGHT
-                graphics.fill(RenderType.guiOverlay(), x + this.getWidth() - 1, y, x + this.getWidth(), y + this.getHeight(), this.borderColor.getColorInt());
+                graphics.fill(x + this.getWidth() - 1, y, x + this.getWidth(), y + this.getHeight(), this.borderColor.getColorInt());
             } else {
-                graphics.fill(RenderType.guiOverlay(), x, y, x + this.getWidth(), y + this.getHeight(), this.backgroundColor.getColorInt());
+                graphics.fill(x, y, x + this.getWidth(), y + this.getHeight(), this.backgroundColor.getColorInt());
             }
         }
     }
 
     protected void renderVanillaLikeBackground(GuiGraphics graphics, int x, int y, int width, int height) {
 
-        graphics.pose().pushPose();
+        graphics.pose().pushMatrix();
 
-        //Set Z to 0, because Z level gets handled in parent method instead
-        int z = 0;
-        TooltipRenderUtil.renderTooltipBackground(graphics, x, y, width, height, z, null);
+        TooltipRenderUtil.renderTooltipBackground(graphics, x, y, width, height, null);
 
-        graphics.pose().popPose();
+        graphics.pose().popMatrix();
 
     }
 

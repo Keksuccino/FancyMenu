@@ -24,6 +24,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
@@ -80,9 +81,9 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
 
         this.hovered = this.isMouseOver(mouseX, mouseY);
 
-        graphics.pose().pushPose();
-        graphics.pose().scale(scale, scale, scale);
-        graphics.pose().translate(0f, 0f, 500f / scale);
+        graphics.pose().pushMatrix();
+        graphics.pose().scale(scale, scale);
+        graphics.pose().translate(0f, 0f);
 
         if (this.expanded) {
             this.renderBackground(graphics, 0, y, scaledWidth, this.height);
@@ -124,9 +125,9 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
             this.renderExpandEntryBorder(graphics, scaledWidth, this.height);
         }
 
-        graphics.pose().popPose();
+        graphics.pose().popMatrix();
 
-        graphics.pose().pushPose();
+        graphics.pose().pushMatrix();
 
         //Render context menus of ContextMenuBarEntries
         for (MenuBarEntry e : ListUtils.mergeLists(this.leftEntries, this.rightEntries)) {
@@ -135,23 +136,23 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
             }
         }
 
-        graphics.pose().popPose();
+        graphics.pose().popMatrix();
 
     }
 
     protected void renderBackground(GuiGraphics graphics, int xMin, int yMin, int xMax, int yMax) {
-        graphics.fill(RenderType.guiOverlay(), xMin, yMin, xMax, yMax, UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
+        graphics.fill(xMin, yMin, xMax, yMax, UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
     }
 
     protected void renderBottomLine(GuiGraphics graphics, int width, int height) {
-        graphics.fill(RenderType.guiOverlay(), 0, height - this.getBottomLineThickness(), width, height, UIBase.getUIColorTheme().menu_bar_bottom_line_color.getColorInt());
+        graphics.fill(0, height - this.getBottomLineThickness(), width, height, UIBase.getUIColorTheme().menu_bar_bottom_line_color.getColorInt());
     }
 
     protected void renderExpandEntryBorder(GuiGraphics graphics, int width, int height) {
         //bottom line
-        graphics.fill(RenderType.guiOverlay(), this.collapseOrExpandEntry.x, height - this.getBottomLineThickness(), width, height, UIBase.getUIColorTheme().menu_bar_bottom_line_color.getColorInt());
+        graphics.fill(this.collapseOrExpandEntry.x, height - this.getBottomLineThickness(), width, height, UIBase.getUIColorTheme().menu_bar_bottom_line_color.getColorInt());
         //left side line
-        graphics.fill(RenderType.guiOverlay(), this.collapseOrExpandEntry.x - this.getBottomLineThickness(), 0, this.collapseOrExpandEntry.x, height, UIBase.getUIColorTheme().menu_bar_bottom_line_color.getColorInt());
+        graphics.fill(this.collapseOrExpandEntry.x - this.getBottomLineThickness(), 0, this.collapseOrExpandEntry.x, height, UIBase.getUIColorTheme().menu_bar_bottom_line_color.getColorInt());
     }
 
     @NotNull
@@ -673,7 +674,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         }
 
         protected void renderBackground(GuiGraphics graphics) {
-            graphics.fill(RenderType.guiOverlay(), this.x, this.y, this.x + this.getWidth(), this.y + this.height, this.getBackgroundColor().getColorInt());
+            graphics.fill(this.x, this.y, this.x + this.getWidth(), this.y + this.height, this.getBackgroundColor().getColorInt());
         }
 
         protected void renderLabelOrIcon(GuiGraphics graphics) {
@@ -684,9 +685,9 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
                 DrawableColor iconColor = (this.iconTextureColor != null) ? this.iconTextureColor.get() : null;
                 ResourceLocation loc = (iconTexture.getResourceLocation() != null) ? iconTexture.getResourceLocation() : ITexture.MISSING_TEXTURE_LOCATION;
                 if (iconColor != null) {
-                    graphics.blit(RenderType::guiTextured, loc, this.x, this.y, 0.0F, 0.0F, size[0], size[1], size[0], size[1], iconColor.getColorInt());
+                    graphics.blit(RenderPipelines.GUI_TEXTURED, loc, this.x, this.y, 0.0F, 0.0F, size[0], size[1], size[0], size[1], iconColor.getColorInt());
                 } else {
-                    graphics.blit(RenderType::guiTextured, loc, this.x, this.y, 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
+                    graphics.blit(RenderPipelines.GUI_TEXTURED, loc, this.x, this.y, 0.0F, 0.0F, size[0], size[1], size[0], size[1]);
                 }
             } else {
                 UIBase.drawElementLabel(graphics, this.font, label, this.x + ENTRY_LABEL_SPACE_LEFT_RIGHT, this.y + (this.height / 2) - (this.font.lineHeight / 2), this.isActive() ? UIBase.getUIColorTheme().element_label_color_normal.getColorInt() : UIBase.getUIColorTheme().element_label_color_inactive.getColorInt());
@@ -946,7 +947,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         }
 
         protected void renderBackground(GuiGraphics graphics) {
-            graphics.fill(RenderType.guiOverlay(), this.x, this.y, this.x + this.getWidth(), this.y + this.height, UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
+            graphics.fill(this.x, this.y, this.x + this.getWidth(), this.y + this.height, UIBase.getUIColorTheme().element_background_color_normal.getColorInt());
         }
 
         @Override
@@ -992,7 +993,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
 
         @Override
         protected void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            graphics.fill(RenderType.guiOverlay(), this.x, this.y, this.x + this.getWidth(), this.y + this.height, color.getColorInt());
+            graphics.fill(this.x, this.y, this.x + this.getWidth(), this.y + this.height, color.getColorInt());
         }
 
         @Override

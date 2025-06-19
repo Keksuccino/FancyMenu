@@ -174,9 +174,8 @@ public class BuddyGui {
     public void render(GuiGraphics graphics, int mouseX, int mouseY) {
         if (!isVisible) return;
 
-        // Push pose stack and move to z=400 for rendering on top of everything
-        graphics.pose().pushPose();
-        graphics.pose().translate(0, 0, 400); // Use z=400 (same as tooltips)
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(0, 0);
 
         // Use the built-in nine-slice rendering
         RenderingUtils.blitNineSlicedTexture(
@@ -207,7 +206,7 @@ public class BuddyGui {
         }
 
         // Pop pose stack
-        graphics.pose().popPose();
+        graphics.pose().popMatrix();
     }
 
     /**

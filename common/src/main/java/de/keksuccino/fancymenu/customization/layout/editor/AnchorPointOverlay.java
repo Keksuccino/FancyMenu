@@ -18,6 +18,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Style;
 import org.apache.commons.lang3.StringUtils;
@@ -264,9 +265,9 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
         }
 
         //Horizontal Line
-        graphics.fill(RenderType.guiOverlay(), horizontalX, horizontalY, horizontalX + horizontalWidth, horizontalY + lineThickness, color);
+        graphics.fill(horizontalX, horizontalY, horizontalX + horizontalWidth, horizontalY + lineThickness, color);
         //Vertical Line
-        graphics.fill(RenderType.guiOverlay(), verticalX, verticalY, verticalX + lineThickness, verticalY + verticalHeight, color);
+        graphics.fill(verticalX, verticalY, verticalX + lineThickness, verticalY + verticalHeight, color);
 
     }
 
@@ -541,7 +542,7 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
         public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             int endX = this.getX() + this.getWidth();
             int endY = this.getY() + this.getHeight();
-            graphics.fill(RenderType.guiOverlay(), this.getX(), this.getY(), endX, endY, RenderingUtils.replaceAlphaInColor(getOverlayColorBase().getColorInt(), getOverlayOpacity()));
+            graphics.fill(this.getX(), this.getY(), endX, endY, RenderingUtils.replaceAlphaInColor(getOverlayColorBase().getColorInt(), getOverlayOpacity()));
             UIBase.renderBorder(graphics, this.getX(), this.getY(), endX, endY, 1, RenderingUtils.replaceAlphaInColor(getOverlayColorBorder().getColorInt(), getOverlayOpacity()), true, true, true, true);
         }
 
@@ -562,7 +563,7 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
                 endX = this.getX() + this.getWidth();
                 startY = endY - progressHeight;
             }
-            graphics.fill(RenderType.guiOverlay(), startX, startY, endX, endY, RenderingUtils.replaceAlphaInColor(getOverlayColorBorder().getColorInt(), getOverlayOpacity()));
+            graphics.fill(startX, startY, endX, endY, RenderingUtils.replaceAlphaInColor(getOverlayColorBorder().getColorInt(), getOverlayOpacity()));
         }
 
         protected int getWidth() {

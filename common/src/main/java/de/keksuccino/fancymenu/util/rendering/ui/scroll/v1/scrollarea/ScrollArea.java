@@ -74,7 +74,7 @@ public class ScrollArea extends UIBase {
     }
 
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        graphics.fill(RenderType.gui(), this.getInnerX(), this.getInnerY(), this.getInnerX() + this.getInnerWidth(), this.getInnerY() + this.getInnerHeight(), this.backgroundColor.getRGB());
+        graphics.fill(this.getInnerX(), this.getInnerY(), this.getInnerX() + this.getInnerWidth(), this.getInnerY() + this.getInnerHeight(), this.backgroundColor.getRGB());
     }
 
     public void renderBorder(GuiGraphics graphics, int mouseX, int mouseY, float partial) {

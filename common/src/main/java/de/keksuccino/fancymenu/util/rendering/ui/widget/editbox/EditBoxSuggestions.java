@@ -19,6 +19,11 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.CommandSuggestions;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositioner;
+import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
+import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
+import net.minecraft.client.multiplayer.ClientSuggestionProvider;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -136,7 +141,7 @@ public class EditBoxSuggestions extends CommandSuggestions {
         int editBoxCursorPos = this.input.getCursorPosition();
         if (treatAsCommand) {
             if (this.minecraft.player != null) {
-                CommandDispatcher<SharedSuggestionProvider> commands = this.minecraft.player.connection.getCommands();
+                CommandDispatcher<ClientSuggestionProvider> commands = this.minecraft.player.connection.getCommands();
                 if (this.getCurrentParse() == null) {
                     this.setCurrentParse(commands.parse(valueReader, this.minecraft.player.connection.getSuggestionsProvider()));
                 }
@@ -322,11 +327,11 @@ public class EditBoxSuggestions extends CommandSuggestions {
         this.getAccessor().setPendingSuggestionsFancyMenu(pendingSuggestions);
     }
 
-    public ParseResults<SharedSuggestionProvider> getCurrentParse() {
+    public ParseResults<ClientSuggestionProvider> getCurrentParse() {
         return this.getAccessor().getCurrentParseFancyMenu();
     }
 
-    public void setCurrentParse(ParseResults<SharedSuggestionProvider> currentParse) {
+    public void setCurrentParse(ParseResults<ClientSuggestionProvider> currentParse) {
         this.getAccessor().setCurrentParseFancyMenu(currentParse);
     }
 
@@ -381,25 +386,25 @@ public class EditBoxSuggestions extends CommandSuggestions {
             }
             if (bl3) {
                 int m;
-                graphics.fill(RenderType.guiOverlay(), this.getRect().getX(), this.getRect().getY() - 1, this.getRect().getX() + this.getRect().getWidth(), this.getRect().getY(), EditBoxSuggestions.this.backgroundColor.getColorInt());
-                graphics.fill(RenderType.guiOverlay(), this.getRect().getX(), this.getRect().getY() + this.getRect().getHeight(), this.getRect().getX() + this.getRect().getWidth(), this.getRect().getY() + this.getRect().getHeight() + 1, EditBoxSuggestions.this.backgroundColor.getColorInt());
+                graphics.fill(this.getRect().getX(), this.getRect().getY() - 1, this.getRect().getX() + this.getRect().getWidth(), this.getRect().getY(), EditBoxSuggestions.this.backgroundColor.getColorInt());
+                graphics.fill(this.getRect().getX(), this.getRect().getY() + this.getRect().getHeight(), this.getRect().getX() + this.getRect().getWidth(), this.getRect().getY() + this.getRect().getHeight() + 1, EditBoxSuggestions.this.backgroundColor.getColorInt());
                 if (bl) {
                     for (m = 0; m < this.getRect().getWidth(); ++m) {
                         if (m % 2 != 0) continue;
-                        graphics.fill(RenderType.guiOverlay(), this.getRect().getX() + m, this.getRect().getY() - 1, this.getRect().getX() + m + 1, this.getRect().getY(), -1);
+                        graphics.fill(this.getRect().getX() + m, this.getRect().getY() - 1, this.getRect().getX() + m + 1, this.getRect().getY(), -1);
                     }
                 }
                 if (bl2) {
                     for (m = 0; m < this.getRect().getWidth(); ++m) {
                         if (m % 2 != 0) continue;
-                        graphics.fill(RenderType.guiOverlay(), this.getRect().getX() + m, this.getRect().getY() + this.getRect().getHeight(), this.getRect().getX() + m + 1, this.getRect().getY() + this.getRect().getHeight() + 1, -1);
+                        graphics.fill(this.getRect().getX() + m, this.getRect().getY() + this.getRect().getHeight(), this.getRect().getX() + m + 1, this.getRect().getY() + this.getRect().getHeight() + 1, -1);
                     }
                 }
             }
             boolean bl52 = false;
             for (int n = 0; n < suggestionLineCount; ++n) {
                 Suggestion suggestion = this.suggestionList.get(n + this.getOffset());
-                graphics.fill(RenderType.guiOverlay(), this.getRect().getX(), this.getRect().getY() + 12 * n, this.getRect().getX() + this.getRect().getWidth(), this.getRect().getY() + 12 * n + 12, EditBoxSuggestions.this.backgroundColor.getColorInt());
+                graphics.fill(this.getRect().getX(), this.getRect().getY() + 12 * n, this.getRect().getX() + this.getRect().getWidth(), this.getRect().getY() + 12 * n + 12, EditBoxSuggestions.this.backgroundColor.getColorInt());
                 if (mouseX > this.getRect().getX() && mouseX < this.getRect().getX() + this.getRect().getWidth() && mouseY > this.getRect().getY() + 12 * n && mouseY < this.getRect().getY() + 12 * n + 12) {
                     if (bl4) {
                         this.select(n + this.getOffset());
@@ -409,7 +414,8 @@ public class EditBoxSuggestions extends CommandSuggestions {
                 graphics.drawString(EditBoxSuggestions.this.font, suggestion.getText(), (this.getRect().getX() + 1), (this.getRect().getY() + 2 + 12 * n), ((n + this.getOffset()) == this.getCurrent()) ? EditBoxSuggestions.this.selectedTextColor.getColorInt() : EditBoxSuggestions.this.normalTextColor.getColorInt(), EditBoxSuggestions.this.textShadow);
             }
             if (bl52 && (message = this.suggestionList.get(this.getCurrent()).getTooltip()) != null) {
-                graphics.renderTooltip(EditBoxSuggestions.this.font, ComponentUtils.fromMessage(message), mouseX, mouseY);
+                ClientTooltipComponent tooltipComponent = ClientTooltipComponent.create(ComponentUtils.fromMessage(message).getVisualOrderText());
+                graphics.renderTooltip(EditBoxSuggestions.this.font, List.of(tooltipComponent), mouseX, mouseY, DefaultTooltipPositioner.INSTANCE, null);
             }
         }
 

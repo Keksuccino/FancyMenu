@@ -9,7 +9,6 @@ import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -17,8 +16,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.ArrayList;
-import java.util.List;
 
 public class TextEditorLine extends ExtendedEditBox {
 
@@ -32,7 +29,6 @@ public class TextEditorLine extends ExtendedEditBox {
     public int lineIndex = 0;
     protected int currentHighlightPosXStart = 0;
     protected int currentHighlightPosXEnd = 0;
-    protected int currentCharacterRenderIndex = 0;
 
     protected static boolean leftRightArrowWasDown = false;
 
@@ -46,111 +42,122 @@ public class TextEditorLine extends ExtendedEditBox {
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-
-        //Only render line if inside the editor area (for performance reasons)
         if (this.isInEditorArea()) {
             super.render(graphics, mouseX, mouseY, partial);
         }
-
         this.lastTickValue = this.getValue();
-
     }
 
-    protected MutableComponent getFormattedText(String text) {
-        List<Component> chars = new ArrayList<>();
+    /**
+     * Creates a formatted component from a plain string, applying formatting rules.
+     *
+     * @param text The input string.
+     * @param characterStartIndex The starting character index in the full line for context-sensitive formatting.
+     * @return A formatted MutableComponent.
+     */
+    protected MutableComponent getFormattedText(String text, int characterStartIndex) {
+        MutableComponent comp = Component.literal("");
+        int currentIndex = characterStartIndex;
         for (char c : text.toCharArray()) {
             Style style = Style.EMPTY;
             for (TextEditorFormattingRule r : this.parent.formattingRules) {
-                Style rs = r.getStyle(c, this.currentCharacterRenderIndex, this.getCursorPosition(), this, this.parent.currentRenderCharacterIndexTotal, this.parent);
+                Style rs = r.getStyle(c, currentIndex, this.getCursorPosition(), this, this.parent.currentRenderCharacterIndexTotal + currentIndex, this.parent);
                 if ((rs != null) && (rs != Style.EMPTY)) {
                     style = rs.applyTo(style);
                 }
             }
-            chars.add(Component.literal(String.valueOf(c)).withStyle(style));
-            this.currentCharacterRenderIndex++;
-            this.parent.currentRenderCharacterIndexTotal++;
-        }
-        MutableComponent comp = Component.literal("");
-        for (Component c : chars) {
-            comp.append(c);
+            comp.append(Component.literal(String.valueOf(c)).withStyle(style));
+            currentIndex++;
         }
         return comp;
     }
 
     @Override
     public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        if (!this.isVisible() || !this.isInEditorArea()) {
+            return;
+        }
 
-        this.currentCharacterRenderIndex = 0;
+        // Reset total character index for the parent editor screen before rendering lines
+        if (this.lineIndex == 0) {
+            this.parent.currentRenderCharacterIndexTotal = 0;
+        }
 
         this.setTextColor(this.parent.textColor.getRGB());
         this.setTextColorUneditable(this.parent.textColor.getRGB());
 
-        if (this.isVisible()) {
-
-            if (this.isFocused()) {
-                //Render focused background
-                graphics.fill(RenderType.gui(), 0, this.getY(), this.parent.width, this.getY() + this.height, this.parent.focusedLineColor.getRGB());
-            }
-
-            int textColorInt = this.isEditable() ? this.getAsAccessor().getTextColorFancyMenu() : this.getAsAccessor().getTextColorUneditableFancyMenu();
-            int cursorPos = this.getCursorPosition() - this.getAsAccessor().getDisplayPosFancyMenu();
-            int highlightPos = this.getAsAccessor().getHighlightPosFancyMenu() - this.getAsAccessor().getDisplayPosFancyMenu();
-            String text = this.getValue();
-            boolean isCursorNotAtStartOrEnd = cursorPos >= 0 && cursorPos <= text.length();
-            boolean renderCursor = this.isFocused() && (Util.getMillis() - this.getAsAccessor().getFocusedTimeFancyMenu()) / 300L % 2L == 0L && isCursorNotAtStartOrEnd;
-            int textX = this.getAsAccessor().getBorderedFancyMenu() ? this.getX() + 4 : this.getX() + 1;
-            int textY = this.getAsAccessor().getBorderedFancyMenu() ? this.getY() + (this.height - 8) / 2 : (this.getY() + Math.max(0, (this.getHeight() / 2)) - (this.font2.lineHeight / 2));
-            int textXRender = textX;
-            if (highlightPos > text.length()) {
-                highlightPos = text.length();
-            }
-
-            if (!text.isEmpty()) {
-                String textBeforeCursor = isCursorNotAtStartOrEnd ? text.substring(0, cursorPos) : text;
-                //Render text before cursor
-                textXRender = graphics.drawString(this.font2, this.getFormattedText(textBeforeCursor), textX, textY, textColorInt, false);
-            }
-
-            boolean isCursorNotAtEndOfLine = this.getCursorPosition() < this.getValue().length() || this.getValue().length() >= this.getAsAccessor().getMaxLengthFancyMenu();
-            int cursorPosRender = textXRender;
-            if (!isCursorNotAtStartOrEnd) {
-                cursorPosRender = cursorPos > 0 ? textX + this.width : textX;
-            } else if (isCursorNotAtEndOfLine) {
-                cursorPosRender = textXRender - 1;
-            }
-
-            if (!text.isEmpty() && isCursorNotAtStartOrEnd && cursorPos < text.length()) {
-                //Render text after cursor
-                graphics.drawString(this.font2, this.getFormattedText(text.substring(cursorPos)), textXRender, textY, textColorInt, false);
-            }
-
-            if (this.getAsAccessor().getHintFancyMenu() != null && text.isEmpty() && !this.isFocused()) {
-                graphics.drawString(this.font2, this.getAsAccessor().getHintFancyMenu(), textXRender, textY, textColorInt, false);
-            }
-
-            if (!isCursorNotAtEndOfLine && this.getAsAccessor().getSuggestionFancyMenu() != null) {
-                graphics.drawString(this.font2, this.getAsAccessor().getSuggestionFancyMenu(), (cursorPosRender - 1), textY, -8355712, false);
-            }
-
-            if (renderCursor) {
-                if (isCursorNotAtEndOfLine) {
-                    graphics.fill(RenderType.guiOverlay(), cursorPosRender, textY - 1, cursorPosRender + 1, textY + 1 + 9, textColorInt);
-                } else {
-                    graphics.drawString(this.font2, "_", cursorPosRender, textY, textColorInt, false);
-                }
-            }
-
-            if (highlightPos != cursorPos) {
-                this.currentHighlightPosXStart = cursorPosRender;
-                this.currentHighlightPosXEnd = textX + this.font2.width(text.substring(0, highlightPos)) - 1;
-                this.getAsAccessor().invokeRenderHighlightFancyMenu(graphics, this.currentHighlightPosXStart, textY - 1, this.currentHighlightPosXEnd, textY + 1 + 9);
-            } else {
-                this.currentHighlightPosXStart = 0;
-                this.currentHighlightPosXEnd = 0;
-            }
-
+        // Render focused line background
+        if (this.isFocused()) {
+            graphics.fill(0, this.getY(), this.parent.width, this.getY() + this.height, this.parent.focusedLineColor.getRGB());
         }
 
+        int textColorInt = this.isEditable() ? this.getAsAccessor().getTextColorFancyMenu() : this.getAsAccessor().getTextColorUneditableFancyMenu();
+        int displayPos = this.getAsAccessor().getDisplayPosFancyMenu();
+        int cursorPos = this.getCursorPosition() - displayPos;
+        int highlightPos = this.getAsAccessor().getHighlightPosFancyMenu() - displayPos;
+
+        // The visible part of the text, trimmed by the display position (scrolling)
+        String visibleText = this.getValue().substring(displayPos);
+
+        boolean isCursorInVisibleArea = cursorPos >= 0 && cursorPos <= visibleText.length();
+        boolean renderCursor = this.isFocused() && (Util.getMillis() - this.getAsAccessor().getFocusedTimeFancyMenu()) / 300L % 2L == 0L && isCursorInVisibleArea;
+
+        int textX = this.getX() + 1;
+        int textY = this.getY() + (this.getHeight() - this.font2.lineHeight) / 2;
+
+        // --- NEW AND IMPROVED RENDERING LOGIC ---
+
+        // 1. Prepare formatted components for text before and after cursor
+        String textBeforeCursorStr = isCursorInVisibleArea ? visibleText.substring(0, cursorPos) : visibleText;
+        String textAfterCursorStr = isCursorInVisibleArea ? visibleText.substring(cursorPos) : "";
+
+        MutableComponent textBeforeCursorComp = getFormattedText(textBeforeCursorStr, displayPos);
+        MutableComponent textAfterCursorComp = getFormattedText(textAfterCursorStr, displayPos + textBeforeCursorStr.length());
+
+        // 2. Calculate positions BEFORE rendering
+        int textAfterCursorX = textX + this.font2.width(textBeforeCursorComp);
+        int cursorRenderX = textAfterCursorX;
+
+        // 3. Render the text parts
+        graphics.drawString(this.font2, textBeforeCursorComp, textX, textY, textColorInt, false);
+        graphics.drawString(this.font2, textAfterCursorComp, textAfterCursorX, textY, textColorInt, false);
+
+        // Update the total character count for the parent editor
+        this.parent.currentRenderCharacterIndexTotal += visibleText.length();
+
+        // 4. Render Highlight
+        if (highlightPos != cursorPos) {
+            int selectionStart = Math.min(cursorPos, highlightPos);
+            int selectionEnd = Math.max(cursorPos, highlightPos);
+
+            String textToHighlightStart = visibleText.substring(0, selectionStart);
+            String textToHighlightEnd = visibleText.substring(0, selectionEnd);
+
+            // Calculate screen coordinates for highlight start and end based on formatted text width
+            int highlightStartX = textX + this.font2.width(getFormattedText(textToHighlightStart, displayPos));
+            int highlightEndX = textX + this.font2.width(getFormattedText(textToHighlightEnd, displayPos));
+
+            // Cache positions for hover checks
+            this.currentHighlightPosXStart = highlightStartX;
+            this.currentHighlightPosXEnd = highlightEndX;
+
+            this.getAsAccessor().invokeRenderHighlightFancyMenu(graphics, highlightStartX, textY - 1, highlightEndX, textY + 1 + this.font2.lineHeight);
+        } else {
+            this.currentHighlightPosXStart = 0;
+            this.currentHighlightPosXEnd = 0;
+        }
+
+        // 5. Render Cursor
+        if (renderCursor) {
+            boolean isCursorAtEnd = this.getCursorPosition() >= this.getValue().length();
+            if (isCursorAtEnd) {
+                // Render underscore cursor at the end
+                graphics.drawString(this.font2, "_", cursorRenderX, textY, textColorInt, false);
+            } else {
+                // Render vertical bar cursor
+                graphics.fill(cursorRenderX, textY - 1, cursorRenderX + 1, textY + this.font2.lineHeight, textColorInt);
+            }
+        }
     }
 
     public boolean isInEditorArea() {
@@ -179,45 +186,32 @@ public class TextEditorLine extends ExtendedEditBox {
 
     @Override
     public void setCursorPosition(int newPos) {
-
         this.textWidth = this.font2.width(this.getValue());
-
         super.setCursorPosition(newPos);
-
-        //Caching the last cursor position set by the user, to set it to the new line when changing the line
         if ((newPos != this.parent.lastCursorPosSetByUser) && this.isFocused()) {
             this.parent.lastCursorPosSetByUser = this.getCursorPosition();
         }
-
         this.parent.correctXScroll(this);
-
     }
 
     public void tick() {
-
         if (!MouseInput.isLeftMouseDown() && this.isInMouseHighlightingMode) {
             this.isInMouseHighlightingMode = false;
         }
-
         leftRightArrowWasDown = false;
-
     }
 
     @Override
     public boolean keyPressed(int keycode, int i1, int i2) {
-        //Handled by the editor
         if (Screen.isCopy(keycode) || Screen.isPaste(keycode) || Screen.isSelectAll(keycode) || Screen.isCut(keycode)) {
             return false;
         }
-        //Text deletion is handled by the editor
         if (keycode == InputConstants.KEY_BACKSPACE) {
             return false;
         }
-        //Don't move cursor when in mouse-highlighting mode
         if (((keycode == InputConstants.KEY_RIGHT) || (keycode == InputConstants.KEY_LEFT)) && this.parent.isInMouseHighlightingMode()) {
             return false;
         }
-        //Jump to line above when pressing ARROW LEFT while at start of line
         if (keycode == InputConstants.KEY_LEFT) {
             if (!leftRightArrowWasDown) {
                 if (this.parent.isLineFocused() && (this.parent.getFocusedLine() == this) && (this.getCursorPosition() <= 0) && (this.parent.getLineIndex(this) > 0)) {
@@ -231,7 +225,6 @@ public class TextEditorLine extends ExtendedEditBox {
                 return true;
             }
         }
-        //Jump to line below when pressing ARROW RIGHT while at end of line
         if (keycode == InputConstants.KEY_RIGHT) {
             if (!leftRightArrowWasDown) {
                 if (this.parent.isLineFocused() && (this.parent.getFocusedLine() == this) && (this.getCursorPosition() >= this.getValue().length()) && (this.parent.getLineIndex(this) < this.parent.getLineCount() - 1)) {
@@ -250,8 +243,6 @@ public class TextEditorLine extends ExtendedEditBox {
 
     @Override
     public void deleteChars(int i) {
-        //If the user presses BACKSPACE and the cursor pos is at 0, it will jump one line up, adds
-        //the text behind the cursor at the end of the new line and deletes the old line
         if (!this.parent.justSwitchedLineByWordDeletion) {
             if ((this.getCursorPosition() == 0) && (this.parent.getFocusedLineIndex() > 0)) {
                 int lastLineIndex = this.parent.getFocusedLineIndex();
@@ -274,7 +265,6 @@ public class TextEditorLine extends ExtendedEditBox {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
-
         if (!this.parent.isMouseInsideEditorArea() || this.parent.rightClickContextMenu.isOpen()) {
             return false;
         }
@@ -288,7 +278,6 @@ public class TextEditorLine extends ExtendedEditBox {
             super.mouseClicked(mouseX, mouseY, mouseButton);
             this.setHighlightPos(this.getCursorPosition());
         } else if ((mouseButton == 0) && !this.isHovered()) {
-            //Clear highlighting when left-clicked in another line, etc.
             this.setHighlightPos(this.getCursorPosition());
         }
 
@@ -296,7 +285,6 @@ public class TextEditorLine extends ExtendedEditBox {
             return super.mouseClicked(mouseX, mouseY, mouseButton);
         }
         return true;
-
     }
 
     @Override

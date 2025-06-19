@@ -18,6 +18,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.WidgetSprites;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -111,7 +112,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
         //Renders the custom widget background if one is present or the Vanilla background if no custom background is present
         if (this.getExtendedAsCustomizableWidget().renderCustomBackgroundFancyMenu(this, graphics, this.getX(), this.getY(), this.getWidth(), this.getHeight())) {
             if (this.renderColorBackground(graphics)) {
-                graphics.blitSprite(RenderType::guiTextured, SPRITES.get(this.active, this.isHoveredOrFocused()), this.getX(), this.getY(), this.getWidth(), this.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.alpha));
+                graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SPRITES.get(this.active, this.isHoveredOrFocused()), this.getX(), this.getY(), this.getWidth(), this.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.alpha));
             }
         }
     }
@@ -123,7 +124,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
         if (this.active) {
             if (this.isHoveredOrFocused()) {
                 if (this.backgroundColorHover != null) {
-                    graphics.fill(RenderType.guiOverlay(), this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.backgroundColorHover.getColorInt());
+                    graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.backgroundColorHover.getColorInt());
                     if (this.borderColorHover != null) {
                         UIBase.renderBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.borderColorHover.getColorInt(), true, true, true, true);
                     }
@@ -131,7 +132,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
                 }
             } else {
                 if (this.backgroundColorNormal != null) {
-                    graphics.fill(RenderType.guiOverlay(), this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.backgroundColorNormal.getColorInt());
+                    graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.backgroundColorNormal.getColorInt());
                     if (this.borderColorNormal != null) {
                         UIBase.renderBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.borderColorNormal.getColorInt(), true, true, true, true);
                     }
@@ -140,7 +141,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
             }
         } else {
             if (this.backgroundColorInactive != null) {
-                graphics.fill(RenderType.guiOverlay(), this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.backgroundColorInactive.getColorInt());
+                graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.backgroundColorInactive.getColorInt());
                 if (this.borderColorInactive != null) {
                     UIBase.renderBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.borderColorInactive.getColorInt(), true, true, true, true);
                 }

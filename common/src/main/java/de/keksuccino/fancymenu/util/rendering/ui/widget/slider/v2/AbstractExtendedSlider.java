@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -100,13 +101,13 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
      */
     protected boolean renderColorBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         if ((this.isFocused() && !this.getAccessor().getCanChangeValueFancyMenu()) && (this.sliderBackgroundColorHighlighted != null)) {
-            graphics.fill(RenderType.guiOverlay(), this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.sliderBackgroundColorHighlighted.getColorInt());
+            graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.sliderBackgroundColorHighlighted.getColorInt());
             if (this.sliderBorderColorHighlighted != null) {
                 UIBase.renderBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.sliderBorderColorHighlighted.getColorInt(), true, true, true, true);
             }
             return false;
         } else if (this.sliderBackgroundColorNormal != null) {
-            graphics.fill(RenderType.guiOverlay(), this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.sliderBackgroundColorNormal.getColorInt());
+            graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.sliderBackgroundColorNormal.getColorInt());
             if (this.sliderBorderColorNormal != null) {
                 UIBase.renderBorder(graphics, this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), 1, this.sliderBorderColorNormal.getColorInt(), true, true, true, true);
             }
@@ -116,7 +117,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     }
 
     protected void renderVanillaBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        graphics.blitSprite(RenderType::guiTextured, this.getSprite(), this.getX(), this.getY(), this.getWidth(), this.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.alpha));
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, this.getSprite(), this.getX(), this.getY(), this.getWidth(), this.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.alpha));
     }
 
     protected void renderHandle(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
@@ -134,18 +135,18 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
         if (this.active) {
             if (this.isHoveredOrFocused()) {
                 if (this.sliderHandleColorHover != null) {
-                    graphics.fill(RenderType.guiOverlay(), handleX, this.getY(), handleX + handleWidth, this.getY() + this.getHeight(), this.sliderHandleColorHover.getColorInt());
+                    graphics.fill(handleX, this.getY(), handleX + handleWidth, this.getY() + this.getHeight(), this.sliderHandleColorHover.getColorInt());
                     return false;
                 }
             } else {
                 if (this.sliderHandleColorNormal != null) {
-                    graphics.fill(RenderType.guiOverlay(), handleX, this.getY(), handleX + handleWidth, this.getY() + this.getHeight(), this.sliderHandleColorNormal.getColorInt());
+                    graphics.fill(handleX, this.getY(), handleX + handleWidth, this.getY() + this.getHeight(), this.sliderHandleColorNormal.getColorInt());
                     return false;
                 }
             }
         } else {
             if (this.sliderHandleColorInactive != null) {
-                graphics.fill(RenderType.guiOverlay(), handleX, this.getY(), handleX + handleWidth, this.getY() + this.getHeight(), this.sliderHandleColorInactive.getColorInt());
+                graphics.fill(handleX, this.getY(), handleX + handleWidth, this.getY() + this.getHeight(), this.sliderHandleColorInactive.getColorInt());
                 return false;
             }
         }
@@ -153,7 +154,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
     }
 
     protected void renderVanillaHandle(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        graphics.blitSprite(RenderType::guiTextured, this.getHandleSprite(), this.getHandleX(), this.getY(), this.getHandleWidth(), this.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.alpha));
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, this.getHandleSprite(), this.getHandleX(), this.getY(), this.getHandleWidth(), this.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.alpha));
     }
 
     protected void renderLabel(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {

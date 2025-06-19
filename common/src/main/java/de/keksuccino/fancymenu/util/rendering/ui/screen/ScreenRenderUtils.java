@@ -34,7 +34,6 @@ public class ScreenRenderUtils {
                 LOGGER.error("[FANCYMENU] Failed to execute pre-screen-render task!", ex);
             }
         }
-        graphics.flush();
     }
 
     @ApiStatus.Internal
@@ -48,7 +47,6 @@ public class ScreenRenderUtils {
                 LOGGER.error("[FANCYMENU] Failed to execute post-screen-render task!", ex);
             }
         }
-        graphics.flush();
     }
 
     @FunctionalInterface

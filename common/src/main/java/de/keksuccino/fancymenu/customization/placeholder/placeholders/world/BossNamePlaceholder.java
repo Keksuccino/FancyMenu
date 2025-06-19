@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinBossHealthOverla
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.component.ComponentSerialization;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.LerpingBossEvent;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -35,7 +36,7 @@ public class BossNamePlaceholder extends Placeholder {
                 for (Map.Entry<UUID, LerpingBossEvent> m : bosses.entrySet()) {
                     if (index == i) {
                         if (asJson) {
-                            return Component.Serializer.toJson(m.getValue().getName(), level.registryAccess());
+                            return ComponentSerialization.Serializer.toJson(m.getValue().getName(), level.registryAccess());
                         } else {
                             return TextFormattingUtils.textComponentToString(m.getValue().getName());
                         }

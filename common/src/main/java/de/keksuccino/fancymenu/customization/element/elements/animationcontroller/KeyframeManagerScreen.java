@@ -22,6 +22,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -368,7 +369,7 @@ public class KeyframeManagerScreen extends Screen {
             double newScale = window.getGuiScale();
             newScale--;
             if (newScale < 1) newScale = 1;
-            window.setGuiScale(newScale);
+            WindowHandler.setGuiScale(newScale);
             this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
         } else if (!tooFarRight && resized) {
             RenderingUtils.resetGuiScale();
@@ -541,7 +542,7 @@ public class KeyframeManagerScreen extends Screen {
         float usableWidth = timelineWidth * ((float)Math.max(actualEndTime + TIMELINE_PADDING_DURATION, MIN_TIMELINE_DURATION) / timelineDuration);
 
         // Draw main timeline background
-        graphics.fill(RenderType.gui(),
+        graphics.fill(
                 timelineX, timelineY,
                 timelineX + (int)((float)actualEndTime / timelineDuration * usableWidth),
                 timelineY + TIMELINE_HEIGHT,
@@ -549,7 +550,7 @@ public class KeyframeManagerScreen extends Screen {
 
         // Draw padding area
         int paddingStartX = timelineX + (int)((float)actualEndTime / timelineDuration * usableWidth);
-        graphics.fill(RenderType.gui(),
+        graphics.fill(
                 paddingStartX, timelineY,
                 timelineX + (int)usableWidth,
                 timelineY + TIMELINE_HEIGHT,
@@ -570,7 +571,7 @@ public class KeyframeManagerScreen extends Screen {
             DrawableColor color = selectedKeyframes.contains(keyframe) ?
                     KEYFRAME_COLOR_SELECTED : KEYFRAME_COLOR;
 
-            graphics.fill(RenderType.gui(),
+            graphics.fill(
                     lineX - KEYFRAME_LINE_WIDTH/2,
                     timelineY + (TIMELINE_HEIGHT - KEYFRAME_LINE_HEIGHT)/2,
                     lineX + KEYFRAME_LINE_WIDTH/2,
@@ -687,7 +688,7 @@ public class KeyframeManagerScreen extends Screen {
             progressX = timelineX + (int)(timelineWidth * newProgress);
         }
 
-        graphics.fill(RenderType.gui(),
+        graphics.fill(
                 progressX - PROGRESS_LINE_WIDTH/2,
                 timelineY,
                 progressX + PROGRESS_LINE_WIDTH/2,
@@ -782,7 +783,7 @@ public class KeyframeManagerScreen extends Screen {
             // Draw indicator rectangle
             if (recordingBlinkState) {
                 int rectX = recordingTextX + recordingTextWidth + padding;
-                graphics.fill(RenderType.gui(), rectX, yOffset, rectX + rectSize, yOffset + rectSize, RECORDING_COLOR.getColorInt());
+                graphics.fill(rectX, yOffset, rectX + rectSize, yOffset + rectSize, RECORDING_COLOR.getColorInt());
             }
 
         }
@@ -1593,7 +1594,7 @@ public class KeyframeManagerScreen extends Screen {
             DrawableColor c = PREVIEW_COLOR_NORMAL;
             if (KeyframeManagerScreen.this.isRecording) c = RECORDING_COLOR;
             if (KeyframeManagerScreen.this.selectedKeyframes.size() == 1) c = KEYFRAME_COLOR_SELECTED;
-            graphics.fill(RenderType.gui(),
+            graphics.fill(
                     this.element.getAbsoluteX(),
                     this.element.getAbsoluteY(),
                     this.element.getAbsoluteX() + this.element.getAbsoluteWidth(),

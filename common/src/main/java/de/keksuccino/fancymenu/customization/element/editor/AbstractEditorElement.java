@@ -42,6 +42,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -743,14 +744,14 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 	protected void renderDraggingNotAllowedOverlay(GuiGraphics graphics) {
 		if (this.renderMovingNotAllowedTime >= System.currentTimeMillis()) {
-			graphics.fill(RenderType.guiOverlay(), this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), UIBase.getUIColorTheme().layout_editor_element_dragging_not_allowed_color.getColorInt());
+			graphics.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), UIBase.getUIColorTheme().layout_editor_element_dragging_not_allowed_color.getColorInt());
 			AspectRatio ratio = new AspectRatio(32, 32);
 			int[] size = ratio.getAspectRatioSizeByMaximumSize(this.getWidth(), this.getHeight());
 			int texW = size[0];
 			int texH = size[1];
 			int texX = this.getX() + (this.getWidth() / 2) - (texW / 2);
 			int texY = this.getY() + (this.getHeight() / 2) - (texH / 2);
-			graphics.blit(RenderType::guiTextured, DRAGGING_NOT_ALLOWED_TEXTURE, texX, texY, 0.0F, 0.0F, texW, texH, texW, texH);
+			graphics.blit(RenderPipelines.GUI_TEXTURED, DRAGGING_NOT_ALLOWED_TEXTURE, texX, texY, 0.0F, 0.0F, texW, texH, texW, texH);
 		}
 	}
 
@@ -762,7 +763,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			int texH = size[1];
 			int texX = this.getX() + this.getWidth() - texW;
 			int texY = this.getY();
-			graphics.blit(RenderType::guiTextured, DEPRECATED_WARNING_TEXTURE, texX, texY, 0.0F, 0.0F, texW, texH, texW, texH, UIBase.getUIColorTheme().warning_text_color.getColorInt());
+			graphics.blit(RenderPipelines.GUI_TEXTURED, DEPRECATED_WARNING_TEXTURE, texX, texY, 0.0F, 0.0F, texW, texH, texW, texH, UIBase.getUIColorTheme().warning_text_color.getColorInt());
 		}
 	}
 
@@ -771,13 +772,13 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		if (((this.editor.getTopHoveredElement() == this) && !this.editor.isUserNavigatingInRightClickMenu() && !this.editor.isUserNavigatingInElementMenu()) || this.isSelected() || this.isMultiSelected()) {
 
 			//TOP
-			graphics.fill(RenderType.guiOverlay(), this.getX() + 1, this.getY(), this.getX() + this.getWidth() - 1, this.getY() + 1, BORDER_COLOR.get(this));
+			graphics.fill(this.getX() + 1, this.getY(), this.getX() + this.getWidth() - 1, this.getY() + 1, BORDER_COLOR.get(this));
 			//BOTTOM
-			graphics.fill(RenderType.guiOverlay(), this.getX() + 1, this.getY() + this.getHeight() - 1, this.getX() + this.getWidth() - 1, this.getY() + this.getHeight(), BORDER_COLOR.get(this));
+			graphics.fill(this.getX() + 1, this.getY() + this.getHeight() - 1, this.getX() + this.getWidth() - 1, this.getY() + this.getHeight(), BORDER_COLOR.get(this));
 			//LEFT
-			graphics.fill(RenderType.guiOverlay(), this.getX(), this.getY(), this.getX() + 1, this.getY() + this.getHeight(), BORDER_COLOR.get(this));
+			graphics.fill(this.getX(), this.getY(), this.getX() + 1, this.getY() + this.getHeight(), BORDER_COLOR.get(this));
 			//RIGHT
-			graphics.fill(RenderType.guiOverlay(), this.getX() + this.getWidth() - 1, this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), BORDER_COLOR.get(this));
+			graphics.fill(this.getX() + this.getWidth() - 1, this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), BORDER_COLOR.get(this));
 
 			for (ResizeGrabber g : this.resizeGrabbers) {
 				g.render(graphics, mouseX, mouseY, partial);
@@ -1237,7 +1238,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 			this.hovered = AbstractEditorElement.this.isSelected() && this.isGrabberEnabled() && this.isMouseOver(mouseX, mouseY);
 			if (AbstractEditorElement.this.isSelected() && this.isGrabberEnabled()) {
-				graphics.fill(RenderType.guiOverlay(), this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, BORDER_COLOR.get(AbstractEditorElement.this));
+				graphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, BORDER_COLOR.get(AbstractEditorElement.this));
 			}
 		}
 

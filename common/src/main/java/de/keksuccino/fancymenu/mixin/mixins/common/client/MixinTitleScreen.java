@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.realmsclient.gui.screens.RealmsNotificationsScreen;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
@@ -18,7 +17,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
@@ -111,7 +109,7 @@ public abstract class MixinTitleScreen extends Screen {
         if ((l != null) && ScreenCustomization.isCustomizationEnabledForScreen(this)) {
             if (!l.layoutBase.menuBackgrounds.isEmpty()) {
                 //Render a black background before the custom background gets rendered
-                graphics.fill(RenderType.guiOverlay(), 0, 0, this.width, this.height, 0);
+                graphics.fill(0, 0, this.width, this.height, 0);
             } else {
                 original.call(instance, graphics, f);
             }
@@ -131,17 +129,9 @@ public abstract class MixinTitleScreen extends Screen {
         return false;
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/SplashRenderer;render(Lnet/minecraft/client/gui/GuiGraphics;ILnet/minecraft/client/gui/Font;I)V"))
-    private boolean cancel_VanillaSplashRendering_FancyMenu(SplashRenderer instance, GuiGraphics $$0, int $$1, Font $$2, int $$3) {
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/SplashRenderer;render(Lnet/minecraft/client/gui/GuiGraphics;ILnet/minecraft/client/gui/Font;F)V"))
+    private boolean cancel_VanillaSplashRendering_FancyMenu(SplashRenderer instance, GuiGraphics $$0, int $$1, Font $$2, float $$3) {
         return false;
-    }
-
-    /**
-     * @reason This is to make the Title screen not constantly update the alpha of its widgets, so FancyMenu can properly handle it.
-     */
-    @WrapWithCondition(method = "fadeWidgets", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractWidget;setAlpha(F)V"))
-    private boolean cancel_setAlpha_FancyMenu(AbstractWidget instance, float alpha) {
-        return !ScreenCustomization.isCustomizationEnabledForScreen(this);
     }
 
 }

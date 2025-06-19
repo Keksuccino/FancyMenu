@@ -80,14 +80,14 @@ public class EditorElementBorderDisplay implements Renderable {
 
         float scale = this.getScale();
         int lineY = y;
-        graphics.pose().pushPose();
-        graphics.pose().scale(scale, scale, scale);
+        graphics.pose().pushMatrix();
+        graphics.pose().scale(scale, scale);
         for (Component c : this.renderLines) {
             int lineX = leftAligned ? x : x + (this.getWidth() - (int)((float)this.font.width(c) * scale));
             graphics.drawString(this.font, c, (int)(lineX / scale), (int)(lineY / scale), -1, this.textShadow);
             lineY += (this.font.lineHeight + 2) * scale;
         }
-        graphics.pose().popPose();
+        graphics.pose().popMatrix();
 
     }
 

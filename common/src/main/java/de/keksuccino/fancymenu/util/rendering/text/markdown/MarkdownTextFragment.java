@@ -13,6 +13,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -75,7 +76,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
 
         if (this.imageSupplier != null) {
             this.imageSupplier.forRenderable((iTexture, location) -> {
-                RenderingUtils.blitF(graphics, RenderType::guiTextured, location, this.x, this.y, 0.0F, 0.0F, this.getRenderWidth(), this.getRenderHeight(), this.getRenderWidth(), this.getRenderHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.parent.textOpacity));
+                RenderingUtils.blitF(graphics, RenderPipelines.GUI_TEXTURED, location, this.x, this.y, 0.0F, 0.0F, this.getRenderWidth(), this.getRenderHeight(), this.getRenderWidth(), this.getRenderHeight(), DrawableColor.WHITE.getColorIntWithAlpha(this.parent.textOpacity));
             });
         } else if (this.separationLine) {
 
@@ -85,10 +86,10 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
 
             this.renderCodeBlock(graphics);
 
-            graphics.pose().pushPose();
-            graphics.pose().scale(this.getScale(), this.getScale(), this.getScale());
+            graphics.pose().pushMatrix();
+            graphics.pose().scale(this.getScale(), this.getScale());
             graphics.drawString(this.parent.font, this.buildRenderComponent(false), (int) this.getTextRenderX(), (int) this.getTextRenderY(), this.parent.textBaseColor.getColorIntWithAlpha(this.parent.textOpacity), this.parent.textShadow && (this.codeBlockContext == null));
-            graphics.pose().popPose();
+            graphics.pose().popMatrix();
 
             this.renderQuoteLine(graphics);
 

@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.panorama.LocalTexturePanoramaRenderer;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
@@ -40,12 +41,10 @@ public class PanoramaMenuBackground extends MenuBackground {
 
         if (this.panorama != null) {
             this.panorama.opacity = this.opacity;
-            graphics.flush();
             this.panorama.render(graphics, mouseX, mouseY, partial);
-            graphics.flush();
             this.panorama.opacity = 1.0F;
         } else {
-            graphics.blit(RenderType::guiTextured, MISSING, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
+            graphics.blit(RenderPipelines.GUI_TEXTURED, MISSING, 0, 0, 0.0F, 0.0F, getScreenWidth(), getScreenHeight(), getScreenWidth(), getScreenHeight());
         }
 
     }

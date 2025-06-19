@@ -19,6 +19,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
@@ -120,8 +121,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         graphics.enableScissor((int) this.getRealBodyX(), (int) this.getRealBodyY(), (int) (this.getRealBodyX() + this.getBodyWidth()), (int) (this.getRealBodyY() + this.getBodyHeight()));
 
-        graphics.pose().pushPose();
-        graphics.pose().translate(0.0F, 0.0F, 400.0F);
+        graphics.pose().pushMatrix();
 
         this.scrollArea.render(graphics, (int) mouseX, (int) mouseY, partial);
 
@@ -153,7 +153,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         }
 
-        graphics.pose().popPose();
+        graphics.pose().popMatrix();
 
         graphics.disableScissor();
     }
@@ -667,11 +667,11 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                 fillF(graphics, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), UIBase.getUIColorTheme().element_background_color_hover.getColorInt());
             }
 
-            blitF(graphics, RenderType::guiTextured, MOVE_UP_TEXTURE, this.x, this.y, 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight(), UIBase.getUIColorTheme().ui_texture_color.getColorIntWithAlpha(this.layerWidget.editor.canMoveLayerUp(this.element) ? 1.0f : 0.3f));
+            blitF(graphics, RenderPipelines.GUI_TEXTURED, MOVE_UP_TEXTURE, this.x, this.y, 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight(), UIBase.getUIColorTheme().ui_texture_color.getColorIntWithAlpha(this.layerWidget.editor.canMoveLayerUp(this.element) ? 1.0f : 0.3f));
 
-            blitF(graphics, RenderType::guiTextured, MOVE_DOWN_TEXTURE, this.x, this.y + this.getButtonHeight(), 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight(), UIBase.getUIColorTheme().ui_texture_color.getColorIntWithAlpha(this.layerWidget.editor.canMoveLayerDown(this.element) ? 1.0f : 0.3f));
+            blitF(graphics, RenderPipelines.GUI_TEXTURED, MOVE_DOWN_TEXTURE, this.x, this.y + this.getButtonHeight(), 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight(), UIBase.getUIColorTheme().ui_texture_color.getColorIntWithAlpha(this.layerWidget.editor.canMoveLayerDown(this.element) ? 1.0f : 0.3f));
 
-            blitF(graphics, RenderType::guiTextured, EYE_ICON_TEXTURE, this.getEyeButtonX(), this.getEyeButtonY(), 0.0F, 0.0F, this.getEyeButtonWidth(), this.getEyeButtonHeight(), this.getEyeButtonWidth(), this.getEyeButtonHeight(), UIBase.getUIColorTheme().ui_texture_color.getColorIntWithAlpha(!this.element.element.layerHiddenInEditor ? 1.0f : 0.3f));
+            blitF(graphics, RenderPipelines.GUI_TEXTURED, EYE_ICON_TEXTURE, this.getEyeButtonX(), this.getEyeButtonY(), 0.0F, 0.0F, this.getEyeButtonWidth(), this.getEyeButtonHeight(), this.getEyeButtonWidth(), this.getEyeButtonHeight(), UIBase.getUIColorTheme().ui_texture_color.getColorIntWithAlpha(!this.element.element.layerHiddenInEditor ? 1.0f : 0.3f));
 
             if (!this.displayEditLayerNameBox) {
                 UIBase.drawElementLabel(graphics, this.font, Component.literal(this.getLayerName()), (int)this.getLayerNameX(), (int)this.getLayerNameY());
@@ -938,7 +938,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
              
 
             ResourceLocation loc = this.layerWidget.editor.layout.renderElementsBehindVanilla ? MOVE_BEHIND_TEXTURE : MOVE_TO_TOP_TEXTURE;
-            blitF(graphics, RenderType::guiTextured, loc, this.x, this.y, 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight(), UIBase.getUIColorTheme().ui_texture_color.getColorInt());
+            blitF(graphics, RenderPipelines.GUI_TEXTURED, loc, this.x, this.y, 0.0F, 0.0F, this.getButtonWidth(), this.getButtonHeight(), this.getButtonWidth(), this.getButtonHeight(), UIBase.getUIColorTheme().ui_texture_color.getColorInt());
 
             UIBase.drawElementLabel(graphics, this.font, Component.translatable("fancymenu.editor.widgets.layers.vanilla_elements").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt())), (int)(this.getX() + this.getButtonWidth() + 3f), (int)(this.getY() + (this.getHeight() / 2f) - (this.font.lineHeight / 2f)));
 

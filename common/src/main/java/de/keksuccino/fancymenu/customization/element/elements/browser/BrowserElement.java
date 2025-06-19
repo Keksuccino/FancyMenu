@@ -126,13 +126,12 @@ public class BrowserElement extends AbstractElement {
                     if ((this.lastLeftClickTime + 5000) > System.currentTimeMillis()) {
                         graphics.fill(x, y, x + w, y + h, ERROR_BACKGROUND_COLOR.getColorIntWithAlpha(0.4F));
                         graphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("fancymenu.elements.browser.disabled_in_editor").setStyle(Style.EMPTY.withBold(true)), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
-                        graphics.flush();
                     }
                 }
 
             } else {
 
-                graphics.fill(RenderType.guiOverlay(), x, y, x + w, y + h, ERROR_BACKGROUND_COLOR.getColorInt());
+                graphics.fill(x, y, x + w, y + h, ERROR_BACKGROUND_COLOR.getColorInt());
                 graphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("fancymenu.elements.browser.mcef_not_loaded.line_1").setStyle(Style.EMPTY.withBold(true)), x + (w / 2), y + (h / 2) - Minecraft.getInstance().font.lineHeight - 2, -1);
                 graphics.drawCenteredString(Minecraft.getInstance().font, Component.translatable("fancymenu.elements.browser.mcef_not_loaded.line_2").setStyle(Style.EMPTY.withBold(true)), x + (w / 2), y + (h / 2) + 2, -1);
 

@@ -80,10 +80,10 @@ public class ComponentWidget extends AbstractWidget implements NavigatableWidget
 
         this.handleComponentHover();
 
-         
+        MutableComponent text = this.getText();
+        this.endX = this.getX() + this.font.width(text);
 
-        this.endX = this.getX();
-        this.endX = graphics.drawString(this.font, this.getText(), this.getX(), this.getY(), this.getBaseColor().getColorInt(), this.shadow);
+        graphics.drawString(this.font, text, this.getX(), this.getY(), this.getBaseColor().getColorInt(), this.shadow);
 
         for (ComponentWidget c : this.children) {
             c.setX(this.endX);

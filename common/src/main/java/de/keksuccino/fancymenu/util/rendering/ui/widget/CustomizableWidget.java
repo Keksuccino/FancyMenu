@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -72,7 +73,7 @@ public interface CustomizableWidget {
                 } else if (!(widget instanceof CustomizableSlider) && this.isNineSliceCustomBackgroundTexture_FancyMenu()) {
                     RenderingUtils.blitNineSlicedTexture(graphics, location, x, y, width, height, customBackground.getWidth(), customBackground.getHeight(), getNineSliceCustomBackgroundBorderY_FancyMenu(), getNineSliceCustomBackgroundBorderX_FancyMenu(), getNineSliceCustomBackgroundBorderY_FancyMenu(), getNineSliceCustomBackgroundBorderX_FancyMenu(), ARGB.white(((IMixinAbstractWidget)widget).getAlphaFancyMenu()));
                 } else {
-                    graphics.blit(RenderType::guiTextured, location, x, y, 0.0F, 0.0F, width, height, width, height, DrawableColor.WHITE.getColorIntWithAlpha(((IMixinAbstractWidget)widget).getAlphaFancyMenu()));
+                    graphics.blit(RenderPipelines.GUI_TEXTURED, location, x, y, 0.0F, 0.0F, width, height, width, height, DrawableColor.WHITE.getColorIntWithAlpha(((IMixinAbstractWidget)widget).getAlphaFancyMenu()));
                 }
             }
         }

@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.layout.editor.buddy.items;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddy;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 
@@ -32,7 +33,7 @@ public class FoodItem {
 
     public void render(GuiGraphics graphics) {
         graphics.blit(
-                RenderType::guiTextured,
+                RenderPipelines.GUI_TEXTURED,
                 TEXTURE_FOOD,
                 x - size/2, y - size/2,
                 0, 0,

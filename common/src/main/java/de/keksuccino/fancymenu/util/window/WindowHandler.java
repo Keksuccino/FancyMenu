@@ -10,8 +10,9 @@ import java.nio.IntBuffer;
 import javax.imageio.ImageIO;
 import com.mojang.blaze3d.platform.MacosUtil;
 import com.mojang.blaze3d.platform.TextureUtil;
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.platform.Window;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinWindow;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.packs.resources.IoSupplier;
@@ -39,6 +40,15 @@ public class WindowHandler {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	public static void setGuiScale(double scaleFactor) {
+		Window w = Minecraft.getInstance().getWindow();
+		w.setGuiScale(Math.max(1, (int) scaleFactor));
+		int i = (int)(w.getWidth() / scaleFactor);
+		((IMixinWindow)(Object)w).set_guiScaledWidth_FancyMenu(w.getWidth() / scaleFactor > i ? i + 1 : i);
+		int j = (int)(w.getHeight() / scaleFactor);
+		((IMixinWindow)(Object)w).set_guiScaledHeight_FancyMenu(w.getHeight() / scaleFactor > j ? j + 1 : j);
 	}
 
 	public static boolean isCustomWindowIconEnabled() {

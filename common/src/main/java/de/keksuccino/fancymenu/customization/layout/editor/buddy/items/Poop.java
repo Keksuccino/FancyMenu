@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.layout.editor.buddy.items;
 
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddy;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 
@@ -59,7 +60,7 @@ public class Poop {
             int color = (int)(alpha * 255) << 24 | 0xFFFFFF;
             
             graphics.blit(
-                RenderType::guiTextured,
+                RenderPipelines.GUI_TEXTURED,
                 TEXTURE_POOP,
                 x - size/2, y - size/2,
                 0, 0,
@@ -69,7 +70,7 @@ public class Poop {
             );
         } else {
             graphics.blit(
-                RenderType::guiTextured,
+                RenderPipelines.GUI_TEXTURED,
                 TEXTURE_POOP,
                 x - size/2, y - size/2,
                 0, 0,

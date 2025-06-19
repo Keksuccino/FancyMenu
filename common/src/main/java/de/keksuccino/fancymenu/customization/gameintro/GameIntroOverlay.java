@@ -19,6 +19,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
@@ -83,7 +84,7 @@ public class GameIntroOverlay extends Overlay {
             EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Post(this.fadeTo, graphics, mouseX, mouseY, partial));
             ScreenRenderUtils.executeAllPostRenderTasks(graphics, mouseX, mouseY, partial);
         } else {
-            graphics.fill(RenderType.guiOverlay(), 0, 0, this.width, this.height, DrawableColor.BLACK.getColorInt());
+            graphics.fill(0, 0, this.width, this.height, DrawableColor.BLACK.getColorInt());
         }
 
         this.renderIntro(graphics, mouseX, mouseY, partial);
@@ -106,7 +107,7 @@ public class GameIntroOverlay extends Overlay {
             ResourceLocation location = r.getResourceLocation();
             if (location != null) {
                  
-                graphics.blit(RenderType::guiTextured, location, x, y, 0.0F, 0.0F, aspectWidth, aspectHeight, aspectWidth, aspectHeight, DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
+                graphics.blit(RenderPipelines.GUI_TEXTURED, location, x, y, 0.0F, 0.0F, aspectWidth, aspectHeight, aspectWidth, aspectHeight, DrawableColor.WHITE.getColorIntWithAlpha(this.opacity));
             }
 
         }
@@ -121,15 +122,15 @@ public class GameIntroOverlay extends Overlay {
                 customSkipText = I18n.get(customSkipText);
             }
             Component skipComp = customSkipText.isEmpty() ? Component.translatable("fancymenu.game_intro.press_any_key") : Component.literal(customSkipText);
-            graphics.pose().pushPose();
-            graphics.pose().scale(scale, scale, scale);
+            graphics.pose().pushMatrix();
+            graphics.pose().scale(scale, scale);
              
             int normalizedWidth = (int)(this.width / scale);
             int normalizedHeight = (int)(this.height / scale);
             int textX = (normalizedWidth / 2) - (this.font.width(skipComp) / 2);
             int textY = normalizedHeight - 40;
             graphics.drawString(this.font, skipComp, textX, textY, DrawableColor.WHITE.getColorIntWithAlpha(Math.max(0.1F, 0.6F * this.opacity)), false);
-            graphics.pose().popPose();
+            graphics.pose().popMatrix();
         }
     }
 

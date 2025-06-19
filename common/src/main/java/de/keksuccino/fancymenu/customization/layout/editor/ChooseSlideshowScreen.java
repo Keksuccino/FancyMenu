@@ -90,7 +90,7 @@ public class ChooseSlideshowScreen extends Screen {
 
          
 
-        graphics.fill(RenderType.guiOverlay(), 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
@@ -116,7 +116,7 @@ public class ChooseSlideshowScreen extends Screen {
             slideH = size[1];
             int slideX = this.width - 20 - slideW;
             int slideY = 50 + 15;
-            graphics.fill(RenderType.guiOverlay(), slideX, slideY, slideX + slideW, slideY + slideH, UIBase.getUIColorTheme().area_background_color.getColorInt());
+            graphics.fill(slideX, slideY, slideX + slideW, slideY + slideH, UIBase.getUIColorTheme().area_background_color.getColorInt());
             this.selectedSlideshow.x = slideX;
             this.selectedSlideshow.y = slideY;
             this.selectedSlideshow.width = slideW;

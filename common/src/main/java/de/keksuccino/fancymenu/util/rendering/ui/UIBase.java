@@ -137,7 +137,7 @@ public class UIBase extends RenderingUtils {
 	}
 
 	public static void renderListingDot(GuiGraphics graphics, int x, int y, Color color) {
-		graphics.fill(RenderType.guiOverlay(), x, y, x + 4, y + 4, color.getRGB());
+		graphics.fill(x, y, x + 4, y + 4, color.getRGB());
 	}
 
 	public static void renderBorder(GuiGraphics graphics, int xMin, int yMin, int xMax, int yMax, int borderThickness, DrawableColor borderColor, boolean renderTop, boolean renderLeft, boolean renderRight, boolean renderBottom) {
@@ -163,20 +163,20 @@ public class UIBase extends RenderingUtils {
 		}
 	}
 
-	public static int drawElementLabel(GuiGraphics graphics, Font font, Component text, int x, int y) {
-		return drawElementLabel(graphics, font, text, x, y, getUIColorTheme().element_label_color_normal.getColorInt());
+	public static void drawElementLabel(GuiGraphics graphics, Font font, Component text, int x, int y) {
+		drawElementLabel(graphics, font, text, x, y, getUIColorTheme().element_label_color_normal.getColorInt());
 	}
 
-	public static int drawElementLabel(GuiGraphics graphics, Font font, String text, int x, int y) {
-		return drawElementLabel(graphics, font, Component.literal(text), x, y, getUIColorTheme().element_label_color_normal.getColorInt());
+	public static void drawElementLabel(GuiGraphics graphics, Font font, String text, int x, int y) {
+		drawElementLabel(graphics, font, Component.literal(text), x, y, getUIColorTheme().element_label_color_normal.getColorInt());
 	}
 
-	public static int drawElementLabel(GuiGraphics graphics, Font font, Component text, int x, int y, int baseColor) {
-		return graphics.drawString(font, text, x, y, baseColor, FancyMenu.getOptions().enableUiTextShadow.getValue());
+	public static void drawElementLabel(GuiGraphics graphics, Font font, Component text, int x, int y, int baseColor) {
+		graphics.drawString(font, text, x, y, baseColor, FancyMenu.getOptions().enableUiTextShadow.getValue());
 	}
 
-	public static int drawElementLabel(GuiGraphics graphics, Font font, String text, int x, int y, int baseColor) {
-		return drawElementLabel(graphics, font, Component.literal(text), x, y, baseColor);
+	public static void drawElementLabel(GuiGraphics graphics, Font font, String text, int x, int y, int baseColor) {
+		drawElementLabel(graphics, font, Component.literal(text), x, y, baseColor);
 	}
 
 	@NotNull

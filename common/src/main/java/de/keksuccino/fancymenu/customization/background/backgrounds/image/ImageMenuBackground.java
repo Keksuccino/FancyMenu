@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ARGB;
@@ -126,7 +127,7 @@ public class ImageMenuBackground extends MenuBackground {
             }
         } else {
             float finalX = (float)slidePos;
-            RenderingUtils.blitF(graphics, RenderType::guiTextured, resourceLocation,
+            RenderingUtils.blitF(graphics, RenderPipelines.GUI_TEXTURED, resourceLocation,
                     finalX, parallaxOffset[1], 0.0F, 0.0F,
                     w, getScreenHeight(), w, getScreenHeight(),
                     ARGB.white(this.opacity));
@@ -145,7 +146,7 @@ public class ImageMenuBackground extends MenuBackground {
         int x = (getScreenWidth() - baseSize[0]) / 2 + (int)parallaxOffset[0];
         int y = (getScreenHeight() - baseSize[1]) / 2 + (int)parallaxOffset[1];
 
-        graphics.blit(RenderType::guiTextured, resourceLocation,
+        graphics.blit(RenderPipelines.GUI_TEXTURED, resourceLocation,
                 x, y, 0.0F, 0.0F,
                 baseSize[0], baseSize[1],
                 baseSize[0], baseSize[1],
@@ -162,13 +163,13 @@ public class ImageMenuBackground extends MenuBackground {
             int x = -((expandedWidth - getScreenWidth()) / 2) + (int)parallaxOffset[0];
             int y = -((expandedHeight - getScreenHeight()) / 2) + (int)parallaxOffset[1];
 
-            graphics.blit(RenderType::guiTextured, resourceLocation,
+            graphics.blit(RenderPipelines.GUI_TEXTURED, resourceLocation,
                     x, y, 0.0F, 0.0F,
                     expandedWidth, expandedHeight,
                     expandedWidth, expandedHeight,
                     ARGB.white(this.opacity));
         } else {
-            graphics.blit(RenderType::guiTextured, resourceLocation,
+            graphics.blit(RenderPipelines.GUI_TEXTURED, resourceLocation,
                     0, 0, 0.0F, 0.0F,
                     getScreenWidth(), getScreenHeight(),
                     getScreenWidth(), getScreenHeight(),

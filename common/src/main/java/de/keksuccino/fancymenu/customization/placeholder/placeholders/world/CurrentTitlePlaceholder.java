@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGui;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.component.ComponentSerialization;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
@@ -31,7 +32,7 @@ public class CurrentTitlePlaceholder extends Placeholder {
             Component component = isSubtitle ? ((IMixinGui)Minecraft.getInstance().gui).get_subtitle_FancyMenu() : ((IMixinGui)Minecraft.getInstance().gui).get_title_FancyMenu();
             if (component != null) {
                 if (asJson) {
-                    return Component.Serializer.toJson(component, level.registryAccess());
+                    return ComponentSerialization.Serializer.toJson(component, level.registryAccess());
                 } else {
                     return TextFormattingUtils.textComponentToString(component);
                 }

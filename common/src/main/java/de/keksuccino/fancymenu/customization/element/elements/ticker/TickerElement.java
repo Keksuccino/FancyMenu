@@ -1,17 +1,14 @@
 package de.keksuccino.fancymenu.customization.element.elements.ticker;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ExecutableElement;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.awt.*;
 
 public class TickerElement extends AbstractElement implements ExecutableElement {
 
@@ -62,7 +59,7 @@ public class TickerElement extends AbstractElement implements ExecutableElement 
             int w = this.getAbsoluteWidth();
             int h = this.getAbsoluteHeight();
              
-            graphics.fill(RenderType.guiOverlay(), x, y, x + w, y + h, this.inEditorColor.getColorInt());
+            graphics.fill(x, y, x + w, y + h, this.inEditorColor.getColorInt());
             graphics.enableScissor(x, y, x + w, y + h);
             graphics.drawCenteredString(Minecraft.getInstance().font, this.getDisplayName(), x + (w / 2), y + (h / 2) - (Minecraft.getInstance().font.lineHeight / 2), -1);
             graphics.disableScissor();

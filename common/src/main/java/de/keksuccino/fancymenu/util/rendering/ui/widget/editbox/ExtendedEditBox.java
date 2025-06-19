@@ -12,7 +12,6 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -20,8 +19,16 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
 import java.awt.Color;
 
+/**
+ * An extended version of Minecraft's EditBox with custom styling and functionality.
+ * <p>
+ * NOTE: This class relies on {@link IMixinEditBox} to access private members of the vanilla {@link EditBox}.
+ * Ensure that the mixin accessors/invokers are targeting the correct field and method names for the
+ * current Minecraft version.
+ */
 @SuppressWarnings("unused")
 public class ExtendedEditBox extends EditBox implements UniqueWidget, NavigatableWidget {
 
@@ -69,19 +76,21 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         boolean bordered = access.getBorderedFancyMenu();
 
         if (this.isVisible()) {
-
-            graphics.fill(RenderType.guiOverlay(), this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, this.backgroundColor.getColorInt());
+            // --- Background and Border Rendering (Custom) ---
+            graphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, this.backgroundColor.getColorInt());
             if (bordered) {
                 int borderColor = this.isFocused() ? this.borderFocusedColor.getColorInt() : this.borderNormalColor.getColorInt();
+                // Assuming UIBase.renderBorder is compatible with GuiGraphics
                 UIBase.renderBorder(graphics, this.getX() - 1, this.getY() - 1, this.getX() + this.width + 1, this.getY() + this.height + 1, 1, borderColor, true, true, true, true);
             }
 
+            // --- Text and Cursor Rendering ---
             int textColor = access.getIsEditableFancyMenu() ? this.textColor.getColorInt() : this.textColorUneditable.getColorInt();
             int cursorPos = this.getCursorPosition() - access.getDisplayPosFancyMenu();
             int highlightPos = access.getHighlightPosFancyMenu() - access.getDisplayPosFancyMenu();
             String text = this.font.plainSubstrByWidth(this.getValue().substring(access.getDisplayPosFancyMenu()), this.getInnerWidth());
             boolean isCursorInsideVisibleText = cursorPos >= 0 && cursorPos <= text.length();
-            boolean isCursorVisible = this.isFocused() && (Util.getMillis() - ((IMixinEditBox)this).getFocusedTimeFancyMenu()) / 300L % 2L == 0L && isCursorInsideVisibleText;
+            boolean isCursorVisible = this.isFocused() && (Util.getMillis() - access.getFocusedTimeFancyMenu()) / 300L % 2L == 0L && isCursorInsideVisibleText;
             int textX = bordered ? this.getX() + 4 : this.getX();
             int textY = bordered ? this.getY() + (this.height - 8) / 2 : this.getY();
             int textXAfterCursor = textX;
@@ -91,6 +100,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
 
             int textCharacterRenderIndex = access.getDisplayPosFancyMenu();
 
+            // Render text before the cursor
             if (!text.isEmpty()) {
                 String textBeforeCursor = isCursorInsideVisibleText ? text.substring(0, cursorPos) : text;
                 MutableComponent beforeCursorComp = Component.literal("");
@@ -103,18 +113,25 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
                         textCharacterRenderIndex++;
                     }
                 }
-                textXAfterCursor = graphics.drawString(this.font, beforeCursorComp, textX, textY, textColor, this.textShadow);
+
+                graphics.drawString(this.font, beforeCursorComp, textX, textY, textColor, this.textShadow);
+                textXAfterCursor = textX + this.font.width(beforeCursorComp);
+
             }
 
+            // Calculate cursor's final render position
             boolean renderSmallCursor = (this.getCursorPosition() < this.getValue().length()) || (this.getValue().length() >= access.getMaxLengthFancyMenu());
             int finalTextXAfterCursor = textXAfterCursor;
             if (!isCursorInsideVisibleText) {
                 finalTextXAfterCursor = (cursorPos > 0) ? (textX + this.width) : textX;
             } else if (renderSmallCursor) {
                 finalTextXAfterCursor = textXAfterCursor - 1;
-                if (this.textShadow) --textXAfterCursor;
+                if (this.textShadow) {
+                    --textXAfterCursor;
+                }
             }
 
+            // Render text after the cursor
             if (!text.isEmpty() && isCursorInsideVisibleText && cursorPos < text.length()) {
                 String textAfterCursor = text.substring(cursorPos);
                 MutableComponent afterCursorComp = Component.literal("");
@@ -130,42 +147,44 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
                 graphics.drawString(this.font, afterCursorComp, textXAfterCursor, textY, textColor, this.textShadow);
             }
 
+            // Render hint text
             Component hint = access.getHintFancyMenu();
             if ((hint != null) && text.isEmpty() && !this.isFocused()) {
-                graphics.drawString(this.font, hint, textXAfterCursor, textY, textColor, this.textShadow);
+                graphics.drawString(this.font, hint, textX, textY, this.suggestionTextColor.getColorInt(), this.textShadow);
             }
 
+            // Render suggestion text
             if (!renderSmallCursor && access.getSuggestionFancyMenu() != null) {
                 graphics.drawString(this.font, access.getSuggestionFancyMenu(), (finalTextXAfterCursor - 1), textY, this.suggestionTextColor.getColorInt(), this.textShadow);
             }
 
+            // Render the cursor
             if (isCursorVisible) {
                 if (renderSmallCursor) {
-                    graphics.fill(RenderType.guiOverlay(), finalTextXAfterCursor, textY - 1, finalTextXAfterCursor + 1, textY + 1 + 9, textColor);
+                    graphics.fill(finalTextXAfterCursor, textY - 1, finalTextXAfterCursor + 1, textY + 1 + 9, textColor);
                 } else {
-                    graphics.fill(RenderType.guiOverlay(), finalTextXAfterCursor, textY + this.font.lineHeight - 2, finalTextXAfterCursor + 5, textY + this.font.lineHeight - 1, textColor);
+                    // This is the underscore-style cursor at the end
+                    graphics.drawString(this.font, "_", finalTextXAfterCursor, textY, textColor, this.textShadow);
                 }
             }
 
+            // Render the text highlight
             if (highlightPos != cursorPos) {
                 int l1 = textX + this.font.width(text.substring(0, highlightPos));
                 access.invokeRenderHighlightFancyMenu(graphics, finalTextXAfterCursor, textY - 1, l1 - 1, textY + 1 + 9);
             }
-
         }
-
     }
 
     @Override
     public void render(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {
-
         if (this.isActiveSupplier != null) this.active = this.isActiveSupplier.get(this);
-
         if (this.isVisibleSupplier != null) this.visible = this.isVisibleSupplier.get(this);
-
         super.render($$0, $$1, $$2, $$3);
-
     }
+
+    // <--- The rest of your class methods remain unchanged as their logic is not directly tied to rendering calls --->
+    // <--- They operate on internal state, which is still valid. --->
 
     public void setHeight(int height) {
         this.height = height;

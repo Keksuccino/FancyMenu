@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.layout.editor.buddy.items;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddy;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import java.util.Random;
@@ -112,7 +113,7 @@ public class PlayBall {
                 int trailY = y - (int)(velocityY * 0.5f * i);
 
                 graphics.blit(
-                        RenderType::guiTextured,
+                        RenderPipelines.GUI_TEXTURED,
                         TEXTURE_BALL,
                         trailX - size/2, trailY - size/2,
                         0, 0,
@@ -125,7 +126,7 @@ public class PlayBall {
 
         // Draw the actual ball
         graphics.blit(
-                RenderType::guiTextured,
+                RenderPipelines.GUI_TEXTURED,
                 TEXTURE_BALL,
                 x - size/2, drawY - size/2,
                 0, 0,

@@ -73,7 +73,7 @@ public class IndentationGuideRenderer {
                 }
 
                 // Draw the guide line
-                graphics.fill(RenderType.gui(), xPos, yPos, xPos + 1, yPos + height, guideColor.getRGB());
+                graphics.fill(xPos, yPos, xPos + 1, yPos + height, guideColor.getRGB());
             }
         }
     }

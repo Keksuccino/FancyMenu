@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ARGB;
@@ -79,7 +80,7 @@ public interface CustomizableSlider {
             if (this.isNineSliceCustomSliderBackground_FancyMenu()) {
                 RenderingUtils.blitNineSlicedTexture(graphics, location, widget.getX(), widget.getY(), widget.getWidth(), widget.getHeight(), texture.getWidth(), texture.getHeight(), this.getNineSliceSliderBackgroundBorderY_FancyMenu(), this.getNineSliceSliderBackgroundBorderX_FancyMenu(), this.getNineSliceSliderBackgroundBorderY_FancyMenu(), this.getNineSliceSliderBackgroundBorderX_FancyMenu(), ARGB.white(((IMixinAbstractWidget)this).getAlphaFancyMenu()));
             } else {
-                graphics.blit(RenderType::guiTextured, location, widget.getX(), widget.getY(), 0.0F, 0.0F, widget.getWidth(), widget.getHeight(), widget.getWidth(), widget.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(((IMixinAbstractWidget)this).getAlphaFancyMenu()));
+                graphics.blit(RenderPipelines.GUI_TEXTURED, location, widget.getX(), widget.getY(), 0.0F, 0.0F, widget.getWidth(), widget.getHeight(), widget.getWidth(), widget.getHeight(), DrawableColor.WHITE.getColorIntWithAlpha(((IMixinAbstractWidget)this).getAlphaFancyMenu()));
             }
             return false;
         }

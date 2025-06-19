@@ -16,6 +16,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScr
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -138,7 +139,7 @@ public abstract class CellScreen extends Screen {
             double newScale = window.getGuiScale();
             newScale--;
             if (newScale < 1) newScale = 1;
-            window.setGuiScale(newScale);
+            WindowHandler.setGuiScale(newScale);
             this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
         } else if ((topRightSideWidget.getY() >= 20) && resized) {
             RenderingUtils.resetGuiScale();
@@ -166,7 +167,7 @@ public abstract class CellScreen extends Screen {
 
         this.updateSelectedCell();
 
-        graphics.fill(RenderType.guiOverlay(), 0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
@@ -362,7 +363,7 @@ public abstract class CellScreen extends Screen {
             //Use the scroll entry position and size to check for cell hover, to cover the whole cell line and not just the (sometimes too small) actual cell size
             this.cell.hovered = UIBase.isXYInArea(mouseX, mouseY, this.getX(), this.getY(), this.parent.getInnerWidth(), this.getHeight());
             if ((cell.isSelectable() && cell.isHovered()) || (cell == CellScreen.this.selectedCell)) {
-                graphics.fill(RenderType.guiOverlay(), (int) this.getX(), (int) this.getY(), (int) (this.getX() + this.parent.getInnerWidth()), (int) (this.getY() + this.getHeight()), this.cell.hoverColorSupplier.get().getColorInt());
+                graphics.fill((int) this.getX(), (int) this.getY(), (int) (this.getX() + this.parent.getInnerWidth()), (int) (this.getY() + this.getHeight()), this.cell.hoverColorSupplier.get().getColorInt());
             }
             this.cell.render(graphics, mouseX, mouseY, partial);
         }
@@ -395,7 +396,7 @@ public abstract class CellScreen extends Screen {
         public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             int centerY = this.getY() + (this.getHeight() / 2);
             int halfThickness = Math.max(1, this.separatorThickness / 2);
-            graphics.fill(RenderType.guiOverlay(), this.getX(), centerY - ((halfThickness > 1) ? halfThickness : 0), this.getX() + this.getWidth(), centerY + halfThickness, this.separatorColorSupplier.get().getColorInt());
+            graphics.fill(this.getX(), centerY - ((halfThickness > 1) ? halfThickness : 0), this.getX() + this.getWidth(), centerY + halfThickness, this.separatorColorSupplier.get().getColorInt());
         }
 
         @Override

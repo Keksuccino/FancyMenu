@@ -4,7 +4,7 @@ import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import net.minecraft.client.gui.components.CommandSuggestions;
-import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.client.multiplayer.ClientSuggestionProvider;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -21,8 +21,8 @@ public interface IMixinCommandSuggestions {
     @Accessor("keepSuggestions") boolean getKeepSuggestionsFancyMenu();
 
     @Nullable
-    @Accessor("currentParse") ParseResults<SharedSuggestionProvider> getCurrentParseFancyMenu();
-    @Accessor("currentParse") void setCurrentParseFancyMenu(ParseResults<SharedSuggestionProvider> currentParse);
+    @Accessor("currentParse") ParseResults<ClientSuggestionProvider> getCurrentParseFancyMenu();
+    @Accessor("currentParse") void setCurrentParseFancyMenu(ParseResults<ClientSuggestionProvider> currentParse);
 
     @Nullable
     @Accessor("pendingSuggestions") CompletableFuture<Suggestions> getPendingSuggestionsFancyMenu();
