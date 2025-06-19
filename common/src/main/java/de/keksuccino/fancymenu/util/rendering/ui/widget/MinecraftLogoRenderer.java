@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget;
 
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ARGB;
@@ -68,10 +69,10 @@ public class MinecraftLogoRenderer {
         int i = screenWidth / 2 - 128;
         float f = this.keepLogoThroughFade ? 1.0F : transparency;
         int j = ARGB.white(f);
-        guiGraphics.blit(RenderType::guiTextured, this.showEasterEgg ? EASTER_EGG_LOGO : MINECRAFT_LOGO, i, height, 0.0F, 0.0F, 256, 44, 256, 64, j);
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, this.showEasterEgg ? EASTER_EGG_LOGO : MINECRAFT_LOGO, i, height, 0.0F, 0.0F, 256, 44, 256, 64, j);
         int k = screenWidth / 2 - 64;
         int l = height + 44 - 7;
-        guiGraphics.blit(RenderType::guiTextured, MINECRAFT_EDITION, k, l, 0.0F, 0.0F, 128, 14, 128, 16, j);
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, MINECRAFT_EDITION, k, l, 0.0F, 0.0F, 128, 14, 128, 16, j);
     }
 
     /**
@@ -86,7 +87,7 @@ public class MinecraftLogoRenderer {
         int color = ARGB.white(f);
 
         // Render main logo with top-left corner at (x,y)
-        guiGraphics.blit(RenderType::guiTextured, this.showEasterEgg ? EASTER_EGG_LOGO : MINECRAFT_LOGO,
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, this.showEasterEgg ? EASTER_EGG_LOGO : MINECRAFT_LOGO,
                 x, y, 0.0F, 0.0F, LOGO_WIDTH, LOGO_HEIGHT, LOGO_TEXTURE_WIDTH, LOGO_TEXTURE_HEIGHT, color);
 
         // Calculate edition logo position
@@ -95,7 +96,7 @@ public class MinecraftLogoRenderer {
         int editionY = y + LOGO_HEIGHT - EDITION_LOGO_OVERLAP;
 
         // Render edition logo
-        guiGraphics.blit(RenderType::guiTextured, MINECRAFT_EDITION,
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, MINECRAFT_EDITION,
                 editionX, editionY, 0.0F, 0.0F, EDITION_WIDTH, EDITION_HEIGHT, EDITION_TEXTURE_WIDTH, EDITION_TEXTURE_HEIGHT, color);
     }
 

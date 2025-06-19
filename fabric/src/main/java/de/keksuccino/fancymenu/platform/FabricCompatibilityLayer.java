@@ -12,7 +12,7 @@ public class FabricCompatibilityLayer implements IPlatformCompatibilityLayer {
 
     @Override
     public List<Component> getTitleScreenBrandingLines() {
-        String branding = "Minecraft " + SharedConstants.getCurrentVersion().getName();
+        String branding = "Minecraft " + SharedConstants.getCurrentVersion().name();
         if (Minecraft.getInstance().isDemo()) {
             branding = branding + " Demo";
         } else {

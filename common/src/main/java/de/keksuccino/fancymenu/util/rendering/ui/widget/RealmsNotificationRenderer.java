@@ -6,6 +6,7 @@ import com.mojang.realmsclient.gui.screens.RealmsNotificationsScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
@@ -117,22 +118,22 @@ public class RealmsNotificationRenderer {
 
         // Render icons in order from left to right
         if (trialAvailable && showOldNotifications) {
-            guiGraphics.blitSprite(RenderType::guiTextured, TRIAL_AVAILABLE_SPRITE, currentX, y + 4, 8, 8, color);
+            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, TRIAL_AVAILABLE_SPRITE, currentX, y + 4, 8, 8, color);
             currentX += 16;
         }
 
         if (pendingInvites > 0 && showOldNotifications) {
-            guiGraphics.blitSprite(RenderType::guiTextured, INVITE_SPRITE, currentX, y + 1, 14, 14, color);
+            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, INVITE_SPRITE, currentX, y + 1, 14, 14, color);
             currentX += 16;
         }
 
         if (hasUnreadNews && showOldNotifications) {
-            guiGraphics.blitSprite(RenderType::guiTextured, NEWS_SPRITE, currentX, y + 1, 14, 14, color);
+            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, NEWS_SPRITE, currentX, y + 1, 14, 14, color);
             currentX += 16;
         }
 
         if (hasUnseenNotifications) {
-            guiGraphics.blitSprite(RenderType::guiTextured, UNSEEN_NOTIFICATION_SPRITE, currentX, y + 3, 10, 10, color);
+            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, UNSEEN_NOTIFICATION_SPRITE, currentX, y + 3, 10, 10, color);
         }
 
     }

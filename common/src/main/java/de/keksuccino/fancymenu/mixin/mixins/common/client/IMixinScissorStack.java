@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
@@ -12,7 +13,7 @@ import javax.annotation.Nullable;
  * This allows invoking the {@code peek()} method on an instance of the ScissorStack.
  * The mixin targets the class using its fully qualified string name because it is private.
  */
-@Mixin(targets = "net.minecraft.client.gui.GuiGraphics$ScissorStack")
+@Mixin(GuiGraphics.ScissorStack.class)
 public interface IMixinScissorStack {
 
     /**

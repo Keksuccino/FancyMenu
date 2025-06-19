@@ -6,8 +6,6 @@ import javax.annotation.Nullable;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.gui.render.state.GuiElementRenderState;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import org.joml.Matrix3x2f;
 
 /**
@@ -30,7 +28,6 @@ import org.joml.Matrix3x2f;
  * @param scissorArea The optional scissor rectangle for clipping.
  * @param bounds The pre-calculated bounding box of this element after transformation and clipping, used for culling.
  */
-@OnlyIn(Dist.CLIENT)
 public record FloatBlitRenderState(RenderPipeline pipeline, TextureSetup textureSetup, Matrix3x2f transform, float minX, float minY, float maxX, float maxY, float minU, float maxU, float minV, float maxV, int color, @Nullable ScreenRectangle scissorArea, @Nullable ScreenRectangle bounds) implements GuiElementRenderState {
 
     /**

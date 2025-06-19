@@ -22,3 +22,5 @@ accessible class net/minecraft/client/gui/screens/worldselection/CreateWorldScre
 accessible class net/minecraft/client/gui/screens/worldselection/SwitchGrid
 
 extendable method net/minecraft/client/gui/components/EditBox deleteText (I)V
+
+accessible class net/minecraft/client/gui/GuiGraphics$ScissorStack

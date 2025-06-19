@@ -10,15 +10,6 @@ public interface IMixinGuiGraphics {
 
     @Accessor("guiRenderState") GuiRenderState get_guiRenderState_FancyMenu();
 
-    /**
-     * Gets the internal ScissorStack instance from a GuiGraphics object.
-     * <p>
-     * The return type is {@link Object} because the actual type,
-     * {@code GuiGraphics.ScissorStack}, is a private inner class and cannot be
-     * referenced directly from outside code.
-     *
-     * @return The ScissorStack instance as an {@link Object}.
-     */
-    @Accessor("scissorStack") Object get_scissorStack_FancyMenu(); // shows as error in IDE, but should work
+    @Accessor("scissorStack") GuiGraphics.ScissorStack get_scissorStack_FancyMenu();
 
 }

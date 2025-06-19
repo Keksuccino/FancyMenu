@@ -22,6 +22,7 @@
     "client.IMixinProgressScreen",
     "client.IMixinRealmsNotificationsScreen",
     "client.IMixinReceivingLevelScreen",
+    "client.IMixinRenderPipelines",
     "client.IMixinScissorStack",
     "client.IMixinScreen",
     "client.IMixinServerList",

@@ -7,7 +7,9 @@ import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.*;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinRenderPipelines;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
@@ -33,7 +35,6 @@ import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +50,20 @@ import java.util.OptionalInt;
 public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 
 	private static final Logger LOGGER = LogManager.getLogger();
+
+	private static final RenderPipeline CUSTOM_PANORAMA_PIPELINE = IMixinRenderPipelines.invoke_register_FancyMenu(
+			RenderPipeline.builder(IMixinRenderPipelines.get_MATRICES_PROJECTION_SNIPPET_FancyMenu())
+					.withLocation("pipeline/fancymenu_custom_panorama")
+					.withVertexShader("core/rendertype_world_border")
+					.withFragmentShader("core/rendertype_world_border")
+					.withVertexFormat(DefaultVertexFormat.POSITION_TEX, VertexFormat.Mode.QUADS)
+					.withSampler("Sampler0")
+					.withCull(false)
+					.withDepthWrite(false)
+					// We don't need to set depth test here, as the RenderPass will handle it.
+					// But keeping it doesn't hurt.
+					.build()
+	);
 
 	@NotNull
 	public File propertiesFile;
@@ -73,7 +88,7 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 	private CachedPerspectiveProjectionMatrixBuffer projectionMatrixUbo;
 
 	@Nullable
-	private GpuBuffer cubeMapBuffer = null;
+	private GpuBuffer cubeMapBuffer = initializeVertices();
 
 	@Nullable
 	public static LocalTexturePanoramaRenderer build(@NotNull File propertiesFile, @NotNull File panoramaImageDir, @Nullable File overlayImageFile) {
@@ -194,6 +209,7 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 	}
 
 	private void _render(@NotNull GuiGraphics graphics, Minecraft mc, float alpha) {
+
 		int screenW = ScreenUtils.getScreenWidth();
 		int screenH = ScreenUtils.getScreenHeight();
 
@@ -204,49 +220,47 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 			this.initializeVertices();
 		}
 
-		RenderSystem.setProjectionMatrix(
-				this.projectionMatrixUbo.getBuffer(mc.getWindow().getWidth(), mc.getWindow().getHeight(), (float)this.fov), ProjectionType.PERSPECTIVE
-		);
+		RenderSystem.setProjectionMatrix(this.projectionMatrixUbo.getBuffer(mc.getWindow().getWidth(), mc.getWindow().getHeight(), (float)this.fov), ProjectionType.PERSPECTIVE);
 
-		RenderPipeline renderPipeline = RenderPipelines.PANORAMA;
 		RenderTarget renderTarget = mc.getMainRenderTarget();
-
+		GpuTextureView colorView = renderTarget.getColorTextureView();
+		GpuTextureView depthView = renderTarget.getDepthTextureView();
 		RenderSystem.AutoStorageIndexBuffer sequentialIndexBuffer = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS);
 		GpuBuffer indexBuffer = sequentialIndexBuffer.getBuffer(36);
-
 		Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();
+
 		modelViewStack.pushMatrix();
 		modelViewStack.rotationX((float) Math.PI);
 		modelViewStack.rotateX(this.angle * (float) (Math.PI / 180.0));
 		modelViewStack.rotateY(-this.currentRotation * (float) (Math.PI / 180.0));
 
-		try (RenderPass renderPass = RenderSystem.getDevice()
-				.createCommandEncoder()
-				.createRenderPass(() -> "Panorama", renderTarget.getColorTextureView(), OptionalInt.empty(), renderTarget.getDepthTextureView(), OptionalDouble.empty())) {
+		GpuBufferSlice dynamicUniforms = RenderSystem.getDynamicUniforms().writeTransform(new Matrix4f(modelViewStack), new Vector4f(1.0F, 1.0F, 1.0F, alpha), new Vector3f(), new Matrix4f(), 0.0F);
 
-			renderPass.setPipeline(renderPipeline);
+		// ### THE FIX: Clear the depth buffer when starting the render pass ###
+		// By providing OptionalDouble.of(1.0), we tell the RenderPass to clear the depth buffer to its
+		// furthest value (1.0). This ensures that our panorama is drawn correctly over any
+		// existing depth information from previous GUI rendering stages.
+		try (RenderPass renderPass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Panorama", colorView, OptionalInt.empty(), depthView, OptionalDouble.of(1.0))) {
+
+			renderPass.setPipeline(CUSTOM_PANORAMA_PIPELINE);
 			RenderSystem.bindDefaultUniforms(renderPass);
 			renderPass.setVertexBuffer(0, this.cubeMapBuffer);
 			renderPass.setIndexBuffer(indexBuffer, sequentialIndexBuffer.type());
+			renderPass.setUniform("DynamicTransforms", dynamicUniforms);
 
 			for (int i = 0; i < 6; i++) {
 				if (i < this.sides.size()) {
 					ResourceLocation location = this.sides.get(i);
 					if (location != null) {
-						GpuBufferSlice dynamicUniforms = RenderSystem.getDynamicUniforms()
-								.writeTransform(new Matrix4f(modelViewStack), new Vector4f(1.0F, 1.0F, 1.0F, alpha), new Vector3f(), new Matrix4f(), 0.0F);
-						renderPass.setUniform("DynamicTransforms", dynamicUniforms);
-
 						renderPass.bindSampler("Sampler0", mc.getTextureManager().getTexture(location).getTextureView());
-
 						renderPass.drawIndexed(i * 6, 0, 6, 1);
 					}
 				}
 			}
+
 		}
 
 		modelViewStack.popMatrix();
-		RenderSystem.restoreProjectionMatrix();
 
 		if (this.overlayTextureSupplier != null) {
 			ITexture texture = this.overlayTextureSupplier.get();
@@ -257,63 +271,49 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 				}
 			}
 		}
+
 	}
 
-	/**
-	 * Initializes the vertex buffer with vertex and UV data for a 6-sided cube.
-	 * This method now correctly constructs the vertex data in memory and then uploads it to a new GpuBuffer.
-	 */
-	private void initializeVertices() {
-		if (this.cubeMapBuffer != null) {
-			this.cubeMapBuffer.close();
-		}
+	private static GpuBuffer initializeVertices() {
 
-		GpuBuffer newBuffer;
+		GpuBuffer gpubuffer;
 
-		try (ByteBufferBuilder byteBufferBuilder = ByteBufferBuilder.exactlySized(DefaultVertexFormat.POSITION_TEX.getVertexSize() * 24)) {
-			BufferBuilder bufferBuilder = new BufferBuilder(byteBufferBuilder, VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+		try (ByteBufferBuilder bytebufferbuilder = ByteBufferBuilder.exactlySized(DefaultVertexFormat.POSITION.getVertexSize() * 4 * 6)) {
 
-			// Z+ (Front) - Face 0
-			bufferBuilder.addVertex( -1.0F, -1.0F,  1.0F).setUv(0.0F, 0.0F);
-			bufferBuilder.addVertex( -1.0F,  1.0F,  1.0F).setUv(0.0F, 1.0F);
-			bufferBuilder.addVertex(  1.0F,  1.0F,  1.0F).setUv(1.0F, 1.0F);
-			bufferBuilder.addVertex(  1.0F, -1.0F,  1.0F).setUv(1.0F, 0.0F);
-			// X+ (Right) - Face 1
-			bufferBuilder.addVertex(  1.0F, -1.0F,  1.0F).setUv(0.0F, 0.0F);
-			bufferBuilder.addVertex(  1.0F,  1.0F,  1.0F).setUv(0.0F, 1.0F);
-			bufferBuilder.addVertex(  1.0F,  1.0F, -1.0F).setUv(1.0F, 1.0F);
-			bufferBuilder.addVertex(  1.0F, -1.0F, -1.0F).setUv(1.0F, 0.0F);
-			// Z- (Back) - Face 2
-			bufferBuilder.addVertex(  1.0F, -1.0F, -1.0F).setUv(0.0F, 0.0F);
-			bufferBuilder.addVertex(  1.0F,  1.0F, -1.0F).setUv(0.0F, 1.0F);
-			bufferBuilder.addVertex( -1.0F,  1.0F, -1.0F).setUv(1.0F, 1.0F);
-			bufferBuilder.addVertex( -1.0F, -1.0F, -1.0F).setUv(1.0F, 0.0F);
-			// X- (Left) - Face 3
-			bufferBuilder.addVertex( -1.0F, -1.0F, -1.0F).setUv(0.0F, 0.0F);
-			bufferBuilder.addVertex( -1.0F,  1.0F, -1.0F).setUv(0.0F, 1.0F);
-			bufferBuilder.addVertex( -1.0F,  1.0F,  1.0F).setUv(1.0F, 1.0F);
-			bufferBuilder.addVertex( -1.0F, -1.0F,  1.0F).setUv(1.0F, 0.0F);
-			// Y- (Bottom) - Face 4
-			bufferBuilder.addVertex( -1.0F, -1.0F, -1.0F).setUv(0.0F, 0.0F);
-			bufferBuilder.addVertex( -1.0F, -1.0F,  1.0F).setUv(0.0F, 1.0F);
-			bufferBuilder.addVertex(  1.0F, -1.0F,  1.0F).setUv(1.0F, 1.0F);
-			bufferBuilder.addVertex(  1.0F, -1.0F, -1.0F).setUv(1.0F, 0.0F);
-			// Y+ (Top) - Face 5
-			bufferBuilder.addVertex( -1.0F,  1.0F,  1.0F).setUv(0.0F, 0.0F);
-			bufferBuilder.addVertex( -1.0F,  1.0F, -1.0F).setUv(0.0F, 1.0F);
-			bufferBuilder.addVertex(  1.0F,  1.0F, -1.0F).setUv(1.0F, 1.0F);
-			bufferBuilder.addVertex(  1.0F,  1.0F,  1.0F).setUv(1.0F, 0.0F);
+			BufferBuilder bufferbuilder = new BufferBuilder(bytebufferbuilder, VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+			bufferbuilder.addVertex(-1.0F, -1.0F, 1.0F);
+			bufferbuilder.addVertex(-1.0F, 1.0F, 1.0F);
+			bufferbuilder.addVertex(1.0F, 1.0F, 1.0F);
+			bufferbuilder.addVertex(1.0F, -1.0F, 1.0F);
+			bufferbuilder.addVertex(1.0F, -1.0F, 1.0F);
+			bufferbuilder.addVertex(1.0F, 1.0F, 1.0F);
+			bufferbuilder.addVertex(1.0F, 1.0F, -1.0F);
+			bufferbuilder.addVertex(1.0F, -1.0F, -1.0F);
+			bufferbuilder.addVertex(1.0F, -1.0F, -1.0F);
+			bufferbuilder.addVertex(1.0F, 1.0F, -1.0F);
+			bufferbuilder.addVertex(-1.0F, 1.0F, -1.0F);
+			bufferbuilder.addVertex(-1.0F, -1.0F, -1.0F);
+			bufferbuilder.addVertex(-1.0F, -1.0F, -1.0F);
+			bufferbuilder.addVertex(-1.0F, 1.0F, -1.0F);
+			bufferbuilder.addVertex(-1.0F, 1.0F, 1.0F);
+			bufferbuilder.addVertex(-1.0F, -1.0F, 1.0F);
+			bufferbuilder.addVertex(-1.0F, -1.0F, -1.0F);
+			bufferbuilder.addVertex(-1.0F, -1.0F, 1.0F);
+			bufferbuilder.addVertex(1.0F, -1.0F, 1.0F);
+			bufferbuilder.addVertex(1.0F, -1.0F, -1.0F);
+			bufferbuilder.addVertex(-1.0F, 1.0F, 1.0F);
+			bufferbuilder.addVertex(-1.0F, 1.0F, -1.0F);
+			bufferbuilder.addVertex(1.0F, 1.0F, -1.0F);
+			bufferbuilder.addVertex(1.0F, 1.0F, 1.0F);
 
-			try (MeshData meshData = bufferBuilder.buildOrThrow()) {
-				newBuffer = RenderSystem.getDevice().createBuffer(
-						() -> "FancyMenu Panorama Vertex Buffer",
-						32, // BufferFlags.DYNAMIC_STORAGE_BIT
-						meshData.vertexBuffer()
-				);
+			try (MeshData meshdata = bufferbuilder.buildOrThrow()) {
+				gpubuffer = RenderSystem.getDevice().createBuffer(() -> "Cube map vertex buffer", 32, meshdata.vertexBuffer());
 			}
+
 		}
 
-		this.cubeMapBuffer = newBuffer;
+		return gpubuffer;
+
 	}
 
 	@Override
