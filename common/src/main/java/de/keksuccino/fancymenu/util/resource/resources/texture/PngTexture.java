@@ -268,6 +268,16 @@ public class PngTexture implements ITexture {
         return this.aspectRatio;
     }
 
+    @Nullable
+    public NativeImage getNativeImage() {
+        return nativeImage;
+    }
+
+    @Nullable
+    public DynamicTexture getDynamicTexture() {
+        return dynamicTexture;
+    }
+
     @Override
     public @Nullable InputStream open() throws IOException {
 
