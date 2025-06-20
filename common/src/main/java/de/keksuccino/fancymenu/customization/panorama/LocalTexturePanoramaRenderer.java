@@ -68,7 +68,7 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 	protected volatile float currentRotation = 0.0F;
 	protected volatile long lastRenderCall = -1L;
 	@Nullable
-	private CustomCubeMapTexture cubemapTexture;
+	private PanoramaCubeMapTexture cubemapTexture;
 	@Nullable
 	private ResourceLocation cubemapLocation;
 	@Nullable
@@ -155,7 +155,7 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 			this.projectionMatrixUbo = new CachedPerspectiveProjectionMatrixBuffer("panorama_proj", 0.05F, 10.0F);
 			this.vertexBuffer = initializeVertices();
 
-			this.cubemapTexture = new CustomCubeMapTexture(this.panoramaImageSuppliers);
+			this.cubemapTexture = new PanoramaCubeMapTexture(this.panoramaImageSuppliers);
 			this.cubemapLocation = ResourceLocation.fromNamespaceAndPath("fancymenu", "panorama/" + this.name.toLowerCase().replaceAll("[^a-z0-9/._-]", "_"));
 
 			Minecraft.getInstance().getTextureManager().register(this.cubemapLocation, this.cubemapTexture);
@@ -212,9 +212,7 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 			renderPass.setVertexBuffer(0, this.vertexBuffer);
 			renderPass.setIndexBuffer(indexBuffer, sequentialIndexBuffer.type());
 			renderPass.setUniform("DynamicTransforms", dynamicUniforms);
-
 			renderPass.bindSampler("Sampler0", mc.getTextureManager().getTexture(this.cubemapLocation).getTextureView());
-
 			renderPass.drawIndexed(0, 0, 36, 1);
 		}
 
@@ -232,21 +230,56 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 		}
 	}
 
+//	private GpuBuffer initializeVertices() {
+//		GpuBuffer newBuffer;
+//		try (ByteBufferBuilder byteBufferBuilder = ByteBufferBuilder.exactlySized(DefaultVertexFormat.POSITION.getVertexSize() * 24)) {
+//			BufferBuilder bufferBuilder = new BufferBuilder(byteBufferBuilder, VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+//			for (int i = 0; i < 6; ++i) {
+//				bufferBuilder.addVertex(-1.0F, -1.0F, 1.0F);
+//				bufferBuilder.addVertex(-1.0F, 1.0F, 1.0F);
+//				bufferBuilder.addVertex(1.0F, 1.0F, 1.0F);
+//				bufferBuilder.addVertex(1.0F, -1.0F, 1.0F);
+//			}
+//			try (MeshData meshData = bufferBuilder.buildOrThrow()) {
+//				newBuffer = RenderSystem.getDevice().createBuffer(() -> "FancyMenu Panorama Position Buffer", 32, meshData.vertexBuffer());
+//			}
+//		}
+//		return newBuffer;
+//	}
+
 	private GpuBuffer initializeVertices() {
-		GpuBuffer newBuffer;
-		try (ByteBufferBuilder byteBufferBuilder = ByteBufferBuilder.exactlySized(DefaultVertexFormat.POSITION.getVertexSize() * 24)) {
+		GpuBuffer gpuBuffer;
+		try (ByteBufferBuilder byteBufferBuilder = ByteBufferBuilder.exactlySized(DefaultVertexFormat.POSITION.getVertexSize() * 4 * 6)) {
 			BufferBuilder bufferBuilder = new BufferBuilder(byteBufferBuilder, VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
-			for (int i = 0; i < 6; ++i) {
-				bufferBuilder.addVertex(-1.0F, -1.0F, 1.0F);
-				bufferBuilder.addVertex(-1.0F, 1.0F, 1.0F);
-				bufferBuilder.addVertex(1.0F, 1.0F, 1.0F);
-				bufferBuilder.addVertex(1.0F, -1.0F, 1.0F);
-			}
+			bufferBuilder.addVertex(-1.0F, -1.0F, 1.0F);
+			bufferBuilder.addVertex(-1.0F, 1.0F, 1.0F);
+			bufferBuilder.addVertex(1.0F, 1.0F, 1.0F);
+			bufferBuilder.addVertex(1.0F, -1.0F, 1.0F);
+			bufferBuilder.addVertex(1.0F, -1.0F, 1.0F);
+			bufferBuilder.addVertex(1.0F, 1.0F, 1.0F);
+			bufferBuilder.addVertex(1.0F, 1.0F, -1.0F);
+			bufferBuilder.addVertex(1.0F, -1.0F, -1.0F);
+			bufferBuilder.addVertex(1.0F, -1.0F, -1.0F);
+			bufferBuilder.addVertex(1.0F, 1.0F, -1.0F);
+			bufferBuilder.addVertex(-1.0F, 1.0F, -1.0F);
+			bufferBuilder.addVertex(-1.0F, -1.0F, -1.0F);
+			bufferBuilder.addVertex(-1.0F, -1.0F, -1.0F);
+			bufferBuilder.addVertex(-1.0F, 1.0F, -1.0F);
+			bufferBuilder.addVertex(-1.0F, 1.0F, 1.0F);
+			bufferBuilder.addVertex(-1.0F, -1.0F, 1.0F);
+			bufferBuilder.addVertex(-1.0F, -1.0F, -1.0F);
+			bufferBuilder.addVertex(-1.0F, -1.0F, 1.0F);
+			bufferBuilder.addVertex(1.0F, -1.0F, 1.0F);
+			bufferBuilder.addVertex(1.0F, -1.0F, -1.0F);
+			bufferBuilder.addVertex(-1.0F, 1.0F, 1.0F);
+			bufferBuilder.addVertex(-1.0F, 1.0F, -1.0F);
+			bufferBuilder.addVertex(1.0F, 1.0F, -1.0F);
+			bufferBuilder.addVertex(1.0F, 1.0F, 1.0F);
 			try (MeshData meshData = bufferBuilder.buildOrThrow()) {
-				newBuffer = RenderSystem.getDevice().createBuffer(() -> "FancyMenu Panorama Position Buffer", 32, meshData.vertexBuffer());
+				gpuBuffer = RenderSystem.getDevice().createBuffer(() -> "FancyMenu Panorama Position Buffer", 32, meshData.vertexBuffer());
 			}
 		}
-		return newBuffer;
+		return gpuBuffer;
 	}
 
 	@Override

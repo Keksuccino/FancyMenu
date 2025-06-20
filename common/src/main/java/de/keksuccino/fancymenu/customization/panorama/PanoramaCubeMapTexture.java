@@ -19,12 +19,12 @@ import java.util.List;
  * A custom texture implementation that takes ResourceSuppliers, retrieves their
  * loaded NativeImage data, and uploads them to the GPU as a single, seamless cubemap texture.
  */
-public class CustomCubeMapTexture extends AbstractTexture {
+public class PanoramaCubeMapTexture extends AbstractTexture {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private final List<ResourceSupplier<ITexture>> suppliers;
 
-    public CustomCubeMapTexture(List<ResourceSupplier<ITexture>> suppliers) {
+    public PanoramaCubeMapTexture(List<ResourceSupplier<ITexture>> suppliers) {
         if (suppliers.size() != 6) {
             throw new IllegalArgumentException("Must provide exactly 6 ResourceSuppliers for a cubemap texture.");
         }
