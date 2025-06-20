@@ -1,13 +1,13 @@
 package de.keksuccino.fancymenu.customization.panorama;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+
 import com.mojang.blaze3d.ProjectionType;
-import com.mojang.blaze3d.buffers.GpuBuffer;
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
@@ -21,30 +21,17 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.renderer.CachedPerspectiveProjectionMatrixBuffer;
+import net.minecraft.client.renderer.CubeMap;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ARGB;
-import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
-import org.joml.Matrix4fStack;
-import org.joml.Vector3f;
-import org.joml.Vector4f;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.OptionalDouble;
-import java.util.OptionalInt;
 
-/**
- * A vanilla-like panorama renderer that uses a custom CubeMap texture to handle loading and rendering.
- * This architecture is cleaner, more efficient, and aligns with modern rendering practices.
- */
 @SuppressWarnings("unused")
 public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 
@@ -65,18 +52,17 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 	protected float angle = 25.0F;
 	public float opacity = 1.0F;
 	protected volatile boolean tickerThreadRunning = false;
-	protected volatile float currentRotation = 0.0F;
+	protected volatile float currentRotation = 0.0F; //0 - 360
 	protected volatile long lastRenderCall = -1L;
 	@Nullable
-	private PanoramaCubeMapTexture cubemapTexture;
+	private CubeMap cubeMap = null;
 	@Nullable
-	private ResourceLocation cubemapLocation;
+	private CustomCubeMapTexture customCubeMapTexture = null;
 	@Nullable
-	private CachedPerspectiveProjectionMatrixBuffer projectionMatrixUbo;
+	private ResourceLocation cubeMapLocation = null;
 	@Nullable
-	private GpuBuffer vertexBuffer;
-	private boolean isPrepared = false;
-	private boolean hasInitialized = false;
+	private CachedPerspectiveProjectionMatrixBuffer projectionMatrixBuffer = null;
+	private final String uniqueId = UUID.randomUUID().toString();
 
 	@Nullable
 	public static LocalTexturePanoramaRenderer build(@NotNull File propertiesFile, @NotNull File panoramaImageDir, @Nullable File overlayImageFile) {
@@ -89,21 +75,36 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 					if (panoMeta != null) {
 						renderer.name = panoMeta.getValue("name");
 						if (renderer.name == null) {
-							LOGGER.error("[FANCYMENU] Unable to load panorama! Missing 'name' value: " + renderer.propertiesFile.getAbsolutePath());
+							LOGGER.error("[FANCYMENU] Unable to load panorama! Missing 'name' value in panorama meta section: " + renderer.propertiesFile.getAbsolutePath(), new NullPointerException());
 							return null;
 						}
 						String sp = panoMeta.getValue("speed");
-						if ((sp != null) && MathUtils.isFloat(sp)) renderer.speed = Float.parseFloat(sp);
+						if ((sp != null) && MathUtils.isFloat(sp)) {
+							renderer.speed = Float.parseFloat(sp);
+						}
 						String fo = panoMeta.getValue("fov");
-						if ((fo != null) && MathUtils.isDouble(fo)) renderer.fov = Double.parseDouble(fo);
+						if ((fo != null) && MathUtils.isDouble(fo)) {
+							renderer.fov = Double.parseDouble(fo);
+						}
 						String an = panoMeta.getValue("angle");
-						if ((an != null) && MathUtils.isFloat(an)) renderer.angle = Float.parseFloat(an);
+						if ((an != null) && MathUtils.isFloat(an)) {
+							renderer.angle = Float.parseFloat(an);
+						}
 						String rot = panoMeta.getValue("start_rotation");
-						if ((rot != null) && MathUtils.isFloat(rot)) renderer.currentRotation = Mth.clamp(Float.parseFloat(rot), 0.0F, 360.0F);
-
+						if ((rot != null) && MathUtils.isFloat(rot)) {
+							renderer.currentRotation = Float.parseFloat(rot);
+							if ((renderer.currentRotation > 360.0F) || (renderer.currentRotation < 0.0F)) {
+								renderer.currentRotation = 0;
+							}
+						}
 						renderer.prepare();
+						renderer.initialize();
 						return renderer;
+					} else {
+						LOGGER.error("[FANCYMENU] Unable to load panorama! Missing 'panorama-meta' section in properties instance: " + renderer.propertiesFile.getAbsolutePath(), new NullPointerException());
 					}
+				} else {
+					LOGGER.error("[FANCYMENU] Unable to load panorama! Parsed properties instance was NULL: " + renderer.propertiesFile.getAbsolutePath(), new NullPointerException());
 				}
 			}
 		} catch (Exception ex) {
@@ -118,33 +119,17 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 		this.overlayImageFile = overlayImageFile;
 	}
 
-	/**
-	 * Prepares the renderer by identifying the image files and creating the custom texture object.
-	 * The actual loading to the GPU is deferred until the first render call.
-	 */
 	protected void prepare() {
 
 		this.panoramaImageSuppliers.clear();
 		this.overlayTextureSupplier = null;
 
-		// The GPU expects faces in a specific order that matches vanilla's cubemap loading
-		// This order is defined in vanilla's CubeMapTexture.SUFFIXES array
-		String[] faceFiles = new String[] {
-				"panorama_1.png", // Face 0: Left (-X)
-				"panorama_3.png", // Face 1: Bottom (-Y)
-				"panorama_5.png", // Face 2: Back (-Z)
-				"panorama_4.png", // Face 3: Front (+Z)
-				"panorama_0.png", // Face 4: Right (+X)
-				"panorama_2.png"  // Face 5: Top (+Y)
-		};
-
-		for (String fileName : faceFiles) {
-			File panoImage = new File(this.panoramaImageDir, fileName);
+		for (int i = 0; i < 6; i++) {
+			File panoImage = new File(this.panoramaImageDir, "panorama_" + i + ".png");
 			if (panoImage.isFile()) {
 				this.panoramaImageSuppliers.add(ResourceSupplier.image(ResourceSource.of(panoImage.getAbsolutePath(), ResourceSourceType.LOCAL).getSourceWithPrefix()));
 			} else {
-				LOGGER.error("[FANCYMENU] Unable to load panorama! Missing image '{}' for '{}'", fileName, this.name);
-				// If any face is missing, we cannot continue.
+				LOGGER.error("[FANCYMENU] Unable to load panorama! Missing panorama image 'panorama_" + i + ".png': " + this.name);
 				return;
 			}
 		}
@@ -153,46 +138,71 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 			this.overlayTextureSupplier = ResourceSupplier.image(ResourceSource.of(this.overlayImageFile.getAbsolutePath(), ResourceSourceType.LOCAL).getSourceWithPrefix());
 		}
 
-		this.isPrepared = true;
-
 	}
 
-	/**
-	 * Initializes all GPU resources on the render thread right before the first use.
-	 * This includes the UBO, vertex buffer, and registering/loading the cubemap texture.
-	 */
-	private void lazyInit() {
-		// Only run once if the renderer is successfully prepared
-		if (this.isPrepared && !this.hasInitialized) {
-			this.projectionMatrixUbo = new CachedPerspectiveProjectionMatrixBuffer("panorama_proj", 0.05F, 10.0F);
-			this.vertexBuffer = initializeVertices();
+	protected void initialize() {
+		// Create custom cube map texture
+		this.customCubeMapTexture = new CustomCubeMapTexture(this.name != null ? this.name : "unnamed", this.panoramaImageSuppliers);
+		
+		// Register the texture with a unique ResourceLocation
+		this.cubeMapLocation = ResourceLocation.fromNamespaceAndPath("fancymenu", "panorama_" + this.uniqueId);
+		TextureManager textureManager = Minecraft.getInstance().getTextureManager();
+		textureManager.register(this.cubeMapLocation, this.customCubeMapTexture);
+		
+		// Create CubeMap instance for rendering
+		this.cubeMap = new CubeMap(this.cubeMapLocation);
+		
+		// Create projection matrix buffer
+		this.projectionMatrixBuffer = new CachedPerspectiveProjectionMatrixBuffer("fancymenu_panorama_" + this.uniqueId, 0.05F, 10.0F);
+	}
 
-			this.cubemapTexture = new PanoramaCubeMapTexture(this.panoramaImageSuppliers);
-			this.cubemapLocation = ResourceLocation.fromNamespaceAndPath("fancymenu", "panorama/" + this.name.toLowerCase().replaceAll("[^a-z0-9/._-]", "_"));
+	@SuppressWarnings("all")
+	protected void startTickerThreadIfNeeded() {
 
-			Minecraft.getInstance().getTextureManager().register(this.cubemapLocation, this.cubemapTexture);
-			try {
-				this.cubemapTexture.load();
-				this.hasInitialized = true; // Only mark as initialized on success
-			} catch (IOException e) {
-				LOGGER.error("[FANCYMENU] Failed to load custom panorama textures for '{}'", this.name, e);
-				this.isPrepared = false; // Prevent further render attempts
+		if (this.tickerThreadRunning) return;
+
+		this.lastRenderCall = System.currentTimeMillis();
+		this.tickerThreadRunning = true;
+
+		new Thread(() -> {
+			while ((this.lastRenderCall + 5000L) > System.currentTimeMillis()) {
+				try {
+					this.currentRotation += 0.03F;
+					if (this.currentRotation >= 360) {
+						this.currentRotation = 0;
+					}
+				} catch (Exception ex) {
+					LOGGER.error("[FANCYMENU] Error while ticking panorama!", ex);
+				}
+				try {
+					Thread.sleep(Math.max(2, (int)(20 / this.speed)));
+				} catch (Exception ex) {
+					LOGGER.error("[FANCYMENU] Error while ticking panorama!", ex);
+				}
 			}
-		}
+			this.tickerThreadRunning = false;
+		}, "FancyMenu Panorama Ticker Thread").start();
+
 	}
 
 	@Override
 	public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-		if (!this.isPrepared) return;
-
-		lazyInit();
-
-		// If initialization failed, don't try to render.
-		if (!this.hasInitialized) return;
-
 		this.lastRenderCall = System.currentTimeMillis();
 		this.startTickerThreadIfNeeded();
+
+		// Check if cube map texture is loaded
+		if ((this.customCubeMapTexture == null) || this.customCubeMapTexture.isLoadFailed()) {
+			graphics.blit(RenderPipelines.GUI_TEXTURED, ITexture.MISSING_TEXTURE_LOCATION, 0, 0, 0.0F, 0.0F, ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight(), ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight());
+			return;
+		}
+
+		if (!this.customCubeMapTexture.isLoaded()) {
+			// Trigger loading by trying to get the texture view
+			this.customCubeMapTexture.getTextureView();
+			// Show loading screen or previous frame while loading
+			return;
+		}
 
 		this._render(graphics, Minecraft.getInstance(), this.opacity);
 
@@ -203,120 +213,51 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 		int screenW = ScreenUtils.getScreenWidth();
 		int screenH = ScreenUtils.getScreenHeight();
 
-		RenderSystem.setProjectionMatrix(this.projectionMatrixUbo.getBuffer(mc.getWindow().getWidth(), mc.getWindow().getHeight(), (float) this.fov), ProjectionType.PERSPECTIVE);
+		float pitch = this.angle;
+		float yaw = -this.currentRotation;
+		
+		// Render the cube map using vanilla's approach with custom alpha support
+		this.renderCubeMapWithAlpha(mc, pitch, yaw, alpha);
 
-		RenderPipeline renderPipeline = RenderPipelines.PANORAMA;
-		RenderTarget renderTarget = mc.getMainRenderTarget();
-		RenderSystem.AutoStorageIndexBuffer sequentialIndexBuffer = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS);
-		GpuBuffer indexBuffer = sequentialIndexBuffer.getBuffer(36);
-
-		Matrix4fStack modelViewStack = RenderSystem.getModelViewStack();
-		modelViewStack.pushMatrix();
-		modelViewStack.rotationX((float) Math.PI);
-		modelViewStack.rotateX(this.angle * (float) (Math.PI / 180.0));
-		modelViewStack.rotateY(-this.currentRotation * (float) (Math.PI / 180.0));
-
-		GpuBufferSlice dynamicUniforms = RenderSystem.getDynamicUniforms().writeTransform(new Matrix4f(modelViewStack), new Vector4f(1.0F, 1.0F, 1.0F, alpha), new Vector3f(), new Matrix4f(), 0.0F);
-
-		try (RenderPass renderPass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Panorama", renderTarget.getColorTextureView(), OptionalInt.empty(), renderTarget.getDepthTextureView(), OptionalDouble.of(1.0))) {
-			renderPass.setPipeline(renderPipeline);
-			RenderSystem.bindDefaultUniforms(renderPass);
-			renderPass.setVertexBuffer(0, this.vertexBuffer);
-			renderPass.setIndexBuffer(indexBuffer, sequentialIndexBuffer.type());
-			renderPass.setUniform("DynamicTransforms", dynamicUniforms);
-			renderPass.bindSampler("Sampler0", mc.getTextureManager().getTexture(this.cubemapLocation).getTextureView());
-			renderPass.drawIndexed(0, 0, 36, 1);
-		}
-
-		modelViewStack.popMatrix();
-		RenderSystem.restoreProjectionMatrix();
-
+		// Render overlay if present
 		if (this.overlayTextureSupplier != null) {
 			ITexture texture = this.overlayTextureSupplier.get();
 			if (texture != null) {
 				ResourceLocation location = texture.getResourceLocation();
 				if (location != null) {
-					graphics.blit(RenderPipelines.GUI_TEXTURED, location, 0, 0, 0, 0, screenW, screenH, screenW, screenH, ARGB.color(Mth.clamp((int)(alpha * 255), 0, 255), 255, 255, 255));
+					graphics.blit(RenderPipelines.GUI_TEXTURED, location, 0, 0, 0.0F, 0.0F, screenW, screenH, screenW, screenH, ARGB.white(this.opacity));
 				}
 			}
 		}
+
 	}
 
-	private GpuBuffer initializeVertices() {
-		GpuBuffer gpuBuffer;
-		try (ByteBufferBuilder byteBufferBuilder = ByteBufferBuilder.exactlySized(DefaultVertexFormat.POSITION.getVertexSize() * 4 * 6)) {
-			BufferBuilder bufferBuilder = new BufferBuilder(byteBufferBuilder, VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
-			bufferBuilder.addVertex(-1.0F, -1.0F, 1.0F);
-			bufferBuilder.addVertex(-1.0F, 1.0F, 1.0F);
-			bufferBuilder.addVertex(1.0F, 1.0F, 1.0F);
-			bufferBuilder.addVertex(1.0F, -1.0F, 1.0F);
-			bufferBuilder.addVertex(1.0F, -1.0F, 1.0F);
-			bufferBuilder.addVertex(1.0F, 1.0F, 1.0F);
-			bufferBuilder.addVertex(1.0F, 1.0F, -1.0F);
-			bufferBuilder.addVertex(1.0F, -1.0F, -1.0F);
-			bufferBuilder.addVertex(1.0F, -1.0F, -1.0F);
-			bufferBuilder.addVertex(1.0F, 1.0F, -1.0F);
-			bufferBuilder.addVertex(-1.0F, 1.0F, -1.0F);
-			bufferBuilder.addVertex(-1.0F, -1.0F, -1.0F);
-			bufferBuilder.addVertex(-1.0F, -1.0F, -1.0F);
-			bufferBuilder.addVertex(-1.0F, 1.0F, -1.0F);
-			bufferBuilder.addVertex(-1.0F, 1.0F, 1.0F);
-			bufferBuilder.addVertex(-1.0F, -1.0F, 1.0F);
-			bufferBuilder.addVertex(-1.0F, -1.0F, -1.0F);
-			bufferBuilder.addVertex(-1.0F, -1.0F, 1.0F);
-			bufferBuilder.addVertex(1.0F, -1.0F, 1.0F);
-			bufferBuilder.addVertex(1.0F, -1.0F, -1.0F);
-			bufferBuilder.addVertex(-1.0F, 1.0F, 1.0F);
-			bufferBuilder.addVertex(-1.0F, 1.0F, -1.0F);
-			bufferBuilder.addVertex(1.0F, 1.0F, -1.0F);
-			bufferBuilder.addVertex(1.0F, 1.0F, 1.0F);
-			try (MeshData meshData = bufferBuilder.buildOrThrow()) {
-				gpuBuffer = RenderSystem.getDevice().createBuffer(() -> "FancyMenu Panorama Position Buffer", 32, meshData.vertexBuffer());
-			}
+	private void renderCubeMapWithAlpha(Minecraft mc, float pitch, float yaw, float alpha) {
+		// We can't use CubeMap.render() directly because it doesn't support custom FOV and alpha
+		// So we need to set our own projection matrix with custom FOV before rendering
+		
+		if (this.cubeMap != null && this.projectionMatrixBuffer != null) {
+			// Backup current projection matrix
+			RenderSystem.backupProjectionMatrix();
+			
+			// Set our custom projection matrix with desired FOV
+			RenderSystem.setProjectionMatrix(
+				this.projectionMatrixBuffer.getBuffer(mc.getWindow().getWidth(), mc.getWindow().getHeight(), (float)this.fov), 
+				ProjectionType.PERSPECTIVE
+			);
+			
+			// Apply alpha by modifying shader color
+//			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, alpha);
+			
+			// Use vanilla cube map render
+			this.cubeMap.render(mc, pitch, yaw);
+			
+			// Reset shader color
+//			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+			
+			// Restore original projection matrix
+			RenderSystem.restoreProjectionMatrix();
 		}
-		return gpuBuffer;
-	}
-
-	@Override
-	public void close() {
-		if (this.vertexBuffer != null) {
-			this.vertexBuffer.close();
-			this.vertexBuffer = null;
-		}
-		if (this.projectionMatrixUbo != null) {
-			this.projectionMatrixUbo.close();
-			this.projectionMatrixUbo = null;
-		}
-		if (this.cubemapTexture != null && this.cubemapLocation != null) {
-			// This tells the texture manager to remove it from its registry, which in turn calls close() on our texture.
-			Minecraft.getInstance().getTextureManager().release(this.cubemapLocation);
-			this.cubemapTexture = null;
-			this.cubemapLocation = null;
-		}
-		this.isPrepared = false;
-		this.hasInitialized = false;
-	}
-
-	protected void startTickerThreadIfNeeded() {
-		if (this.tickerThreadRunning) return;
-
-		this.lastRenderCall = System.currentTimeMillis();
-		this.tickerThreadRunning = true;
-
-		new Thread(() -> {
-			while ((this.lastRenderCall + 5000L) > System.currentTimeMillis()) {
-				this.currentRotation += 0.03F;
-				if (this.currentRotation >= 360) {
-					this.currentRotation = 0;
-				}
-				try {
-					Thread.sleep(Math.max(2, (int)(20 / this.speed)));
-				} catch (Exception ex) {
-					LOGGER.error("[FANCYMENU] Error while ticking panorama!", ex);
-				}
-			}
-			this.tickerThreadRunning = false;
-		}, "FancyMenu Panorama Ticker Thread").start();
 	}
 
 	public String getName() {
@@ -324,15 +265,41 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 	}
 
 	public void setSpeed(float speed) {
-		this.speed = Math.max(0.0F, speed);
+		if (speed < 0.0F) {
+			speed = 0.0F;
+		}
+		this.speed = speed;
 	}
 
 	public void setFov(double fov) {
-		this.fov = Math.min(fov, 179.0D);
+		if (fov > 179.0D) {
+			fov = 179.0D;
+		}
+		this.fov = fov;
 	}
 
 	public void setAngle(float angle) {
 		this.angle = angle;
+	}
+
+	@Override
+	public void close() {
+		if (this.cubeMap != null) {
+			this.cubeMap.close();
+			this.cubeMap = null;
+		}
+		if (this.customCubeMapTexture != null) {
+			this.customCubeMapTexture.close();
+			this.customCubeMapTexture = null;
+		}
+		if (this.projectionMatrixBuffer != null) {
+			this.projectionMatrixBuffer.close();
+			this.projectionMatrixBuffer = null;
+		}
+		if (this.cubeMapLocation != null) {
+			Minecraft.getInstance().getTextureManager().release(this.cubeMapLocation);
+			this.cubeMapLocation = null;
+		}
 	}
 
 }
