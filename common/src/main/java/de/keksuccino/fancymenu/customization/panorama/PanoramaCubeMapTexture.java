@@ -35,6 +35,14 @@ public class PanoramaCubeMapTexture extends AbstractTexture {
      * Loads the 6 images by getting them from the suppliers, validates them, and uploads them to the GPU.
      * This version is simplified thanks to PngTexture::getNativeImage.
      *
+     * IMPORTANT: The suppliers must be provided in the exact order expected by the GPU:
+     * Index 0: Left face (-X)
+     * Index 1: Bottom face (-Y)
+     * Index 2: Back face (-Z)
+     * Index 3: Front face (+Z)
+     * Index 4: Right face (+X)
+     * Index 5: Top face (+Y)
+     *
      * @throws IOException If image data cannot be retrieved or dimensions are mismatched.
      */
     public void load() throws IOException {

@@ -127,15 +127,15 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 		this.panoramaImageSuppliers.clear();
 		this.overlayTextureSupplier = null;
 
-		// The GPU expects faces in this order: +X, -X, +Y, -Y, +Z, -Z
-		// Vanilla's panorama_X.png maps to this order.
+		// The GPU expects faces in a specific order that matches vanilla's cubemap loading
+		// This order is defined in vanilla's CubeMapTexture.SUFFIXES array
 		String[] faceFiles = new String[] {
-				"panorama_0.png", // Right (+X)
-				"panorama_1.png", // Left (-X)
-				"panorama_2.png", // Top (+Y)
-				"panorama_3.png", // Bottom (-Y)
-				"panorama_4.png", // Front (+Z)
-				"panorama_5.png"  // Back (-Z)
+				"panorama_1.png", // Face 0: Left (-X)
+				"panorama_3.png", // Face 1: Bottom (-Y)
+				"panorama_5.png", // Face 2: Back (-Z)
+				"panorama_4.png", // Face 3: Front (+Z)
+				"panorama_0.png", // Face 4: Right (+X)
+				"panorama_2.png"  // Face 5: Top (+Y)
 		};
 
 		for (String fileName : faceFiles) {
