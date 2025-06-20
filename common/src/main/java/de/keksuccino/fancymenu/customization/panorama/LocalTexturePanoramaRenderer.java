@@ -30,7 +30,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
 
 @SuppressWarnings("unused")
 public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
@@ -57,7 +56,7 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 	@Nullable
 	private CubeMap cubeMap = null;
 	@Nullable
-	private CustomCubeMapTexture customCubeMapTexture = null;
+	private PanoramaCubeMapTexture panoramaCubeMapTexture = null;
 	@Nullable
 	private ResourceLocation cubeMapLocation = null;
 	@Nullable
@@ -142,12 +141,12 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 
 	protected void initialize() {
 		// Create custom cube map texture
-		this.customCubeMapTexture = new CustomCubeMapTexture(this.name != null ? this.name : "unnamed", this.panoramaImageSuppliers);
+		this.panoramaCubeMapTexture = new PanoramaCubeMapTexture(this.name != null ? this.name : "unnamed", this.panoramaImageSuppliers);
 		
 		// Register the texture with a unique ResourceLocation
 		this.cubeMapLocation = ResourceLocation.fromNamespaceAndPath("fancymenu", "panorama_" + this.uniqueId);
 		TextureManager textureManager = Minecraft.getInstance().getTextureManager();
-		textureManager.register(this.cubeMapLocation, this.customCubeMapTexture);
+		textureManager.register(this.cubeMapLocation, this.panoramaCubeMapTexture);
 		
 		// Create CubeMap instance for rendering
 		this.cubeMap = new CubeMap(this.cubeMapLocation);
@@ -192,14 +191,14 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 		this.startTickerThreadIfNeeded();
 
 		// Check if cube map texture is loaded
-		if ((this.customCubeMapTexture == null) || this.customCubeMapTexture.isLoadFailed()) {
+		if ((this.panoramaCubeMapTexture == null) || this.panoramaCubeMapTexture.isLoadFailed()) {
 			graphics.blit(RenderPipelines.GUI_TEXTURED, ITexture.MISSING_TEXTURE_LOCATION, 0, 0, 0.0F, 0.0F, ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight(), ScreenUtils.getScreenWidth(), ScreenUtils.getScreenHeight());
 			return;
 		}
 
-		if (!this.customCubeMapTexture.isLoaded()) {
+		if (!this.panoramaCubeMapTexture.isLoaded()) {
 			// Trigger loading by trying to get the texture view
-			this.customCubeMapTexture.getTextureView();
+			this.panoramaCubeMapTexture.getTextureView();
 			// Show loading screen or previous frame while loading
 			return;
 		}
@@ -288,9 +287,9 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 			this.cubeMap.close();
 			this.cubeMap = null;
 		}
-		if (this.customCubeMapTexture != null) {
-			this.customCubeMapTexture.close();
-			this.customCubeMapTexture = null;
+		if (this.panoramaCubeMapTexture != null) {
+			this.panoramaCubeMapTexture.close();
+			this.panoramaCubeMapTexture = null;
 		}
 		if (this.projectionMatrixBuffer != null) {
 			this.projectionMatrixBuffer.close();

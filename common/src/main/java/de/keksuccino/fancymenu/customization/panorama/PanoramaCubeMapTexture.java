@@ -8,7 +8,6 @@ import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
 import net.minecraft.client.renderer.texture.AbstractTexture;
-import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -18,7 +17,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 
-public class CustomCubeMapTexture extends AbstractTexture {
+public class PanoramaCubeMapTexture extends AbstractTexture {
     
     private static final Logger LOGGER = LogManager.getLogger();
     // Vanilla uses this specific order for cube map faces
@@ -31,7 +30,7 @@ public class CustomCubeMapTexture extends AbstractTexture {
     private volatile boolean loaded = false;
     private volatile boolean loadFailed = false;
     
-    public CustomCubeMapTexture(@NotNull String name, @NotNull List<ResourceSupplier<ITexture>> textureSuppliers) {
+    public PanoramaCubeMapTexture(@NotNull String name, @NotNull List<ResourceSupplier<ITexture>> textureSuppliers) {
         this.name = Objects.requireNonNull(name);
         this.textureSuppliers = Objects.requireNonNull(textureSuppliers);
         
