@@ -3,6 +3,8 @@ package de.keksuccino.fancymenu.customization.panorama;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.GpuDevice;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.textures.TextureFormat;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -11,8 +13,6 @@ import net.minecraft.client.renderer.texture.AbstractTexture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
@@ -145,8 +145,8 @@ public class PanoramaCubeMapTexture extends AbstractTexture {
     }
     
     @Override
-    @Nullable
-    public com.mojang.blaze3d.textures.GpuTextureView getTextureView() {
+    @NotNull
+    public GpuTextureView getTextureView() {
         if (!this.loaded && !this.loadFailed) {
             this.loadTextures();
         }
@@ -154,8 +154,8 @@ public class PanoramaCubeMapTexture extends AbstractTexture {
     }
     
     @Override
-    @Nullable  
-    public com.mojang.blaze3d.textures.GpuTexture getTexture() {
+    @NotNull
+    public GpuTexture getTexture() {
         if (!this.loaded && !this.loadFailed) {
             this.loadTextures();
         }
@@ -169,4 +169,5 @@ public class PanoramaCubeMapTexture extends AbstractTexture {
     public boolean isLoadFailed() {
         return this.loadFailed;
     }
+
 }
