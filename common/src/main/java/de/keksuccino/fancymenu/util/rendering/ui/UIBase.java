@@ -11,10 +11,10 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestio
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v1.ExtendedSliderButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtendedSlider;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -128,7 +128,7 @@ public class UIBase extends RenderingUtils {
 	}
 
 	public static float calculateFixedScale(float fixedScale) {
-		double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
+		double guiScale = WindowHandler.getGuiScale();
 		return (float)(1.0D * (1.0D / guiScale) * fixedScale);
 	}
 

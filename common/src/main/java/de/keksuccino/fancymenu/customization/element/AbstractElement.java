@@ -19,6 +19,7 @@ import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierH
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -606,18 +607,16 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	}
 
 	public void setAutoSizingBaseWidthAndHeight() {
-		Window window = Minecraft.getInstance().getWindow();
-		double guiWidth = getScreenWidth() * window.getGuiScale();
-		double guiHeight = getScreenHeight() * window.getGuiScale();
+		double guiWidth = getScreenWidth() * WindowHandler.getGuiScale();
+		double guiHeight = getScreenHeight() * WindowHandler.getGuiScale();
 		this.autoSizingBaseScreenWidth = (int)guiWidth;
 		this.autoSizingBaseScreenHeight = (int)guiHeight;
 	}
 
 	public void updateAutoSizing(boolean ignoreLastTickScreenSize) {
 
-		Window window = Minecraft.getInstance().getWindow();
-		double guiWidth = getScreenWidth() * window.getGuiScale();
-		double guiHeight = getScreenHeight() * window.getGuiScale();
+		double guiWidth = getScreenWidth() * WindowHandler.getGuiScale();
+		double guiHeight = getScreenHeight() * WindowHandler.getGuiScale();
 
 		if (((this.autoSizingLastTickScreenWidth != guiWidth) || (this.autoSizingLastTickScreenHeight != guiHeight)) || ignoreLastTickScreenSize) {
 			if (this.autoSizing && (this.autoSizingBaseScreenWidth > 0) && (this.autoSizingBaseScreenHeight > 0)) {

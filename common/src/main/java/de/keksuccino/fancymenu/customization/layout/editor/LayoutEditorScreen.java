@@ -179,12 +179,12 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		//Handle auto-scaling
 		if ((this.layout.autoScalingWidth != 0) && (this.layout.autoScalingHeight != 0)) {
 			Window m = Minecraft.getInstance().getWindow();
-			double guiWidth = this.width * m.getGuiScale();
-			double guiHeight = this.height * m.getGuiScale();
+			double guiWidth = this.width * WindowHandler.getGuiScale();
+			double guiHeight = this.height * WindowHandler.getGuiScale();
 			double percentX = (guiWidth / (double)this.layout.autoScalingWidth) * 100.0D;
 			double percentY = (guiHeight / (double)this.layout.autoScalingHeight) * 100.0D;
-			double newScaleX = (percentX / 100.0D) * m.getGuiScale();
-			double newScaleY = (percentY / 100.0D) * m.getGuiScale();
+			double newScaleX = (percentX / 100.0D) * WindowHandler.getGuiScale();
+			double newScaleY = (percentY / 100.0D) * WindowHandler.getGuiScale();
 			double newScale = Math.min(newScaleX, newScaleY);
 			WindowHandler.setGuiScale(newScale);
 			this.width = m.getGuiScaledWidth();

@@ -365,8 +365,8 @@ public class KeyframeManagerScreen extends Screen {
         boolean tooFarRight = (farRightWidget.getX() + farRightWidget.getWidth()) >= (this.width - 100);
 
         //Adjust GUI scale to make all buttons fit in the screen
-        if (tooFarRight && (window.getGuiScale() > 1)) {
-            double newScale = window.getGuiScale();
+        if (tooFarRight && (WindowHandler.getGuiScale() > 1)) {
+            double newScale = WindowHandler.getGuiScale();
             newScale--;
             if (newScale < 1) newScale = 1;
             WindowHandler.setGuiScale(newScale);

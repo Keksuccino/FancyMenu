@@ -7,6 +7,7 @@ import com.mojang.blaze3d.vertex.*;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -220,19 +221,19 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Fan
     }
 
     protected int convertMouseX(double mouseX) {
-        return (int)((mouseX - (double)this.getX()) * this.minecraft.getWindow().getGuiScale());
+        return (int)((mouseX - (double)this.getX()) * WindowHandler.getGuiScale());
     }
 
     protected int convertMouseY(double mouseY) {
-        return (int)((mouseY - (double)this.getY()) * this.minecraft.getWindow().getGuiScale());
+        return (int)((mouseY - (double)this.getY()) * WindowHandler.getGuiScale());
     }
 
     protected int convertWidth(double width) {
-        return (int) (width * this.minecraft.getWindow().getGuiScale());
+        return (int) (width * WindowHandler.getGuiScale());
     }
 
     protected int convertHeight(double height) {
-        return (int) (height * this.minecraft.getWindow().getGuiScale());
+        return (int) (height * WindowHandler.getGuiScale());
     }
 
     /**

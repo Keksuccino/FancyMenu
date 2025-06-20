@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.loadingrequirement.requirements.gu
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.resources.language.I18n;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
@@ -74,7 +75,7 @@ public class IsGuiScaleRequirement extends LoadingRequirement {
     }
 
     protected static boolean checkForGuiScale(String condition) {
-        double windowScale = Minecraft.getInstance().getWindow().getGuiScale();
+        double windowScale = WindowHandler.getGuiScale();
         if (condition.startsWith("double:")) {
             String value = condition.replace("double:", "");
             double valueScale = Double.parseDouble(value);

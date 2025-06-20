@@ -45,6 +45,7 @@
     "client.MixinGameLoadCookie",
     "client.MixinGameRenderer",
     "client.MixinGenericMessageScreen",
+    "client.MixinGuiRenderer",
     "client.MixinImageButton",
     "client.MixinLevelLoadingScreen",
     "client.MixinLevelStorageAccess",
@@ -64,6 +65,7 @@
     "client.MixinSwitchGrid_SwitchBuilder",
     "client.MixinTabNavigationBar",
     "client.MixinTitleScreen",
+    "client.MixinWindow",
     "client.MixinWorldListEntry"
   ],
   "mixins": [

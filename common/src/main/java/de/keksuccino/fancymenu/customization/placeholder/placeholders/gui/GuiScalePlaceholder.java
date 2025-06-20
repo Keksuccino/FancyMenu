@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.gui;
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
@@ -19,7 +20,7 @@ public class GuiScalePlaceholder extends Placeholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-       return "" + Minecraft.getInstance().getWindow().getGuiScale();
+       return "" + WindowHandler.getGuiScale();
     }
 
     @Override

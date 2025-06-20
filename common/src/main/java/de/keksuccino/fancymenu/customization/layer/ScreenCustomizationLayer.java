@@ -258,12 +258,12 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		//Handle auto-scaling
 		if ((this.layoutBase.autoScalingWidth != 0) && (this.layoutBase.autoScalingHeight != 0) && (this.layoutBase.forcedScale != 0)) {
-			double guiWidth = e.getScreen().width * window.getGuiScale();
-			double guiHeight = e.getScreen().height * window.getGuiScale();
+			double guiWidth = e.getScreen().width * WindowHandler.getGuiScale();
+			double guiHeight = e.getScreen().height * WindowHandler.getGuiScale();
 			double percentX = (guiWidth / (double)this.layoutBase.autoScalingWidth) * 100.0D;
 			double percentY = (guiHeight / (double)this.layoutBase.autoScalingHeight) * 100.0D;
-			double newScaleX = (percentX / 100.0D) * window.getGuiScale();
-			double newScaleY = (percentY / 100.0D) * window.getGuiScale();
+			double newScaleX = (percentX / 100.0D) * WindowHandler.getGuiScale();
+			double newScaleY = (percentY / 100.0D) * WindowHandler.getGuiScale();
 			double newScale = Math.min(newScaleX, newScaleY);
 			WindowHandler.setGuiScale(newScale);
 			e.getScreen().width = window.getGuiScaledWidth();

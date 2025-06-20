@@ -36,6 +36,7 @@ import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -990,7 +991,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 							int bottomEdge = topEdge + this.getHeight();
 
 							// Get GUI scale to account for the scale difference
-							double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
+							double guiScale = WindowHandler.getGuiScale();
 
 							// Get grid size
 							int gridSize = FancyMenu.getOptions().layoutEditorGridSize.getValue();

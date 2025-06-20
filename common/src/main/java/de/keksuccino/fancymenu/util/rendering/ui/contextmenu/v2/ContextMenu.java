@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -125,7 +126,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         renderEntries.add(new SpacerContextMenuEntry("unregistered_spacer_bottom", this));
 
         // Calculate max height considering both menu scale and GUI scale
-        double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
+        double guiScale = WindowHandler.getGuiScale();
         float menuScale = UIBase.calculateFixedScale(this.scale);
         float maxMenuHeight = (getScreenHeight() / menuScale) * 0.7f;
 
