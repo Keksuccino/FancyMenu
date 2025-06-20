@@ -6,7 +6,7 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
 
 public class FancyMenuForgeClientEvents {
 

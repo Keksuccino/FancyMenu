@@ -15,7 +15,7 @@ public class MixinForgeMouseHandler {
     /**
      * @reason This restores Minecraft's old UI component click logic to not only click the hovered component, but all of them. The old logic is only used for FancyMenu's components.
      */
-    @WrapOperation(method = "onPress", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/client/event/ForgeEventFactoryClient;onScreenMouseClicked(Lnet/minecraft/client/gui/screens/Screen;DDI)Z"))
+    @WrapOperation(method = "onPress", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/client/event/ForgeEventFactoryClient;onScreenMouseClicked(Lnet/minecraft/client/gui/screens/Screen;DDI)Z", remap = false))
     private boolean wrap_Screen_mouseClicked_in_onPress_FancyMenu(Screen instance, double mouseX, double mouseY, int button, Operation<Boolean> original) {
         for (GuiEventListener listener : instance.children()) {
             if (listener instanceof FancyMenuUiComponent) {
