@@ -127,12 +127,24 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 		this.panoramaImageSuppliers.clear();
 		this.overlayTextureSupplier = null;
 
-		for (int i = 0; i < 6; i++) {
-			File panoImage = new File(this.panoramaImageDir, "panorama_" + i + ".png");
+		// The GPU expects faces in this order: +X, -X, +Y, -Y, +Z, -Z
+		// Vanilla's panorama_X.png maps to this order.
+		String[] faceFiles = new String[] {
+				"panorama_0.png", // Right (+X)
+				"panorama_1.png", // Left (-X)
+				"panorama_2.png", // Top (+Y)
+				"panorama_3.png", // Bottom (-Y)
+				"panorama_4.png", // Front (+Z)
+				"panorama_5.png"  // Back (-Z)
+		};
+
+		for (String fileName : faceFiles) {
+			File panoImage = new File(this.panoramaImageDir, fileName);
 			if (panoImage.isFile()) {
 				this.panoramaImageSuppliers.add(ResourceSupplier.image(ResourceSource.of(panoImage.getAbsolutePath(), ResourceSourceType.LOCAL).getSourceWithPrefix()));
 			} else {
-				LOGGER.error("[FANCYMENU] Unable to load panorama! Missing image 'panorama_{}.png' for '{}'", i, this.name);
+				LOGGER.error("[FANCYMENU] Unable to load panorama! Missing image '{}' for '{}'", fileName, this.name);
+				// If any face is missing, we cannot continue.
 				return;
 			}
 		}
@@ -229,23 +241,6 @@ public class LocalTexturePanoramaRenderer implements Renderable, AutoCloseable {
 			}
 		}
 	}
-
-//	private GpuBuffer initializeVertices() {
-//		GpuBuffer newBuffer;
-//		try (ByteBufferBuilder byteBufferBuilder = ByteBufferBuilder.exactlySized(DefaultVertexFormat.POSITION.getVertexSize() * 24)) {
-//			BufferBuilder bufferBuilder = new BufferBuilder(byteBufferBuilder, VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
-//			for (int i = 0; i < 6; ++i) {
-//				bufferBuilder.addVertex(-1.0F, -1.0F, 1.0F);
-//				bufferBuilder.addVertex(-1.0F, 1.0F, 1.0F);
-//				bufferBuilder.addVertex(1.0F, 1.0F, 1.0F);
-//				bufferBuilder.addVertex(1.0F, -1.0F, 1.0F);
-//			}
-//			try (MeshData meshData = bufferBuilder.buildOrThrow()) {
-//				newBuffer = RenderSystem.getDevice().createBuffer(() -> "FancyMenu Panorama Position Buffer", 32, meshData.vertexBuffer());
-//			}
-//		}
-//		return newBuffer;
-//	}
 
 	private GpuBuffer initializeVertices() {
 		GpuBuffer gpuBuffer;
