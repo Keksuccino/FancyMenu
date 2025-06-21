@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
 
 public class FancyMenuForgeClientEvents {
@@ -24,6 +25,10 @@ public class FancyMenuForgeClientEvents {
 
         if (Minecraft.getInstance().getOverlay() instanceof GameIntroOverlay o) o.keyPressed(e.getKeyCode(), e.getScanCode(), e.getModifiers());
 
+    }
+
+    @SubscribeEvent
+    public void uselessMethodThanksForge(TickEvent.ClientTickEvent e) {
     }
 
 }
