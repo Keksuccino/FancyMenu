@@ -61,6 +61,7 @@ CHANGELOG | FANCYMENU v3.6.0 [ W I P !! Not public yet !! ]
 - The "Random Text" placeholder now accepts URLs as "source" value to get text content from remote/web files (#823)
 - The "Random Text" placeholder now accepts direct plain text as "source" value to get text lines (separate lines with "\n" for plain text)
 - The "JSON Parser" placeholder now accepts plain JSON text content as source
+- Improved the placeholder parsing logic to better parse multi-line placeholders and weirdly formatted placeholders in general (#1132)
 - Loading requirement containers now cache their "requirements met" value for 150 milliseconds for performance optimization reasons
   - I don't think this will break any logic stuff in layouts, but if you notice something, tell me please! Thank you!
 - Placeholder replacements now get cached for 150 milliseconds (was 30 milliseconds before) for performance optimization reasons
