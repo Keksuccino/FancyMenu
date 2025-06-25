@@ -70,7 +70,7 @@ public class PlaceholderParser {
     public static boolean containsPlaceholders(@Nullable String in, boolean checkForVariableReferences, boolean checkForFormattingCodes) {
         if (in == null) return false;
         if (in.length() <= 2) return false;
-        if (StringUtils.contains(in, PLACEHOLDER_PREFIX)) return true;
+        if (StringUtils.contains(in, "{\"placeholder\"")) return true;
         if (checkForFormattingCodes && (in.hashCode() != TextFormattingUtils.replaceFormattingCodes(in, FORMATTING_PREFIX_AND, FORMATTING_PREFIX_PARAGRAPH).hashCode())) return true;
         if (checkForVariableReferences && (in.hashCode() != replaceVariableReferences(in).hashCode())) return true;
         return false;
@@ -190,16 +190,32 @@ public class PlaceholderParser {
     public static List<ParsedPlaceholder> findPlaceholders(@Nullable String in, @NotNull HashMap<String, String> parsed, boolean replaceFormattingCodes) {
         List<ParsedPlaceholder> placeholders = new ArrayList<>();
         if (in == null) return placeholders;
-        int index = -1;
-        for (char c : in.toCharArray()) {
-            index++;
-            if (c == OPEN_CURLY_BRACKETS_CHAR) {
-                String sub = StringUtils.substring(in, index);
-                if (StringUtils.startsWith(sub, PLACEHOLDER_PREFIX)) {
-                    int endIndex = findPlaceholderEndIndex(sub, index);
-                    if (endIndex != -1) {
-                        endIndex++; //so the sub string ends AFTER the placeholder
-                        placeholders.add(new ParsedPlaceholder(StringUtils.substring(in, index, endIndex), index, endIndex, parsed, replaceFormattingCodes));
+
+        for (int i = 0; i < in.length(); i++) {
+            if (in.charAt(i) == OPEN_CURLY_BRACKETS_CHAR) {
+                // Found a potential start of a JSON object.
+                // Let's find its corresponding closing bracket.
+                String sub = StringUtils.substring(in, i);
+                int endIndex = findPlaceholderEndIndex(sub, i); // Returns absolute index in 'in'
+
+                if (endIndex != -1) {
+                    // We found a matching '}' for the '{' at 'i'.
+                    // This block is a candidate for being a placeholder.
+                    String candidate = StringUtils.substring(in, i, endIndex + 1);
+
+                    // To check if it's a real placeholder, we normalize it and check the prefix.
+                    // This handles multi-line and whitespace variations.
+                    String normalized = normalizePlaceholderString(candidate);
+
+                    if (normalized.startsWith(PLACEHOLDER_PREFIX)) {
+                        // It's a valid placeholder. Add it to our list.
+                        // Note: We use the original 'candidate' string for the object,
+                        // as that's what exists in the input string 'in'.
+                        placeholders.add(new ParsedPlaceholder(candidate, i, endIndex + 1, parsed, replaceFormattingCodes));
+
+                        // Advance the loop counter past this placeholder to avoid
+                        // parsing its contents as separate, new placeholders.
+                        i = endIndex;
                     }
                 }
             }
@@ -235,87 +251,63 @@ public class PlaceholderParser {
      */
     @NotNull
     private static String normalizePlaceholderString(@NotNull String placeholderString) {
-        StringBuilder result = new StringBuilder();
+        StringBuilder result = new StringBuilder(placeholderString.length());
         boolean inQuotes = false;
-        boolean backslash = false;
-        boolean lastWasWhitespace = false;
-        
+        boolean isEscaped = false;
+
         for (int i = 0; i < placeholderString.length(); i++) {
             char c = placeholderString.charAt(i);
-            
-            // Check for %n% newline code
-            if (i + 2 < placeholderString.length() && 
-                c == PERCENT_CHAR && 
-                placeholderString.charAt(i + 1) == LOWERCASE_N_CHAR && 
-                placeholderString.charAt(i + 2) == PERCENT_CHAR) {
-                
+
+            // Handle %n% first, as it's a multi-char sequence that can appear inside or outside quotes
+            if (!isEscaped && i + 2 < placeholderString.length() &&
+                    c == PERCENT_CHAR &&
+                    placeholderString.charAt(i+1) == LOWERCASE_N_CHAR &&
+                    placeholderString.charAt(i+2) == PERCENT_CHAR) {
+
                 if (inQuotes) {
-                    // Inside quotes, preserve the %n% sequence
+                    // Inside quotes, the code should be preserved.
                     result.append(PERCENT_NEWLINE_CODE);
-                } else {
-                    // Outside quotes, treat %n% as whitespace
-                    if (!lastWasWhitespace && result.length() > 0) {
-                        char lastChar = result.charAt(result.length() - 1);
-                        if (lastChar != OPEN_CURLY_BRACKETS_CHAR && lastChar != CLOSE_CURLY_BRACKETS_CHAR && 
-                            lastChar != COLON_CHAR && lastChar != COMMA_CHAR) {
-                            result.append(SPACE_CHAR);
-                        }
-                    }
-                    lastWasWhitespace = true;
                 }
-                i += 2; // Skip the 'n%' part
+                // If not in quotes, it's treated as whitespace, so we do nothing and just skip it.
+                i += 2;
                 continue;
             }
-            
-            if (backslash) {
-                // Always include escaped characters
+
+            if (isEscaped) {
+                // The previous character was a backslash, so append both it and the current character.
+                result.append(BACKSLASH_CHAR);
                 result.append(c);
-                backslash = false;
-                lastWasWhitespace = false;
-            } else if (c == BACKSLASH_CHAR) {
-                result.append(c);
-                backslash = true;
-                lastWasWhitespace = false;
-            } else if (c == APOSTROPHE_CHAR) {
-                result.append(c);
+                isEscaped = false;
+                continue;
+            }
+
+            if (c == BACKSLASH_CHAR) {
+                // This is an escape character. Set the flag and wait for the next character.
+                isEscaped = true;
+                continue;
+            }
+
+            if (c == APOSTROPHE_CHAR) {
+                // Toggles the in/out of quotes state.
                 inQuotes = !inQuotes;
-                lastWasWhitespace = false;
-            } else if (inQuotes) {
-                // Inside quotes, preserve everything
                 result.append(c);
-                lastWasWhitespace = false;
-            } else if (isWhitespace(c)) {
-                // Outside quotes, collapse multiple whitespace into single space
-                // and skip whitespace after structural characters
-                if (!lastWasWhitespace && result.length() > 0) {
-                    char lastChar = result.charAt(result.length() - 1);
-                    if (lastChar != OPEN_CURLY_BRACKETS_CHAR && lastChar != CLOSE_CURLY_BRACKETS_CHAR && 
-                        lastChar != COLON_CHAR && lastChar != COMMA_CHAR) {
-                        result.append(SPACE_CHAR);
-                    }
-                }
-                lastWasWhitespace = true;
+                continue;
+            }
+
+            if (inQuotes) {
+                // If we are inside quotes, append every character as is.
+                result.append(c);
             } else {
-                // Remove whitespace before structural characters
-                if (lastWasWhitespace && result.length() > 0 && 
-                    (c == CLOSE_CURLY_BRACKETS_CHAR || c == COLON_CHAR || c == COMMA_CHAR)) {
-                    if (result.charAt(result.length() - 1) == SPACE_CHAR) {
-                        result.deleteCharAt(result.length() - 1);
-                    }
+                // If we are outside quotes, only append non-whitespace characters.
+                if (!isWhitespace(c)) {
+                    result.append(c);
                 }
-                result.append(c);
-                lastWasWhitespace = false;
             }
         }
-        
-        // Remove trailing whitespace if any
-        while (result.length() > 0 && result.charAt(result.length() - 1) == SPACE_CHAR) {
-            result.deleteCharAt(result.length() - 1);
-        }
-        
+
         return result.toString();
     }
-    
+
     private static boolean isWhitespace(char c) {
         return c == SPACE_CHAR || c == TAB_CHAR || c == NEWLINE_CHAR || c == CARRIAGE_RETURN_CHAR;
     }
@@ -397,8 +389,14 @@ public class PlaceholderParser {
             if (this.identifier != null) return this.identifier;
             try {
                 String normalized = this.getNormalizedString();
-                this.identifier = StringUtils.split(StringUtils.substring(normalized, PLACEHOLDER_PREFIX.length()), APOSTROPHE, 2)[0];
-                return this.identifier;
+                // Remove the prefix to get the rest
+                String afterPrefix = StringUtils.substring(normalized, PLACEHOLDER_PREFIX.length());
+                // Find the closing quote for the identifier
+                int endQuoteIndex = afterPrefix.indexOf(APOSTROPHE_CHAR);
+                if (endQuoteIndex > 0) {
+                    this.identifier = afterPrefix.substring(0, endQuoteIndex);
+                    return this.identifier;
+                }
             } catch (Exception ex) {
                 logError("[FANCYMENU] Failed to parse identifier of placeholder: " + this.placeholderString, ex);
                 this.identifierFailed = true;
@@ -432,7 +430,15 @@ public class PlaceholderParser {
                     return null;
                 }
                 String normalized = this.getNormalizedString();
-                String valueString = COMMA + StringUtils.split(normalized, COMMA, 2)[1];
+                // Check if there's actually a comma (indicating values section exists)
+                if (!normalized.contains(COMMA)) {
+                    return null;
+                }
+                String[] parts = StringUtils.split(normalized, COMMA, 2);
+                if (parts.length < 2) {
+                    return null;
+                }
+                String valueString = COMMA + parts[1];
                 int currentIndex = 0;
                 int inValueDepth = 0;
                 String currentValueName = null;
