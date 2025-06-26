@@ -315,10 +315,12 @@ public class LayoutEditorUI {
 
 		windowMenu.addSeparatorEntry("separator_after_anchor_overlay_opacity");
 
-		windowMenu.addValueCycleEntry("toggle_buddy", CommonCycles.cycleEnabledDisabled("fancymenu.editor.buddy.enable", FancyMenu.getOptions().enableBuddy.getValue()).addCycleListener(cycleEnabledDisabled -> {
-			FancyMenu.getOptions().enableBuddy.setValue(cycleEnabledDisabled.getAsBoolean());
-			ScreenCustomization.reInitCurrentScreen();
-		})).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.buddy.enable.desc")));
+		if (!LayoutEditorScreen.FORCE_DISABLE_BUDDY) {
+			windowMenu.addValueCycleEntry("toggle_buddy", CommonCycles.cycleEnabledDisabled("fancymenu.editor.buddy.enable", FancyMenu.getOptions().enableBuddy.getValue()).addCycleListener(cycleEnabledDisabled -> {
+				FancyMenu.getOptions().enableBuddy.setValue(cycleEnabledDisabled.getAsBoolean());
+				ScreenCustomization.reInitCurrentScreen();
+			})).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.buddy.enable.desc")));
+		}
 
 		//USER INTERFACE
 		CustomizationOverlayUI.buildUITabAndAddTo(menuBar);

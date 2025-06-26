@@ -61,6 +61,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
+	public static final boolean FORCE_DISABLE_BUDDY = true;
+
 	protected static final Map<SerializedElement, ElementBuilder<?,?>> COPIED_ELEMENTS_CLIPBOARD = new LinkedHashMap<>();
 	public static final int ELEMENT_DRAG_CRUMPLE_ZONE = 5;
 
@@ -210,7 +212,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			w.refresh();
 		}
 
-		if (FancyMenu.getOptions().enableBuddy.getValue()) {
+		if (FancyMenu.getOptions().enableBuddy.getValue() && !FORCE_DISABLE_BUDDY) {
 			this.addWidget(this.buddyWidget);
 			this.buddyWidget.setScreenSize(this.width, this.height);
 		}
@@ -227,7 +229,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	@Override
 	public void tick() {
 
-		if (FancyMenu.getOptions().enableBuddy.getValue()) {
+		if (FancyMenu.getOptions().enableBuddy.getValue() && !FORCE_DISABLE_BUDDY) {
 			this.buddyWidget.tick();
 		}
 
@@ -261,7 +263,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		this.renderLayoutEditorWidgets(graphics, mouseX, mouseY, partial);
 
-		if (FancyMenu.getOptions().enableBuddy.getValue()) {
+		if (FancyMenu.getOptions().enableBuddy.getValue() && !FORCE_DISABLE_BUDDY) {
 			this.buddyWidget.render(graphics, mouseX, mouseY, partial);
 		}
 
@@ -1226,7 +1228,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	@Override
 	public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
-		if (FancyMenu.getOptions().enableBuddy.getValue()) {
+		if (FancyMenu.getOptions().enableBuddy.getValue() && !FORCE_DISABLE_BUDDY) {
 			return this.buddyWidget.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY);
 		}
 		return false;
