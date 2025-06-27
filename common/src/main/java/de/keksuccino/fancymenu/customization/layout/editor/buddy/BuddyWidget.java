@@ -12,17 +12,18 @@ import net.minecraft.client.gui.navigation.ScreenRectangle;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Wrapper to integrate the TamagotchiBuddy with any Minecraft screen
  */
-public class TamagotchiBuddyWidget extends AbstractContainerEventHandler implements Renderable, NarratableEntry, FancyMenuUiComponent {
+public class BuddyWidget extends AbstractContainerEventHandler implements Renderable, NarratableEntry, FancyMenuUiComponent {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private final TamagotchiBuddy buddy;
+    private final Buddy buddy;
     private final List<GuiEventListener> unusedDummyChildren = new ArrayList<>(); // don't use this and handle event method calls manually instead
     private int screenWidth;
     private int screenHeight;
@@ -30,18 +31,18 @@ public class TamagotchiBuddyWidget extends AbstractContainerEventHandler impleme
     // Flag to track if buddy has been initialized with proper screen size
     private boolean fullyInitialized = false;
     
-    public TamagotchiBuddyWidget(int screenWidth, int screenHeight) {
+    public BuddyWidget(int screenWidth, int screenHeight) {
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
-        LOGGER.info("Creating new TamagotchiEasterEgg with screen size: {}x{}", screenWidth, screenHeight);
-        this.buddy = new TamagotchiBuddy(screenWidth, screenHeight);
+        LOGGER.debug("Creating new TamagotchiEasterEgg with screen size: {}x{}", screenWidth, screenHeight);
+        this.buddy = new Buddy(screenWidth, screenHeight);
         
         // Only try to load the state if we have valid screen dimensions
         if (screenWidth > 0 && screenHeight > 0) {
             loadBuddyState();
             fullyInitialized = true;
         } else {
-            LOGGER.info("Delaying buddy state loading until screen size is properly set");
+            LOGGER.debug("Delaying buddy state loading until screen size is properly set");
         }
     }
     
@@ -51,19 +52,19 @@ public class TamagotchiBuddyWidget extends AbstractContainerEventHandler impleme
     private void loadBuddyState() {
         // Try to load saved state
         if (!buddy.loadState()) {
-            LOGGER.info("No saved state found, starting with default buddy state");
+            LOGGER.debug("No saved state found, starting with default buddy state");
         } else {
-            LOGGER.info("Successfully loaded saved buddy state");
+            LOGGER.debug("Successfully loaded saved buddy state");
             
             // Log poop positions after loading
             List<Poop> poops = buddy.getPoops();
             if (poops.isEmpty()) {
-                LOGGER.info("No poops loaded");
+                LOGGER.debug("No poops loaded");
             } else {
-                LOGGER.info("Loaded {} poops, current positions:", poops.size());
+                LOGGER.debug("Loaded {} poops, current positions:", poops.size());
                 for (int i = 0; i < poops.size(); i++) {
                     Poop poop = poops.get(i);
-                    LOGGER.info("  Poop {}: ({}, {})", i+1, poop.getX(), poop.getY());
+                    LOGGER.debug("  Poop {}: ({}, {})", i+1, poop.getX(), poop.getY());
                 }
             }
         }
@@ -77,25 +78,25 @@ public class TamagotchiBuddyWidget extends AbstractContainerEventHandler impleme
 
     // Auto-save timer
     private int saveTimer = 0;
-    private static final int SAVE_INTERVAL = 1200; // Save every minute (20 ticks/sec * 60 sec)
+    private static final int SAVE_INTERVAL = 2400; // Save every 2 minutes (20 ticks/sec * 120 sec) - increased from 1 minute
     
     public void tick() {
         buddy.tick();
-
+        
         // Handle auto-saving
         saveTimer++;
         if (saveTimer >= SAVE_INTERVAL) {
             saveTimer = 0;
             buddy.saveState();
-            LOGGER.info("Auto-saved buddy state");
-
+            LOGGER.debug("Auto-saved buddy state");
+            
             // Log current poop positions for debugging
             List<Poop> poops = buddy.getPoops();
             if (!poops.isEmpty()) {
-                LOGGER.info("Current poop positions after save:");
+                LOGGER.debug("Current poop positions after save:");
                 for (int i = 0; i < poops.size(); i++) {
                     Poop poop = poops.get(i);
-                    LOGGER.info("  Poop {}: ({}, {})", i+1, poop.getX(), poop.getY());
+                    LOGGER.debug("  Poop {}: ({}, {})", i+1, poop.getX(), poop.getY());
                 }
             }
         }
@@ -117,6 +118,11 @@ public class TamagotchiBuddyWidget extends AbstractContainerEventHandler impleme
     }
 
     @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double deltaX, double deltaY) {
+        return this.buddy.mouseScrolled(mouseX, mouseY, deltaX, deltaY);
+    }
+
+    @Override
     public @NotNull List<? extends GuiEventListener> children() {
         return unusedDummyChildren;
     }
@@ -127,7 +133,7 @@ public class TamagotchiBuddyWidget extends AbstractContainerEventHandler impleme
     }
 
     public void setScreenSize(int width, int height) {
-        LOGGER.info("TamagotchiEasterEgg screen size changed: {}x{} -> {}x{}", 
+        LOGGER.debug("TamagotchiEasterEgg screen size changed: {}x{} -> {}x{}", 
                     this.screenWidth, this.screenHeight, width, height);
         
         // Update screen dimensions
@@ -137,7 +143,7 @@ public class TamagotchiBuddyWidget extends AbstractContainerEventHandler impleme
         
         // If we have valid dimensions and haven't loaded the buddy state yet, do it now
         if (!fullyInitialized && width > 0 && height > 0) {
-            LOGGER.info("Screen size now valid, loading buddy state");
+            LOGGER.debug("Screen size now valid, loading buddy state");
             loadBuddyState();
             fullyInitialized = true;
         }
@@ -157,8 +163,14 @@ public class TamagotchiBuddyWidget extends AbstractContainerEventHandler impleme
      * Call this method when the buddy is about to be removed from the screen
      */
     public void cleanup() {
-        LOGGER.info("TamagotchiEasterEgg cleanup - saving buddy state");
+        LOGGER.debug("TamagotchiEasterEgg cleanup - saving buddy state");
         buddy.saveState();
+        
+        // Also save leveling data if available
+        if (buddy.getLevelingManager() != null) {
+            LOGGER.debug("Saving buddy leveling data");
+            buddy.getLevelingManager().saveState();
+        }
     }
 
 }

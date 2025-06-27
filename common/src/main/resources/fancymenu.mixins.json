@@ -1,5 +1,5 @@
 {
-  "required": true,
+  "required": false,
   "package": "de.keksuccino.fancymenu.mixin.mixins.common",
   "compatibilityLevel": "JAVA_17",
   "client": [
