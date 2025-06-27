@@ -30,10 +30,7 @@ public class ScoreboardHasScorePlaceholder extends Placeholder {
             Objective objective = scoreboard.getObjective(objectiveName);
             
             if (objective != null) {
-                ScoreHolder scoreHolder = ScoreHolder.forNameOnly(playerName);
-                ReadOnlyScoreInfo scoreInfo = scoreboard.getPlayerScoreInfo(scoreHolder, objective);
-                
-                return String.valueOf(scoreInfo != null);
+                return String.valueOf(scoreboard.hasPlayerScore(playerName, objective));
             }
         }
         return "false";
