@@ -1541,10 +1541,10 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
     }
     
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double deltaX, double deltaY) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double deltaY) {
         // Handle mouse scroll for leveling screen if visible
         if (statusScreen.isVisible()) {
-            return statusScreen.mouseScrolled(mouseX, mouseY, deltaX, deltaY);
+            return statusScreen.mouseScrolled(mouseX, mouseY, deltaY);
         }
         return false;
     }

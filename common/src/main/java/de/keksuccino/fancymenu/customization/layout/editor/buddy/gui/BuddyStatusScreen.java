@@ -34,10 +34,10 @@ public class BuddyStatusScreen implements Renderable {
     private static final int SCREEN_BORDER_HEIGHT = 293;
 
     // GUI Texture
-    private static final ResourceLocation BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/status_screen_background.png");
-    private static final ResourceLocation BACKGROUND_BORDER_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/status_screen_background_border.png");
-    private static final ResourceLocation TAB_BUTTON_TEXTURE_NORMAL = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/tab_button_normal.png");
-    private static final ResourceLocation TAB_BUTTON_TEXTURE_SELECTED = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/tab_button_selected.png");
+    private static final ResourceLocation BACKGROUND_TEXTURE = new ResourceLocation("fancymenu", "textures/buddy/gui/status_screen_background.png");
+    private static final ResourceLocation BACKGROUND_BORDER_TEXTURE = new ResourceLocation("fancymenu", "textures/buddy/gui/status_screen_background_border.png");
+    private static final ResourceLocation TAB_BUTTON_TEXTURE_NORMAL = new ResourceLocation("fancymenu", "textures/buddy/gui/tab_button_normal.png");
+    private static final ResourceLocation TAB_BUTTON_TEXTURE_SELECTED = new ResourceLocation("fancymenu", "textures/buddy/gui/tab_button_selected.png");
 
     // Tab Indices
     private static final int TAB_STATS = 0;
@@ -585,7 +585,7 @@ public class BuddyStatusScreen implements Renderable {
     /**
      * Called when the mouse wheel is scrolled
      */
-    public boolean mouseScrolled(double mouseX, double mouseY, double deltaX, double deltaY) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double deltaY) {
         if (!isVisible) return false;
 
         // Check if mouse is within GUI bounds

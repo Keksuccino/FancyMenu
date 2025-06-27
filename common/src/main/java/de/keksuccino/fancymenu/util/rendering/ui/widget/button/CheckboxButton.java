@@ -9,10 +9,10 @@ import org.jetbrains.annotations.Nullable;
 
 public class CheckboxButton extends ExtendedButton {
 
-    public static final ResourceLocation CHECKBOX_BACKGROUND_TEXTURE_NORMAL_DEFAULT = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/widgets/checkbox/background_normal.png");
-    public static final ResourceLocation CHECKBOX_BACKGROUND_TEXTURE_HOVER_DEFAULT = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/widgets/checkbox/background_hover.png");
-    public static final ResourceLocation CHECKBOX_BACKGROUND_TEXTURE_INACTIVE_DEFAULT = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/widgets/checkbox/background_inactive.png");
-    public static final ResourceLocation CHECKBOX_CHECKMARK_TEXTURE_DEFAULT = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/widgets/checkbox/checkmark.png");
+    public static final ResourceLocation CHECKBOX_BACKGROUND_TEXTURE_NORMAL_DEFAULT = new ResourceLocation("fancymenu", "textures/widgets/checkbox/background_normal.png");
+    public static final ResourceLocation CHECKBOX_BACKGROUND_TEXTURE_HOVER_DEFAULT = new ResourceLocation("fancymenu", "textures/widgets/checkbox/background_hover.png");
+    public static final ResourceLocation CHECKBOX_BACKGROUND_TEXTURE_INACTIVE_DEFAULT = new ResourceLocation("fancymenu", "textures/widgets/checkbox/background_inactive.png");
+    public static final ResourceLocation CHECKBOX_CHECKMARK_TEXTURE_DEFAULT = new ResourceLocation("fancymenu", "textures/widgets/checkbox/checkmark.png");
 
     protected boolean checkboxState = false;
     @NotNull

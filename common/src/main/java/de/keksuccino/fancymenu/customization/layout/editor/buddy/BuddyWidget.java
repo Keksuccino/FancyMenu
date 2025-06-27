@@ -118,8 +118,8 @@ public class BuddyWidget extends AbstractContainerEventHandler implements Render
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double deltaX, double deltaY) {
-        return this.buddy.mouseScrolled(mouseX, mouseY, deltaX, deltaY);
+    public boolean mouseScrolled(double mouseX, double mouseY, double deltaY) {
+        return this.buddy.mouseScrolled(mouseX, mouseY, deltaY);
     }
 
     @Override

@@ -6,7 +6,6 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.world.scores.ScoreHolder;
 import net.minecraft.world.scores.Scoreboard;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -14,7 +13,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ScoreboardTrackedPlayersPlaceholder extends Placeholder {
 
@@ -30,11 +28,8 @@ public class ScoreboardTrackedPlayersPlaceholder extends Placeholder {
         
         if (level != null) {
             Scoreboard scoreboard = level.getScoreboard();
-            Collection<ScoreHolder> trackedPlayers = scoreboard.getTrackedPlayers();
-            
-            return trackedPlayers.stream()
-                    .map(ScoreHolder::getScoreboardName)
-                    .collect(Collectors.joining(separator));
+            Collection<String> trackedPlayers = scoreboard.getTrackedPlayers();
+            return String.join(separator, trackedPlayers);
         }
         return "";
     }

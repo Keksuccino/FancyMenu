@@ -7,9 +7,9 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
+import net.minecraft.client.gui.screens.OptionsSubScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
-import net.minecraft.client.gui.screens.options.OptionsSubScreen;
 import net.minecraft.client.gui.screens.packs.PackSelectionScreen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import net.minecraft.network.chat.ComponentContents;
@@ -48,7 +48,7 @@ public class ScrollScreenNormalizer {
         IMixinScreen accessor = ((IMixinScreen)screen);
 
         extractAllScrollListsOfScreen(screen).forEach(scroll -> {
-            scroll.updateSizeAndPosition(1000000, 1000000, 0);
+            scroll.updateSize(1000000, 1000000, 0, 0);
             accessor.getChildrenFancyMenu().remove(scroll);
             accessor.getNarratablesFancyMenu().remove(scroll);
             accessor.getRenderablesFancyMenu().remove(scroll);

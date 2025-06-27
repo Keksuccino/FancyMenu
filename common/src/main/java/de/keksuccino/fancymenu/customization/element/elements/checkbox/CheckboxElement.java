@@ -115,9 +115,8 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
     }
 
     protected void updateWidgetNavigatable() {
-        if (this.checkbox instanceof NavigatableWidget w) {
-            w.setNavigatable(this.navigatable);
-        }
+        if (this.checkbox == null) return;
+        this.checkbox.setNavigatable(this.navigatable);
     }
 
     protected void updateWidgetVisibility() {

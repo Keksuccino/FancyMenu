@@ -8,13 +8,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.world.scores.Objective;
-import net.minecraft.world.scores.ScoreHolder;
+import net.minecraft.world.scores.Score;
 import net.minecraft.world.scores.Scoreboard;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ScoreboardPlayerScoresListPlaceholder extends Placeholder {
@@ -35,14 +34,13 @@ public class ScoreboardPlayerScoresListPlaceholder extends Placeholder {
         
         if ((level != null) && (playerName != null)) {
             Scoreboard scoreboard = level.getScoreboard();
-            ScoreHolder scoreHolder = ScoreHolder.forNameOnly(playerName);
-            Object2IntMap<Objective> scores = scoreboard.listPlayerScores(scoreHolder);
+            Map<Objective, Score> scores = scoreboard.getPlayerScores(playerName);
             
             final String finalFormat = format;
-            return scores.object2IntEntrySet().stream()
+            return scores.entrySet().stream()
                     .map(entry -> finalFormat
                             .replace("%objective%", entry.getKey().getName())
-                            .replace("%score%", String.valueOf(entry.getIntValue())))
+                            .replace("%score%", String.valueOf(entry.getValue().getScore())))
                     .collect(Collectors.joining(separator));
         }
         return "";

@@ -6,7 +6,6 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.world.scores.DisplaySlot;
 import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.Scoreboard;
 import org.jetbrains.annotations.NotNull;
@@ -28,9 +27,9 @@ public class ScoreboardDisplaySlotPlaceholder extends Placeholder {
         
         if ((level != null) && (slotName != null)) {
             Scoreboard scoreboard = level.getScoreboard();
-            DisplaySlot slot = DisplaySlot.CODEC.byName(slotName);
+            int slot = Scoreboard.getDisplaySlotByName(slotName);
             
-            if (slot != null) {
+            if (slot != -1) {
                 Objective objective = scoreboard.getDisplayObjective(slot);
                 if (objective != null) {
                     return objective.getName();

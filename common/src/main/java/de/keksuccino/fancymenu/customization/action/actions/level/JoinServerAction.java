@@ -61,7 +61,7 @@ public class JoinServerAction extends Action {
                             }
                         }
                         if (d == null) {
-                            d = new ServerData(value.replace(" ", ""), value.replace(" ", ""), ServerData.Type.OTHER);
+                            d = new ServerData(value.replace(" ", ""), value.replace(" ", ""), false);
                             l.add(d, false);
                             l.save();
                         }
@@ -69,7 +69,7 @@ public class JoinServerAction extends Action {
                         if (current == null) current = new TitleScreen();
                         boolean isQuickPlay = false;
 
-                        ConnectScreen.startConnecting(current, Minecraft.getInstance(), new ServerAddress(ip, port), d, isQuickPlay, null);
+                        ConnectScreen.startConnecting(current, Minecraft.getInstance(), new ServerAddress(ip, port), d, isQuickPlay);
 
                     } catch (Exception ex) {
                         LOGGER.error("[FANCYMENU] Failed to execute the 'Join Server' action!", ex);
@@ -101,7 +101,7 @@ public class JoinServerAction extends Action {
         return "exampleserver.com:25565";
     }
 
-    private static class JoinServerBridgeScreen extends GenericMessageScreen {
+    private static class JoinServerBridgeScreen extends GenericDirtMessageScreen {
 
         public JoinServerBridgeScreen() {
             super(Component.empty());

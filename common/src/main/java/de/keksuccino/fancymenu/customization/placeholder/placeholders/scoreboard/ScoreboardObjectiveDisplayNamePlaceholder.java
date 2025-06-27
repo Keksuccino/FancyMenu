@@ -32,7 +32,7 @@ public class ScoreboardObjectiveDisplayNamePlaceholder extends Placeholder {
             Objective objective = scoreboard.getObjective(objectiveName);
             if (objective != null) {
                 if (asJson) {
-                    String name = Component.Serializer.toJson(objective.getDisplayName(), level.registryAccess());
+                    String name = Component.Serializer.toJson(objective.getDisplayName());
                     if (name.startsWith("\"") && name.endsWith("\"")) name = name.substring(1, name.length() - 1);
                     return name;
                 } else {

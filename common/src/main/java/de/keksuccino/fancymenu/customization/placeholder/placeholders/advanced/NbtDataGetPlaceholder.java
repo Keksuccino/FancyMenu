@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.placeholder.placeholders.advanced;
 
+import com.mojang.brigadier.StringReader;
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -51,7 +52,7 @@ public class NbtDataGetPlaceholder extends Placeholder {
 
         try {
             // Parse NBT path
-            NbtPathArgument.NbtPath path = NbtPathArgument.NbtPath.of(nbtPath);
+            NbtPathArgument.NbtPath path = new NbtPathArgument().parse(new StringReader(nbtPath));
             
             // Get the source NBT data
             CompoundTag sourceData = getSourceData(sourceType, dps);
@@ -76,7 +77,7 @@ public class NbtDataGetPlaceholder extends Placeholder {
                 return tag.toString();
             } else if ("json".equalsIgnoreCase(returnType) && tag instanceof CompoundTag) {
                 // Return as JSON-formatted component
-                String json = Component.Serializer.toJson(NbtUtils.toPrettyComponent(tag), level.registryAccess());
+                String json = Component.Serializer.toJson(NbtUtils.toPrettyComponent(tag));
                 if (json.startsWith("\"") && json.endsWith("\"")) {
                     json = json.substring(1, json.length() - 1);
                 }
@@ -190,7 +191,7 @@ public class NbtDataGetPlaceholder extends Placeholder {
             BlockEntity blockEntity = level.getBlockEntity(pos);
             
             if (blockEntity != null) {
-                return blockEntity.saveWithoutMetadata(level.registryAccess());
+                return blockEntity.saveWithoutMetadata();
             }
         } catch (NumberFormatException e) {
             LOGGER.error("[FANCYMENU] Invalid block position: " + posStr);

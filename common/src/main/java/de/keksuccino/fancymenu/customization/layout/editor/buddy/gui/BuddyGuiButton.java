@@ -15,11 +15,11 @@ import java.util.function.BooleanSupplier;
  */
 public class BuddyGuiButton implements Renderable {
 
-    public static final ResourceLocation DEFAULT_BUTTON_NORMAL = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/default_button_normal.png");
-    public static final ResourceLocation DEFAULT_BUTTON_HOVER = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/default_button_hover.png");
-    public static final ResourceLocation DEFAULT_BUTTON_INACTIVE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/default_button_inactive.png");
-    public static final ResourceLocation BUTTON_CLOSE_NORMAL = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/button_close_normal.png");
-    public static final ResourceLocation BUTTON_CLOSE_HOVER = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/buddy/gui/button_close_hover.png");
+    public static final ResourceLocation DEFAULT_BUTTON_NORMAL = new ResourceLocation("fancymenu", "textures/buddy/gui/default_button_normal.png");
+    public static final ResourceLocation DEFAULT_BUTTON_HOVER = new ResourceLocation("fancymenu", "textures/buddy/gui/default_button_hover.png");
+    public static final ResourceLocation DEFAULT_BUTTON_INACTIVE = new ResourceLocation("fancymenu", "textures/buddy/gui/default_button_inactive.png");
+    public static final ResourceLocation BUTTON_CLOSE_NORMAL = new ResourceLocation("fancymenu", "textures/buddy/gui/button_close_normal.png");
+    public static final ResourceLocation BUTTON_CLOSE_HOVER = new ResourceLocation("fancymenu", "textures/buddy/gui/button_close_hover.png");
 
     private static final int DEFAULT_BUTTON_WIDTH = 80;
     private static final int DEFAULT_BUTTON_HEIGHT = 20;
