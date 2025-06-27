@@ -86,7 +86,8 @@ public class HighlightPlaceholdersFormattingRule extends TextEditorFormattingRul
 
     private boolean isPlaceholderJson(String json) {
         // Simple check for placeholder format
-        return json.contains("\"placeholder\"") && json.contains("\"values\"");
+        // Only require "placeholder" field since "values" is optional
+        return json.contains("\"placeholder\"");
     }
 
     private int findMatchingCloseBrace(String text, int openBracePos) {

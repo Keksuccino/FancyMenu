@@ -50,7 +50,6 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
     implementation "net.neoforged:neoforge:${neoforge_version}"
-    compileOnly project(":common")
     implementation "maven.modrinth:konkrete:1.9.9-1.21-neoforge"
     implementation "maven.modrinth:melody:1.0.10-1.21-neoforge"
     //Also needs to get added to the client run configuration (runs -> client -> dependencies) since it's a non-Minecraft library
@@ -60,8 +59,18 @@ dependencies {
     implementation(jarJar("com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7")) {
         jarJar.ranged(it, "[1.7,)")
     }
-    implementation "com.cinemamod:mcef:2.1.6-1.21.1"
-    implementation "curse.maven:distant-horizons-508933:5689286"
+//    implementation "com.cinemamod:mcef:2.1.6-1.21.1"
+    implementation "maven.modrinth:mcef:euXLgkSB"
+    compileOnly project(":common")
+}
+
+// Exclude Fabric Loader from NeoForge
+configurations {
+    runtimeClasspath    { exclude group: 'net.fabricmc', module: 'fabric-loader' }
+    developmentRuntimeClasspath {
+        // Gradle 8 names used by ForgeGradle 6
+        exclude group: 'net.fabricmc', module: 'fabric-loader'
+    }
 }
 
 // NeoGradle compiles the game, but we don't want to add our common code to the game's code

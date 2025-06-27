@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy.animation;
 
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddy;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy;
 import de.keksuccino.fancymenu.util.MathUtils;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
@@ -22,15 +22,15 @@ public class AnimationState {
     public static final int SPRITE_WIDTH = 32;
     public static final int SPRITE_HEIGHT = 32;
     public static final int ATLAS_COLUMNS = 4; // 4 animation frames per row
-    public static final int ATLAS_ROWS = 17; // Different states (idle, happy, eating, etc.) - now 17 rows with sitting, waving, and yawning animations
+    public static final int ATLAS_ROWS = 18; // Different states (idle, happy, eating, etc.) - now 18 rows with peeking animation
 
     private final String name;
     private final int atlasIndex;
     private final AnimationSpeedSupplier animationSpeed;
     private final boolean allowsMovement;
     private final boolean allowsHopping;
-    private final Predicate<TamagotchiBuddy> activationCondition;
-    private final Predicate<TamagotchiBuddy> preventionCondition;
+    private final Predicate<Buddy> activationCondition;
+    private final Predicate<Buddy> preventionCondition;
     private final int priority;
     private final boolean isTemporaryState;
     private final int minDuration;
@@ -67,8 +67,8 @@ public class AnimationState {
      * @param cooldown The amount of time in MS the state should be on cooldown after getting activated
      */
     private AnimationState(@NotNull String name, int atlasIndex, @NotNull AnimationSpeedSupplier animationSpeed, boolean allowsMovement,
-                           boolean allowsHopping, @NotNull Predicate<TamagotchiBuddy> activationCondition,
-                           @NotNull Predicate<TamagotchiBuddy> preventionCondition, int priority,
+                           boolean allowsHopping, @NotNull Predicate<Buddy> activationCondition,
+                           @NotNull Predicate<Buddy> preventionCondition, int priority,
                            boolean isTemporaryState, int minDuration, int maxDuration, @NotNull DurationRandomizer durationRandomizer, @NotNull WalkingSpeedSupplier walkingSpeed,
                            boolean lockStateUntilFinished, boolean ignoresLockedState, long cooldown, @Nullable StateEndAction onDeactivate) {
         this.name = name;
@@ -96,7 +96,7 @@ public class AnimationState {
      * @param buddy The buddy to check
      * @return true if this state can be activated, false otherwise
      */
-    public boolean canActivate(TamagotchiBuddy buddy) {
+    public boolean canActivate(Buddy buddy) {
         // First check activation condition
         if (!activationCondition.test(buddy)) {
             return false;
@@ -108,7 +108,7 @@ public class AnimationState {
         // If state is on cooldown, don't activate
         long now = System.currentTimeMillis();
         if ((this.cooldown > 0) && ((this.lastCountdownTriggerTime + this.cooldown) > now)) {
-            LOGGER.info("State on cooldown! Will not activate: " + this.getName());
+            LOGGER.debug("State on cooldown! Will not activate: " + this.getName());
             return false;
         }
         return true;
@@ -119,9 +119,9 @@ public class AnimationState {
      *
      * @param buddy The buddy instance
      */
-    public void onActivate(TamagotchiBuddy buddy) {
+    public void onActivate(Buddy buddy) {
 
-        LOGGER.info("Activating state: {}", name);
+        LOGGER.debug("Activating state: {}", name);
 
         // Reset animation frame when changing state
         buddy.resetAnimationFrame();
@@ -140,8 +140,8 @@ public class AnimationState {
      *
      * @param buddy The buddy instance
      */
-    public void onDeactivate(TamagotchiBuddy buddy) {
-        LOGGER.info("Deactivating state: {}", name);
+    public void onDeactivate(Buddy buddy) {
+        LOGGER.debug("Deactivating state: {}", name);
         if (this.onDeactivate != null) this.onDeactivate.onDeactivate(buddy, this);
     }
 
@@ -154,7 +154,7 @@ public class AnimationState {
         return atlasIndex;
     }
 
-    public int getAnimationSpeed(@NotNull TamagotchiBuddy buddy) {
+    public int getAnimationSpeed(@NotNull Buddy buddy) {
         return animationSpeed.speed(buddy, this);
     }
 
@@ -182,11 +182,11 @@ public class AnimationState {
         return maxDuration;
     }
 
-    public int getRandomizedDuration(TamagotchiBuddy buddy) {
+    public int getRandomizedDuration(Buddy buddy) {
         return this.durationRandomizer.randomize(buddy, this);
     }
 
-    public int getCurrentWalkingSpeed(@NotNull TamagotchiBuddy buddy) {
+    public int getCurrentWalkingSpeed(@NotNull Buddy buddy) {
         return this.walkingSpeed.speed(buddy, this);
     }
 
@@ -209,22 +209,22 @@ public class AnimationState {
 
     @FunctionalInterface
     public interface DurationRandomizer {
-        int randomize(TamagotchiBuddy buddy, AnimationState state);
+        int randomize(Buddy buddy, AnimationState state);
     }
 
     @FunctionalInterface
     public interface WalkingSpeedSupplier {
-        int speed(TamagotchiBuddy buddy, AnimationState state);
+        int speed(Buddy buddy, AnimationState state);
     }
 
     @FunctionalInterface
     public interface AnimationSpeedSupplier {
-        int speed(TamagotchiBuddy buddy, AnimationState state);
+        int speed(Buddy buddy, AnimationState state);
     }
 
     @FunctionalInterface
     public interface StateEndAction {
-        void onDeactivate(TamagotchiBuddy buddy, AnimationState state);
+        void onDeactivate(Buddy buddy, AnimationState state);
     }
 
     // Builder pattern for easier construction
@@ -235,8 +235,8 @@ public class AnimationState {
         private AnimationSpeedSupplier animationSpeed = (buddy, state) -> 5; // Default animation speed
         private boolean allowsMovement = true;
         private boolean allowsHopping = true;
-        private Predicate<TamagotchiBuddy> activationCondition = buddy -> true; // Default: always active
-        private Predicate<TamagotchiBuddy> preventionCondition = buddy -> false; // Default: no prevention
+        private Predicate<Buddy> activationCondition = buddy -> true; // Default: always active
+        private Predicate<Buddy> preventionCondition = buddy -> false; // Default: no prevention
         private int priority = 0;
         private boolean isTemporaryState = false;
         private int minDuration = 60;
@@ -278,12 +278,12 @@ public class AnimationState {
             return this;
         }
 
-        public Builder activationCondition(@NotNull Predicate<TamagotchiBuddy> activationCondition) {
+        public Builder activationCondition(@NotNull Predicate<Buddy> activationCondition) {
             this.activationCondition = activationCondition;
             return this;
         }
 
-        public Builder preventionCondition(@NotNull Predicate<TamagotchiBuddy> preventionCondition) {
+        public Builder preventionCondition(@NotNull Predicate<Buddy> preventionCondition) {
             this.preventionCondition = preventionCondition;
             return this;
         }

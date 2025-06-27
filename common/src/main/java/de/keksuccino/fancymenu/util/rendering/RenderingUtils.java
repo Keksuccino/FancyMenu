@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.util.rendering;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import com.mojang.math.MatrixUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
@@ -14,10 +13,8 @@ import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
-
 import java.awt.*;
 import java.util.Objects;
 
@@ -169,6 +166,18 @@ public class RenderingUtils {
     public static void blitNineSlicedTexture(GuiGraphics graphics, ResourceLocation texture, int x, int y, int width, int height,
                                              int textureWidth, int textureHeight,
                                              int borderTop, int borderRight, int borderBottom, int borderLeft) {
+
+        // Correct border sizes if they're too large
+        if (borderLeft + borderRight >= textureWidth) {
+            float scale = (float)(textureWidth - 2) / (borderLeft + borderRight);
+            borderLeft = (int)(borderLeft * scale);
+            borderRight = (int)(borderRight * scale);
+        }
+        if (borderTop + borderBottom >= textureHeight) {
+            float scale = (float)(textureHeight - 2) / (borderTop + borderBottom);
+            borderTop = (int)(borderTop * scale);
+            borderBottom = (int)(borderBottom * scale);
+        }
 
         // Corner pieces
         // Top left

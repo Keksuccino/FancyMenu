@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.*;
 import de.keksuccino.fancymenu.Compat;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.background.MenuBackground;
+import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementMemories;
 import de.keksuccino.fancymenu.customization.element.elements.animationcontroller.AnimationControllerHandler;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
@@ -34,6 +36,7 @@ import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenStartingEvent;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
@@ -129,6 +132,13 @@ public class ScreenCustomization {
 			enableCustomizationForScreen(screen);
 		} else {
 			disableCustomizationForScreen(screen);
+			if (screen != null) {
+				ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(screen);
+				if (layer != null) {
+					layer.layoutBase.menuBackgrounds.forEach(MenuBackground::onDisableOrRemove);
+					layer.allElements.forEach(AbstractElement::onDestroyElement);
+				}
+			}
 		}
 	}
 
@@ -282,6 +292,7 @@ public class ScreenCustomization {
 			} else {
 				Minecraft.getInstance().screen.resize(Minecraft.getInstance(), Minecraft.getInstance().getWindow().getGuiScaledWidth(), Minecraft.getInstance().getWindow().getGuiScaledHeight());
 			}
+			ScrollScreenNormalizer.normalizeScrollableScreen(Minecraft.getInstance().screen);
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(Minecraft.getInstance().screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(Minecraft.getInstance().screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
 		}
@@ -359,6 +370,11 @@ public class ScreenCustomization {
 		addScreenBlacklistRule((screen) -> screen.startsWith("blusunrize.immersiveengineering."));
 		addScreenBlacklistRule((screen) -> screen.startsWith("net.dungeonz."));
 		addScreenBlacklistRule((screen) -> screen.startsWith("net.spellcraftgaming.rpghud."));
+		addScreenBlacklistRule((screen) -> screen.contains(".cobblemon."));
+		addScreenBlacklistRule((screen) -> screen.contains(".mari_023."));
+		addScreenBlacklistRule((screen) -> screen.startsWith("appeng."));
+		addScreenBlacklistRule((screen) -> screen.startsWith("xaero."));
+		addScreenBlacklistRule((screen) -> screen.contains(".xaero."));
 
 	}
 
