@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.util.ObjectHolder;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
 import de.keksuccino.fancymenu.util.mcef.WrappedMCEFBrowser;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Renderable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -24,7 +25,7 @@ import java.util.function.Supplier;
  * A Minecraft video player using MCEF (Minecraft Chromium Embedded Framework).
  * This implementation uses a custom HTML/JS player to render and control videos.
  */
-public class MCEFVideoPlayer {
+public class MCEFVideoPlayer implements Renderable {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final long JS_RESULT_TIMEOUT_MS = 1000; // Timeout for waiting for JS result (e.g., 1 second)
@@ -177,7 +178,7 @@ public class MCEFVideoPlayer {
      * @param mouseY The mouse Y position
      * @param partialTick The partial tick time
      */
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         if (browser != null && initialized) {
             browser.render(graphics, mouseX, mouseY, partialTick);
         }

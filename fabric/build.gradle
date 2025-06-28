@@ -31,7 +31,7 @@ dependencies {
     modImplementation "maven.modrinth:melody:1.0.10-1.21-fabric"
     modImplementation "maven.modrinth:konkrete:1.9.9-1.21.4-fabric"
     modImplementation "maven.modrinth:modmenu:13.0.0-beta.1"
-    modCompileOnly 'com.cinemamod:mcef:2.1.6-1.21.1'
+    modCompileOnly 'com.cinemamod:mcef:2.1.6-1.21.4'
 
 }
 

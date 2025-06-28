@@ -60,7 +60,7 @@ dependencies {
         jarJar.ranged(it, "[1.7,)")
     }
 //    implementation "com.cinemamod:mcef:2.1.6-1.21.1"
-    implementation "maven.modrinth:mcef:euXLgkSB"
+    implementation "curse.maven:mcef-636236:6091756"
     compileOnly project(":common")
 }
 
