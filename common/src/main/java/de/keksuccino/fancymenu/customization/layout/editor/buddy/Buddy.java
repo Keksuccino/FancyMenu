@@ -1,11 +1,14 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.animation.AnimationState;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.animation.AnimationStates;
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.gui.BuddyGui;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.gui.BuddyStatusScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.FoodItem;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.PlayBall;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.Poop;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.leveling.BuddyAchievement;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.leveling.LevelingManager;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
@@ -14,25 +17,22 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 
 import static de.keksuccino.fancymenu.customization.layout.editor.buddy.animation.AnimationState.*;
-import static de.keksuccino.fancymenu.customization.layout.editor.buddy.animation.AnimationStates.*;
+import static de.keksuccino.fancymenu.customization.layout.editor.buddy.animation.AnimationStates.RUNNING;
+import static de.keksuccino.fancymenu.customization.layout.editor.buddy.animation.AnimationStates.WALKING;
 
 /**
- * TamagotchiBuddy is a cute Easter egg that adds a pixel art pet
+ * Buddy is a cute Easter egg that adds a pixel art pet
  * to the layout editor. It walks along the bottom of the screen,
  * has needs, and reacts to your interactions.
  */
-public class TamagotchiBuddy extends AbstractContainerEventHandler implements Renderable, FancyMenuUiComponent {
+public class Buddy extends AbstractContainerEventHandler implements Renderable, FancyMenuUiComponent {
 
     public static final Logger LOGGER = LogManager.getLogger();
 
@@ -61,10 +61,10 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     public int hopAnimationDuration = 0;
 
     // Needs and stats
-    public float hunger = 100.0f;
-    public float happiness = 100.0f;
-    public float energy = 100.0f;
-    public float funLevel = 100.0f;
+    public float hunger;
+    public float happiness;
+    public float energy;
+    public float funLevel;
     public boolean needsFood = false;
     public boolean needsPet = false;
     public boolean needsPlay = false;
@@ -86,6 +86,11 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     public boolean isSitting = false;
     public boolean isWaving = false;
     public boolean isYawning = false;
+    public boolean isPeeking = true; // Start in peeking mode until user clicks
+    public boolean hasBeenAwakened = false; // Track if buddy has been clicked for the first time ever
+    public boolean isActivelyPeeking = false; // Whether buddy is currently visible during a peek
+    public int peekTimer; // Timer for when to peek next
+    public int peekDuration = 0; // How long the current peek should last
 
     // Timers and behaviors
     public int stateChangeTimer;
@@ -109,43 +114,85 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     public List<Poop> poops = new ArrayList<>();
     public boolean isPooping = false;
     public int timeSinceLastPoop = 0;
-    public int poopingInterval = 1500; // Time between potential poops (in ticks)
-    public float poopChancePercentage = 5f; // Chance to poop when the interval is reached
-    public static final int MAX_POOPS_BEFORE_SAD = 3; // Buddy gets sad if there are too many poops
+    public int poopingInterval = 6000;
+    public float poopChancePercentage = 1f;
+    public static final int MAX_POOPS_BEFORE_SAD = 3;
 
     // Track visibility changes
     public boolean wasDisabled = true;
     public boolean wasOffScreen = false;
 
-    public BuddyGui gui;
+    public BuddyStatusScreen statusScreen;
+    
+    // Leveling system
+    private final LevelingManager levelingManager;
+    
+    // Level effect multipliers (set by leveling manager based on level)
+    private float hungerMultiplier = 1.0f;
+    private float happinessMultiplier = 1.0f;
+    private float energyMultiplier = 1.0f;
+    private float happinessGainMultiplier = 1.0f;
+    private float experienceMultiplier = 1.0f;
+    private float needsUnderstandingBonus = 0.0f;
+    private float luckBonus = 0.0f;
+    
+    // XP Sources tracking
+    private long lastXpGainTime = 0;
+    private final Map<String, Long> xpCooldowns = new HashMap<>();
 
+    private long lastSessionUpdateTime;
+    
     // Event listeners
     public final List<GuiEventListener> children = new ArrayList<>();
 
     /**
      * Creates a new TamagotchiBuddy
      */
-    public TamagotchiBuddy(int screenWidth, int screenHeight) {
+    public Buddy(int screenWidth, int screenHeight) {
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
-
-        // Position at bottom of screen
-        this.buddyPosX = screenWidth / 2;
-        this.buddyPosY = screenHeight - SPRITE_HEIGHT - 10;
 
         // Initialize with random timer
         this.stateChangeTimer = random.nextInt(200) + 100;
 
+        // Initialize session timers
+        // Activity tracking for achievements
+        this.lastSessionUpdateTime = System.currentTimeMillis();
+
+        // Initialize leveling manager
+        this.levelingManager = new LevelingManager(this);
+        
         // Initialize GUI
-        this.gui = new BuddyGui(this);
+        this.statusScreen = new BuddyStatusScreen(this, levelingManager);
+        
+        // Start in peeking state
+        this.isPeeking = true;
+        
+        // Set initial peek timer (buddy will peek after 1-2 minutes initially)
+        this.peekTimer = (60 * 20) + MathUtils.getRandomNumberInRange(0, 1200); // 1-2 minutes in ticks
+        this.isActivelyPeeking = false; // Start hidden
+        
+        // Position buddy off-screen initially
+        this.buddyPosX = -SPRITE_WIDTH - 10;
+        this.buddyPosY = screenHeight - SPRITE_HEIGHT - 10;
+        
+        LOGGER.debug("Buddy created in hidden state, will peek in {} seconds", peekTimer / 20.0f);
+        
+        // Start with full stats since buddy is dormant until awakened
+        this.hunger = 100.0f;
+        this.happiness = 100.0f;
+        this.energy = 100.0f;
+        this.funLevel = 100.0f;
     }
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
 
+        RenderSystem.enableBlend();
+
         // Log disabled changes
         if (wasDisabled != isDisabled) {
-            LOGGER.info("Buddy disabled state changed: {} -> {}", wasDisabled, isDisabled);
+            LOGGER.debug("Buddy disabled state changed: {} -> {}", wasDisabled, isDisabled);
             wasDisabled = isDisabled;
         }
 
@@ -154,7 +201,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
 
         // Log off-screen changes
         if (wasOffScreen != isOffScreen) {
-            LOGGER.info("Buddy off-screen state changed: {} -> {}", wasOffScreen, isOffScreen);
+            LOGGER.debug("Buddy off-screen state changed: {} -> {}", wasOffScreen, isOffScreen);
             wasOffScreen = isOffScreen;
             
             // Force state reevaluation when coming back onscreen
@@ -165,6 +212,12 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         }
 
         renderPoops(graphics);
+
+        // Don't render buddy if it's peeking but not actively showing
+        if (isPeeking && !isActivelyPeeking) {
+            // Buddy is hidden off-screen
+            return;
+        }
 
         animationRenderTicks++;
         
@@ -253,10 +306,11 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         if (droppedFood != null) {
             droppedFood.render(graphics);
         }
-
-        // Render the GUI
-        gui.render(graphics, mouseX, mouseY);
-
+        
+        // Render the status screen if visible
+        if (statusScreen.isVisible()) {
+            statusScreen.render(graphics, mouseX, mouseY, partialTick);
+        }
     }
 
     /**
@@ -275,10 +329,18 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
 
         // Don't render thought bubble if any of these conditions are true
         if (isEating || isBeingPet || isPlaying || isSleeping) return;
+        
+        // Don't show needs if buddy hasn't been awakened yet
+        if (!hasBeenAwakened) return;
 
         int iconSize = 16;
-        int iconX = buddyPosX + (SPRITE_WIDTH / 2) - (iconSize / 2);
-        int iconY = buddyPosY - iconSize - 5;
+        int bubbleSize = 32; // Increased from 24 to give more breathing room
+        int bubbleX = buddyPosX + (SPRITE_WIDTH / 2) - (bubbleSize / 2);
+        int bubbleY = buddyPosY - bubbleSize - 5;
+        
+        // Calculate icon position - offset upward to account for bubble tail
+        int iconX = bubbleX + (bubbleSize - iconSize) / 2;
+        int iconY = bubbleY + 4; // Position icon in upper portion of bubble (was centered)
 
         ResourceLocation icon = null;
 
@@ -295,13 +357,13 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             // First render the thought bubble
             graphics.blit(
                     TEXTURE_THOUGHT_BUBBLE,
-                    iconX - 4, iconY - 4,
+                    bubbleX, bubbleY,
                     0, 0,
-                    iconSize + 8, iconSize + 8,
-                    iconSize + 8, iconSize + 8
+                    bubbleSize, bubbleSize,
+                    bubbleSize, bubbleSize
             );
 
-            // Then render the icon inside it
+            // Then render the icon inside it (positioned in upper portion)
             graphics.blit(
                     icon,
                     iconX, iconY,
@@ -319,10 +381,94 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     public void tick() {
 
         if (!isDisabled) return;
+        
+        // If buddy is peeking, only update minimal things
+        if (isPeeking) {
+            // First-time peeking - buddy is dormant until awakened
+            if (!hasBeenAwakened) {
+                // Update peek timer
+                if (peekTimer > 0) {
+                    peekTimer--;
+                } else if (!isActivelyPeeking) {
+                    // Start peeking
+                    startActivelyPeeking();
+                    // Set duration for this peek (15 seconds +/- a few seconds)
+                    peekDuration = (15 * 20) + MathUtils.getRandomNumberInRange(-60, 60); // 14-16 seconds in ticks
+                    LOGGER.debug("Buddy starting to peek for {} seconds", peekDuration / 20.0f);
+                }
+                
+                // Update peek duration if actively peeking
+                if (isActivelyPeeking && peekDuration > 0) {
+                    peekDuration--;
+                    if (peekDuration <= 0) {
+                        // Stop peeking and go back off-screen
+                        stopActivelyPeeking();
+                        // Set timer for next peek (5 minutes +/- 1-2 minutes)
+                        peekTimer = (5 * 60 * 20) + MathUtils.getRandomNumberInRange(-2400, 2400); // 3-7 minutes in ticks
+                        LOGGER.debug("Buddy hiding again, will peek again in {} seconds", peekTimer / 20.0f);
+                    }
+                }
+                
+                // No stat changes, no needs, just wait for the player
+                updateVisualState();
+                return;
+            }
+            
+            // Regular peeking after being awakened - stats still decrease but at half rate
+            hunger = Math.max(0, hunger - (0.0025f * hungerMultiplier));
+            happiness = Math.max(0, happiness - (0.0015f * happinessMultiplier));
+            energy = Math.max(0, energy - (0.001f * energyMultiplier));
+            funLevel = Math.max(0, funLevel - 0.001f);
+            
+            // Update needs
+            updateStatsAndNeeds();
+            
+            // Stop peeking if buddy has critical needs
+            if (needsFood || needsPet || needsPlay || isSleepy) {
+                isPeeking = false;
+                LOGGER.debug("Buddy stopped peeking due to critical needs");
+                // Move away from edge
+                if (facingLeft) {
+                    buddyPosX = screenWidth - SPRITE_WIDTH - 50;
+                } else {
+                    buddyPosX = 50;
+                }
+            }
+            
+            // Small chance to come out of peeking on its own (only after being awakened)
+            if (this.chanceCheck(0.1f)) {
+                isPeeking = false;
+                LOGGER.debug("Buddy came out of peeking on its own!");
+                // Move away from edge
+                if (facingLeft) {
+                    buddyPosX = screenWidth - SPRITE_WIDTH - 50;
+                } else {
+                    buddyPosX = 50;
+                }
+            }
+            
+            // Update visual state for peeking
+            updateVisualState();
+            
+            // Skip most other behaviors while peeking
+            return;
+        }
+        
+        // Update session time tracking
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastSessionUpdateTime > 60000) { // Update every minute
+            if (levelingManager != null) {
+                levelingManager.updateSessionTime();
+            }
+            lastSessionUpdateTime = currentTime;
+            
+            // Check for midnight companion achievement
+            checkTimeBasedAchievements(currentTime);
+        }
 
         // Immediately stop hopping if buddy becomes sad
         if (isHopping && isSad()) {
-            LOGGER.info("Stopping hopping because buddy is sad");
+            LOGGER.debug("Stopping hopping because buddy is sad");
             isHopping = false;
             hopAnimationCounter = 0;
         }
@@ -378,7 +524,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         }
 
         if (isPlaying && playBall == null) {
-            LOGGER.info("Ending play due to no ball");
+            LOGGER.debug("Ending play due to no ball");
             isPlaying = false;
             isHoldingBall = false;
             isChasingBall = false;
@@ -402,7 +548,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         if (animationRenderTicks % (20 * 5) == 0) {  // Every 5 seconds
             // If buddy is standing for too long, consider clearing the flag
             if (isStanding && !isLookingAround && !isStretching && !isGrumpy && (currentStateDuration <= 0) && !isOffScreen) {
-                LOGGER.info("Buddy has been standing still too long, forcing movement");
+                LOGGER.debug("Buddy has been standing still too long, forcing movement");
                 isStanding = false;
             }
         }
@@ -439,7 +585,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
 
             if (currentStateDuration <= 0) {
 
-                LOGGER.info("Buddy activity duration ended for temporary state: {}", currentState.getName());
+                LOGGER.debug("Buddy activity duration ended for temporary state: {}", currentState.getName());
 
                 // End temporary states --->
 
@@ -478,58 +624,106 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
      */
     public void updateStatsAndNeeds() {
 
-        // Decrease stats over time
-        hunger = Math.max(0, hunger - 0.05f);
-        happiness = Math.max(0, happiness - 0.03f);
-        funLevel = Math.max(0, funLevel - 0.02f);  // NEW: Fun decreases slower than hunger
+        // Don't update stats or needs if buddy hasn't been awakened yet
+        if (!hasBeenAwakened) {
+            return;
+        }
+
+        // Apply attribute effects from leveling system to stat changes
+        
+        // Decrease stats over time - modified by attributes (10x slower)
+        hunger = Math.max(0, hunger - (0.005f * hungerMultiplier));
+        happiness = Math.max(0, happiness - (0.003f * happinessMultiplier));
+        funLevel = Math.max(0, funLevel - 0.002f);  // Fun decreases slower than hunger
 
         // Energy decreases unless sleeping
         if (isSleeping) {
-            energy = Math.min(100, energy + 0.3f);
+            energy = Math.min(100, energy + 0.03f);  // Reduced from 0.3f to match slower stat decrease
         } else {
-            energy = Math.max(0, energy - 0.02f);
+            energy = Math.max(0, energy - (0.002f * energyMultiplier));
 
-            // Playing increases fun but drains energy faster
+            // Playing increases fun but drains energy much faster (3x normal rate)
+            // This makes playing a strategic choice - great for fun but exhausting
             if (isPlaying) {
-                energy = Math.max(0, energy - 0.1f);
-                funLevel = Math.min(100, funLevel + 0.5f);  // Playing significantly increases fun
+                energy = Math.max(0, energy - (0.03f * energyMultiplier)); // Increased 3x from 0.01f
+                funLevel = Math.min(100, funLevel + 0.05f);  // Playing significantly increases fun
+                happiness = Math.min(100, happiness + (0.01f * happinessGainMultiplier)); // Playing also makes buddy happy!
+                hunger = Math.max(0, hunger - (0.01f * hungerMultiplier)); // Playing makes buddy hungrier (2x normal rate)
             }
 
-            // Chasing drains energy faster
+            // Chasing drains energy faster (3x normal rate when actively chasing)
             if (isChasingBall) {
-                energy = Math.max(0, energy - 0.08f);
+                energy = Math.max(0, energy - (0.024f * energyMultiplier)); // Increased 3x from 0.008f
+                hunger = Math.max(0, hunger - (0.005f * hungerMultiplier)); // Chasing makes even hungrier (3x normal rate total)
             }
 
             // Hopping drains energy faster
             if (isHopping) {
-                energy = Math.max(0, energy - 0.05f);
+                energy = Math.max(0, energy - (0.005f * energyMultiplier));
+                hunger = Math.max(0, hunger - (0.002f * hungerMultiplier)); // Slight hunger increase from activity
             }
 
             // Excitement drains energy faster
             if (isExcited) {
-                energy = Math.max(0, energy - 0.1f);
+                energy = Math.max(0, energy - (0.01f * energyMultiplier));
                 // But it also increases happiness!
-                happiness = Math.min(100, happiness + 0.1f);
+                happiness = Math.min(100, happiness + (0.01f * happinessGainMultiplier));
+                hunger = Math.max(0, hunger - (0.003f * hungerMultiplier)); // Excitement burns calories too
             }
 
             // Running drains energy faster
             if (this.currentState == RUNNING) {
-                energy = Math.max(0, energy - 0.1f);
+                energy = Math.max(0, energy - (0.01f * energyMultiplier));
+                hunger = Math.max(0, hunger - (0.005f * hungerMultiplier)); // Running also makes buddy hungrier
             }
 
         }
 
-        // Set needs based on stats
-        needsFood = hunger < 30;
-        needsPet = happiness < 30;
-        needsPlay = funLevel < 30;
-        isSleepy = energy < 30 && energy >= 10;
+        // Set needs based on stats, improved by Empathy attribute
+        float needThreshold = 20f * (1f - (needsUnderstandingBonus * 0.3f)); // Reduced from 30f - gives more time before needs trigger
+        needsFood = hunger < needThreshold;
+        needsPet = happiness < needThreshold;
+        needsPlay = funLevel < needThreshold;
+        
+        // Energy thresholds (with slower stat decay, adjusted for better gameplay):
+        // - Energy < 10: Sleepy walk animation (was < 20)
+        // - Energy < 6.7: Auto-sleep triggers (same as before)
+        isSleepy = energy < (needThreshold * 0.5f) && energy >= (needThreshold / 3); // Sleepy triggers at 10 instead of 20, critical at ~6.7
 
         // Auto-sleep if energy is critically low
-        if (energy < 10 && !isSleeping) {
+        if (energy < (needThreshold / 3) && !isSleeping) {
             this.startSleeping();
         }
-
+        
+        // Check if we should award experience for maintaining good stats
+        awardStatMaintenanceXp();
+        
+        // Check for stat-based achievements
+        if (levelingManager != null) {
+            levelingManager.checkStatAchievements();
+        }
+    }
+    
+    /**
+     * Awards experience for maintaining good stats over time
+     */
+    private void awardStatMaintenanceXp() {
+        // Only check once every minute
+        long now = System.currentTimeMillis();
+        if (now - lastXpGainTime < 60000) return;
+        
+        // Check if all stats are good
+        if (hunger >= 70 && happiness >= 70 && energy >= 70 && funLevel >= 70) {
+            // Award XP for good stat maintenance
+            gainExperience("statMaintenance", 5, 60000);
+            
+            // If ALL stats are excellent (90+), award bonus XP
+            if (hunger >= 90 && happiness >= 90 && energy >= 90 && funLevel >= 90) {
+                gainExperience("excellentStats", 10, 300000); // 5 minute cooldown on excellent stats bonus
+            }
+        }
+        
+        lastXpGainTime = now;
     }
 
     /**
@@ -583,13 +777,13 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             // If buddy is off screen to the LEFT
             if (buddyPosX < -SPRITE_WIDTH) {
                 if (!isOffScreen) {
-                    LOGGER.info("Buddy going offscreen to the left at x={}", buddyPosX);
+                    LOGGER.debug("Buddy going offscreen to the left at x={}", buddyPosX);
                     isOffScreen = true;
                     return;
                 }
                 // Random chance to come back
                 if (this.chanceCheck(1f)) {
-                    LOGGER.info("Buddy coming back onscreen from the left");
+                    LOGGER.debug("Buddy coming back onscreen from the left");
                     facingLeft = false;
                     isOffScreen = false;
                     buddyPosX = -SPRITE_WIDTH; // teleport buddy to screen edge
@@ -610,13 +804,13 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             // If buddy is off screen to the RIGHT
             if (buddyPosX > screenWidth) {
                 if (!isOffScreen) {
-                    LOGGER.info("Buddy going offscreen to the right at x={}", buddyPosX);
+                    LOGGER.debug("Buddy going offscreen to the right at x={}", buddyPosX);
                     isOffScreen = true;
                     return;
                 }
                 // Random chance to come back
                 if (this.chanceCheck(1f)) {
-                    LOGGER.info("Buddy coming back onscreen from the right");
+                    LOGGER.debug("Buddy coming back onscreen from the right");
                     facingLeft = true;
                     isOffScreen = false;
                     buddyPosX = screenWidth; // teleport buddy to screen edge
@@ -660,6 +854,12 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
      */
     public void performRandomAction() {
 
+        // Small chance to go back to peeking (only if already awakened)
+        if (hasBeenAwakened && this.chanceCheck(0.5f) && !needsFood && !needsPet && !needsPlay && !isSleepy && happiness > 30) {
+            startPeeking();
+            return;
+        }
+
         // Chance to randomly stop and stand
         if ((pixelsSinceLastDirectionChange > minWalkDistance) && this.chanceCheck(standChancePercentage)) {
             startStanding();
@@ -673,13 +873,13 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         }
         
         // Chance to wave when happy
-        if ((happiness > 60) && this.chanceCheck(1.0f) && !isSad() && !isSleepy) {
+        if ((happiness > 60) && this.chanceCheck(4.0f) && !isSad() && !isSleepy) {
             startWaving();
             return;
         }
 
         // Chance to yawn when tired
-        if ((energy < 60) && this.chanceCheck(2.0f)) {
+        if ((energy < 30) && this.chanceCheck(2.0f)) {
             startYawning();
             return;
         }
@@ -720,7 +920,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
 
         // Stop hopping if current state doesn't allow it
         if (isHopping && !currentState.allowsHopping()) {
-            LOGGER.info("Stopping hopping because current state {} doesn't allow it", currentState.getName());
+            LOGGER.debug("Stopping hopping because current state {} doesn't allow it", currentState.getName());
             isHopping = false;
             hopAnimationCounter = 0;
         }
@@ -735,7 +935,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         Objects.requireNonNull(state);
         // Apply the selected state if it's different from the current one
         if (currentState != state) {
-            LOGGER.info("Changing buddy state: {} -> {}", currentState.getName(), state.getName());
+            LOGGER.debug("Changing buddy state: {} -> {}", currentState.getName(), state.getName());
             // Deactivate the previous state
             currentState.onDeactivate(this);
             // Activate the new state
@@ -759,6 +959,68 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         isSitting = false;
         isWaving = false;
         isYawning = false;
+        // Don't stop isPeeking here - it's handled separately
+    }
+
+    /**
+     * Starts actively showing the buddy during a peek
+     */
+    public void startActivelyPeeking() {
+        isActivelyPeeking = true;
+        
+        // Position buddy at edge for peeking
+        if (random.nextBoolean()) {
+            // Peek from left side
+            buddyPosX = -(int)(SPRITE_WIDTH * 0.1f);
+            facingLeft = false;
+        } else {
+            // Peek from right side  
+            buddyPosX = screenWidth - (int)(SPRITE_WIDTH * 0.9f);
+            facingLeft = true;
+        }
+        
+        LOGGER.debug("Buddy actively peeking from {} side", facingLeft ? "right" : "left");
+    }
+    
+    /**
+     * Stops actively showing the buddy and hides it off-screen
+     */
+    public void stopActivelyPeeking() {
+        isActivelyPeeking = false;
+        
+        // Move buddy completely off-screen
+        if (facingLeft) {
+            buddyPosX = screenWidth + SPRITE_WIDTH;
+        } else {
+            buddyPosX = -SPRITE_WIDTH - 10;
+        }
+        
+        LOGGER.debug("Buddy hiding off-screen");
+    }
+
+    /**
+     * Starts the buddy peeking animation
+     */
+    public void startPeeking() {
+        if (this.lockedInState()) return;
+        
+        LOGGER.debug("Buddy starting to peek from the edge");
+        
+        isPeeking = true;
+        // Move buddy to edge of screen
+        if (buddyPosX < screenWidth / 2) {
+            // Peek from left edge - hide only 10% of sprite
+            buddyPosX = -(int)(SPRITE_WIDTH * 0.1f);
+            facingLeft = false; // Face right when peeking from left
+        } else {
+            // Peek from right edge - show 90% of sprite
+            buddyPosX = screenWidth - (int)(SPRITE_WIDTH * 0.9f);
+            facingLeft = true; // Face left when peeking from right
+        }
+        
+        // Stop all other activities
+        stopAllStandingActions();
+        isPeeking = true; // Set again after stopAllStandingActions
     }
 
     /**
@@ -768,7 +1030,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
 
         if (this.lockedInState()) return;
 
-        LOGGER.info("Buddy starting to stand: x={}, y={}, state={}", buddyPosX, buddyPosY, currentState.getName());
+        LOGGER.debug("Buddy starting to stand: x={}, y={}, state={}", buddyPosX, buddyPosY, currentState.getName());
 
         isStanding = true;
         isHopping = false;
@@ -785,17 +1047,17 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
 
         // Don't hop if the buddy is sad, has critical needs, or is performing another stationary activity
         if (isSad()) {
-            LOGGER.info("Buddy is too sad to hop right now");
+            LOGGER.debug("Buddy is too sad to hop right now");
             return;
         }
         
         // Check if current state allows hopping
         if (!currentState.allowsHopping()) {
-            LOGGER.info("Current state {} doesn't allow hopping", currentState.getName());
+            LOGGER.debug("Current state {} doesn't allow hopping", currentState.getName());
             return;
         }
 
-        LOGGER.info("Buddy starting to hop: x={}, y={}, state={}", buddyPosX, buddyPosY, currentState.getName());
+        LOGGER.debug("Buddy starting to hop: x={}, y={}, state={}", buddyPosX, buddyPosY, currentState.getName());
 
         isHopping = true;
         hopAnimationCounter = 0;
@@ -804,7 +1066,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         // If buddy is very happy, chance to get excited
         if (this.chanceCheck(30f) && (happiness > 60)) {
             isExcited = true;
-            LOGGER.info("Buddy switching to excited animation during hop");
+            LOGGER.debug("Buddy switching to excited animation during hop");
         }
 
     }
@@ -814,7 +1076,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
      */
     public void startLookingAround() {
         if (this.lockedInState()) return;
-        LOGGER.info("Buddy starting to look around: x={}, y={}, state={}", buddyPosX, buddyPosY, currentState.getName());
+        LOGGER.debug("Buddy starting to look around: x={}, y={}, state={}", buddyPosX, buddyPosY, currentState.getName());
         isLookingAround = true;
         isStanding = true;
     }
@@ -828,11 +1090,11 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
 
         // Don't stretch if the buddy is sad or has critical needs
         if (isSad()) {
-            LOGGER.info("Buddy is too sad to stretch right now");
+            LOGGER.debug("Buddy is too sad to stretch right now");
             return;
         }
 
-        LOGGER.info("Buddy starting to stretch: x={}, y={}, state={}", buddyPosX, buddyPosY, currentState.getName());
+        LOGGER.debug("Buddy starting to stretch: x={}, y={}, state={}", buddyPosX, buddyPosY, currentState.getName());
 
         isStretching = true;
     }
@@ -843,7 +1105,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     public void startSitting() {
         if (this.lockedInState()) return;
 
-        LOGGER.info("Buddy starting to sit: x={}, y={}, state={}", buddyPosX, buddyPosY, currentState.getName());
+        LOGGER.debug("Buddy starting to sit: x={}, y={}, state={}", buddyPosX, buddyPosY, currentState.getName());
 
         isSitting = true;
         isHopping = false;
@@ -861,17 +1123,17 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         
         // Only wave when buddy is happy enough
         if (happiness < 60) {
-            LOGGER.info("Buddy is not happy enough to wave right now");
+            LOGGER.debug("Buddy is not happy enough to wave right now");
             return;
         }
         
         // Don't wave if buddy is sad or sleepy
         if (isSad() || isSleepy) {
-            LOGGER.info("Buddy doesn't feel like waving right now");
+            LOGGER.debug("Buddy doesn't feel like waving right now");
             return;
         }
         
-        LOGGER.info("Buddy starting to wave: x={}, y={}, state={}", buddyPosX, buddyPosY, currentState.getName());
+        LOGGER.debug("Buddy starting to wave: x={}, y={}, state={}", buddyPosX, buddyPosY, currentState.getName());
         
         isWaving = true;
         isHopping = false;
@@ -887,7 +1149,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     public void startYawning() {
         if (this.lockedInState()) return;
         
-        LOGGER.info("Buddy starting to yawn: x={}, y={}, state={}", buddyPosX, buddyPosY, currentState.getName());
+        LOGGER.debug("Buddy starting to yawn: x={}, y={}, state={}", buddyPosX, buddyPosY, currentState.getName());
         
         isYawning = true;
         isHopping = false;
@@ -907,11 +1169,11 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
 
         // Don't get excited if the buddy is sad or has critical needs
         if (isSad() || happiness < 50) {
-            LOGGER.info("Buddy is too sad to get excited right now");
+            LOGGER.debug("Buddy is too sad to get excited right now");
             return;
         }
 
-        LOGGER.info("Buddy starting to get excited: x={}, y={}, state={}", buddyPosX, buddyPosY, currentState.getName());
+        LOGGER.debug("Buddy starting to get excited: x={}, y={}, state={}", buddyPosX, buddyPosY, currentState.getName());
 
         isExcited = true;
     }
@@ -923,11 +1185,11 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
 
         // Don't allow pooping when off-screen
         if (isOffScreen) {
-            LOGGER.info("Buddy tried to poop while off-screen, preventing");
+            LOGGER.debug("Buddy tried to poop while off-screen, preventing");
             return;
         }
 
-        LOGGER.info("Buddy starting to poop: x={}, y={}", buddyPosX, buddyPosY);
+        LOGGER.debug("Buddy starting to poop: x={}, y={}", buddyPosX, buddyPosY);
 
         isPooping = true;
 
@@ -974,8 +1236,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         poopY = Math.max(10, Math.min(screenHeight - 10, poopY));
 
         // Safety check for invalid coordinates
-        if (poopX < 0 || poopX > screenWidth || poopY < 0 || poopY > screenHeight ||
-                poopX == Integer.MAX_VALUE || poopY == Integer.MAX_VALUE) {
+        if (poopX > screenWidth || poopY > screenHeight || poopX == Integer.MAX_VALUE || poopY == Integer.MAX_VALUE) {
             LOGGER.warn("Attempted to create poop with invalid coordinates: ({}, {}), skipping", poopX, poopY);
             return;
         }
@@ -983,11 +1244,11 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         // Create and add the poop
         poops.add(new Poop(poopX, poopY, this));
 
-        LOGGER.info("Buddy pooped at position: x={}, y={}, total poops: {}", poopX, poopY, poops.size());
+        LOGGER.debug("Buddy pooped at position: x={}, y={}, total poops: {}", poopX, poopY, poops.size());
 
         // If too many poops, make the buddy sad
         if (poops.size() >= MAX_POOPS_BEFORE_SAD) {
-            LOGGER.info("Too many poops! Buddy is getting sad");
+            LOGGER.debug("Too many poops! Buddy is getting sad");
         }
 
     }
@@ -1010,8 +1271,11 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
      */
     public void eatFood() {
         isEating = true;
-        hunger = Math.min(100, hunger + 40);
-        happiness = Math.min(100, happiness + 10);
+        // Apply level-based bonus to food effectiveness
+        float levelRatio = (float) Math.min(30, levelingManager.getCurrentLevel()) / 30f;
+        float foodEffectiveness = 1.0f + (levelRatio * 0.5f); // Up to 50% more effective at max level
+        hunger = Math.min(100, hunger + (20 * foodEffectiveness)); // Reduced from 40
+        happiness = Math.min(100, happiness + (5 * happinessGainMultiplier)); // Reduced from 10
     }
 
     /**
@@ -1022,14 +1286,15 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             // Waking up - make buddy grumpy
             isSleeping = false;
             // Slightly decrease happiness when woken up
-            happiness = Math.max(0, happiness - 5);
+            happiness = Math.max(0, happiness - 2.5f); // Reduced from 5
             // Start grumpy state
             startGrumpyState();
         } else {
             isBeingPet = true;
-            happiness = Math.min(100, happiness + 30);
+            // Happiness gain is affected by the happiness gain multiplier from Charisma attribute
+            happiness = Math.min(100, happiness + (15 * happinessGainMultiplier)); // Reduced from 30
             // Sometimes get excited when petted if already happy
-            if ((happiness > 70) && this.chanceCheck(30.0f)) {
+            if ((happiness > 70) && this.chanceCheck(30.0f + (luckBonus * 10.0f))) { // Luck affects chance of excitement
                 startExcitement();
             }
         }
@@ -1039,7 +1304,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
      * Starts the buddy grumpy animation
      */
     public void startGrumpyState() {
-        LOGGER.info("Buddy is grumpy after being woken up");
+        LOGGER.debug("Buddy is grumpy after being woken up");
         
         // Clear other states
         isHopping = false;
@@ -1050,10 +1315,26 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         // Set grumpy state
         isGrumpy = true;
     }
+    
+    /**
+     * Makes buddy grumpy without negative effects (used for sleep refusal)
+     */
+    public void refuseSleep() {
+        LOGGER.debug("Buddy refuses to sleep and gets grumpy");
+        
+        // Clear other states
+        isHopping = false;
+        isLookingAround = false;
+        isStretching = false;
+        isExcited = false;
+        
+        // Set grumpy state without any stat penalties
+        isGrumpy = true;
+    }
 
     public boolean isSad() {
         if (isPlaying || isChasingBall) return false;
-        if (happiness < 20) return true;
+        if (happiness < 15) return true; // Reduced from 20 to match slower stat decrease
         return (needsFood || needsPet || needsPlay);
     }
 
@@ -1061,6 +1342,11 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
 
         if (!isDisabled) return false;
+        
+        // First handle the leveling screen if it's visible (highest priority)
+        if (statusScreen.isVisible()) {
+            return statusScreen.mouseClicked(mouseX, mouseY, button);
+        }
 
         if ((droppedFood != null) && !droppedFood.justCreated) {
             droppedFood.stickToCursor = false;
@@ -1076,6 +1362,12 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
                 isChasingBall = false;
                 playBall.setGrabbedByBuddy(true);
                 needsPlay = false; // Reset play need immediately
+                
+                // Award XP for playing with buddy
+                gainExperience("playWithBuddy", 10, 60000);
+                if (levelingManager != null) {
+                    levelingManager.incrementPlayCount();
+                }
             } else {
                 // Always make buddy chase the ball when thrown
                 isPlaying = true;
@@ -1091,40 +1383,81 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
                 if (poop.isMouseOver(mouseX, mouseY)) {
                     poop.startCleaning();
                     // Increase happiness slightly for cleaning up poop
-                    happiness = Math.min(100, happiness + 5);
-                    LOGGER.info("Cleaned up poop at ({},{}), happiness: {}", poop.getX(), poop.getY(), happiness);
+                    happiness = Math.min(100, happiness + 2.5f); // Reduced from 5
+                    LOGGER.debug("Cleaned up poop at ({},{}), happiness: {}", poop.getX(), poop.getY(), happiness);
+                    
+                    // Award XP for cleaning poop
+                    gainExperience("cleanPoop", 5, 30000);
+                    if (levelingManager != null) {
+                        levelingManager.incrementPoopCleanCount();
+                    }
+                    
                     return true;
                 }
             }
         }
 
-        // First handle the GUI if it's visible
-        if (gui.isVisible()) {
-            return gui.mouseClicked(mouseX, mouseY, button);
-        }
-
         if (button == 1) { // Right click
-            // If clicked on buddy, open the GUI
-            if (isMouseOverBuddy(mouseX, mouseY)) {
-                gui.show(screenWidth, screenHeight);
-                LOGGER.info("Opening buddy GUI");
+            // If clicked on buddy, open the stats screen directly (only if awakened)
+            if (isMouseOverBuddy(mouseX, mouseY) && hasBeenAwakened) {
+                statusScreen.show(screenWidth, screenHeight);
+                LOGGER.debug("Opening buddy stats screen (on right-click)");
                 return true;
             }
         } else if (button == 0) { // Left click
             // Normal petting if menu isn't open
             if (isMouseOverBuddy(mouseX, mouseY)) {
-                pet();
+                // If buddy is peeking, stop peeking and start walking
+                if (isPeeking && isActivelyPeeking) {
+                    isPeeking = false;
+                    isActivelyPeeking = false;
+                    peekTimer = 0;
+                    peekDuration = 0;
+                    
+                    // Move buddy away from edge to a visible position
+                    if (facingLeft) {
+                        // Was peeking from right, move left a bit
+                        buddyPosX = screenWidth - SPRITE_WIDTH - 50;
+                    } else {
+                        // Was peeking from left, move right a bit
+                        buddyPosX = 50;
+                    }
+                    
+                    // First time being awakened?
+                    if (!hasBeenAwakened) {
+                        hasBeenAwakened = true;
+                        LOGGER.debug("Buddy has been awakened for the first time!");
+                        // Give a bigger happiness boost for first awakening
+                        happiness = Math.min(100, happiness + 10);
+                        // Award special XP for first interaction
+                        gainExperience("firstAwakening", 50, Long.MAX_VALUE); // One-time XP bonus
+                    } else {
+                        LOGGER.debug("Buddy stopped peeking and came out to play!");
+                        // Give a small happiness boost for coming out
+                        happiness = Math.min(100, happiness + 2.5f); // Reduced from 5
+                    }
+                } else {
+                    // Normal petting
+                    pet();
+                    
+                    // Award XP for petting
+                    gainExperience("petBuddy", 5, 10000); // Increased from 2 to compensate for slower gameplay
+                    if (levelingManager != null) {
+                        levelingManager.incrementPetCount();
+                    }
+                }
+                
                 return true;
             }
 
-            // Check if clicked on food
-            if (droppedFood != null && droppedFood.isMouseOver(mouseX, mouseY)) {
+            // Check if clicked on food (only if awakened)
+            if (hasBeenAwakened && droppedFood != null && droppedFood.isMouseOver(mouseX, mouseY)) {
                 droppedFood.pickup((int)mouseX, (int)mouseY);
                 return true;
             }
 
-            // Check if clicked on play ball
-            if (playBall != null && playBall.isMouseOver(mouseX, mouseY)) {
+            // Check if clicked on play ball (only if awakened)
+            if (hasBeenAwakened && playBall != null && playBall.isMouseOver(mouseX, mouseY)) {
                 // Start dragging ball instead of just kicking it
                 playBall.pickup((int)mouseX, (int)mouseY);
 
@@ -1150,6 +1483,12 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
 
         if (!isDisabled) return false;
+        
+        // Handle the leveling screen first if it's visible
+        if (statusScreen.isVisible()) {
+            statusScreen.mouseReleased(mouseX, mouseY, button);
+            return true;
+        }
 
         if (button == 0) {
             if (droppedFood != null && droppedFood.isBeingDragged()) {
@@ -1158,6 +1497,12 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
                     // If close to buddy, don't drop - just start eating
                     eatFood();
                     droppedFood = null;
+                    
+                    // Award XP for feeding
+                    gainExperience("feedBuddy", 5, 30000);
+                    if (levelingManager != null) {
+                        levelingManager.incrementFeedCount();
+                    }
                 } else {
                     // If not close, just drop normally
                     droppedFood.drop((int)mouseX, (int)mouseY);
@@ -1175,6 +1520,12 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
                     isChasingBall = false;
                     playBall.setGrabbedByBuddy(true);
                     needsPlay = false; // Reset play need immediately
+                    
+                    // Award XP for playing with buddy
+                    gainExperience("playWithBuddy", 10, 60000);
+                    if (levelingManager != null) {
+                        levelingManager.incrementPlayCount();
+                    }
                 } else {
                     // If not close, throw normally
                     playBall.throwBall((int)mouseX, (int)mouseY);
@@ -1185,6 +1536,15 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
                 }
                 return true;
             }
+        }
+        return false;
+    }
+    
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double deltaY) {
+        // Handle mouse scroll for leveling screen if visible
+        if (statusScreen.isVisible()) {
+            return statusScreen.mouseScrolled(mouseX, mouseY, deltaY);
         }
         return false;
     }
@@ -1238,7 +1598,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
      * Sets the screen dimensions for the buddy
      */
     public void setScreenSize(int width, int height) {
-        LOGGER.info("Screen size changed: {}x{} -> {}x{}", this.screenWidth, this.screenHeight, width, height);
+        LOGGER.debug("Screen size changed: {}x{} -> {}x{}", this.screenWidth, this.screenHeight, width, height);
 
         // Ensure valid dimensions
         width = Math.max(1, width);
@@ -1256,12 +1616,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
         // Clean up any poops that might now be invalid
         cleanupInvalidPoops();
 
-        // If GUI is visible, update its position based on new screen size
-        if (gui.isVisible()) {
-            gui.show(width, height);
-        }
-
-        LOGGER.info("Updated buddy position to y={}", this.buddyPosY);
+        LOGGER.debug("Updated buddy position to y={}", this.buddyPosY);
     }
 
     @Override
@@ -1376,7 +1731,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     public void setEnergy(float energy) {
         this.energy = energy;
         // Handle auto-sleep if energy is critically low
-        if (energy < 10 && !isSleeping) {
+        if (energy < 6.7f && !isSleeping) {
             this.startSleeping();
         }
     }
@@ -1457,7 +1812,13 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
      * Saves the buddy's state to persistent storage
      */
     public void saveState() {
-        TamagotchiBuddySerializer.saveBuddy(this);
+        BuddySerializer.saveBuddy(this);
+        
+        // Also save the leveling data
+        if (levelingManager != null) {
+            boolean levelingSaveResult = levelingManager.saveState();
+            LOGGER.debug("Leveling data saving result: {}", levelingSaveResult);
+        }
     }
 
     /**
@@ -1465,7 +1826,13 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
      * @return true if state was successfully loaded, false otherwise
      */
     public boolean loadState() {
-        boolean result = TamagotchiBuddySerializer.loadBuddy(this);
+        boolean result = BuddySerializer.loadBuddy(this);
+        
+        // Also load the leveling data
+        if (levelingManager != null) {
+            boolean levelingResult = levelingManager.loadState();
+            LOGGER.debug("Leveling data loading result: {}", levelingResult);
+        }
 
         // After loading, clean up any poops that might be off-screen
         cleanupInvalidPoops();
@@ -1488,7 +1855,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             boolean isExtremelyInvalid = (x < 0) || (y < 0) || (x > 10000) || (y > 10000);
 
             if (isExtremelyInvalid) {
-                LOGGER.info("Removed invalid poop at position ({}, {})", x, y);
+                LOGGER.debug("Removed invalid poop at position ({}, {})", x, y);
                 madeChanges = true;
                 continue;  // Skip this poop
             }
@@ -1496,7 +1863,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
             // Check if poop is off-screen but has reasonable coordinates
             if (x > screenWidth || y > screenHeight) {
                 // Update position to bring it within screen bounds
-                LOGGER.info("Repositioning off-screen poop from ({}, {}) to within screen bounds", x, y);
+                LOGGER.debug("Repositioning off-screen poop from ({}, {}) to within screen bounds", x, y);
                 poop.updatePosition(screenWidth, screenHeight);
                 madeChanges = true;
             }
@@ -1506,7 +1873,7 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
 
         // If we removed or repositioned any poops, update the list
         if (madeChanges) {
-            LOGGER.info("Cleaned up {} invalid poops", poops.size() - validPoops.size());
+            LOGGER.debug("Cleaned up {} invalid poops", poops.size() - validPoops.size());
             poops = validPoops;
         }
     }
@@ -1519,7 +1886,115 @@ public class TamagotchiBuddy extends AbstractContainerEventHandler implements Re
     public boolean chanceCheck(float percentage) {
         if (percentage < 0.0f) percentage = 0.0f;
         if (percentage > 100.0f) percentage = 100.0f;
-        return this.random.nextFloat() < (percentage / 100.0f);
+        
+        // Apply luck bonus to chance checks
+        float effectivePercentage = percentage * (1.0f + (luckBonus * 0.3f));
+        effectivePercentage = Math.min(100.0f, effectivePercentage);
+        
+        return this.random.nextFloat() < (effectivePercentage / 100.0f);
+    }
+    
+    /**
+     * Awards experience points to the buddy
+     * 
+     * @param source The source of the experience (for cooldown tracking)
+     * @param amount The base amount of experience to award
+     * @param cooldownMs The cooldown in milliseconds before this source can award XP again
+     */
+    public void gainExperience(String source, int amount, long cooldownMs) {
+        if (levelingManager == null) return;
+        
+        // Check if this source is on cooldown
+        long now = System.currentTimeMillis();
+        Long lastAwardTime = xpCooldowns.get(source);
+        if (lastAwardTime != null && (now - lastAwardTime < cooldownMs)) {
+            return;
+        }
+        
+        // Apply intelligence bonus to experience gain
+        float finalAmount = amount * experienceMultiplier;
+        
+        // Award the experience
+        List<Integer> newLevels = levelingManager.addExperience(Math.round(finalAmount));
+        
+        // Update cooldown
+        xpCooldowns.put(source, now);
+        
+        // If leveled up, show a special animation
+        if (!newLevels.isEmpty()) {
+            startLevelUpCelebration(newLevels);
+        }
+    }
+    
+    /**
+     * Starts a celebration animation for leveling up
+     * 
+     * @param newLevels The list of new levels achieved
+     */
+    private void startLevelUpCelebration(List<Integer> newLevels) {
+        // For now, just show excitement (we could add a special animation later)
+        startExcitement();
+        
+        // Log the level up
+        for (int level : newLevels) {
+            LOGGER.debug("Buddy leveled up to level {}!", level);
+        }
+    }
+    
+    /**
+     * Checks for time-based achievements based on the current time
+     * 
+     * @param currentTime The current time in milliseconds
+     */
+    private void checkTimeBasedAchievements(long currentTime) {
+        if (levelingManager == null) return;
+        
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(currentTime);
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        
+        // Check for midnight companion achievement (between midnight and 4 AM)
+        if (hour >= 0 && hour < 4) {
+            levelingManager.unlockAchievement(BuddyAchievement.AchievementType.MIDNIGHT_COMPANION);
+        }
+    }
+    
+    /**
+     * Sets the attribute effect multipliers and bonuses from the leveling manager
+     * 
+     * @param hungerMultiplier The multiplier for hunger decrease rate
+     * @param happinessMultiplier The multiplier for happiness decrease rate
+     * @param energyMultiplier The multiplier for energy decrease rate
+     * @param happinessGainMultiplier The multiplier for happiness gain
+     * @param experienceMultiplier The multiplier for experience gain
+     * @param needsUnderstandingBonus The bonus to needs understanding
+     * @param luckBonus The bonus to luck
+     */
+    public void setAttributeEffects(float hungerMultiplier, float happinessMultiplier, float energyMultiplier,
+                                   float happinessGainMultiplier, float experienceMultiplier, float needsUnderstandingBonus, float luckBonus) {
+        this.hungerMultiplier = hungerMultiplier;
+        this.happinessMultiplier = happinessMultiplier;
+        this.energyMultiplier = energyMultiplier;
+        this.happinessGainMultiplier = happinessGainMultiplier;
+        this.experienceMultiplier = experienceMultiplier;
+        this.needsUnderstandingBonus = needsUnderstandingBonus;
+        this.luckBonus = luckBonus;
+    }
+    
+    /**
+     * Opens the leveling stats screen
+     */
+    public void openLevelingScreen() {
+        statusScreen.show(screenWidth, screenHeight);
+    }
+    
+    /**
+     * Gets the leveling manager for this buddy
+     * 
+     * @return The leveling manager
+     */
+    public LevelingManager getLevelingManager() {
+        return levelingManager;
     }
 
 }

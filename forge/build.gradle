@@ -97,6 +97,15 @@ dependencies {
     compileOnly project(":common")
 }
 
+// Exclude Fabric Loader from Forge
+configurations {
+    runtimeClasspath    { exclude group: 'net.fabricmc', module: 'fabric-loader' }
+    developmentRuntimeClasspath {
+        // Gradle 8 names used by ForgeGradle 6
+        exclude group: 'net.fabricmc', module: 'fabric-loader'
+    }
+}
+
 tasks.withType(JavaCompile).configureEach {
     source(project(":common").sourceSets.main.allSource)
 }
@@ -138,7 +147,7 @@ sourceSets.each {
 jar {
     manifest {
         attributes([
-                "MixinConfigs": "${mod_id}.forge.mixins.json,${mod_id}.mixins.json"
+                "MixinConfigs": "${mod_id}.forge.mixins.json,${mod_id}.mixins.json,${mod_id}.late.mixins.json"
         ])
     }
 }

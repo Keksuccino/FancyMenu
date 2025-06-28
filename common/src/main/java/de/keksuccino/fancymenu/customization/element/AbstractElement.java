@@ -12,7 +12,7 @@ import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
+import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
@@ -31,12 +31,15 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.awt.*;
 import java.util.List;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 public abstract class AbstractElement implements Renderable, GuiEventListener, NarratableEntry, NavigatableWidget {
+
+	private static final Logger LOGGER = LogManager.getLogger();
 
 	/** The {@link AbstractElement#builder} field is NULL for this element! Keep that in mind when using it as placeholder! **/
 	@SuppressWarnings("all")
@@ -45,7 +48,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	public final ElementBuilder<?,?> builder;
 	public ElementAnchorPoint anchorPoint = ElementAnchorPoints.MID_CENTERED;
-	public String anchorPointElementIdentifier = null;
+	protected String anchorPointElementIdentifier = null;
 	protected AbstractElement cachedElementAnchorPointParent = null;
 	/** Not the same as {@link AbstractElement#getAbsoluteX()}! This is the X-offset from the origin of its anchor! **/
 	public int posOffsetX = 0;
@@ -137,7 +140,9 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 * - 1.0 means maximum movement
 	 * Default is 0.5 for medium intensity.
 	 */
-	public float parallaxIntensity = 0.5f;
+	@NotNull
+	public String parallaxIntensityString = "0.5";
+	public float lastParallaxIntensity = -10000.0F;
 	public boolean loadOncePerSession = false;
 	@NotNull
 	public DrawableColor inEditorColor = DrawableColor.of(Color.ORANGE);
@@ -183,6 +188,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		this.cachedMouseX = mouseX;
 		this.cachedMouseY = mouseY;
+
+		this.lastParallaxIntensity = SerializationUtils.deserializeNumber(Float.class, 0.5F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityString));
 
 		this.tickBaseOpacity();
 
@@ -529,7 +536,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			// Calculate parallax offset using cached mouse position
 			float centerX = getScreenWidth() / 2f;
 			float offsetX = this.cachedMouseX - centerX;
-			float parallaxOffset = offsetX * parallaxIntensity * 0.1f; // Scale factor to control maximum movement
+			float parallaxOffset = offsetX * this.lastParallaxIntensity * 0.1f; // Scale factor to control maximum movement
 
 			// Apply offset based on direction
 			x += (int) (invertParallax ? parallaxOffset : -parallaxOffset);
@@ -580,7 +587,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			// Calculate parallax offset using cached mouse position
 			float centerY = getScreenHeight() / 2f;
 			float offsetY = this.cachedMouseY - centerY;
-			float parallaxOffset = offsetY * parallaxIntensity * 0.1f; // Scale factor to control maximum movement
+			float parallaxOffset = offsetY * this.lastParallaxIntensity * 0.1f; // Scale factor to control maximum movement
 
 			// Apply offset based on direction
 			y += (int) (invertParallax ? parallaxOffset : -parallaxOffset);
@@ -597,41 +604,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			}
 		}
 		return y;
-	}
-
-	public void setAutoSizingBaseWidthAndHeight() {
-		Window window = Minecraft.getInstance().getWindow();
-		double guiWidth = getScreenWidth() * window.getGuiScale();
-		double guiHeight = getScreenHeight() * window.getGuiScale();
-		this.autoSizingBaseScreenWidth = (int)guiWidth;
-		this.autoSizingBaseScreenHeight = (int)guiHeight;
-	}
-
-	public void updateAutoSizing(boolean ignoreLastTickScreenSize) {
-
-		Window window = Minecraft.getInstance().getWindow();
-		double guiWidth = getScreenWidth() * window.getGuiScale();
-		double guiHeight = getScreenHeight() * window.getGuiScale();
-
-		if (((this.autoSizingLastTickScreenWidth != guiWidth) || (this.autoSizingLastTickScreenHeight != guiHeight)) || ignoreLastTickScreenSize) {
-			if (this.autoSizing && (this.autoSizingBaseScreenWidth > 0) && (this.autoSizingBaseScreenHeight > 0)) {
-				double percentX = Math.max(1.0D, (guiWidth / (double) this.autoSizingBaseScreenWidth) * 100.0D);
-				double percentY = Math.max(1.0D, (guiHeight / (double) this.autoSizingBaseScreenHeight) * 100.0D);
-				double percent = Math.min(percentX, percentY);
-				this.autoSizingWidth = Math.max(1, (int) ((percent / 100.0D) * (double) this.baseWidth));
-				this.autoSizingHeight = Math.max(1, (int) ((percent / 100.0D) * (double) this.baseHeight));
-				if ((this.autoSizingBaseScreenWidth == guiWidth) && (this.autoSizingBaseScreenHeight == guiHeight)) {
-					this.autoSizingWidth = 0;
-					this.autoSizingHeight = 0;
-				}
-			} else {
-				this.autoSizingWidth = 0;
-				this.autoSizingHeight = 0;
-			}
-		}
-		this.autoSizingLastTickScreenWidth = guiWidth;
-		this.autoSizingLastTickScreenHeight = guiHeight;
-
 	}
 
 	/**
@@ -690,6 +662,149 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		return this.baseHeight;
 	}
 
+	public void setAutoSizingBaseWidthAndHeight() {
+		Window window = Minecraft.getInstance().getWindow();
+		double guiWidth = getScreenWidth() * window.getGuiScale();
+		double guiHeight = getScreenHeight() * window.getGuiScale();
+		this.autoSizingBaseScreenWidth = (int)guiWidth;
+		this.autoSizingBaseScreenHeight = (int)guiHeight;
+	}
+
+	public void updateAutoSizing(boolean ignoreLastTickScreenSize) {
+
+		Window window = Minecraft.getInstance().getWindow();
+		double guiWidth = getScreenWidth() * window.getGuiScale();
+		double guiHeight = getScreenHeight() * window.getGuiScale();
+
+		if (((this.autoSizingLastTickScreenWidth != guiWidth) || (this.autoSizingLastTickScreenHeight != guiHeight)) || ignoreLastTickScreenSize) {
+			if (this.autoSizing && (this.autoSizingBaseScreenWidth > 0) && (this.autoSizingBaseScreenHeight > 0)) {
+				double percentX = Math.max(1.0D, (guiWidth / (double) this.autoSizingBaseScreenWidth) * 100.0D);
+				double percentY = Math.max(1.0D, (guiHeight / (double) this.autoSizingBaseScreenHeight) * 100.0D);
+				double percent = Math.min(percentX, percentY);
+				this.autoSizingWidth = Math.max(1, (int) ((percent / 100.0D) * (double) this.baseWidth));
+				this.autoSizingHeight = Math.max(1, (int) ((percent / 100.0D) * (double) this.baseHeight));
+				if ((this.autoSizingBaseScreenWidth == guiWidth) && (this.autoSizingBaseScreenHeight == guiHeight)) {
+					this.autoSizingWidth = 0;
+					this.autoSizingHeight = 0;
+				}
+			} else {
+				this.autoSizingWidth = 0;
+				this.autoSizingHeight = 0;
+			}
+		}
+		this.autoSizingLastTickScreenWidth = guiWidth;
+		this.autoSizingLastTickScreenHeight = guiHeight;
+
+	}
+
+	@Nullable
+	public String getAnchorPointElementIdentifier() {
+		return this.anchorPointElementIdentifier;
+	}
+
+	public void setAnchorPointElementIdentifier(@Nullable String anchorPointElementIdentifier) {
+
+		// Handle null or empty string - clear the anchor
+		if (anchorPointElementIdentifier == null || anchorPointElementIdentifier.trim().isEmpty()) {
+			this.anchorPointElementIdentifier = null;
+			this.cachedElementAnchorPointParent = null;
+			return;
+		}
+		
+		// Normalize the identifier (remove potential prefixes)
+		String normalizedIdentifier = anchorPointElementIdentifier
+			.replace("vanillabtn:", "")
+			.replace("button_compatibility_id:", "");
+		
+		// Check for self-anchoring
+		if (this.getInstanceIdentifier().equals(normalizedIdentifier)) {
+			this.resetToDefaultAnchor();
+			LOGGER.error("[FANCYMENU] Tried to anchor element to itself! (Element: " + this.getInstanceIdentifier() + ")", 
+				new IllegalStateException("Anchoring element to itself"));
+			return;
+		}
+		
+		// Try to get the target parent element (it might not exist yet, which is valid)
+		AbstractElement parent = getElementByInstanceIdentifier(normalizedIdentifier);
+		
+		// Only check for circular dependencies if parent exists
+		// If parent is null, it might be created later, which is a valid scenario
+		if (parent != null) {
+			// Check for circular dependencies (both direct and transitive)
+			if (detectCircularDependency(this, parent)) {
+				this.resetToDefaultAnchor();
+				LOGGER.error("[FANCYMENU] Detected circular anchor dependency! Cannot anchor '" + 
+					this.getInstanceIdentifier() + "' to '" + normalizedIdentifier + 
+					"' as it would create a circular reference chain.", 
+					new IllegalStateException("Circular anchor dependency detected"));
+				return;
+			}
+		}
+		
+		// Set the anchor identifier (parent might be null and resolved later)
+		this.anchorPointElementIdentifier = normalizedIdentifier;
+		this.cachedElementAnchorPointParent = parent;
+	}
+	
+	/**
+	 * Detects circular dependencies in the anchor chain.
+	 * @param child The element being anchored
+	 * @param proposedParent The element to anchor to
+	 * @return true if adding this anchor would create a circular dependency
+	 */
+	protected boolean detectCircularDependency(AbstractElement child, AbstractElement proposedParent) {
+		// Set a reasonable depth limit to prevent infinite loops
+		final int MAX_DEPTH = 100;
+		int depth = 0;
+		
+		Set<String> visitedElements = new HashSet<>();
+		visitedElements.add(child.getInstanceIdentifier());
+		
+		AbstractElement current = proposedParent;
+		while (current != null && depth < MAX_DEPTH) {
+			String currentId = current.getInstanceIdentifier();
+			
+			// Check if we've encountered the child element in the chain
+			if (visitedElements.contains(currentId)) {
+				return true; // Circular dependency detected
+			}
+			
+			visitedElements.add(currentId);
+			
+			// Move up the anchor chain
+			String parentId = current.getAnchorPointElementIdentifier();
+			if (parentId == null || parentId.trim().isEmpty()) {
+				break; // Reached the top of the chain
+			}
+			
+			// Normalize the parent ID
+			parentId = parentId.replace("vanillabtn:", "").replace("button_compatibility_id:", "");
+			
+			current = getElementByInstanceIdentifier(parentId);
+			depth++;
+		}
+		
+		// Check if we hit the depth limit (which might indicate an issue)
+		if (depth >= MAX_DEPTH) {
+			LOGGER.warn("[FANCYMENU] Anchor chain depth exceeded " + MAX_DEPTH + 
+				" levels while checking for circular dependencies. This might indicate a problem.");
+			return true; // Treat as circular to be safe
+		}
+		
+		return false; // No circular dependency found
+	}
+	
+	/**
+	 * Resets the element's anchor to default values.
+	 */
+	public void resetToDefaultAnchor() {
+		this.anchorPointElementIdentifier = null;
+		this.cachedElementAnchorPointParent = null;
+		this.anchorPoint = ElementAnchorPoints.MID_CENTERED;
+		this.posOffsetX = 0;
+		this.posOffsetY = 0;
+	}
+
 	/**
 	 * Returns this element's PARENT element, if this element uses the {@link ElementAnchorPoints#ELEMENT} anchor.
 	 */
@@ -706,6 +821,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 * This is to set this element's PARENT element, if this element uses the {@link ElementAnchorPoints#ELEMENT} anchor.
 	 */
 	public void setElementAnchorPointParent(@Nullable AbstractElement element) {
+		if (this.anchorPointElementIdentifier == null) element = null;
 		this.cachedElementAnchorPointParent = element;
 	}
 
@@ -786,11 +902,12 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	}
 
 	protected static boolean isEditor() {
-		return (getScreen() instanceof LayoutEditorScreen);
+		return (LayoutEditorScreen.getCurrentInstance() != null);
 	}
 
 	@Nullable
 	public static Screen getScreen() {
+		if (LayoutEditorScreen.getCurrentInstance() != null) return LayoutEditorScreen.getCurrentInstance();
 		return Minecraft.getInstance().screen;
 	}
 
@@ -808,8 +925,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	@Nullable
 	public static AbstractElement getElementByInstanceIdentifier(String identifier) {
 		identifier = identifier.replace("vanillabtn:", "").replace("button_compatibility_id:", "");
-		if (isEditor()) {
-			AbstractEditorElement editorElement = ((LayoutEditorScreen)getScreen()).getElementByInstanceIdentifier(identifier);
+		if (LayoutEditorScreen.getCurrentInstance() != null) {
+			AbstractEditorElement editorElement = LayoutEditorScreen.getCurrentInstance().getElementByInstanceIdentifier(identifier);
 			if (editorElement != null) return editorElement.element;
 		} else {
 			ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getActiveLayer();
