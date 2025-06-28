@@ -17,7 +17,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
-
 import java.awt.*;
 
 public class RenderingUtils {
@@ -168,6 +167,18 @@ public class RenderingUtils {
     public static void blitNineSlicedTexture(GuiGraphics graphics, ResourceLocation texture, int x, int y, int width, int height,
                                              int textureWidth, int textureHeight,
                                              int borderTop, int borderRight, int borderBottom, int borderLeft) {
+
+        // Correct border sizes if they're too large
+        if (borderLeft + borderRight >= textureWidth) {
+            float scale = (float)(textureWidth - 2) / (borderLeft + borderRight);
+            borderLeft = (int)(borderLeft * scale);
+            borderRight = (int)(borderRight * scale);
+        }
+        if (borderTop + borderBottom >= textureHeight) {
+            float scale = (float)(textureHeight - 2) / (borderTop + borderBottom);
+            borderTop = (int)(borderTop * scale);
+            borderBottom = (int)(borderBottom * scale);
+        }
 
         // Corner pieces
         // Top left

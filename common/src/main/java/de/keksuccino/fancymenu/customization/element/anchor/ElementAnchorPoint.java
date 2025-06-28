@@ -352,6 +352,10 @@ public class ElementAnchorPoint {
         public int getOriginX(@NotNull AbstractElement element) {
             AbstractElement anchor = element.getElementAnchorPointParent();
             if (anchor != null) {
+                if (anchor == element) return super.getOriginX(element);
+                if ((anchor.getElementAnchorPointParent() != null) && (anchor.getElementAnchorPointParent() == element)) return super.getOriginX(element);
+                if (element.getElementAnchorPointParent() == element) return super.getOriginX(element);
+                if (anchor.getElementAnchorPointParent() == anchor) return super.getOriginX(element);
                 return anchor.getChildElementAnchorPointX();
             }
             return super.getOriginX(element);
@@ -361,6 +365,10 @@ public class ElementAnchorPoint {
         public int getOriginY(@NotNull AbstractElement element) {
             AbstractElement anchor = element.getElementAnchorPointParent();
             if (anchor != null) {
+                if (anchor == element) return super.getOriginY(element);
+                if ((anchor.getElementAnchorPointParent() != null) && (anchor.getElementAnchorPointParent() == element)) return super.getOriginY(element);
+                if (element.getElementAnchorPointParent() == element) return super.getOriginY(element);
+                if (anchor.getElementAnchorPointParent() == anchor) return super.getOriginY(element);
                 return anchor.getChildElementAnchorPointY();
             }
             return super.getOriginY(element);

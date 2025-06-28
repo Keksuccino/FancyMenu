@@ -38,6 +38,7 @@ subprojects {
 
     repositories {
         mavenCentral()
+        maven { url = 'https://maven.minecraftforge.net' }
         maven {
             name = 'Sponge / Mixin'
             url = 'https://repo.spongepowered.org/repository/maven-public/'

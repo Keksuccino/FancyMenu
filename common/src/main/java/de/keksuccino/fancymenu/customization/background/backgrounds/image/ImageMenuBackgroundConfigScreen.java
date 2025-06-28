@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
@@ -89,17 +90,16 @@ public class ImageMenuBackgroundConfigScreen extends CellScreen {
             b.setIsActiveSupplier(consumes -> !this.background.slideLeftRight);
         }
 
+
         this.addWidgetCell(new ExtendedButton(0, 0, 0, 20, Component.translatable("fancymenu.background.image.configure.parallax_intensity"), var1 -> {
             final Screen currentScreen = Minecraft.getInstance().screen;
-            TextInputScreen s = TextInputScreen.build(Component.translatable("fancymenu.background.image.configure.parallax_intensity"), CharacterFilter.buildDecimalFiler(), callback -> {
+            TextEditorScreen s = TextEditorScreen.build(Component.translatable("fancymenu.background.image.configure.parallax_intensity"), null, callback -> {
                 if (callback != null) {
-                    this.background.parallaxIntensity = SerializationUtils.deserializeNumber(Float.class, this.background.parallaxIntensity, callback);
-                    if (this.background.parallaxIntensity > 1.0F) this.background.parallaxIntensity = 1.0F;
-                    if (this.background.parallaxIntensity < 0.0F) this.background.parallaxIntensity = 0.0F;
+                    this.background.parallaxIntensityString = callback;
                 }
                 Minecraft.getInstance().setScreen(currentScreen);
             });
-            s.setText("" + this.background.parallaxIntensity);
+            s.setText(this.background.parallaxIntensityString);
             Minecraft.getInstance().setScreen(s);
         }).setTooltip(Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.background.image.configure.parallax_intensity.desc"))), true);
 
