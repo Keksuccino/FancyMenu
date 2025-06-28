@@ -20,7 +20,6 @@ import de.keksuccino.fancymenu.customization.element.elements.ticker.TickerEleme
 import de.keksuccino.fancymenu.customization.element.elements.text.v2.TextElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.slider.v2.SliderElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.tooltip.TooltipElementBuilder;
-import de.keksuccino.fancymenu.customization.element.elements.video.mcef.MCEFVideoElementBuilder;
 
 public class Elements {
 
@@ -43,7 +42,6 @@ public class Elements {
     public static final DraggerElementBuilder DRAGGER = new DraggerElementBuilder();
     public static final ItemElementBuilder ITEM = new ItemElementBuilder();
     public static final AnimationControllerElementBuilder ANIMATION_CONTROLLER = new AnimationControllerElementBuilder();
-    public static final MCEFVideoElementBuilder MCEF_VIDEO = new MCEFVideoElementBuilder();
 
     public static void registerAll() {
 
@@ -66,7 +64,6 @@ public class Elements {
         ElementRegistry.register(DRAGGER);
         ElementRegistry.register(ITEM);
         ElementRegistry.register(ANIMATION_CONTROLLER);
-        ElementRegistry.register(MCEF_VIDEO);
 
     }
 

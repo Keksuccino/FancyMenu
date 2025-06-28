@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.layout.editor.buddy;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.items.Poop;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
-import de.keksuccino.fancymenu.util.rendering.gui.ScreenRectangle;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -12,7 +11,6 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -125,10 +123,6 @@ public class BuddyWidget extends AbstractContainerEventHandler implements Render
     @Override
     public @NotNull List<? extends GuiEventListener> children() {
         return unusedDummyChildren;
-    }
-
-    public ScreenRectangle getRectangle() {
-        return new ScreenRectangle(0, 0, screenWidth, screenHeight);
     }
 
     public void setScreenSize(int width, int height) {

@@ -13,11 +13,9 @@ import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
-import de.keksuccino.fancymenu.util.rendering.gui.ScreenRectangle;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -1623,10 +1621,6 @@ public class Buddy extends AbstractContainerEventHandler implements Renderable, 
     @Override
     public @NotNull List<? extends GuiEventListener> children() {
         return children;
-    }
-
-    public @NotNull ScreenRectangle getRectangle() {
-        return new ScreenRectangle(buddyPosX, buddyPosY, SPRITE_WIDTH, SPRITE_HEIGHT);
     }
 
     /**

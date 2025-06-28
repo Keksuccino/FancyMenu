@@ -6,16 +6,16 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ExecutableElement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CheckboxButton;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.input.StringUtils;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -143,7 +143,7 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
     }
 
     protected void updateWidgetTooltip() {
-        if ((this.tooltip != null) && (this.checkbox != null) && this.checkbox.isHovered() && this.checkbox.visible && this.shouldRender() && !isEditor()) {
+        if ((this.tooltip != null) && (this.checkbox != null) && ((IMixinAbstractWidget)this.checkbox).getIsHoveredFancyMenu() && this.checkbox.visible && this.shouldRender() && !isEditor()) {
             String tooltip = this.tooltip.replace("%n%", "\n");
             TooltipHandler.INSTANCE.addWidgetTooltip(this.checkbox, Tooltip.of(StringUtils.splitLines(PlaceholderParser.replacePlaceholders(tooltip), "\n")), false, true);
         }

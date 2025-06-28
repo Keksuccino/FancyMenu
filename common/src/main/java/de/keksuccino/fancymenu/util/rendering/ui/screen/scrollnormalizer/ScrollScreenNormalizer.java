@@ -63,8 +63,8 @@ public class ScrollScreenNormalizer {
         Map<String, Integer> ids = new HashMap<>();
         for (AbstractWidget widget : extracted) {
 
-            widget.setX(pos);
-            widget.setY(pos);
+            widget.x = (pos);
+            widget.y = (pos);
             pos++;
 
             if (screen instanceof OptionsSubScreen) {

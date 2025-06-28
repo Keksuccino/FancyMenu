@@ -1,7 +1,8 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.button;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
@@ -36,12 +37,12 @@ public class CheckboxButton extends ExtendedButton {
     }
 
     @Override
-    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderButton(@NotNull PoseStack pose, int mouseX, int mouseY, float partial) {
 
-        super.renderWidget(graphics, mouseX, mouseY, partial);
+        super.renderButton(pose, mouseX, mouseY, partial);
 
         if (this.checkboxState && this.isActive()) {
-            graphics.blit(this.getCheckboxCheckmarkTexture(), this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+            GuiGraphics.currentGraphics().blit(this.getCheckboxCheckmarkTexture(), this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
         }
 
     }

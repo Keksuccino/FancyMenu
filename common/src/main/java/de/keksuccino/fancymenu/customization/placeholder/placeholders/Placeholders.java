@@ -16,14 +16,6 @@ import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.ram.
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.ram.UsedRamPlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.player.PlayerNamePlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.player.PlayerUuidPlaceholder;
-import de.keksuccino.fancymenu.customization.placeholder.placeholders.video.background.VideoMenuBackgroundDurationPlaceholder;
-import de.keksuccino.fancymenu.customization.placeholder.placeholders.video.background.VideoMenuBackgroundPausedStatePlaceholder;
-import de.keksuccino.fancymenu.customization.placeholder.placeholders.video.background.VideoMenuBackgroundPlaytimePlaceholder;
-import de.keksuccino.fancymenu.customization.placeholder.placeholders.video.background.VideoMenuBackgroundVolumePlaceholder;
-import de.keksuccino.fancymenu.customization.placeholder.placeholders.video.element.VideoElementDurationPlaceholder;
-import de.keksuccino.fancymenu.customization.placeholder.placeholders.video.element.VideoElementPausedStatePlaceholder;
-import de.keksuccino.fancymenu.customization.placeholder.placeholders.video.element.VideoElementPlaytimePlaceholder;
-import de.keksuccino.fancymenu.customization.placeholder.placeholders.video.element.VideoElementVolumePlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.world.*;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.scoreboard.*;
 
@@ -153,14 +145,6 @@ public class Placeholders {
     public static final MaxPlayerOxygenPlaceholder MAX_PLAYER_OXYGEN = new MaxPlayerOxygenPlaceholder();
     public static final CurrentPlayerOxygenPercentagePlaceholder CURRENT_PLAYER_OXYGEN_PERCENTAGE = new CurrentPlayerOxygenPercentagePlaceholder();
     public static final LastWorldOrServerPlaceholder LAST_WORLD_OR_SERVER = new LastWorldOrServerPlaceholder();
-    public static final VideoElementVolumePlaceholder VIDEO_ELEMENT_VOLUME = new VideoElementVolumePlaceholder();
-    public static final VideoElementDurationPlaceholder VIDEO_ELEMENT_DURATION = new VideoElementDurationPlaceholder();
-    public static final VideoElementPausedStatePlaceholder VIDEO_ELEMENT_PAUSED_STATE = new VideoElementPausedStatePlaceholder();
-    public static final VideoElementPlaytimePlaceholder VIDEO_ELEMENT_PLAYTIME = new VideoElementPlaytimePlaceholder();
-    public static final VideoMenuBackgroundVolumePlaceholder VIDEO_MENU_BACKGROUND_VOLUME = new VideoMenuBackgroundVolumePlaceholder();
-    public static final VideoMenuBackgroundDurationPlaceholder VIDEO_MENU_BACKGROUND_DURATION = new VideoMenuBackgroundDurationPlaceholder();
-    public static final VideoMenuBackgroundPausedStatePlaceholder VIDEO_MENU_BACKGROUND_PAUSED_STATE = new VideoMenuBackgroundPausedStatePlaceholder();
-    public static final VideoMenuBackgroundPlaytimePlaceholder VIDEO_MENU_BACKGROUND_PLAYTIME = new VideoMenuBackgroundPlaytimePlaceholder();
     public static final TextCharacterCountPlaceholder TEXT_CHARACTER_COUNT = new TextCharacterCountPlaceholder();
     public static final TextWidthPlaceholder TEXT_WIDTH = new TextWidthPlaceholder();
     public static final ClipboardContentPlaceholder CLIPBOARD_CONTENT = new ClipboardContentPlaceholder();
@@ -312,16 +296,6 @@ public class Placeholders {
         PlaceholderRegistry.register(AUDIO_ELEMENT_DURATION);
         PlaceholderRegistry.register(AUDIO_ELEMENT_PLAYTIME);
         PlaceholderRegistry.register(AUDIO_ELEMENT_PLAYING_STATE);
-
-        //Video
-        PlaceholderRegistry.register(VIDEO_ELEMENT_VOLUME);
-        PlaceholderRegistry.register(VIDEO_ELEMENT_DURATION);
-        PlaceholderRegistry.register(VIDEO_ELEMENT_PAUSED_STATE);
-        PlaceholderRegistry.register(VIDEO_ELEMENT_PLAYTIME);
-        PlaceholderRegistry.register(VIDEO_MENU_BACKGROUND_VOLUME);
-        PlaceholderRegistry.register(VIDEO_MENU_BACKGROUND_DURATION);
-        PlaceholderRegistry.register(VIDEO_MENU_BACKGROUND_PAUSED_STATE);
-        PlaceholderRegistry.register(VIDEO_MENU_BACKGROUND_PLAYTIME);
 
         //Other
         PlaceholderRegistry.register(PERCENT_RAM);

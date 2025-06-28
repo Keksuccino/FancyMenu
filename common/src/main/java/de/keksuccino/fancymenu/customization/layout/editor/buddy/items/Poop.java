@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.layout.editor.buddy.items;
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import net.minecraft.client.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 
 /**

@@ -1,10 +1,10 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy.gui;
 
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

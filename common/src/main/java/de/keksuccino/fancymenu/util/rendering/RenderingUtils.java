@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
+import com.mojang.math.Matrix4f;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinMinecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.gui.MatrixUtils;
@@ -15,7 +16,6 @@ import net.minecraft.util.Mth;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import java.awt.*;
 

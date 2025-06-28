@@ -618,15 +618,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         }
         return false;
     }
-
-    @Override
-    public void setFocused(boolean var1) {
-    }
-
-    @Override
-    public boolean isFocused() {
-        return false;
-    }
     
     public boolean isTable() {
         return (this.tableContext != null) && this.text.equals("[TABLE]");

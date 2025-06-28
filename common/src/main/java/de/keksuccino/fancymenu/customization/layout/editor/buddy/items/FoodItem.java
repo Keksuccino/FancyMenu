@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy.items;
 
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.konkrete.input.MouseInput;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 
 /**
