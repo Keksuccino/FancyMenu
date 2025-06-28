@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.element.ElementRegistry;
 import de.keksuccino.fancymenu.customization.element.elements.animationcontroller.AnimationControllerElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.audio.AudioElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.checkbox.CheckboxElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.cursor.CursorElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.dragger.DraggerElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.image.ImageElementBuilder;
@@ -18,13 +19,16 @@ import de.keksuccino.fancymenu.customization.element.elements.splash.SplashTextE
 import de.keksuccino.fancymenu.customization.element.elements.ticker.TickerElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.text.v2.TextElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.slider.v2.SliderElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.tooltip.TooltipElementBuilder;
 
 public class Elements {
 
     public static final ButtonElementBuilder BUTTON = new ButtonElementBuilder();
     public static final InputFieldElementBuilder INPUT_FIELD = new InputFieldElementBuilder();
     public static final SliderElementBuilder SLIDER_V2 = new SliderElementBuilder();
+    public static final CheckboxElementBuilder CHECKBOX = new CheckboxElementBuilder();
     public static final TextElementBuilder TEXT_V2 = new TextElementBuilder();
+    public static final TooltipElementBuilder TOOLTIP = new TooltipElementBuilder();
     public static final TickerElementBuilder TICKER = new TickerElementBuilder();
     public static final PlayerEntityElementBuilder PLAYER_ENTITY = new PlayerEntityElementBuilder();
     public static final ImageElementBuilder IMAGE = new ImageElementBuilder();
@@ -44,7 +48,9 @@ public class Elements {
         ElementRegistry.register(BUTTON);
         ElementRegistry.register(INPUT_FIELD);
         ElementRegistry.register(SLIDER_V2);
+        ElementRegistry.register(CHECKBOX);
         ElementRegistry.register(TEXT_V2);
+        ElementRegistry.register(TOOLTIP);
         ElementRegistry.register(TICKER);
         ElementRegistry.register(PLAYER_ENTITY);
         ElementRegistry.register(IMAGE);

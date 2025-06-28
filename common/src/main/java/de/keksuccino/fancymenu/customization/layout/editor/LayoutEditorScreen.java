@@ -18,7 +18,7 @@ import de.keksuccino.fancymenu.customization.layer.ElementFactory;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddyWidget;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.BuddyWidget;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.LayoutEditorWidgetRegistry;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
@@ -56,13 +56,14 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
-
 import java.util.*;
 
 @SuppressWarnings("all")
 public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 
 	private static final Logger LOGGER = LogManager.getLogger();
+
+	public static final boolean FORCE_DISABLE_BUDDY = true;
 
 	protected static final Map<SerializedElement, ElementBuilder<?,?>> COPIED_ELEMENTS_CLIPBOARD = new LinkedHashMap<>();
 	public static final int ELEMENT_DRAG_CRUMPLE_ZONE = 5;
@@ -96,7 +97,8 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 	protected LayoutEditorHistory.Snapshot preDragElementSnapshot;
 	public final List<WidgetMeta> cachedVanillaWidgetMetas = new ArrayList<>();
 	public boolean unsavedChanges = false;
-	protected final TamagotchiBuddyWidget tamagotchiBuddyWidget = new TamagotchiBuddyWidget(0, 0);
+	protected final BuddyWidget buddyWidget = new BuddyWidget(0, 0);
+	public boolean justOpened = true;
 
 	public LayoutEditorScreen(@NotNull Layout layout) {
 		this(null, layout);
@@ -120,6 +122,10 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 
 		//Load all element instances before init, so the layout instance elements don't get wiped when updating it
 		this.constructElementInstances();
+
+		this.getAllElements().forEach(element -> {
+			element.element._onOpenScreen();
+		});
 
 	}
 
@@ -189,14 +195,31 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 			this.height = m.getGuiScaledHeight();
 		}
 
+		this.getAllElements().forEach(element -> {
+			if (!this.justOpened) element.element.onBeforeResizeScreen();
+			element.element.onDestroyElement();
+		});
+
+		if (this.justOpened) this.layout.menuBackgrounds.forEach(MenuBackground::onOpenScreen);
+
+		if (!this.justOpened) this.layout.menuBackgrounds.forEach(MenuBackground::onBeforeResizeScreen);
+
 		this.constructElementInstances();
+
+		if (!this.justOpened) this.layout.menuBackgrounds.forEach(MenuBackground::onAfterResizeScreen);
+
+		this.layout.menuBackgrounds.forEach(MenuBackground::onAfterEnable);
 
 		for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
 			w.refresh();
 		}
 
-//		this.addWidget(this.tamagotchiBuddyWidget);
-//		this.tamagotchiBuddyWidget.setScreenSize(this.width, this.height);
+		if (FancyMenu.getOptions().enableBuddy.getValue() && !FORCE_DISABLE_BUDDY) {
+			this.addWidget(this.buddyWidget);
+			this.buddyWidget.setScreenSize(this.width, this.height);
+		}
+
+		this.justOpened = false;
 
 	}
 
@@ -208,7 +231,9 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 	@Override
 	public void tick() {
 
-//		this.tamagotchiBuddyWidget.tick();
+		if (FancyMenu.getOptions().enableBuddy.getValue() && !FORCE_DISABLE_BUDDY) {
+			this.buddyWidget.tick();
+		}
 
 		for (AbstractLayoutEditorWidget w : this.layoutEditorWidgets) {
 			w.tick();
@@ -219,28 +244,6 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 		}
 
 		this.layout.menuBackgrounds.forEach(MenuBackground::tick);
-
-	}
-
-	@Override
-	public void removed() {
-
-		for (AbstractEditorElement e : this.getAllElements()) {
-			e.element.onCloseScreen(null, null);
-			e.element.onCloseScreen();
-		}
-
-		this.layout.menuBackgrounds.forEach(MenuBackground::onCloseScreen);
-
-	}
-
-	public void added() {
-
-		for (AbstractEditorElement e : this.getAllElements()) {
-			e.element._onOpenScreen();
-		}
-
-		this.layout.menuBackgrounds.forEach(MenuBackground::onOpenScreen);
 
 	}
 
@@ -262,7 +265,9 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 
 		this.renderLayoutEditorWidgets(graphics, mouseX, mouseY, partial);
 
-//		this.tamagotchiBuddyWidget.render(graphics, mouseX, mouseY, partial);
+		if (FancyMenu.getOptions().enableBuddy.getValue() && !FORCE_DISABLE_BUDDY) {
+			this.buddyWidget.render(graphics, mouseX, mouseY, partial);
+		}
 
 		this.menuBar.render(graphics, mouseX, mouseY, partial);
 
@@ -1027,7 +1032,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 	@Nullable
 	protected AbstractEditorElement getChildElementOf(@NotNull AbstractEditorElement element) {
 		for (AbstractEditorElement e : this.getAllElements()) {
-			String parentOfE = e.element.anchorPointElementIdentifier;
+			String parentOfE = e.element.getAnchorPointElementIdentifier();
 			if ((parentOfE != null) && parentOfE.equals(element.element.getInstanceIdentifier())) return e;
 		}
 		return null;
@@ -1234,6 +1239,14 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 	}
 
 	@Override
+	public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaY) {
+		if (FancyMenu.getOptions().enableBuddy.getValue() && !FORCE_DISABLE_BUDDY) {
+			return this.buddyWidget.mouseScrolled(mouseX, mouseY, scrollDeltaY);
+		}
+		return false;
+	}
+
+	@Override
 	public boolean keyPressed(int keycode, int scancode, int modifiers) {
 
 		this.anchorPointOverlay.keyPressed(keycode, scancode, modifiers);
@@ -1346,7 +1359,14 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 
 	public void closeEditor() {
 		this.saveWidgetSettings();
-		this.tamagotchiBuddyWidget.cleanup();
+		this.buddyWidget.cleanup();
+		this.getAllElements().forEach(element -> {
+			element.element.onDestroyElement();
+			element.element.onCloseScreen(null, null);
+			element.element.onCloseScreen();
+		});
+		this.layout.menuBackgrounds.forEach(menuBackground -> menuBackground.onCloseScreen(null, null));
+		this.layout.menuBackgrounds.forEach(MenuBackground::onCloseScreen);
 		currentInstance = null;
 		if (this.layoutTargetScreen != null) {
 			Minecraft.getInstance().setScreen(new GenericDirtMessageScreen(Components.literal("Closing editor..")));

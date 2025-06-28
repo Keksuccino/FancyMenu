@@ -171,6 +171,52 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
 
         element.markdownRenderer.setParseMarkdown(deserializeBoolean(true, serialized.getValue("parse_markdown")));
 
+        // Table properties
+        String tableShowHeader = serialized.getValue("table_show_header");
+        if (tableShowHeader != null) {
+            element.markdownRenderer.setTableShowHeader(deserializeBoolean(true, tableShowHeader));
+        }
+
+        String tableAlternateRowColors = serialized.getValue("table_alternate_row_colors");
+        if (tableAlternateRowColors != null) {
+            element.markdownRenderer.setTableAlternateRowColors(deserializeBoolean(true, tableAlternateRowColors));
+        }
+
+        String tableLineColor = serialized.getValue("table_line_color");
+        if (tableLineColor != null) {
+            element.markdownRenderer.setTableLineColor(DrawableColor.of(tableLineColor));
+        }
+
+        String tableHeaderBackgroundColor = serialized.getValue("table_header_background_color");
+        if (tableHeaderBackgroundColor != null) {
+            element.markdownRenderer.setTableHeaderBackgroundColor(DrawableColor.of(tableHeaderBackgroundColor));
+        }
+
+        String tableRowBackgroundColor = serialized.getValue("table_row_background_color");
+        if (tableRowBackgroundColor != null) {
+            element.markdownRenderer.setTableRowBackgroundColor(DrawableColor.of(tableRowBackgroundColor));
+        }
+
+        String tableAlternateRowColor = serialized.getValue("table_alternate_row_color");
+        if (tableAlternateRowColor != null) {
+            element.markdownRenderer.setTableAlternateRowColor(DrawableColor.of(tableAlternateRowColor));
+        }
+
+        String tableLineThickness = serialized.getValue("table_line_thickness");
+        if ((tableLineThickness != null) && MathUtils.isFloat(tableLineThickness)) {
+            element.markdownRenderer.setTableLineThickness(Float.parseFloat(tableLineThickness));
+        }
+
+        String tableCellPadding = serialized.getValue("table_cell_padding");
+        if ((tableCellPadding != null) && MathUtils.isFloat(tableCellPadding)) {
+            element.markdownRenderer.setTableCellPadding(Float.parseFloat(tableCellPadding));
+        }
+
+        String tableMargin = serialized.getValue("table_margin");
+        if ((tableMargin != null) && MathUtils.isFloat(tableMargin)) {
+            element.markdownRenderer.setTableMargin(Float.parseFloat(tableMargin));
+        }
+
         element.markdownRenderer.refreshRenderer();
 
         element.setSource(element.sourceMode, element.source);
@@ -232,6 +278,17 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
         serializeTo.putProperty("bullet_list_spacing", "" + element.markdownRenderer.getBulletListSpacing());
 
         serializeTo.putProperty("parse_markdown", "" + element.markdownRenderer.isParseMarkdown());
+
+        // Table properties
+        serializeTo.putProperty("table_show_header", "" + element.markdownRenderer.isTableShowHeader());
+        serializeTo.putProperty("table_alternate_row_colors", "" + element.markdownRenderer.isTableAlternateRowColors());
+        serializeTo.putProperty("table_line_color", element.markdownRenderer.getTableLineColor().getHex());
+        serializeTo.putProperty("table_header_background_color", element.markdownRenderer.getTableHeaderBackgroundColor().getHex());
+        serializeTo.putProperty("table_row_background_color", element.markdownRenderer.getTableRowBackgroundColor().getHex());
+        serializeTo.putProperty("table_alternate_row_color", element.markdownRenderer.getTableAlternateRowColor().getHex());
+        serializeTo.putProperty("table_line_thickness", "" + element.markdownRenderer.getTableLineThickness());
+        serializeTo.putProperty("table_cell_padding", "" + element.markdownRenderer.getTableCellPadding());
+        serializeTo.putProperty("table_margin", "" + element.markdownRenderer.getTableMargin());
 
         return serializeTo;
         

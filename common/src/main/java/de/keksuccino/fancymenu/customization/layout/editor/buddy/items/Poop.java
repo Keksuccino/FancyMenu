@@ -1,12 +1,10 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy.items;
 
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddy;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
-
-import java.awt.*;
 
 /**
  * Represents a poop object that appears after the buddy poops.
@@ -28,9 +26,9 @@ public class Poop {
     public float relativeY; // Position as percentage of screen height (NEW - replaces groundLevel)
     
     // Reference to the buddy
-    public final TamagotchiBuddy buddy;
+    public final Buddy buddy;
 
-    public Poop(int x, int y, TamagotchiBuddy buddy) {
+    public Poop(int x, int y, Buddy buddy) {
         this.x = x;
         this.y = y;
         this.buddy = buddy;
@@ -60,9 +58,7 @@ public class Poop {
             // Fade out during cleaning animation
             float alpha = 1.0f - (cleaningAnimation / (float)CLEANING_DURATION);
             int color = (int)(alpha * 255) << 24 | 0xFFFFFF;
-
-            DrawableColor.of(new Color(color)).setAsShaderColor(graphics);
-
+            DrawableColor.of(color).setAsShaderColor(graphics);
             graphics.blit(
                 TEXTURE_POOP,
                 x - size/2, y - size/2,
@@ -70,9 +66,7 @@ public class Poop {
                 size, size,
                 size, size
             );
-
             RenderingUtils.resetShaderColor(graphics);
-
         } else {
             graphics.blit(
                 TEXTURE_POOP,

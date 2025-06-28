@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.background.ChooseMenuBackgroundScreen;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
@@ -312,6 +313,15 @@ public class LayoutEditorUI {
 						0.0D, 1.0D, consumes -> Components.translatable("fancymenu.editor.anchor_overlay.opacity_busy.slider_label", ((int)(consumes * 100.0D)) + "%"))
 				.setIsActiveSupplier((menu, entry) -> !FancyMenu.getOptions().invertAnchorOverlayColor.getValue());
 
+		windowMenu.addSeparatorEntry("separator_after_anchor_overlay_opacity");
+
+		if (!LayoutEditorScreen.FORCE_DISABLE_BUDDY) {
+			windowMenu.addValueCycleEntry("toggle_buddy", CommonCycles.cycleEnabledDisabled("fancymenu.editor.buddy.enable", FancyMenu.getOptions().enableBuddy.getValue()).addCycleListener(cycleEnabledDisabled -> {
+				FancyMenu.getOptions().enableBuddy.setValue(cycleEnabledDisabled.getAsBoolean());
+				ScreenCustomization.reInitCurrentScreen();
+			})).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.buddy.enable.desc")));
+		}
+
 		//USER INTERFACE
 		CustomizationOverlayUI.buildUITabAndAddTo(menuBar);
 
@@ -459,9 +469,11 @@ public class LayoutEditorUI {
 						if (call != null) {
 							editor.history.saveSnapshot();
 							MenuBackground b = (call != ChooseMenuBackgroundScreen.NO_BACKGROUND) ? call : null;
+							editor.layout.menuBackgrounds.forEach(MenuBackground::onDisableOrRemove);
 							editor.layout.menuBackgrounds.clear();
 							if (b != null) {
 								editor.layout.menuBackgrounds.add(b);
+								b.onOpenScreen();
 							}
 						}
 						Minecraft.getInstance().setScreen(editor);
@@ -474,6 +486,27 @@ public class LayoutEditorUI {
 			editor.history.saveSnapshot();
 			editor.layout.preserveBackgroundAspectRatio = cycle.getAsBoolean();
 		})).setIcon(ContextMenu.IconFactory.getIcon("aspect_ratio"));
+
+		menu.addValueCycleEntry("show_overlay_on_custom_background", CommonCycles.cycleEnabledDisabled("fancymenu.editor.background.show_overlay_on_custom_background", editor.layout.showScreenBackgroundOverlayOnCustomBackground).addCycleListener(cycle -> {
+			editor.history.saveSnapshot();
+			editor.layout.showScreenBackgroundOverlayOnCustomBackground = cycle.getAsBoolean();
+		})).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.background.show_overlay_on_custom_background.desc")));
+
+		menu.addValueCycleEntry("apply_vanilla_background_blur", CommonCycles.cycleEnabledDisabled("fancymenu.editor.background.blur_background", editor.layout.applyVanillaBackgroundBlur).addCycleListener(cycle -> {
+			editor.history.saveSnapshot();
+			editor.layout.applyVanillaBackgroundBlur = cycle.getAsBoolean();
+		})).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.background.blur_background.desc")));
+
+		menu.addClickableEntry("copy_background_identifier", Component.translatable("fancymenu.editor.background_options.copy_background_identifier"), (menu1, entry) -> {
+			if (!editor.layout.menuBackgrounds.isEmpty()) {
+				Minecraft.getInstance().keyboardHandler.setClipboard(editor.layout.menuBackgrounds.get(0).getInstanceIdentifier());
+			} else {
+				Minecraft.getInstance().keyboardHandler.setClipboard("");
+			}
+		}).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.background_options.copy_background_identifier.desc")))
+				.addIsActiveSupplier((menu1, entry) -> !editor.layout.menuBackgrounds.isEmpty());
+
+		menu.addSeparatorEntry("separator_after_keep_background_aspect");
 
 		if ((editor.layoutTargetScreen != null) && !editor.layout.isUniversalLayout()) {
 
@@ -872,7 +905,7 @@ public class LayoutEditorUI {
 					displayUnsavedWarning(editor, call -> {
 						if (call) {
 							editor.saveWidgetSettings();
-							editor.tamagotchiBuddyWidget.cleanup();
+							editor.buddyWidget.cleanup();
 							Minecraft.getInstance().setScreen(new ManageLayoutsScreen(LayoutHandler.getAllLayoutsForScreenIdentifier(Layout.UNIVERSAL_LAYOUT_IDENTIFIER, true), editor.layoutTargetScreen, layouts -> {
 								Minecraft.getInstance().setScreen(editor);
 							}));

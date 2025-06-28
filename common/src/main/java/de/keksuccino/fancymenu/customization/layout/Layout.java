@@ -858,7 +858,7 @@ public class Layout extends LayoutBase {
                         }
                     }
 
-                    element.anchorPointElementIdentifier = sec.getValue("orientation_element");
+                    element.setAnchorPointElementIdentifier(sec.getValue("orientation_element"));
 
                 }
 

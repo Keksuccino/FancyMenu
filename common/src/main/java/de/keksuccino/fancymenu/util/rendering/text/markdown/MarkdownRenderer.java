@@ -32,6 +32,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     private static final String NEWLINE_PERCENT = "%n%";
     private static final String NEWLINE = "\n";
     private static final String NEWLINE_R = "\r";
+    private static final String NEWLINE_ESCAPED = "\\n";
     private static final String EMPTY_STRING = "";
     private static final String HTML_BREAK = "<br>";
 
@@ -82,6 +83,19 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     protected Float parentRenderScale = null;
     @NotNull
     protected Font font = Minecraft.getInstance().font;
+    @NotNull
+    protected DrawableColor tableLineColor = DrawableColor.of(new Color(120, 120, 120));
+    @NotNull
+    protected DrawableColor tableHeaderBackgroundColor = DrawableColor.of(new Color(50, 50, 50));
+    @NotNull
+    protected DrawableColor tableRowBackgroundColor = DrawableColor.of(new Color(40, 40, 40));
+    @NotNull
+    protected DrawableColor tableAlternateRowColor = DrawableColor.of(new Color(60, 60, 60));
+    protected float tableLineThickness = 1.0f;
+    protected float tableCellPadding = 8.0f;
+    protected float tableMargin = 4.0f;
+    protected boolean tableAlternateRowColors = true;
+    protected boolean tableShowHeader = true;
     protected boolean dragging;
     protected final List<MarkdownTextLine> lines = new ArrayList<>();
     protected final List<MarkdownTextFragment> fragments = new ArrayList<>();
@@ -180,6 +194,42 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
             f.autoLineBreakAfter = false;
 
+            // Tables should always be on their own line
+            if (f.isTable()) {
+                // If there's content on the current line, finish it
+                if (!isStartOfLine && !line.fragments.isEmpty()) {
+                    line.prepareLine();
+                    this.lines.add(line);
+                    line = new MarkdownTextLine(this);
+                    totalHeight += currentLineHeight + this.lineSpacing;
+                    currentLineHeight = 0;
+                    currentLineWidth = this.border;
+                }
+                
+                // Add table as its own line
+                line.fragments.add(f);
+                f.startOfRenderLine = true;
+                line.offsetX = this.border;
+                line.offsetY = totalHeight;
+                line.prepareLine();
+                this.lines.add(line);
+                
+                // Update dimensions
+                float tableWidth = f.getRenderWidth() + this.border + this.border;
+                if (totalWidth < tableWidth) {
+                    totalWidth = tableWidth;
+                }
+                float tableHeight = f.getRenderHeight();
+                totalHeight += tableHeight + this.lineSpacing;
+                
+                // Reset for next line
+                line = new MarkdownTextLine(this);
+                currentLineHeight = 0;
+                currentLineWidth = this.border;
+                queueNewLine = true;
+                continue;
+            }
+
             //Handle Auto Line Break
             if (!isStartOfLine && this.isAutoLineBreakingEnabled()) {
                 f.startOfRenderLine = false;
@@ -230,7 +280,8 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
         }
 
-        if (this.lines.isEmpty()) {
+        if (this.lines.isEmpty() || !line.fragments.isEmpty()) {
+            line.prepareLine();
             this.lines.add(line);
         }
 
@@ -241,6 +292,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
         String t = PlaceholderParser.replacePlaceholders(this.text);
         t = StringUtils.replace(t, NEWLINE_PERCENT, NEWLINE);
         t = StringUtils.replace(t, NEWLINE_R, NEWLINE);
+        t = StringUtils.replace(t, NEWLINE_ESCAPED, NEWLINE);
         if (this.removeHtmlBreaks) t = StringUtils.replace(t, HTML_BREAK, EMPTY_STRING);
         return t;
     }
@@ -538,6 +590,92 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     public MarkdownRenderer setBorder(float border) {
         this.border = border;
         this.refreshRenderer();
+        return this;
+    }
+
+    @NotNull
+    public DrawableColor getTableLineColor() {
+        return this.tableLineColor;
+    }
+
+    public MarkdownRenderer setTableLineColor(@NotNull DrawableColor tableLineColor) {
+        this.tableLineColor = tableLineColor;
+        return this;
+    }
+
+    @NotNull
+    public DrawableColor getTableHeaderBackgroundColor() {
+        return this.tableHeaderBackgroundColor;
+    }
+
+    public MarkdownRenderer setTableHeaderBackgroundColor(@NotNull DrawableColor tableHeaderBackgroundColor) {
+        this.tableHeaderBackgroundColor = tableHeaderBackgroundColor;
+        return this;
+    }
+
+    @NotNull
+    public DrawableColor getTableRowBackgroundColor() {
+        return this.tableRowBackgroundColor;
+    }
+
+    public MarkdownRenderer setTableRowBackgroundColor(@NotNull DrawableColor tableRowBackgroundColor) {
+        this.tableRowBackgroundColor = tableRowBackgroundColor;
+        return this;
+    }
+
+    @NotNull
+    public DrawableColor getTableAlternateRowColor() {
+        return this.tableAlternateRowColor;
+    }
+
+    public MarkdownRenderer setTableAlternateRowColor(@NotNull DrawableColor tableAlternateRowColor) {
+        this.tableAlternateRowColor = tableAlternateRowColor;
+        return this;
+    }
+
+    public float getTableLineThickness() {
+        return this.tableLineThickness;
+    }
+
+    public MarkdownRenderer setTableLineThickness(float tableLineThickness) {
+        this.tableLineThickness = tableLineThickness;
+        return this;
+    }
+
+    public float getTableCellPadding() {
+        return this.tableCellPadding;
+    }
+
+    public MarkdownRenderer setTableCellPadding(float tableCellPadding) {
+        this.tableCellPadding = tableCellPadding;
+        this.refreshRenderer();
+        return this;
+    }
+
+    public boolean isTableAlternateRowColors() {
+        return this.tableAlternateRowColors;
+    }
+
+    public MarkdownRenderer setTableAlternateRowColors(boolean tableAlternateRowColors) {
+        this.tableAlternateRowColors = tableAlternateRowColors;
+        return this;
+    }
+
+    public boolean isTableShowHeader() {
+        return this.tableShowHeader;
+    }
+
+    public MarkdownRenderer setTableShowHeader(boolean tableShowHeader) {
+        this.tableShowHeader = tableShowHeader;
+        return this;
+    }
+
+    public float getTableMargin() {
+        return this.tableMargin;
+    }
+
+    public MarkdownRenderer setTableMargin(float tableMargin) {
+        this.tableMargin = tableMargin;
         return this;
     }
 

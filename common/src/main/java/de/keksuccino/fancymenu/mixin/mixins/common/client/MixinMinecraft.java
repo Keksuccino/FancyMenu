@@ -4,10 +4,12 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.WelcomeScreen;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.events.screen.*;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.preload.ResourcePreLoader;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
@@ -101,7 +103,22 @@ public class MixinMinecraft {
 	}
 
 	@Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
-	private void headSetScreenFancyMenu(Screen screen, CallbackInfo info) {
+	private void before_setScreen_FancyMenu(Screen screen, CallbackInfo info) {
+
+		if ((Minecraft.getInstance().screen instanceof LayoutEditorScreen e) && !(screen instanceof LayoutEditorScreen)) {
+			e.layout.menuBackgrounds.forEach(menuBackground -> {
+				menuBackground.onCloseScreen(e, screen);
+				menuBackground.onDisableOrRemove();
+			});
+			e.getAllElements().forEach(element -> {
+				element.element.onCloseScreen(e, screen);
+				element.element.onDestroyElement();
+			});
+		}
+
+		if (screen instanceof LayoutEditorScreen e) {
+			e.justOpened = true;
+		}
 
 		this.lastScreen_FancyMenu = this.screen;
 
@@ -154,6 +171,7 @@ public class MixinMinecraft {
 	@Inject(method = "setScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;updateTitle()V"))
 	private void afterInitCurrentScreenFancyMenu(Screen screen, CallbackInfo info) {
 		if (screen != null) {
+			ScrollScreenNormalizer.normalizeScrollableScreen(screen);
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(screen, InitOrResizeScreenEvent.InitializationPhase.INIT));
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(screen, InitOrResizeScreenEvent.InitializationPhase.INIT));
 			EventHandler.INSTANCE.postEvent(new OpenScreenPostInitEvent(screen));
@@ -184,6 +202,7 @@ public class MixinMinecraft {
 	@Inject(method = "resizeDisplay", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;getMainRenderTarget()Lcom/mojang/blaze3d/pipeline/RenderTarget;"))
 	private void afterResizeCurrentScreenFancyMenu(CallbackInfo info) {
 		if (this.screen != null) {
+			ScrollScreenNormalizer.normalizeScrollableScreen(this.screen);
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(this.screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
 			EventHandler.INSTANCE.postEvent(new InitOrResizeScreenCompletedEvent(this.screen, InitOrResizeScreenEvent.InitializationPhase.RESIZE));
 		}

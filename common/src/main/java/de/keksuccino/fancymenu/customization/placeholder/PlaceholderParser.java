@@ -1,6 +1,5 @@
-
-//Copyright (c) 2022-2023 Keksuccino.
-//This code is licensed under DSMSLv2.
+//Copyright (c) 2022-2025 Keksuccino.
+//This code is licensed under DSMSLv3.
 //For more information about the license, see this: https://github.com/Keksuccino/FancyMenu/blob/master/LICENSE.md
 
 package de.keksuccino.fancymenu.customization.placeholder;
@@ -32,7 +31,7 @@ public class PlaceholderParser {
     private static final HashSet<String> TOO_LONG_TO_PARSE = new HashSet<>();
     private static final HashMap<String, Boolean> CONTAINS_PLACEHOLDERS = new HashMap<>();
     private static final HashMap<String, Pair<String, Long>> PLACEHOLDER_CACHE = new HashMap<>();
-    private static final Long PLACEHOLDER_CACHE_DURATION_MS = 30L;
+    private static final Long PLACEHOLDER_CACHE_DURATION_MS = 150L;
 
     private static final int MAX_TEXT_LENGTH = 17000;
     private static final String PLACEHOLDER_PREFIX = "{\"placeholder\":\"";
@@ -47,10 +46,18 @@ public class PlaceholderParser {
     private static final char APOSTROPHE_CHAR = '\"';
     private static final char NEWLINE_CHAR = '\n';
     private static final char BACKSLASH_CHAR = '\\';
+    private static final char SPACE_CHAR = ' ';
+    private static final char TAB_CHAR = '\t';
+    private static final char CARRIAGE_RETURN_CHAR = '\r';
+    private static final char COLON_CHAR = ':';
+    private static final char COMMA_CHAR = ',';
+    private static final char PERCENT_CHAR = '%';
+    private static final char LOWERCASE_N_CHAR = 'n';
     private static final String BACKSLASH = "\\";
     private static final String COMMA = ",";
     private static final String COMMA_WRAPPED_IN_APOSTROPHES = "\",\"";
     private static final String COLON_WRAPPED_IN_APOSTROPHES = "\":\"";
+    private static final String PERCENT_NEWLINE_CODE = "%n%";
     private static final String TOO_LONG_TO_PARSE_LOCALIZATION = "fancymenu.placeholders.error.text_too_long";
 
     /**
@@ -63,7 +70,7 @@ public class PlaceholderParser {
     public static boolean containsPlaceholders(@Nullable String in, boolean checkForVariableReferences, boolean checkForFormattingCodes) {
         if (in == null) return false;
         if (in.length() <= 2) return false;
-        if (StringUtils.contains(in, PLACEHOLDER_PREFIX)) return true;
+        if (StringUtils.contains(in, "{\"placeholder\"")) return true;
         if (checkForFormattingCodes && (in.hashCode() != TextFormattingUtils.replaceFormattingCodes(in, FORMATTING_PREFIX_AND, FORMATTING_PREFIX_PARAGRAPH).hashCode())) return true;
         if (checkForVariableReferences && (in.hashCode() != replaceVariableReferences(in).hashCode())) return true;
         return false;
@@ -183,16 +190,32 @@ public class PlaceholderParser {
     public static List<ParsedPlaceholder> findPlaceholders(@Nullable String in, @NotNull HashMap<String, String> parsed, boolean replaceFormattingCodes) {
         List<ParsedPlaceholder> placeholders = new ArrayList<>();
         if (in == null) return placeholders;
-        int index = -1;
-        for (char c : in.toCharArray()) {
-            index++;
-            if (c == OPEN_CURLY_BRACKETS_CHAR) {
-                String sub = StringUtils.substring(in, index);
-                if (StringUtils.startsWith(sub, PLACEHOLDER_PREFIX)) {
-                    int endIndex = findPlaceholderEndIndex(sub, index);
-                    if (endIndex != -1) {
-                        endIndex++; //so the sub string ends AFTER the placeholder
-                        placeholders.add(new ParsedPlaceholder(StringUtils.substring(in, index, endIndex), index, endIndex, parsed, replaceFormattingCodes));
+
+        for (int i = 0; i < in.length(); i++) {
+            if (in.charAt(i) == OPEN_CURLY_BRACKETS_CHAR) {
+                // Found a potential start of a JSON object.
+                // Let's find its corresponding closing bracket.
+                String sub = StringUtils.substring(in, i);
+                int endIndex = findPlaceholderEndIndex(sub, i); // Returns absolute index in 'in'
+
+                if (endIndex != -1) {
+                    // We found a matching '}' for the '{' at 'i'.
+                    // This block is a candidate for being a placeholder.
+                    String candidate = StringUtils.substring(in, i, endIndex + 1);
+
+                    // To check if it's a real placeholder, we normalize it and check the prefix.
+                    // This handles multi-line and whitespace variations.
+                    String normalized = normalizePlaceholderString(candidate);
+
+                    if (normalized.startsWith(PLACEHOLDER_PREFIX)) {
+                        // It's a valid placeholder. Add it to our list.
+                        // Note: We use the original 'candidate' string for the object,
+                        // as that's what exists in the input string 'in'.
+                        placeholders.add(new ParsedPlaceholder(candidate, i, endIndex + 1, parsed, replaceFormattingCodes));
+
+                        // Advance the loop counter past this placeholder to avoid
+                        // parsing its contents as separate, new placeholders.
+                        i = endIndex;
                     }
                 }
             }
@@ -206,7 +229,6 @@ public class PlaceholderParser {
         boolean backslash = false;
         for (char c : placeholderStartSubString.toCharArray()) {
             if (currentIndex != startIndex) { //skip first char
-                if (c == NEWLINE_CHAR) return -1;
                 if ((c == OPEN_CURLY_BRACKETS_CHAR) && !backslash) {
                     depth++;
                 } else if ((c == CLOSE_CURLY_BRACKETS_CHAR) && !backslash) {
@@ -221,6 +243,73 @@ public class PlaceholderParser {
             currentIndex++;
         }
         return -1;
+    }
+
+    /**
+     * Normalizes a placeholder string by removing unnecessary whitespace while preserving quoted content.
+     * This allows multi-line placeholders to be parsed correctly.
+     */
+    @NotNull
+    private static String normalizePlaceholderString(@NotNull String placeholderString) {
+        StringBuilder result = new StringBuilder(placeholderString.length());
+        boolean inQuotes = false;
+        boolean isEscaped = false;
+
+        for (int i = 0; i < placeholderString.length(); i++) {
+            char c = placeholderString.charAt(i);
+
+            // Handle %n% first, as it's a multi-char sequence that can appear inside or outside quotes
+            if (!isEscaped && i + 2 < placeholderString.length() &&
+                    c == PERCENT_CHAR &&
+                    placeholderString.charAt(i+1) == LOWERCASE_N_CHAR &&
+                    placeholderString.charAt(i+2) == PERCENT_CHAR) {
+
+                if (inQuotes) {
+                    // Inside quotes, the code should be preserved.
+                    result.append(PERCENT_NEWLINE_CODE);
+                }
+                // If not in quotes, it's treated as whitespace, so we do nothing and just skip it.
+                i += 2;
+                continue;
+            }
+
+            if (isEscaped) {
+                // The previous character was a backslash, so append both it and the current character.
+                result.append(BACKSLASH_CHAR);
+                result.append(c);
+                isEscaped = false;
+                continue;
+            }
+
+            if (c == BACKSLASH_CHAR) {
+                // This is an escape character. Set the flag and wait for the next character.
+                isEscaped = true;
+                continue;
+            }
+
+            if (c == APOSTROPHE_CHAR) {
+                // Toggles the in/out of quotes state.
+                inQuotes = !inQuotes;
+                result.append(c);
+                continue;
+            }
+
+            if (inQuotes) {
+                // If we are inside quotes, append every character as is.
+                result.append(c);
+            } else {
+                // If we are outside quotes, only append non-whitespace characters.
+                if (!isWhitespace(c)) {
+                    result.append(c);
+                }
+            }
+        }
+
+        return result.toString();
+    }
+
+    private static boolean isWhitespace(char c) {
+        return c == SPACE_CHAR || c == TAB_CHAR || c == NEWLINE_CHAR || c == CARRIAGE_RETURN_CHAR;
     }
 
     @NotNull
@@ -273,6 +362,7 @@ public class PlaceholderParser {
         private boolean identifierFailed = false;
         private Placeholder placeholder;
         private boolean placeholderFailed = false;
+        private String normalizedString;
 
         protected ParsedPlaceholder(@NotNull String placeholderString, int startIndex, int endIndex, @NotNull HashMap<String, String> parsed, boolean replaceFormattingCodes) {
             this.placeholderString = placeholderString;
@@ -282,13 +372,31 @@ public class PlaceholderParser {
             this.replaceFormattingCodes = replaceFormattingCodes;
         }
 
+        /**
+         * Gets the normalized version of the placeholder string with whitespace cleaned up.
+         */
+        @NotNull
+        private String getNormalizedString() {
+            if (this.normalizedString == null) {
+                this.normalizedString = normalizePlaceholderString(this.placeholderString);
+            }
+            return this.normalizedString;
+        }
+
         @Nullable
         public String getIdentifier() {
             if (this.identifierFailed) return null;
             if (this.identifier != null) return this.identifier;
             try {
-                this.identifier = StringUtils.split(StringUtils.substring(this.placeholderString, PLACEHOLDER_PREFIX.length()), APOSTROPHE, 2)[0];
-                return this.identifier;
+                String normalized = this.getNormalizedString();
+                // Remove the prefix to get the rest
+                String afterPrefix = StringUtils.substring(normalized, PLACEHOLDER_PREFIX.length());
+                // Find the closing quote for the identifier
+                int endQuoteIndex = afterPrefix.indexOf(APOSTROPHE_CHAR);
+                if (endQuoteIndex > 0) {
+                    this.identifier = afterPrefix.substring(0, endQuoteIndex);
+                    return this.identifier;
+                }
             } catch (Exception ex) {
                 logError("[FANCYMENU] Failed to parse identifier of placeholder: " + this.placeholderString, ex);
                 this.identifierFailed = true;
@@ -321,7 +429,16 @@ public class PlaceholderParser {
                 if ((placeholder == null) || !this.hasValues()) {
                     return null;
                 }
-                String valueString = COMMA + StringUtils.split(this.placeholderString, COMMA, 2)[1];
+                String normalized = this.getNormalizedString();
+                // Check if there's actually a comma (indicating values section exists)
+                if (!normalized.contains(COMMA)) {
+                    return null;
+                }
+                String[] parts = StringUtils.split(normalized, COMMA, 2);
+                if (parts.length < 2) {
+                    return null;
+                }
+                String valueString = COMMA + parts[1];
                 int currentIndex = 0;
                 int inValueDepth = 0;
                 String currentValueName = null;
