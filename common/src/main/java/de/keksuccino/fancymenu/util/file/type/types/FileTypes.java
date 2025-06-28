@@ -66,10 +66,9 @@ public class FileTypes {
             FileCodec.advanced(IAudio.class, WavAudio::of, WavAudio::location, WavAudio::local, WavAudio::web),
             "audio/wav", "wav");
 
-    //TODO implement video codecs (and remove file types that have no codec)
-    public static final VideoFileType MPEG_VIDEO = new VideoFileType(FileCodec.basic(IVideo.class, consumes -> null, consumes -> null), "video/mpeg", "mpeg", "mpg");
+//    public static final VideoFileType MPEG_VIDEO = new VideoFileType(FileCodec.basic(IVideo.class, consumes -> null, consumes -> null), "video/mpeg", "mpeg", "mpg");
     public static final VideoFileType MP4_VIDEO = new VideoFileType(FileCodec.basic(IVideo.class, consumes -> null, consumes -> null), "video/mp4", "mp4");
-    public static final VideoFileType AVI_VIDEO = new VideoFileType(FileCodec.basic(IVideo.class, consumes -> null, consumes -> null), "video/x-msvideo", "avi");
+//    public static final VideoFileType AVI_VIDEO = new VideoFileType(FileCodec.basic(IVideo.class, consumes -> null, consumes -> null), "video/x-msvideo", "avi");
 
     public static final TextFileType TXT_TEXT = new TextFileType(
             FileCodec.advanced(IText.class, PlainText::of, PlainText::location, PlainText::local, PlainText::web),
@@ -119,9 +118,9 @@ public class FileTypes {
         FileTypeRegistry.register("ogg", OGG_AUDIO);
         FileTypeRegistry.register("wav", WAV_AUDIO);
 
-        FileTypeRegistry.register("mpeg", MPEG_VIDEO);
+//        FileTypeRegistry.register("mpeg", MPEG_VIDEO);
         FileTypeRegistry.register("mp4", MP4_VIDEO);
-        FileTypeRegistry.register("avi", AVI_VIDEO);
+//        FileTypeRegistry.register("avi", AVI_VIDEO);
 
         FileTypeRegistry.register("txt", TXT_TEXT);
         FileTypeRegistry.register("markdown", MARKDOWN_TEXT);

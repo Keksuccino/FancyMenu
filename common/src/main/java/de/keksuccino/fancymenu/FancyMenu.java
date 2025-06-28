@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.rendering.text.color.colors.TextColorFormatters;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.themes.UIColorThemes;
+import de.keksuccino.fancymenu.util.rendering.video.mcef.MCEFVideoManager;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.fancymenu.customization.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.customization.server.ServerCache;
@@ -24,7 +25,7 @@ public class FancyMenu {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	public static final String VERSION = "3.5.2";
+	public static final String VERSION = "3.6.0";
 	public static final String MOD_LOADER = Services.PLATFORM.getPlatformName();
 	public static final String MOD_ID = "fancymenu";
 
@@ -52,6 +53,11 @@ public class FancyMenu {
 		if (Services.PLATFORM.isOnClient()) {
 
 			FileTypes.registerAll();
+
+			if (MCEFUtil.isMCEFLoaded()) {
+				BrowserHandler.init();
+				MCEFVideoManager.getInstance().initialize();
+			}
 
 			UIColorThemes.registerAll();
 

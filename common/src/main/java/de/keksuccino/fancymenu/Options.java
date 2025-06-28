@@ -36,7 +36,6 @@ public class Options extends AbstractOptions {
     public final Option<Integer> layoutEditorGridSize = new Option<>(config, "layout_editor_grid_size", 10, "layout_editor");
     public final Option<Boolean> layoutEditorGridSnapping = new Option<>(config, "layout_editor_grid_snapping", true, "layout_editor");
     public final Option<Float> layoutEditorGridSnappingStrength = new Option<>(config, "layout_editor_grid_snapping_strength", 1.0f, "layout_editor");
-
     public final Option<Boolean> showAllAnchorOverlayConnections = new Option<>(config, "anchor_overlay_show_all_connection_lines", false, "layout_editor");
     public final Option<Boolean> anchorOverlayChangeAnchorOnAreaHover = new Option<>(config, "anchor_overlay_change_anchor_on_area_hover", true, "layout_editor");
     public final Option<Boolean> anchorOverlayChangeAnchorOnElementHover = new Option<>(config, "anchor_overlay_change_anchor_on_element_hover", true, "layout_editor");
@@ -47,6 +46,7 @@ public class Options extends AbstractOptions {
     public final Option<String> anchorOverlayColorBorderOverride = new Option<>(config, "anchor_overlay_color_border_override", "", "layout_editor");
     public final Option<String> anchorOverlayVisibilityMode = new Option<>(config, "anchor_overlay_visibility_mode", "dragging", "layout_editor");
     public final Option<Double> anchorOverlayHoverChargingTimeSeconds = new Option<>(config, "anchor_overlay_hover_charging_time_seconds", 2.0D, "layout_editor");
+    public final Option<Boolean> enableBuddy = new Option<>(config, "enable_buddy", true, "layout_editor");
 
     public final Option<Float> uiScale = new Option<>(config, "ui_scale", 4.0F, "ui");
     public final Option<Boolean> playUiClickSounds = new Option<>(config, "play_ui_click_sounds", true, "ui");

@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
+import de.keksuccino.fancymenu.customization.element.elements.animationcontroller.KeyframeManagerScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.AnchorPointOverlay;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
@@ -215,7 +216,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 													this.editor.history.saveSnapshot();
 													for (AbstractEditorElement e : this.editor.getSelectedElements()) {
 														if (e.settings.isAnchorPointChangeable() && e.settings.isElementAnchorPointAllowed()) {
-															e.element.anchorPointElementIdentifier = editorElement.element.getInstanceIdentifier();
+															e.element.setAnchorPointElementIdentifier(editorElement.element.getInstanceIdentifier());
 															e.element.setElementAnchorPointParent(editorElement.element);
 															e.setAnchorPoint(ElementAnchorPoints.ELEMENT, true);
 														}
@@ -231,7 +232,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 											}
 										});
 										if (!entry.getStackMeta().isPartOfStack()) {
-											s.setText(this.element.anchorPointElementIdentifier);
+											s.setText(this.element.getAnchorPointElementIdentifier());
 										}
 										Minecraft.getInstance().setScreen(s);
 										menu.closeMenu();
@@ -660,29 +661,11 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 							"fancymenu.elements.parallax")
 					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.parallax.desc")));
 
-			this.addFloatInputContextMenuEntryTo(this.rightClickMenu, "parallax_intensity", AbstractEditorElement.class,
-							consumes -> consumes.element.parallaxIntensity,
-							(abstractEditorElement, aFloat) -> abstractEditorElement.element.parallaxIntensity = aFloat,
-							Component.translatable("fancymenu.elements.parallax.intensity"), true, 0.5F,
-							consumes -> {
-								if (de.keksuccino.fancymenu.util.MathUtils.isFloat(consumes)) {
-									float f = Float.parseFloat(consumes);
-									if (f < 0.0F) return false;
-									if (f > 1.0F) return false;
-									return true;
-								}
-								return false;
-							}, consumes -> {
-								boolean valid = true;
-								if (de.keksuccino.fancymenu.util.MathUtils.isFloat(consumes)) {
-									float f = Float.parseFloat(consumes);
-									if (f < 0.0F) valid = false;
-									if (f > 1.0F) valid = false;
-								} else {
-									valid = false;
-								}
-								return !valid ? Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.parallax.intensity.invalid_value")) : null;
-							})
+			this.addStringInputContextMenuEntryTo(this.rightClickMenu, "parallax_intensity", AbstractEditorElement.class,
+							consumes -> consumes.element.parallaxIntensityString,
+							(element1, s) -> element1.element.parallaxIntensityString = s,
+							null, false, true, Component.translatable("fancymenu.elements.parallax.intensity"),
+							true, "0.5", null, null)
 					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.parallax.intensity.desc")));
 
 			this.addToggleContextMenuEntryTo(this.rightClickMenu, "invert_parallax", AbstractEditorElement.class,
@@ -797,7 +780,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 	/**
 	 * Sets the {@link ElementAnchorPoint} of the element.<br>
-	 * It is important to set {@link AbstractElement#anchorPointElementIdentifier} first before calling
+	 * It is important to set {@link AbstractElement#setAnchorPointElementIdentifier(String)} first before calling
 	 * this method, in case {@code newAnchor} is {@link ElementAnchorPoints#ELEMENT}.
 	 */
 	public void setAnchorPoint(ElementAnchorPoint newAnchor, boolean resetElementStates) {
@@ -812,14 +795,14 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 
 	/**
 	 * Sets the {@link ElementAnchorPoint} of the element.<br>
-	 * It is important to set {@link AbstractElement#anchorPointElementIdentifier} first before calling
+	 * It is important to set {@link AbstractElement#setAnchorPointElementIdentifier(String)} first before calling
 	 * this method, in case {@code newAnchor} is {@link ElementAnchorPoints#ELEMENT}.
 	 */
 	public void setAnchorPoint(ElementAnchorPoint newAnchor, int oldAbsX, int oldAbsY, boolean resetElementStates) {
 
 		if (!this.settings.isAnchorPointChangeable()) return;
 		if ((newAnchor == ElementAnchorPoints.ELEMENT) && !this.settings.isElementAnchorPointAllowed()) return;
-		if ((newAnchor == ElementAnchorPoints.ELEMENT) && (this.element.anchorPointElementIdentifier == null)) {
+		if ((newAnchor == ElementAnchorPoints.ELEMENT) && (this.element.getAnchorPointElementIdentifier() == null)) {
 			LOGGER.error("[FANCYMENU] Failed to set element's anchor to anchor point type 'ELEMENT'! Identifier was NULL!", new NullPointerException());
 			return;
 		}
@@ -835,7 +818,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		}
 
 		if (newAnchor == ElementAnchorPoints.ELEMENT) {
-			AbstractEditorElement ee = this.editor.getElementByInstanceIdentifier(Objects.requireNonNull(this.element.anchorPointElementIdentifier));
+			AbstractEditorElement ee = this.editor.getElementByInstanceIdentifier(Objects.requireNonNull(this.element.getAnchorPointElementIdentifier()));
 			if (ee != null) {
 				this.element.setElementAnchorPointParent(ee.element);
 			} else {
@@ -843,7 +826,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				LOGGER.error("[FANCYMENU] Failed to get parent element for 'ELEMENT' anchor type! Element was NULL!", new NullPointerException());
 			}
 		} else {
-			this.element.anchorPointElementIdentifier = null;
+			this.element.setAnchorPointElementIdentifier(null);
 			this.element.setElementAnchorPointParent(null);
 		}
 
@@ -867,7 +850,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 		if (!this.settings.isAnchorPointChangeable()) return;
 		if ((anchor.anchorPoint == ElementAnchorPoints.ELEMENT) && !this.settings.isElementAnchorPointAllowed()) return;
 		if (anchor instanceof AnchorPointOverlay.ElementAnchorPointArea ea) {
-			this.element.anchorPointElementIdentifier = ea.elementIdentifier;
+			this.element.setAnchorPointElementIdentifier(ea.elementIdentifier);
 		}
 		this.setAnchorPoint(anchor.anchorPoint, false);
 		this.updateLeftMouseDownCachedValues(mouseX, mouseY);
@@ -912,8 +895,8 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 	 */
 	public boolean isElementAnchorAndParentIsSelected() {
 		if (this.element.anchorPoint != ElementAnchorPoints.ELEMENT) return false;
-		if (this.element.anchorPointElementIdentifier == null) return false;
-		AbstractEditorElement parent = this.editor.getElementByInstanceIdentifier(this.element.anchorPointElementIdentifier);
+		if (this.element.getAnchorPointElementIdentifier() == null) return false;
+		AbstractEditorElement parent = this.editor.getElementByInstanceIdentifier(this.element.getAnchorPointElementIdentifier());
 		if (parent == null) return false;
 		return (parent.isSelected() || parent.isMultiSelected());
 	}
@@ -979,12 +962,59 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 				int diffY = (int)-(this.movingStartPosY - mouseY);
 				if (this.editor.allSelectedElementsMovable()) {
 					if (!this.isMultiSelected() || !this.isElementAnchorAndParentIsSelected()) {
-						// Apply normal offset calculation
-						this.element.posOffsetX = this.leftMouseDownBaseX + diffX;
-						this.element.posOffsetY = this.leftMouseDownBaseY + diffY;
+						// Calculate new positions
+						int newOffsetX = this.leftMouseDownBaseX + diffX;
+						int newOffsetY = this.leftMouseDownBaseY + diffY;
+						
+						// Check if stay on screen is enabled
+						if (this.element.stayOnScreen && !this.element.stickyAnchor) {
+							// Calculate what the absolute positions would be with the new offsets
+							int oldPosOffsetX = this.element.posOffsetX;
+							int oldPosOffsetY = this.element.posOffsetY;
+							
+							// Temporarily set new offsets to calculate absolute positions
+							this.element.posOffsetX = newOffsetX;
+							this.element.posOffsetY = newOffsetY;
+							
+							// Get the absolute positions (which include stay-on-screen clamping)
+							int absoluteX = this.element.getAbsoluteX();
+							int absoluteY = this.element.getAbsoluteY();
+							
+							// Restore old offsets
+							this.element.posOffsetX = oldPosOffsetX;
+							this.element.posOffsetY = oldPosOffsetY;
+							
+							// Check if X position would be clamped
+							int leftEdge = AbstractElement.STAY_ON_SCREEN_EDGE_ZONE_SIZE;
+							int rightEdge = AbstractElement.getScreenWidth() - AbstractElement.STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.element.getAbsoluteWidth();
+							
+							if (absoluteX <= leftEdge && diffX < 0) {
+								// Element is at left edge and trying to move further left
+								newOffsetX = this.element.posOffsetX;
+							} else if (absoluteX >= rightEdge && diffX > 0) {
+								// Element is at right edge and trying to move further right
+								newOffsetX = this.element.posOffsetX;
+							}
+							
+							// Check if Y position would be clamped
+							int topEdge = AbstractElement.STAY_ON_SCREEN_EDGE_ZONE_SIZE;
+							int bottomEdge = AbstractElement.getScreenHeight() - AbstractElement.STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.element.getAbsoluteHeight();
+							
+							if (absoluteY <= topEdge && diffY < 0) {
+								// Element is at top edge and trying to move further up
+								newOffsetY = this.element.posOffsetY;
+							} else if (absoluteY >= bottomEdge && diffY > 0) {
+								// Element is at bottom edge and trying to move further down
+								newOffsetY = this.element.posOffsetY;
+							}
+						}
+						
+						// Apply the potentially adjusted offsets
+						this.element.posOffsetX = newOffsetX;
+						this.element.posOffsetY = newOffsetY;
 
 						// Apply grid snapping if enabled
-						if (FancyMenu.getOptions().showLayoutEditorGrid.getValue() && FancyMenu.getOptions().layoutEditorGridSnapping.getValue()) {
+						if (FancyMenu.getOptions().showLayoutEditorGrid.getValue() && FancyMenu.getOptions().layoutEditorGridSnapping.getValue() && !this.isMultiSelected() && !(Minecraft.getInstance().screen instanceof KeyframeManagerScreen)) {
 							// Get element edges
 							int leftEdge = this.getX();
 							int rightEdge = leftEdge + this.getWidth();

@@ -354,7 +354,7 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
 
     protected boolean isAttachedToAnchor(@NotNull AbstractEditorElement element, @NotNull AnchorPointArea area) {
         if (area instanceof ElementAnchorPointArea ae) {
-            String parentOfElement = element.element.anchorPointElementIdentifier;
+            String parentOfElement = element.element.getAnchorPointElementIdentifier();
             if (parentOfElement != null) {
                 return ae.elementIdentifier.equals(parentOfElement);
             }
@@ -365,9 +365,9 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
     @Nullable
     protected AnchorPointArea getParentAreaOfElement(@NotNull AbstractEditorElement element) {
         if (element.element.anchorPoint == ElementAnchorPoints.ELEMENT) {
-            if (element.element.anchorPointElementIdentifier != null) {
+            if (element.element.getAnchorPointElementIdentifier() != null) {
                 //Safety check to lower the change to construct a broken ElementAnchorPointArea instance
-                AbstractEditorElement e = this.editor.getElementByInstanceIdentifier(element.element.anchorPointElementIdentifier);
+                AbstractEditorElement e = this.editor.getElementByInstanceIdentifier(element.element.getAnchorPointElementIdentifier());
                 if (e != null) return new ElementAnchorPointArea(e.element.getInstanceIdentifier());
             }
             return null;
