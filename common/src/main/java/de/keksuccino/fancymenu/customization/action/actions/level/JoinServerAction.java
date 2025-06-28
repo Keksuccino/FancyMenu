@@ -8,10 +8,7 @@ import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.ConnectScreen;
-import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.gui.screens.*;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.ServerList;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
@@ -40,45 +37,46 @@ public class JoinServerAction extends Action {
     @Override
     public void execute(@Nullable String value) {
         if (value != null) {
-            if (RenderSystem.isOnRenderThread()) {
-                try {
-                    String ip = value.replace(" ", "");
-                    int port = 25565;
-                    if (ip.contains(":")) {
-                        String portString = ip.split(":", 2)[1];
-                        ip = ip.split(":", 2)[0];
-                        if (MathUtils.isInteger(portString)) {
-                            port = Integer.parseInt(portString);
+            if (!(Minecraft.getInstance().screen instanceof JoinServerBridgeScreen) && !(Minecraft.getInstance().screen instanceof ConnectScreen) && !(Minecraft.getInstance().screen instanceof DisconnectedScreen)) {
+                if (RenderSystem.isOnRenderThread()) {
+                    try {
+
+                        Minecraft.getInstance().setScreen(new JoinServerBridgeScreen());
+
+                        String ip = value.replace(" ", "");
+                        int port = 25565;
+                        if (ip.contains(":")) {
+                            String portString = ip.split(":", 2)[1];
+                            ip = ip.split(":", 2)[0];
+                            if (MathUtils.isInteger(portString)) {
+                                port = Integer.parseInt(portString);
+                            }
                         }
-                    }
-                    ServerData d = null;
-                    ServerList l = new ServerList(Minecraft.getInstance());
-                    l.load();
-                    for (ServerData data : ((IMixinServerList) l).getServerListFancyMenu()) {
-                        if (data.ip.equals(value.replace(" ", ""))) {
-                            d = data;
-                            break;
+                        ServerData d = null;
+                        ServerList l = new ServerList(Minecraft.getInstance());
+                        l.load();
+                        for (ServerData data : ((IMixinServerList) l).getServerListFancyMenu()) {
+                            if (data.ip.equals(value.replace(" ", ""))) {
+                                d = data;
+                                break;
+                            }
                         }
+                        if (d == null) {
+                            d = new ServerData(value.replace(" ", ""), value.replace(" ", ""), false);
+                            l.add(d);
+                            l.save();
+                        }
+                        Screen current = Minecraft.getInstance().screen;
+                        if (current == null) current = new TitleScreen();
+                        boolean isQuickPlay = false;
+
+                        ConnectScreen.startConnecting(current, Minecraft.getInstance(), new ServerAddress(ip, port), d);
+
+                    } catch (Exception ex) {
+                        LOGGER.error("[FANCYMENU] Failed to execute the 'Join Server' action!", ex);
                     }
-                    if (d == null) {
-                        d = new ServerData(value.replace(" ", ""), value.replace(" ", ""), IS_LAN);
-                        l.add(d);
-                        l.save();
-                    }
-                    Screen current = Minecraft.getInstance().screen;
-                    if (current == null) current = new TitleScreen();
-                    Minecraft.getInstance().setScreen(new GenericDirtMessageScreen(Components.empty()));
-                    ConnectScreen.startConnecting(current, Minecraft.getInstance(), new ServerAddress(ip, port), d);
-                } catch (Exception ex) {
-                    LOGGER.error("[FANCYMENU] Failed to execute the 'Join Server' action!", ex);
-                }
-            } else {
-                long now = System.currentTimeMillis();
-                if ((lastErrorTriggered + 60000) < now) {
-                    lastErrorTriggered = now;
-                    MainThreadTaskExecutor.executeInMainThread(
-                            () -> Minecraft.getInstance().setScreen(new GenericDirtMessageScreen(Components.translatable("fancymenu.actions.generic.async_error", this.getActionDisplayName()))),
-                            MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+                } else {
+                    LOGGER.error("[FANCYMENU] Tried to execute Join Server action while already connecting!", new IllegalStateException());
                 }
             }
         }
@@ -102,6 +100,19 @@ public class JoinServerAction extends Action {
     @Override
     public String getValueExample() {
         return "exampleserver.com:25565";
+    }
+
+    private static class JoinServerBridgeScreen extends GenericDirtMessageScreen {
+
+        public JoinServerBridgeScreen() {
+            super(Components.empty());
+        }
+
+        @Override
+        public boolean shouldCloseOnEsc() {
+            return false;
+        }
+
     }
 
 }

@@ -15,7 +15,9 @@ minecraft {
 }
 
 repositories {
-    flatDir { dirs 'libs' }
+    flatDir {
+        dirs 'libs'
+    }
 }
 
 dependencies {

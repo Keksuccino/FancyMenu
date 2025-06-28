@@ -53,7 +53,7 @@ public class WebUtils {
      */
     private static boolean _isInternetAvailable() {
         try {
-            var url = new URL("https://8.8.8.8");
+            var url = new URL("https://docs.fancymenu.net");
             var connection = (HttpURLConnection) url.openConnection();
 
             // Using 3 seconds (3000ms) as a reasonable timeout

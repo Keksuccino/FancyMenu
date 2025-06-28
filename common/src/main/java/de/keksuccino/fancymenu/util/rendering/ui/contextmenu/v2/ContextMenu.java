@@ -833,6 +833,10 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     }
 
     public boolean isUserNavigatingInMenu() {
+        // If the menu is scrollable and the mouse is over it, consider it as navigating
+        if (this.needsScrolling && this.isOpen() && this.isMouseOverMenu(MouseInput.getMouseX(), MouseInput.getMouseY())) {
+            return true;
+        }
         return this.isHovered() || this.isUserNavigatingInSubMenu();
     }
 
@@ -875,6 +879,42 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             float scale = UIBase.calculateFixedScale(this.scale);
             int scaledMouseX = (int) ((float)mouseX / scale);
             int scaledMouseY = (int) ((float)mouseY / scale);
+
+            // Check if click is on scroll arrow areas first
+            if (button == 0 && this.needsScrolling && this.isMouseOverMenu(mouseX, mouseY)) {
+                float scaledX = (float)((float)this.getActualX()/scale) + this.getBorderThickness();
+                float scaledY = (float)((float)this.getActualY()/scale) + this.getBorderThickness();
+                
+                // Calculate max scroll position
+                float maxScrollPosition = this.rawHeight - (this.displayHeight - SCROLL_INDICATOR_HEIGHT * 2);
+                
+                // Check if clicking in up arrow area
+                if (scaledMouseY >= scaledY && scaledMouseY <= scaledY + SCROLL_INDICATOR_HEIGHT) {
+                    // Only scroll if the arrow is actually visible (can scroll up)
+                    if (this.scrollPosition > 0) {
+                        // Scroll up by a fixed amount (e.g., 3 entries worth)
+                        this.scrollPosition = Math.max(0, this.scrollPosition - 60);
+                        // Close sub-menus when scrolling
+                        this.closeSubMenus();
+                    }
+                    // Always consume the click in the arrow area
+                    return true;
+                }
+                
+                // Check if clicking in down arrow area
+                if (scaledMouseY >= scaledY + this.displayHeight - SCROLL_INDICATOR_HEIGHT && 
+                    scaledMouseY <= scaledY + this.displayHeight) {
+                    // Only scroll if the arrow is actually visible (can scroll down)
+                    if (this.scrollPosition < maxScrollPosition) {
+                        // Scroll down by a fixed amount (e.g., 3 entries worth)
+                        this.scrollPosition = Math.min(maxScrollPosition, this.scrollPosition + 60);
+                        // Close sub-menus when scrolling
+                        this.closeSubMenus();
+                    }
+                    // Always consume the click in the arrow area
+                    return true;
+                }
+            }
 
             // Process entries only if they're visible in the scroll area
             for (ContextMenuEntry<?> entry : this.entries) {

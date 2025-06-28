@@ -82,8 +82,8 @@ dependencies {
 //    compileOnly ('org.jetbrains:annotations:23.0.0') { version { strictly '23.0.0' } }
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
     //Needs to be "implementation" when building and "compileOnly" in-dev for some frickin reason
-    implementation(annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.5"))
-    //compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.5"))
+    //implementation(annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.5"))
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.5"))
     implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.3.5")) {
         jarJar.ranged(it, "[0.3.5,)")
     }
@@ -101,6 +101,15 @@ dependencies {
     //This is only to fix the missing dependency error in-dev
     implementation group: 'ca.weblite', name: 'java-objc-bridge', version: '1.1'
     compileOnly project(":common")
+}
+
+// Exclude Fabric Loader from Forge
+configurations {
+    runtimeClasspath    { exclude group: 'net.fabricmc', module: 'fabric-loader' }
+    developmentRuntimeClasspath {
+        // Gradle 8 names used by ForgeGradle 6
+        exclude group: 'net.fabricmc', module: 'fabric-loader'
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -144,7 +153,7 @@ sourceSets.each {
 jar {
     manifest {
         attributes([
-                "MixinConfigs": "${mod_id}.forge.mixins.json,${mod_id}.mixins.json"
+                "MixinConfigs": "${mod_id}.forge.mixins.json,${mod_id}.mixins.json,${mod_id}.late.mixins.json"
         ])
     }
 }

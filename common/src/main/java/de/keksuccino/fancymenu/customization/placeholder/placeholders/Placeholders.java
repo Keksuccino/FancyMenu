@@ -17,7 +17,7 @@ import de.keksuccino.fancymenu.customization.placeholder.placeholders.other.ram.
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.player.PlayerNamePlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.player.PlayerUuidPlaceholder;
 import de.keksuccino.fancymenu.customization.placeholder.placeholders.world.*;
-import de.keksuccino.fancymenu.customization.world.LastWorldHandler;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.scoreboard.*;
 
 public class Placeholders {
 
@@ -128,12 +128,15 @@ public class Placeholders {
     public static final AudioElementVolumePlaceholder AUDIO_ELEMENT_VOLUME = new AudioElementVolumePlaceholder();
     public static final SplitTextPlaceholder SPLIT_TEXT = new SplitTextPlaceholder();
     public static final TrimTextPlaceholder TRIM_TEXT = new TrimTextPlaceholder();
+    public static final UppercaseTextPlaceholder UPPERCASE_TEXT = new UppercaseTextPlaceholder();
+    public static final LowercaseTextPlaceholder LOWERCASE_TEXT = new LowercaseTextPlaceholder();
     public static final CropTextPlaceholder CROP_TEXT = new CropTextPlaceholder();
     public static final MathCeilPlaceholder MATH_CEIL = new MathCeilPlaceholder();
     public static final MathFloorPlaceholder MATH_FLOOR = new MathFloorPlaceholder();
     public static final MathRoundPlaceholder MATH_ROUND = new MathRoundPlaceholder();
     public static final MathSignPlaceholder MATH_SIGN = new MathSignPlaceholder();
     public static final SwitchCasePlaceholder SWITCH_CASE = new SwitchCasePlaceholder();
+    public static final ReplaceTextPlaceholder REPLACE_TEXT = new ReplaceTextPlaceholder();
     public static final AudioTrackPlaceholder AUDIO_ELEMENT_TRACK = new AudioTrackPlaceholder();
     public static final AudioDurationPlaceholder AUDIO_ELEMENT_DURATION = new AudioDurationPlaceholder();
     public static final AudioPlaytimePlaceholder AUDIO_ELEMENT_PLAYTIME = new AudioPlaytimePlaceholder();
@@ -142,6 +145,25 @@ public class Placeholders {
     public static final MaxPlayerOxygenPlaceholder MAX_PLAYER_OXYGEN = new MaxPlayerOxygenPlaceholder();
     public static final CurrentPlayerOxygenPercentagePlaceholder CURRENT_PLAYER_OXYGEN_PERCENTAGE = new CurrentPlayerOxygenPercentagePlaceholder();
     public static final LastWorldOrServerPlaceholder LAST_WORLD_OR_SERVER = new LastWorldOrServerPlaceholder();
+    public static final TextCharacterCountPlaceholder TEXT_CHARACTER_COUNT = new TextCharacterCountPlaceholder();
+    public static final TextWidthPlaceholder TEXT_WIDTH = new TextWidthPlaceholder();
+    public static final ClipboardContentPlaceholder CLIPBOARD_CONTENT = new ClipboardContentPlaceholder();
+    public static final ScoreboardPlayerTeamPlaceholder SCOREBOARD_PLAYER_TEAM = new ScoreboardPlayerTeamPlaceholder();
+    public static final NbtDataGetPlaceholder NBT_DATA_GET = new NbtDataGetPlaceholder();
+    public static final WorldPlayersListPlaceholder WORLD_PLAYERS_LIST = new WorldPlayersListPlaceholder();
+    public static final ScoreboardScorePlaceholder SCOREBOARD_SCORE = new ScoreboardScorePlaceholder();
+    public static final ScoreboardObjectivesListPlaceholder SCOREBOARD_OBJECTIVES_LIST = new ScoreboardObjectivesListPlaceholder();
+    public static final ScoreboardTrackedPlayersPlaceholder SCOREBOARD_TRACKED_PLAYERS = new ScoreboardTrackedPlayersPlaceholder();
+    public static final ScoreboardDisplaySlotPlaceholder SCOREBOARD_DISPLAY_SLOT = new ScoreboardDisplaySlotPlaceholder();
+    public static final ScoreboardHasScorePlaceholder SCOREBOARD_HAS_SCORE = new ScoreboardHasScorePlaceholder();
+    public static final ScoreboardObjectiveDisplayNamePlaceholder SCOREBOARD_OBJECTIVE_DISPLAY_NAME = new ScoreboardObjectiveDisplayNamePlaceholder();
+    public static final ScoreboardObjectiveCriteriaPlaceholder SCOREBOARD_OBJECTIVE_CRITERIA = new ScoreboardObjectiveCriteriaPlaceholder();
+    public static final ScoreboardObjectiveRenderTypePlaceholder SCOREBOARD_OBJECTIVE_RENDER_TYPE = new ScoreboardObjectiveRenderTypePlaceholder();
+    public static final ScoreboardPlayerScoresListPlaceholder SCOREBOARD_PLAYER_SCORES_LIST = new ScoreboardPlayerScoresListPlaceholder();
+    public static final ScoreboardObjectiveCountPlaceholder SCOREBOARD_OBJECTIVE_COUNT = new ScoreboardObjectiveCountPlaceholder();
+    public static final PlayerHasTagPlaceholder PLAYER_HAS_TAG = new PlayerHasTagPlaceholder();
+    public static final PlayerTagsListPlaceholder PLAYER_TAGS_LIST = new PlayerTagsListPlaceholder();
+    public static final FileTextPlaceholder FILE_TEXT = new FileTextPlaceholder();
 
     public static void registerAll() {
 
@@ -216,6 +238,9 @@ public class Placeholders {
         PlaceholderRegistry.register(CURRENT_PLAYER_OXYGEN);
         PlaceholderRegistry.register(MAX_PLAYER_OXYGEN);
         PlaceholderRegistry.register(CURRENT_PLAYER_OXYGEN_PERCENTAGE);
+        PlaceholderRegistry.register(WORLD_PLAYERS_LIST);
+        PlaceholderRegistry.register(PLAYER_HAS_TAG);
+        PlaceholderRegistry.register(PLAYER_TAGS_LIST);
 
         //Server
         PlaceholderRegistry.register(SERVER_MOTD);
@@ -253,12 +278,17 @@ public class Placeholders {
         PlaceholderRegistry.register(MATH_TANH);
         PlaceholderRegistry.register(SPLIT_TEXT);
         PlaceholderRegistry.register(TRIM_TEXT);
+        PlaceholderRegistry.register(UPPERCASE_TEXT);
+        PlaceholderRegistry.register(LOWERCASE_TEXT);
         PlaceholderRegistry.register(CROP_TEXT);
         PlaceholderRegistry.register(MATH_CEIL);
         PlaceholderRegistry.register(MATH_FLOOR);
         PlaceholderRegistry.register(MATH_ROUND);
         PlaceholderRegistry.register(MATH_SIGN);
         PlaceholderRegistry.register(SWITCH_CASE);
+        PlaceholderRegistry.register(REPLACE_TEXT);
+        PlaceholderRegistry.register(NBT_DATA_GET);
+        PlaceholderRegistry.register(FILE_TEXT);
 
         //Audio
         PlaceholderRegistry.register(AUDIO_ELEMENT_VOLUME);
@@ -283,6 +313,22 @@ public class Placeholders {
         PlaceholderRegistry.register(JVM_NAME);
         PlaceholderRegistry.register(OPEN_GL_VERSION);
         PlaceholderRegistry.register(OS_NAME);
+        PlaceholderRegistry.register(TEXT_CHARACTER_COUNT);
+        PlaceholderRegistry.register(TEXT_WIDTH);
+        PlaceholderRegistry.register(CLIPBOARD_CONTENT);
+
+        //Scoreboard
+        PlaceholderRegistry.register(SCOREBOARD_SCORE);
+        PlaceholderRegistry.register(SCOREBOARD_OBJECTIVES_LIST);
+        PlaceholderRegistry.register(SCOREBOARD_TRACKED_PLAYERS);
+        PlaceholderRegistry.register(SCOREBOARD_DISPLAY_SLOT);
+        PlaceholderRegistry.register(SCOREBOARD_HAS_SCORE);
+        PlaceholderRegistry.register(SCOREBOARD_OBJECTIVE_DISPLAY_NAME);
+        PlaceholderRegistry.register(SCOREBOARD_OBJECTIVE_CRITERIA);
+        PlaceholderRegistry.register(SCOREBOARD_OBJECTIVE_RENDER_TYPE);
+        PlaceholderRegistry.register(SCOREBOARD_PLAYER_SCORES_LIST);
+        PlaceholderRegistry.register(SCOREBOARD_OBJECTIVE_COUNT);
+        PlaceholderRegistry.register(SCOREBOARD_PLAYER_TEAM);
 
     }
 
