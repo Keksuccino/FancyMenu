@@ -91,9 +91,9 @@ public class ImageMenuBackgroundConfigScreen extends CellScreen {
         }
 
 
-        this.addWidgetCell(new ExtendedButton(0, 0, 0, 20, Component.translatable("fancymenu.background.image.configure.parallax_intensity"), var1 -> {
+        this.addWidgetCell(new ExtendedButton(0, 0, 0, 20, Components.translatable("fancymenu.background.image.configure.parallax_intensity"), var1 -> {
             final Screen currentScreen = Minecraft.getInstance().screen;
-            TextEditorScreen s = TextEditorScreen.build(Component.translatable("fancymenu.background.image.configure.parallax_intensity"), null, callback -> {
+            TextEditorScreen s = TextEditorScreen.build(Components.translatable("fancymenu.background.image.configure.parallax_intensity"), null, callback -> {
                 if (callback != null) {
                     this.background.parallaxIntensityString = callback;
                 }

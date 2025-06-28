@@ -665,7 +665,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 			this.addStringInputContextMenuEntryTo(this.rightClickMenu, "parallax_intensity", AbstractEditorElement.class,
 							consumes -> consumes.element.parallaxIntensityString,
 							(element1, s) -> element1.element.parallaxIntensityString = s,
-							null, false, true, Component.translatable("fancymenu.elements.parallax.intensity"),
+							null, false, true, Components.translatable("fancymenu.elements.parallax.intensity"),
 							true, "0.5", null, null)
 					.setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.parallax.intensity.desc")));
 

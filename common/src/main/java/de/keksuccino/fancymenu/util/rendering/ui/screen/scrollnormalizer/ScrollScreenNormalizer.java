@@ -12,9 +12,9 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.packs.PackSelectionScreen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
-import net.minecraft.network.chat.ComponentContents;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.contents.TranslatableContents;
+import net.minecraft.network.chat.TranslatableComponent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -70,7 +70,7 @@ public class ScrollScreenNormalizer {
             if (screen instanceof OptionsSubScreen) {
                 if (widget instanceof UniqueWidget w) {
                     StringBuilder id = new StringBuilder("options");
-                    buildId(widget.getMessage().getContents(), id);
+                    buildId(widget.getMessage(), id);
                     String idString = id.toString();
                     if (idString.equals("options")) idString += "_generic";
                     if (ids.containsKey(idString)) {
@@ -96,13 +96,13 @@ public class ScrollScreenNormalizer {
     }
 
     @NotNull
-    private static StringBuilder buildId(@NotNull ComponentContents contents, @NotNull StringBuilder builder) {
-        if (contents instanceof TranslatableContents t) {
+    private static StringBuilder buildId(@NotNull Component message, @NotNull StringBuilder builder) {
+        if (message instanceof TranslatableComponent t) {
             builder.append("_");
             Object[] args = t.getArgs();
             if (args.length > 0) {
                 if (args[0] instanceof MutableComponent c) {
-                    if (c.getContents() instanceof TranslatableContents t2) {
+                    if (c instanceof TranslatableComponent t2) {
                         builder.append(t2.getKey());
                         return builder;
                     }

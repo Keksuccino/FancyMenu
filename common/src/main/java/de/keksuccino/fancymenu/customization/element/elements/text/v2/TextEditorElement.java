@@ -241,7 +241,7 @@ public class TextEditorElement extends AbstractEditorElement {
 
         // Table customization submenu
         ContextMenu tableMenu = new ContextMenu();
-        markdownMenu.addSubMenuEntry("tables", Component.translatable("fancymenu.customization.items.text.markdown.tables"), tableMenu)
+        markdownMenu.addSubMenuEntry("tables", Components.translatable("fancymenu.customization.items.text.markdown.tables"), tableMenu)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.markdown.tables.desc")))
                 .setStackable(true);
 
@@ -262,28 +262,28 @@ public class TextEditorElement extends AbstractEditorElement {
         this.addStringInputContextMenuEntryTo(tableMenu, "table_line_color", TextEditorElement.class,
                         consumes -> consumes.getElement().markdownRenderer.getTableLineColor().getHex(),
                         (textEditorElement, s) -> textEditorElement.getElement().markdownRenderer.setTableLineColor(DrawableColor.of(s)),
-                        null, false, false, Component.translatable("fancymenu.customization.items.text.markdown.tables.line_color"),
+                        null, false, false, Components.translatable("fancymenu.customization.items.text.markdown.tables.line_color"),
                         true, DrawableColor.of(120, 120, 120).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .setStackable(true);
 
         this.addStringInputContextMenuEntryTo(tableMenu, "table_header_background_color", TextEditorElement.class,
                         consumes -> consumes.getElement().markdownRenderer.getTableHeaderBackgroundColor().getHex(),
                         (textEditorElement, s) -> textEditorElement.getElement().markdownRenderer.setTableHeaderBackgroundColor(DrawableColor.of(s)),
-                        null, false, false, Component.translatable("fancymenu.customization.items.text.markdown.tables.header_background_color"),
+                        null, false, false, Components.translatable("fancymenu.customization.items.text.markdown.tables.header_background_color"),
                         true, DrawableColor.of(50, 50, 50).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .setStackable(true);
 
         this.addStringInputContextMenuEntryTo(tableMenu, "table_row_background_color", TextEditorElement.class,
                         consumes -> consumes.getElement().markdownRenderer.getTableRowBackgroundColor().getHex(),
                         (textEditorElement, s) -> textEditorElement.getElement().markdownRenderer.setTableRowBackgroundColor(DrawableColor.of(s)),
-                        null, false, false, Component.translatable("fancymenu.customization.items.text.markdown.tables.row_background_color"),
+                        null, false, false, Components.translatable("fancymenu.customization.items.text.markdown.tables.row_background_color"),
                         true, DrawableColor.of(40, 40, 40).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .setStackable(true);
 
         this.addStringInputContextMenuEntryTo(tableMenu, "table_alternate_row_color", TextEditorElement.class,
                         consumes -> consumes.getElement().markdownRenderer.getTableAlternateRowColor().getHex(),
                         (textEditorElement, s) -> textEditorElement.getElement().markdownRenderer.setTableAlternateRowColor(DrawableColor.of(s)),
-                        null, false, false, Component.translatable("fancymenu.customization.items.text.markdown.tables.alternate_row_color"),
+                        null, false, false, Components.translatable("fancymenu.customization.items.text.markdown.tables.alternate_row_color"),
                         true, DrawableColor.of(60, 60, 60).getHex(), TextValidators.HEX_COLOR_TEXT_VALIDATOR, null)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.markdown.tables.alternate_row_color.desc")));
@@ -293,20 +293,20 @@ public class TextEditorElement extends AbstractEditorElement {
         this.addFloatInputContextMenuEntryTo(tableMenu, "table_line_thickness", TextEditorElement.class,
                         consumes -> consumes.getElement().markdownRenderer.getTableLineThickness(),
                         (textEditorElement, aFloat) -> textEditorElement.getElement().markdownRenderer.setTableLineThickness(Math.max(0.5F, aFloat)),
-                        Component.translatable("fancymenu.customization.items.text.markdown.tables.line_thickness"), true, 1.0F, null, null)
+                        Components.translatable("fancymenu.customization.items.text.markdown.tables.line_thickness"), true, 1.0F, null, null)
                 .setStackable(true);
 
         this.addFloatInputContextMenuEntryTo(tableMenu, "table_cell_padding", TextEditorElement.class,
                         consumes -> consumes.getElement().markdownRenderer.getTableCellPadding(),
                         (textEditorElement, aFloat) -> textEditorElement.getElement().markdownRenderer.setTableCellPadding(Math.max(0.0F, aFloat)),
-                        Component.translatable("fancymenu.customization.items.text.markdown.tables.cell_padding"), true, 8.0F, null, null)
+                        Components.translatable("fancymenu.customization.items.text.markdown.tables.cell_padding"), true, 8.0F, null, null)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.markdown.tables.cell_padding.desc")));
 
         this.addFloatInputContextMenuEntryTo(tableMenu, "table_margin", TextEditorElement.class,
                         consumes -> consumes.getElement().markdownRenderer.getTableMargin(),
                         (textEditorElement, aFloat) -> textEditorElement.getElement().markdownRenderer.setTableMargin(Math.max(0.0F, aFloat)),
-                        Component.translatable("fancymenu.customization.items.text.markdown.tables.margin"), true, 4.0F, null, null)
+                        Components.translatable("fancymenu.customization.items.text.markdown.tables.margin"), true, 4.0F, null, null)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.customization.items.text.markdown.tables.margin.desc")));
 

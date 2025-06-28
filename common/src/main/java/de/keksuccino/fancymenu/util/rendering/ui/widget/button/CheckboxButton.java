@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.widget.button;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -28,7 +29,7 @@ public class CheckboxButton extends ExtendedButton {
     protected ITexture customBackgroundTextureInactive = null;
 
     public CheckboxButton(int x, int y, int width, int height, @NotNull StateChangedAction onStateChanged) {
-        super(x, y, width, height, Component.empty(), button -> {});
+        super(x, y, width, height, Components.empty(), button -> {});
         this.onStateChanged = onStateChanged;
         this.setPressAction(button -> {
             this.checkboxState = !this.checkboxState;

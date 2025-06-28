@@ -63,7 +63,7 @@ public class JoinServerAction extends Action {
                         }
                         if (d == null) {
                             d = new ServerData(value.replace(" ", ""), value.replace(" ", ""), false);
-                            l.add(d, false);
+                            l.add(d);
                             l.save();
                         }
                         Screen current = Minecraft.getInstance().screen;
@@ -105,7 +105,7 @@ public class JoinServerAction extends Action {
     private static class JoinServerBridgeScreen extends GenericDirtMessageScreen {
 
         public JoinServerBridgeScreen() {
-            super(Component.empty());
+            super(Components.empty());
         }
 
         @Override

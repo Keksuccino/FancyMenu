@@ -155,7 +155,7 @@ public class CustomizationOverlayUI {
                 .addIsActiveSupplier((menu, entry) -> !ScrollScreenNormalizer.isBlacklisted(screen))
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.scroll_screen_normalizer.desc")));
 
-        customizationMenu.addClickableEntry("force_close_current_screen", Component.translatable("fancymenu.overlay.menu_bar.customization.close_current_screen"), (menu, entry) -> {
+        customizationMenu.addClickableEntry("force_close_current_screen", Components.translatable("fancymenu.overlay.menu_bar.customization.close_current_screen"), (menu, entry) -> {
             menu.closeMenu();
             Minecraft.getInstance().setScreen(null);
         }).setIcon(ContextMenu.IconFactory.getIcon("exit"));

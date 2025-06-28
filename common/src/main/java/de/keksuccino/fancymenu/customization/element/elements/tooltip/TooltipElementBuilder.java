@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.network.chat.Component;
@@ -243,7 +244,7 @@ public class TooltipElementBuilder extends ElementBuilder<TooltipElement, Toolti
 
     @Override
     public @NotNull Component getDisplayName(@Nullable AbstractElement element) {
-        return Component.translatable("fancymenu.elements.tooltip");
+        return Components.translatable("fancymenu.elements.tooltip");
     }
 
     @Override

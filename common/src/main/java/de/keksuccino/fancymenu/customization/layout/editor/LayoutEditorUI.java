@@ -497,7 +497,7 @@ public class LayoutEditorUI {
 			editor.layout.applyVanillaBackgroundBlur = cycle.getAsBoolean();
 		})).setTooltipSupplier((menu1, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.background.blur_background.desc")));
 
-		menu.addClickableEntry("copy_background_identifier", Component.translatable("fancymenu.editor.background_options.copy_background_identifier"), (menu1, entry) -> {
+		menu.addClickableEntry("copy_background_identifier", Components.translatable("fancymenu.editor.background_options.copy_background_identifier"), (menu1, entry) -> {
 			if (!editor.layout.menuBackgrounds.isEmpty()) {
 				Minecraft.getInstance().keyboardHandler.setClipboard(editor.layout.menuBackgrounds.get(0).getInstanceIdentifier());
 			} else {

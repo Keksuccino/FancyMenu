@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.M
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import net.minecraft.client.Minecraft;
@@ -25,7 +26,7 @@ public class CheckboxEditorElement extends AbstractEditorElement {
         
         super.init();
         
-        this.rightClickMenu.addClickableEntry("manage_actions", Component.translatable("fancymenu.editor.action.screens.manage_screen.manage"), (menu, entry) -> {
+        this.rightClickMenu.addClickableEntry("manage_actions", Components.translatable("fancymenu.editor.action.screens.manage_screen.manage"), (menu, entry) -> {
                     ManageActionsScreen s = new ManageActionsScreen(this.getElement().getExecutableBlock(), (call) -> {
                         if (call != null) {
                             this.editor.history.saveSnapshot();
@@ -39,7 +40,7 @@ public class CheckboxEditorElement extends AbstractEditorElement {
                 .setIcon(ContextMenu.IconFactory.getIcon("script"))
                 .setStackable(false);
 
-        this.rightClickMenu.addClickableEntry("widget_active_state_controller", Component.translatable("fancymenu.elements.button.active_state_controller"), (menu, entry) -> {
+        this.rightClickMenu.addClickableEntry("widget_active_state_controller", Components.translatable("fancymenu.elements.button.active_state_controller"), (menu, entry) -> {
                     ManageRequirementsScreen s = new ManageRequirementsScreen(this.getElement().activeStateSupplier.copy(false), (call) -> {
                         if (call != null) {
                             this.editor.history.saveSnapshot();
@@ -63,7 +64,7 @@ public class CheckboxEditorElement extends AbstractEditorElement {
                         null,
                         consumes -> consumes.getElement().hoverSound,
                         (checkboxEditorElement, supplier) -> checkboxEditorElement.getElement().hoverSound = supplier,
-                        Component.translatable("fancymenu.editor.items.button.hoversound"), true, null, true, true, true)
+                        Components.translatable("fancymenu.editor.items.button.hoversound"), true, null, true, true, true)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
         this.addAudioResourceChooserContextMenuEntryTo(this.rightClickMenu, "click_sound",
@@ -71,7 +72,7 @@ public class CheckboxEditorElement extends AbstractEditorElement {
                         null,
                         consumes -> consumes.getElement().clickSound,
                         (checkboxEditorElement, supplier) -> checkboxEditorElement.getElement().clickSound = supplier,
-                        Component.translatable("fancymenu.editor.items.button.clicksound"), true, null, true, true, true)
+                        Components.translatable("fancymenu.editor.items.button.clicksound"), true, null, true, true, true)
                 .setIcon(ContextMenu.IconFactory.getIcon("sound"));
 
         this.rightClickMenu.addSeparatorEntry("checkbox_separator_5").setStackable(true);
@@ -89,7 +90,7 @@ public class CheckboxEditorElement extends AbstractEditorElement {
                             }
                             ((CheckboxElement)element1.element).tooltip = s;
                         },
-                        null, true, true, Component.translatable("fancymenu.editor.items.button.btndescription"),
+                        null, true, true, Components.translatable("fancymenu.editor.items.button.btndescription"),
                         true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.items.button.btndescription.desc")))
@@ -108,7 +109,7 @@ public class CheckboxEditorElement extends AbstractEditorElement {
     protected void addTextureSettings() {
         
         ContextMenu texturesMenu = new ContextMenu();
-        this.rightClickMenu.addSubMenuEntry("checkbox_textures", Component.translatable("fancymenu.elements.checkbox.textures"), texturesMenu)
+        this.rightClickMenu.addSubMenuEntry("checkbox_textures", Components.translatable("fancymenu.elements.checkbox.textures"), texturesMenu)
                 .setIcon(ContextMenu.IconFactory.getIcon("image"))
                 .setStackable(true);
 
@@ -117,7 +118,7 @@ public class CheckboxEditorElement extends AbstractEditorElement {
                         null,
                         consumes -> consumes.getElement().backgroundTextureNormal,
                         (checkboxEditorElement, iTextureResourceSupplier) -> checkboxEditorElement.getElement().backgroundTextureNormal = iTextureResourceSupplier,
-                        Component.translatable("fancymenu.elements.checkbox.background_texture_normal"), true, null, true, true, true)
+                        Components.translatable("fancymenu.elements.checkbox.background_texture_normal"), true, null, true, true, true)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.background_texture_normal.desc")));
 
@@ -126,7 +127,7 @@ public class CheckboxEditorElement extends AbstractEditorElement {
                         null,
                         consumes -> consumes.getElement().backgroundTextureHover,
                         (checkboxEditorElement, iTextureResourceSupplier) -> checkboxEditorElement.getElement().backgroundTextureHover = iTextureResourceSupplier,
-                        Component.translatable("fancymenu.elements.checkbox.background_texture_hover"), true, null, true, true, true)
+                        Components.translatable("fancymenu.elements.checkbox.background_texture_hover"), true, null, true, true, true)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.background_texture_hover.desc")));
 
@@ -135,7 +136,7 @@ public class CheckboxEditorElement extends AbstractEditorElement {
                         null,
                         consumes -> consumes.getElement().backgroundTextureInactive,
                         (checkboxEditorElement, iTextureResourceSupplier) -> checkboxEditorElement.getElement().backgroundTextureInactive = iTextureResourceSupplier,
-                        Component.translatable("fancymenu.elements.checkbox.background_texture_inactive"), true, null, true, true, true)
+                        Components.translatable("fancymenu.elements.checkbox.background_texture_inactive"), true, null, true, true, true)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.background_texture_inactive.desc")));
 
@@ -146,7 +147,7 @@ public class CheckboxEditorElement extends AbstractEditorElement {
                         null,
                         consumes -> consumes.getElement().checkmarkTexture,
                         (checkboxEditorElement, iTextureResourceSupplier) -> checkboxEditorElement.getElement().checkmarkTexture = iTextureResourceSupplier,
-                        Component.translatable("fancymenu.elements.checkbox.checkmark_texture"), true, null, true, true, true)
+                        Components.translatable("fancymenu.elements.checkbox.checkmark_texture"), true, null, true, true, true)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.checkmark_texture.desc")));
         
