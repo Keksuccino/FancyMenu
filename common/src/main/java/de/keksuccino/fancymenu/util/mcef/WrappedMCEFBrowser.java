@@ -110,8 +110,10 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     @Override
     protected void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         try {
+
             if (this.autoHandle) BrowserHandler.notifyHandler(this.genericIdentifier.toString(), this);
 
+            graphics.flush();
             RenderSystem.disableDepthTest();
             RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
             RenderSystem.setShaderTexture(0, this.browser.getRenderer().getTextureID());
@@ -146,6 +148,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
             RenderSystem.setShaderTexture(0, 0);
             RenderSystem.enableDepthTest();
             graphics.flush();
+
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to render MCEFBrowser!", ex);
         }

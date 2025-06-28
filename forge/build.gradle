@@ -93,7 +93,7 @@ dependencies {
     implementation fg.deobf("maven.modrinth:konkrete:1.8.0-1.20-1.20.1-forge")
     implementation fg.deobf("maven.modrinth:melody:1.0.3-1.20.1-1.20.4-forge")
     implementation fg.deobf("maven.modrinth:rrls:4.0.6.1+mc1.20.1-forge")
-    implementation fg.deobf("com.cinemamod:mcef:2.1.6-1.20.1")
+    implementation fg.deobf("curse.maven:mcef-636236:5828187")
     compileOnly project(":common")
 }
 
