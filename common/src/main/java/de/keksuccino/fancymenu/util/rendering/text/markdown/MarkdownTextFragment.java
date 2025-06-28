@@ -262,8 +262,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
                 x += this.tableContext.columnWidths.get(i);
             }
         }
-        
-        RenderingUtils.resetShaderColor(graphics);
+
     }
 
     protected void renderCodeBlock(GuiGraphics graphics) {

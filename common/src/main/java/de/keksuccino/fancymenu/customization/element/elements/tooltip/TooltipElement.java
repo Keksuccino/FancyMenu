@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.TooltipRenderUtil;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Style;
 import org.apache.logging.log4j.LogManager;
@@ -114,11 +115,11 @@ public class TooltipElement extends AbstractElement {
                     }
 
                     // Render custom background texture with nine-slicing
-                    RenderingUtils.blitNineSlicedTexture(graphics, tex.getResourceLocation(), 
+                    RenderingUtils.blitNineSlicedTexture(graphics, tex.getResourceLocation(),
                         x, y, width, height, 
                         textureWidth, textureHeight,
                         this.nineSliceBorderTop, this.nineSliceBorderRight, 
-                        this.nineSliceBorderBottom, this.nineSliceBorderLeft);
+                        this.nineSliceBorderBottom, this.nineSliceBorderLeft, -1);
 
                     if (!isEditor()) graphics.pose().popPose();
 
@@ -147,12 +148,11 @@ public class TooltipElement extends AbstractElement {
             LOGGER.error("[FANCYMENU] Failed to render Tooltip element!", e);
         }
 
-        RenderingUtils.resetShaderColor(graphics);
     }
     
     private void renderVanillaTooltipBackground(GuiGraphics graphics, int x, int y, int width, int height) {
         // Use vanilla tooltip background rendering
-        TooltipRenderUtil.renderTooltipBackground(graphics, x, y, width, height, isEditor() ? 0 : 400);
+        TooltipRenderUtil.renderTooltipBackground(graphics, x, y, width, height, isEditor() ? 0 : 400, null);
     }
 
     protected void renderTick() {

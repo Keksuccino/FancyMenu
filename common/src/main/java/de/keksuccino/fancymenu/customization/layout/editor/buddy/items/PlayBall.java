@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.Random;
@@ -113,7 +114,6 @@ public class PlayBall {
                 int trailX = x - (int)(velocityX * 0.5f * i);
                 int trailY = y - (int)(velocityY * 0.5f * i);
 
-                DrawableColor.of(trailColor).setAsShaderColor(graphics);
                 graphics.blit(
                         RenderType::guiTextured,
                         TEXTURE_BALL,
@@ -123,7 +123,7 @@ public class PlayBall {
                         size, size,
                         trailColor
                 );
-                RenderingUtils.resetShaderColor(graphics);
+
             }
         }
 

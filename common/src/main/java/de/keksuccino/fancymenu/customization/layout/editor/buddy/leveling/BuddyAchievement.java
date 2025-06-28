@@ -1,17 +1,10 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy.leveling;
 
-<<<<<<< HEAD
-import java.util.function.Consumer;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-=======
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
 
->>>>>>> 9b519ec... v3.6.0
 /**
  * Represents an achievement that the buddy can earn through various actions.
  * Achievements provide rewards like experience points, attribute bonuses, or special unlocks.

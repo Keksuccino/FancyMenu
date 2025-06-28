@@ -12,6 +12,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -262,8 +263,8 @@ public class BuddyStatusScreen implements Renderable {
         // Render background
         int borderXDiff = 35;
         int borderYDiff = 27;
-        graphics.blit(BACKGROUND_TEXTURE, this.guiX, this.guiY, 0.0F, 0.0F, SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT);
-        graphics.blit(BACKGROUND_BORDER_TEXTURE, this.guiX - borderXDiff, this.guiY - borderYDiff, 0.0F, 0.0F, SCREEN_BORDER_WIDTH, SCREEN_BORDER_HEIGHT, SCREEN_BORDER_WIDTH, SCREEN_BORDER_HEIGHT);
+        graphics.blit(RenderType::guiTextured, BACKGROUND_TEXTURE, this.guiX, this.guiY, 0.0F, 0.0F, SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT);
+        graphics.blit(RenderType::guiTextured, BACKGROUND_BORDER_TEXTURE, this.guiX - borderXDiff, this.guiY - borderYDiff, 0.0F, 0.0F, SCREEN_BORDER_WIDTH, SCREEN_BORDER_HEIGHT, SCREEN_BORDER_WIDTH, SCREEN_BORDER_HEIGHT);
 
         // Render tabs
         renderTabs(graphics, mouseX, mouseY, partial);
@@ -308,7 +309,7 @@ public class BuddyStatusScreen implements Renderable {
             ResourceLocation buttonTexture = isSelected ? TAB_BUTTON_TEXTURE_SELECTED : TAB_BUTTON_TEXTURE_NORMAL;
             
             // Render button background
-            graphics.blit(buttonTexture, tabX, tabY, 0.0F, 0.0F, tabWidth, tabHeight, tabWidth, tabHeight);
+            graphics.blit(RenderType::guiTextured, buttonTexture, tabX, tabY, 0.0F, 0.0F, tabWidth, tabHeight, tabWidth, tabHeight);
 
             // Draw tab text
             int textColor = isSelected ? 0xFFFFFF : 0xAAAAAA;

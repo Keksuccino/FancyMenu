@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.widget.button;
 
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
@@ -41,7 +42,7 @@ public class CheckboxButton extends ExtendedButton {
         super.renderWidget(graphics, mouseX, mouseY, partial);
 
         if (this.checkboxState && this.isActive()) {
-            graphics.blit(this.getCheckboxCheckmarkTexture(), this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+            graphics.blit(RenderType::guiTextured, this.getCheckboxCheckmarkTexture(), this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
         }
 
     }
@@ -49,7 +50,7 @@ public class CheckboxButton extends ExtendedButton {
     @Override
     protected void renderBackground(@NotNull GuiGraphics graphics) {
 
-        graphics.blit(this.getCheckboxBackground(), this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
+        graphics.blit(RenderType::guiTextured, this.getCheckboxBackground(), this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight());
 
     }
 

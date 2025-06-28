@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -74,7 +75,7 @@ public class BuddyGuiButton implements Renderable {
 
         // Draw button background
         if (backgroundTexture != null) {
-            graphics.blit(backgroundTexture, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
+            graphics.blit(RenderType::guiTextured, backgroundTexture, this.x, this.y, 0.0F, 0.0F, this.width, this.height, this.width, this.height);
         } else {
             graphics.fill(x, y, x + this.width, y + this.height, backgroundColor);
             graphics.renderOutline(x, y, this.width, this.height, 0xFF000000);
