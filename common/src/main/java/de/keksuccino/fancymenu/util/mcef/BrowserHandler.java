@@ -39,7 +39,7 @@ public class BrowserHandler {
         try {
             if (close) {
                 Pair<WrappedMCEFBrowser, Long> browser = BROWSERS.get(identifier);
-                if (browser != null) browser.getKey().getBrowser().close(true);
+                if (browser != null) browser.getKey().close();
             }
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to force-close MCEFBrowser!", ex);
@@ -59,7 +59,7 @@ public class BrowserHandler {
         garbageCollect.forEach(s -> {
             try {
                 Pair<WrappedMCEFBrowser, Long> browser = BROWSERS.get(s);
-                if (browser != null) browser.getKey().getBrowser().close(true);
+                if (browser != null) browser.getKey().close();
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to force-close MCEFBrowser!", ex);
             }

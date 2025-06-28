@@ -1,14 +1,15 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy.animation;
 
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddy;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddy.MAX_POOPS_BEFORE_SAD;
+import static de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy.MAX_POOPS_BEFORE_SAD;
 
 public class AnimationStates {
 
@@ -31,6 +32,17 @@ public class AnimationStates {
     private static final int ATLAS_INDEX_SITTING = 14;
     private static final int ATLAS_INDEX_WAVING = 15;
     private static final int ATLAS_INDEX_YAWNING = 16;
+    private static final int ATLAS_INDEX_PEEKING = 17;
+
+    public static final AnimationState PEEKING = registerState(new AnimationState.Builder("PEEKING", ATLAS_INDEX_PEEKING)
+            .priority(110) // Highest priority
+            .allowsMovement(false)
+            .allowsHopping(false)
+            .animationSpeed((buddy, state) -> 50) // Slow animation for peeking
+            .activationCondition(buddy -> buddy.isPeeking && buddy.isActivelyPeeking)
+            .preventionCondition(buddy -> !buddy.hasBeenAwakened ? false : (buddy.needsFood || buddy.needsPet || buddy.needsPlay || buddy.isSleepy))
+            .ignoresLockedState(true)
+            .build());
 
     public static final AnimationState POOPING_STANDING = registerState(new AnimationState.Builder("POOPING_STANDING", ATLAS_INDEX_POOPING_STANDING)
             .priority(100)
@@ -197,7 +209,7 @@ public class AnimationStates {
             .priority(1)
             .animationSpeed((buddy, state) -> 3)
             .walkingSpeed((buddy, state) -> 7)
-            .activationCondition(buddy -> (buddy.energy >= 70) && buddy.chanceCheck(0.02f)) // 0.02% chance to trigger RUNNING when energy is high enough
+            .activationCondition(buddy -> (buddy.energy >= 50) && buddy.chanceCheck(0.02f)) // Adjusted from 70 to 50 for new energy scale
             .preventionCondition(buddy -> buddy.isSad() || buddy.isSleepy)
             .temporaryState(true)
             .duration(30, 50)
@@ -207,7 +219,7 @@ public class AnimationStates {
 
     public static final AnimationState WALKING = registerState(new AnimationState.Builder("WALKING", ATLAS_INDEX_IDLE_WALK)
             .priority(0)
-            .walkingSpeed((buddy, state) -> (buddy.energy < 45) ? 1 : 2) // Walks slower when tired
+            .walkingSpeed((buddy, state) -> (buddy.energy < 10) ? 1 : 2) // Walks slower when very tired (adjusted from 45)
             .activationCondition(buddy -> true) // Always valid if no other state applies
             .preventionCondition(buddy -> buddy.isSleepy)
             .build());
@@ -237,7 +249,7 @@ public class AnimationStates {
     }
 
     @NotNull
-    public static AnimationState findFirstValidStateFor(@NotNull TamagotchiBuddy buddy) {
+    public static AnimationState findFirstValidStateFor(@NotNull Buddy buddy) {
         AnimationState selectedState = null;
         for (AnimationState state : AnimationStates.getStates()) {
             if (state.canActivate(buddy)) {

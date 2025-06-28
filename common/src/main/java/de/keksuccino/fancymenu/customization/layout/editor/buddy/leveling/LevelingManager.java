@@ -4,10 +4,18 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import de.keksuccino.fancymenu.FancyMenu;
+<<<<<<< HEAD
 import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+=======
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+
+>>>>>>> 9b519ec... v3.6.0
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -28,19 +36,28 @@ public class LevelingManager {
     private static final int MAX_LEVEL = 30;
     private static final int BASE_XP_PER_LEVEL = 100;
     private static final float LEVEL_SCALING_FACTOR = 1.5f;
+<<<<<<< HEAD
     private static final int ATTRIBUTE_POINTS_PER_LEVEL = 2;
 
     // Reference to the buddy
     private final TamagotchiBuddy buddy;
+=======
+
+    // Reference to the buddy
+    private final Buddy buddy;
+>>>>>>> 9b519ec... v3.6.0
 
     // Leveling data
     private int currentLevel = 1;
     private int experience = 0;
+<<<<<<< HEAD
     // Removed skill points and unlocks
 
     // Attributes removed
 
     // Skills - removed
+=======
+>>>>>>> 9b519ec... v3.6.0
 
     // Achievements
     private final Map<BuddyAchievement.AchievementType, BuddyAchievement> achievements = new EnumMap<>(BuddyAchievement.AchievementType.class);
@@ -62,7 +79,11 @@ public class LevelingManager {
      *
      * @param buddy The buddy to manage leveling for
      */
+<<<<<<< HEAD
     public LevelingManager(@NotNull TamagotchiBuddy buddy) {
+=======
+    public LevelingManager(@NotNull Buddy buddy) {
+>>>>>>> 9b519ec... v3.6.0
         this.buddy = buddy;
         
         // Attributes initialization removed
@@ -239,7 +260,11 @@ public class LevelingManager {
         int oldLevel = currentLevel;
         
         experience += amount;
+<<<<<<< HEAD
         LOGGER.info("Added {} XP to buddy, total XP: {}", amount, experience);
+=======
+        LOGGER.debug("Added {} XP to buddy, total XP: {}", amount, experience);
+>>>>>>> 9b519ec... v3.6.0
         
         // Check for level-ups
         while (currentLevel < MAX_LEVEL && experience >= levelExperience[currentLevel + 1]) {
@@ -248,7 +273,11 @@ public class LevelingManager {
             
             // Attribute points award removed
             
+<<<<<<< HEAD
             LOGGER.info("Buddy leveled up to level {}!", currentLevel);
+=======
+            LOGGER.debug("Buddy leveled up to level {}!", currentLevel);
+>>>>>>> 9b519ec... v3.6.0
             
             // Check for level-based achievements
             checkLevelAchievements();
@@ -272,7 +301,11 @@ public class LevelingManager {
         buddy.lookChancePercentage = Math.min(0.8f, 0.2f + (currentLevel * 0.02f));
         buddy.stretchChancePercentage = Math.min(0.5f, 0.1f + (currentLevel * 0.01f));
         buddy.excitedChancePercentage = Math.min(0.5f, 0.1f + (currentLevel * 0.01f));
+<<<<<<< HEAD
         buddy.poopingInterval = Math.max(1000, 1500 - (int)(100 * Math.min(5, currentLevel)));
+=======
+        buddy.poopingInterval = Math.max(4000, 6000 - (int)(200 * Math.min(10, currentLevel))); // Reduced from 1500-100 to 6000-200
+>>>>>>> 9b519ec... v3.6.0
         buddy.hopAnimationSpeed = 0.3f + (0.01f * Math.min(30, currentLevel));
         
         // Apply buddy effects based on level only
@@ -291,12 +324,18 @@ public class LevelingManager {
         float happinessMultiplier = 1.0f - (levelProgress * 0.5f); // Up to 50% slower happiness decrease
         float energyMultiplier = 1.0f - (levelProgress * 0.5f); // Up to 50% slower energy decrease
         float happinessGainMultiplier = 1.0f + (levelProgress * 0.5f); // Up to 50% more happiness gain
+<<<<<<< HEAD
         float moveSpeedBonus = levelProgress * 2.0f; // Up to +2 move speed
         float experienceMultiplier = 1.0f + (levelProgress * 0.3f); // Up to 30% more experience
         float animationVarietyBonus = levelProgress * 0.5f; // Up to 50% more animation variety
         float needsUnderstandingBonus = levelProgress * 0.5f; // Up to 50% better needs understanding
         float luckBonus = levelProgress * 0.4f; // Up to 40% better luck
         float skillEffectMultiplier = 1.0f; // No skills, so this is unused
+=======
+        float experienceMultiplier = 1.0f + (levelProgress * 0.3f); // Up to 30% more experience
+        float needsUnderstandingBonus = levelProgress * 0.5f; // Up to 50% better needs understanding
+        float luckBonus = levelProgress * 0.4f; // Up to 40% better luck
+>>>>>>> 9b519ec... v3.6.0
         
         // Store these effects for the TamagotchiBuddy to use
         buddy.setAttributeEffects(
@@ -304,6 +343,7 @@ public class LevelingManager {
                 happinessMultiplier,
                 energyMultiplier,
                 happinessGainMultiplier,
+<<<<<<< HEAD
                 moveSpeedBonus,
                 experienceMultiplier,
                 animationVarietyBonus,
@@ -321,6 +361,14 @@ public class LevelingManager {
     
     // Unlock methods removed
     
+=======
+                experienceMultiplier,
+                needsUnderstandingBonus,
+                luckBonus
+        );
+    }
+    
+>>>>>>> 9b519ec... v3.6.0
     /**
      * Updates the session time tracking and checks for time-based achievements.
      */
@@ -462,7 +510,11 @@ public class LevelingManager {
         boolean unlocked = achievement.unlock(this);
         
         if (unlocked) {
+<<<<<<< HEAD
             LOGGER.info("Unlocked achievement: {}", type.getName());
+=======
+            LOGGER.debug("Unlocked achievement: {}", type.getName());
+>>>>>>> 9b519ec... v3.6.0
             
             // Check for completion collector achievement
             checkCompletionCollectorAchievement();
@@ -492,7 +544,11 @@ public class LevelingManager {
             BuddyAchievement completionCollector = achievements.get(BuddyAchievement.AchievementType.COMPLETION_COLLECTOR);
             if (completionCollector != null && !completionCollector.isUnlocked()) {
                 completionCollector.unlock(this);
+<<<<<<< HEAD
                 LOGGER.info("Unlocked achievement: {}", BuddyAchievement.AchievementType.COMPLETION_COLLECTOR.getName());
+=======
+                LOGGER.debug("Unlocked achievement: {}", BuddyAchievement.AchievementType.COMPLETION_COLLECTOR.getName());
+>>>>>>> 9b519ec... v3.6.0
             }
         }
     }
@@ -515,7 +571,11 @@ public class LevelingManager {
             BuddyAchievement achievementHunter = achievements.get(BuddyAchievement.AchievementType.ACHIEVEMENT_HUNTER);
             if (achievementHunter != null && !achievementHunter.isUnlocked()) {
                 achievementHunter.unlock(this);
+<<<<<<< HEAD
                 LOGGER.info("Unlocked achievement: {}", BuddyAchievement.AchievementType.ACHIEVEMENT_HUNTER.getName());
+=======
+                LOGGER.debug("Unlocked achievement: {}", BuddyAchievement.AchievementType.ACHIEVEMENT_HUNTER.getName());
+>>>>>>> 9b519ec... v3.6.0
             }
         }
     }
@@ -538,10 +598,13 @@ public class LevelingManager {
             json.addProperty("level", currentLevel);
             json.addProperty("experience", experience);
             
+<<<<<<< HEAD
             // Attribute saving removed
             
             // Skills removed
             
+=======
+>>>>>>> 9b519ec... v3.6.0
             // Save achievements
             JsonObject achievementsObj = new JsonObject();
             for (Map.Entry<BuddyAchievement.AchievementType, BuddyAchievement> entry : achievements.entrySet()) {
@@ -567,7 +630,11 @@ public class LevelingManager {
                 GSON.toJson(json, writer);
             }
             
+<<<<<<< HEAD
             LOGGER.info("Saved buddy leveling data to {}", saveFile.getAbsolutePath());
+=======
+            LOGGER.debug("Saved buddy leveling data to {}", saveFile.getAbsolutePath());
+>>>>>>> 9b519ec... v3.6.0
             return true;
             
         } catch (IOException e) {
@@ -584,7 +651,11 @@ public class LevelingManager {
     public boolean loadState() {
         File saveFile = new File(BUDDY_DIR, SAVE_FILENAME);
         if (!saveFile.exists()) {
+<<<<<<< HEAD
             LOGGER.info("No buddy leveling save file found at {}", saveFile.getAbsolutePath());
+=======
+            LOGGER.debug("No buddy leveling save file found at {}", saveFile.getAbsolutePath());
+>>>>>>> 9b519ec... v3.6.0
             return false;
         }
         
@@ -604,10 +675,13 @@ public class LevelingManager {
                 experience = Math.max(calculateExperienceForLevel(currentLevel), experience);
             }
             
+<<<<<<< HEAD
             // Attribute loading removed
             
             // Skills loading removed
             
+=======
+>>>>>>> 9b519ec... v3.6.0
             // Load achievements
             if (json.has("achievements")) {
                 JsonObject achievementsObj = json.getAsJsonObject("achievements");
@@ -657,8 +731,13 @@ public class LevelingManager {
             // Apply level stat boosts after loading
             applyLevelStatBoosts();
             
+<<<<<<< HEAD
             LOGGER.info("Loaded buddy leveling data from {}", saveFile.getAbsolutePath());
             LOGGER.info("Current level: {}, Experience: {}",
+=======
+            LOGGER.debug("Loaded buddy leveling data from {}", saveFile.getAbsolutePath());
+            LOGGER.debug("Current level: {}, Experience: {}",
+>>>>>>> 9b519ec... v3.6.0
                     currentLevel, experience);
             
             return true;
@@ -669,8 +748,11 @@ public class LevelingManager {
         }
     }
     
+<<<<<<< HEAD
     // Getters and setters
     
+=======
+>>>>>>> 9b519ec... v3.6.0
     public int getCurrentLevel() {
         return currentLevel;
     }

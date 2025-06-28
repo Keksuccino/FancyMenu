@@ -35,6 +35,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.NotificationScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizerHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorTheme;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorThemeRegistry;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -62,9 +64,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -142,6 +142,17 @@ public class CustomizationOverlayUI {
             }
         }).setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.copy_current_screen_identifier.desc")))
                 .setIcon(ContextMenu.IconFactory.getIcon("copy"));
+
+        customizationMenu.addValueCycleEntry("normalize_current_scroll_screen", CommonCycles.cycleEnabledDisabled("fancymenu.scroll_screen_normalizer", ScrollScreenNormalizerHandler.shouldNormalize(screen))
+                        .addCycleListener(cycle -> {
+                            MainThreadTaskExecutor.executeInMainThread(() -> {
+                                grandfatheredMenuBar = CustomizationOverlay.getCurrentMenuBarInstance();
+                                ScrollScreenNormalizerHandler.setForScreen(screen, cycle.getAsBoolean());
+                                ScreenCustomization.reInitCurrentScreen();
+                            }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+                        }))
+                .addIsActiveSupplier((menu, entry) -> !ScrollScreenNormalizer.isBlacklisted(screen))
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.scroll_screen_normalizer.desc")));
 
         customizationMenu.addClickableEntry("force_close_current_screen", Component.translatable("fancymenu.overlay.menu_bar.customization.close_current_screen"), (menu, entry) -> {
             menu.closeMenu();
