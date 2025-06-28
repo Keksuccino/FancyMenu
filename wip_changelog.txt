@@ -1,6 +1,7 @@
 
 CHANGELOG | FANCYMENU v3.6.0 [ W I P !! Not public yet !! ]
 
+- Dropped support for Minecraft 1.21.5
 - Added "Checkbox" element as an easy way to toggle settings (#940)
   - Executes its action script on click
   - Similar to sliders, the current checkbox state can be accessed with $$value in the action script and loading requirements
