@@ -41,7 +41,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     protected volatile boolean muteAllMediaOnLoad = false;
     protected volatile boolean loopAllVideos = false;
     protected volatile boolean hideVideoControls = false;
-    protected UUID genericIdentifier = UUID.randomUUID();
+    protected final UUID genericIdentifier = UUID.randomUUID();
     protected final ResourceLocation frameLocation = new ResourceLocation("fancymenu", "mcef_browser_frame_texture_" + this.genericIdentifier.toString().toLowerCase().replace("-", ""));
     protected final BrowserFrameTexture frameTexture = new BrowserFrameTexture(-1);
     
