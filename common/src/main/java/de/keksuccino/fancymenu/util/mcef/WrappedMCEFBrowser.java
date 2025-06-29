@@ -3,31 +3,30 @@ package de.keksuccino.fancymenu.util.mcef;
 import com.cinemamod.mcef.MCEF;
 import com.cinemamod.mcef.MCEFBrowser;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.*;
-import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.renderer.CoreShaders;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.ARGB;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
-public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, FancyMenuUiComponent, NavigatableWidget {
+public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, NavigatableWidget {
 
     protected static final Logger LOGGER = LogManager.getLogger();
     protected static final ScheduledExecutorService EXECUTOR = Executors. newSingleThreadScheduledExecutor();
@@ -44,8 +43,10 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Fan
     protected volatile boolean muteAllMediaOnLoad = false;
     protected volatile boolean loopAllVideos = false;
     protected volatile boolean hideVideoControls = false;
-    protected UUID genericIdentifier = UUID.randomUUID();
-    
+    protected final UUID genericIdentifier = UUID.randomUUID();
+    protected final ResourceLocation frameLocation = ResourceLocation.fromNamespaceAndPath("fancymenu", "mcef_browser_frame_texture_" + this.genericIdentifier.toString().toLowerCase().replace("-", ""));
+    protected final BrowserFrameTexture frameTexture = new BrowserFrameTexture(-1);
+
     // Track if initialization is complete for this browser
     private volatile boolean initialized = false;
 
@@ -95,8 +96,12 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Fan
         this.setSize(200, 200);
         this.setPosition(0, 0);
 
+        this.frameTexture.setId(this.browser.getRenderer().getTextureID());
+
+        Minecraft.getInstance().getTextureManager().register(this.frameLocation, this.frameTexture);
+
     }
-    
+
     /**
      * Apply all initial settings once the page is loaded
      */
@@ -110,47 +115,21 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Fan
 
     @Override
     protected void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
         try {
+
+            this.frameTexture.setId(this.browser.getRenderer().getTextureID());
 
             if (this.autoHandle) BrowserHandler.notifyHandler(this.genericIdentifier.toString(), this);
 
-            graphics.flush();
-            RenderSystem.disableDepthTest();
-            RenderSystem.setShader(CoreShaders.POSITION_TEX_COLOR);
-            RenderSystem.setShaderTexture(0, this.browser.getRenderer().getTextureID());
-            Tesselator t = Tesselator.getInstance();
-            BufferBuilder buffer = t.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+            RenderSystem.enableBlend();
 
-            int alpha = (int)(this.opacity * 255.0F);
-
-            // Bottom left vertex
-            buffer.addVertex(this.getX(), this.getY() + this.getHeight(), 0.0F)
-                    .setUv(0.0F, 1.0F)
-                    .setColor(255, 255, 255, alpha);
-
-            // Bottom right vertex
-            buffer.addVertex(this.getX() + this.getWidth(), this.getY() + this.getHeight(), 0.0F)
-                    .setUv(1.0F, 1.0F)
-                    .setColor(255, 255, 255, alpha);
-
-            // Top right vertex
-            buffer.addVertex(this.getX() + this.getWidth(), this.getY(), 0.0F)
-                    .setUv(1.0F, 0.0F)
-                    .setColor(255, 255, 255, alpha);
-
-            // Top left vertex
-            buffer.addVertex(this.getX(), this.getY(), 0.0F)
-                    .setUv(0.0F, 0.0F)
-                    .setColor(255, 255, 255, alpha);
-
-            BufferUploader.drawWithShader(Objects.requireNonNull(buffer.build()));
-            RenderSystem.setShaderTexture(0, 0);
-            RenderSystem.enableDepthTest();
-            graphics.flush();
+            graphics.blit(RenderType::guiTextured, this.frameLocation, this.getX(), this.getY(), 0.0F, 0.0F, this.getWidth(), this.getHeight(), this.getWidth(), this.getHeight(), ARGB.white(this.opacity));
 
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to render MCEFBrowser!", ex);
         }
+
     }
 
     public void onVolumeUpdated(@NotNull SoundSource soundSource, float newVolume) {
@@ -239,6 +218,18 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Fan
     public void setSize(int width, int height) {
         super.setSize(width, height);
         this.browser.resize(this.convertWidth(width), this.convertHeight(height));
+    }
+
+    @Override
+    public void setWidth(int width) {
+        this.width = width;
+        this.setSize(this.width, this.height);
+    }
+
+    @Override
+    public void setHeight(int height) {
+        this.height = height;
+        this.setSize(this.width, this.height);
     }
 
     protected int convertMouseX(double mouseX) {
@@ -462,14 +453,21 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Fan
     public MCEFBrowser getBrowser() {
         return this.browser;
     }
-    
+
     /**
      * Get the browser identifier
-     * 
+     *
      * @return The browser identifier
      */
     public String getIdentifier() {
         return this.genericIdentifier.toString();
+    }
+
+    @NotNull
+    public ResourceLocation getFrameLocation() {
+        this.frameTexture.setId(this.browser.getRenderer().getTextureID());
+        if (this.autoHandle) BrowserHandler.notifyHandler(this.genericIdentifier.toString(), this);
+        return this.frameLocation;
     }
 
     @Override
@@ -497,6 +495,7 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Fan
             BrowserLoadEventListenerManager.getInstance().unregisterAllListenersForBrowser(this.getIdentifier());
             this.browser.close(true);
         }
+        Minecraft.getInstance().getTextureManager().release(this.frameLocation);
     }
 
 }
