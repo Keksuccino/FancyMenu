@@ -11,6 +11,7 @@ import net.minecraft.commands.arguments.NbtPathArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.*;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -52,7 +53,7 @@ public class NbtDataGetPlaceholder extends Placeholder {
         try {
             // Parse NBT path
             NbtPathArgument.NbtPath path = NbtPathArgument.NbtPath.of(nbtPath);
-            
+
             // Get the source NBT data
             CompoundTag sourceData = getSourceData(sourceType, dps);
             if (sourceData == null) {
@@ -66,17 +67,18 @@ public class NbtDataGetPlaceholder extends Placeholder {
             }
 
             Tag tag = tags.get(0);
-            
+
             // Return based on return type
             if ("string".equalsIgnoreCase(returnType)) {
                 // Return the actual NBT data as string
-                return tag.getAsString();
+                return getTagAsString(tag);
             } else if ("snbt".equalsIgnoreCase(returnType)) {
                 // Return as SNBT (formatted NBT)
                 return tag.toString();
             } else if ("json".equalsIgnoreCase(returnType) && tag instanceof CompoundTag) {
                 // Return as JSON-formatted component
-                String json = Component.Serializer.toJson(NbtUtils.toPrettyComponent(tag), level.registryAccess());
+                Component component = NbtUtils.toPrettyComponent(tag);
+                String json = ComponentSerialization.CODEC.encodeStart(level.registryAccess().createSerializationContext(com.mojang.serialization.JsonOps.INSTANCE), component).getOrThrow().toString();
                 if (json.startsWith("\"") && json.endsWith("\"")) {
                     json = json.substring(1, json.length() - 1);
                 }
@@ -93,7 +95,7 @@ public class NbtDataGetPlaceholder extends Placeholder {
                 }
                 return getTagValue(tag, scale);
             }
-            
+
         } catch (Exception e) {
             LOGGER.error("[FANCYMENU] Error in nbt_data_get placeholder: " + e.getMessage());
             return "";
@@ -164,10 +166,13 @@ public class NbtDataGetPlaceholder extends Placeholder {
 
         if (targetEntity == null) return null;
 
-        // Get entity NBT data
-        CompoundTag tag = new CompoundTag();
-        targetEntity.saveWithoutId(tag);
-        return tag;
+        // Get entity NBT data using the new ValueOutput system in 1.21.6
+        // Use DISCARDING reporter since we don't need to collect problems
+        net.minecraft.world.level.storage.TagValueOutput valueOutput = net.minecraft.world.level.storage.TagValueOutput.createWithoutContext(
+                net.minecraft.util.ProblemReporter.DISCARDING
+        );
+        targetEntity.saveWithoutId(valueOutput);
+        return valueOutput.buildResult();
     }
 
     private CompoundTag getBlockData(DeserializedPlaceholderString dps) {
@@ -188,7 +193,7 @@ public class NbtDataGetPlaceholder extends Placeholder {
 
             BlockPos pos = new BlockPos(x, y, z);
             BlockEntity blockEntity = level.getBlockEntity(pos);
-            
+
             if (blockEntity != null) {
                 return blockEntity.saveWithoutMetadata(level.registryAccess());
             }
@@ -199,18 +204,30 @@ public class NbtDataGetPlaceholder extends Placeholder {
         return null;
     }
 
+    private String getTagAsString(Tag tag) {
+        // Handle different tag types appropriately
+        if (tag instanceof StringTag stringTag) {
+            return stringTag.value();
+        } else if (tag instanceof NumericTag) {
+            return tag.toString();
+        } else {
+            // For compound tags and lists, use the string representation
+            return tag.toString();
+        }
+    }
+
     private String getTagValue(Tag tag, double scale) {
         if (tag instanceof NumericTag numericTag) {
             // Numeric value with optional scaling
             if (scale != 1.0) {
-                return String.valueOf(Mth.floor(numericTag.getAsDouble() * scale));
+                return String.valueOf(Mth.floor(numericTag.doubleValue() * scale));
             } else {
-                return String.valueOf(Mth.floor(numericTag.getAsDouble()));
+                return String.valueOf(Mth.floor(numericTag.doubleValue()));
             }
-        } else if (tag instanceof StringTag) {
+        } else if (tag instanceof StringTag stringTag) {
             // String length
-            return String.valueOf(tag.getAsString().length());
-        } else if (tag instanceof CollectionTag<?> collectionTag) {
+            return String.valueOf(stringTag.value().length());
+        } else if (tag instanceof CollectionTag collectionTag) {
             // Collection size
             return String.valueOf(collectionTag.size());
         } else if (tag instanceof CompoundTag compoundTag) {
@@ -218,7 +235,7 @@ public class NbtDataGetPlaceholder extends Placeholder {
             return String.valueOf(compoundTag.size());
         } else {
             // For other types, return the string representation
-            return tag.getAsString();
+            return getTagAsString(tag);
         }
     }
 
