@@ -16,8 +16,10 @@ import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2f;
-import javax.annotation.Nullable;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import java.awt.*;
 
 public class RenderingUtils {
@@ -229,6 +231,18 @@ public class RenderingUtils {
     public static void blitNineSlicedTexture(GuiGraphics graphics, @NotNull RenderPipeline renderType, ResourceLocation texture, int x, int y, int width, int height,
                                              int textureWidth, int textureHeight,
                                              int borderTop, int borderRight, int borderBottom, int borderLeft, int color) {
+
+        // Correct border sizes if they're too large
+        if (borderLeft + borderRight >= textureWidth) {
+            float scale = (float)(textureWidth - 2) / (borderLeft + borderRight);
+            borderLeft = (int)(borderLeft * scale);
+            borderRight = (int)(borderRight * scale);
+        }
+        if (borderTop + borderBottom >= textureHeight) {
+            float scale = (float)(textureHeight - 2) / (borderTop + borderBottom);
+            borderTop = (int)(borderTop * scale);
+            borderBottom = (int)(borderBottom * scale);
+        }
 
         // Corner pieces
         // Top left

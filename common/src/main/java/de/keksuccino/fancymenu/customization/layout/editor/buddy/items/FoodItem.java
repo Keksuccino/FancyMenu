@@ -1,9 +1,8 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy.items;
 
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddy;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy;
 import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 
@@ -23,9 +22,9 @@ public class FoodItem {
     public boolean justCreated = true;
 
     // Reference to the buddy
-    public final TamagotchiBuddy buddy;
+    public final Buddy buddy;
 
-    public FoodItem(int x, int y, TamagotchiBuddy buddy) {
+    public FoodItem(int x, int y, Buddy buddy) {
         this.x = x;
         this.y = y;
         this.buddy = buddy;
@@ -33,7 +32,6 @@ public class FoodItem {
 
     public void render(GuiGraphics graphics) {
         graphics.blit(
-                RenderPipelines.GUI_TEXTURED,
                 TEXTURE_FOOD,
                 x - size/2, y - size/2,
                 0, 0,

@@ -3,6 +3,8 @@ package de.keksuccino.fancymenu.customization.background.backgrounds.image;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
+import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -25,7 +27,9 @@ public class ImageMenuBackground extends MenuBackground {
     public boolean repeat = false;
     public boolean parallaxEnabled = false;
     /** Value between 0.0 and 1.0, where 0.0 is no movement and 1.0 is maximum movement **/
-    public float parallaxIntensity = 0.02F;
+    @NotNull
+    public String parallaxIntensityString = "0.02";
+    public float lastParallaxIntensity = -10000.0F;
     /** When TRUE, the parallax effect will move in the SAME direction as the mouse, otherwise it moves in the opposite direction **/
     public boolean invertParallax = false;
 
@@ -40,6 +44,8 @@ public class ImageMenuBackground extends MenuBackground {
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
+        this.lastParallaxIntensity = SerializationUtils.deserializeNumber(Float.class, 0.02F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityString));
 
         ResourceLocation resourceLocation = null;
         ITexture tex = null;
@@ -88,8 +94,8 @@ public class ImageMenuBackground extends MenuBackground {
         float directionMultiplier = invertParallax ? 1.0f : -1.0f;
 
         // Calculate offset based on screen dimensions and center-adjusted mouse position
-        float xOffset = directionMultiplier * parallaxIntensity * mouseXPercent * getScreenWidth() * 0.5f;
-        float yOffset = directionMultiplier * parallaxIntensity * mouseYPercent * getScreenHeight() * 0.5f;
+        float xOffset = directionMultiplier * this.lastParallaxIntensity * mouseXPercent * getScreenWidth() * 0.5f;
+        float yOffset = directionMultiplier * this.lastParallaxIntensity * mouseYPercent * getScreenHeight() * 0.5f;
 
         return new float[]{xOffset, yOffset};
     }
@@ -97,8 +103,8 @@ public class ImageMenuBackground extends MenuBackground {
     protected void renderRepeatBackground(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation, ITexture tex, float[] parallaxOffset) {
         if (parallaxEnabled) {
             // Create expanded area for parallax movement
-            int expandedWidth = (int)(getScreenWidth() * (1.0F + parallaxIntensity));
-            int expandedHeight = (int)(getScreenHeight() * (1.0F + parallaxIntensity));
+            int expandedWidth = (int)(getScreenWidth() * (1.0F + this.lastParallaxIntensity));
+            int expandedHeight = (int)(getScreenHeight() * (1.0F + this.lastParallaxIntensity));
 
             // Center the expanded area and apply parallax offset
             int baseX = -((expandedWidth - getScreenWidth()) / 2) + (int)parallaxOffset[0];
@@ -136,7 +142,7 @@ public class ImageMenuBackground extends MenuBackground {
 
     protected void renderKeepAspectRatio(@NotNull GuiGraphics graphics, @NotNull AspectRatio ratio, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset) {
         // Calculate base size with reduced parallax expansion
-        float parallaxScale = parallaxEnabled ? (1.0F + parallaxIntensity) : 1.0F;
+        float parallaxScale = parallaxEnabled ? (1.0F + this.lastParallaxIntensity) : 1.0F;
         int[] baseSize = ratio.getAspectRatioSizeByMinimumSize(
                 (int)(getScreenWidth() * parallaxScale),
                 (int)(getScreenHeight() * parallaxScale)
@@ -156,8 +162,8 @@ public class ImageMenuBackground extends MenuBackground {
     protected void renderFullScreen(@NotNull GuiGraphics graphics, @NotNull ResourceLocation resourceLocation, float[] parallaxOffset) {
         if (parallaxEnabled) {
             // Reduce the expansion amount for parallax
-            int expandedWidth = (int)(getScreenWidth() * (1.0F + parallaxIntensity));
-            int expandedHeight = (int)(getScreenHeight() * (1.0F + parallaxIntensity));
+            int expandedWidth = (int)(getScreenWidth() * (1.0F + this.lastParallaxIntensity));
+            int expandedHeight = (int)(getScreenHeight() * (1.0F + this.lastParallaxIntensity));
 
             // Center the expanded area and apply parallax offset
             int x = -((expandedWidth - getScreenWidth()) / 2) + (int)parallaxOffset[0];

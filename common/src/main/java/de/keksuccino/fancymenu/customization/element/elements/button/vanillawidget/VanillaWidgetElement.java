@@ -112,6 +112,12 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
     }
 
     @Override
+    public void updateWidgetActiveState() {
+        if (this.activeStateSupplier.isEmpty()) return;
+        super.updateWidgetActiveState();
+    }
+
+    @Override
     public @NotNull String getInstanceIdentifier() {
         if (this.widgetMeta != null) {
             return this.widgetMeta.getIdentifier().replace("vanillabtn:", "").replace("button_compatibility_id:", "");

@@ -59,6 +59,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
     public boolean plainText = false;
     public ResourceLocation font = null;
     public boolean hovered = false;
+    public TableContext tableContext = null;
 
     public MarkdownTextFragment(@NotNull MarkdownRenderer parent, @NotNull String text) {
         this.parent = parent;
@@ -73,6 +74,12 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
 
         if ((this.hyperlink != null) && this.hovered) {
             CursorHandler.setClientTickCursor(CursorHandler.CURSOR_POINTING_HAND);
+        }
+
+        // Handle table rendering
+        if (this.isTable()) {
+            renderTable(graphics, mouseX, mouseY, partial);
+            return;
         }
 
         if (this.imageSupplier != null) {
@@ -102,8 +109,173 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
 
     }
 
+    protected void renderTable(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        if (this.tableContext == null) return;
+        
+        // Calculate column widths
+        this.tableContext.calculateColumnWidths(this.parent);
+        
+        // Use the fragment's x position which already includes alignment offset
+        float tableX = this.x;
+        float tableY = this.y + this.parent.tableMargin; // Add margin before table
+        float currentY = tableY;
+        
+        // Use the actual table width for rendering (not the full area width)
+        float actualTableWidth = this.tableContext.totalWidth;
+        
+        // Render rows
+        int dataRowIndex = 0; // Track data rows separately for alternating colors
+        for (int rowIndex = 0; rowIndex < this.tableContext.rows.size(); rowIndex++) {
+            TableRow row = this.tableContext.rows.get(rowIndex);
+            float rowHeight = this.tableContext.getRowHeight(row);
+            float currentX = tableX;
+            
+            // Draw row background
+            if (row.isHeader && this.parent.tableShowHeader) {
+                // Header background
+                RenderingUtils.fillF(graphics, tableX, currentY, tableX + actualTableWidth, 
+                    currentY + rowHeight, this.parent.tableHeaderBackgroundColor.getColorIntWithAlpha(this.parent.textOpacity));
+            } else if (!row.isHeader) {
+                // Regular row background - alternate between two colors
+                if (this.parent.tableAlternateRowColors && dataRowIndex % 2 == 1) {
+                    // Alternate rows
+                    RenderingUtils.fillF(graphics, tableX, currentY, tableX + actualTableWidth, 
+                        currentY + rowHeight, this.parent.tableAlternateRowColor.getColorIntWithAlpha(this.parent.textOpacity));
+                } else {
+                    // Base rows
+                    RenderingUtils.fillF(graphics, tableX, currentY, tableX + actualTableWidth, 
+                        currentY + rowHeight, this.parent.tableRowBackgroundColor.getColorIntWithAlpha(this.parent.textOpacity));
+                }
+                dataRowIndex++;
+            }
+            
+            // Render cells
+            for (int cellIndex = 0; cellIndex < row.cells.size(); cellIndex++) {
+                if (cellIndex >= this.tableContext.columnWidths.size()) break;
+                
+                TableCell cell = row.cells.get(cellIndex);
+                float cellWidth = this.tableContext.columnWidths.get(cellIndex);
+                
+                // Calculate text position based on alignment
+                float textX = currentX + this.parent.tableCellPadding;
+                float textY = currentY + this.parent.tableCellPadding;
+                
+                // Calculate alignment offset once for all fragments
+                float totalTextWidth = 0;
+                for (MarkdownTextFragment f : cell.fragments) {
+                    totalTextWidth += f.getTextRenderWidth();
+                }
+                
+                float alignmentOffset = 0;
+                if (cell.alignment == TableCell.TableCellAlignment.CENTER) {
+                    alignmentOffset = (cellWidth - this.parent.tableCellPadding * 2 - totalTextWidth) / 2;
+                } else if (cell.alignment == TableCell.TableCellAlignment.RIGHT) {
+                    alignmentOffset = cellWidth - this.parent.tableCellPadding * 2 - totalTextWidth;
+                }
+                
+                // First pass: position fragments and render code block backgrounds
+                float fragmentX = textX + alignmentOffset;
+                float codeBlockStartX = -1;
+                MarkdownTextFragment.CodeBlockContext currentCodeBlock = null;
+                
+                for (int fragIndex = 0; fragIndex < cell.fragments.size(); fragIndex++) {
+                    MarkdownTextFragment fragment = cell.fragments.get(fragIndex);
+                    
+                    fragment.x = fragmentX;
+                    fragment.y = textY;
+                    
+                    // Track and render code block backgrounds
+                    if (fragment.codeBlockContext != null && fragment.codeBlockContext.singleLine) {
+                        if (currentCodeBlock == null || currentCodeBlock != fragment.codeBlockContext) {
+                            // Start of a new code block
+                            currentCodeBlock = fragment.codeBlockContext;
+                            codeBlockStartX = fragment.x - 1;
+                        }
+                        
+                        // Check if this is the last fragment of the code block
+                        boolean isLastFragment = (fragIndex == cell.fragments.size() - 1) || 
+                                                (fragIndex + 1 < cell.fragments.size() && 
+                                                 cell.fragments.get(fragIndex + 1).codeBlockContext != currentCodeBlock);
+                        
+                        if (isLastFragment) {
+                            // Render the code block background
+                            float endX = fragment.x + fragment.getRenderWidth() + 1;
+                            if (fragment.text.endsWith(" ")) {
+                                endX -= (this.parent.font.width(" ") * fragment.getScale());
+                            }
+                            renderCodeBlockBackground(graphics, codeBlockStartX, fragment.y - 2, endX, 
+                                fragment.y + fragment.getTextRenderHeight(), 
+                                this.parent.codeBlockSingleLineColor.getColorIntWithAlpha(this.parent.textOpacity));
+                            currentCodeBlock = null;
+                        }
+                    } else {
+                        currentCodeBlock = null;
+                    }
+                    
+                    fragmentX += fragment.getTextRenderWidth();
+                }
+                
+                // Second pass: render the fragments
+                for (MarkdownTextFragment fragment : cell.fragments) {
+                    fragment.render(graphics, mouseX, mouseY, partial); // Pass actual mouse coords for hover/click detection
+                    
+                    // Check if any hyperlink in the table is hovered
+                    if (fragment.hyperlink != null && fragment.hovered) {
+                        CursorHandler.setClientTickCursor(CursorHandler.CURSOR_POINTING_HAND);
+                    }
+                }
+                
+                currentX += cellWidth;
+            }
+            
+            currentY += rowHeight;
+        }
+        
+        // Draw table borders
+        int lineColor = this.parent.tableLineColor.getColorIntWithAlpha(this.parent.textOpacity);
+        float lineThickness = this.parent.tableLineThickness;
+        
+        // Horizontal lines
+        float y = tableY;
+        for (int i = 0; i <= this.tableContext.rows.size(); i++) {
+            RenderingUtils.fillF(graphics, tableX, y, tableX + actualTableWidth, y + lineThickness, lineColor);
+            if (i < this.tableContext.rows.size()) {
+                y += this.tableContext.getRowHeight(this.tableContext.rows.get(i));
+            }
+        }
+        
+        // Draw thicker line under header
+        if (this.tableContext.hasHeader && this.parent.tableShowHeader && !this.tableContext.rows.isEmpty()) {
+            float headerY = tableY + this.tableContext.getRowHeight(this.tableContext.rows.get(0));
+            RenderingUtils.fillF(graphics, tableX, headerY, tableX + actualTableWidth, 
+                headerY + lineThickness * 2, lineColor);
+        }
+        
+        // Vertical lines
+        float x = tableX;
+        for (int i = 0; i <= this.tableContext.columnWidths.size(); i++) {
+            RenderingUtils.fillF(graphics, x, tableY, x + lineThickness, currentY + lineThickness, lineColor);
+            if (i < this.tableContext.columnWidths.size()) {
+                x += this.tableContext.columnWidths.get(i);
+            }
+        }
+
+    }
+
     protected void renderCodeBlock(GuiGraphics graphics) {
-        if ((this.codeBlockContext != null) && (this.parentLine != null)) {
+        if (this.codeBlockContext == null) return;
+        
+        // Check if this fragment is inside a table cell (has tableContext but is not the table itself)
+        boolean isInTableCell = this.tableContext != null && !this.isTable();
+        
+        // Skip code block background rendering for fragments inside table cells
+        // (handled in renderTable method)
+        if (isInTableCell) {
+            return;
+        }
+        
+        // Normal code block rendering (outside tables)
+        if (this.parentLine != null) {
             MarkdownTextFragment start = this.codeBlockContext.getBlockStart();
             MarkdownTextFragment end = this.codeBlockContext.getBlockEnd();
             if (this.codeBlockContext.singleLine) {
@@ -272,6 +444,12 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
 
     public float getRenderWidth() {
 
+        // Handle table width - return actual table width for proper alignment
+        if (this.isTable()) {
+            this.tableContext.calculateColumnWidths(this.parent);
+            return this.tableContext.totalWidth;
+        }
+
         if (this.imageSupplier != null) {
             ITexture t = this.imageSupplier.get();
             if (t == null) return 10;
@@ -309,6 +487,19 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
     }
 
     public float getRenderHeight() {
+
+        // Handle table height
+        if (this.isTable()) {
+            float totalHeight = 0;
+            for (TableRow row : this.tableContext.rows) {
+                totalHeight += this.tableContext.getRowHeight(row);
+            }
+            // Add line thickness for borders
+            totalHeight += this.parent.tableLineThickness * (this.tableContext.rows.size() + 1);
+            // Add margin above and below tables
+            totalHeight += this.parent.tableMargin * 2;
+            return totalHeight;
+        }
 
         if (this.imageSupplier != null) {
             ITexture t = this.imageSupplier.get();
@@ -375,6 +566,15 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
 
     @Override
     public boolean isMouseOver(double mouseX, double mouseY) {
+        if (this.isTable()) {
+            // For tables, use the actual table rendering area
+            this.tableContext.calculateColumnWidths(this.parent);
+            float tableX = this.x;
+            float tableY = this.y + this.parent.tableMargin;
+            float tableWidth = this.tableContext.totalWidth;
+            float tableHeight = this.getRenderHeight() - (this.parent.tableMargin * 2); // Subtract the margin
+            return RenderingUtils.isXYInArea(mouseX, mouseY, tableX, tableY, tableWidth, tableHeight);
+        }
         if ((this.imageSupplier != null) && (this.imageSupplier.get() != null)) {
             return RenderingUtils.isXYInArea(mouseX, mouseY, this.x, this.y, this.getRenderWidth(), this.getRenderHeight());
         }
@@ -383,6 +583,22 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        // Handle clicks on table cells
+        if (this.isTable() && this.tableContext != null) {
+            // Check all cell fragments for clicks
+            for (TableRow row : this.tableContext.rows) {
+                for (TableCell cell : row.cells) {
+                    for (MarkdownTextFragment fragment : cell.fragments) {
+                        if (fragment.isMouseOver(mouseX, mouseY) && fragment.mouseClicked(mouseX, mouseY, button)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+        
+        // Handle regular hyperlink clicks
         if ((this.hyperlink != null) && this.hovered) {
             WebUtils.openWebLink(this.hyperlink.link);
             return true;
@@ -397,6 +613,10 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
     @Override
     public boolean isFocused() {
         return false;
+    }
+    
+    public boolean isTable() {
+        return (this.tableContext != null) && this.text.equals("[TABLE]");
     }
 
     public static class Hyperlink {
@@ -455,6 +675,85 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener, Fancy
         BIG, // ###
         BIGGER, // ##
         BIGGEST // #
+    }
+
+    public static class TableContext {
+        public final List<TableRow> rows = new ArrayList<>();
+        public final List<Float> columnWidths = new ArrayList<>();
+        public boolean hasHeader = false;
+        public float totalWidth = 0;
+        public float x = 0;
+        public float y = 0;
+        
+        public void calculateColumnWidths(MarkdownRenderer renderer) {
+            columnWidths.clear();
+            if (rows.isEmpty()) return;
+            
+            // Initialize column widths
+            int columnCount = rows.get(0).cells.size();
+            for (int i = 0; i < columnCount; i++) {
+                columnWidths.add(0f);
+            }
+            
+            // Find maximum width for each column
+            for (TableRow row : rows) {
+                for (int i = 0; i < Math.min(row.cells.size(), columnCount); i++) {
+                    TableCell cell = row.cells.get(i);
+                    float cellWidth = 0;
+                    for (MarkdownTextFragment fragment : cell.fragments) {
+                        cellWidth += fragment.getTextRenderWidth();
+                    }
+                    cellWidth += renderer.tableCellPadding * 2;
+                    if (cellWidth > columnWidths.get(i)) {
+                        columnWidths.set(i, cellWidth);
+                    }
+                }
+            }
+            
+            // Calculate total width
+            totalWidth = 0;
+            for (Float width : columnWidths) {
+                totalWidth += width;
+            }
+        }
+        
+        public float getRowHeight(TableRow row) {
+            float maxHeight = 0;
+            for (TableCell cell : row.cells) {
+                float cellHeight = 0;
+                for (MarkdownTextFragment fragment : cell.fragments) {
+                    float fragmentHeight = fragment.getTextRenderHeight();
+                    if (fragmentHeight > cellHeight) {
+                        cellHeight = fragmentHeight;
+                    }
+                }
+                if (cellHeight > maxHeight) {
+                    maxHeight = cellHeight;
+                }
+            }
+            return maxHeight + (row.parent.tableCellPadding * 2);
+        }
+    }
+    
+    public static class TableRow {
+        public final List<TableCell> cells = new ArrayList<>();
+        public boolean isHeader = false;
+        public MarkdownRenderer parent;
+        
+        public TableRow(MarkdownRenderer parent) {
+            this.parent = parent;
+        }
+    }
+    
+    public static class TableCell {
+        public final List<MarkdownTextFragment> fragments = new ArrayList<>();
+        public TableCellAlignment alignment = TableCellAlignment.LEFT;
+        
+        public enum TableCellAlignment {
+            LEFT,
+            CENTER,
+            RIGHT
+        }
     }
 
 }

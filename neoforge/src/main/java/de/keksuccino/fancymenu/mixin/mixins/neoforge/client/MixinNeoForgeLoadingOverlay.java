@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenRenderUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -71,6 +72,8 @@ public class MixinNeoForgeLoadingOverlay {
 
         //Use window.getGuiScaledWidth/Height here to respect GUI scale modifications made in Init.Pre events
         original.call(instance, mc, mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight());
+
+        ScrollScreenNormalizer.normalizeScrollableScreen(instance);
 
         //Fire Post Screen Init events, because they normally don't get fired in the loading overlay
         EventHandler.INSTANCE.postEvent(new InitOrResizeScreenEvent.Post(Objects.requireNonNull(instance), InitOrResizeScreenEvent.InitializationPhase.INIT));

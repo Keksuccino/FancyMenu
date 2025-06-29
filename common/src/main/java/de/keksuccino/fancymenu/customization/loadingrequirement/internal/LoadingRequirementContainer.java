@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.loadingrequirement.internal;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.action.ValuePlaceholderHolder;
+import de.keksuccino.fancymenu.util.Pair;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.ListUtils;
@@ -16,6 +17,8 @@ import java.util.function.Supplier;
 public class LoadingRequirementContainer implements ValuePlaceholderHolder {
 
     private static final Logger LOGGER = LogManager.getLogger();
+
+    private static final Map<String, Pair<Long, Boolean>> COOLDOWN_CACHE = new HashMap<>();
 
     protected final List<LoadingRequirementGroup> groups = new ArrayList<>();
     protected final List<LoadingRequirementInstance> instances = new ArrayList<>();
@@ -36,22 +39,30 @@ public class LoadingRequirementContainer implements ValuePlaceholderHolder {
         if (this.forceRequirementsNotMet) {
             return false;
         }
+        long now = System.currentTimeMillis();
+        // Use cache if last value update was less than 150ms ago for performance
+        if (COOLDOWN_CACHE.containsKey(this.identifier) && ((COOLDOWN_CACHE.get(this.identifier).getKey() + 150) > now)) {
+            return COOLDOWN_CACHE.get(this.identifier).getValue();
+        }
         try {
             for (LoadingRequirementGroup g : this.groups) {
                 if (!g.requirementsMet()) {
+                    COOLDOWN_CACHE.put(this.identifier, Pair.of(now, false));
                     return false;
                 }
             }
             for (LoadingRequirementInstance i : this.instances) {
                 if (!i.requirementMet()) {
+                    COOLDOWN_CACHE.put(this.identifier, Pair.of(now, false));
                     return false;
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("[FANCYMENU] Error while checking LoadingRequirements of LoadingRequirementContainer!");
-            e.printStackTrace();
+            LOGGER.error("[FANCYMENU] Error while checking LoadingRequirements of LoadingRequirementContainer!", e);
+            COOLDOWN_CACHE.put(this.identifier, Pair.of(now, false));
             return false;
         }
+        COOLDOWN_CACHE.put(this.identifier, Pair.of(now, true));
         return true;
     }
 
@@ -132,6 +143,10 @@ public class LoadingRequirementContainer implements ValuePlaceholderHolder {
         this.forceRequirementsNotMet = forceNotMet;
         this.forceRequirementsMet = false;
         return this;
+    }
+
+    public boolean isEmpty() {
+        return this.groups.isEmpty() && this.instances.isEmpty();
     }
 
     /**
