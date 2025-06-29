@@ -17,6 +17,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Objects;
@@ -109,49 +111,39 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
     @Override
     protected void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+
         try {
 
             if (this.autoHandle) BrowserHandler.notifyHandler(this.genericIdentifier.toString(), this);
 
-            graphics.flush();
             RenderSystem.disableDepthTest();
-            RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
             RenderSystem.setShaderTexture(0, this.browser.getRenderer().getTextureID());
+            RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+            RenderSystem.enableBlend();
             Tesselator t = Tesselator.getInstance();
             BufferBuilder buffer = t.getBuilder();
-
             buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
 
             int alpha = (int)(this.opacity * 255.0F);
 
             // Bottom left vertex
-            buffer.vertex(this.getX(), this.getY() + this.getHeight(), 0.0F)
-                    .uv(0.0F, 1.0F)
-                    .color(255, 255, 255, alpha);
-
+            buffer.vertex(this.getX(), this.getY() + this.getHeight(), 0.0F).color(255, 255, 255, alpha).uv(0.0F, 1.0F).endVertex();
             // Bottom right vertex
-            buffer.vertex(this.getX() + this.getWidth(), this.getY() + this.getHeight(), 0.0F)
-                    .uv(1.0F, 1.0F)
-                    .color(255, 255, 255, alpha);
-
+            buffer.vertex(this.getX() + this.getWidth(), this.getY() + this.getHeight(), 0.0F).color(255, 255, 255, alpha).uv(1.0F, 1.0F).endVertex();
             // Top right vertex
-            buffer.vertex(this.getX() + this.getWidth(), this.getY(), 0.0F)
-                    .uv(1.0F, 0.0F)
-                    .color(255, 255, 255, alpha);
-
+            buffer.vertex(this.getX() + this.getWidth(), this.getY(), 0.0F).color(255, 255, 255, alpha).uv(1.0F, 0.0F).endVertex();
             // Top left vertex
-            buffer.vertex(this.getX(), this.getY(), 0.0F)
-                    .uv(0.0F, 0.0F)
-                    .color(255, 255, 255, alpha);
+            buffer.vertex(this.getX(), this.getY(), 0.0F).color(255, 255, 255, alpha).uv(0.0F, 0.0F).endVertex();
 
-            BufferUploader.drawWithShader(Objects.requireNonNull(buffer.end()));
+            BufferUploader.drawWithShader(buffer.end());
             RenderSystem.setShaderTexture(0, 0);
             RenderSystem.enableDepthTest();
-            graphics.flush();
+            RenderSystem.disableBlend();
 
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to render MCEFBrowser!", ex);
         }
+
     }
 
     public void onVolumeUpdated(@NotNull SoundSource soundSource, float newVolume) {
