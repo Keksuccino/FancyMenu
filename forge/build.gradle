@@ -79,8 +79,8 @@ dependencies {
     implementation('net.sf.jopt-simple:jopt-simple:5.0.4') { version { strictly '5.0.4' } }
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
     //Needs to be "implementation" when building and "compileOnly" in-dev for some frickin reason
-    implementation(annotationProcessor("io.github.llamalad7:mixinextras-common:0.4.1"))
-    //compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.4.1"))
+    //implementation(annotationProcessor("io.github.llamalad7:mixinextras-common:0.4.1"))
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.4.1"))
     implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.4.1")) {
         jarJar.ranged(it, "[0.4.1,)")
     }
@@ -147,7 +147,7 @@ sourceSets.each {
 jar {
     manifest {
         attributes([
-                "MixinConfigs": "${mod_id}.forge.mixins.json,${mod_id}.mixins.json"
+                "MixinConfigs": "${mod_id}.forge.mixins.json,${mod_id}.mixins.json,${mod_id}.late.mixins.json"
         ])
     }
 }

@@ -1,17 +1,1 @@
 
-
-- Washing mechanism (new button in radial menu for washing; will give the user a shower head to wash buddy; washing will need 10 seconds, then the action ends)
-
-- Buddy should peek first for some time before he actually comes out to walk around
-  - Will peek from the left and right screen edges randomly
-  - Will not have any needs and states and will not loose stats (hunger, energy, etc.)
-  - Will peek for like 9 times with delays of 3-6 minutes between the peeks before coming out
-  - Add new state PEEKING to animate the peeking (mirror to let him peek from left and right)
-
-- Buddy Cosmetics
-  - Werden durch "Quests" freigeschaltet
-  - Cosmetics sind Overlays, die über normalem Character liegen
-
-- Level System
-  - Bei Level-Up wird LvlUp Animation gezeigt
-  - Durch leveln verdient man Stats Points, mit denen man Werte verbessern kann

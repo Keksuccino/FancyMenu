@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.customization.layer;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.platform.Window;
@@ -16,6 +18,7 @@ import de.keksuccino.fancymenu.customization.layout.LayoutBase;
 import de.keksuccino.fancymenu.customization.widget.ScreenWidgetDiscoverer;
 import de.keksuccino.fancymenu.events.widget.RenderTabNavigationBarHeaderBackgroundEvent;
 import de.keksuccino.fancymenu.util.ScreenUtils;
+import de.keksuccino.fancymenu.util.TaskExecutor;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventPriority;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
@@ -32,6 +35,7 @@ import de.keksuccino.fancymenu.util.ScreenTitleUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
+import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
@@ -144,13 +148,27 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			element.onDestroyElement();
 		});
 
+		this.layoutBase.menuBackgrounds.forEach(menuBackground -> menuBackground.onCloseScreen(e.getClosedScreen(), e.getNewScreen()));
 		this.layoutBase.menuBackgrounds.forEach(MenuBackground::onCloseScreen);
 
 		if (this.layoutBase.closeAudio != null) {
-			IAudio audio = this.layoutBase.closeAudio.get();
-			if (audio != null) {
+			final ResourceSupplier<IAudio> closeAudioSupplier = this.layoutBase.closeAudio;
+			IAudio audio = closeAudioSupplier.get();
+			if ((audio != null) && audio.isReady()) {
 				audio.stop();
 				audio.play();
+			} else {
+				final AtomicBoolean played = new AtomicBoolean(false);
+				TaskExecutor.scheduleAtFixedRate((future) -> {
+					if (played.get()) return;
+					IAudio audio2 = closeAudioSupplier.get();
+					if ((audio2 != null) && audio2.isReady()) {
+						audio2.stop();
+						audio2.play();
+						played.set(true);
+						future.cancel(true);
+					}
+				}, 100, 100, TimeUnit.MILLISECONDS, true);
 			}
 		}
 
@@ -182,6 +200,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		if (e.getInitializationPhase() == InitOrResizeScreenEvent.InitializationPhase.RESIZE) {
 			this.layoutBase.menuBackgrounds.forEach(MenuBackground::onBeforeResizeScreen);
 		}
+
+		List<MenuBackground> oldMenuBackgrounds = new ArrayList<>(this.layoutBase.menuBackgrounds);
 
 		List<Layout> rawLayouts = LayoutHandler.getEnabledLayoutsForScreenIdentifier(this.getScreenIdentifier(), true);
 		List<Layout> normalLayouts = new ArrayList<>();
@@ -270,6 +290,12 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			e.getScreen().height = window.getGuiScaledHeight();
 		}
 
+		oldMenuBackgrounds.forEach(menuBackground -> {
+			if (!this.layoutBase.menuBackgrounds.contains(menuBackground)) menuBackground.onDisableOrRemove();
+		});
+
+		this.layoutBase.menuBackgrounds.forEach(MenuBackground::onAfterEnable);
+
 	}
 
 	@EventListener
@@ -287,10 +313,23 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		}
 
 		if (ScreenCustomization.isNewMenu() && (this.layoutBase.openAudio != null)) {
-			IAudio audio = this.layoutBase.openAudio.get();
-			if (audio != null) {
+			final ResourceSupplier<IAudio> openAudioSupplier = this.layoutBase.openAudio;
+			IAudio audio = openAudioSupplier.get();
+			if ((audio != null) && audio.isReady()) {
 				audio.stop();
 				audio.play();
+			} else {
+				final AtomicBoolean played = new AtomicBoolean(false);
+				TaskExecutor.scheduleAtFixedRate((future) -> {
+					if (played.get()) return;
+					IAudio audio2 = openAudioSupplier.get();
+					if ((audio2 != null) && audio2.isReady()) {
+						audio2.stop();
+						audio2.play();
+						played.set(true);
+						future.cancel(true);
+					}
+				}, 100, 100, TimeUnit.MILLISECONDS, true);
 			}
 		}
 
@@ -550,6 +589,14 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			if (element.getInstanceIdentifier().equals(instanceIdentifier)) {
 				return element;
 			}
+		}
+		return null;
+	}
+
+	@Nullable
+	public MenuBackground getMenuBackgroundByInstanceIdentifier(@NotNull String identifier) {
+		for (MenuBackground b : this.layoutBase.menuBackgrounds) {
+			if (b.getInstanceIdentifier().equals(identifier)) return b;
 		}
 		return null;
 	}

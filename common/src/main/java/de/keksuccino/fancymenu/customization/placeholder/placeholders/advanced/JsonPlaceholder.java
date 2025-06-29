@@ -100,6 +100,14 @@ public class JsonPlaceholder extends Placeholder {
         String jsonPath = dps.values.get("json_path");
         if ((source != null) && (jsonPath != null)) {
             source = StringUtils.convertFormatCodes(source, "§", "&");
+            
+            // First check if source is direct JSON content
+            if (isDirectJsonContent(source)) {
+                List<String> json = JsonUtils.getJsonValueByPath(source, jsonPath);
+                return formatJsonToString(json);
+            }
+            
+            // If not direct JSON, check for file
             File f = new File(source);
             if (!f.exists() || !f.getAbsolutePath().replace("\\", "/").startsWith(Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/"))) {
                 String linkTemp = Minecraft.getInstance().gameDirectory.getAbsolutePath().replace("\\", "/") + "/" + source;
@@ -109,6 +117,7 @@ public class JsonPlaceholder extends Placeholder {
                 List<String> json = JsonUtils.getJsonValueByPath(f, jsonPath);
                 return formatJsonToString(json);
             } else {
+                // Finally, check for URL
                 if (!isInvalidWebPlaceholderLink(source)) {
                     List<String> json = getCachedWebPlaceholder(dps.placeholderString);
                     if (json != null) {
@@ -123,6 +132,34 @@ public class JsonPlaceholder extends Placeholder {
             }
         }
         return null;
+    }
+
+    /**
+     * Checks if the given string is direct JSON content (not a file path or URL).
+     * This is a quick check that looks for JSON object or array indicators.
+     * 
+     * @param str The string to check
+     * @return true if the string appears to be direct JSON content
+     */
+    private static boolean isDirectJsonContent(String str) {
+        if (str == null || str.trim().isEmpty()) {
+            return false;
+        }
+        
+        String trimmed = str.trim();
+        // Check if it starts with JSON object or array indicators
+        if ((trimmed.startsWith("{") && trimmed.endsWith("}")) || 
+            (trimmed.startsWith("[") && trimmed.endsWith("]"))) {
+            try {
+                // Do a quick validation by checking if JsonUtils can parse it
+                // If getJsonValueByPath works with it, it's valid JSON
+                JsonUtils.getJsonValueByPath(trimmed, "$");
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+        return false;
     }
 
     protected static String formatJsonToString(@NotNull List<String> json) {
@@ -264,11 +301,10 @@ public class JsonPlaceholder extends Placeholder {
 
     @Override
     public @NotNull DeserializedPlaceholderString getDefaultPlaceholderString() {
-        DeserializedPlaceholderString dps = new DeserializedPlaceholderString();
-        dps.placeholderIdentifier = this.getIdentifier();
-        dps.values.put("source", "path_or_link_to_json");
-        dps.values.put("json_path", "$.some.json.path");
-        return dps;
+        LinkedHashMap<String, String> values = new LinkedHashMap<>();
+        values.put("source", "path_or_link_or_json_content");
+        values.put("json_path", "$.some.json.path");
+        return new DeserializedPlaceholderString(this.getIdentifier(), values, "");
     }
 
 }
