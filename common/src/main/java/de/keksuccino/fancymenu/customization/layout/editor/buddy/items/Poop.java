@@ -1,6 +1,6 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy.items;
 
-import de.keksuccino.fancymenu.customization.layout.editor.buddy.TamagotchiBuddy;
+import de.keksuccino.fancymenu.customization.layout.editor.buddy.Buddy;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
@@ -19,34 +19,34 @@ public class Poop {
     public boolean isBeingCleaned = false;
     public int cleaningAnimation = 0;
     public static final int CLEANING_DURATION = 20; // increased from 10 to 20 frames
-    
+
     // Store relative position for screen resizing
     public float relativeX; // Position as percentage of screen width
     public float relativeY; // Position as percentage of screen height (NEW - replaces groundLevel)
-    
-    // Reference to the buddy
-    public final TamagotchiBuddy buddy;
 
-    public Poop(int x, int y, TamagotchiBuddy buddy) {
+    // Reference to the buddy
+    public final Buddy buddy;
+
+    public Poop(int x, int y, Buddy buddy) {
         this.x = x;
         this.y = y;
         this.buddy = buddy;
-        
+
         // Calculate and store relative coordinates for screen resizing
         int screenWidth = buddy.getScreenWidth();
         int screenHeight = buddy.getScreenHeight();
-        
+
         // If screen dimensions are not valid yet, use reasonable defaults
         if (screenWidth <= 0 || screenHeight <= 0) {
             this.relativeX = 0.5f; // Default to middle of screen horizontally
             this.relativeY = 0.9f; // Default to near bottom of screen vertically
             return;
         }
-        
+
         // Clamp coordinates to be within screen bounds
         this.x = Math.min(Math.max(x, 0), screenWidth);
         this.y = Math.min(Math.max(y, 0), screenHeight);
-        
+
         // Now calculate relative positions using the clamped values
         this.relativeX = (float)this.x / screenWidth;
         this.relativeY = (float)this.y / screenHeight;
@@ -57,24 +57,23 @@ public class Poop {
             // Fade out during cleaning animation
             float alpha = 1.0f - (cleaningAnimation / (float)CLEANING_DURATION);
             int color = (int)(alpha * 255) << 24 | 0xFFFFFF;
-            
             graphics.blit(
-                RenderType::guiTextured,
-                TEXTURE_POOP,
-                x - size/2, y - size/2,
-                0, 0,
-                size, size,
-                size, size,
-                color
+                    RenderType::guiTextured,
+                    TEXTURE_POOP,
+                    x - size/2, y - size/2,
+                    0, 0,
+                    size, size,
+                    size, size,
+                    color
             );
         } else {
             graphics.blit(
-                RenderType::guiTextured,
-                TEXTURE_POOP,
-                x - size/2, y - size/2,
-                0, 0,
-                size, size,
-                size, size
+                    RenderType::guiTextured,
+                    TEXTURE_POOP,
+                    x - size/2, y - size/2,
+                    0, 0,
+                    size, size,
+                    size, size
             );
         }
     }
@@ -85,7 +84,7 @@ public class Poop {
             cleaningAnimation += 2;
         }
     }
-    
+
     /**
      * Updates the poop's position when screen size changes
      */
@@ -95,11 +94,11 @@ public class Poop {
             // Don't update position if screen dimensions are invalid
             return;
         }
-        
+
         // Calculate new position using relative coordinates
         x = (int)(relativeX * screenWidth);
         y = (int)(relativeY * screenHeight);
-        
+
         // Ensure poop is within screen bounds with some margin
         x = Math.min(Math.max(x, 10), screenWidth - 10);
         y = Math.min(Math.max(y, 10), screenHeight - 10);
@@ -107,7 +106,7 @@ public class Poop {
 
     public boolean isMouseOver(double mouseX, double mouseY) {
         return mouseX >= x - size/2 && mouseX < x + size/2 &&
-               mouseY >= y - size/2 && mouseY < y + size/2;
+                mouseY >= y - size/2 && mouseY < y + size/2;
     }
 
     public void startCleaning() {

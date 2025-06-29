@@ -1,8 +1,9 @@
 package de.keksuccino.fancymenu.customization.layout.editor.buddy.leveling;
 
-import java.util.function.Consumer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.function.Consumer;
 
 /**
  * Represents an achievement that the buddy can earn through various actions.
