@@ -52,6 +52,7 @@ CHANGELOG | FANCYMENU v3.6.0 [ W I P !! Not public yet !! ]
 - Added "Player Has Tag" placeholder that returns true if a specific player has a specific tag (#1133)
 - Added "Player Tags List" placeholder that returns all tags a specific player has
 - Added full support for tables to the Markdown parser
+- The "Browser" element now works in Minecraft 1.20.1
 - The parallax intensity value of menu backgrounds now supports placeholders (#1164)
 - The parallax intensity value of elements now supports placeholders (#1164)
 - The "Text" element now converts newline codes written as normal text ("\n") to real newline codes and displays text containing these as multiline text
