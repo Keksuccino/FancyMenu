@@ -1,4 +1,96 @@
 
+CHANGELOG | FANCYMENU v3.6.0
+
+- Dropped support for Minecraft 1.21.5
+- Added "Checkbox" element as an easy way to toggle settings (#940)
+  - Executes its action script on click
+  - Similar to sliders, the current checkbox state can be accessed with $$value in the action script and loading requirements
+- Added "Expose Scroll Area Content Of Current Screen" feature to extract buttons and sliders from scroll areas, so FancyMenu can see and customize them
+  - This is especially useful to make options screens (like the Video Settings screen) customizable
+  - This is experimental and will probably not work for all screens
+  - If scroll areas contain more than just buttons and sliders, the additional elements will get lost, because the scroll area gets removed from the screen (until you disable the feature for that screen)
+- Added "Video [MCEF]" element to MC 1.20.1+ that plays a video file (powered by the MCEF mod, so you need that mod for it to work!) (#685)
+- Added "Video [MCEF]" menu background type to MC 1.20.1+ that plays a video file (powered by the MCEF mod, so you need that mod for it to work!) (#685)
+  - Will continue playing across menus when used in a universal layout
+- Added "Set Video Element Volume" action to MC 1.20.1+ to set the volume of a Video element
+- Added "Toggle Video Element Paused State" action to MC 1.20.1+ to toggle the paused state of a Video element
+- Added "Video Element Volume" placeholder to MC 1.20.1+ to get the volume of a Video element
+- Added "Video Element Duration" placeholder to MC 1.20.1+ to get the duration of a Video element
+- Added "Video Element Play Time" placeholder to MC 1.20.1+ to get the current play time (progress) of a Video element
+- Added "Video Element Paused State" placeholder to MC 1.20.1+ to get the paused state (true/false) of a Video element
+- Added "Set Video Background Volume" action to MC 1.20.1+ to set the volume of a Video menu background
+- Added "Toggle Video Background Paused State" action to MC 1.20.1+ to toggle the paused state of a Video menu background
+- Added "Video Background Volume" placeholder to MC 1.20.1+ to get the volume of a Video menu background
+- Added "Video Background Duration" placeholder to MC 1.20.1+ to get the duration of a Video menu background
+- Added "Video Background Play Time" placeholder to MC 1.20.1+ to get the current play time (progress) of a Video menu background
+- Added "Video Background Paused State" placeholder to MC 1.20.1+ to get the paused state (true/false) of a Video menu background
+- Added "Tooltip" element to render a tooltip at a specific position or the mouse position (#1135)
+  - Supports custom background textures with nine-slicing
+  - Full Markdown support, similar to Text elements
+- Added "Text Character Count" placeholder that returns the character count of the given text (#1160)
+- Added "Text Width" placeholder that returns the width in pixels of the given text (#1159)
+- Added "Uppercase Text" placeholder that returns its input text as all-uppercase
+- Added "Lowercase Text" placeholder that returns its input text as all-lowercase
+- Added "File Text" placeholder that returns text lines of the given file or URL (returns either all lines or just the last X lines) (#1101)
+- Added "Clipboard Content" placeholder that returns the current text content stored in the system's clipboard (#1118)
+- Added new value "full_world_path" to the "Last World/Server" placeholder to control if the placeholder should return full world paths or only the world name (does not work for servers) (#1151)
+  - Old placeholders should continue working, but if you want to use the new value, you should use the Placeholder menu to paste the new version of the placeholder to the text area
+- Added "World Players List" placeholder that returns a list of all players currently in the world
+- Added "Scoreboard Player Team" placeholder that returns the current team of the given player (#1149, #452)
+- Added "Scoreboard Score" placeholder that returns the score value of a player for a specific objective (#452)
+- Added "Scoreboard Objectives List" placeholder that returns a list of all objectives in the scoreboard (#452)
+- Added "Scoreboard Tracked Players" placeholder that returns a list of all players tracked by the scoreboard (#452)
+- Added "Scoreboard Display Slot" placeholder that returns the objective displayed in a specific slot (sidebar, list, etc.) (#452)
+- Added "Scoreboard Has Score" placeholder that checks if a player has a score for a specific objective (true/false) (#452)
+- Added "Scoreboard Objective Display Name" placeholder that returns the display name of an objective (supports JSON format) (#452)
+- Added "Scoreboard Objective Criteria" placeholder that returns the criteria type of an objective (dummy, trigger, etc.) (#452)
+- Added "Scoreboard Objective Render Type" placeholder that returns how an objective is rendered (integer or hearts) (#452)
+- Added "Scoreboard Player Scores List" placeholder that returns a formatted list of all scores for a specific player (#452)
+- Added "Scoreboard Objective Count" placeholder that returns the total number of objectives in the scoreboard (#452)
+- Added "Replace Text" placeholder that replaces text in a string using literal text or regular expressions (regex)
+- Added "Get NBT Data" placeholder to get NBT data from entities and blocks (similar to '/data get' command) (will probably replace the now deprecated placeholder in SpiffyHUD)
+- Added "Player Has Tag" placeholder that returns true if a specific player has a specific tag (#1133)
+- Added "Player Tags List" placeholder that returns all tags a specific player has
+- Added full support for tables to the Markdown parser
+- The "Browser" element now works in Minecraft 1.20.1
+- The parallax intensity value of menu backgrounds now supports placeholders (#1164)
+- The parallax intensity value of elements now supports placeholders (#1164)
+- The "Text" element now converts newline codes written as normal text ("\n") to real newline codes and displays text containing these as multiline text
+  - Example: "This is text.\nSecond line." will get shown as two lines in the "Text" element with "This is text." on the first and "Second line." on the second line
+  - Works for placeholder replacements that contain "\n"
+  - And before that one guy pulls the "aKsHuaLLy" card again: I know that "\n" written as "normal text" is just a frickin escaped newline, but normal people don't know what a frickin escaped newline is
+- The "path" value of the "Random Text" placeholder got renamed to "source" (old placeholders still work and see the old "path" value as "source" now)
+- The "Random Text" placeholder now accepts URLs as "source" value to get text content from remote/web files (#823)
+- The "Random Text" placeholder now accepts direct plain text as "source" value to get text lines (separate lines with "\n" for plain text)
+- The "JSON Parser" placeholder now accepts plain JSON text content as source
+- Improved the placeholder parsing logic to better parse multi-line placeholders and weirdly formatted placeholders in general (#1132)
+- Loading requirement containers now cache their "requirements met" value for 150 milliseconds for performance optimization reasons
+  - I don't think this will break any logic stuff in layouts, but if you notice something, tell me please! Thank you!
+- Placeholder replacements now get cached for 150 milliseconds (was 30 milliseconds before) for performance optimization reasons
+  - I don't think this will break any logic stuff in layouts, but if you notice something, tell me please! Thank you!
+- Made it more clear that the source file of the "Random Text" placeholder needs to be in FancyMenu's assets folder (#1127, #1128)
+- The up/down arrows when a context menu is scrollable are now clickable to scroll up and down (alternative way to normal scrolling)
+- Fixed inactive Vanilla buttons become active if customizations are enabled for the screen they're part of (#1161)
+- Fixed placeholders not working in the URL value of the "Browser" element (#1141)
+- Fixed game crashing when setting nine-slicing borders of buttons/sliders to half the texture's size or larger (#1134)
+- Fixed game crashing when executing the "Join Server" action via a "Ticker" element (another attempt at fixing this) (#1157)
+- Fixed open/close screen audio not working when opening/closing the screen for the first time (#1148)
+- Fixed elements snapping to grid when multiple elements are selected in the editor (#1158)
+- Fixed preview element in keyframe editor screen (of the Element Animator) snapping to grid like a normal editor element instead of ignoring the grid (#1172)
+- Fixed line wrapping in "Text" elements sometimes not working when the text contains hyperlinks with long URLs (#1166)
+- Fixed placeholder color formatting in text editor not working for placeholders without values (#1131)
+- Fixed element internally gets moved further out of screen when dragging it and "Stay on Screen" is enabled and the element has reached a screen edge (#860)
+- Disabled customization for Cobblemon screens, because they were causing problems (#1116)
+- Disabled customization for "Applied Energistics 2" & "Applied Energistics 2 Wireless Terminals" screens as a potential fix for crashes some users experienced (#1092) 
+- Disabled customization for "Xareo's World Map" and "Xaero's Mini Map" to fix crashes related to them (#1063)
+- It should now be at least more difficult to crash the game when anchoring elements to itself, child elements or similar (#1142)
+  - This anchor-ception shit is super difficult, so it will probably still crash in some cases, but at least less often lmao
+ 
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.5.3
 
 - Added support for MC 1.21.6
