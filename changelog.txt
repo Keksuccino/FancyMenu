@@ -1,4 +1,13 @@
 
+CHANGELOG | FANCYMENU v3.6.1
+
+- Removed the leftover debug button ("Open Video Player") I acidentally left in the MC 1.20.1 build of the mod
+ 
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.6.0
 
 - Dropped support for Minecraft 1.21.5
