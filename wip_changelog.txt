@@ -9,21 +9,21 @@ CHANGELOG | FANCYMENU v3.6.0 [ W I P !! Not public yet !! ]
   - This is especially useful to make options screens (like the Video Settings screen) customizable
   - This is experimental and will probably not work for all screens
   - If scroll areas contain more than just buttons and sliders, the additional elements will get lost, because the scroll area gets removed from the screen (until you disable the feature for that screen)
-- Added "Video [MCEF]" element that plays a video file (powered by the MCEF mod, so you need that mod for it to work!) (#685)
-- Added "Video [MCEF]" menu background type that plays a video file (powered by the MCEF mod, so you need that mod for it to work!) (#685)
+- Added "Video [MCEF]" element to MC 1.20.1+ that plays a video file (powered by the MCEF mod, so you need that mod for it to work!) (#685)
+- Added "Video [MCEF]" menu background type to MC 1.20.1+ that plays a video file (powered by the MCEF mod, so you need that mod for it to work!) (#685)
   - Will continue playing across menus when used in a universal layout
-- Added "Set Video Element Volume" action to set the volume of a Video element
-- Added "Toggle Video Element Paused State" action to toggle the paused state of a Video element
-- Added "Video Element Volume" placeholder to get the volume of a Video element
-- Added "Video Element Duration" placeholder to get the duration of a Video element
-- Added "Video Element Play Time" placeholder to get the current play time (progress) of a Video element
-- Added "Video Element Paused State" placeholder to get the paused state (true/false) of a Video element
-- Added "Set Video Background Volume" action to set the volume of a Video menu background
-- Added "Toggle Video Background Paused State" action to toggle the paused state of a Video menu background
-- Added "Video Background Volume" placeholder to get the volume of a Video menu background
-- Added "Video Background Duration" placeholder to get the duration of a Video menu background
-- Added "Video Background Play Time" placeholder to get the current play time (progress) of a Video menu background
-- Added "Video Background Paused State" placeholder to get the paused state (true/false) of a Video menu background
+- Added "Set Video Element Volume" action to MC 1.20.1+ to set the volume of a Video element
+- Added "Toggle Video Element Paused State" action to MC 1.20.1+ to toggle the paused state of a Video element
+- Added "Video Element Volume" placeholder to MC 1.20.1+ to get the volume of a Video element
+- Added "Video Element Duration" placeholder to MC 1.20.1+ to get the duration of a Video element
+- Added "Video Element Play Time" placeholder to MC 1.20.1+ to get the current play time (progress) of a Video element
+- Added "Video Element Paused State" placeholder to MC 1.20.1+ to get the paused state (true/false) of a Video element
+- Added "Set Video Background Volume" action to MC 1.20.1+ to set the volume of a Video menu background
+- Added "Toggle Video Background Paused State" action to MC 1.20.1+ to toggle the paused state of a Video menu background
+- Added "Video Background Volume" placeholder to MC 1.20.1+ to get the volume of a Video menu background
+- Added "Video Background Duration" placeholder to MC 1.20.1+ to get the duration of a Video menu background
+- Added "Video Background Play Time" placeholder to MC 1.20.1+ to get the current play time (progress) of a Video menu background
+- Added "Video Background Paused State" placeholder to MC 1.20.1+ to get the paused state (true/false) of a Video menu background
 - Added "Tooltip" element to render a tooltip at a specific position or the mouse position (#1135)
   - Supports custom background textures with nine-slicing
   - Full Markdown support, similar to Text elements
