@@ -1,7 +1,7 @@
 
 CHANGELOG | FANCYMENU v3.6.1
 
-- Removed the leftover debug button ("Open Video Player") I acidentally left in the MC 1.20.1 build of the mod
+- Removed the leftover debug button ("Open Video Player") I accidentally left in the MC 1.20.1 build of the mod
  
 %changelog:end%
 
