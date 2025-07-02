@@ -62,6 +62,15 @@ subprojects {
             }
         }
         maven { url 'https://jitpack.io' }
+        maven {
+            name = 'MCEF Releases'
+            url = 'https://mcef-download.cinemamod.com/repositories/releases'
+        }
+        // Optional for snapshot versions
+        maven {
+            name = 'MCEF Snapshots'
+            url = 'https://mcef-download.cinemamod.com/repositories/snapshots'
+        }
     }
 
     tasks.withType(JavaCompile).configureEach {
