@@ -18,6 +18,7 @@ public class LoadingRequirementContainer implements ValuePlaceholderHolder {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    private static final long COOLDOWN_CACHE_DURATION_MS = 150L;
     private static final Map<String, Pair<Long, Boolean>> COOLDOWN_CACHE = new HashMap<>();
 
     protected final List<LoadingRequirementGroup> groups = new ArrayList<>();
@@ -31,38 +32,41 @@ public class LoadingRequirementContainer implements ValuePlaceholderHolder {
     public String identifier = ScreenCustomization.generateUniqueIdentifier();
     protected boolean forceRequirementsMet = false;
     protected boolean forceRequirementsNotMet = false;
+    protected final String cachingIdentifier = ScreenCustomization.generateUniqueIdentifier();
 
     public boolean requirementsMet() {
+        long now = System.currentTimeMillis();
+        // Use cache if last value update was less than 150ms ago for performance
+        if (COOLDOWN_CACHE.containsKey(this.cachingIdentifier) && ((COOLDOWN_CACHE.get(this.cachingIdentifier).getKey() + COOLDOWN_CACHE_DURATION_MS) > now)) {
+            return COOLDOWN_CACHE.get(this.cachingIdentifier).getValue();
+        }
+        boolean b = this._requirementsMet();
+        COOLDOWN_CACHE.put(this.cachingIdentifier, Pair.of(now, b));
+        return b;
+    }
+
+    private boolean _requirementsMet() {
         if (this.forceRequirementsMet) {
             return true;
         }
         if (this.forceRequirementsNotMet) {
             return false;
         }
-        long now = System.currentTimeMillis();
-        // Use cache if last value update was less than 150ms ago for performance
-        if (COOLDOWN_CACHE.containsKey(this.identifier) && ((COOLDOWN_CACHE.get(this.identifier).getKey() + 150) > now)) {
-            return COOLDOWN_CACHE.get(this.identifier).getValue();
-        }
         try {
             for (LoadingRequirementGroup g : this.groups) {
                 if (!g.requirementsMet()) {
-                    COOLDOWN_CACHE.put(this.identifier, Pair.of(now, false));
                     return false;
                 }
             }
             for (LoadingRequirementInstance i : this.instances) {
                 if (!i.requirementMet()) {
-                    COOLDOWN_CACHE.put(this.identifier, Pair.of(now, false));
                     return false;
                 }
             }
         } catch (Exception e) {
             LOGGER.error("[FANCYMENU] Error while checking LoadingRequirements of LoadingRequirementContainer!", e);
-            COOLDOWN_CACHE.put(this.identifier, Pair.of(now, false));
             return false;
         }
-        COOLDOWN_CACHE.put(this.identifier, Pair.of(now, true));
         return true;
     }
 
