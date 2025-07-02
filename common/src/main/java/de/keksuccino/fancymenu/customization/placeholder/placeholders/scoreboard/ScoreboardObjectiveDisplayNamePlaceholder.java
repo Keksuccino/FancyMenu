@@ -7,7 +7,6 @@ import de.keksuccino.fancymenu.util.SerializationUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.Scoreboard;
