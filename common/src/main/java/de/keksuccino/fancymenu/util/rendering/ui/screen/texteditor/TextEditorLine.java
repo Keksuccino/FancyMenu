@@ -141,7 +141,7 @@ public class TextEditorLine extends ExtendedEditBox {
             this.currentHighlightPosXStart = highlightStartX;
             this.currentHighlightPosXEnd = highlightEndX;
 
-            this.getAsAccessor().invokeRenderHighlightFancyMenu(graphics, highlightStartX, textY - 1, highlightEndX, textY + 1 + this.font2.lineHeight);
+            graphics.textHighlight(highlightStartX, textY - 1, highlightEndX, textY + 1 + this.font2.lineHeight);
         } else {
             this.currentHighlightPosXStart = 0;
             this.currentHighlightPosXEnd = 0;
