@@ -1,4 +1,13 @@
 
+CHANGELOG | FANCYMENU v3.6.3
+
+- Added support for Minecraft 1.21.7
+ 
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.6.2
 
 - Fixed new loading requirement caching breaks layouts with duplicated requirement container IDs (#1195)
