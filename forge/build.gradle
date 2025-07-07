@@ -38,6 +38,9 @@ minecraft {
     }
 
     runs {
+        configureEach {
+            property 'eventbus.api.strictRuntimeChecks', 'true'
+        }
         client {
             workingDirectory project.file('../run_client')
             ideaModule "${rootProject.name}.${project.name}.main"
@@ -76,7 +79,6 @@ sourceSets.main.resources.srcDir 'src/generated/resources'
 
 dependencies {
     minecraft("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
-    implementation('net.sf.jopt-simple:jopt-simple:5.0.4') { version { strictly '5.0.4' } }
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
     //Needs to be "implementation" when building and "compileOnly" in-dev for some frickin reason
     implementation(annotationProcessor("io.github.llamalad7:mixinextras-common:0.4.1"))

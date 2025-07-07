@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu;
 
 import de.keksuccino.fancymenu.networking.PacketsForge;
 import de.keksuccino.fancymenu.platform.Services;
-import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -16,7 +15,7 @@ public class FancyMenuForge {
 
         PacketsForge.init();
 
-        FMLCommonSetupEvent.getBus(context.getModBusGroup()).addListener(this::onSetup);
+        FMLCommonSetupEvent.getBus(context.getModBusGroup()).addListener(FancyMenuForge::onSetup);
 
         if (Services.PLATFORM.isOnClient()) {
             FancyMenuForgeClientEvents.registerAll();
@@ -26,8 +25,7 @@ public class FancyMenuForge {
         
     }
 
-    @SubscribeEvent
-    public void onSetup(FMLCommonSetupEvent e) {
+    private static void onSetup(FMLCommonSetupEvent e) {
 
         if (Compat.isAudioExtensionLoaded() || Services.PLATFORM.isModLoaded("fmextension_audio")) {
             throw new RuntimeException("§rFancyMenu v2's §cAudio Extension§r is not supported by §cFancyMenu v3§r. Please remove the audio extension. The Audio element is now part of the base mod.");

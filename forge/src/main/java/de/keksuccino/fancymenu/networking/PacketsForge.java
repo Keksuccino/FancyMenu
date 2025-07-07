@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.networking.bridge.BridgePacketMessageForge;
 import de.keksuccino.fancymenu.networking.packets.Packets;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.network.PacketDistributor;
 
 public class PacketsForge {
@@ -52,20 +53,20 @@ public class PacketsForge {
             //Handle packet
             context.enqueueWork(() -> {
                 //Handle on client
-                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
+                if (FMLEnvironment.dist.isClient()) {
                     //Handle both sides on client, because integrated server needs handling too
                     if (msg.direction.equals("server")) {
                         BridgePacketHandlerForge.handle(context.getSender(), msg, PacketHandler.PacketDirection.TO_SERVER);
                     } else if (msg.direction.equals("client")) {
                         BridgePacketHandlerForge.handle(null, msg, PacketHandler.PacketDirection.TO_CLIENT);
                     }
-                });
+                }
                 //Handle on server
-                DistExecutor.unsafeRunWhenOn(Dist.DEDICATED_SERVER, () -> () -> {
+                if (FMLEnvironment.dist.isDedicatedServer()) {
                     if (msg.direction.equals("server")) {
                         BridgePacketHandlerForge.handle(context.getSender(), msg, PacketHandler.PacketDirection.TO_SERVER);
                     }
-                });
+                }
             });
             context.setPacketHandled(true);
 
