@@ -39,6 +39,7 @@ public class JoinServerAction extends Action {
                 if (RenderSystem.isOnRenderThread()) {
                     try {
 
+                        Screen current = Minecraft.getInstance().screen;
                         Minecraft.getInstance().setScreen(new JoinServerBridgeScreen());
 
                         String ip = value.replace(" ", "");
@@ -64,7 +65,6 @@ public class JoinServerAction extends Action {
                             l.add(d, false);
                             l.save();
                         }
-                        Screen current = Minecraft.getInstance().screen;
                         if (current == null) current = new TitleScreen();
                         boolean isQuickPlay = false;
 
