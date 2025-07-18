@@ -3,7 +3,7 @@ CHANGELOG | FANCYMENU v3.6.4 [ W I P !! Not public yet !! ]
 
 - Dropped support for MC 1.21.6
 - Fixed "Join Server" action causing users to be stuck on an empty screen without a way to close it in some situations (#1220, #1210, #1221)
-  - Big thanks to GitHub user Brancieq-Paul for the research on the bug and providing a fix!
+  - Big Thanks to GitHub user Brancieq-Paul for the research on the bug and providing a fix!
  
 %changelog:end%
 
