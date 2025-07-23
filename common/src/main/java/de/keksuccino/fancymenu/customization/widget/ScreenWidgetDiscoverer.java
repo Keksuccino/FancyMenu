@@ -99,7 +99,11 @@ public class ScreenWidgetDiscoverer {
 		if (widget instanceof AbstractWidget w) {
 			//Skip AbstractSelectionLists so they don't appear as customizable widget
 			if (widget instanceof AbstractSelectionList<?>) return;
-			String idRaw = w.getX() + "" + w.getY();
+			var rawY = w.getY();
+			var absY = rawY < 0 ? rawY * -1 : rawY;
+			var rawX = w.getX();
+			var prefix = rawY < 0 ? (rawX >= 0 ? "-" : "") : "";
+			String idRaw = prefix + rawX + "" + absY;
 			long id = 0;
 			if (MathUtils.isLong(idRaw)) {
 				id = getAvailableIdFromBaseId(Long.parseLong(idRaw), ids);
