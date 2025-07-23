@@ -115,7 +115,7 @@ public class ScreenWidgetDiscoverer {
 		int x = w.getX();
 		int y = w.getY();
 		String prefix = (y < 0 && x >= 0) ? "-" : "";
-		return prefix + x + Math.abs(y);
+		return prefix + x + "" + Math.abs(y);
 	}
 
 	private static Long getAvailableIdFromBaseId(long baseId, @NotNull List<Long> ids) {
