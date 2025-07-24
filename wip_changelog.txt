@@ -2,7 +2,7 @@
 CHANGELOG | FANCYMENU v3.7.0 [ W I P !! Not public yet !! ]
 
 - Dropped support for MC 1.21.7
-- Added back "Player Entity" element in MC 1.21.4 (#1191)
+- Added back "Player Entity" element in MC 1.21.4+ (#1191)
   - This new element is sadly not compatible with old ones, so you need to remake Player Entity elements in MC 1.21.4+ (sorry for that!)
   - Now supports rotating the entity's body on the Z axis
   - Now supports normal element resizing like other elements (no need to set a scale anymore)
