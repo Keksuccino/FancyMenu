@@ -6,6 +6,7 @@ CHANGELOG | FANCYMENU v3.7.0 [ W I P !! Not public yet !! ]
   - This new element is sadly not compatible with old ones, so you need to remake Player Entity elements in MC 1.21.4+ (sorry for that!)
   - Now supports rotating the entity's body on the Z axis
   - Now supports normal element resizing like other elements (no need to set a scale anymore)
+- Removed old unused "Preload Animations" options from FancyMenu's settings, since it was only for the old animation system that does not exist anymore
 - 
  
 %changelog:end%
