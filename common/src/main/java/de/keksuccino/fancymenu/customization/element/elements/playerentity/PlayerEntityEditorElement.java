@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.element.elements.playerentity.v2;
+package de.keksuccino.fancymenu.customization.element.elements.playerentity;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
@@ -17,8 +17,6 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
         super(element, editor);
         this.settings.setFadeable(false);
         this.settings.setOpacityChangeable(false);
-//        this.settings.setResizeable(false);
-//        this.settings.setAdvancedSizingSupported(false);
     }
 
     @Override
@@ -198,12 +196,6 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                     }));
                 });
 
-//        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "entity_scale", PlayerEntityEditorElement.class,
-//                consumes -> consumes.getElement().scale,
-//                (playerEntityEditorElement, s) -> playerEntityEditorElement.getElement().scale = s,
-//                null, false, true, Component.translatable("fancymenu.helper.editor.items.playerentity.scale"),
-//                true, "30", null, null);
-
         this.rightClickMenu.addSeparatorEntry("separator_after_entity_scale");
 
         this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "crouching",
@@ -220,8 +212,10 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                         "fancymenu.helper.editor.items.playerentity.baby")
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.baby.desc")));
 
-        this.rightClickMenu.addSeparatorEntry("player_entity_separator_5");
+        //TODO parrots currently do not work - FER does not support that (yet)
 
+//        this.rightClickMenu.addSeparatorEntry("player_entity_separator_5");
+//
 //        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "parrot",
 //                        consumes -> (consumes instanceof PlayerEntityEditorElement),
 //                        consumes -> ((PlayerEntityElement) consumes.element).hasParrotOnShoulder,

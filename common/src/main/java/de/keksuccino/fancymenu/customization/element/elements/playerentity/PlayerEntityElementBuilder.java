@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.element.elements.playerentity.v1;
+package de.keksuccino.fancymenu.customization.element.elements.playerentity;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
@@ -17,7 +17,7 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
     private static final Logger LOGGER = LogManager.getLogger();
 
     public PlayerEntityElementBuilder() {
-        super("fancymenu_customization_player_entity");
+        super("player_entity_v2");
     }
 
     @Override
@@ -80,9 +80,6 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
 
         }
 
-        element.scale = serialized.getValue("scale");
-        if (element.scale == null) element.scale = "30";
-
         element.setHasParrotOnShoulder(
                 this.deserializeBoolean(element.hasParrotOnShoulder, serialized.getValue("parrot")),
                 this.deserializeBoolean(element.parrotOnLeftShoulder, serialized.getValue("parrot_left_shoulder"))
@@ -101,11 +98,11 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
 
         element.headXRot = serialized.getValue("headrotationx");
         element.headYRot = serialized.getValue("headrotationy");
+        element.headZRot = serialized.getValue("head_z_rot");
 
         element.bodyXRot = serialized.getValue("bodyrotationx");
         element.bodyYRot = serialized.getValue("bodyrotationy");
-
-        element.headZRot = serialized.getValue("head_z_rot");
+        element.bodyZRot = serialized.getValue("bodyrotationz");
 
         element.leftArmXRot = serialized.getValue("left_arm_x_rot");
         element.leftArmYRot = serialized.getValue("left_arm_y_rot");
@@ -125,6 +122,7 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
 
         element.bodyXRotAdvancedMode = this.deserializeBoolean(element.bodyXRotAdvancedMode, serialized.getValue("body_x_rot_advanced_mode"));
         element.bodyYRotAdvancedMode = this.deserializeBoolean(element.bodyYRotAdvancedMode, serialized.getValue("body_y_rot_advanced_mode"));
+        element.bodyZRotAdvancedMode = this.deserializeBoolean(element.bodyZRotAdvancedMode, serialized.getValue("body_z_rot_advanced_mode"));
         element.headXRotAdvancedMode = this.deserializeBoolean(element.headXRotAdvancedMode, serialized.getValue("head_x_rot_advanced_mode"));
         element.headYRotAdvancedMode = this.deserializeBoolean(element.headYRotAdvancedMode, serialized.getValue("head_y_rot_advanced_mode"));
         element.headZRotAdvancedMode = this.deserializeBoolean(element.headZRotAdvancedMode, serialized.getValue("head_z_rot_advanced_mode"));
@@ -161,7 +159,6 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
         if (element.capeTextureSupplier != null) {
             serializeTo.putProperty("cape_source", element.capeTextureSupplier.getSourceWithPrefix());
         }
-        serializeTo.putProperty("scale", element.scale);
         serializeTo.putProperty("parrot", "" + element.hasParrotOnShoulder);
         serializeTo.putProperty("parrot_left_shoulder", "" + element.parrotOnLeftShoulder);
         serializeTo.putProperty("is_baby", "" + element.isBaby);
@@ -173,6 +170,7 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
         serializeTo.putProperty("headrotationy", element.headYRot);
         serializeTo.putProperty("bodyrotationx", element.bodyXRot);
         serializeTo.putProperty("bodyrotationy", element.bodyYRot);
+        serializeTo.putProperty("bodyrotationz", element.bodyZRot);
         serializeTo.putProperty("head_z_rot", element.headZRot);
         serializeTo.putProperty("left_arm_x_rot", element.leftArmXRot);
         serializeTo.putProperty("left_arm_y_rot", element.leftArmYRot);
@@ -188,6 +186,7 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
         serializeTo.putProperty("right_leg_z_rot", element.rightLegZRot);
         serializeTo.putProperty("body_x_rot_advanced_mode", "" + element.bodyXRotAdvancedMode);
         serializeTo.putProperty("body_y_rot_advanced_mode", "" + element.bodyYRotAdvancedMode);
+        serializeTo.putProperty("body_z_rot_advanced_mode", "" + element.bodyZRotAdvancedMode);
         serializeTo.putProperty("head_x_rot_advanced_mode", "" + element.headXRotAdvancedMode);
         serializeTo.putProperty("head_y_rot_advanced_mode", "" + element.headYRotAdvancedMode);
         serializeTo.putProperty("head_z_rot_advanced_mode", "" + element.headZRotAdvancedMode);

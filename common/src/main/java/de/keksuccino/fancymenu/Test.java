@@ -1,19 +1,25 @@
 package de.keksuccino.fancymenu;
 
-import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
+import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.util.event.acara.EventPriority;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
-import net.minecraft.client.Minecraft;
+//import it.crystalnest.fancy_entity_renderer.api.entity.player.FancyPlayerWidget;
+//import net.minecraft.client.gui.screens.TitleScreen;
 
 public class Test {
 
     @EventListener(priority = EventPriority.VERY_LOW)
-    public void onRenderPost(InitOrResizeScreenCompletedEvent e) {
+    public void onInitPost(InitOrResizeScreenEvent.Post e) {
 
-//        e.addRenderableWidget(new ExtendedButton(20, 20, 200, 20, "Open Video Player", button -> {
-//            Minecraft.getInstance().setScreen(new VideoPlayerExample());
-//        }));
+//        if (e.getScreen() instanceof TitleScreen) {
+//
+//            FancyPlayerWidget widget = new FancyPlayerWidget(100, 100, 200, 200);
+//            widget.setMoving(true);
+//            widget.copyLocalPlayer();
+//
+//            e.addRenderableWidget(widget);
+//
+//        }
 
     }
 
