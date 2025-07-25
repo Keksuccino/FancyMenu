@@ -1757,5 +1757,9 @@
   "fancymenu.elements.checkbox.background_texture_inactive.desc": "The inactive background texture. The default texture is 20x20 pixels.",
   "fancymenu.elements.checkbox.checkmark_texture": "Checkmark Texture",
   "fancymenu.elements.checkbox.checkmark_texture.desc": "The texture displayed when the checkbox is checked.\nLeave empty to use the default checkmark.\n\nThe default checkmark texture is 20x20 pixels.",
-  "fancymenu.editor.elements.checkbox.manage_actions.desc": "Actions will be executed when the checkbox is toggled.\n\nYou can use the '$$value' placeholder in actions\nto get the current checkbox state (true/false)."
+  "fancymenu.editor.elements.checkbox.manage_actions.desc": "Actions will be executed when the checkbox is toggled.\n\nYou can use the '$$value' placeholder in actions\nto get the current checkbox state (true/false).",
+  "fancymenu.settings.caching.placeholders.set": "Set Placeholder Caching Duration [MS]",
+  "fancymenu.settings.caching.placeholders.set.desc": "The amount of time in milliseconds FancyMenu should cache\nreplaced text of placeholders to make them less performance-heavy.\n\nSetting this to 0 will disable caching.\n\n§l§xCaching can cause unexpected behaviour in complex setups and action scripts!",
+  "fancymenu.settings.caching.requirements.set": "Set Requirement Caching Duration [MS]",
+  "fancymenu.settings.caching.requirements.set.desc": "The amount of time in milliseconds FancyMenu should cache\nthe state of requirements to make them less performance-heavy.\n\nSetting this to 0 will disable caching.\n\n§l§xCaching can cause unexpected behaviour in complex setups and action scripts!"
 }
