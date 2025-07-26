@@ -17,6 +17,8 @@ CHANGELOG | FANCYMENU v3.7.0 [ W I P !! Not public yet !! ]
 - Fixed log error spam related to packets (#1217, #1163)
 - Fixed "Last Server/World Name" placeholder ignores "full_world_path=false" when its return type is set to "both" (#1214)
 - Fixed Forge builds crash on launch in some MC versions (#1229)
+- Fixed mouse in Browser element stays down when releasing mouse outside the browser window
+- Fixed keyboard input not working in Browser element (#1207)
 - 
  
 %changelog:end%
