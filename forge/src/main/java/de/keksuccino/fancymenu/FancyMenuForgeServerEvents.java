@@ -22,7 +22,7 @@ public class FancyMenuForgeServerEvents {
     }
 
     @SubscribeEvent
-    public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent e) {
+    public void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent e) {
         if (e.getEntity() instanceof ServerPlayer p) {
             PacketHandler.sendHandshakeToClient(p);
         }

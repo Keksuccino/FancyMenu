@@ -29,7 +29,7 @@ public class FancyMenuForgeClientEvents {
     }
 
     @SubscribeEvent
-    public static void onClientLoggedIn(ClientPlayerNetworkEvent.LoggingIn e) {
+    public void onClientLoggedIn(ClientPlayerNetworkEvent.LoggingIn e) {
         Minecraft.getInstance().execute(PacketHandler::sendHandshakeToServer);
     }
 

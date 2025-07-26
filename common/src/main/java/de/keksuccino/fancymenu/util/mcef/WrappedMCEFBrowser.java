@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.mcef;
 import com.cinemamod.mcef.MCEF;
 import com.cinemamod.mcef.MCEFBrowser;
 import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.Minecraft;
@@ -24,7 +25,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
-public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, NavigatableWidget {
+public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, NavigatableWidget, FancyMenuUiComponent {
 
     protected static final Logger LOGGER = LogManager.getLogger();
     protected static final ScheduledExecutorService EXECUTOR = Executors. newSingleThreadScheduledExecutor();
