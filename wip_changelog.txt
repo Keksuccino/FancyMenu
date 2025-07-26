@@ -2,7 +2,7 @@
 CHANGELOG | FANCYMENU v3.7.0 [ W I P !! Not public yet !! ]
 
 - Dropped support for MC 1.21.7
-- Dropped support for the Forge mod loader in MC 1.21.1+ (NeoForge is still supported - this is just for (Lex)Forge)
+- This is probably the last build that will support the Forge mod loader in MC 1.21.1+, future builds will drop support for it (NeoForge is still supported - this is just for (Lex)Forge)
 - Added back "Player Entity" element in MC 1.21.4+ (#1191)
   - Now needs "FER" (Fancy Entity Renderer) for rendering the element (this is a new optional dependency - without this mod installed, the Player Entity element will not work)
   - This new element is sadly not compatible with old ones, so you need to remake Player Entity elements in MC 1.21.4+ (sorry for that!)
