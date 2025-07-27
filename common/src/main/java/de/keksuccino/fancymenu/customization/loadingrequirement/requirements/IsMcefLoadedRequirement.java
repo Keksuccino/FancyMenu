@@ -24,7 +24,7 @@ public class IsMcefLoadedRequirement extends LoadingRequirement {
     @Override
     public boolean isRequirementMet(@Nullable String value) {
 
-        return MCEFUtil.isMCEFLoaded();
+        return MCEFUtil.isMCEFLoaded() && MCEFUtil.MCEF_initialized;
 
     }
 
