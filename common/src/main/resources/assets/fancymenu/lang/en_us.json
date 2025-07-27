@@ -1761,5 +1761,7 @@
   "fancymenu.settings.caching.placeholders.set": "Set Placeholder Caching Duration [MS]",
   "fancymenu.settings.caching.placeholders.set.desc": "The amount of time in milliseconds FancyMenu should cache\nreplaced text of placeholders to make them less performance-heavy.\n\nSetting this to 0 will disable caching.\n\n§l§xCaching can cause unexpected behaviour in complex setups and action scripts!",
   "fancymenu.settings.caching.requirements.set": "Set Requirement Caching Duration [MS]",
-  "fancymenu.settings.caching.requirements.set.desc": "The amount of time in milliseconds FancyMenu should cache\nthe state of requirements to make them less performance-heavy.\n\nSetting this to 0 will disable caching.\n\n§l§xCaching can cause unexpected behaviour in complex setups and action scripts!"
+  "fancymenu.settings.caching.requirements.set.desc": "The amount of time in milliseconds FancyMenu should cache\nthe state of requirements to make them less performance-heavy.\n\nSetting this to 0 will disable caching.\n\n§l§xCaching can cause unexpected behaviour in complex setups and action scripts!",
+  "fancymenu.requirements.is_mcef_loaded": "Is MCEF Loaded",
+  "fancymenu.requirements.is_mcef_loaded.desc": "Checks if the MCEF mod is loaded.\n\nThis mod is needed for the Browser element and for all\nvideo-related features like the Video element and menu background."
 }

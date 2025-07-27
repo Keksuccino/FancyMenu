@@ -171,7 +171,6 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
             this.browserFocused = true;
             this.browser.sendMousePress(this.convertMouseX(mouseX), this.convertMouseY(mouseY), button);
             this.browser.setFocus(true);
-            return true;
         } else {
             this.browserFocused = false;
         }
@@ -198,7 +197,6 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         if (this.isMouseOver(mouseX, mouseY) && this.interactable) {
             this.browser.sendMouseWheel(this.convertMouseX(mouseX), this.convertMouseY(mouseY), scrollY, 0);
             this.browser.setFocus(true);
-            return true;
         }
         return false;
     }
@@ -208,7 +206,6 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         if (this.interactable && this.browserFocused) {
             this.browser.sendKeyPress(keyCode, scanCode, modifiers);
             this.browser.setFocus(true);
-            return true;
         }
         return false;
     }
@@ -218,7 +215,6 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         if (this.interactable && this.browserFocused) {
             this.browser.sendKeyRelease(keyCode, scanCode, modifiers);
             this.browser.setFocus(true);
-            return true;
         }
         return false;
     }
@@ -229,7 +225,6 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
             if (codePoint == (char) 0) return true;
             this.browser.sendKeyTyped(codePoint, modifiers);
             this.browser.setFocus(true);
-            return true;
         }
         return false;
     }
