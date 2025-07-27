@@ -1,20 +1,16 @@
-# FancyMenu Browser Actions API
+# JavaScript API
 
 This document explains how to execute FancyMenu actions from web pages loaded in the MCEF browser.
 
-## Overview
-
 When a web page is loaded in a FancyMenu MCEF browser, a JavaScript API is automatically injected that allows the page to execute FancyMenu actions. This enables interactive web content that can control various aspects of the game.
-
-## JavaScript API
 
 The API is available through two global objects:
 - `window.fancymenu` - The primary namespace
 - `window.FancyMenu` - An alias for convenience
 
-### Methods
+# Methods
 
-#### `fancymenu.execute(actionType, actionValue)`
+## Without Callback: `fancymenu.execute(actionType, actionValue)`
 Executes a FancyMenu action without callbacks.
 
 **Parameters:**
@@ -31,7 +27,7 @@ fancymenu.execute('opengui', 'title_screen');
 fancymenu.execute('set_variable', 'myvar:myvalue');
 ```
 
-#### `fancymenu.executeAction(actionType, actionValue, onSuccess, onFailure)`
+## With Callback: `fancymenu.executeWithCallback(actionType, actionValue, onSuccess, onFailure)`
 Executes a FancyMenu action with callback functions.
 
 **Parameters:**
@@ -45,7 +41,7 @@ Executes a FancyMenu action with callback functions.
 **Examples:**
 ```javascript
 // Action without value
-fancymenu.executeAction('quitgame',
+fancymenu.executeWithCallback('quitgame',
     function(result) {
         console.log('Game quit initiated');
     },
@@ -55,7 +51,7 @@ fancymenu.executeAction('quitgame',
 );
 
 // Action with value
-fancymenu.executeAction('opengui', 'title_screen',
+fancymenu.executeWithCallback('opengui', 'title_screen',
     function(result) {
         console.log('Title screen opened');
     },
@@ -65,28 +61,27 @@ fancymenu.executeAction('opengui', 'title_screen',
 );
 ```
 
-## Common Action Types
+# Common Action Types
 
-### Actions without values:
+## Actions without values:
 - `quitgame` - Quits the game
-- `disconnect` - Disconnects from current server
-- `reloadmenu` - Reloads the current menu
+- `back_to_last_screen` - Returns to the previous screen
 
-### Actions with values:
+## Actions with values:
 - `opengui` - Opens a specific GUI screen
   - Example: `fancymenu.execute('opengui', 'title_screen')`
 - `openlink` - Opens a URL in the default browser
   - Example: `fancymenu.execute('openlink', 'https://minecraft.net')`
 - `sendmessage` - Sends a chat message
   - Example: `fancymenu.execute('sendmessage', 'Hello World!')`
-- `playsound` - Plays a sound
-  - Example: `fancymenu.execute('playsound', 'minecraft:ui.button.click')`
 - `set_variable` - Sets a FancyMenu variable
   - Example: `fancymenu.execute('set_variable', 'myvar:myvalue')`
-- `connecttoserver` - Connects to a server
-  - Example: `fancymenu.execute('connecttoserver', 'play.server.com')`
+- `joinserver` - Connects to a Minecraft server
+  - Example: `fancymenu.execute('joinserver', 'play.hypixel.net')`
+- `disconnect_server_or_world` - Disconnects from current server or world and opens a specific screen after
+  - Example: `fancymenu.execute('disconnect_server_or_world', 'title_screen')`
 
-## Example HTML
+# Example HTML
 
 ```html
 <!DOCTYPE html>
@@ -99,7 +94,7 @@ fancymenu.executeAction('opengui', 'title_screen',
     
     <button onclick="quitGame()">Quit Game</button>
     <button onclick="openTitleScreen()">Title Screen</button>
-    <button onclick="playSound()">Play Sound</button>
+    <button onclick="disconnectFromServer()">Disconnect</button>
     <button onclick="setVariable()">Set Variable</button>
     
     <script>
@@ -111,16 +106,16 @@ fancymenu.executeAction('opengui', 'title_screen',
         
         function openTitleScreen() {
             if (typeof fancymenu !== 'undefined') {
-                fancymenu.executeAction('opengui', 'title_screen',
+                fancymenu.executeWithCallback('opengui', 'title_screen',
                     function() { console.log('Title screen opened!'); },
                     function(err) { console.error('Error:', err); }
                 );
             }
         }
         
-        function playSound() {
+        function disconnectFromServer() {
             if (typeof fancymenu !== 'undefined') {
-                fancymenu.execute('playsound', 'minecraft:ui.button.click');
+                fancymenu.execute('disconnect_server_or_world', 'title_screen');
             }
         }
         
@@ -138,22 +133,22 @@ fancymenu.executeAction('opengui', 'title_screen',
 </html>
 ```
 
-## Best Practices
+# Best Practices
 
 1. **Check API Availability**: Always check if `fancymenu` is defined before using it
-2. **Handle Errors**: Use the callback version for important actions
+2. **Handle Errors**: Use the callback version (`executeWithCallback`) for important actions
 3. **Validate Input**: Sanitize user input before passing to actions
 4. **Action Values**: Remember that some actions require values while others don't
 5. **Performance**: Avoid executing too many actions rapidly
 
-## Security Notes
+# Security Notes
 
 - Actions are executed with the same permissions as if triggered from the game UI
 - Some actions may be restricted based on game state
 - Always validate and sanitize user input to prevent injection attacks
 - The `set_variable` action value format is `variable_name:variable_value`
 
-## Troubleshooting
+# Troubleshooting
 
 If the API is not available:
 1. Ensure the page is loaded in a FancyMenu MCEF browser
@@ -165,3 +160,14 @@ For action-specific issues:
 2. Verify if the action requires a value or not
 3. Ensure any required values are properly formatted
 4. Check the game logs for any error messages
+
+# Events
+
+The API dispatches a `fancymenu-ready` event when it's fully loaded:
+
+```javascript
+window.addEventListener('fancymenu-ready', function() {
+    console.log('FancyMenu API is ready!');
+    // Your code here
+});
+```

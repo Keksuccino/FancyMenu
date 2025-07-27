@@ -90,7 +90,8 @@
             <button onclick="executeTitleScreen()">Open Title Screen</button>
             <button onclick="executeOpenLink()">Open Minecraft.net</button>
             <button onclick="executeSendMessage()">Send Chat Message</button>
-            <button onclick="executePlaySound()">Play Button Click Sound</button>
+            <button onclick="executeDisconnect()">Disconnect from Server</button>
+            <button onclick="executeBackToLastScreen()">Back to Last Screen</button>
         </div>
         
         <div class="variable-section">
@@ -98,6 +99,9 @@
             <input type="text" id="varName" placeholder="Variable name" value="example_variable">
             <input type="text" id="varValue" placeholder="Variable value" value="example_value">
             <button onclick="executeSetVariable()">Set Variable</button>
+            <h3>Join Server Example</h3>
+            <input type="text" id="serverIP" placeholder="Server IP" value="play.hypixel.net">
+            <button onclick="executeJoinServer()">Join Server</button>
         </div>
         
         <div class="status" id="status">Status: Ready</div>
@@ -114,13 +118,13 @@ fancymenu.execute('opengui', 'title_screen');
 fancymenu.execute('set_variable', 'example_variable:example_value');
 
 // With callbacks (action without value)
-fancymenu.executeAction('quitgame',
+fancymenu.executeWithCallback('quitgame',
     function(result) { console.log('Success:', result); },
     function(error) { console.error('Error:', error); }
 );
 
 // With callbacks (action with value)
-fancymenu.executeAction('opengui', 'title_screen',
+fancymenu.executeWithCallback('opengui', 'title_screen',
     function(result) { console.log('GUI opened'); },
     function(error) { console.error('Failed:', error); }
 );
@@ -148,7 +152,7 @@ FancyMenu.execute('opengui', 'title_screen');
                 return;
             }
             
-            fancymenu.executeAction('quitgame',
+            fancymenu.executeWithCallback('quitgame',
                 function(result) {
                     updateStatus('Success: Quit game action executed');
                 },
@@ -167,7 +171,7 @@ FancyMenu.execute('opengui', 'title_screen');
                 return;
             }
             
-            fancymenu.executeAction('opengui', 'title_screen',
+            fancymenu.executeWithCallback('opengui', 'title_screen',
                 function(result) {
                     updateStatus('Success: Title screen opened');
                 },
@@ -186,7 +190,7 @@ FancyMenu.execute('opengui', 'title_screen');
                 return;
             }
             
-            fancymenu.executeAction('openlink', 'https://minecraft.net',
+            fancymenu.executeWithCallback('openlink', 'https://minecraft.net',
                 function(result) {
                     updateStatus('Success: Link opened');
                 },
@@ -208,7 +212,7 @@ FancyMenu.execute('opengui', 'title_screen');
                 return;
             }
             
-            fancymenu.executeAction('sendmessage', message,
+            fancymenu.executeWithCallback('sendmessage', message,
                 function(result) {
                     updateStatus('Success: Message sent');
                 },
@@ -218,18 +222,37 @@ FancyMenu.execute('opengui', 'title_screen');
             );
         }
         
-        // Execute play sound action
-        function executePlaySound() {
-            updateStatus('Executing: playsound:minecraft:ui.button.click');
+        // Execute disconnect from server action
+        function executeDisconnect() {
+            updateStatus('Executing: disconnect_server_or_world', 'title_screen');
             
             if (typeof fancymenu === 'undefined') {
                 updateStatus('Error: FancyMenu API not available', true);
                 return;
             }
             
-            fancymenu.executeAction('playsound', 'minecraft:ui.button.click',
+            fancymenu.executeWithCallback('disconnect_server_or_world', 'title_screen',
                 function(result) {
-                    updateStatus('Success: Sound played');
+                    updateStatus('Success: Disconnected from server/world');
+                },
+                function(error) {
+                    updateStatus('Failed: ' + error, true);
+                }
+            );
+        }
+        
+        // Execute back to last screen action
+        function executeBackToLastScreen() {
+            updateStatus('Executing: back_to_last_screen');
+            
+            if (typeof fancymenu === 'undefined') {
+                updateStatus('Error: FancyMenu API not available', true);
+                return;
+            }
+            
+            fancymenu.executeWithCallback('back_to_last_screen',
+                function(result) {
+                    updateStatus('Success: Went back to last screen');
                 },
                 function(error) {
                     updateStatus('Failed: ' + error, true);
@@ -255,9 +278,35 @@ FancyMenu.execute('opengui', 'title_screen');
                 return;
             }
             
-            fancymenu.executeAction('set_variable', variableData,
+            fancymenu.executeWithCallback('set_variable', variableData,
                 function(result) {
                     updateStatus('Success: Variable set (' + varName + ' = ' + varValue + ')');
+                },
+                function(error) {
+                    updateStatus('Failed: ' + error, true);
+                }
+            );
+        }
+        
+        // Execute join server action
+        function executeJoinServer() {
+            const serverIP = document.getElementById('serverIP').value;
+            
+            if (!serverIP) {
+                updateStatus('Error: Server IP is required', true);
+                return;
+            }
+            
+            updateStatus('Executing: joinserver:' + serverIP);
+            
+            if (typeof fancymenu === 'undefined') {
+                updateStatus('Error: FancyMenu API not available', true);
+                return;
+            }
+            
+            fancymenu.executeWithCallback('joinserver', serverIP,
+                function(result) {
+                    updateStatus('Success: Joining server ' + serverIP);
                 },
                 function(error) {
                     updateStatus('Failed: ' + error, true);

@@ -108,10 +108,10 @@ public class ActionBridge {
                 
                 waitForCefQuery(function() {
                     window.%namespace% = {
-                        executeAction: function(actionType, actionValue, onSuccess, onFailure) {
+                        executeWithCallback: function(actionType, actionValue, onSuccess, onFailure) {
                             // Handle overloaded calls
                             if (typeof actionValue === 'function') {
-                                // executeAction(actionType, onSuccess, onFailure)
+                                // executeWithCallback(actionType, onSuccess, onFailure)
                                 onFailure = onSuccess;
                                 onSuccess = actionValue;
                                 actionValue = null;
@@ -157,10 +157,10 @@ public class ActionBridge {
                         execute: function(actionType, actionValue) {
                             if (arguments.length === 1) {
                                 // Single argument - action without value
-                                this.executeAction(actionType);
+                                this.executeWithCallback(actionType);
                             } else {
                                 // Two arguments - action with value
-                                this.executeAction(actionType, actionValue);
+                                this.executeWithCallback(actionType, actionValue);
                             }
                         }
                     };
