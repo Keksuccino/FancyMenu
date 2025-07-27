@@ -430,7 +430,7 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
      * @return {@code this}.
      */
     public WrappedFancyPlayerWidget setRightHandItem(@Nullable ItemStack item) {
-        wrapped.setRightHandItem((item != null) ? item.getItem() : null);
+        wrapped.setRightHandItem(item);
         return this;
     }
 
@@ -454,7 +454,7 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
      * @return {@code this}.
      */
     public WrappedFancyPlayerWidget setLeftHandItem(@Nullable ItemStack item) {
-        wrapped.setLeftHandItem((item != null) ? item.getItem() : null);
+        wrapped.setLeftHandItem(item);
         return this;
     }
 
