@@ -15,6 +15,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cef.browser.CefMessageRouter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.Closeable;
@@ -46,6 +47,9 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     protected final ResourceLocation frameLocation = ResourceLocation.fromNamespaceAndPath("fancymenu", "mcef_browser_frame_texture_" + this.genericIdentifier.toString().toLowerCase().replace("-", ""));
     protected final BrowserFrameTexture frameTexture = new BrowserFrameTexture(-1);
     
+    // Message router for JavaScript-to-Java communication
+    protected CefMessageRouter messageRouter;
+    
     // Track if initialization is complete for this browser
     private volatile boolean initialized = false;
 
@@ -68,11 +72,18 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
         super(0, 0, 0, 0, Component.empty());
 
+        // Set up message router for JavaScript-to-Java communication
+        this.messageRouter = CefMessageRouter.create();
+        this.messageRouter.addHandler(ActionBridge.createMessageHandler(), true);
+        
         // Register the custom load listener handler to later register multiple load listeners.
         // Calling this method multiple times is fine, because there can only be one default listener active.
         MCEF.getClient().addLoadHandler(BrowserLoadEventListenerManager.getInstance().getGlobalHandler());
 
         this.browser = MCEF.createBrowser(url, transparent);
+        
+        // Add message router to the browser
+        this.browser.getClient().addMessageRouter(this.messageRouter);
 
         String browserId = this.getIdentifier();
 
@@ -81,6 +92,8 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
                 initialized = true;
                 // Apply settings once the page is loaded
                 applyInitialSettings();
+                // Inject the FancyMenu JavaScript API
+                injectJavaScriptAPI();
             } else {
                 LOGGER.error("[FANCYMENU] WrappedMCEFBrowser browser page failed to load (ID: {})", browserId, new Exception());
                 initialized = false;
@@ -110,6 +123,18 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         this.setHideVideoControls(this.hideVideoControls);
         this.setAutoPlayAllVideosOnLoad(this.autoPlayAllVideosOnLoad);
         this.setMuteAllMediaOnLoad(this.muteAllMediaOnLoad);
+    }
+    
+    /**
+     * Injects the FancyMenu JavaScript API into the browser
+     */
+    protected void injectJavaScriptAPI() {
+        try {
+            LOGGER.info("[FANCYMENU] Injecting FancyMenu JavaScript API into browser (ID: {})", this.getIdentifier());
+            this.browser.executeJavaScript(ActionBridge.JAVASCRIPT_API, this.browser.getURL(), 0);
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to inject JavaScript API into browser", ex);
+        }
     }
 
     @Override
@@ -420,6 +445,12 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         if (this.browser.canGoBack()) this.browser.goBack();
         if (initialized) {
             this.setVolume(this.volume);
+            // Re-register load listener to inject JavaScript API on navigation
+            BrowserLoadEventListenerManager.getInstance().registerListenerForBrowser(this, success -> {
+                if (success) {
+                    injectJavaScriptAPI();
+                }
+            });
         }
     }
 
@@ -427,6 +458,12 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         if (this.browser.canGoForward()) this.browser.goForward();
         if (initialized) {
             this.setVolume(this.volume);
+            // Re-register load listener to inject JavaScript API on navigation
+            BrowserLoadEventListenerManager.getInstance().registerListenerForBrowser(this, success -> {
+                if (success) {
+                    injectJavaScriptAPI();
+                }
+            });
         }
     }
 
@@ -436,12 +473,24 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
     public void setUrl(@NotNull String url) {
         this.browser.loadURL(url);
+        // Re-register load listener to inject JavaScript API on new page
+        BrowserLoadEventListenerManager.getInstance().registerListenerForBrowser(this, success -> {
+            if (success) {
+                injectJavaScriptAPI();
+            }
+        });
     }
 
     public void reload() {
         this.browser.reload();
         if (initialized) {
             this.setVolume(this.volume);
+            // Re-register load listener to inject JavaScript API on reload
+            BrowserLoadEventListenerManager.getInstance().registerListenerForBrowser(this, success -> {
+                if (success) {
+                    injectJavaScriptAPI();
+                }
+            });
         }
     }
 
@@ -496,6 +545,12 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         // Unregister from the global handler manager
         if (this.browser != null) {
             BrowserLoadEventListenerManager.getInstance().unregisterAllListenersForBrowser(this.getIdentifier());
+            // Remove message router
+            if (this.messageRouter != null) {
+                this.browser.getClient().removeMessageRouter(this.messageRouter);
+                this.messageRouter.dispose();
+                this.messageRouter = null;
+            }
             this.browser.close(true);
         }
         Minecraft.getInstance().getTextureManager().release(this.frameLocation);
