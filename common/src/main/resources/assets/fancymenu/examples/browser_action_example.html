@@ -267,11 +267,19 @@ FancyMenu.execute('opengui', 'title_screen');
         
         // Check if FancyMenu API is loaded
         window.addEventListener('load', function() {
-            if (typeof fancymenu !== 'undefined') {
+            // Wait for the fancymenu-ready event
+            window.addEventListener('fancymenu-ready', function() {
                 updateStatus('FancyMenu API loaded successfully!');
-            } else {
-                updateStatus('Warning: FancyMenu API not detected', true);
-            }
+            });
+            
+            // Fallback check after a delay
+            setTimeout(function() {
+                if (typeof fancymenu !== 'undefined') {
+                    updateStatus('FancyMenu API loaded successfully!');
+                } else {
+                    updateStatus('Warning: FancyMenu API not detected', true);
+                }
+            }, 1000);
         });
     </script>
 </body>

@@ -18,6 +18,9 @@ public class BrowserHandler {
     private static final HashMap<String, Pair<WrappedMCEFBrowser, Long>> BROWSERS = new HashMap<>();
 
     public static void init() {
+        // Initialize the ActionBridge for JavaScript-to-Java communication
+        ActionBridge.initialize();
+        
         MinecraftSoundSettingsObserver.registerVolumeListener(BrowserHandler::onVolumeUpdated);
     }
 

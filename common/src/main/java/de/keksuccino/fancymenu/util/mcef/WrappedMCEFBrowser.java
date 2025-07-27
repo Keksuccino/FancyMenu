@@ -15,7 +15,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.cef.browser.CefMessageRouter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.Closeable;
@@ -23,6 +22,7 @@ import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
@@ -47,9 +47,6 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     protected final ResourceLocation frameLocation = ResourceLocation.fromNamespaceAndPath("fancymenu", "mcef_browser_frame_texture_" + this.genericIdentifier.toString().toLowerCase().replace("-", ""));
     protected final BrowserFrameTexture frameTexture = new BrowserFrameTexture(-1);
     
-    // Message router for JavaScript-to-Java communication
-    protected CefMessageRouter messageRouter;
-    
     // Track if initialization is complete for this browser
     private volatile boolean initialized = false;
 
@@ -72,18 +69,14 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
         super(0, 0, 0, 0, Component.empty());
 
-        // Set up message router for JavaScript-to-Java communication
-        this.messageRouter = CefMessageRouter.create();
-        this.messageRouter.addHandler(ActionBridge.createMessageHandler(), true);
+        // Initialize the global message router if not already done
+        ActionBridge.initialize();
         
         // Register the custom load listener handler to later register multiple load listeners.
         // Calling this method multiple times is fine, because there can only be one default listener active.
         MCEF.getClient().addLoadHandler(BrowserLoadEventListenerManager.getInstance().getGlobalHandler());
 
         this.browser = MCEF.createBrowser(url, transparent);
-        
-        // Add message router to the browser
-        this.browser.getClient().addMessageRouter(this.messageRouter);
 
         String browserId = this.getIdentifier();
 
@@ -131,9 +124,17 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
     protected void injectJavaScriptAPI() {
         try {
             LOGGER.info("[FANCYMENU] Injecting FancyMenu JavaScript API into browser (ID: {})", this.getIdentifier());
-            this.browser.executeJavaScript(ActionBridge.JAVASCRIPT_API, this.browser.getURL(), 0);
+            // Execute the JavaScript injection with a delay to ensure the page and message router are ready
+            EXECUTOR.schedule(() -> {
+                try {
+                    this.browser.executeJavaScript(ActionBridge.JAVASCRIPT_API, this.browser.getURL(), 0);
+                    LOGGER.info("[FANCYMENU] JavaScript API injection completed for browser (ID: {})", this.getIdentifier());
+                } catch (Exception ex) {
+                    LOGGER.error("[FANCYMENU] Failed to inject JavaScript API into browser", ex);
+                }
+            }, 500, TimeUnit.MILLISECONDS);
         } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to inject JavaScript API into browser", ex);
+            LOGGER.error("[FANCYMENU] Failed to schedule JavaScript API injection", ex);
         }
     }
 
@@ -545,12 +546,6 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         // Unregister from the global handler manager
         if (this.browser != null) {
             BrowserLoadEventListenerManager.getInstance().unregisterAllListenersForBrowser(this.getIdentifier());
-            // Remove message router
-            if (this.messageRouter != null) {
-                this.browser.getClient().removeMessageRouter(this.messageRouter);
-                this.messageRouter.dispose();
-                this.messageRouter = null;
-            }
             this.browser.close(true);
         }
         Minecraft.getInstance().getTextureManager().release(this.frameLocation);
