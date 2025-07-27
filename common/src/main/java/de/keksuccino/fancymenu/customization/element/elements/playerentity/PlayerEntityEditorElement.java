@@ -10,6 +10,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
+
 @SuppressWarnings("all")
 public class PlayerEntityEditorElement extends AbstractEditorElement {
 
@@ -189,6 +191,18 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                 (element, follow) -> element.getElement().bodyFollowsMouse = follow,
                 "fancymenu.editor.elements.player_entity.body_follows_mouse");
 
+        this.addCycleContextMenuEntryTo(this.rightClickMenu, "base_pose", List.of(PlayerEntityElement.PlayerPose.values()), PlayerEntityEditorElement.class,
+                        consumes -> consumes.getElement().pose,
+                        (playerEntityEditorElement, playerPose) -> playerEntityEditorElement.getElement().pose = playerPose,
+                        (menu, entry, switcherValue) -> switcherValue.getCycleComponent())
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.pose.desc")));
+
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "body_movement", PlayerEntityEditorElement.class,
+                        consumes -> consumes.getElement().bodyMovement,
+                        (playerEntityEditorElement, aBoolean) -> playerEntityEditorElement.getElement().bodyMovement = aBoolean,
+                        "fancymenu.elements.player_entity.body_movement")
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.player_entity.body_movement.desc")));
+
         this.rightClickMenu.addClickableEntry("entity_pose", Component.translatable("fancymenu.editor.elements.player_entity.edit_pose"),
                 (menu, entry) -> {
                     Minecraft.getInstance().setScreen(new PlayerEntityPoseScreen(this.getElement(), this.editor, () -> {
@@ -198,13 +212,6 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("separator_after_entity_scale");
 
-        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "crouching",
-                        consumes -> (consumes instanceof PlayerEntityEditorElement),
-                        consumes -> ((PlayerEntityElement) consumes.element).crouching,
-                        (element1, s) -> ((PlayerEntityElement) element1.element).setCrouching(s),
-                        "fancymenu.helper.editor.items.playerentity.crouching")
-                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.crouching.desc")));
-
         this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "is_baby",
                         consumes -> (consumes instanceof PlayerEntityEditorElement),
                         consumes -> ((PlayerEntityElement)consumes.element).isBaby,
@@ -212,23 +219,21 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                         "fancymenu.helper.editor.items.playerentity.baby")
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.baby.desc")));
 
-        //TODO parrots currently do not work - FER does not support that (yet)
+        this.rightClickMenu.addSeparatorEntry("player_entity_separator_5");
 
-//        this.rightClickMenu.addSeparatorEntry("player_entity_separator_5");
-//
-//        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "parrot",
-//                        consumes -> (consumes instanceof PlayerEntityEditorElement),
-//                        consumes -> ((PlayerEntityElement) consumes.element).hasParrotOnShoulder,
-//                        (element1, s) -> ((PlayerEntityElement) element1.element).setHasParrotOnShoulder(s, ((PlayerEntityElement) element1.element).parrotOnLeftShoulder),
-//                        "fancymenu.helper.editor.items.playerentity.parrot")
-//                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.parrot.desc")));
-//
-//        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "parrot_on_left",
-//                        consumes -> (consumes instanceof PlayerEntityEditorElement),
-//                        consumes -> ((PlayerEntityElement) consumes.element).parrotOnLeftShoulder,
-//                        (element1, s) -> ((PlayerEntityElement) element1.element).setHasParrotOnShoulder(((PlayerEntityElement) element1.element).hasParrotOnShoulder, s),
-//                        "fancymenu.helper.editor.items.playerentity.parrot_left")
-//                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.parrot_left.desc")));
+        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "parrot",
+                        consumes -> (consumes instanceof PlayerEntityEditorElement),
+                        consumes -> ((PlayerEntityElement) consumes.element).hasParrotOnShoulder,
+                        (element1, s) -> ((PlayerEntityElement) element1.element).setHasParrotOnShoulder(s, ((PlayerEntityElement) element1.element).parrotOnLeftShoulder),
+                        "fancymenu.helper.editor.items.playerentity.parrot")
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.parrot.desc")));
+
+        this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "parrot_on_left",
+                        consumes -> (consumes instanceof PlayerEntityEditorElement),
+                        consumes -> ((PlayerEntityElement) consumes.element).parrotOnLeftShoulder,
+                        (element1, s) -> ((PlayerEntityElement) element1.element).setHasParrotOnShoulder(((PlayerEntityElement) element1.element).hasParrotOnShoulder, s),
+                        "fancymenu.helper.editor.items.playerentity.parrot_left")
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.parrot_left.desc")));
 
     }
 

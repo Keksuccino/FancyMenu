@@ -5,13 +5,17 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.textures.CapeResourceSupplier;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.textures.SkinResourceSupplier;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.entity.FancyEntityRendererUtils;
 import de.keksuccino.fancymenu.util.rendering.entity.WrappedFancyPlayerWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.PlayerSkin;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.animal.Parrot;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -28,9 +32,11 @@ public class PlayerEntityElement extends AbstractElement {
     @NotNull
     public volatile String playerName = "Steve";
     public boolean showPlayerName = true;
+    @NotNull
+    public PlayerPose pose = PlayerPose.STANDING;
+    public boolean bodyMovement = false;
     public boolean hasParrotOnShoulder = false;
     public boolean parrotOnLeftShoulder = false;
-    public boolean crouching = false;
     public boolean isBaby = false;
     public boolean headFollowsMouse = true;
     public boolean bodyFollowsMouse = true;
@@ -117,6 +123,8 @@ public class PlayerEntityElement extends AbstractElement {
 
                 this.updateEntityPose();
 
+                this.updateParrots();
+
                 this.updateEntityProperties();
 
                 this.widget.render(graphics, mouseX, mouseY, partial);
@@ -133,7 +141,6 @@ public class PlayerEntityElement extends AbstractElement {
 
             this.widget.setShowName(this.showPlayerName);
             this.widget.setName(this.playerName);
-            this.widget.setCrouching(this.crouching);
             this.widget.setBaby(this.isBaby);
             this.widget.setHeadFollowsMouse(this.headFollowsMouse);
             this.widget.setBodyFollowsMouse(this.bodyFollowsMouse);
@@ -143,9 +150,24 @@ public class PlayerEntityElement extends AbstractElement {
 
     }
 
+    protected void updateParrots() {
+        if (this.widget != null) {
+            if (!this.hasParrotOnShoulder) {
+                this.widget.setParrots(null, null);
+            } else if (this.parrotOnLeftShoulder) {
+                this.widget.setParrots(Parrot.Variant.RED_BLUE, null);
+            } else {
+                this.widget.setParrots(null, Parrot.Variant.RED_BLUE);
+            }
+        }
+    }
+
     protected void updateEntityPose() {
 
         if (this.widget != null) {
+
+            this.widget.setPose(this.pose.pose);
+            this.widget.setBodyMovement(this.bodyMovement);
 
             float bodyXRot = stringToFloat(this.bodyXRot);
             float bodyYRot = stringToFloat(this.bodyYRot);
@@ -221,14 +243,9 @@ public class PlayerEntityElement extends AbstractElement {
         this.showPlayerName = showName;
     }
 
-    // TODO currently not working - FER does not have an option for that (yet)
     public void setHasParrotOnShoulder(boolean hasParrot, boolean onLeftShoulder) {
         this.hasParrotOnShoulder = hasParrot;
         this.parrotOnLeftShoulder = onLeftShoulder;
-    }
-
-    public void setCrouching(boolean crouching) {
-        this.crouching = crouching;
     }
 
     public void setIsBaby(boolean isBaby) {
@@ -259,6 +276,59 @@ public class PlayerEntityElement extends AbstractElement {
             return Float.parseFloat(s);
         } catch (Exception ignore) {}
         return 0.0F;
+    }
+
+    public enum PlayerPose implements LocalizedCycleEnum<PlayerPose> {
+
+        STANDING("standing", Pose.STANDING),
+        CROUCHING("crouching", Pose.CROUCHING),
+        SLEEPING("sleeping", Pose.SLEEPING),
+        SWIMMING("swimming", Pose.SWIMMING),
+        DYING("dying", Pose.DYING),
+        SPIN_ATTACK("spin_attack", Pose.SPIN_ATTACK);
+
+        public final String name;
+        public final Pose pose;
+
+        PlayerPose(@NotNull String name, @NotNull Pose pose) {
+            this.name = name;
+            this.pose = pose;
+        }
+
+        @Override
+        public @NotNull String getLocalizationKeyBase() {
+            return "fancymenu.elements.player_entity.pose";
+        }
+
+        @Override
+        public @NotNull Style getValueComponentStyle() {
+            return WARNING_TEXT_STYLE.get();
+        }
+
+        @Override
+        public @NotNull String getName() {
+            return this.name;
+        }
+
+        @Override
+        public @NotNull PlayerPose[] getValues() {
+            return PlayerPose.values();
+        }
+
+        @Override
+        public @Nullable PlayerPose getByNameInternal(@NotNull String name) {
+            return getByName(name);
+        }
+
+        @Nullable
+        public static PlayerPose getByName(@Nullable String name) {
+            if (name == null) return null;
+            for (PlayerPose p : PlayerPose.values()) {
+                if (p.name.equals(name)) return p;
+            }
+            return null;
+        }
+
     }
 
 }

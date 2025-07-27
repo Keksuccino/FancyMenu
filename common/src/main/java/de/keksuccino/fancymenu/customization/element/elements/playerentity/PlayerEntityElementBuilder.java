@@ -11,6 +11,8 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
+
 @SuppressWarnings("all")
 public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityElement, PlayerEntityEditorElement> {
 
@@ -87,7 +89,9 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
 
         element.setIsBaby(this.deserializeBoolean(element.isBaby, serialized.getValue("is_baby")));
 
-        element.setCrouching(this.deserializeBoolean(element.crouching, serialized.getValue("crouching")));
+        element.pose = Objects.requireNonNullElse(PlayerEntityElement.PlayerPose.getByName(serialized.getValue("player_pose")), PlayerEntityElement.PlayerPose.STANDING);
+
+        element.bodyMovement = this.deserializeBoolean(element.bodyMovement, serialized.getValue("body_movement"));
 
         element.setShowPlayerName(this.deserializeBoolean(element.showPlayerName, serialized.getValue("showname")));
 
@@ -162,7 +166,8 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
         serializeTo.putProperty("parrot", "" + element.hasParrotOnShoulder);
         serializeTo.putProperty("parrot_left_shoulder", "" + element.parrotOnLeftShoulder);
         serializeTo.putProperty("is_baby", "" + element.isBaby);
-        serializeTo.putProperty("crouching", "" + element.crouching);
+        serializeTo.putProperty("body_movement", "" + element.bodyMovement);
+        serializeTo.putProperty("player_pose", element.pose.name);
         serializeTo.putProperty("showname", "" + element.showPlayerName);
         serializeTo.putProperty("head_follows_mouse", "" + element.headFollowsMouse);
         serializeTo.putProperty("body_follows_mouse", "" + element.bodyFollowsMouse);

@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.entity;
 
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import it.crystalnest.fancy_entity_renderer.api.Rotation;
+import it.crystalnest.fancy_entity_renderer.api.entity.RenderMode;
 import it.crystalnest.fancy_entity_renderer.api.entity.player.FancyPlayerWidget;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -10,6 +11,8 @@ import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.animal.Parrot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.ApiStatus;
@@ -322,14 +325,13 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
         return this;
     }
 
-    /**
-     * Sets whether the player is rendered as in spectator mode.
-     *
-     * @param isSpectator whether the player is rendered as in spectator mode.
-     * @return {@code this}.
-     */
-    public WrappedFancyPlayerWidget setSpectator(boolean isSpectator) {
-        wrapped.setSpectator(isSpectator);
+    public WrappedFancyPlayerWidget setPose(@NotNull Pose pose) {
+        wrapped.setPose(pose);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setRenderMode(@NotNull RenderMode renderMode) {
+        wrapped.setRenderMode(renderMode);
         return this;
     }
 
@@ -398,17 +400,13 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
         return this;
     }
 
-    /**
-     * Sets whether the player is crouching.<br>
-     * Will probably be removed in the future in favor of a more general method to set default player poses.
-     *
-     * @param isCrouching whether the player is crouching.
-     * @return {@code this}.
-     * @deprecated
-     */
-    @Deprecated(since = "0.1.0", forRemoval = true)
-    public WrappedFancyPlayerWidget setCrouching(boolean isCrouching) {
-        wrapped.setCrouching(isCrouching);
+    public WrappedFancyPlayerWidget setParrots(@Nullable Parrot.Variant leftParrot, @Nullable Parrot.Variant rightParrot) {
+        wrapped.setParrots(leftParrot, rightParrot);
+        return this;
+    }
+
+    public WrappedFancyPlayerWidget setBodyMovement(boolean shouldMove) {
+        wrapped.setMoving(shouldMove);
         return this;
     }
 

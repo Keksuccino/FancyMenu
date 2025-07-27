@@ -923,7 +923,7 @@
   "fancymenu.editor.elements.deprecated_warning.line1": "DEPRECATED ELEMENT! This element type gets removed in the future!",
   "fancymenu.editor.elements.deprecated_warning.line2": "There should be a new version of this element type.",
   "fancymenu.editor.elements.deprecated_warning.line3": "You should replace this element with the new version.",
-  "fancymenu.editor.elements.player_entity.edit_pose": "Entity Pose",
+  "fancymenu.editor.elements.player_entity.edit_pose": "Custom Player Pose",
   "fancymenu.editor.elements.player_entity.head_follows_mouse": "Head Follows Mouse: %s",
   "fancymenu.editor.elements.player_entity.body_follows_mouse": "Body Follows Mouse: %s",
   "fancymenu.editor.loading_requirements.is_menu_title": "Is Screen Title",
@@ -1759,5 +1759,15 @@
   "fancymenu.elements.checkbox.background_texture_inactive.desc": "The inactive background texture. The default texture is 20x20 pixels.",
   "fancymenu.elements.checkbox.checkmark_texture": "Checkmark Texture",
   "fancymenu.elements.checkbox.checkmark_texture.desc": "The texture displayed when the checkbox is checked.\nLeave empty to use the default checkmark.\n\nThe default checkmark texture is 20x20 pixels.",
-  "fancymenu.editor.elements.checkbox.manage_actions.desc": "Actions will be executed when the checkbox is toggled.\n\nYou can use the '$$value' placeholder in actions\nto get the current checkbox state (true/false)."
+  "fancymenu.editor.elements.checkbox.manage_actions.desc": "Actions will be executed when the checkbox is toggled.\n\nYou can use the '$$value' placeholder in actions\nto get the current checkbox state (true/false).",
+  "fancymenu.elements.player_entity.pose": "Pose: %s",
+  "fancymenu.elements.player_entity.pose.desc": "The pose of the player.",
+  "fancymenu.elements.player_entity.pose.standing": "Standing",
+  "fancymenu.elements.player_entity.pose.crouching": "Crouching",
+  "fancymenu.elements.player_entity.pose.swimming": "Swimming",
+  "fancymenu.elements.player_entity.pose.sleeping": "Sleeping",
+  "fancymenu.elements.player_entity.pose.dying": "Dying",
+  "fancymenu.elements.player_entity.pose.spin_attack": "Spin Attack",
+  "fancymenu.elements.player_entity.body_movement": "Body Movement: %s",
+  "fancymenu.elements.player_entity.body_movement.desc": "If the player's pose should be animated."
 }
