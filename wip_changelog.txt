@@ -10,6 +10,7 @@ CHANGELOG | FANCYMENU v3.7.0 [ W I P !! Not public yet !! ]
   - Now supports normal element resizing like other elements (no need to set a scale anymore)
   - Now has a setting to set Vanilla's existing poses (like standing, crouching, swimming, sleeping, etc.)
   - Now has a setting to enable "body movement", which basically plays idle animations like arms moving around, etc. when enabled (or other pose-related movement like the swimming animation)
+  - It's now possible to set armor and tools for the player to wear/hold
   - The new Player Entity element will get backported to older MC versions in the future when "FER" (Fancy Entity Renderer) gets released for these older versions
 - Added "Is MCEF Loaded" requirement to check if the MCEF mod is loaded, which is needed for the Browser element and all video-related features
 - It is now possible to execute FancyMenu's actions from within the "Browser" element, which means you can now basically make web-based UIs (#1223)
