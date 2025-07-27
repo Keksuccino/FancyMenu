@@ -102,6 +102,9 @@
             <h3>Join Server Example</h3>
             <input type="text" id="serverIP" placeholder="Server IP" value="play.hypixel.net">
             <button onclick="executeJoinServer()">Join Server</button>
+            <h3>Open GUI Example</h3>
+            <input type="text" id="guiScreen" placeholder="Screen identifier" value="options_screen">
+            <button onclick="executeOpenGui()">Open GUI</button>
         </div>
         
         <div class="status" id="status">Status: Ready</div>
@@ -307,6 +310,32 @@ FancyMenu.execute('opengui', 'title_screen');
             fancymenu.executeWithCallback('joinserver', serverIP,
                 function(result) {
                     updateStatus('Success: Joining server ' + serverIP);
+                },
+                function(error) {
+                    updateStatus('Failed: ' + error, true);
+                }
+            );
+        }
+        
+        // Execute open GUI action
+        function executeOpenGui() {
+            const guiScreen = document.getElementById('guiScreen').value;
+            
+            if (!guiScreen) {
+                updateStatus('Error: Screen identifier is required', true);
+                return;
+            }
+            
+            updateStatus('Executing: opengui:' + guiScreen);
+            
+            if (typeof fancymenu === 'undefined') {
+                updateStatus('Error: FancyMenu API not available', true);
+                return;
+            }
+            
+            fancymenu.executeWithCallback('opengui', guiScreen,
+                function(result) {
+                    updateStatus('Success: Opening ' + guiScreen);
                 },
                 function(error) {
                     updateStatus('Failed: ' + error, true);
