@@ -1769,5 +1769,18 @@
   "fancymenu.elements.player_entity.pose.dying": "Dying",
   "fancymenu.elements.player_entity.pose.spin_attack": "Spin Attack",
   "fancymenu.elements.player_entity.body_movement": "Body Movement: %s",
-  "fancymenu.elements.player_entity.body_movement.desc": "If the player's pose should be animated."
+  "fancymenu.elements.player_entity.body_movement.desc": "If the player's pose should be animated.",
+  "fancymenu.elements.player_entity.wearables": "Armor and Tools",
+  "fancymenu.elements.player_entity.wearables.left_hand": "Set Left Hand Tool",
+  "fancymenu.elements.player_entity.wearables.left_hand.enchant": "Enchant Left Hand Tool: %s",
+  "fancymenu.elements.player_entity.wearables.right_hand": "Set Right Hand Tool",
+  "fancymenu.elements.player_entity.wearables.right_hand.enchant": "Enchant Right Hand Tool: %s",
+  "fancymenu.elements.player_entity.wearables.head": "Set Head Armor",
+  "fancymenu.elements.player_entity.wearables.head.enchant": "Enchant Head Armor: %s",
+  "fancymenu.elements.player_entity.wearables.chest": "Set Chest Armor",
+  "fancymenu.elements.player_entity.wearables.chest.enchant": "Enchant Chest Armor: %s",
+  "fancymenu.elements.player_entity.wearables.legs": "Set Legs Armor",
+  "fancymenu.elements.player_entity.wearables.legs.enchant": "Enchant Legs Armor: %s",
+  "fancymenu.elements.player_entity.wearables.feet": "Set Feet Armor",
+  "fancymenu.elements.player_entity.wearables.feet.enchant": "Enchant Feet Armor: %s"
 }

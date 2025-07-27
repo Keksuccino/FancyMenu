@@ -423,6 +423,18 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
     }
 
     /**
+     * Sets the item the player is holding in its right hand.<br>
+     * Pass a valid item to set it, pass {@code null} to empty the hand.
+     *
+     * @param item item to set or {@code null}.
+     * @return {@code this}.
+     */
+    public WrappedFancyPlayerWidget setRightHandItem(@Nullable ItemStack item) {
+        wrapped.setRightHandItem((item != null) ? item.getItem() : null);
+        return this;
+    }
+
+    /**
      * Sets the item the player is holding in its left hand.<br>
      * Pass a valid item to set it, pass {@code null} to empty the hand.
      *
@@ -431,6 +443,18 @@ public class WrappedFancyPlayerWidget extends AbstractWidget implements Navigata
      */
     public WrappedFancyPlayerWidget setLeftHandItem(@Nullable Item item) {
         wrapped.setLeftHandItem(item);
+        return this;
+    }
+
+    /**
+     * Sets the item the player is holding in its left hand.<br>
+     * Pass a valid item to set it, pass {@code null} to empty the hand.
+     *
+     * @param item item to set or {@code null}.
+     * @return {@code this}.
+     */
+    public WrappedFancyPlayerWidget setLeftHandItem(@Nullable ItemStack item) {
+        wrapped.setLeftHandItem((item != null) ? item.getItem() : null);
         return this;
     }
 

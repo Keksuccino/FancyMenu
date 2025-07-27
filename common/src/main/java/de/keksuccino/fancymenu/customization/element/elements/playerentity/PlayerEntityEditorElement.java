@@ -2,15 +2,22 @@ package de.keksuccino.fancymenu.customization.element.elements.playerentity;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
+import de.keksuccino.fancymenu.customization.element.elements.item.ItemKeyScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.function.BiConsumer;
 
 @SuppressWarnings("all")
 public class PlayerEntityEditorElement extends AbstractEditorElement {
@@ -212,6 +219,18 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("separator_after_entity_scale");
 
+        ContextMenu wearablesMenu = new ContextMenu();
+        this.rightClickMenu.addSubMenuEntry("wearables_menu", Component.translatable("fancymenu.elements.player_entity.wearables"), wearablesMenu);
+
+        this.addWearableEntrySet(wearablesMenu, this.getElement().leftHandWearable, "left_hand");
+        this.addWearableEntrySet(wearablesMenu, this.getElement().rightHandWearable, "right_hand");
+        this.addWearableEntrySet(wearablesMenu, this.getElement().headWearable, "head");
+        this.addWearableEntrySet(wearablesMenu, this.getElement().chestWearable, "chest");
+        this.addWearableEntrySet(wearablesMenu, this.getElement().legsWearable, "legs");
+        this.addWearableEntrySet(wearablesMenu, this.getElement().feetWearable, "feet");
+
+        this.rightClickMenu.addSeparatorEntry("separator_after_wearables");
+
         this.addGenericBooleanSwitcherContextMenuEntryTo(this.rightClickMenu, "is_baby",
                         consumes -> (consumes instanceof PlayerEntityEditorElement),
                         consumes -> ((PlayerEntityElement)consumes.element).isBaby,
@@ -234,6 +253,48 @@ public class PlayerEntityEditorElement extends AbstractEditorElement {
                         (element1, s) -> ((PlayerEntityElement) element1.element).setHasParrotOnShoulder(((PlayerEntityElement) element1.element).hasParrotOnShoulder, s),
                         "fancymenu.helper.editor.items.playerentity.parrot_left")
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.helper.editor.items.playerentity.parrot_left.desc")));
+
+    }
+
+    protected void addWearableEntrySet(@NotNull ContextMenu contextMenu, @NotNull PlayerEntityElement.Wearable wearable, @NotNull String wearableIdentifier) {
+
+        ConsumingSupplier<PlayerEntityEditorElement, String> itemKeyTargetFieldGetter = consumes -> wearable.isEmpty() ? null : wearable.itemKey;
+        BiConsumer<PlayerEntityEditorElement, String> itemKeyTargetFieldSetter = (itemEditorElement, s) -> wearable.itemKey = Objects.requireNonNullElse(s, PlayerEntityElement.Wearable.WEARABLE_EMPTY_KEY);
+
+        ContextMenu.ClickableContextMenuEntry<?> itemKeyEntry = this.addStringInputContextMenuEntryTo(contextMenu, "wearable_entry_" + wearableIdentifier, PlayerEntityEditorElement.class,
+                        itemKeyTargetFieldGetter,
+                        itemKeyTargetFieldSetter,
+                        null, false, true, Component.translatable("fancymenu.elements.player_entity.wearables." + wearableIdentifier),
+                        true, null, null, null)
+                .setStackable(false);
+
+        if (itemKeyEntry instanceof ContextMenu.SubMenuContextMenuEntry subMenuEntry) {
+
+            subMenuEntry.getSubContextMenu().removeEntry("input_value");
+
+            subMenuEntry.getSubContextMenu().addClickableEntryAt(0, "input_value", Component.translatable("fancymenu.guicomponents.set"), (menu, entry) ->
+            {
+                if (entry.getStackMeta().isFirstInStack()) {
+                    Screen inputScreen = new ItemKeyScreen(itemKeyTargetFieldGetter.get(this), callback -> {
+                        if (callback != null) {
+                            this.editor.history.saveSnapshot();
+                            itemKeyTargetFieldSetter.accept(this, callback);
+                        }
+                        menu.closeMenu();
+                        Minecraft.getInstance().setScreen(this.editor);
+                    });
+                    Minecraft.getInstance().setScreen(inputScreen);
+                }
+            }).setStackable(false);
+
+        }
+
+        this.addToggleContextMenuEntryTo(contextMenu, "toggle_enchant_" + wearableIdentifier, PlayerEntityEditorElement.class,
+                consumes -> wearable.enchanted,
+                (playerEntityEditorElement, aBoolean) -> wearable.enchanted = aBoolean,
+                "fancymenu.elements.player_entity.wearables." + wearableIdentifier + ".enchant");
+
+        contextMenu.addSeparatorEntry("separator_after_" + wearableIdentifier);
 
     }
 

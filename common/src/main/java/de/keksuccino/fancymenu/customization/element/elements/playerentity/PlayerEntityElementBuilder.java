@@ -143,6 +143,13 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
         element.rightLegYRotAdvancedMode = this.deserializeBoolean(element.rightLegYRotAdvancedMode, serialized.getValue("right_leg_y_rot_advanced_mode"));
         element.rightLegZRotAdvancedMode = this.deserializeBoolean(element.rightLegZRotAdvancedMode, serialized.getValue("right_leg_z_rot_advanced_mode"));
 
+        element.leftHandWearable = PlayerEntityElement.Wearable.deserialize(serialized.getValue("left_hand_wearable"));
+        element.rightHandWearable = PlayerEntityElement.Wearable.deserialize(serialized.getValue("right_hand_wearable"));
+        element.headWearable = PlayerEntityElement.Wearable.deserialize(serialized.getValue("head_wearable"));
+        element.chestWearable = PlayerEntityElement.Wearable.deserialize(serialized.getValue("chest_wearable"));
+        element.legsWearable = PlayerEntityElement.Wearable.deserialize(serialized.getValue("legs_wearable"));
+        element.feetWearable = PlayerEntityElement.Wearable.deserialize(serialized.getValue("feet_wearable"));
+
         return element;
 
     }
@@ -207,6 +214,13 @@ public class PlayerEntityElementBuilder extends ElementBuilder<PlayerEntityEleme
         serializeTo.putProperty("right_leg_x_rot_advanced_mode", "" + element.rightLegXRotAdvancedMode);
         serializeTo.putProperty("right_leg_y_rot_advanced_mode", "" + element.rightLegYRotAdvancedMode);
         serializeTo.putProperty("right_leg_z_rot_advanced_mode", "" + element.rightLegZRotAdvancedMode);
+
+        serializeTo.putProperty("left_hand_wearable", element.leftHandWearable.serialize());
+        serializeTo.putProperty("right_hand_wearable", element.rightHandWearable.serialize());
+        serializeTo.putProperty("head_wearable", element.headWearable.serialize());
+        serializeTo.putProperty("chest_wearable", element.chestWearable.serialize());
+        serializeTo.putProperty("legs_wearable", element.legsWearable.serialize());
+        serializeTo.putProperty("feet_wearable", element.feetWearable.serialize());
 
         return serializeTo;
         

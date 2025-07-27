@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.textures.CapeResourceSupplier;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.textures.SkinResourceSupplier;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.entity.FancyEntityRendererUtils;
@@ -12,15 +13,19 @@ import de.keksuccino.fancymenu.util.rendering.entity.WrappedFancyPlayerWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.PlayerSkin;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.animal.Parrot;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.awt.*;
 
 public class PlayerEntityElement extends AbstractElement {
@@ -83,6 +88,18 @@ public class PlayerEntityElement extends AbstractElement {
     public boolean rightLegXRotAdvancedMode;
     public boolean rightLegYRotAdvancedMode;
     public boolean rightLegZRotAdvancedMode;
+    @NotNull
+    public Wearable leftHandWearable = Wearable.empty();
+    @NotNull
+    public Wearable rightHandWearable = Wearable.empty();
+    @NotNull
+    public Wearable headWearable = Wearable.empty();
+    @NotNull
+    public Wearable chestWearable = Wearable.empty();
+    @NotNull
+    public Wearable legsWearable = Wearable.empty();
+    @NotNull
+    public Wearable feetWearable = Wearable.empty();
 
     @Nullable
     protected WrappedFancyPlayerWidget widget = null;
@@ -125,6 +142,8 @@ public class PlayerEntityElement extends AbstractElement {
 
                 this.updateParrots();
 
+                this.updateWearables();
+
                 this.updateEntityProperties();
 
                 this.widget.render(graphics, mouseX, mouseY, partial);
@@ -147,6 +166,20 @@ public class PlayerEntityElement extends AbstractElement {
             this.widget.setSlim(this.slim);
 
         }
+
+    }
+
+    protected void updateWearables() {
+
+        if (this.widget == null) return;
+
+        this.widget.setLeftHandItem(this.leftHandWearable.getWearable());
+        this.widget.setRightHandItem(this.rightHandWearable.getWearable());
+
+        this.widget.setHeadWearable(this.headWearable.getWearable());
+        this.widget.setChestWearable(this.chestWearable.getWearable());
+        this.widget.setLegsWearable(this.legsWearable.getWearable());
+        this.widget.setFeetWearable(this.feetWearable.getWearable());
 
     }
 
@@ -327,6 +360,94 @@ public class PlayerEntityElement extends AbstractElement {
                 if (p.name.equals(name)) return p;
             }
             return null;
+        }
+
+    }
+
+    public static class Wearable {
+
+        public static final String WEARABLE_EMPTY_KEY = "fancymenu_wearable_none_dummy";
+        private static final String SERIALIZATION_SEPARATOR = ":::";
+
+        @NotNull
+        public String itemKey;
+        public boolean enchanted;
+        @NotNull
+        public ItemStack cachedStack = new ItemStack(Items.AIR);
+        @Nullable
+        protected String lastFinalKey = null;
+        protected boolean lastEnchanted = false;
+
+        @NotNull
+        public static Wearable empty() {
+            return new Wearable(WEARABLE_EMPTY_KEY, false);
+        }
+
+        private Wearable(@NotNull String itemKey, boolean enchanted) {
+            this.itemKey = itemKey;
+            this.enchanted = enchanted;
+        }
+
+        public void update() {
+
+            try {
+
+                String keyFinal = PlaceholderParser.replacePlaceholders(this.itemKey);
+
+                if (!keyFinal.equals(this.lastFinalKey) || (this.lastEnchanted != this.enchanted)) {
+
+                    this.lastFinalKey = keyFinal;
+                    this.lastEnchanted = enchanted;
+
+                    Item item = BuiltInRegistries.ITEM.getValue(ResourceLocation.parse(keyFinal));
+                    this.cachedStack = new ItemStack(item);
+                    this.cachedStack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, this.enchanted);
+
+                }
+
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to update wearable of PlayerEntityElement!", ex);
+            }
+
+        }
+
+        public boolean isEmpty() {
+            return this.itemKey.equals(WEARABLE_EMPTY_KEY);
+        }
+
+        public void setEmpty() {
+            this.itemKey = WEARABLE_EMPTY_KEY;
+        }
+
+        @Nullable
+        public ItemStack getWearable() {
+            if (this.isEmpty()) return null;
+            this.update();
+            return this.cachedStack;
+        }
+
+        @NotNull
+        public String serialize() {
+            StringBuilder serialized = new StringBuilder()
+                    .append(this.itemKey).append(SERIALIZATION_SEPARATOR)
+                    .append(this.enchanted);
+            return serialized.toString();
+        }
+
+        @NotNull
+        public static Wearable deserialize(@Nullable String serialized) {
+            if (serialized == null) return empty();
+            try {
+                if (serialized.contains(SERIALIZATION_SEPARATOR)) {
+                    var array = serialized.split(SERIALIZATION_SEPARATOR);
+                    String key = array[0];
+                    boolean enchant = SerializationUtils.deserializeBoolean(false, array[1]);
+                    return new Wearable(key, enchant);
+                }
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to deserialize Wearable of PlayerEntityElement!", ex);
+            }
+            return empty();
         }
 
     }
