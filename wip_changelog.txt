@@ -12,6 +12,7 @@ CHANGELOG | FANCYMENU v3.7.0 [ W I P !! Not public yet !! ]
   - Now has a setting to enable "body movement", which basically plays idle animations like arms moving around, etc. when enabled (or other pose-related movement like the swimming animation)
   - The new Player Entity element will get backported to older MC versions in the future when "FER" (Fancy Entity Renderer) gets released for these older versions
 - Added "Is MCEF Loaded" requirement to check if the MCEF mod is loaded, which is needed for the Browser element and all video-related features
+- It is now possible to execute FancyMenu's actions from within the "Browser" element, which means you can now basically make web-based UIs
 - Removed old unused "Preload Animations" options from FancyMenu's settings, since it was only for the old animation system that does not exist anymore
 - Reverted the changes I did to the caching logic of placeholders and requirements, because they created more problems than they solved (#1215)
   - I instead added settings to set individual, custom caching durations for requirements and placeholders (or disable caching by setting the duration to 0) (#1194, #1193)
