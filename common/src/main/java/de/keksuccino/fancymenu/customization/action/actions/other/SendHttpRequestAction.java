@@ -312,9 +312,7 @@ public class SendHttpRequestAction extends Action {
             // Store existing header data before clearing
             List<HttpHeader> existingHeaders = new ArrayList<>();
             for (HeaderEditRow row : this.headerRows) {
-                if (!row.key.isEmpty() || !row.value.isEmpty()) {
-                    existingHeaders.add(new HttpHeader(row.key, row.value));
-                }
+                existingHeaders.add(new HttpHeader(row.key, row.value));
             }
             this.headerRows.clear();
             
@@ -404,7 +402,7 @@ public class SendHttpRequestAction extends Action {
             
             this.addLabelCell(Component.translatable("fancymenu.actions.send_http_request.edit.headers"));
             
-            // Add existing headers (either from config on first init, or from stored data on rebuild)
+            // Add existing headers
             if (!existingHeaders.isEmpty()) {
                 for (HttpHeader header : existingHeaders) {
                     this.addHeaderRow(header.key, header.value);
@@ -414,6 +412,9 @@ public class SendHttpRequestAction extends Action {
                     this.addHeaderRow(header.key, header.value);
                 }
             }
+            
+            // Add spacing before button
+            this.addCellGroupEndSpacerCell();
             
             // Add header button
             this.addWidgetCell(new ExtendedButton(0, 0, 20, 20, Component.translatable("fancymenu.actions.send_http_request.edit.add_header"), button -> {
