@@ -346,6 +346,7 @@ public class SendHttpRequestAction extends Action {
             // Body
             this.addLabelCell(Component.translatable("fancymenu.actions.send_http_request.edit.body"));
             TextInputCell bodyCell = this.addTextInputCell(null, true, true)
+                    .setEditListener(s -> this.config.body = s)
                     .setText(this.config.body);
             bodyCell.setEditorCallback((s, cell) -> {
                 this.config.body = s;
