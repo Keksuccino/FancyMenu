@@ -1768,12 +1768,12 @@
   "fancymenu.actions.send_http_request.desc": "Sends an HTTP request to a web target with configurable parameters.\n\nThis action allows you to send data to REST APIs, webhooks, or any HTTP endpoint.\nSupports various authentication methods, custom headers, and different request types.",
   "fancymenu.actions.send_http_request.edit_value": "Edit HTTP Request Configuration",
   "fancymenu.actions.send_http_request.edit.url": "Target URL",
-  "fancymenu.actions.send_http_request.edit.method": "Request Method",
+  "fancymenu.actions.send_http_request.edit.method": "Request Method: %s",
   "fancymenu.actions.send_http_request.edit.content_type": "Content Type",
   "fancymenu.actions.send_http_request.edit.body": "Request Body",
   "fancymenu.actions.send_http_request.edit.timeout": "Timeout (seconds)",
-  "fancymenu.actions.send_http_request.edit.log_response": "Log Response",
-  "fancymenu.actions.send_http_request.edit.auth_type": "Authentication Type",
+  "fancymenu.actions.send_http_request.edit.log_response": "Log Response: %s",
+  "fancymenu.actions.send_http_request.edit.auth_type": "Authentication Type: %s",
   "fancymenu.actions.send_http_request.auth.none": "None",
   "fancymenu.actions.send_http_request.auth.basic": "Basic Authentication",
   "fancymenu.actions.send_http_request.auth.bearer": "Bearer Token",
@@ -1785,5 +1785,7 @@
   "fancymenu.actions.send_http_request.edit.auth_api_key": "API Key Value",
   "fancymenu.actions.send_http_request.edit.headers": "Custom Headers",
   "fancymenu.actions.send_http_request.edit.add_header": "Add Header",
-  "fancymenu.actions.send_http_request.edit.remove_header": "Remove"
+  "fancymenu.actions.send_http_request.edit.remove_header": "Remove",
+  "fancymenu.actions.send_http_request.edit.header_key": "Header Key",
+  "fancymenu.actions.send_http_request.edit.header_value": "Header Value"
 }

@@ -309,6 +309,15 @@ public class SendHttpRequestAction extends Action {
 
         @Override
         protected void initCells() {
+            // Store existing header data before clearing
+            List<HttpHeader> existingHeaders = new ArrayList<>();
+            for (HeaderEditRow row : this.headerRows) {
+                if (!row.key.isEmpty() || !row.value.isEmpty()) {
+                    existingHeaders.add(new HttpHeader(row.key, row.value));
+                }
+            }
+            this.headerRows.clear();
+            
             this.addStartEndSpacerCell();
 
             // URL
@@ -321,8 +330,9 @@ public class SendHttpRequestAction extends Action {
 
             // Method
             this.addLabelCell(Component.translatable("fancymenu.actions.send_http_request.edit.method"));
-            LocalizedGenericValueCycle<HttpMethod> methodCycle = CommonCycles.cycle("fancymenu.actions.send_http_request.edit.method", 
-                    Arrays.asList(HttpMethod.values()), HttpMethod.valueOf(this.config.method));
+            List<HttpMethod> methods = Arrays.asList(HttpMethod.values());
+            LocalizedGenericValueCycle<HttpMethod> methodCycle = LocalizedGenericValueCycle.of("fancymenu.actions.send_http_request.edit.method", methods.toArray(new HttpMethod[0]));
+            methodCycle.setCurrentValue(HttpMethod.valueOf(this.config.method));
             this.addCycleButtonCell(methodCycle, true, (value, button) -> this.config.method = value.name());
 
             this.addCellGroupEndSpacerCell();
@@ -369,8 +379,11 @@ public class SendHttpRequestAction extends Action {
             
             this.addLabelCell(Component.translatable("fancymenu.actions.send_http_request.edit.auth_type"));
             
+            // Add auth type cycle with localized display
             List<AuthType> authTypes = Arrays.asList(AuthType.values());
             LocalizedGenericValueCycle<AuthType> authCycle = LocalizedGenericValueCycle.of("fancymenu.actions.send_http_request.edit.auth_type", authTypes.toArray(new AuthType[0]));
+            // Set a custom value name supplier that returns the localized name
+            authCycle.setValueNameSupplier(authType -> Component.translatable(authType.getLocalizationKey()).getString());
             authCycle.setCurrentValue(this.config.authType);
             
             this.addCycleButtonCell(authCycle, true, (value, button) -> {
@@ -391,9 +404,15 @@ public class SendHttpRequestAction extends Action {
             
             this.addLabelCell(Component.translatable("fancymenu.actions.send_http_request.edit.headers"));
             
-            // Add existing headers
-            for (HttpHeader header : this.config.headers) {
-                this.addHeaderRow(header.key, header.value);
+            // Add existing headers (either from config on first init, or from stored data on rebuild)
+            if (!existingHeaders.isEmpty()) {
+                for (HttpHeader header : existingHeaders) {
+                    this.addHeaderRow(header.key, header.value);
+                }
+            } else {
+                for (HttpHeader header : this.config.headers) {
+                    this.addHeaderRow(header.key, header.value);
+                }
             }
             
             // Add header button
@@ -446,15 +465,23 @@ public class SendHttpRequestAction extends Action {
             HeaderEditRow row = new HeaderEditRow(key, value);
             this.headerRows.add(row);
             
-            this.addLabelCell(Component.literal("Header " + this.headerRows.size()));
+            // Add a separator for visual clarity
+            if (this.headerRows.size() > 1) {
+                this.addSpacerCell(3);
+            }
+            
+            // Header section label
+            this.addLabelCell(Component.literal("Header #" + this.headerRows.size()).withStyle(s -> s.withBold(true)));
             
             // Key input
+            this.addLabelCell(Component.translatable("fancymenu.actions.send_http_request.edit.header_key"));
             this.addTextInputCell(null, false, false)
                     .setEditListener(s -> row.key = s)
                     .setText(key);
             row.keyCell = (CellScrollEntry) this.scrollArea.getEntries().get(this.scrollArea.getEntries().size() - 1);
             
             // Value input
+            this.addLabelCell(Component.translatable("fancymenu.actions.send_http_request.edit.header_value"));
             this.addTextInputCell(null, false, false)
                     .setEditListener(s -> row.value = s)
                     .setText(value);
