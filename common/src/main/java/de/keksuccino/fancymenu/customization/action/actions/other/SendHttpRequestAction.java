@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedGenericValueCycle;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
@@ -16,6 +17,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -143,15 +145,18 @@ public class SendHttpRequestAction extends Action {
                 }
                 
                 final String responseText = response.toString().trim();
-
+                
                 // Set variable if specified
                 if (!config.responseVariable.isEmpty()) {
+                    // Convert to single line by removing all line breaks
+                    final String singleLineResponse = responseText.replace("\n", "").replace("\r", "").trim();
+                    
                     MainThreadTaskExecutor.executeInMainThread(() -> {
-                        VariableHandler.setVariable(config.responseVariable, responseText);
+                        VariableHandler.setVariable(config.responseVariable, singleLineResponse);
                     }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                 }
                 
-                // Log if requested
+                // Log if requested (keep multi-line for readability)
                 if (config.logResponse) {
                     LOGGER.info("[FANCYMENU] HTTP Request completed - Code: {}, Response: {}", responseCode, responseText);
                 }
@@ -346,10 +351,11 @@ public class SendHttpRequestAction extends Action {
             this.addCellGroupEndSpacerCell();
 
             // Method
-            this.addLabelCell(Component.translatable("fancymenu.actions.send_http_request.edit.method"));
+            this.addLabelCell(Component.translatable("fancymenu.actions.send_http_request.edit.method.title"));
             List<HttpMethod> methods = Arrays.asList(HttpMethod.values());
             LocalizedGenericValueCycle<HttpMethod> methodCycle = LocalizedGenericValueCycle.of("fancymenu.actions.send_http_request.edit.method", methods.toArray(new HttpMethod[0]));
             methodCycle.setCurrentValue(HttpMethod.valueOf(this.config.method));
+            methodCycle.setValueComponentStyleSupplier(consumes -> Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()));
             this.addCycleButtonCell(methodCycle, true, (value, button) -> this.config.method = value.name());
 
             this.addCellGroupEndSpacerCell();
@@ -404,13 +410,14 @@ public class SendHttpRequestAction extends Action {
             this.addSeparatorCell();
             this.addCellGroupEndSpacerCell();
             
-            this.addLabelCell(Component.translatable("fancymenu.actions.send_http_request.edit.auth_type"));
+            this.addLabelCell(Component.translatable("fancymenu.actions.send_http_request.edit.auth_type.title"));
             
             // Add auth type cycle with localized display
             List<AuthType> authTypes = Arrays.asList(AuthType.values());
             LocalizedGenericValueCycle<AuthType> authCycle = LocalizedGenericValueCycle.of("fancymenu.actions.send_http_request.edit.auth_type", authTypes.toArray(new AuthType[0]));
             // Set a custom value name supplier that returns the localized name
             authCycle.setValueNameSupplier(authType -> Component.translatable(authType.getLocalizationKey()).getString());
+            authCycle.setValueComponentStyleSupplier(consumes -> Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()));
             authCycle.setCurrentValue(this.config.authType);
             
             this.addCycleButtonCell(authCycle, true, (value, button) -> {
@@ -504,18 +511,18 @@ public class SendHttpRequestAction extends Action {
             }
             
             // Header section label
-            this.addLabelCell(Component.literal("Header #" + this.headerRows.size()).withStyle(s -> s.withBold(true)));
+            this.addLabelCell(Component.literal("> Header #" + this.headerRows.size()).withStyle(s -> s.withBold(true)));
             
             // Key input
             this.addLabelCell(Component.translatable("fancymenu.actions.send_http_request.edit.header_key"));
-            this.addTextInputCell(null, false, false)
+            this.addTextInputCell(null, true, true)
                     .setEditListener(s -> row.key = s)
                     .setText(key);
             row.keyCell = (CellScrollEntry) this.scrollArea.getEntries().get(this.scrollArea.getEntries().size() - 1);
             
             // Value input
             this.addLabelCell(Component.translatable("fancymenu.actions.send_http_request.edit.header_value"));
-            this.addTextInputCell(null, false, false)
+            this.addTextInputCell(null, true, true)
                     .setEditListener(s -> row.value = s)
                     .setText(value);
             row.valueCell = (CellScrollEntry) this.scrollArea.getEntries().get(this.scrollArea.getEntries().size() - 1);
