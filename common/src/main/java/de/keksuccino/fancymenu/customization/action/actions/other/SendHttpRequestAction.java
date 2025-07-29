@@ -141,14 +141,6 @@ public class SendHttpRequestAction extends Action {
                         response.append(line).append("\n");
                     }
                 }
-
-                //TODO write response to variable without backslashes and newlines !!!!!!!!!!!!!
-                //TODO write response to variable without backslashes and newlines !!!!!!!!!!!!!
-                //TODO write response to variable without backslashes and newlines !!!!!!!!!!!!!
-                //TODO write response to variable without backslashes and newlines !!!!!!!!!!!!!
-                //TODO write response to variable without backslashes and newlines !!!!!!!!!!!!!
-                //TODO write response to variable without backslashes and newlines !!!!!!!!!!!!!
-                //TODO write response to variable without backslashes and newlines !!!!!!!!!!!!!
                 
                 final String responseText = response.toString().trim();
 
