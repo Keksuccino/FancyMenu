@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.action.actions.other;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
+import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
@@ -10,14 +11,15 @@ import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -129,7 +131,8 @@ public class SendHttpRequestAction extends Action {
             // Get response
             int responseCode = connection.getResponseCode();
             
-            if (config.logResponse) {
+            // Always capture the response if we need to log it or store it in a variable
+            if (config.logResponse || !config.responseVariable.isEmpty()) {
                 StringBuilder response = new StringBuilder();
                 try (BufferedReader br = new BufferedReader(new InputStreamReader(
                         responseCode >= 200 && responseCode < 300 ? connection.getInputStream() : connection.getErrorStream()))) {
@@ -138,8 +141,28 @@ public class SendHttpRequestAction extends Action {
                         response.append(line).append("\n");
                     }
                 }
+
+                //TODO write response to variable without backslashes and newlines !!!!!!!!!!!!!
+                //TODO write response to variable without backslashes and newlines !!!!!!!!!!!!!
+                //TODO write response to variable without backslashes and newlines !!!!!!!!!!!!!
+                //TODO write response to variable without backslashes and newlines !!!!!!!!!!!!!
+                //TODO write response to variable without backslashes and newlines !!!!!!!!!!!!!
+                //TODO write response to variable without backslashes and newlines !!!!!!!!!!!!!
+                //TODO write response to variable without backslashes and newlines !!!!!!!!!!!!!
                 
-                LOGGER.info("[FANCYMENU] HTTP Request completed - Code: {}, Response: {}", responseCode, response);
+                final String responseText = response.toString().trim();
+
+                // Set variable if specified
+                if (!config.responseVariable.isEmpty()) {
+                    MainThreadTaskExecutor.executeInMainThread(() -> {
+                        VariableHandler.setVariable(config.responseVariable, responseText);
+                    }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+                }
+                
+                // Log if requested
+                if (config.logResponse) {
+                    LOGGER.info("[FANCYMENU] HTTP Request completed - Code: {}, Response: {}", responseCode, responseText);
+                }
             } else {
                 LOGGER.info("[FANCYMENU] HTTP Request completed - Code: {}", responseCode);
             }
@@ -166,7 +189,7 @@ public class SendHttpRequestAction extends Action {
 
     @Override
     public String getValueExample() {
-        return "https://api.example.com|||POST|||{\"key\":\"value\"}|||application/json|||10|||true|||NONE|||||||||||||";
+        return "https://api.example.com|||POST|||{\"key\":\"value\"}|||application/json|||10|||true||||||NONE|||||||||||||";
     }
 
     @Override
@@ -218,6 +241,7 @@ public class SendHttpRequestAction extends Action {
         public String contentType = "application/json";
         public int timeout = 10;
         public boolean logResponse = false;
+        public String responseVariable = "";
         public AuthType authType = AuthType.NONE;
         public String authUsername = "";
         public String authPassword = "";
@@ -236,6 +260,7 @@ public class SendHttpRequestAction extends Action {
             sb.append(contentType).append(VALUE_SEPARATOR);
             sb.append(timeout).append(VALUE_SEPARATOR);
             sb.append(logResponse).append(VALUE_SEPARATOR);
+            sb.append(responseVariable).append(VALUE_SEPARATOR);
             sb.append(authType.name()).append(VALUE_SEPARATOR);
             sb.append(authUsername).append(VALUE_SEPARATOR);
             sb.append(authPassword).append(VALUE_SEPARATOR);
@@ -265,19 +290,20 @@ public class SendHttpRequestAction extends Action {
                 if (parts.length >= 4) config.contentType = parts[3];
                 if (parts.length >= 5) config.timeout = Integer.parseInt(parts[4]);
                 if (parts.length >= 6) config.logResponse = Boolean.parseBoolean(parts[5]);
-                if (parts.length >= 7) config.authType = AuthType.valueOf(parts[6]);
-                if (parts.length >= 8) config.authUsername = parts[7];
-                if (parts.length >= 9) config.authPassword = parts[8];
-                if (parts.length >= 10) config.authToken = parts[9];
-                if (parts.length >= 11) config.authApiKeyHeader = parts[10];
-                if (parts.length >= 12) config.authApiKey = parts[11];
+                if (parts.length >= 7) config.responseVariable = parts[6];
+                if (parts.length >= 8) config.authType = AuthType.valueOf(parts[7]);
+                if (parts.length >= 9) config.authUsername = parts[8];
+                if (parts.length >= 10) config.authPassword = parts[9];
+                if (parts.length >= 11) config.authToken = parts[10];
+                if (parts.length >= 12) config.authApiKeyHeader = parts[11];
+                if (parts.length >= 13) config.authApiKey = parts[12];
                 
                 // Parse headers
-                if (parts.length >= 13 && !parts[12].isEmpty()) {
-                    String[] headerPairs = parts[12].split("~~~");
+                if (parts.length >= 14 && !parts[13].isEmpty()) {
+                    String[] headerPairs = parts[13].split(HEADER_SEPARATOR);
                     for (String headerPair : headerPairs) {
-                        if (headerPair.contains(":::")) {
-                            String[] kv = headerPair.split(":::", 2);
+                        if (headerPair.contains(HEADER_KEY_VALUE_SEPARATOR)) {
+                            String[] kv = headerPair.split(HEADER_KEY_VALUE_SEPARATOR, 2);
                             config.headers.add(new HttpHeader(kv[0], kv[1]));
                         }
                     }
@@ -297,6 +323,7 @@ public class SendHttpRequestAction extends Action {
         protected Consumer<String> callback;
         protected List<HeaderEditRow> headerRows = new ArrayList<>();
         protected boolean authFieldsInitialized = false;
+        protected boolean firstInit = true;
 
         protected SendHttpRequestActionValueScreen(@NotNull String value, @NotNull Consumer<String> callback) {
             super(Component.translatable("fancymenu.actions.send_http_request.edit_value"));
@@ -372,6 +399,15 @@ public class SendHttpRequestAction extends Action {
 
             this.addCellGroupEndSpacerCell();
 
+            // Response Variable
+            this.addLabelCell(Component.translatable("fancymenu.actions.send_http_request.edit.response_variable"));
+            this.addTextInputCell(CharacterFilter.buildResourceNameFilter(), false, false)
+                    .setEditListener(s -> this.config.responseVariable = s)
+                    .setText(this.config.responseVariable)
+                    .editBox.setTooltip(Tooltip.create(Component.translatable("fancymenu.actions.send_http_request.edit.response_variable.desc")));
+
+            this.addCellGroupEndSpacerCell();
+
             // Authentication
             this.addSeparatorCell();
             this.addCellGroupEndSpacerCell();
@@ -408,7 +444,7 @@ public class SendHttpRequestAction extends Action {
                 for (HttpHeader header : existingHeaders) {
                     this.addHeaderRow(header.key, header.value);
                 }
-            } else {
+            } else if (this.firstInit) {
                 for (HttpHeader header : this.config.headers) {
                     this.addHeaderRow(header.key, header.value);
                 }
@@ -426,6 +462,9 @@ public class SendHttpRequestAction extends Action {
             this.addStartEndSpacerCell();
             
             this.authFieldsInitialized = true;
+
+            this.firstInit = false;
+
         }
 
         private void addAuthFields() {
@@ -520,7 +559,7 @@ public class SendHttpRequestAction extends Action {
             this.callback.accept(this.config.serialize());
         }
 
-        private static class HeaderEditRow {
+        protected static class HeaderEditRow {
             String key;
             String value;
             CellScrollEntry keyCell;
