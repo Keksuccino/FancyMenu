@@ -148,11 +148,17 @@ public class SendHttpRequestAction extends Action {
                 
                 // Set variable if specified
                 if (!config.responseVariable.isEmpty()) {
-                    // Convert to single line by removing all line breaks
-                    final String singleLineResponse = responseText.replace("\n", "").replace("\r", "").trim();
+                    final String variableValue;
+                    if (config.singleLineResponse) {
+                        // Convert to single line by removing all line breaks
+                        variableValue = responseText.replace("\n", " ").replace("\r", " ").trim();
+                    } else {
+                        // Keep multi-line format
+                        variableValue = responseText;
+                    }
                     
                     MainThreadTaskExecutor.executeInMainThread(() -> {
-                        VariableHandler.setVariable(config.responseVariable, singleLineResponse);
+                        VariableHandler.setVariable(config.responseVariable, variableValue);
                     }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
                 }
                 
@@ -186,7 +192,7 @@ public class SendHttpRequestAction extends Action {
 
     @Override
     public String getValueExample() {
-        return "https://api.example.com|||POST|||{\"key\":\"value\"}|||application/json|||10|||true||||||NONE|||||||||||||";
+        return "https://api.example.com|||POST|||{\"key\":\"value\"}|||application/json|||10|||true||||||true|||NONE|||||||||||||";
     }
 
     @Override
@@ -239,6 +245,7 @@ public class SendHttpRequestAction extends Action {
         public int timeout = 10;
         public boolean logResponse = false;
         public String responseVariable = "";
+        public boolean singleLineResponse = true;
         public AuthType authType = AuthType.NONE;
         public String authUsername = "";
         public String authPassword = "";
@@ -258,6 +265,7 @@ public class SendHttpRequestAction extends Action {
             sb.append(timeout).append(VALUE_SEPARATOR);
             sb.append(logResponse).append(VALUE_SEPARATOR);
             sb.append(responseVariable).append(VALUE_SEPARATOR);
+            sb.append(singleLineResponse).append(VALUE_SEPARATOR);
             sb.append(authType.name()).append(VALUE_SEPARATOR);
             sb.append(authUsername).append(VALUE_SEPARATOR);
             sb.append(authPassword).append(VALUE_SEPARATOR);
@@ -288,16 +296,17 @@ public class SendHttpRequestAction extends Action {
                 if (parts.length >= 5) config.timeout = Integer.parseInt(parts[4]);
                 if (parts.length >= 6) config.logResponse = Boolean.parseBoolean(parts[5]);
                 if (parts.length >= 7) config.responseVariable = parts[6];
-                if (parts.length >= 8) config.authType = AuthType.valueOf(parts[7]);
-                if (parts.length >= 9) config.authUsername = parts[8];
-                if (parts.length >= 10) config.authPassword = parts[9];
-                if (parts.length >= 11) config.authToken = parts[10];
-                if (parts.length >= 12) config.authApiKeyHeader = parts[11];
-                if (parts.length >= 13) config.authApiKey = parts[12];
+                if (parts.length >= 8) config.singleLineResponse = Boolean.parseBoolean(parts[7]);
+                if (parts.length >= 9) config.authType = AuthType.valueOf(parts[8]);
+                if (parts.length >= 10) config.authUsername = parts[9];
+                if (parts.length >= 11) config.authPassword = parts[10];
+                if (parts.length >= 12) config.authToken = parts[11];
+                if (parts.length >= 13) config.authApiKeyHeader = parts[12];
+                if (parts.length >= 14) config.authApiKey = parts[13];
                 
                 // Parse headers
-                if (parts.length >= 14 && !parts[13].isEmpty()) {
-                    String[] headerPairs = parts[13].split(HEADER_SEPARATOR);
+                if (parts.length >= 15 && !parts[14].isEmpty()) {
+                    String[] headerPairs = parts[14].split(HEADER_SEPARATOR);
                     for (String headerPair : headerPairs) {
                         if (headerPair.contains(HEADER_KEY_VALUE_SEPARATOR)) {
                             String[] kv = headerPair.split(HEADER_KEY_VALUE_SEPARATOR, 2);
@@ -403,6 +412,11 @@ public class SendHttpRequestAction extends Action {
                     .setEditListener(s -> this.config.responseVariable = s)
                     .setText(this.config.responseVariable)
                     .editBox.setTooltip(Tooltip.create(Component.translatable("fancymenu.actions.send_http_request.edit.response_variable.desc")));
+
+            this.addCellGroupEndSpacerCell();
+
+            // Single Line Response
+            this.addWidgetCell(new CycleButton<>(0, 0, 20, 20, CommonCycles.cycleEnabledDisabled("fancymenu.actions.send_http_request.edit.single_line_response", this.config.singleLineResponse), (value, button) -> this.config.singleLineResponse = value.getAsBoolean()), true);
 
             this.addCellGroupEndSpacerCell();
 

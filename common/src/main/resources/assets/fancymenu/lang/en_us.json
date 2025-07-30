@@ -1791,5 +1791,6 @@
   "fancymenu.actions.send_http_request.edit.header_key": "Header Key",
   "fancymenu.actions.send_http_request.edit.header_value": "Header Value",
   "fancymenu.actions.send_http_request.edit.response_variable": "Response Variable Name (Optional)",
-  "fancymenu.actions.send_http_request.edit.response_variable.desc": "The name of a FancyMenu variable the response should get written to.\n\n§xIt's important to note that this action gets executed asynchronously,\n§xso the variable value is not updated yet right after the action got executed."
+  "fancymenu.actions.send_http_request.edit.response_variable.desc": "The name of a FancyMenu variable the response should get written to.\n\n§xIt's important to note that this action gets executed asynchronously,\n§xso the variable value is not updated yet right after the action got executed.",
+  "fancymenu.actions.send_http_request.edit.single_line_response": "Store Response as Single-Line in Variable: %s"
 }
