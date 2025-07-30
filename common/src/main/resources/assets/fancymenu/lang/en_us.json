@@ -1792,5 +1792,9 @@
   "fancymenu.actions.send_http_request.edit.header_value": "Header Value",
   "fancymenu.actions.send_http_request.edit.response_variable": "Response Variable Name (Optional)",
   "fancymenu.actions.send_http_request.edit.response_variable.desc": "The name of a FancyMenu variable the response should get written to.\n\n§xIt's important to note that this action gets executed asynchronously,\n§xso the variable value is not updated yet right after the action got executed.",
-  "fancymenu.actions.send_http_request.edit.single_line_response": "Store Response as Single-Line in Variable: %s"
+  "fancymenu.actions.send_http_request.edit.single_line_response": "Store Response as Single-Line in Variable: %s",
+  "fancymenu.placeholders.world.level_save_names": "World Save Names",
+  "fancymenu.placeholders.world.level_save_names.desc": "Returns a list of all available local world save names.\n\nValues:\n§eseparator§r = The separator text between world names. Default is ', '.",
+  "fancymenu.placeholders.world.level_save_data": "World Save Data",
+  "fancymenu.placeholders.world.level_save_data.desc": "Returns the complete level data of a specific world save as single-line JSON.\n\nValues:\n§elevel_name§r = The exact name of the world save to get data for."
 }
