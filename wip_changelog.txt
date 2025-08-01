@@ -25,7 +25,8 @@ CHANGELOG | FANCYMENU v3.7.0 [ W I P !! Not public yet !! ]
 - FancyMenu should now cause way less "MCEF was never initialized" errors in the log
 - The file where data about normalized scroll screens is stored now gets saved in /config/fancymenu/ (it was previously saved in the MC instance root, which was a bug)
 - The file where position offsets of Dragger elements is stored now gets saved in /fancymenu_data/ to not accidentally copy it to modpacks anymore
-- The keyframe editor of the "Element Animator" element now shows the editor's grid and supports grid snapping (disable grid or grid snapping in the editor settings if you don't like it) (#1231)
+- The keyframe editor of the "Element Animator" element now shows the editor's grid and supports grid snapping (#1231)
+  - You can disable grid or grid snapping in the editor settings if you don't like it
 - For devs: It is no longer possible to register actions that have the character ":" in its identifier (this will result in a crash now)
 - Fixed complex custom logic using placeholders and requirments lags/flickers in some cases due to the caching of placeholders and requirements (#1213)
 - Fixed negative widget coordinates produce errors in widget ID calculation (#1226, #1206)
