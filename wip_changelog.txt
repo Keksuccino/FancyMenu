@@ -21,6 +21,7 @@ CHANGELOG | FANCYMENU v3.7.0 [ W I P !! Not public yet !! ]
 - It's now possible to restart animated textures used in "Image" menu backgrounds when a screen/menu gets opened (#1237)
 - It's now possible to restart animated textures used in "Image" elements when a screen/menu gets opened (#1237)
 - It is now possible to execute FancyMenu's actions from within the "Browser" element, which means you can now basically make web-based UIs (#1223)
+- "Random Layout Groups" that contain only universal layouts now remember their picked layout across all screens the layout group gets applied to (#722)
 - Removed old unused "Preload Animations" option from FancyMenu's settings, since it was only for the old animation system that does not exist anymore
 - Reverted the changes I did to the caching logic of placeholders and requirements, because they created more problems than they solved (#1215)
   - I instead added settings to set individual, custom caching durations for requirements and placeholders (or disable caching by setting the duration to 0) (#1194, #1193)
