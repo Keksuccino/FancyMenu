@@ -1796,5 +1796,7 @@
   "fancymenu.placeholders.world.level_save_names": "World Save Names",
   "fancymenu.placeholders.world.level_save_names.desc": "Returns a list of all available local world save names.\n\nValues:\n§eseparator§r = The separator text between world names. Default is ', '.",
   "fancymenu.placeholders.world.level_save_data": "World Save Data",
-  "fancymenu.placeholders.world.level_save_data.desc": "Returns the complete level data of a specific world save as single-line JSON.\n\nValues:\n§elevel_name§r = The exact name of the world save to get data for."
+  "fancymenu.placeholders.world.level_save_data.desc": "Returns the complete level data of a specific world save as single-line JSON.\n\nValues:\n§elevel_name§r = The exact name of the world save to get data for.",
+  "fancymenu.background.image.restart_animated_on_menu_load": "Restart Animated Textures When Opening Screen: %s",
+  "fancymenu.elements.image.restart_animated_on_menu_load": "Restart Animated Textures When Opening Screen: %s"
 }
