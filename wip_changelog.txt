@@ -18,7 +18,8 @@ CHANGELOG | FANCYMENU v3.7.0 [ W I P !! Not public yet !! ]
 - Added "Send HTTP Request" action that can send text data to a web target (like a REST API for example)
   - Target URL, body and header keys/values have full placeholder support
   - It is possible to write the response to a variable for later use
-- It's now possible to restart animated textures used in the "Image" menu background type when a screen/menu gets opened (#1237)
+- It's now possible to restart animated textures used in "Image" menu backgrounds when a screen/menu gets opened (#1237)
+- It's now possible to restart animated textures used in "Image" elements when a screen/menu gets opened (#1237)
 - It is now possible to execute FancyMenu's actions from within the "Browser" element, which means you can now basically make web-based UIs (#1223)
 - Removed old unused "Preload Animations" option from FancyMenu's settings, since it was only for the old animation system that does not exist anymore
 - Reverted the changes I did to the caching logic of placeholders and requirements, because they created more problems than they solved (#1215)
