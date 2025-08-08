@@ -109,7 +109,7 @@ public class OptimizedFmaTexture extends AbstractTexture {
         GlStateManager._texImage2D(
             GL11.GL_TEXTURE_2D,
             0,  // mipmap level
-            GL11.GL_RGBA,
+            GL11.GL_RGBA,  // internal format
             textureWidth,
             textureHeight,
             0,  // border
@@ -117,6 +117,8 @@ public class OptimizedFmaTexture extends AbstractTexture {
             GL11.GL_UNSIGNED_BYTE,
             null  // no initial data
         );
+
+        LOGGER.debug("[FANCYMENU] Created GL texture with ID {} for {}x{} FMA animation", glTextureId, textureWidth, textureHeight);
 
         // Create a custom texture wrapper (like MCEFDirectTexture)
         DirectFmaTexture directTexture = new DirectFmaTexture(glTextureId, textureWidth, textureHeight);
@@ -218,8 +220,7 @@ public class OptimizedFmaTexture extends AbstractTexture {
     }
 
     /**
-     * Upload frame data to the GPU texture using direct OpenGL calls (zero-copy)
-     * This is the same approach used in MCEF for browser textures
+     * Upload frame data to the GPU texture using direct OpenGL calls
      */
     private void uploadFrameToGPU(FrameData frame) {
         if (glTextureId < 0 || frame.imageData == null) return;
@@ -245,8 +246,8 @@ public class OptimizedFmaTexture extends AbstractTexture {
                 GlStateManager._pixelStore(GL11.GL_UNPACK_SKIP_ROWS, 0);
                 GlStateManager._pixelStore(GL11.GL_UNPACK_ALIGNMENT, 4);
 
-                // Upload using glTexSubImage2D for efficiency (updates existing texture)
-                // This is a zero-copy operation that directly uploads the NativeImage data
+                // Upload the texture data
+                // Try BGRA format like MCEF uses
                 GlStateManager._texSubImage2D(
                     GL11.GL_TEXTURE_2D,
                     0,  // mipmap level
@@ -254,10 +255,12 @@ public class OptimizedFmaTexture extends AbstractTexture {
                     0,  // y offset
                     newImage.getWidth(),
                     newImage.getHeight(),
-                    GL11.GL_RGBA,  // format - NativeImage uses RGBA internally
+                    0x80E1,  // GL_BGRA = 0x80E1 (from GL12)
                     GL11.GL_UNSIGNED_BYTE,  // type
                     newImage.getPointer()  // direct pointer to pixel data
                 );
+
+                LOGGER.debug("[FANCYMENU] Uploaded frame to texture {} ({}x{})", glTextureId, newImage.getWidth(), newImage.getHeight());
 
                 currentNativeImage.set(newImage);
 
@@ -265,6 +268,8 @@ public class OptimizedFmaTexture extends AbstractTexture {
                 if (oldImage != null && oldImage != newImage) {
                     oldImage.close();
                 }
+            } else {
+                LOGGER.warn("[FANCYMENU] Frame getNativeImage() returned null");
             }
         } catch (Exception e) {
             LOGGER.error("[FANCYMENU] Failed to upload frame to GPU", e);
@@ -301,6 +306,18 @@ public class OptimizedFmaTexture extends AbstractTexture {
     public void play() {
         playing.set(true);
         lastFrameTime = System.currentTimeMillis();
+        
+        // If no current frame is set, advance to the first frame immediately
+        if (currentFrame.get() == null) {
+            advanceFrame();
+            
+            // Upload the first frame immediately
+            FrameData firstFrame = currentFrame.get();
+            if (firstFrame != null && RenderSystem.isOnRenderThread()) {
+                uploadFrameToGPU(firstFrame);
+                firstFrame.needsUpload = false;
+            }
+        }
     }
 
     /**
@@ -334,6 +351,12 @@ public class OptimizedFmaTexture extends AbstractTexture {
         if (firstFrame != null) {
             currentFrame.set(firstFrame);
             firstFrame.needsUpload = true;
+            
+            // Upload the first frame immediately if on render thread
+            if (RenderSystem.isOnRenderThread() && glTextureId >= 0) {
+                uploadFrameToGPU(firstFrame);
+                firstFrame.needsUpload = false;
+            }
         }
     }
 
@@ -415,30 +438,20 @@ public class OptimizedFmaTexture extends AbstractTexture {
      */
     private static class DirectFmaTexture extends AbstractTexture {
 
-        private final int glId;
-        private final int width;
-        private final int height;
-
         DirectFmaTexture(int glId, int width, int height) {
-            this.glId = glId;
-            this.width = width;
-            this.height = height;
-
             // IMPORTANT: Create and set the texture field in AbstractTexture
             // This is what GuiGraphics.innerBlit() looks for
             DirectGlTexture glTexture = new DirectGlTexture(glId, width, height);
             this.texture = glTexture;
-            this.textureView = new DirectGlTextureView(glTexture, 1, 1);
+            // Fix: Use (0, 1) for baseMipLevel=0, mipLevels=1
+            this.textureView = new DirectGlTextureView(glTexture, 0, 1);
         }
 
         @Override
         public void close() {
             // Don't delete the texture - OptimizedFmaTexture manages it
             this.texture = null;
-        }
-
-        public int getGlId() {
-            return glId;
+            this.textureView = null;
         }
 
         /**
@@ -499,6 +512,14 @@ public class OptimizedFmaTexture extends AbstractTexture {
             if (cachedNativeImage == null && imageData != null) {
                 try {
                     cachedNativeImage = NativeImage.read(imageData);
+                    
+                    // Debug: Check if the image has actual pixel data
+                    if (cachedNativeImage != null && cachedNativeImage.getWidth() > 0 && cachedNativeImage.getHeight() > 0) {
+                        // Sample a few pixels to check if they're all black
+                        int samplePixel = cachedNativeImage.getPixel(0, 0);
+                        LOGGER.debug("[FANCYMENU] Frame decoded: {}x{}, sample pixel at (0,0): {}", 
+                            cachedNativeImage.getWidth(), cachedNativeImage.getHeight(), Integer.toHexString(samplePixel));
+                    }
                 } catch (Exception e) {
                     LOGGER.error("[FANCYMENU] Failed to decode frame data", e);
                 }
