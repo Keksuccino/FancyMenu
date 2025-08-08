@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.util.resource.resources.texture.fma;
 
 import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.resources.ResourceLocation;
@@ -47,7 +49,8 @@ public class OptimizedFmaTexture extends AbstractTexture {
     private final AtomicInteger currentFrameIndex = new AtomicInteger(0);
     
     // Loading state
-    private final AtomicBoolean initialized = new AtomicBoolean(false);
+    private final AtomicBoolean dimensionsSet = new AtomicBoolean(false);
+    private final AtomicBoolean glInitialized = new AtomicBoolean(false);
     private final AtomicBoolean closed = new AtomicBoolean(false);
     
     public OptimizedFmaTexture() {
@@ -57,13 +60,30 @@ public class OptimizedFmaTexture extends AbstractTexture {
     }
     
     /**
-     * Initialize the texture and register it with Minecraft's TextureManager
+     * Set the dimensions for the texture. This can be called from any thread.
+     * The actual OpenGL texture creation is deferred until needed on the render thread.
      */
     public void initialize(int width, int height) {
-        if (initialized.getAndSet(true)) return;
+        if (dimensionsSet.getAndSet(true)) return;
         
         this.textureWidth = width;
         this.textureHeight = height;
+        
+        // Don't create GL texture here - it will be created lazily on the render thread
+    }
+    
+    /**
+     * Initialize OpenGL resources. This must be called on the render thread.
+     */
+    private void initializeGL() {
+        if (glInitialized.getAndSet(true)) return;
+        if (!dimensionsSet.get()) return;
+        
+        // Must be on render thread
+        if (!RenderSystem.isOnRenderThread()) {
+            LOGGER.error("[FANCYMENU] Attempted to create GL texture from wrong thread!");
+            return;
+        }
         
         // Create the OpenGL texture directly
         glTextureId = GlStateManager._genTexture();
@@ -80,8 +100,8 @@ public class OptimizedFmaTexture extends AbstractTexture {
             GL11.GL_TEXTURE_2D,
             0,  // mipmap level
             GL11.GL_RGBA,
-            width,
-            height,
+            textureWidth,
+            textureHeight,
             0,  // border
             GL11.GL_RGBA,
             GL11.GL_UNSIGNED_BYTE,
@@ -89,7 +109,7 @@ public class OptimizedFmaTexture extends AbstractTexture {
         );
         
         // Create a custom texture wrapper (like MCEFDirectTexture)
-        DirectFmaTexture directTexture = new DirectFmaTexture(glTextureId, width, height);
+        DirectFmaTexture directTexture = new DirectFmaTexture(glTextureId, textureWidth, textureHeight);
         
         // Register with TextureManager
         Minecraft.getInstance().getTextureManager().register(textureLocation, directTexture);
@@ -111,7 +131,14 @@ public class OptimizedFmaTexture extends AbstractTexture {
      * Update the texture with the current frame's data
      */
     public void updateFrame() {
-        if (closed.get() || !initialized.get() || glTextureId < 0) return;
+        if (closed.get() || !dimensionsSet.get()) return;
+        
+        // Initialize GL resources if needed (will only happen on render thread)
+        if (!glInitialized.get() && RenderSystem.isOnRenderThread()) {
+            initializeGL();
+        }
+        
+        if (!glInitialized.get() || glTextureId < 0) return;
         
         long currentTime = System.currentTimeMillis();
         FrameData current = currentFrame.get();
@@ -187,6 +214,12 @@ public class OptimizedFmaTexture extends AbstractTexture {
     private void uploadFrameToGPU(FrameData frame) {
         if (glTextureId < 0 || frame.imageData == null) return;
         
+        // Must be on render thread
+        if (!RenderSystem.isOnRenderThread()) {
+            LOGGER.error("[FANCYMENU] Attempted to upload texture from wrong thread!");
+            return;
+        }
+        
         try {
             // Decode the frame data into a NativeImage if needed
             NativeImage oldImage = currentNativeImage.get();
@@ -233,8 +266,14 @@ public class OptimizedFmaTexture extends AbstractTexture {
      * This always returns the same ResourceLocation, but the underlying texture data changes.
      */
     public ResourceLocation getTextureLocation() {
+        // Initialize GL resources if needed (will only happen on render thread)
+        if (!glInitialized.get() && RenderSystem.isOnRenderThread()) {
+            initializeGL();
+        }
+        
         // Update the current frame if needed
         updateFrame();
+        
         return textureLocation;
     }
     
@@ -314,9 +353,15 @@ public class OptimizedFmaTexture extends AbstractTexture {
     public void close() {
         if (closed.getAndSet(true)) return;
         
-        // Delete the OpenGL texture
+        // Delete the OpenGL texture (only if on render thread)
         if (glTextureId >= 0) {
-            GlStateManager._deleteTexture(glTextureId);
+            if (RenderSystem.isOnRenderThread()) {
+                GlStateManager._deleteTexture(glTextureId);
+            } else {
+                // Schedule deletion on render thread
+                int textureToDelete = glTextureId;
+                MainThreadTaskExecutor.executeInMainThread(() -> GlStateManager._deleteTexture(textureToDelete), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+            }
             glTextureId = -1;
         }
         
@@ -336,8 +381,14 @@ public class OptimizedFmaTexture extends AbstractTexture {
         frames.clear();
         introFrames.clear();
         
-        // Unregister from TextureManager
-        Minecraft.getInstance().getTextureManager().release(textureLocation);
+        // Unregister from TextureManager (only if initialized)
+        if (glInitialized.get()) {
+            if (RenderSystem.isOnRenderThread()) {
+                Minecraft.getInstance().getTextureManager().release(textureLocation);
+            } else {
+                MainThreadTaskExecutor.executeInMainThread(() -> Minecraft.getInstance().getTextureManager().release(textureLocation), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+            }
+        }
     }
     
     /**
