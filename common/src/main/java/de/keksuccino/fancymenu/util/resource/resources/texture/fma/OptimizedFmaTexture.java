@@ -2,8 +2,10 @@ package de.keksuccino.fancymenu.util.resource.resources.texture.fma;
 
 import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.opengl.GlTexture;
+import com.mojang.blaze3d.opengl.GlTextureView;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.TextureFormat;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
@@ -412,6 +414,7 @@ public class OptimizedFmaTexture extends AbstractTexture {
      * This is the same approach as MCEFDirectTexture
      */
     private static class DirectFmaTexture extends AbstractTexture {
+
         private final int glId;
         private final int width;
         private final int height;
@@ -421,17 +424,11 @@ public class OptimizedFmaTexture extends AbstractTexture {
             this.width = width;
             this.height = height;
 
-            // IMPORTANT: Set the texture field in AbstractTexture
+            // IMPORTANT: Create and set the texture field in AbstractTexture
             // This is what GuiGraphics.innerBlit() looks for
             DirectGlTexture glTexture = new DirectGlTexture(glId, width, height);
             this.texture = glTexture;
-
-            // Debug logging
-            if (this.texture == null) {
-                LOGGER.error("[FANCYMENU] DirectFmaTexture: texture field is null after setting!");
-            } else {
-                LOGGER.debug("[FANCYMENU] DirectFmaTexture: texture successfully set with GL ID " + glId);
-            }
+            this.textureView = new DirectGlTextureView(glTexture, 1, 1);
         }
 
         @Override
@@ -445,32 +442,26 @@ public class OptimizedFmaTexture extends AbstractTexture {
         }
 
         /**
-         * Override getTexture to ensure we always return our wrapped texture
-         */
-        @Override
-        public com.mojang.blaze3d.textures.GpuTexture getTexture() {
-            if (this.texture == null) {
-                // This should never happen if constructor ran properly
-                LOGGER.error("[FANCYMENU] DirectFmaTexture.getTexture() called but texture is null!");
-                throw new IllegalStateException("DirectFmaTexture not initialized properly");
-            }
-            return this.texture;
-        }
-
-        /**
          * Custom GlTexture implementation that wraps an existing OpenGL texture ID
          * without managing its lifecycle.
          */
         private static class DirectGlTexture extends GlTexture {
-            private final int textureWidth;
-            private final int textureHeight;
 
             protected DirectGlTexture(int textureId, int width, int height) {
-                // Call parent constructor with correct parameter order
-                // GlTexture(int glId, String label, TextureFormat format, int width, int height, int mipLevels, int x, int y)
-                super(textureId, "FMA Direct Texture", TextureFormat.RGBA8, width, height, 1, 0, 0);
-                this.textureWidth = width;
-                this.textureHeight = height;
+                // GlTexture constructor parameters in 1.21.7:
+                // int usage, String label, TextureFormat format, int width, int height, int depthOrLayers, int mipLevels, int glId
+                super(
+                    GpuTexture.USAGE_TEXTURE_BINDING,  // usage flags
+                    "FMA Direct Texture",               // label
+                    TextureFormat.RGBA8,                // format
+                    width,                              // width
+                    height,                             // height
+                    1,                                  // depthOrLayers
+                    1,                                  // mipLevels
+                    textureId                           // glId
+                );
+                // Mark as not closed initially
+                this.closed = false;
             }
 
             @Override
@@ -478,17 +469,16 @@ public class OptimizedFmaTexture extends AbstractTexture {
                 // Don't actually delete the texture - we don't own it
                 this.closed = true;
             }
-
-            @Override
-            public int getWidth(int mipLevel) {
-                return this.textureWidth >> mipLevel;
-            }
-
-            @Override
-            public int getHeight(int mipLevel) {
-                return this.textureHeight >> mipLevel;
-            }
         }
+
+        private static class DirectGlTextureView extends GlTextureView {
+
+            protected DirectGlTextureView(GlTexture $$0, int $$1, int $$2) {
+                super($$0, $$1, $$2);
+            }
+
+        }
+
     }
     
     /**
