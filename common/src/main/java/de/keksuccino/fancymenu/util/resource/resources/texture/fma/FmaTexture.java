@@ -247,12 +247,25 @@ public class FmaTexture implements ITexture, PlayableResource {
     public ResourceLocation getResourceLocation() {
         if (closed.get() || !decoded.get()) return null;
         
+        // Get the texture location - may be null if not initialized yet
+        ResourceLocation location = optimizedTexture.getTextureLocation();
+        
+        // If the texture isn't ready yet (e.g., GL not initialized), return null
+        // The caller should handle this and try again later
+        if (location == null) {
+            // Start playing so it initializes on next frame
+            if (!optimizedTexture.isPlaying()) {
+                optimizedTexture.play();
+            }
+            return null;
+        }
+        
         // Start playing if not already
         if (!optimizedTexture.isPlaying()) {
             optimizedTexture.play();
         }
         
-        return optimizedTexture.getTextureLocation();
+        return location;
     }
     
     @Override
