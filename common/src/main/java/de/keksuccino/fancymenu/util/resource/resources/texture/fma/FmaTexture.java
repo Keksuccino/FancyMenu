@@ -24,8 +24,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class FmaTexture implements ITexture, PlayableResource {
     private static final Logger LOGGER = LogManager.getLogger();
     
-    // The optimized texture backend
-    private final FmaTextureBackend optimizedTexture;
+    // The optimized texture backend - using memory-efficient version
+    private final FmaTextureBackendEfficient optimizedTexture;
     
     // Compatibility fields from original FmaTexture
     private volatile int width = 10;
@@ -44,7 +44,7 @@ public class FmaTexture implements ITexture, PlayableResource {
     private String sourceURL;
     
     public FmaTexture() {
-        this.optimizedTexture = new FmaTextureBackend();
+        this.optimizedTexture = new FmaTextureBackendEfficient();
     }
     
     /**
