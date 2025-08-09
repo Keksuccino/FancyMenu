@@ -17,7 +17,15 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
+/**
+ * Streaming FMA decoder that reads frames on-demand from the ZIP file
+ * instead of loading everything into memory at once.
+ */
 public class FmaDecoder implements Closeable {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -28,51 +36,91 @@ public class FmaDecoder implements Closeable {
     @Nullable
     protected FmaMetadata metadata = null;
     
-    // Store decoded frames as direct ByteBuffers ready for OpenGL
-    protected final List<FrameData> frames = new ArrayList<>();
-    protected final List<FrameData> introFrames = new ArrayList<>();
-    protected final List<AutoCloseable> closeables = new ArrayList<>();
+    // Frame index maps: frame number -> ZIP entry name (package-private for backend access)
+    final Map<Integer, String> frameEntries = new TreeMap<>();
+    final Map<Integer, String> introFrameEntries = new TreeMap<>();
     
-    // Frame dimensions (assuming all frames have the same size)
+    // Cache for recently decoded frames (thread-safe)
+    protected final Map<FrameKey, FrameData> frameCache = new ConcurrentHashMap<>();
+    protected static final int MAX_CACHE_SIZE = 15; // Keep up to 15 frames in cache
+    
+    // Thread safety for ZIP file access
+    protected final ReadWriteLock zipLock = new ReentrantReadWriteLock();
+    
+    // Frame dimensions (detected from first frame)
     protected int frameWidth = 0;
     protected int frameHeight = 0;
+    protected int totalFrames = 0;
+    protected int totalIntroFrames = 0;
+    
+    // Track if we're using in-memory ZIP (from InputStream)
+    protected boolean isInMemory = false;
+    
+    /**
+     * Key for frame cache that includes intro flag
+     */
+    protected static class FrameKey {
+        public final int index;
+        public final boolean isIntro;
+        
+        public FrameKey(int index, boolean isIntro) {
+            this.index = index;
+            this.isIntro = isIntro;
+        }
+        
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            FrameKey frameKey = (FrameKey) o;
+            return index == frameKey.index && isIntro == frameKey.isIntro;
+        }
+        
+        @Override
+        public int hashCode() {
+            return Objects.hash(index, isIntro);
+        }
+    }
     
     /**
      * Represents a single frame with its pixel data ready for OpenGL upload
      */
     public static class FrameData {
-        public ByteBuffer pixelData;  // Direct ByteBuffer in RGBA format (non-final for ownership transfer)
+        public ByteBuffer pixelData;  // Direct ByteBuffer in RGBA format
         public final int width;
         public final int height;
         public final int frameIndex;
+        public final long timestamp; // When this frame was cached
         
         public FrameData(ByteBuffer pixelData, int width, int height, int frameIndex) {
             this.pixelData = pixelData;
             this.width = width;
             this.height = height;
             this.frameIndex = frameIndex;
+            this.timestamp = System.currentTimeMillis();
         }
         
         public void free() {
             if (pixelData != null) {
                 STBImage.stbi_image_free(pixelData);
-                pixelData = null; // Clear reference after freeing
+                pixelData = null;
             }
         }
     }
     
     /**
-     * Reads an FMA file from an InputStream, keeping everything in memory
+     * Opens an FMA file from an InputStream for streaming playback.
+     * The entire ZIP is kept in memory for random access.
      */
-    public void read(@NotNull InputStream in) throws IOException {
+    public void openStream(@NotNull InputStream in) throws IOException {
         if (this.zipFile != null) throw new IllegalStateException("The decoder is already reading a file!");
         try {
             byte[] data = in.readAllBytes();
             this.zipFile = ZipFile.builder()
                 .setSeekableByteChannel(new SeekableInMemoryByteChannel(data))
                 .get();
-            this.readMetadata();
-            this.loadAllFramesToMemory();
+            this.isInMemory = true;
+            this.initializeDecoder();
         } catch (Exception ex) {
             this.close();
             throw new IOException(ex);
@@ -82,14 +130,15 @@ public class FmaDecoder implements Closeable {
     }
     
     /**
-     * Reads an FMA file from a File
+     * Opens an FMA file from a File for streaming playback.
+     * The file remains open for on-demand frame reading.
      */
-    public void read(@NotNull File fmaFile) throws IOException {
+    public void openFile(@NotNull File fmaFile) throws IOException {
         if (this.zipFile != null) throw new IllegalStateException("The decoder is already reading a file!");
         try {
             this.zipFile = ZipFile.builder().setFile(fmaFile).get();
-            this.readMetadata();
-            this.loadAllFramesToMemory();
+            this.isInMemory = false;
+            this.initializeDecoder();
         } catch (Exception ex) {
             this.close();
             throw new IOException(ex);
@@ -97,212 +146,320 @@ public class FmaDecoder implements Closeable {
     }
     
     /**
-     * Loads all frames directly into memory as ByteBuffers ready for OpenGL
+     * Initialize the decoder by reading metadata and indexing frames
      */
-    protected void loadAllFramesToMemory() throws IOException {
-        Objects.requireNonNull(this.zipFile);
-        
-        // Load main frames
-        Map<Integer, FrameData> frameMap = new TreeMap<>();
-        
-        Enumeration<ZipArchiveEntry> entries = zipFile.getEntries();
-        while (entries.hasMoreElements()) {
-            ZipArchiveEntry entry = entries.nextElement();
-            String name = entry.getName();
-            
-            if (name.startsWith("frames/") && name.endsWith(".png")) {
-                String frameName = name.substring("frames/".length(), name.length() - 4);
-                try {
-                    int frameIndex = Integer.parseInt(frameName);
-                    FrameData frameData = loadFrameFromZipEntry(entry, frameIndex);
-                    if (frameData != null) {
-                        frameMap.put(frameIndex, frameData);
-                        // Set frame dimensions from first frame
-                        if (frameWidth == 0) {
-                            frameWidth = frameData.width;
-                            frameHeight = frameData.height;
-                        }
-                    }
-                } catch (NumberFormatException e) {
-                    LOGGER.error("Invalid frame name: " + frameName);
-                }
-            } else if (name.startsWith("intro_frames/") && name.endsWith(".png")) {
-                String frameName = name.substring("intro_frames/".length(), name.length() - 4);
-                try {
-                    int frameIndex = Integer.parseInt(frameName);
-                    FrameData frameData = loadFrameFromZipEntry(entry, frameIndex);
-                    if (frameData != null) {
-                        introFrames.add(frameData);
-                    }
-                } catch (NumberFormatException e) {
-                    LOGGER.error("Invalid intro frame name: " + frameName);
-                }
-            }
+    protected void initializeDecoder() throws IOException {
+        try {
+            this.readMetadata();
+            this.indexFrames();
+        } catch (Exception e) {
+            LOGGER.error("[FANCYMENU] Failed to initialize FMA decoder", e);
+            throw new IOException("Failed to initialize decoder: " + e.getMessage(), e);
         }
-        
-        // Add frames in order
-        frames.addAll(frameMap.values());
-        
-        // Sort intro frames by index
-        introFrames.sort(Comparator.comparingInt(f -> f.frameIndex));
     }
     
     /**
-     * Loads a single frame from a ZIP entry and decodes it directly to a ByteBuffer
-     * using STBImage (same library Minecraft uses for texture loading)
+     * Index all frames in the ZIP without loading them
+     */
+    protected void indexFrames() throws IOException {
+        Objects.requireNonNull(this.zipFile);
+        
+        zipLock.readLock().lock();
+        try {
+            Enumeration<ZipArchiveEntry> entries = zipFile.getEntries();
+            while (entries.hasMoreElements()) {
+                ZipArchiveEntry entry = entries.nextElement();
+                String name = entry.getName();
+                
+                if (name.startsWith("frames/") && name.endsWith(".png")) {
+                    String frameName = name.substring("frames/".length(), name.length() - 4);
+                    try {
+                        int frameIndex = Integer.parseInt(frameName);
+                        frameEntries.put(frameIndex, name);
+                    } catch (NumberFormatException e) {
+                        LOGGER.error("Invalid frame name: " + frameName);
+                    }
+                } else if (name.startsWith("intro_frames/") && name.endsWith(".png")) {
+                    String frameName = name.substring("intro_frames/".length(), name.length() - 4);
+                    try {
+                        int frameIndex = Integer.parseInt(frameName);
+                        introFrameEntries.put(frameIndex, name);
+                    } catch (NumberFormatException e) {
+                        LOGGER.error("Invalid intro frame name: " + frameName);
+                    }
+                }
+            }
+            
+            totalFrames = frameEntries.size();
+            totalIntroFrames = introFrameEntries.size();
+            
+            // Check if we found any frames
+            if (totalFrames == 0 && totalIntroFrames == 0) {
+                LOGGER.error("[FANCYMENU] No frames found in FMA file!");
+                throw new IOException("No frames found in FMA file");
+            }
+            
+            // Load first frame to get dimensions - try regular frames first, then intro
+            boolean dimensionsFound = false;
+            
+            if (!frameEntries.isEmpty()) {
+                // Try to find the first frame (could be 0 or 1 based)
+                Integer firstIndex = frameEntries.keySet().stream().min(Integer::compareTo).orElse(null);
+                if (firstIndex != null) {
+                    try {
+                        FrameData firstFrame = loadFrameInternal(firstIndex, false);
+                        if (firstFrame != null) {
+                            frameWidth = firstFrame.width;
+                            frameHeight = firstFrame.height;
+                            // Keep it in cache
+                            frameCache.put(new FrameKey(firstIndex, false), firstFrame);
+                            dimensionsFound = true;
+                        }
+                    } catch (Exception e) {
+                        LOGGER.warn("[FANCYMENU] Failed to load first regular frame (index={}) for dimensions", firstIndex, e);
+                    }
+                }
+            }
+            
+            // If regular frames failed, try intro frames
+            if (!dimensionsFound && !introFrameEntries.isEmpty()) {
+                Integer firstIntroIndex = introFrameEntries.keySet().stream().min(Integer::compareTo).orElse(null);
+                if (firstIntroIndex != null) {
+                    try {
+                        FrameData firstIntroFrame = loadFrameInternal(firstIntroIndex, true);
+                        if (firstIntroFrame != null) {
+                            frameWidth = firstIntroFrame.width;
+                            frameHeight = firstIntroFrame.height;
+                            // Keep it in cache
+                            frameCache.put(new FrameKey(firstIntroIndex, true), firstIntroFrame);
+                            dimensionsFound = true;
+                        }
+                    } catch (Exception e) {
+                        LOGGER.warn("[FANCYMENU] Failed to load first intro frame (index={}) for dimensions", firstIntroIndex, e);
+                    }
+                }
+            }
+            
+            if (!dimensionsFound) {
+                throw new IOException("Failed to determine frame dimensions from FMA file");
+            }
+            
+            LOGGER.debug("[FANCYMENU] Indexed FMA: {} frames, {} intro frames, {}x{}", 
+                totalFrames, totalIntroFrames, frameWidth, frameHeight);
+            
+        } finally {
+            zipLock.readLock().unlock();
+        }
+    }
+    
+    /**
+     * Load a specific frame on-demand. Uses cache if available.
+     * 
+     * @param index Frame index
+     * @param isIntro Whether this is an intro frame
+     * @return Frame data or null if not found
      */
     @Nullable
-    protected FrameData loadFrameFromZipEntry(ZipArchiveEntry entry, int frameIndex) throws IOException {
-        try (InputStream entryStream = zipFile.getInputStream(entry)) {
-            byte[] pngData = entryStream.readAllBytes();
+    public FrameData loadFrame(int index, boolean isIntro) {
+        FrameKey key = new FrameKey(index, isIntro);
+        
+        // Check cache first
+        FrameData cached = frameCache.get(key);
+        if (cached != null) {
+            return cached;
+        }
+        
+        // Load from ZIP
+        FrameData frame = loadFrameInternal(index, isIntro);
+        if (frame != null) {
+            // Add to cache
+            frameCache.put(key, frame);
             
-            // Use STBImage to decode PNG directly to RGBA ByteBuffer
-            ByteBuffer pngBuffer = MemoryUtil.memAlloc(pngData.length);
-            pngBuffer.put(pngData);
-            pngBuffer.flip();
+            // Clean old entries if cache is too large
+            cleanCache();
+        }
+        
+        return frame;
+    }
+    
+    /**
+     * Internal method to load a frame from the ZIP file
+     */
+    @Nullable
+    protected FrameData loadFrameInternal(int index, boolean isIntro) {
+        Map<Integer, String> entries = isIntro ? introFrameEntries : frameEntries;
+        String entryName = entries.get(index);
+        
+        if (entryName == null) {
+            LOGGER.debug("[FANCYMENU] Frame entry not found: index={}, isIntro={}", index, isIntro);
+            return null;
+        }
+        
+        zipLock.readLock().lock();
+        try {
+            ZipArchiveEntry entry = zipFile.getEntry(entryName);
+            if (entry == null) {
+                LOGGER.error("[FANCYMENU] ZIP entry not found: {}", entryName);
+                return null;
+            }
             
-            try (MemoryStack stack = MemoryStack.stackPush()) {
-                IntBuffer widthBuf = stack.mallocInt(1);
-                IntBuffer heightBuf = stack.mallocInt(1);
-                IntBuffer channelsBuf = stack.mallocInt(1);
+            try (InputStream entryStream = zipFile.getInputStream(entry)) {
+                byte[] pngData = entryStream.readAllBytes();
                 
-                // Decode to RGBA format (4 channels) - this returns a direct ByteBuffer
-                // This is the same format OpenGL expects with GL_RGBA
-                ByteBuffer pixelData = STBImage.stbi_load_from_memory(
-                    pngBuffer, 
-                    widthBuf, 
-                    heightBuf, 
-                    channelsBuf, 
-                    4  // Force RGBA
-                );
-                
-                if (pixelData == null) {
-                    LOGGER.error("Failed to decode frame: " + STBImage.stbi_failure_reason());
+                if (pngData.length == 0) {
+                    LOGGER.error("[FANCYMENU] Empty PNG data for frame: {}", entryName);
                     return null;
                 }
                 
-                // Note: pixelData is now a direct ByteBuffer allocated by STBImage
-                // It must be freed with STBImage.stbi_image_free() when done
+                // Decode PNG to RGBA ByteBuffer
+                ByteBuffer pngBuffer = MemoryUtil.memAlloc(pngData.length);
+                pngBuffer.put(pngData);
+                pngBuffer.flip();
                 
-                return new FrameData(
-                    pixelData,
-                    widthBuf.get(0),
-                    heightBuf.get(0),
-                    frameIndex
-                );
-            } finally {
-                MemoryUtil.memFree(pngBuffer);
+                try (MemoryStack stack = MemoryStack.stackPush()) {
+                    IntBuffer widthBuf = stack.mallocInt(1);
+                    IntBuffer heightBuf = stack.mallocInt(1);
+                    IntBuffer channelsBuf = stack.mallocInt(1);
+                    
+                    ByteBuffer pixelData = STBImage.stbi_load_from_memory(
+                        pngBuffer, 
+                        widthBuf, 
+                        heightBuf, 
+                        channelsBuf, 
+                        4  // Force RGBA
+                    );
+                    
+                    if (pixelData == null) {
+                        LOGGER.error("[FANCYMENU] Failed to decode frame {}: {}", entryName, STBImage.stbi_failure_reason());
+                        return null;
+                    }
+                    
+                    int width = widthBuf.get(0);
+                    int height = heightBuf.get(0);
+                    
+                    if (width <= 0 || height <= 0) {
+                        LOGGER.error("[FANCYMENU] Invalid frame dimensions: {}x{} for {}", width, height, entryName);
+                        STBImage.stbi_image_free(pixelData);
+                        return null;
+                    }
+                    
+                    return new FrameData(pixelData, width, height, index);
+                } finally {
+                    MemoryUtil.memFree(pngBuffer);
+                }
+            }
+        } catch (IOException e) {
+            LOGGER.error("[FANCYMENU] Failed to load frame {} (intro={}): {}", index, isIntro, e.getMessage(), e);
+            return null;
+        } finally {
+            zipLock.readLock().unlock();
+        }
+    }
+    
+    /**
+     * Preload multiple frames for smooth playback
+     * This method is kept for backward compatibility but isn't used by the new streaming backend
+     * 
+     * @param startIndex Starting frame index
+     * @param count Number of frames to preload
+     * @param isIntro Whether these are intro frames
+     */
+    public void preloadFrames(int startIndex, int count, boolean isIntro) {
+        Map<Integer, String> entries = isIntro ? introFrameEntries : frameEntries;
+        
+        // Get actual frame indices starting from startIndex
+        List<Integer> indicesToLoad = entries.keySet().stream()
+            .filter(i -> i >= startIndex)
+            .sorted()
+            .limit(count)
+            .collect(Collectors.toList());
+        
+        for (int index : indicesToLoad) {
+            FrameKey key = new FrameKey(index, isIntro);
+            if (!frameCache.containsKey(key)) {
+                loadFrame(index, isIntro);
             }
         }
     }
     
     /**
-     * Gets a frame's pixel data as a direct ByteBuffer ready for OpenGL upload.
-     * This can be uploaded directly with glTexImage2D or glTexSubImage2D.
-     * 
-     * Format: RGBA, 8 bits per channel
-     * The ByteBuffer is direct (off-heap) and should NOT be modified.
-     * 
-     * IMPORTANT: The returned ByteBuffer is still owned by this decoder.
-     * If you need to keep it after the decoder is closed, use takeFramePixelData() instead.
+     * Clean old frames from cache when it gets too large
      */
-    @Nullable
-    public ByteBuffer getFramePixelData(int index) {
-        if (index < 0 || index >= frames.size()) return null;
-        return frames.get(index).pixelData;
-    }
-    
-    /**
-     * Gets an intro frame's pixel data as a direct ByteBuffer.
-     * 
-     * IMPORTANT: The returned ByteBuffer is still owned by this decoder.
-     * If you need to keep it after the decoder is closed, use takeIntroFramePixelData() instead.
-     */
-    @Nullable
-    public ByteBuffer getIntroFramePixelData(int index) {
-        if (index < 0 || index >= introFrames.size()) return null;
-        return introFrames.get(index).pixelData;
-    }
-    
-    /**
-     * Takes ownership of a frame's pixel data. After calling this method,
-     * the decoder will no longer free this ByteBuffer when closed.
-     * The caller is responsible for freeing it with STBImage.stbi_image_free().
-     */
-    @Nullable
-    public ByteBuffer takeFramePixelData(int index) {
-        if (index < 0 || index >= frames.size()) return null;
-        FrameData frame = frames.get(index);
-        ByteBuffer data = frame.pixelData;
-        if (data == null) {
-            LOGGER.warn("[FANCYMENU] Frame {} already had ownership transferred or was null", index);
-            return null;
+    protected void cleanCache() {
+        if (frameCache.size() <= MAX_CACHE_SIZE) {
+            return;
         }
-        frame.pixelData = null; // Remove reference so it won't be freed
-        return data;
-    }
-    
-    /**
-     * Takes ownership of an intro frame's pixel data. After calling this method,
-     * the decoder will no longer free this ByteBuffer when closed.
-     * The caller is responsible for freeing it with STBImage.stbi_image_free().
-     */
-    @Nullable
-    public ByteBuffer takeIntroFramePixelData(int index) {
-        if (index < 0 || index >= introFrames.size()) return null;
-        FrameData frame = introFrames.get(index);
-        ByteBuffer data = frame.pixelData;
-        if (data == null) {
-            LOGGER.warn("[FANCYMENU] Intro frame {} already had ownership transferred or was null", index);
-            return null;
-        }
-        frame.pixelData = null; // Remove reference so it won't be freed
-        return data;
-    }
-    
-    /**
-     * Example of how to upload a frame to OpenGL (similar to MCEF)
-     */
-    public void uploadFrameToOpenGL(int frameIndex, int textureId) {
-        ByteBuffer pixelData = getFramePixelData(frameIndex);
-        if (pixelData == null) return;
         
-        // This is how you'd upload it - exactly like MCEF does:
-        // GlStateManager._bindTexture(textureId);
-        // GL11.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, frameWidth, frameHeight, 0,
-        //                   GL_RGBA, GL_UNSIGNED_BYTE, pixelData);
+        // Find and remove oldest entries
+        List<Map.Entry<FrameKey, FrameData>> entries = new ArrayList<>(frameCache.entrySet());
+        entries.sort(Comparator.comparingLong(e -> e.getValue().timestamp));
+        
+        int toRemove = frameCache.size() - MAX_CACHE_SIZE + 5; // Remove a few extra to avoid frequent cleaning
+        for (int i = 0; i < toRemove && i < entries.size(); i++) {
+            Map.Entry<FrameKey, FrameData> entry = entries.get(i);
+            FrameData removed = frameCache.remove(entry.getKey());
+            if (removed != null) {
+                removed.free();
+            }
+        }
+    }
+    
+    /**
+     * Clear all cached frames
+     */
+    public void clearCache() {
+        for (FrameData frame : frameCache.values()) {
+            frame.free();
+        }
+        frameCache.clear();
+    }
+    
+    /**
+     * Get a frame's pixel data as a direct ByteBuffer ready for OpenGL upload.
+     * This loads the frame on-demand if not cached.
+     */
+    @Nullable
+    public ByteBuffer getFramePixelData(int index, boolean isIntro) {
+        FrameData frame = loadFrame(index, isIntro);
+        return frame != null ? frame.pixelData : null;
     }
     
     protected void readMetadata() throws IOException {
         Objects.requireNonNull(this.zipFile);
-        ZipArchiveEntry metadataEntry = zipFile.getEntry("metadata.json");
-        if (metadataEntry == null) {
-            throw new FileNotFoundException("No metadata.json found in FMA file!");
-        }
         
-        try (InputStream in = zipFile.getInputStream(metadataEntry);
-             BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
-            
-            StringBuilder json = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                json.append(line).append("\n");
+        zipLock.readLock().lock();
+        try {
+            ZipArchiveEntry metadataEntry = zipFile.getEntry("metadata.json");
+            if (metadataEntry == null) {
+                throw new FileNotFoundException("No metadata.json found in FMA file!");
             }
             
-            this.metadata = GSON.fromJson(json.toString(), FmaMetadata.class);
+            try (InputStream in = zipFile.getInputStream(metadataEntry);
+                 BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
+                
+                StringBuilder json = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    json.append(line).append("\n");
+                }
+                
+                this.metadata = GSON.fromJson(json.toString(), FmaMetadata.class);
+            }
+        } finally {
+            zipLock.readLock().unlock();
         }
     }
     
     public int getFrameCount() {
-        return frames.size();
+        return totalFrames;
     }
     
     public int getIntroFrameCount() {
-        return introFrames.size();
+        return totalIntroFrames;
     }
     
     public boolean hasIntroFrames() {
-        return !introFrames.isEmpty();
+        return totalIntroFrames > 0;
     }
     
     public int getFrameWidth() {
@@ -318,32 +475,32 @@ public class FmaDecoder implements Closeable {
         return metadata;
     }
     
+    /**
+     * Check if the decoder is ready (has indexed frames and knows dimensions)
+     */
+    public boolean isReady() {
+        return zipFile != null && frameWidth > 0 && frameHeight > 0;
+    }
+    
     @Override
     public void close() throws IOException {
-        // Free all STBImage-allocated buffers
-        for (FrameData frame : frames) {
-            frame.free();
-        }
-        frames.clear();
+        // Clear cache first
+        clearCache();
         
-        for (FrameData frame : introFrames) {
-            frame.free();
-        }
-        introFrames.clear();
-        
+        // Close ZIP file
         if (zipFile != null) {
-            zipFile.close();
-            zipFile = null;
-        }
-        
-        for (AutoCloseable closeable : closeables) {
+            zipLock.writeLock().lock();
             try {
-                closeable.close();
-            } catch (Exception e) {
-                // Ignore
+                zipFile.close();
+                zipFile = null;
+            } finally {
+                zipLock.writeLock().unlock();
             }
         }
-        closeables.clear();
+        
+        frameEntries.clear();
+        introFrameEntries.clear();
+        metadata = null;
     }
     
     // FmaMetadata class remains the same
@@ -380,11 +537,12 @@ public class FmaDecoder implements Closeable {
             if (isIntroFrame) {
                 if ((custom_frame_times_intro != null) && custom_frame_times_intro.containsKey(frame)) 
                     return custom_frame_times_intro.get(frame);
+                return this.getFrameTimeIntro();
             } else {
                 if ((custom_frame_times != null) && custom_frame_times.containsKey(frame)) 
                     return custom_frame_times.get(frame);
+                return this.getFrameTime();
             }
-            return isIntroFrame ? this.getFrameTimeIntro() : this.getFrameTime();
         }
     }
 }

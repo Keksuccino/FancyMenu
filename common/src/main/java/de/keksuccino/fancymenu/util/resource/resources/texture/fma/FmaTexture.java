@@ -10,15 +10,21 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.*;
-import java.nio.ByteBuffer;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Streaming FMA texture that loads frames on-demand during playback
+ */
 public class FmaTexture implements ITexture, PlayableResource {
     private static final Logger LOGGER = LogManager.getLogger();
     
-    // The optimized texture backend - using memory-efficient version
+    // The streaming texture backend
     private final FmaTextureBackend backend;
+    
+    // The decoder that streams frames from the FMA file
+    private FmaDecoder decoder;
     
     // Compatibility fields from original FmaTexture
     private volatile int width = 10;
@@ -36,6 +42,9 @@ public class FmaTexture implements ITexture, PlayableResource {
     private File sourceFile;
     private String sourceURL;
     
+    // Loading future for async operations
+    private CompletableFuture<Void> loadingFuture;
+    
     public FmaTexture() {
         this.backend = new FmaTextureBackend();
     }
@@ -49,14 +58,14 @@ public class FmaTexture implements ITexture, PlayableResource {
         texture.sourceLocation = location;
         
         // Load asynchronously
-        new Thread(() -> {
+        texture.loadingFuture = CompletableFuture.runAsync(() -> {
             try (InputStream in = Minecraft.getInstance().getResourceManager().open(location)) {
                 texture.loadFromStream(in, location.toString());
             } catch (Exception ex) {
                 texture.loadingFailed.set(true);
-                LOGGER.error("[FANCYMENU] Failed to read optimized FMA image from ResourceLocation: " + location, ex);
+                LOGGER.error("[FANCYMENU] Failed to read streaming FMA image from ResourceLocation: " + location, ex);
             }
-        }, "FMA-Loader-" + location).start();
+        }, runnable -> new Thread(runnable, "FMA-StreamLoader-" + location).start());
         
         return texture;
     }
@@ -71,19 +80,19 @@ public class FmaTexture implements ITexture, PlayableResource {
         
         if (!fmaFile.isFile()) {
             texture.loadingFailed.set(true);
-            LOGGER.error("[FANCYMENU] Failed to read optimized FMA image from file! File not found: " + fmaFile.getPath());
+            LOGGER.error("[FANCYMENU] Failed to read streaming FMA image from file! File not found: " + fmaFile.getPath());
             return texture;
         }
         
         // Load asynchronously
-        new Thread(() -> {
+        texture.loadingFuture = CompletableFuture.runAsync(() -> {
             try {
                 texture.loadFromFile(fmaFile);
             } catch (Exception ex) {
                 texture.loadingFailed.set(true);
-                LOGGER.error("[FANCYMENU] Failed to read optimized FMA image from file: " + fmaFile.getPath(), ex);
+                LOGGER.error("[FANCYMENU] Failed to read streaming FMA image from file: " + fmaFile.getPath(), ex);
             }
-        }, "FMA-Loader-" + fmaFile.getName()).start();
+        }, runnable -> new Thread(runnable, "FMA-StreamLoader-" + fmaFile.getName()).start());
         
         return texture;
     }
@@ -95,11 +104,11 @@ public class FmaTexture implements ITexture, PlayableResource {
 
     @NotNull
     public static FmaTexture web(@NotNull String fmaUrl, @Nullable FmaTexture writeTo) {
-        // Web loading not implemented yet in optimized version
+        // Web loading not implemented yet in streaming version
         FmaTexture texture = writeTo != null ? writeTo : new FmaTexture();
         texture.sourceURL = fmaUrl;
         texture.loadingFailed.set(true);
-        LOGGER.warn("[FANCYMENU] Web loading not yet implemented for optimized FMA textures");
+        LOGGER.warn("[FANCYMENU] Web loading not yet implemented for streaming FMA textures");
         return texture;
     }
 
@@ -115,7 +124,7 @@ public class FmaTexture implements ITexture, PlayableResource {
             texture.loadFromStream(in, gifTextureName != null ? gifTextureName : "stream");
         } catch (Exception ex) {
             texture.loadingFailed.set(true);
-            LOGGER.error("[FANCYMENU] Failed to read optimized FMA image from stream", ex);
+            LOGGER.error("[FANCYMENU] Failed to read streaming FMA image from stream", ex);
         }
         
         return texture;
@@ -130,30 +139,39 @@ public class FmaTexture implements ITexture, PlayableResource {
     }
     
     /**
-     * Load FMA data from file using the optimized decoder
+     * Load FMA data from file using the streaming decoder
      */
     private void loadFromFile(File file) throws IOException {
-        try (FmaDecoder decoder = new FmaDecoder()) {
-            decoder.read(file);
-            processDecodedFma(decoder, file.getPath());
-        }
+        // Create decoder but keep it open for streaming
+        decoder = new FmaDecoder();
+        decoder.openFile(file);
+        processStreamingDecoder(file.getPath());
     }
     
     /**
-     * Load FMA data from stream using the optimized decoder
+     * Load FMA data from stream using the streaming decoder
      */
     private void loadFromStream(InputStream in, String sourceName) throws IOException {
-        try (FmaDecoder decoder = new FmaDecoder()) {
-            decoder.read(in);
-            processDecodedFma(decoder, sourceName);
-        }
+        // Create decoder but keep it open for streaming
+        decoder = new FmaDecoder();
+        decoder.openStream(in);
+        processStreamingDecoder(sourceName);
     }
     
     /**
-     * Process the decoded FMA data and set up the texture backend
+     * Process the streaming decoder and set up the texture backend
      */
-    private void processDecodedFma(FmaDecoder decoder, String sourceName) {
+    private void processStreamingDecoder(String sourceName) {
         try {
+            // Wait for decoder to be ready
+            if (!decoder.isReady()) {
+                LOGGER.error("[FANCYMENU] Decoder not ready for: {}", sourceName);
+                LOGGER.error("[FANCYMENU] Frame count: {}, Intro count: {}, Dimensions: {}x{}", 
+                    decoder.getFrameCount(), decoder.getIntroFrameCount(), 
+                    decoder.getFrameWidth(), decoder.getFrameHeight());
+                throw new IOException("Decoder failed to initialize");
+            }
+            
             // Get metadata
             FmaDecoder.FmaMetadata metadata = decoder.getMetadata();
             if (metadata == null) {
@@ -166,39 +184,28 @@ public class FmaTexture implements ITexture, PlayableResource {
             this.aspectRatio = new AspectRatio(width, height);
             this.numPlays.set(metadata.getLoopCount());
             
-            // Initialize the optimized texture with the dimensions
-            backend.initialize(width, height);
-            
-            // Add intro frames if present - TAKE ownership of ByteBuffers
-            if (decoder.hasIntroFrames()) {
-                for (int i = 0; i < decoder.getIntroFrameCount(); i++) {
-                    // Use takeIntroFramePixelData to transfer ownership
-                    ByteBuffer frameData = decoder.takeIntroFramePixelData(i);
-                    if (frameData != null) {
-                        long delayMs = metadata.getFrameTimeForFrame(i, true);
-                        // FmaTextureBackend now owns this ByteBuffer
-                        backend.addFrameDirect(frameData, delayMs, true);
-                    }
-                }
-            }
-            
-            // Add normal frames - TAKE ownership of ByteBuffers
-            for (int i = 0; i < decoder.getFrameCount(); i++) {
-                // Use takeFramePixelData to transfer ownership
-                ByteBuffer frameData = decoder.takeFramePixelData(i);
-                if (frameData != null) {
-                    long delayMs = metadata.getFrameTimeForFrame(i, false);
-                    // FmaTextureBackend now owns this ByteBuffer
-                    backend.addFrameDirect(frameData, delayMs, false);
-                }
-            }
+            // Initialize the streaming backend with the decoder
+            backend.initializeWithDecoder(decoder);
             
             decoded.set(true);
             loadingCompleted.set(true);
             
+            LOGGER.debug("[FANCYMENU] Streaming FMA texture initialized: {} ({}x{}, {} frames + {} intro)", 
+                sourceName, width, height, decoder.getFrameCount(), decoder.getIntroFrameCount());
+            
         } catch (Exception ex) {
             loadingFailed.set(true);
-            LOGGER.error("[FANCYMENU] Failed to process optimized FMA image: " + sourceName, ex);
+            LOGGER.error("[FANCYMENU] Failed to process streaming FMA image: " + sourceName, ex);
+            
+            // Clean up decoder on failure
+            if (decoder != null) {
+                try {
+                    decoder.close();
+                } catch (IOException e) {
+                    // Ignore
+                }
+                decoder = null;
+            }
         }
     }
     
@@ -251,7 +258,7 @@ public class FmaTexture implements ITexture, PlayableResource {
     
     @Override
     public boolean isReady() {
-        return decoded.get();
+        return decoded.get() && backend.isReady();
     }
     
     @Override
@@ -266,7 +273,9 @@ public class FmaTexture implements ITexture, PlayableResource {
     
     @Override
     public void play() {
-        backend.play();
+        if (decoded.get()) {
+            backend.play();
+        }
     }
     
     @Override
@@ -295,7 +304,7 @@ public class FmaTexture implements ITexture, PlayableResource {
      * Compatible with FmaTexture.reset()
      */
     public void reset() {
-        // Reset the optimized texture
+        // Reset the streaming texture
         backend.reset();
         cycles.set(0);
         
@@ -311,7 +320,26 @@ public class FmaTexture implements ITexture, PlayableResource {
     @Override
     public void close() {
         if (closed.getAndSet(true)) return;
+        
+        // Cancel loading if still in progress
+        if (loadingFuture != null && !loadingFuture.isDone()) {
+            loadingFuture.cancel(true);
+        }
+        
+        // Close backend
         backend.close();
+        
+        // Close decoder if we still have one
+        // (backend.close() should already close it, but just in case)
+        if (decoder != null) {
+            try {
+                decoder.close();
+            } catch (IOException e) {
+                // Ignore
+            }
+            decoder = null;
+        }
+        
         sourceLocation = null;
         sourceFile = null;
         sourceURL = null;
