@@ -1,258 +1,353 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.fma;
 
-import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.customization.ScreenCustomization;
-import de.keksuccino.fancymenu.util.CloseableUtils;
-import de.keksuccino.fancymenu.util.MathUtils;
-import de.keksuccino.fancymenu.util.file.FileUtils;
-import org.apache.commons.compress.archivers.examples.Expander;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.compress.utils.SeekableInMemoryByteChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
+import org.lwjgl.stb.STBImage;
+import org.lwjgl.system.MemoryStack;
+import org.lwjgl.system.MemoryUtil;
 import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class FmaDecoder implements Closeable {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson GSON = new GsonBuilder().create();
-    private static final File TEMP_DIR = FileUtils.createDirectory(new File(FancyMenu.TEMP_DATA_DIR, "/decoded_fma_images"));
-
+    
     @Nullable
     protected ZipFile zipFile = null;
     @Nullable
     protected FmaMetadata metadata = null;
-    @NotNull
+    
+    // Store decoded frames as direct ByteBuffers ready for OpenGL
+    protected final List<FrameData> frames = new ArrayList<>();
+    protected final List<FrameData> introFrames = new ArrayList<>();
     protected final List<AutoCloseable> closeables = new ArrayList<>();
-    @NotNull
-    protected final List<String> orderedFramePaths = new ArrayList<>();
-    @NotNull
-    protected final List<String> orderedIntroFramePaths = new ArrayList<>();
-    protected final String identifier = ScreenCustomization.generateUniqueIdentifier();
-    protected final File decodingTempDir = FileUtils.createDirectory(new File(TEMP_DIR, "/" + identifier));
-
+    
+    // Frame dimensions (assuming all frames have the same size)
+    protected int frameWidth = 0;
+    protected int frameHeight = 0;
+    
     /**
-     * Reads an FMA file from an {@link InputStream}. Copies the FMA to the memory.<br>
-     * Closes the provided {@link InputStream} at the end.
+     * Represents a single frame with its pixel data ready for OpenGL upload
+     */
+    public static class FrameData {
+        public ByteBuffer pixelData;  // Direct ByteBuffer in RGBA format (non-final for ownership transfer)
+        public final int width;
+        public final int height;
+        public final int frameIndex;
+        
+        public FrameData(ByteBuffer pixelData, int width, int height, int frameIndex) {
+            this.pixelData = pixelData;
+            this.width = width;
+            this.height = height;
+            this.frameIndex = frameIndex;
+        }
+        
+        public void free() {
+            if (pixelData != null) {
+                STBImage.stbi_image_free(pixelData);
+                pixelData = null; // Clear reference after freeing
+            }
+        }
+    }
+    
+    /**
+     * Reads an FMA file from an InputStream, keeping everything in memory
      */
     public void read(@NotNull InputStream in) throws IOException {
         if (this.zipFile != null) throw new IllegalStateException("The decoder is already reading a file!");
         try {
-            this.zipFile = this.putCloseable(ZipFile.builder().setSeekableByteChannel(this.putCloseable(new SeekableInMemoryByteChannel(in.readAllBytes()))).get());
-            this.decodeImage();
+            byte[] data = in.readAllBytes();
+            this.zipFile = ZipFile.builder()
+                .setSeekableByteChannel(new SeekableInMemoryByteChannel(data))
+                .get();
             this.readMetadata();
-            this.readFramePaths();
-            this.readIntroFramePaths();
+            this.loadAllFramesToMemory();
         } catch (Exception ex) {
-            CloseableUtils.closeQuietly(in);
-            CloseableUtils.closeQuietly(this);
-            this.zipFile = null;
-            this.metadata = null;
+            this.close();
             throw new IOException(ex);
+        } finally {
+            in.close();
         }
-        CloseableUtils.closeQuietly(in);
     }
-
+    
     /**
-     * Reads an FMA file from a {@link File}.
+     * Reads an FMA file from a File
      */
     public void read(@NotNull File fmaFile) throws IOException {
         if (this.zipFile != null) throw new IllegalStateException("The decoder is already reading a file!");
         try {
-            this.zipFile = this.putCloseable(ZipFile.builder().setFile(fmaFile).get());
-            this.decodeImage();
+            this.zipFile = ZipFile.builder().setFile(fmaFile).get();
             this.readMetadata();
-            this.readFramePaths();
-            this.readIntroFramePaths();
+            this.loadAllFramesToMemory();
         } catch (Exception ex) {
-            CloseableUtils.closeQuietly(this);
-            this.zipFile = null;
-            this.metadata = null;
+            this.close();
             throw new IOException(ex);
         }
     }
-
-    protected void decodeImage() throws IOException {
-        Objects.requireNonNull(this.zipFile);
-        new Expander().expand(this.zipFile, this.decodingTempDir);
-    }
-
-    protected void readFramePaths() throws IOException {
-        Objects.requireNonNull(this.zipFile);
-        this.orderedFramePaths.clear();
-        try {
-            File framesDir = new File(this.decodingTempDir, "/frames");
-            if (!framesDir.isDirectory()) throw new FileNotFoundException("No frames directory found in FMA file!");
-            File[] frames = Objects.requireNonNull(framesDir.listFiles());
-            for (File frame : frames) {
-                String name = frame.getAbsolutePath();
-                if (name.toLowerCase().endsWith(".png")) {
-                    String withoutExtension = Files.getNameWithoutExtension(name);
-                    if (MathUtils.isInteger(withoutExtension)) {
-                        this.orderedFramePaths.add(name);
-                    } else {
-                        LOGGER.error("[FANCYMENU] Invalid PNG frame found in FMA file!", new IllegalStateException("Frame file name is not a valid number: " + frame.getName()));
-                    }
-                } else {
-                    LOGGER.error("[FANCYMENU] Invalid frame found in FMA file!", new IllegalStateException("Frame file is not a valid PNG image: " + frame.getName()));
-                }
-            }
-            this.orderedFramePaths.sort((o1, o2) -> {
-                int i1 = Integer.parseInt(Files.getNameWithoutExtension(o1));
-                int i2 = Integer.parseInt(Files.getNameWithoutExtension(o2));
-                return Integer.compare(i1, i2);
-            });
-        } catch (Exception ex) {
-            throw new IOException(ex);
-        }
-    }
-
-    protected void readIntroFramePaths() throws IOException {
-        Objects.requireNonNull(this.zipFile);
-        this.orderedIntroFramePaths.clear();
-        try {
-            File framesDir = new File(this.decodingTempDir, "/intro_frames");
-            if (!framesDir.isDirectory()) return;
-            File[] frames = Objects.requireNonNull(framesDir.listFiles());
-            for (File frame : frames) {
-                String name = frame.getAbsolutePath();
-                if (name.toLowerCase().endsWith(".png")) {
-                    String withoutExtension = Files.getNameWithoutExtension(name);
-                    if (MathUtils.isInteger(withoutExtension)) {
-                        this.orderedIntroFramePaths.add(name);
-                    } else {
-                        LOGGER.error("[FANCYMENU] Invalid PNG intro frame found in FMA file!", new IllegalStateException("Frame file name is not a valid number: " + frame.getName()));
-                    }
-                } else {
-                    LOGGER.error("[FANCYMENU] Invalid intro frame found in FMA file!", new IllegalStateException("Frame file is not a valid PNG image: " + frame.getName()));
-                }
-            }
-            this.orderedIntroFramePaths.sort((o1, o2) -> {
-                int i1 = Integer.parseInt(Files.getNameWithoutExtension(o1));
-                int i2 = Integer.parseInt(Files.getNameWithoutExtension(o2));
-                return Integer.compare(i1, i2);
-            });
-        } catch (Exception ex) {
-            throw new IOException(ex);
-        }
-    }
-
-    protected void readMetadata() throws IOException {
-        try {
-            File metadata = new File(this.decodingTempDir, "/metadata.json");
-            if (!metadata.isFile()) throw new FileNotFoundException("No metadata.json found in FMA file! Unable to read metadata!");
-            List<String> metadataLines = FileUtils.readTextLinesFrom(metadata);
-            StringBuilder metadataString = new StringBuilder();
-            for (String line : metadataLines) {
-                metadataString.append(line).append("\n");
-            }
-            this.metadata = Objects.requireNonNull(GSON.fromJson(metadataString.toString(), FmaMetadata.class), "Unable to parse metadata.json of FMA file!");
-        } catch (Exception ex) {
-            throw new IOException(ex);
-        }
-    }
-
-    public int getFrameCount() {
-        return this.orderedFramePaths.size();
-    }
-
-    public int getIntroFrameCount() {
-        return this.orderedIntroFramePaths.size();
-    }
-
-    public boolean hasIntroFrames() {
-        return (this.getIntroFrameCount() > 0);
-    }
-
-    @Nullable
-    public FmaMetadata getMetadata() {
-        return this.metadata;
-    }
-
-    @Nullable
-    public InputStream getFrame(int index) throws IOException {
-        Objects.requireNonNull(this.zipFile);
-        if (this.orderedFramePaths.isEmpty()) return null;
-        if (this.getFrameCount()-1 < index) return null;
-        try {
-            File frame = new File(this.orderedFramePaths.get(index));
-            if (!frame.isFile()) throw new FileNotFoundException("Frame file of FMA not found: " + frame.getAbsolutePath());
-            return org.apache.commons.io.FileUtils.openInputStream(frame);
-        } catch (Exception ex) {
-            throw new IOException(ex);
-        }
-    }
-
-    @Nullable
-    public InputStream getFirstFrame() throws IOException {
-        return this.getFrame(0);
-    }
-
-    @Nullable
-    public BufferedImage getFirstFrameAsBufferedImage() throws IOException {
-        InputStream in = getFirstFrame();
-        try {
-            if (in != null) return ImageIO.read(in);
-        } catch (Exception ex) {
-            throw new IOException(ex);
-        }
-        return null;
-    }
-
-    @Nullable
-    public InputStream getIntroFrame(int index) throws IOException {
-        Objects.requireNonNull(this.zipFile);
-        if (this.orderedIntroFramePaths.isEmpty()) return null;
-        if (this.getIntroFrameCount()-1 < index) return null;
-        try {
-            File frame = new File(this.orderedIntroFramePaths.get(index));
-            if (!frame.isFile()) throw new FileNotFoundException("Intro frame file of FMA not found: " + frame.getAbsolutePath());
-            return org.apache.commons.io.FileUtils.openInputStream(frame);
-        } catch (Exception ex) {
-            throw new IOException(ex);
-        }
-    }
-
+    
     /**
-     * Returns the background.png image of the FMA file, if present. Returns NULL if no background.png file is present.<br>
-     * This is UNUSED at the moment. The background is not used by FancyMenu's {@link FmaTexture} class.
+     * Loads all frames directly into memory as ByteBuffers ready for OpenGL
+     */
+    protected void loadAllFramesToMemory() throws IOException {
+        Objects.requireNonNull(this.zipFile);
+        
+        // Load main frames
+        Map<Integer, FrameData> frameMap = new TreeMap<>();
+        
+        Enumeration<ZipArchiveEntry> entries = zipFile.getEntries();
+        while (entries.hasMoreElements()) {
+            ZipArchiveEntry entry = entries.nextElement();
+            String name = entry.getName();
+            
+            if (name.startsWith("frames/") && name.endsWith(".png")) {
+                String frameName = name.substring("frames/".length(), name.length() - 4);
+                try {
+                    int frameIndex = Integer.parseInt(frameName);
+                    FrameData frameData = loadFrameFromZipEntry(entry, frameIndex);
+                    if (frameData != null) {
+                        frameMap.put(frameIndex, frameData);
+                        // Set frame dimensions from first frame
+                        if (frameWidth == 0) {
+                            frameWidth = frameData.width;
+                            frameHeight = frameData.height;
+                        }
+                    }
+                } catch (NumberFormatException e) {
+                    LOGGER.error("Invalid frame name: " + frameName);
+                }
+            } else if (name.startsWith("intro_frames/") && name.endsWith(".png")) {
+                String frameName = name.substring("intro_frames/".length(), name.length() - 4);
+                try {
+                    int frameIndex = Integer.parseInt(frameName);
+                    FrameData frameData = loadFrameFromZipEntry(entry, frameIndex);
+                    if (frameData != null) {
+                        introFrames.add(frameData);
+                    }
+                } catch (NumberFormatException e) {
+                    LOGGER.error("Invalid intro frame name: " + frameName);
+                }
+            }
+        }
+        
+        // Add frames in order
+        frames.addAll(frameMap.values());
+        
+        // Sort intro frames by index
+        introFrames.sort(Comparator.comparingInt(f -> f.frameIndex));
+    }
+    
+    /**
+     * Loads a single frame from a ZIP entry and decodes it directly to a ByteBuffer
+     * using STBImage (same library Minecraft uses for texture loading)
      */
     @Nullable
-    public InputStream getBackgroundImage() throws IOException {
-        Objects.requireNonNull(this.zipFile);
-        File backgroundImage = new File(this.decodingTempDir, "/background.png");
-        if (!backgroundImage.isFile()) return null;
-        try {
-            return org.apache.commons.io.FileUtils.openInputStream(backgroundImage);
-        } catch (Exception ex) {
-            throw new IOException(ex);
+    protected FrameData loadFrameFromZipEntry(ZipArchiveEntry entry, int frameIndex) throws IOException {
+        try (InputStream entryStream = zipFile.getInputStream(entry)) {
+            byte[] pngData = entryStream.readAllBytes();
+            
+            // Use STBImage to decode PNG directly to RGBA ByteBuffer
+            ByteBuffer pngBuffer = MemoryUtil.memAlloc(pngData.length);
+            pngBuffer.put(pngData);
+            pngBuffer.flip();
+            
+            try (MemoryStack stack = MemoryStack.stackPush()) {
+                IntBuffer widthBuf = stack.mallocInt(1);
+                IntBuffer heightBuf = stack.mallocInt(1);
+                IntBuffer channelsBuf = stack.mallocInt(1);
+                
+                // Decode to RGBA format (4 channels) - this returns a direct ByteBuffer
+                // This is the same format OpenGL expects with GL_RGBA
+                ByteBuffer pixelData = STBImage.stbi_load_from_memory(
+                    pngBuffer, 
+                    widthBuf, 
+                    heightBuf, 
+                    channelsBuf, 
+                    4  // Force RGBA
+                );
+                
+                if (pixelData == null) {
+                    LOGGER.error("Failed to decode frame: " + STBImage.stbi_failure_reason());
+                    return null;
+                }
+                
+                // Note: pixelData is now a direct ByteBuffer allocated by STBImage
+                // It must be freed with STBImage.stbi_image_free() when done
+                
+                return new FrameData(
+                    pixelData,
+                    widthBuf.get(0),
+                    heightBuf.get(0),
+                    frameIndex
+                );
+            } finally {
+                MemoryUtil.memFree(pngBuffer);
+            }
         }
     }
-
-    protected <T extends AutoCloseable> T putCloseable(@NotNull T closeable) {
-        this.closeables.add(closeable);
-        return closeable;
+    
+    /**
+     * Gets a frame's pixel data as a direct ByteBuffer ready for OpenGL upload.
+     * This can be uploaded directly with glTexImage2D or glTexSubImage2D.
+     * 
+     * Format: RGBA, 8 bits per channel
+     * The ByteBuffer is direct (off-heap) and should NOT be modified.
+     * 
+     * IMPORTANT: The returned ByteBuffer is still owned by this decoder.
+     * If you need to keep it after the decoder is closed, use takeFramePixelData() instead.
+     */
+    @Nullable
+    public ByteBuffer getFramePixelData(int index) {
+        if (index < 0 || index >= frames.size()) return null;
+        return frames.get(index).pixelData;
     }
-
+    
+    /**
+     * Gets an intro frame's pixel data as a direct ByteBuffer.
+     * 
+     * IMPORTANT: The returned ByteBuffer is still owned by this decoder.
+     * If you need to keep it after the decoder is closed, use takeIntroFramePixelData() instead.
+     */
+    @Nullable
+    public ByteBuffer getIntroFramePixelData(int index) {
+        if (index < 0 || index >= introFrames.size()) return null;
+        return introFrames.get(index).pixelData;
+    }
+    
+    /**
+     * Takes ownership of a frame's pixel data. After calling this method,
+     * the decoder will no longer free this ByteBuffer when closed.
+     * The caller is responsible for freeing it with STBImage.stbi_image_free().
+     */
+    @Nullable
+    public ByteBuffer takeFramePixelData(int index) {
+        if (index < 0 || index >= frames.size()) return null;
+        FrameData frame = frames.get(index);
+        ByteBuffer data = frame.pixelData;
+        if (data == null) {
+            LOGGER.warn("[FANCYMENU] Frame {} already had ownership transferred or was null", index);
+            return null;
+        }
+        frame.pixelData = null; // Remove reference so it won't be freed
+        return data;
+    }
+    
+    /**
+     * Takes ownership of an intro frame's pixel data. After calling this method,
+     * the decoder will no longer free this ByteBuffer when closed.
+     * The caller is responsible for freeing it with STBImage.stbi_image_free().
+     */
+    @Nullable
+    public ByteBuffer takeIntroFramePixelData(int index) {
+        if (index < 0 || index >= introFrames.size()) return null;
+        FrameData frame = introFrames.get(index);
+        ByteBuffer data = frame.pixelData;
+        if (data == null) {
+            LOGGER.warn("[FANCYMENU] Intro frame {} already had ownership transferred or was null", index);
+            return null;
+        }
+        frame.pixelData = null; // Remove reference so it won't be freed
+        return data;
+    }
+    
+    /**
+     * Example of how to upload a frame to OpenGL (similar to MCEF)
+     */
+    public void uploadFrameToOpenGL(int frameIndex, int textureId) {
+        ByteBuffer pixelData = getFramePixelData(frameIndex);
+        if (pixelData == null) return;
+        
+        // This is how you'd upload it - exactly like MCEF does:
+        // GlStateManager._bindTexture(textureId);
+        // GL11.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, frameWidth, frameHeight, 0,
+        //                   GL_RGBA, GL_UNSIGNED_BYTE, pixelData);
+    }
+    
+    protected void readMetadata() throws IOException {
+        Objects.requireNonNull(this.zipFile);
+        ZipArchiveEntry metadataEntry = zipFile.getEntry("metadata.json");
+        if (metadataEntry == null) {
+            throw new FileNotFoundException("No metadata.json found in FMA file!");
+        }
+        
+        try (InputStream in = zipFile.getInputStream(metadataEntry);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
+            
+            StringBuilder json = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                json.append(line).append("\n");
+            }
+            
+            this.metadata = GSON.fromJson(json.toString(), FmaMetadata.class);
+        }
+    }
+    
+    public int getFrameCount() {
+        return frames.size();
+    }
+    
+    public int getIntroFrameCount() {
+        return introFrames.size();
+    }
+    
+    public boolean hasIntroFrames() {
+        return !introFrames.isEmpty();
+    }
+    
+    public int getFrameWidth() {
+        return frameWidth;
+    }
+    
+    public int getFrameHeight() {
+        return frameHeight;
+    }
+    
+    @Nullable
+    public FmaMetadata getMetadata() {
+        return metadata;
+    }
+    
     @Override
     public void close() throws IOException {
-        this.closeables.forEach(CloseableUtils::closeQuietly);
-        this.closeables.clear();
-        this.orderedFramePaths.clear();
-        this.orderedIntroFramePaths.clear();
-        org.apache.commons.io.FileUtils.deleteQuietly(this.decodingTempDir);
+        // Free all STBImage-allocated buffers
+        for (FrameData frame : frames) {
+            frame.free();
+        }
+        frames.clear();
+        
+        for (FrameData frame : introFrames) {
+            frame.free();
+        }
+        introFrames.clear();
+        
+        if (zipFile != null) {
+            zipFile.close();
+            zipFile = null;
+        }
+        
+        for (AutoCloseable closeable : closeables) {
+            try {
+                closeable.close();
+            } catch (Exception e) {
+                // Ignore
+            }
+        }
+        closeables.clear();
     }
-
+    
+    // FmaMetadata class remains the same
     public static class FmaMetadata {
-
         protected int loop_count;
         protected long frame_time;
         protected long frame_time_intro;
@@ -283,13 +378,13 @@ public class FmaDecoder implements Closeable {
 
         public long getFrameTimeForFrame(int frame, boolean isIntroFrame) {
             if (isIntroFrame) {
-                if ((custom_frame_times_intro != null) && custom_frame_times_intro.containsKey(frame)) return custom_frame_times_intro.get(frame);
+                if ((custom_frame_times_intro != null) && custom_frame_times_intro.containsKey(frame)) 
+                    return custom_frame_times_intro.get(frame);
             } else {
-                if ((custom_frame_times != null) && custom_frame_times.containsKey(frame)) return custom_frame_times.get(frame);
+                if ((custom_frame_times != null) && custom_frame_times.containsKey(frame)) 
+                    return custom_frame_times.get(frame);
             }
             return isIntroFrame ? this.getFrameTimeIntro() : this.getFrameTime();
         }
-
     }
-
 }

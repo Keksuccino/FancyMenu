@@ -9,23 +9,16 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * Optimized FMA texture that uses zero-copy OpenGL uploads like MCEF.
- * This class provides the same API as the original FmaTexture but uses
- * FmaDecoderOptimized and FmaTextureBackend for maximum performance.
- */
 public class FmaTexture implements ITexture, PlayableResource {
     private static final Logger LOGGER = LogManager.getLogger();
     
     // The optimized texture backend - using memory-efficient version
-    private final FmaTextureBackendEfficient optimizedTexture;
+    private final FmaTextureBackend backend;
     
     // Compatibility fields from original FmaTexture
     private volatile int width = 10;
@@ -44,7 +37,7 @@ public class FmaTexture implements ITexture, PlayableResource {
     private String sourceURL;
     
     public FmaTexture() {
-        this.optimizedTexture = new FmaTextureBackendEfficient();
+        this.backend = new FmaTextureBackend();
     }
     
     /**
@@ -140,7 +133,7 @@ public class FmaTexture implements ITexture, PlayableResource {
      * Load FMA data from file using the optimized decoder
      */
     private void loadFromFile(File file) throws IOException {
-        try (FmaDecoderOptimized decoder = new FmaDecoderOptimized()) {
+        try (FmaDecoder decoder = new FmaDecoder()) {
             decoder.read(file);
             processDecodedFma(decoder, file.getPath());
         }
@@ -150,7 +143,7 @@ public class FmaTexture implements ITexture, PlayableResource {
      * Load FMA data from stream using the optimized decoder
      */
     private void loadFromStream(InputStream in, String sourceName) throws IOException {
-        try (FmaDecoderOptimized decoder = new FmaDecoderOptimized()) {
+        try (FmaDecoder decoder = new FmaDecoder()) {
             decoder.read(in);
             processDecodedFma(decoder, sourceName);
         }
@@ -159,10 +152,10 @@ public class FmaTexture implements ITexture, PlayableResource {
     /**
      * Process the decoded FMA data and set up the texture backend
      */
-    private void processDecodedFma(FmaDecoderOptimized decoder, String sourceName) {
+    private void processDecodedFma(FmaDecoder decoder, String sourceName) {
         try {
             // Get metadata
-            FmaDecoderOptimized.FmaMetadata metadata = decoder.getMetadata();
+            FmaDecoder.FmaMetadata metadata = decoder.getMetadata();
             if (metadata == null) {
                 throw new IOException("No metadata found in FMA file");
             }
@@ -174,7 +167,7 @@ public class FmaTexture implements ITexture, PlayableResource {
             this.numPlays.set(metadata.getLoopCount());
             
             // Initialize the optimized texture with the dimensions
-            optimizedTexture.initialize(width, height);
+            backend.initialize(width, height);
             
             // Add intro frames if present - TAKE ownership of ByteBuffers
             if (decoder.hasIntroFrames()) {
@@ -184,7 +177,7 @@ public class FmaTexture implements ITexture, PlayableResource {
                     if (frameData != null) {
                         long delayMs = metadata.getFrameTimeForFrame(i, true);
                         // FmaTextureBackend now owns this ByteBuffer
-                        optimizedTexture.addFrameDirect(frameData, delayMs, true);
+                        backend.addFrameDirect(frameData, delayMs, true);
                     }
                 }
             }
@@ -196,7 +189,7 @@ public class FmaTexture implements ITexture, PlayableResource {
                 if (frameData != null) {
                     long delayMs = metadata.getFrameTimeForFrame(i, false);
                     // FmaTextureBackend now owns this ByteBuffer
-                    optimizedTexture.addFrameDirect(frameData, delayMs, false);
+                    backend.addFrameDirect(frameData, delayMs, false);
                 }
             }
             
@@ -215,20 +208,20 @@ public class FmaTexture implements ITexture, PlayableResource {
         if (closed.get() || !decoded.get()) return null;
         
         // Get the texture location from the backend
-        ResourceLocation location = optimizedTexture.getTextureLocation();
+        ResourceLocation location = backend.getTextureLocation();
         
         // If the texture isn't ready yet, return null
         if (location == null) {
             // Start playing so it initializes on next frame
-            if (!optimizedTexture.isPlaying()) {
-                optimizedTexture.play();
+            if (!backend.isPlaying()) {
+                backend.play();
             }
             return null;
         }
         
         // Start playing if not already
-        if (!optimizedTexture.isPlaying()) {
-            optimizedTexture.play();
+        if (!backend.isPlaying()) {
+            backend.play();
         }
         
         return location;
@@ -273,27 +266,27 @@ public class FmaTexture implements ITexture, PlayableResource {
     
     @Override
     public void play() {
-        optimizedTexture.play();
+        backend.play();
     }
     
     @Override
     public boolean isPlaying() {
-        return optimizedTexture.isPlaying();
+        return backend.isPlaying();
     }
     
     @Override
     public void pause() {
-        optimizedTexture.pause();
+        backend.pause();
     }
     
     @Override
     public boolean isPaused() {
-        return !optimizedTexture.isPlaying();
+        return !backend.isPlaying();
     }
     
     @Override
     public void stop() {
-        optimizedTexture.stop();
+        backend.stop();
         cycles.set(0);
     }
     
@@ -303,7 +296,7 @@ public class FmaTexture implements ITexture, PlayableResource {
      */
     public void reset() {
         // Reset the optimized texture
-        optimizedTexture.reset();
+        backend.reset();
         cycles.set(0);
         
         // The animation stays in the "ready to play" state
@@ -318,7 +311,7 @@ public class FmaTexture implements ITexture, PlayableResource {
     @Override
     public void close() {
         if (closed.getAndSet(true)) return;
-        optimizedTexture.close();
+        backend.close();
         sourceLocation = null;
         sourceFile = null;
         sourceURL = null;
