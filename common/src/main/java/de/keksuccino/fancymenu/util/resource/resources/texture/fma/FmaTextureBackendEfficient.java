@@ -159,27 +159,20 @@ public class FmaTextureBackendEfficient extends AbstractTexture {
     }
     
     /**
-     * Add a frame from a ByteBuffer (takes ownership and will free it when no longer needed)
+     * Add a frame from a ByteBuffer (takes ownership and stores it directly)
+     * This avoids copying to heap memory, keeping the data off-heap.
      */
     public void addFrameDirect(ByteBuffer rgbaPixelData, long delayMs, boolean isIntro) {
-        // For efficiency, we could keep the first few frames decoded
-        // But for now, convert to byte array to save memory
+        // Store the ByteBuffer directly without copying to avoid heap usage
+        // The ByteBuffer is already off-heap from STBImage
         
-        // Copy the ByteBuffer data to a byte array
-        byte[] rawData = new byte[rgbaPixelData.remaining()];
-        rgbaPixelData.get(rawData);
-        rgbaPixelData.rewind(); // Reset position after reading
-        
-        CompressedFrame frame = new CompressedFrame(rawData, delayMs, true); // Mark as raw RGBA
+        // Don't free it here - we'll keep it and free it when the frame is evicted or closed
+        CompressedFrame frame = new CompressedFrame(rgbaPixelData, delayMs);
         if (isIntro) {
             introFrames.add(frame);
         } else {
             frames.add(frame);
         }
-        
-        // Free the original ByteBuffer since we've taken ownership and copied the data
-        // This ByteBuffer was allocated by STBImage in FmaDecoderOptimized
-        STBImage.stbi_image_free(rgbaPixelData);
     }
 
     /**
@@ -215,9 +208,13 @@ public class FmaTextureBackendEfficient extends AbstractTexture {
         }
         
         // Create DecodedFrame with correct allocator flag
-        // If isRawRGBA, it was allocated with MemoryUtil, otherwise with STBImage
-        boolean isStbAllocated = !compressed.isRawRGBA;
-        DecodedFrame decodedFrame = new DecodedFrame(decoded, textureWidth, textureHeight, isStbAllocated);
+        // If it's a direct frame (ByteBuffer from decoder), we shouldn't free it
+        // If it was decoded from PNG or wrapped from byte array, we should free it
+        boolean shouldFree = !compressed.isDirect;
+        boolean isStbAllocated = !compressed.isRawRGBA || compressed.isDirect;
+        
+        DecodedFrame decodedFrame = new DecodedFrame(decoded, textureWidth, textureHeight, 
+            isStbAllocated, shouldFree);
         
         // Cache it (will automatically evict oldest if cache is full)
         frameCache.put(cacheKey, decodedFrame);
@@ -406,7 +403,9 @@ public class FmaTextureBackendEfficient extends AbstractTexture {
         frameCache.values().forEach(DecodedFrame::free);
         frameCache.clear();
         
-        // Clear compressed frames
+        // Clear compressed frames and free any direct ByteBuffers
+        frames.forEach(CompressedFrame::cleanup);
+        introFrames.forEach(CompressedFrame::cleanup);
         frames.clear();
         introFrames.clear();
 
@@ -437,25 +436,45 @@ public class FmaTextureBackendEfficient extends AbstractTexture {
 
     /**
      * Compressed frame data (PNG bytes or raw RGBA)
+     * Can store either byte array (heap) or ByteBuffer (off-heap) to save memory
      */
     private static class CompressedFrame {
-        final byte[] data;
+        final byte[] data;  // For PNG or manually added raw RGBA
+        final ByteBuffer directBuffer;  // For ByteBuffers from decoder (off-heap)
         final long delayMs;
         final boolean isRawRGBA;
+        final boolean isDirect;  // True if using directBuffer instead of data array
 
+        // Constructor for byte array data
         CompressedFrame(byte[] data, long delayMs) {
             this(data, delayMs, false);
         }
         
+        // Constructor for byte array data with raw RGBA flag
         CompressedFrame(byte[] data, long delayMs, boolean isRawRGBA) {
             this.data = data;
+            this.directBuffer = null;
             this.delayMs = delayMs;
             this.isRawRGBA = isRawRGBA;
+            this.isDirect = false;
+        }
+        
+        // Constructor for direct ByteBuffer (always raw RGBA)
+        CompressedFrame(ByteBuffer directBuffer, long delayMs) {
+            this.data = null;
+            this.directBuffer = directBuffer;
+            this.delayMs = delayMs;
+            this.isRawRGBA = true;
+            this.isDirect = true;
         }
 
         ByteBuffer decode(int expectedWidth, int expectedHeight) {
-            if (isRawRGBA) {
-                // Data is already RGBA, just wrap it
+            if (isDirect) {
+                // Already have a direct ByteBuffer, just return it
+                // Don't free it - it's owned by this CompressedFrame
+                return directBuffer;
+            } else if (isRawRGBA) {
+                // Data is already RGBA in byte array, wrap it in a ByteBuffer
                 ByteBuffer buffer = MemoryUtil.memAlloc(data.length);
                 buffer.put(data);
                 buffer.flip();
@@ -486,6 +505,13 @@ public class FmaTextureBackendEfficient extends AbstractTexture {
                 }
             }
         }
+        
+        void cleanup() {
+            // Free the direct ByteBuffer if we own one
+            if (isDirect && directBuffer != null) {
+                STBImage.stbi_image_free(directBuffer);
+            }
+        }
     }
 
     /**
@@ -496,16 +522,19 @@ public class FmaTextureBackendEfficient extends AbstractTexture {
         final int width;
         final int height;
         final boolean isStbAllocated; // Track which allocator was used
+        final boolean shouldFree; // Whether we should free this buffer
 
-        DecodedFrame(ByteBuffer pixelData, int width, int height, boolean isStbAllocated) {
+        DecodedFrame(ByteBuffer pixelData, int width, int height, boolean isStbAllocated, boolean shouldFree) {
             this.pixelData = pixelData;
             this.width = width;
             this.height = height;
             this.isStbAllocated = isStbAllocated;
+            this.shouldFree = shouldFree;
         }
 
         void free() {
-            if (pixelData != null && pixelData.isDirect()) {
+            // Only free if we should (not owned by a CompressedFrame)
+            if (pixelData != null && pixelData.isDirect() && shouldFree) {
                 if (isStbAllocated) {
                     // Free with STBImage if it was allocated by STBImage
                     STBImage.stbi_image_free(pixelData);
