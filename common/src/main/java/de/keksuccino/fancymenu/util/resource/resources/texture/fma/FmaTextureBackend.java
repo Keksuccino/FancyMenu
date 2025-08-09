@@ -3,35 +3,37 @@ package de.keksuccino.fancymenu.util.resource.resources.texture.fma;
 import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.opengl.GlTexture;
 import com.mojang.blaze3d.opengl.GlTextureView;
-import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.TextureFormat;
-import de.keksuccino.fancymenu.util.ObjectUtils;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
+import org.lwjgl.stb.STBImage;
+import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL12.*;
+
 /**
- * Optimized FMA texture that uses a single OpenGL texture and updates it in-place
- * for each frame using direct OpenGL calls, exactly like MCEF handles browser textures.
- * This provides zero-copy updates and minimal overhead.
+ * Optimized FMA texture backend that uses zero-copy OpenGL uploads like MCEF.
+ * This stores frames as direct ByteBuffers and uploads them directly to OpenGL
+ * without any intermediate conversions.
  */
-public class OptimizedFmaTexture extends AbstractTexture {
+public class FmaTextureBackend extends AbstractTexture {
+
     private static final Logger LOGGER = LogManager.getLogger();
 
     // The OpenGL texture ID that we update directly
@@ -42,13 +44,12 @@ public class OptimizedFmaTexture extends AbstractTexture {
     // The single ResourceLocation that always points to our texture
     private final ResourceLocation textureLocation;
 
-    // Frame data storage - we only decode frames as needed
+    // Frame data storage - direct ByteBuffers ready for OpenGL
     private final ConcurrentLinkedQueue<FrameData> frames = new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<FrameData> introFrames = new ConcurrentLinkedQueue<>();
 
     // Current frame being displayed
     private final AtomicReference<FrameData> currentFrame = new AtomicReference<>();
-    private final AtomicReference<NativeImage> currentNativeImage = new AtomicReference<>();
 
     // Animation state
     private final AtomicBoolean playing = new AtomicBoolean(false);
@@ -61,7 +62,7 @@ public class OptimizedFmaTexture extends AbstractTexture {
     private final AtomicBoolean glInitialized = new AtomicBoolean(false);
     private final AtomicBoolean closed = new AtomicBoolean(false);
 
-    public OptimizedFmaTexture() {
+    public FmaTextureBackend() {
         // Generate a unique ResourceLocation for this animated texture
         String uniqueId = UUID.randomUUID().toString().replace("-", "");
         this.textureLocation = ResourceLocation.fromNamespaceAndPath("fancymenu", "optimized_fma_" + uniqueId);
@@ -104,21 +105,21 @@ public class OptimizedFmaTexture extends AbstractTexture {
         GlStateManager._bindTexture(glTextureId);
 
         // Set texture parameters
-        GlStateManager._texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-        GlStateManager._texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-        GlStateManager._texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
-        GlStateManager._texParameter(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
+        GlStateManager._texParameter(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        GlStateManager._texParameter(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        GlStateManager._texParameter(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        GlStateManager._texParameter(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
         // Allocate texture memory with empty data
         GlStateManager._texImage2D(
-            GL11.GL_TEXTURE_2D,
+            GL_TEXTURE_2D,
             0,  // mipmap level
-            GL11.GL_RGBA,  // internal format - standard RGBA
+            GL_RGBA,  // internal format
             textureWidth,
             textureHeight,
             0,  // border
-            GL11.GL_RGBA,  // format for initial data
-            GL11.GL_UNSIGNED_BYTE,
+            GL_RGBA,  // format
+            GL_UNSIGNED_BYTE,
             null  // no initial data
         );
 
@@ -132,14 +133,96 @@ public class OptimizedFmaTexture extends AbstractTexture {
     }
 
     /**
-     * Add a frame to the animation
+     * Add a frame to the animation using PNG bytes that will be decoded using STBImage.
      */
-    public void addFrame(byte[] imageData, long delayMs, boolean isIntro) {
-        FrameData frame = new FrameData(imageData, delayMs);
+    public void addFrame(byte[] pngData, long delayMs, boolean isIntro) {
+        // Decode the PNG data immediately using STBImage to get a direct ByteBuffer
+        ByteBuffer pixelData = decodePngToDirectBuffer(pngData);
+        if (pixelData != null) {
+            FrameData frame = new FrameData(pixelData, textureWidth, textureHeight, delayMs);
+            if (isIntro) {
+                introFrames.offer(frame);
+            } else {
+                frames.offer(frame);
+            }
+        }
+    }
+    
+    /**
+     * Add a frame to the animation using a direct ByteBuffer already in RGBA format.
+     * This is the most efficient method as it avoids any decoding.
+     * The ByteBuffer should be allocated with STBImage.stbi_load_from_memory() to ensure
+     * it can be freed with STBImage.stbi_image_free().
+     * 
+     * IMPORTANT: This method takes ownership of the ByteBuffer. It will be freed
+     * when this FmaTextureBackend is closed.
+     */
+    public void addFrameDirect(ByteBuffer rgbaPixelData, long delayMs, boolean isIntro) {
+        if (rgbaPixelData == null) {
+            LOGGER.warn("[FANCYMENU] Attempted to add null frame data");
+            return;
+        }
+        
+        // Validate the buffer
+        if (!rgbaPixelData.isDirect()) {
+            LOGGER.error("[FANCYMENU] Frame data must be a direct ByteBuffer!");
+            return;
+        }
+        
+        int expectedSize = textureWidth * textureHeight * 4; // RGBA = 4 bytes per pixel
+        if (rgbaPixelData.remaining() < expectedSize) {
+            LOGGER.error("[FANCYMENU] Frame data size mismatch: expected at least {} bytes, got {}", 
+                expectedSize, rgbaPixelData.remaining());
+            return;
+        }
+        
+        FrameData frame = new FrameData(rgbaPixelData, textureWidth, textureHeight, delayMs);
         if (isIntro) {
             introFrames.offer(frame);
         } else {
             frames.offer(frame);
+        }
+    }
+
+    /**
+     * Decode PNG data directly to a ByteBuffer using STBImage.
+     * This returns a direct ByteBuffer in RGBA format ready for OpenGL upload.
+     */
+    private ByteBuffer decodePngToDirectBuffer(byte[] pngData) {
+        // Allocate a direct ByteBuffer for the PNG data
+        ByteBuffer pngBuffer = MemoryUtil.memAlloc(pngData.length);
+        pngBuffer.put(pngData);
+        pngBuffer.flip();
+        
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            IntBuffer widthBuf = stack.mallocInt(1);
+            IntBuffer heightBuf = stack.mallocInt(1);
+            IntBuffer channelsBuf = stack.mallocInt(1);
+            
+            // Decode to RGBA format (4 channels) - this returns a direct ByteBuffer
+            // This is exactly what MCEF does with browser frames
+            ByteBuffer pixelData = STBImage.stbi_load_from_memory(
+                pngBuffer, 
+                widthBuf, 
+                heightBuf, 
+                channelsBuf, 
+                4  // Force RGBA
+            );
+            
+            if (pixelData == null) {
+                LOGGER.error("[FANCYMENU] Failed to decode frame: " + STBImage.stbi_failure_reason());
+                return null;
+            }
+            
+            // Verify dimensions match
+            if (widthBuf.get(0) != textureWidth || heightBuf.get(0) != textureHeight) {
+                LOGGER.warn("[FANCYMENU] Frame dimensions mismatch: expected {}x{}, got {}x{}", 
+                    textureWidth, textureHeight, widthBuf.get(0), heightBuf.get(0));
+            }
+            
+            return pixelData;
+        } finally {
+            MemoryUtil.memFree(pngBuffer);
         }
     }
 
@@ -165,7 +248,7 @@ public class OptimizedFmaTexture extends AbstractTexture {
             lastFrameTime = currentTime;
         }
 
-        // Update the GPU texture if we have a new frame
+        // Upload the GPU texture if we have a new frame
         FrameData frameToRender = currentFrame.get();
         if (frameToRender != null && frameToRender.needsUpload) {
             uploadFrameToGPU(frameToRender);
@@ -224,10 +307,16 @@ public class OptimizedFmaTexture extends AbstractTexture {
     }
 
     /**
-     * Upload frame data to the GPU texture using direct OpenGL calls
+     * Upload frame data to the GPU texture using direct OpenGL calls.
+     * This is the zero-copy upload path, exactly like MCEF does it.
      */
     private void uploadFrameToGPU(FrameData frame) {
-        if (glTextureId < 0 || frame.imageData == null) return;
+        if (glTextureId < 0 || frame == null || frame.pixelData == null) {
+            if (frame != null && frame.pixelData == null) {
+                LOGGER.error("[FANCYMENU] Frame has null pixelData - may have been freed already!");
+            }
+            return;
+        }
 
         // Must be on render thread
         if (!RenderSystem.isOnRenderThread()) {
@@ -236,91 +325,30 @@ public class OptimizedFmaTexture extends AbstractTexture {
         }
 
         try {
-            // Decode the frame data into a NativeImage if needed
-            NativeImage oldImage = currentNativeImage.get();
-            NativeImage newImage = frame.getNativeImage();
-
-            if (newImage != null) {
-                // Bind our texture
-                GlStateManager._bindTexture(glTextureId);
-
-                // Set pixel unpacking parameters
-                GlStateManager._pixelStore(GL11.GL_UNPACK_ROW_LENGTH, 0);
-                GlStateManager._pixelStore(GL11.GL_UNPACK_SKIP_PIXELS, 0);
-                GlStateManager._pixelStore(GL11.GL_UNPACK_SKIP_ROWS, 0);
-                GlStateManager._pixelStore(GL11.GL_UNPACK_ALIGNMENT, 4);
-
-                // Debug: Let's thoroughly check the pixel data
-                if (newImage.getWidth() > 0 && newImage.getHeight() > 0) {
-                    // Sample multiple pixels to understand the format
-                    int pixel = newImage.getPixel(0, 0); // Returns ARGB
-                    int a = (pixel >> 24) & 0xFF;
-                    int r = (pixel >> 16) & 0xFF;
-                    int g = (pixel >> 8) & 0xFF;
-                    int b = pixel & 0xFF;
-
-                    // Also check the raw memory
-                    int abgr = ObjectUtils.build(() -> {
-                        try {
-                            Method m = NativeImage.class.getDeclaredMethod("getPixelABGR", int.class, int.class);
-                            m.setAccessible(true);
-                            return (int) m.invoke(newImage, 0, 0);
-                        } catch (Exception ex) {
-                            ex.printStackTrace();
-                        }
-                        return -1;
-                    });
-
-                    // Get the actual bytes from memory
-                    long ptr = newImage.getPointer();
-                    byte b0 = MemoryUtil.memGetByte(ptr + 0);
-                    byte b1 = MemoryUtil.memGetByte(ptr + 1);
-                    byte b2 = MemoryUtil.memGetByte(ptr + 2);
-                    byte b3 = MemoryUtil.memGetByte(ptr + 3);
-
-                    LOGGER.info("[FANCYMENU] Pixel analysis:");
-                    LOGGER.info("  - getPixel() ARGB: A={}, R={}, G={}, B={}", a, r, g, b);
-                    LOGGER.info("  - getPixelABGR() raw: 0x{}", Integer.toHexString(abgr));
-                    LOGGER.info("  - Memory bytes [0-3]: [{}, {}, {}, {}]",
-                        Byte.toUnsignedInt(b0), Byte.toUnsignedInt(b1),
-                        Byte.toUnsignedInt(b2), Byte.toUnsignedInt(b3));
-                    LOGGER.info("  - Expected: If R={}, G={}, B={}, then bytes should be [{}, {}, {}, {}]",
-                        r, g, b, r, g, b, a);
-                }
-
-                // ABSOLUTE DIRECT UPLOAD - No modifications at all!
-                // NativeImage memory layout on little-endian (x86/x64):
-                // ABGR integer 0xAABBGGRR is stored as bytes [RR, GG, BB, AA]
-                // So byte order in memory is R,G,B,A
-
-                // The simplest possible upload - GL_RGBA with GL_UNSIGNED_BYTE
-                GlStateManager._texSubImage2D(
-                    GL11.GL_TEXTURE_2D,
-                    0,  // mipmap level
-                    0,  // x offset
-                    0,  // y offset
-                    newImage.getWidth(),
-                    newImage.getHeight(),
-                    GL11.GL_RGBA,  // OpenGL expects R,G,B,A byte order
-                    GL11.GL_UNSIGNED_BYTE,  // Read as individual bytes
-                    newImage.getPointer()  // Direct pointer to NativeImage data
-                );
-
-                LOGGER.info("[FANCYMENU] Using direct GL_RGBA upload for frame");
-
-                // If this still has wrong colors, the issue is somewhere else in the pipeline
-
-                LOGGER.info("[FANCYMENU] Direct upload to texture {} ({}x{})", glTextureId, newImage.getWidth(), newImage.getHeight());
-
-                currentNativeImage.set(newImage);
-
-                // Clean up old image if different
-                if (oldImage != null && oldImage != newImage) {
-                    oldImage.close();
-                }
-            } else {
-                LOGGER.warn("[FANCYMENU] Frame getNativeImage() returned null");
-            }
+            // Bind our texture
+            GlStateManager._bindTexture(glTextureId);
+            
+            // Set pixel unpacking parameters
+            GlStateManager._pixelStore(GL_UNPACK_ROW_LENGTH, frame.width);
+            GlStateManager._pixelStore(GL_UNPACK_SKIP_PIXELS, 0);
+            GlStateManager._pixelStore(GL_UNPACK_SKIP_ROWS, 0);
+            
+            // Zero-copy upload directly from the ByteBuffer to OpenGL
+            // The ByteBuffer is already in RGBA format from STBImage
+            glTexImage2D(
+                GL_TEXTURE_2D, 
+                0,              // mipmap level
+                GL_RGBA,        // internal format
+                frame.width,    // width
+                frame.height,   // height
+                0,              // border (must be 0)
+                GL_RGBA,        // format of pixel data
+                GL_UNSIGNED_BYTE, // data type
+                frame.pixelData   // the actual pixel data - direct ByteBuffer
+            );
+            
+            // Note: For better performance after the first frame, we could use glTexSubImage2D
+            // but since we're replacing the entire texture anyway, glTexImage2D is fine
         } catch (Exception e) {
             LOGGER.error("[FANCYMENU] Failed to upload frame to GPU", e);
         }
@@ -456,13 +484,7 @@ public class OptimizedFmaTexture extends AbstractTexture {
             glTextureId = -1;
         }
 
-        // Clean up current native image
-        NativeImage img = currentNativeImage.get();
-        if (img != null) {
-            img.close();
-        }
-
-        // Clean up frame data
+        // Clean up frame data - free STBImage-allocated buffers
         for (FrameData frame : frames) {
             frame.cleanup();
         }
@@ -489,17 +511,15 @@ public class OptimizedFmaTexture extends AbstractTexture {
     private static class DirectFmaTexture extends AbstractTexture {
 
         DirectFmaTexture(int glId, int width, int height) {
-            // IMPORTANT: Create and set the texture field in AbstractTexture
-            // This is what GuiGraphics.innerBlit() looks for
+            // Create and set the texture field in AbstractTexture
             DirectGlTexture glTexture = new DirectGlTexture(glId, width, height);
             this.texture = glTexture;
-            // Fix: Use (0, 1) for baseMipLevel=0, mipLevels=1
             this.textureView = new DirectGlTextureView(glTexture, 0, 1);
         }
 
         @Override
         public void close() {
-            // Don't delete the texture - OptimizedFmaTexture manages it
+            // Don't delete the texture - FmaTextureBackend manages it
             this.texture = null;
             this.textureView = null;
         }
@@ -511,8 +531,6 @@ public class OptimizedFmaTexture extends AbstractTexture {
         private static class DirectGlTexture extends GlTexture {
 
             protected DirectGlTexture(int textureId, int width, int height) {
-                // GlTexture constructor parameters in 1.21.7:
-                // int usage, String label, TextureFormat format, int width, int height, int depthOrLayers, int mipLevels, int glId
                 super(
                     GpuTexture.USAGE_TEXTURE_BINDING,  // usage flags
                     "FMA Direct Texture",               // label
@@ -535,57 +553,33 @@ public class OptimizedFmaTexture extends AbstractTexture {
         }
 
         private static class DirectGlTextureView extends GlTextureView {
-
-            protected DirectGlTextureView(GlTexture $$0, int $$1, int $$2) {
-                super($$0, $$1, $$2);
+            protected DirectGlTextureView(GlTexture texture, int baseMipLevel, int mipLevels) {
+                super(texture, baseMipLevel, mipLevels);
             }
-
         }
-
     }
 
     /**
-     * Frame data holder - stores compressed image data until needed
+     * Frame data holder - stores direct ByteBuffer ready for OpenGL upload
      */
     private static class FrameData {
-        final byte[] imageData;
+        final ByteBuffer pixelData;  // Direct ByteBuffer in RGBA format from STBImage
+        final int width;
+        final int height;
         final long delayMs;
         boolean needsUpload = true;
-        private NativeImage cachedNativeImage;
 
-        FrameData(byte[] imageData, long delayMs) {
-            this.imageData = imageData;
+        FrameData(ByteBuffer pixelData, int width, int height, long delayMs) {
+            this.pixelData = pixelData;
+            this.width = width;
+            this.height = height;
             this.delayMs = delayMs;
-        }
-
-        NativeImage getNativeImage() {
-            if (cachedNativeImage == null && imageData != null) {
-                try {
-                    // Read the PNG data into a NativeImage
-                    // This uses STBImage internally which should give us proper RGBA data
-                    cachedNativeImage = NativeImage.read(imageData);
-
-                    if (cachedNativeImage != null && cachedNativeImage.getWidth() > 0 && cachedNativeImage.getHeight() > 0) {
-                        // Debug: Check pixel format
-                        int pixel = cachedNativeImage.getPixel(0, 0); // Returns ARGB
-                        int a = (pixel >> 24) & 0xFF;
-                        int r = (pixel >> 16) & 0xFF;
-                        int g = (pixel >> 8) & 0xFF;
-                        int b = pixel & 0xFF;
-                        LOGGER.debug("[FANCYMENU] Frame decoded: {}x{}, sample pixel ARGB: A={}, R={}, G={}, B={}",
-                            cachedNativeImage.getWidth(), cachedNativeImage.getHeight(), a, r, g, b);
-                    }
-                } catch (Exception e) {
-                    LOGGER.error("[FANCYMENU] Failed to decode frame data", e);
-                }
-            }
-            return cachedNativeImage;
         }
         
         void cleanup() {
-            if (cachedNativeImage != null) {
-                cachedNativeImage.close();
-                cachedNativeImage = null;
+            if (pixelData != null) {
+                // Free the STBImage-allocated buffer
+                STBImage.stbi_image_free(pixelData);
             }
         }
     }
