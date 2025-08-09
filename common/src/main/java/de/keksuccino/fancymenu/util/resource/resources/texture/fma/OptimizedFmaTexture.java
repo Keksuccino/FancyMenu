@@ -7,6 +7,7 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.TextureFormat;
+import de.keksuccino.fancymenu.util.ObjectUtils;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
@@ -15,7 +16,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
+import org.lwjgl.system.MemoryUtil;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -109,11 +113,11 @@ public class OptimizedFmaTexture extends AbstractTexture {
         GlStateManager._texImage2D(
             GL11.GL_TEXTURE_2D,
             0,  // mipmap level
-            GL11.GL_RGBA,  // internal format
+            GL11.GL_RGBA,  // internal format - standard RGBA
             textureWidth,
             textureHeight,
             0,  // border
-            GL11.GL_RGBA,
+            GL11.GL_RGBA,  // format for initial data
             GL11.GL_UNSIGNED_BYTE,
             null  // no initial data
         );
@@ -246,8 +250,50 @@ public class OptimizedFmaTexture extends AbstractTexture {
                 GlStateManager._pixelStore(GL11.GL_UNPACK_SKIP_ROWS, 0);
                 GlStateManager._pixelStore(GL11.GL_UNPACK_ALIGNMENT, 4);
 
-                // Upload the texture data
-                // Try BGRA format like MCEF uses
+                // Debug: Let's thoroughly check the pixel data
+                if (newImage.getWidth() > 0 && newImage.getHeight() > 0) {
+                    // Sample multiple pixels to understand the format
+                    int pixel = newImage.getPixel(0, 0); // Returns ARGB
+                    int a = (pixel >> 24) & 0xFF;
+                    int r = (pixel >> 16) & 0xFF;
+                    int g = (pixel >> 8) & 0xFF;
+                    int b = pixel & 0xFF;
+
+                    // Also check the raw memory
+                    int abgr = ObjectUtils.build(() -> {
+                        try {
+                            Method m = NativeImage.class.getDeclaredMethod("getPixelABGR", int.class, int.class);
+                            m.setAccessible(true);
+                            return (int) m.invoke(newImage, 0, 0);
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                        return -1;
+                    });
+
+                    // Get the actual bytes from memory
+                    long ptr = newImage.getPointer();
+                    byte b0 = MemoryUtil.memGetByte(ptr + 0);
+                    byte b1 = MemoryUtil.memGetByte(ptr + 1);
+                    byte b2 = MemoryUtil.memGetByte(ptr + 2);
+                    byte b3 = MemoryUtil.memGetByte(ptr + 3);
+
+                    LOGGER.info("[FANCYMENU] Pixel analysis:");
+                    LOGGER.info("  - getPixel() ARGB: A={}, R={}, G={}, B={}", a, r, g, b);
+                    LOGGER.info("  - getPixelABGR() raw: 0x{}", Integer.toHexString(abgr));
+                    LOGGER.info("  - Memory bytes [0-3]: [{}, {}, {}, {}]",
+                        Byte.toUnsignedInt(b0), Byte.toUnsignedInt(b1),
+                        Byte.toUnsignedInt(b2), Byte.toUnsignedInt(b3));
+                    LOGGER.info("  - Expected: If R={}, G={}, B={}, then bytes should be [{}, {}, {}, {}]",
+                        r, g, b, r, g, b, a);
+                }
+
+                // ABSOLUTE DIRECT UPLOAD - No modifications at all!
+                // NativeImage memory layout on little-endian (x86/x64):
+                // ABGR integer 0xAABBGGRR is stored as bytes [RR, GG, BB, AA]
+                // So byte order in memory is R,G,B,A
+
+                // The simplest possible upload - GL_RGBA with GL_UNSIGNED_BYTE
                 GlStateManager._texSubImage2D(
                     GL11.GL_TEXTURE_2D,
                     0,  // mipmap level
@@ -255,12 +301,16 @@ public class OptimizedFmaTexture extends AbstractTexture {
                     0,  // y offset
                     newImage.getWidth(),
                     newImage.getHeight(),
-                    0x80E1,  // GL_BGRA = 0x80E1 (from GL12)
-                    GL11.GL_UNSIGNED_BYTE,  // type
-                    newImage.getPointer()  // direct pointer to pixel data
+                    GL11.GL_RGBA,  // OpenGL expects R,G,B,A byte order
+                    GL11.GL_UNSIGNED_BYTE,  // Read as individual bytes
+                    newImage.getPointer()  // Direct pointer to NativeImage data
                 );
 
-                LOGGER.debug("[FANCYMENU] Uploaded frame to texture {} ({}x{})", glTextureId, newImage.getWidth(), newImage.getHeight());
+                LOGGER.info("[FANCYMENU] Using direct GL_RGBA upload for frame");
+
+                // If this still has wrong colors, the issue is somewhere else in the pipeline
+
+                LOGGER.info("[FANCYMENU] Direct upload to texture {} ({}x{})", glTextureId, newImage.getWidth(), newImage.getHeight());
 
                 currentNativeImage.set(newImage);
 
@@ -306,11 +356,11 @@ public class OptimizedFmaTexture extends AbstractTexture {
     public void play() {
         playing.set(true);
         lastFrameTime = System.currentTimeMillis();
-        
+
         // If no current frame is set, advance to the first frame immediately
         if (currentFrame.get() == null) {
             advanceFrame();
-            
+
             // Upload the first frame immediately
             FrameData firstFrame = currentFrame.get();
             if (firstFrame != null && RenderSystem.isOnRenderThread()) {
@@ -351,7 +401,7 @@ public class OptimizedFmaTexture extends AbstractTexture {
         if (firstFrame != null) {
             currentFrame.set(firstFrame);
             firstFrame.needsUpload = true;
-            
+
             // Upload the first frame immediately if on render thread
             if (RenderSystem.isOnRenderThread() && glTextureId >= 0) {
                 uploadFrameToGPU(firstFrame);
@@ -493,7 +543,7 @@ public class OptimizedFmaTexture extends AbstractTexture {
         }
 
     }
-    
+
     /**
      * Frame data holder - stores compressed image data until needed
      */
@@ -502,23 +552,28 @@ public class OptimizedFmaTexture extends AbstractTexture {
         final long delayMs;
         boolean needsUpload = true;
         private NativeImage cachedNativeImage;
-        
+
         FrameData(byte[] imageData, long delayMs) {
             this.imageData = imageData;
             this.delayMs = delayMs;
         }
-        
+
         NativeImage getNativeImage() {
             if (cachedNativeImage == null && imageData != null) {
                 try {
+                    // Read the PNG data into a NativeImage
+                    // This uses STBImage internally which should give us proper RGBA data
                     cachedNativeImage = NativeImage.read(imageData);
-                    
-                    // Debug: Check if the image has actual pixel data
+
                     if (cachedNativeImage != null && cachedNativeImage.getWidth() > 0 && cachedNativeImage.getHeight() > 0) {
-                        // Sample a few pixels to check if they're all black
-                        int samplePixel = cachedNativeImage.getPixel(0, 0);
-                        LOGGER.debug("[FANCYMENU] Frame decoded: {}x{}, sample pixel at (0,0): {}", 
-                            cachedNativeImage.getWidth(), cachedNativeImage.getHeight(), Integer.toHexString(samplePixel));
+                        // Debug: Check pixel format
+                        int pixel = cachedNativeImage.getPixel(0, 0); // Returns ARGB
+                        int a = (pixel >> 24) & 0xFF;
+                        int r = (pixel >> 16) & 0xFF;
+                        int g = (pixel >> 8) & 0xFF;
+                        int b = pixel & 0xFF;
+                        LOGGER.debug("[FANCYMENU] Frame decoded: {}x{}, sample pixel ARGB: A={}, R={}, G={}, B={}",
+                            cachedNativeImage.getWidth(), cachedNativeImage.getHeight(), a, r, g, b);
                     }
                 } catch (Exception e) {
                     LOGGER.error("[FANCYMENU] Failed to decode frame data", e);
