@@ -54,6 +54,9 @@ public class FancyMenu {
 		if (Services.PLATFORM.isOnClient()) {
 
 			FileTypes.registerAll();
+			
+			// Initialize FMA disk cache manager
+			de.keksuccino.fancymenu.util.resource.resources.texture.fma.FmaDiskCacheManager.getInstance().initialize();
 
 			if (MCEFUtil.isMCEFLoaded()) {
 				BrowserHandler.init();
