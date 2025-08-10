@@ -5,7 +5,10 @@ import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.Scoreboard;
 import org.jetbrains.annotations.NotNull;
@@ -24,19 +27,21 @@ public class ScoreboardObjectivesListPlaceholder extends Placeholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-        ClientLevel level = Minecraft.getInstance().level;
+
+        ClientPacketListener connection = Minecraft.getInstance().getConnection();
+        Scoreboard scoreboard = (connection != null) ? connection.scoreboard() : null;
         String separator = dps.values.get("separator");
         if (separator == null) separator = ", ";
         
-        if (level != null) {
-            Scoreboard scoreboard = level.getScoreboard();
+        if (scoreboard != null) {
             Collection<Objective> objectives = scoreboard.getObjectives();
-            
             return objectives.stream()
                     .map(Objective::getName)
                     .collect(Collectors.joining(separator));
         }
+
         return "";
+
     }
 
     @Override

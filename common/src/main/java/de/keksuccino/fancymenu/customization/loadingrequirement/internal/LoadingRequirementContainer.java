@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.loadingrequirement.internal;
 
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.action.ValuePlaceholderHolder;
 import de.keksuccino.fancymenu.util.Pair;
@@ -18,7 +19,6 @@ public class LoadingRequirementContainer implements ValuePlaceholderHolder {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final long COOLDOWN_CACHE_DURATION_MS = 150L;
     private static final Map<String, Pair<Long, Boolean>> COOLDOWN_CACHE = new HashMap<>();
 
     protected final List<LoadingRequirementGroup> groups = new ArrayList<>();
@@ -34,14 +34,26 @@ public class LoadingRequirementContainer implements ValuePlaceholderHolder {
     protected boolean forceRequirementsNotMet = false;
     protected final String cachingIdentifier = ScreenCustomization.generateUniqueIdentifier();
 
+    public static boolean isCachingRequirements() {
+        return FancyMenu.getOptions().requirementCachingDurationMs.getValue() > 0;
+    }
+
+    public static long getRequirementCachingDurationMs() {
+        return FancyMenu.getOptions().requirementCachingDurationMs.getValue();
+    }
+
     public boolean requirementsMet() {
         long now = System.currentTimeMillis();
-        // Use cache if last value update was less than 150ms ago for performance
-        if (COOLDOWN_CACHE.containsKey(this.cachingIdentifier) && ((COOLDOWN_CACHE.get(this.cachingIdentifier).getKey() + COOLDOWN_CACHE_DURATION_MS) > now)) {
-            return COOLDOWN_CACHE.get(this.cachingIdentifier).getValue();
+        if (isCachingRequirements()) {
+            // Use cache if last value update was less than 150ms ago for performance
+            if (COOLDOWN_CACHE.containsKey(this.cachingIdentifier) && ((COOLDOWN_CACHE.get(this.cachingIdentifier).getKey() + getRequirementCachingDurationMs()) > now)) {
+                return COOLDOWN_CACHE.get(this.cachingIdentifier).getValue();
+            }
         }
         boolean b = this._requirementsMet();
-        COOLDOWN_CACHE.put(this.cachingIdentifier, Pair.of(now, b));
+        if (isCachingRequirements()) {
+            COOLDOWN_CACHE.put(this.cachingIdentifier, Pair.of(now, b));
+        }
         return b;
     }
 

@@ -6,6 +6,7 @@
   ],
   "client": [
     "client.MixinForgeHooksClient",
+    "client.MixinForgeKeyboardHandler",
     "client.MixinForgeLoadingOverlay",
     "client.MixinForgeMouseHandler",
     "client.MixinForgeTitleScreen"
