@@ -13,7 +13,6 @@ import java.util.*;
 public class VariableHandler {
 
     protected static final File VARIABLES_FILE = new File(FancyMenu.MOD_DIR.getPath() + "/user_variables.db");
-
     protected static final Map<String, Variable> VARIABLES = new HashMap<>();
 
     public static void init() {

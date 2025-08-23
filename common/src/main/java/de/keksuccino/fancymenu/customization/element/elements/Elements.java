@@ -12,7 +12,7 @@ import de.keksuccino.fancymenu.customization.element.elements.image.ImageElement
 import de.keksuccino.fancymenu.customization.element.elements.inputfield.InputFieldElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.item.ItemElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.musiccontroller.MusicControllerElementBuilder;
-import de.keksuccino.fancymenu.customization.element.elements.playerentity.v2.PlayerEntityElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.playerentity.PlayerEntityElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.progressbar.ProgressBarElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.shape.ShapeElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.slideshow.SlideshowElementBuilder;

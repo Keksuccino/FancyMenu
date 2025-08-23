@@ -19,7 +19,6 @@ public class Options extends AbstractOptions {
     public final Option<Boolean> gameIntroAllowSkip = new Option<>(config, "allow_game_intro_skip", true, "loading");
     public final Option<Boolean> gameIntroFadeOut = new Option<>(config, "game_intro_fade_out", true, "loading");
     public final Option<String> gameIntroCustomSkipText = new Option<>(config, "custom_game_intro_skip_text", "", "loading");
-    public final Option<Boolean> preLoadAnimations = new Option<>(config, "preload_animations", true, "loading");
     public final Option<String> preLoadResources = new Option<>(config, "preload_resources", "", "loading");
 
     public final Option<Boolean> showCustomWindowIcon = new Option<>(config, "show_custom_window_icon", false, "window");
@@ -63,6 +62,9 @@ public class Options extends AbstractOptions {
     public final Option<Boolean> showWelcomeScreen = new Option<>(config, "show_welcome_screen", true, "tutorial");
 
     public final Option<Boolean> arrowKeysMovePreview = new Option<>(config, "arrow_keys_move_preview", false, "keyframe_editor");
+
+    public final Option<Long> placeholderCachingDurationMs = new Option<>(config, "placeholder_caching_duration_ms", 30L, "advanced");
+    public final Option<Long> requirementCachingDurationMs = new Option<>(config, "requirement_caching_duration_ms", 0L, "advanced");
 
     public Options() {
         this.config.syncConfig();

@@ -1,13 +1,19 @@
 package de.keksuccino.fancymenu;
 
 import de.keksuccino.fancymenu.commands.Commands;
+import de.keksuccino.fancymenu.networking.PacketHandler;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 
 public class FancyMenuFabricServerEvents {
 
     public static void registerAll() {
 
         registerServerCommands();
+
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            PacketHandler.sendHandshakeToClient(handler.getPlayer());
+        });
 
     }
 

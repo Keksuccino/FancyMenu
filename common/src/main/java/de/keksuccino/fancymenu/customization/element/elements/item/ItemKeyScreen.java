@@ -19,7 +19,7 @@ public class ItemKeyScreen extends StringBuilderScreen {
     protected TextInputCell itemKeyCell;
     protected EditBoxSuggestions itemKeySuggestions;
 
-    protected ItemKeyScreen(@NotNull String value, @NotNull Consumer<String> callback) {
+    public ItemKeyScreen(@NotNull String value, @NotNull Consumer<String> callback) {
         super(Component.translatable("fancymenu.elements.item.key"), callback);
         this.itemKey = value;
     }

@@ -99,23 +99,26 @@ public class ScreenWidgetDiscoverer {
 		if (widget instanceof AbstractWidget w) {
 			//Skip AbstractSelectionLists so they don't appear as customizable widget
 			if (widget instanceof AbstractSelectionList<?>) return;
-			String idRaw = w.getX() + "" + w.getY();
-			long id = 0;
-			if (MathUtils.isLong(idRaw)) {
-				id = getAvailableIdFromBaseId(Long.parseLong(idRaw), ids);
-			} else {
-				LOGGER.error("[FANCYMENU] Widget ID is not a Long!", new NumberFormatException("Failed to parse widget identifier to Long!"));
-			}
+			long id = generateAvailableIdFromBaseId(generateBaseId(w), ids);
 			ids.add(id);
 			widgetMetaList.add(new WidgetMeta(w, id, screen));
 		}
 	}
 
-	private static Long getAvailableIdFromBaseId(long baseId, @NotNull List<Long> ids) {
+	private static long generateBaseId(@NotNull AbstractWidget widget) {
+		String s = Math.abs(widget.getX()) + "" + Math.abs(widget.getY());
+		if (!MathUtils.isLong(s)) {
+			LOGGER.error("[FANCYMENU] Widget ID is not a Long!", new NumberFormatException("Failed to parse widget identifier to Long!"));
+			return 0L;
+		}
+		return Long.parseLong(s);
+	}
+
+	private static long generateAvailableIdFromBaseId(long baseId, @NotNull List<Long> ids) {
 		if (ids.contains(baseId)) {
 			String newId = baseId + "1";
 			if (MathUtils.isLong(newId)) {
-				return getAvailableIdFromBaseId(Long.parseLong(newId), ids);
+				return generateAvailableIdFromBaseId(Long.parseLong(newId), ids);
 			} else {
 				LOGGER.error("[FANCYMENU] Widget ID is not a Long!", new NumberFormatException("Failed to parse widget identifier to Long!"));
 			}
