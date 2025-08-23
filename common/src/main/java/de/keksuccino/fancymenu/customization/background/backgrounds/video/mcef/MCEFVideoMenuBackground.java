@@ -84,7 +84,7 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
 
     public MCEFVideoMenuBackground(MenuBackgroundBuilder<MCEFVideoMenuBackground> builder) {
         super(builder);
-        if (MCEFUtil.isMCEFLoaded()) this.videoManager = MCEFVideoManager.getInstance();
+        if (MCEFUtil.isMCEFLoaded() && MCEFUtil.MCEF_initialized) this.videoManager = MCEFVideoManager.getInstance();
     }
 
     @Override
@@ -92,7 +92,7 @@ public class MCEFVideoMenuBackground extends MenuBackground implements IVideoMen
 
         this.lastParallaxIntensity = SerializationUtils.deserializeNumber(Float.class, 0.02F, PlaceholderParser.replacePlaceholders(this.parallaxIntensityString));
 
-        if (!MCEFUtil.isMCEFLoaded()) {
+        if (!MCEFUtil.isMCEFLoaded() || !MCEFUtil.MCEF_initialized) {
             graphics.fill(0, 0, getScreenWidth(), getScreenHeight(), MISSING_MCEF_COLOR.getColorInt());
             graphics.drawCenteredString(Minecraft.getInstance().font, "§lMCEF IS NOT INSTALLED! PLEASE DOWNLOAD FROM CURSEFORGE!", getScreenWidth() / 2, getScreenHeight() / 2, -1);
             return;
