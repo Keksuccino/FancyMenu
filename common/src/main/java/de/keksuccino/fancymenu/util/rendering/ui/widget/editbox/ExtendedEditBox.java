@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenRenderUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.gui.Font;
@@ -18,11 +19,14 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.util.FormattedCharSequence;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
 
 @SuppressWarnings("unused")
 public class ExtendedEditBox extends EditBox implements UniqueWidget, NavigatableWidget {
@@ -54,6 +58,8 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     @Nullable
     protected ConsumingSupplier<ExtendedEditBox, Boolean> isVisibleSupplier = null;
     protected Component hint;
+    @NotNull
+    protected final List<FormattedCharSequence> tooltip = new ArrayList<>();
 
     public ExtendedEditBox(Font font, int x, int y, int width, int height, Component hint) {
         super(font, x, y, width, height, hint);
@@ -65,6 +71,15 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         super(font, x, y, width, height, editBox, hint);
         this.font = font;
         this.hint = hint;
+    }
+
+    public ExtendedEditBox setTooltip(@Nullable Component tooltip) {
+        if (tooltip == null) {
+            this.tooltip.clear();
+        } else {
+            this.tooltip.addAll(this.font.split(tooltip, 170));
+        }
+        return this;
     }
 
     public int getX() {
@@ -99,6 +114,12 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
         boolean bordered = access.getBorderedFancyMenu();
 
         if (this.isVisible()) {
+
+            if (!this.tooltip.isEmpty() && this.isHovered) {
+                ScreenRenderUtils.postPostRenderTask((graphics1, mouseX1, mouseY1, partial1) -> {
+                    graphics1.renderTooltip(this.font, this.tooltip, mouseX, mouseY);
+                });
+            }
 
             graphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, this.backgroundColor.getColorInt());
             if (bordered) {

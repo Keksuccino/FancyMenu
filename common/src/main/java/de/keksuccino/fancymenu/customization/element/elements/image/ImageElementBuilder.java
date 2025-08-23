@@ -38,6 +38,7 @@ public class ImageElementBuilder extends ElementBuilder<ImageElement, ImageEdito
         element.nineSlice = deserializeBoolean(element.nineSlice, serialized.getValue("nine_slice_texture"));
         element.nineSliceBorderX = deserializeNumber(Integer.class, element.nineSliceBorderX, serialized.getValue("nine_slice_texture_border_x"));
         element.nineSliceBorderY = deserializeNumber(Integer.class, element.nineSliceBorderY, serialized.getValue("nine_slice_texture_border_y"));
+        element.restartAnimatedOnMenuLoad = deserializeBoolean(element.restartAnimatedOnMenuLoad, serialized.getValue("restart_animated_on_menu_load"));
 
         String tint = serialized.getValue("image_tint");
         if (tint != null) element.imageTint = DrawableColor.of(tint);
@@ -57,6 +58,7 @@ public class ImageElementBuilder extends ElementBuilder<ImageElement, ImageEdito
         serializeTo.putProperty("nine_slice_texture_border_x", "" + element.nineSliceBorderX);
         serializeTo.putProperty("nine_slice_texture_border_y", "" + element.nineSliceBorderY);
         serializeTo.putProperty("image_tint", element.imageTint.getHex());
+        serializeTo.putProperty("restart_animated_on_menu_load", "" + element.restartAnimatedOnMenuLoad);
 
         return serializeTo;
 

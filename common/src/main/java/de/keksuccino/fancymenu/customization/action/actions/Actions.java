@@ -47,6 +47,7 @@ public class Actions {
     public static final PreviousTrackAction PREVIOUS_AUDIO_ELEMENT_TRACK = new PreviousTrackAction();
     public static final TogglePlayTrackAction TOGGLE_PLAY_AUDIO_ELEMENT_TRACK = new TogglePlayTrackAction();
     public static final BackToLastScreenAction BACK_TO_LAST_SCREEN = new BackToLastScreenAction();
+    public static final SendHttpRequestAction SEND_HTTP_REQUEST = new SendHttpRequestAction();
 
     public static void registerAll() {
 
@@ -75,6 +76,7 @@ public class Actions {
         ActionRegistry.register(PREVIOUS_AUDIO_ELEMENT_TRACK);
         ActionRegistry.register(TOGGLE_PLAY_AUDIO_ELEMENT_TRACK);
         ActionRegistry.register(BACK_TO_LAST_SCREEN);
+        ActionRegistry.register(SEND_HTTP_REQUEST);
 
     }
 

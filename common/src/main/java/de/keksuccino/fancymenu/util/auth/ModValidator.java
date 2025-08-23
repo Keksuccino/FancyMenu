@@ -5,9 +5,15 @@ import de.keksuccino.fancymenu.util.mod.UniversalModContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.*;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
+import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import java.awt.*;
 
 public class ModValidator {
@@ -70,7 +76,7 @@ public class ModValidator {
         if (current == null) return;
 
         //Do not render the error in non-Minecraft screens
-        if (!current.getClass().getName().startsWith("net.minecraft.")) return;
+        if (!isValidMinecraftScreen(current)) return;
 
         graphics.flush();
         graphics.pose().pushPose();
@@ -83,6 +89,21 @@ public class ModValidator {
 
         graphics.pose().popPose();
 
+    }
+
+    private static boolean isValidMinecraftScreen(@NotNull Screen screen) {
+        if (screen instanceof TitleScreen) return true;
+        if (screen instanceof PauseScreen) return true;
+        if (screen instanceof SelectWorldScreen) return true;
+        if (screen instanceof OptionsScreen) return true;
+        if (screen instanceof OptionsSubScreen) return true;
+        if (screen instanceof JoinMultiplayerScreen) return true;
+        if (screen instanceof DeathScreen) return true;
+        if (screen instanceof InventoryScreen) return true;
+        if (screen instanceof AbstractContainerScreen<?>) return true;
+        if (screen instanceof CreativeModeInventoryScreen) return true;
+        if (screen instanceof ChatScreen) return true;
+        return false;
     }
 
 }

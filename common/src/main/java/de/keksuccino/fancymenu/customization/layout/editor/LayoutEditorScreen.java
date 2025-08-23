@@ -363,7 +363,7 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 
 		this.renderScrollListHeaderFooterPreview(graphics, mouseX, mouseY, partial);
 
-		this.renderGrid(graphics);
+		renderGrid(graphics, this.width, this.height);
 
 	}
 
@@ -450,13 +450,13 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 	}
 
 	@SuppressWarnings("all")
-	protected void renderGrid(@NotNull GuiGraphics graphics) {
+	public static void renderGrid(@NotNull GuiGraphics graphics, int screenWidth, int screenHeight) {
 
 		if (FancyMenu.getOptions().showLayoutEditorGrid.getValue()) {
 
 			float scale = UIBase.calculateFixedScale(1.0F);
-			int scaledWidth = (int)((float)this.width / scale);
-			int scaledHeight = (int)((float)this.height / scale);
+			int scaledWidth = (int)((float)screenWidth / scale);
+			int scaledHeight = (int)((float)screenHeight / scale);
 
 			graphics.pose().pushPose();
 			graphics.pose().scale(scale, scale, scale);

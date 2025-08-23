@@ -5,7 +5,6 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
-import de.keksuccino.fancymenu.customization.element.elements.animationcontroller.KeyframeManagerScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.AnchorPointOverlay;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements.ManageRequirementsScreen;
@@ -1014,7 +1013,7 @@ public abstract class AbstractEditorElement implements Renderable, GuiEventListe
 						this.element.posOffsetY = newOffsetY;
 
 						// Apply grid snapping if enabled
-						if (FancyMenu.getOptions().showLayoutEditorGrid.getValue() && FancyMenu.getOptions().layoutEditorGridSnapping.getValue() && !this.isMultiSelected() && !(Minecraft.getInstance().screen instanceof KeyframeManagerScreen)) {
+						if (FancyMenu.getOptions().showLayoutEditorGrid.getValue() && FancyMenu.getOptions().layoutEditorGridSnapping.getValue() && !this.isMultiSelected()) {
 							// Get element edges
 							int leftEdge = this.getX();
 							int rightEdge = leftEdge + this.getWidth();

@@ -6,6 +6,7 @@
   ],
   "client": [
     "client.MixinForgeGameRenderer",
+    "client.MixinForgeKeyboardHandler",
     "client.MixinForgeMouseHandler",
     "client.MixinForgeTitleScreen"
   ],
