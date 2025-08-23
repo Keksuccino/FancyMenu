@@ -1,14 +1,12 @@
 package de.keksuccino.fancymenu.customization.background.backgrounds.image;
 
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.file.type.types.ImageFileType;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.text.Components;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
@@ -17,7 +15,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -69,6 +66,10 @@ public class ImageMenuBackgroundConfigScreen extends CellScreen {
 
         this.addCellGroupEndSpacerCell();
 
+        this.addCycleButtonCell(CommonCycles.cycleEnabledDisabled("fancymenu.background.image.restart_animated_on_menu_load", this.background.restartAnimatedOnMenuLoad), true, (value, button) -> {
+            this.background.restartAnimatedOnMenuLoad = value.getAsBoolean();
+        });
+
         WidgetCell repeatButton = this.addCycleButtonCell(CommonCycles.cycleEnabledDisabled("fancymenu.background.image.configure.repeat", this.background.repeat), true, (value, button) -> {
             this.background.repeat = value.getAsBoolean();
         });
@@ -90,8 +91,7 @@ public class ImageMenuBackgroundConfigScreen extends CellScreen {
             b.setIsActiveSupplier(consumes -> !this.background.slideLeftRight);
         }
 
-
-        this.addWidgetCell(new ExtendedButton(0, 0, 0, 20, Components.translatable("fancymenu.background.image.configure.parallax_intensity"), var1 -> {
+        this.addWidgetCell(new ExtendedButton(0, 0, 0, 20, Component.translatable("fancymenu.background.image.configure.parallax_intensity"), var1 -> {
             final Screen currentScreen = Minecraft.getInstance().screen;
             TextEditorScreen s = TextEditorScreen.build(Components.translatable("fancymenu.background.image.configure.parallax_intensity"), null, callback -> {
                 if (callback != null) {
