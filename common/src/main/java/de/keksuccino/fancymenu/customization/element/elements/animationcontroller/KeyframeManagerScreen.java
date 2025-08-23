@@ -32,7 +32,6 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.world.entity.schedule.Keyframe;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -461,6 +460,8 @@ public class KeyframeManagerScreen extends Screen {
 
         // Render screen background
         graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+
+        LayoutEditorScreen.renderGrid(graphics, this.width, this.height);
 
         this.renderTimelineBackground(graphics, actualEndTime);
 

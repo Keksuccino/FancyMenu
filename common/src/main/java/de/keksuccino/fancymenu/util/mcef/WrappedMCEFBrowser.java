@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.util.mcef;
 
 import com.cinemamod.mcef.MCEF;
 import com.cinemamod.mcef.MCEFBrowser;
+import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
@@ -23,10 +25,11 @@ import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
-public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, NavigatableWidget {
+public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, NavigatableWidget, FancyMenuUiComponent {
 
     protected static final Logger LOGGER = LogManager.getLogger();
     protected static final ScheduledExecutorService EXECUTOR = Executors. newSingleThreadScheduledExecutor();
@@ -69,6 +72,9 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
         super(0, 0, 0, 0, Component.empty());
 
+        // Initialize the global message router if not already done
+        ActionBridge.initialize();
+        
         // Register the custom load listener handler to later register multiple load listeners.
         // Calling this method multiple times is fine, because there can only be one default listener active.
         MCEF.getClient().addLoadHandler(BrowserLoadEventListenerManager.getInstance().getGlobalHandler());
@@ -82,6 +88,8 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
                 initialized = true;
                 // Apply settings once the page is loaded
                 applyInitialSettings();
+                // Inject the FancyMenu JavaScript API
+                injectJavaScriptAPI();
             } else {
                 LOGGER.error("[FANCYMENU] WrappedMCEFBrowser browser page failed to load (ID: {})", browserId, new Exception());
                 initialized = false;
@@ -111,6 +119,26 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         this.setHideVideoControls(this.hideVideoControls);
         this.setAutoPlayAllVideosOnLoad(this.autoPlayAllVideosOnLoad);
         this.setMuteAllMediaOnLoad(this.muteAllMediaOnLoad);
+    }
+    
+    /**
+     * Injects the FancyMenu JavaScript API into the browser
+     */
+    protected void injectJavaScriptAPI() {
+        try {
+            LOGGER.info("[FANCYMENU] Injecting FancyMenu JavaScript API into browser (ID: {})", this.getIdentifier());
+            // Execute the JavaScript injection with a delay to ensure the page and message router are ready
+            EXECUTOR.schedule(() -> {
+                try {
+                    this.browser.executeJavaScript(ActionBridge.JAVASCRIPT_API, this.browser.getURL(), 0);
+                    LOGGER.info("[FANCYMENU] JavaScript API injection completed for browser (ID: {})", this.getIdentifier());
+                } catch (Exception ex) {
+                    LOGGER.error("[FANCYMENU] Failed to inject JavaScript API into browser", ex);
+                }
+            }, 500, TimeUnit.MILLISECONDS);
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to schedule JavaScript API injection", ex);
+        }
     }
 
     protected void updateFrameTexture() {
@@ -146,7 +174,6 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
             this.browserFocused = true;
             this.browser.sendMousePress(this.convertMouseX(mouseX), this.convertMouseY(mouseY), button);
             this.browser.setFocus(true);
-            return true;
         } else {
             this.browserFocused = false;
         }
@@ -173,7 +200,6 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         if (this.isMouseOver(mouseX, mouseY) && this.interactable) {
             this.browser.sendMouseWheel(this.convertMouseX(mouseX), this.convertMouseY(mouseY), scrollY, 0);
             this.browser.setFocus(true);
-            return true;
         }
         return false;
     }
@@ -183,7 +209,6 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         if (this.interactable && this.browserFocused) {
             this.browser.sendKeyPress(keyCode, scanCode, modifiers);
             this.browser.setFocus(true);
-            return true;
         }
         return false;
     }
@@ -193,7 +218,6 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         if (this.interactable && this.browserFocused) {
             this.browser.sendKeyRelease(keyCode, scanCode, modifiers);
             this.browser.setFocus(true);
-            return true;
         }
         return false;
     }
@@ -204,7 +228,6 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
             if (codePoint == (char) 0) return true;
             this.browser.sendKeyTyped(codePoint, modifiers);
             this.browser.setFocus(true);
-            return true;
         }
         return false;
     }
@@ -421,6 +444,12 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         if (this.browser.canGoBack()) this.browser.goBack();
         if (initialized) {
             this.setVolume(this.volume);
+            // Re-register load listener to inject JavaScript API on navigation
+            BrowserLoadEventListenerManager.getInstance().registerListenerForBrowser(this, success -> {
+                if (success) {
+                    injectJavaScriptAPI();
+                }
+            });
         }
     }
 
@@ -428,6 +457,12 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
         if (this.browser.canGoForward()) this.browser.goForward();
         if (initialized) {
             this.setVolume(this.volume);
+            // Re-register load listener to inject JavaScript API on navigation
+            BrowserLoadEventListenerManager.getInstance().registerListenerForBrowser(this, success -> {
+                if (success) {
+                    injectJavaScriptAPI();
+                }
+            });
         }
     }
 
@@ -437,12 +472,24 @@ public class WrappedMCEFBrowser extends AbstractWidget implements Closeable, Nav
 
     public void setUrl(@NotNull String url) {
         this.browser.loadURL(url);
+        // Re-register load listener to inject JavaScript API on new page
+        BrowserLoadEventListenerManager.getInstance().registerListenerForBrowser(this, success -> {
+            if (success) {
+                injectJavaScriptAPI();
+            }
+        });
     }
 
     public void reload() {
         this.browser.reload();
         if (initialized) {
             this.setVolume(this.volume);
+            // Re-register load listener to inject JavaScript API on reload
+            BrowserLoadEventListenerManager.getInstance().registerListenerForBrowser(this, success -> {
+                if (success) {
+                    injectJavaScriptAPI();
+                }
+            });
         }
     }
 

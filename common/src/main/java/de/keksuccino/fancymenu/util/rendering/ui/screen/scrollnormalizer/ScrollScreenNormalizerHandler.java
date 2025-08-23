@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import net.minecraft.client.gui.screens.Screen;
@@ -21,7 +22,8 @@ public class ScrollScreenNormalizerHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final File NORMALIZE_SCREEN_FILE = new File(GameDirectoryUtils.getGameDirectory(), "normalized_scroll_screens.json");
+    private static final File NORMALIZE_SCREEN_FILE = new File(FancyMenu.MOD_DIR, "normalized_scroll_screens.json");
+    private static final File OLD_NORMALIZE_SCREEN_FILE = new File(GameDirectoryUtils.getGameDirectory(), "normalized_scroll_screens.json");
     private static final Map<String, Boolean> NORMALIZE_SCREEN_MAP = new HashMap<>();
 
     private static boolean loaded = false;
@@ -29,14 +31,19 @@ public class ScrollScreenNormalizerHandler {
     private static void loadFromFile() {
         if (loaded) return;
         try {
-            if (NORMALIZE_SCREEN_FILE.exists()) {
-                try (FileReader reader = new FileReader(NORMALIZE_SCREEN_FILE)) {
+            File dir = NORMALIZE_SCREEN_FILE;
+            if (!dir.exists()) dir = OLD_NORMALIZE_SCREEN_FILE;
+            if (dir.exists()) {
+                try (FileReader reader = new FileReader(dir)) {
                     Type mapType = new TypeToken<Map<String, Boolean>>(){}.getType();
                     Map<String, Boolean> loadedMap = GSON.fromJson(reader, mapType);
                     if (loadedMap != null) {
                         NORMALIZE_SCREEN_MAP.clear();
                         NORMALIZE_SCREEN_MAP.putAll(loadedMap);
                     }
+                }
+                if (dir == OLD_NORMALIZE_SCREEN_FILE) {
+                    saveToFile(); // save to new file
                 }
             }
             loaded = true;

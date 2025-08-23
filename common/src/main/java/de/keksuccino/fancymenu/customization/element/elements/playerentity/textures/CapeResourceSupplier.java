@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.textures;
+package de.keksuccino.fancymenu.customization.element.elements.playerentity.textures;
 
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;

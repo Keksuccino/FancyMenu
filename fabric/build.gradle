@@ -31,7 +31,8 @@ dependencies {
     modImplementation "maven.modrinth:melody:1.0.12-1.21.6-fabric"
     modImplementation "maven.modrinth:konkrete:1.9.12-1.21.6-fabric"
     modImplementation "maven.modrinth:modmenu:15.0.0-beta.2"
-    modCompileOnly 'com.cinemamod:mcef:2.1.6-1.21.1'
+    modCompileOnly "it.crystalnest:fancy-entity-renderer-fabric:$fer_mc_version-$fer_version"
+    modCompileOnly 'com.cinemamod:mcef:2.1.6-1.21.4'
 
 }
 

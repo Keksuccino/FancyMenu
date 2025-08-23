@@ -70,6 +70,18 @@ subprojects {
             name = 'MCEF Snapshots'
             url = 'https://mcef-download.cinemamod.com/repositories/snapshots'
         }
+        // Crystal Nest repository where Fancy Entity Renderer is hosted.
+        exclusiveContent {
+            forRepository {
+                maven {
+                    name = "Crystal Nest"
+                    url = "https://maven.crystalnest.it"
+                }
+            }
+            filter {
+                includeGroup "it.crystalnest"
+            }
+        }
     }
 
     tasks.withType(JavaCompile).configureEach {

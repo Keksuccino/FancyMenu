@@ -2,7 +2,11 @@ package de.keksuccino.fancymenu.util.rendering.video.mcef;
 
 import com.cinemamod.mcef.MCEFClient;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.util.mcef.ActionBridge;
+import de.keksuccino.fancymenu.util.mcef.BrowserHandler;
 import de.keksuccino.fancymenu.util.mcef.MCEFUtil;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
+import de.keksuccino.melody.resources.audio.MinecraftSoundSettingsObserver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.cef.CefSettings;
@@ -41,6 +45,9 @@ public class MCEFVideoManager {
     // For handling JS results
     private static volatile boolean jsResultHandlerRegistered = false;
     private static final Map<String, CompletableFuture<String>> pendingJsResults = new ConcurrentHashMap<>();
+
+    private static boolean is_initializing = false;
+    public static boolean initialized = false;
     
     /**
      * Gets the singleton instance of the VideoManager.
@@ -63,24 +70,61 @@ public class MCEFVideoManager {
      * This should be called during mod initialization.
      */
     public void initialize() {
-        if (isVideoPlaybackAvailable()) {
-            // Register JS result handler if not already done
-            if (!jsResultHandlerRegistered) {
-                registerJsResultHandlerInternal();
-            }
-            
-            // Existing web resource extraction logic
-            if (!webResourcesRegistered) {
-                try {
-                    // Extract the web resources to FancyMenu's temp directory
-                    extractWebResources();
-                    webResourcesRegistered = true;
-                    LOGGER.info("[FANCYMENU] Successfully extracted video player web resources");
-                } catch (Exception e) {
-                    LOGGER.error("[FANCYMENU] Failed to extract video player web resources", e);
-                }
-            }
+
+        if (initialized) return;
+
+        if (is_initializing) return;
+        is_initializing = true;
+
+        LOGGER.info("[FANCYMENU] Starting initialization of MCEFVideoManager..");
+
+        if (!MCEFUtil.MCEF_initialized) {
+            LOGGER.warn("[FANCYMENU] MCEF not initialized yet! Will wait for MCEF to be ready before initializing MCEFVideoManager!");
         }
+
+        new Thread(() -> {
+            try {
+                while (true) {
+                    if (MCEFUtil.MCEF_initialized) {
+                        MainThreadTaskExecutor.executeInMainThread(() -> {
+                            try {
+
+                                if (isVideoPlaybackAvailable()) {
+                                    // Register JS result handler if not already done
+                                    if (!jsResultHandlerRegistered) {
+                                        registerJsResultHandlerInternal();
+                                    }
+
+                                    // Existing web resource extraction logic
+                                    if (!webResourcesRegistered) {
+                                        try {
+                                            // Extract the web resources to FancyMenu's temp directory
+                                            extractWebResources();
+                                            webResourcesRegistered = true;
+                                            LOGGER.info("[FANCYMENU] MCEFVideoManager: Successfully extracted video player web resources");
+                                        } catch (Exception e) {
+                                            LOGGER.error("[FANCYMENU] MCEFVideoManager: Failed to extract video player web resources", e);
+                                        }
+                                    }
+                                }
+
+                                initialized = true;
+
+                                LOGGER.info("[FANCYMENU] MCEFVideoManager successfully initialized!");
+
+                            } catch (Exception ex) {
+                                LOGGER.error("[FANCYMENU] Failed to initialize MCEFVideoManager!", ex);
+                            }
+                        }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+                        break;
+                    }
+                    Thread.sleep(100);
+                }
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to initialize MCEFVideoManager!", ex);
+            }
+        }).start();
+
     }
     
     /**
