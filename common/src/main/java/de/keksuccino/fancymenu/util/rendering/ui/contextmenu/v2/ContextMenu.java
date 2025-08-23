@@ -1216,7 +1216,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         /**
          * @deprecated Use {@link ContextMenuEntry#addIsActiveSupplier(BooleanSupplier)} instead.
          */
-        @Deprecated(forRemoval = true)
+        @Deprecated
         public T setIsActiveSupplier(@Nullable BooleanSupplier activeStateSupplier) {
             if (activeStateSupplier != null) this.addIsActiveSupplier(activeStateSupplier);
             return (T) this;
@@ -1241,7 +1241,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         /**
          * @deprecated Use {@link ContextMenuEntry#addIsVisibleSupplier(BooleanSupplier)} instead.
          */
-        @Deprecated(forRemoval = true)
+        @Deprecated
         public T setIsVisibleSupplier(@Nullable BooleanSupplier visibleStateSupplier) {
             if (visibleStateSupplier != null) this.addIsVisibleSupplier(visibleStateSupplier);
             return (T) this;

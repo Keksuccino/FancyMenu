@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.networking;
 
+import de.keksuccino.fancymenu.networking.packets.handshake.HandshakePacket;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -7,6 +8,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -15,11 +18,34 @@ import java.util.function.Supplier;
 public class PacketHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    static final List<String> FANCYMENU_SERVERS = new ArrayList<>();
+    private static final List<String> FANCYMENU_CLIENTS = new ArrayList<>();
 
     private static Consumer<String> sendToServerDataConsumer = null;
     private static BiConsumer<ServerPlayer, String> sendToClientPlayerAndDataConsumer = null;
 
+    public static void addFancyMenuServer(@NotNull String serverIp) {
+        Objects.requireNonNull(serverIp);
+        if (FANCYMENU_SERVERS.contains(serverIp)) return;
+        FANCYMENU_SERVERS.add(serverIp);
+    }
+
+    public static void addFancyMenuClient(@NotNull String playerUUID) {
+        Objects.requireNonNull(playerUUID);
+        if (FANCYMENU_CLIENTS.contains(playerUUID)) return;
+        FANCYMENU_CLIENTS.add(playerUUID);
+    }
+
+    public static void sendHandshakeToClient(@NotNull ServerPlayer player) {
+        sendToClient(player, new HandshakePacket());
+    }
+
+    public static void sendHandshakeToServer() {
+        sendToServer(new HandshakePacket());
+    }
+
     public static <T extends Packet> void sendToServer(@NotNull T packet) {
+        if (!ClientPacketUtils.shouldSendToServer(packet)) return;
         Objects.requireNonNull(sendToServerDataConsumer, "Tried to send packet to server too early! No logic set yet!");
         PacketCodec<T> codec = PacketRegistry.getCodecFor(Objects.requireNonNull(packet));
         if (codec != null) {
@@ -34,6 +60,7 @@ public class PacketHandler {
     }
 
     public static <T extends Packet> void sendToClient(@NotNull ServerPlayer toPlayer, @NotNull T packet) {
+        if (!(packet instanceof HandshakePacket) && !FANCYMENU_CLIENTS.contains(toPlayer.getUUID().toString())) return;
         Objects.requireNonNull(sendToClientPlayerAndDataConsumer, "Tried to send packet to client too early! No logic set yet!");
         PacketCodec<T> codec = PacketRegistry.getCodecFor(Objects.requireNonNull(packet));
         if (codec != null) {

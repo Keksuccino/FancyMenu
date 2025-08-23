@@ -6,7 +6,9 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.Scoreboard;
 import org.apache.logging.log4j.LogManager;
@@ -31,11 +33,18 @@ public class ScoreboardObjectivesListPlaceholder extends Placeholder {
     public String getReplacementFor(DeserializedPlaceholderString dps) {
 
         ClientPacketListener connection = Minecraft.getInstance().getConnection();
+<<<<<<< HEAD
         ClientLevel level = (connection != null) ? connection.getLevel() : null;
         Scoreboard scoreboard = (level != null) ? level.getScoreboard(): null;
         String separator = dps.values.get("separator");
         if (separator == null) separator = ", ";
 
+=======
+        Scoreboard scoreboard = (connection != null) ? connection.scoreboard() : null;
+        String separator = dps.values.get("separator");
+        if (separator == null) separator = ", ";
+        
+>>>>>>> e8bdf5a... v3.7.0
         if (scoreboard != null) {
             Collection<Objective> objectives = scoreboard.getObjectives();
             return objectives.stream()

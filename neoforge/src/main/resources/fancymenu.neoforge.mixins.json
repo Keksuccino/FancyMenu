@@ -1,0 +1,20 @@
+{
+  "required": true,
+  "package": "de.keksuccino.fancymenu.mixin.mixins.neoforge",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+  ],
+  "client": [
+    "client.MixinNeoForgeGameRenderer",
+    "client.MixinNeoForgeKeyboardHandler",
+    "client.MixinNeoForgeLoadingOverlay",
+    "client.MixinNeoForgeMouseHandler",
+    "client.MixinNeoForgeTitleScreen"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "refmap": "fancymenu.refmap.json",
+  "plugin": "de.keksuccino.fancymenu.mixin.FMMixinPlugin",
+  "minVersion": "0.8"
+}

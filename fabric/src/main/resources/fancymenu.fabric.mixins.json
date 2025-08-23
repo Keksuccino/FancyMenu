@@ -6,6 +6,7 @@
   ],
   "client": [
     "client.MixinFabricGameRenderer",
+    "client.MixinFabricKeyboardHandler",
     "client.MixinFabricMouseHandler",
     "client.MixinFabricTitleScreen"
   ],

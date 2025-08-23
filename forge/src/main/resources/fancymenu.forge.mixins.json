@@ -5,7 +5,12 @@
   "mixins": [
   ],
   "client": [
+<<<<<<< HEAD
     "client.MixinForgeGameRenderer",
+=======
+    "client.MixinForgeHooksClient",
+    "client.MixinForgeKeyboardHandler",
+>>>>>>> e8bdf5a... v3.7.0
     "client.MixinForgeLoadingOverlay",
     "client.MixinForgeMouseHandler",
     "client.MixinForgeTitleScreen"
