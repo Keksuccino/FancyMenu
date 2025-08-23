@@ -1,19 +1,17 @@
 package de.keksuccino.fancymenu;
 
-import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenCompletedEvent;
+import de.keksuccino.fancymenu.events.screen.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.util.event.acara.EventPriority;
-import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
-import net.minecraft.client.Minecraft;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class Test {
 
-    @EventListener(priority = EventPriority.VERY_LOW)
-    public void onRenderPost(InitOrResizeScreenCompletedEvent e) {
+    private static final Logger LOGGER = LogManager.getLogger();
 
-//        e.addRenderableWidget(new ExtendedButton(20, 20, 200, 20, "Open Video Player", button -> {
-//            Minecraft.getInstance().setScreen(new VideoPlayerExample());
-//        }));
+    @EventListener(priority = EventPriority.VERY_LOW)
+    public void onInitPost(InitOrResizeScreenEvent.Post e) {
 
     }
 

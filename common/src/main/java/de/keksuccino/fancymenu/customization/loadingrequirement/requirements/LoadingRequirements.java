@@ -92,6 +92,7 @@ public class LoadingRequirements {
     public static final OncePerSessionRequirement ONLY_ONCE_PER_SESSION = new OncePerSessionRequirement();
     public static final MouseClickedRequirement MOUSE_CLICKED = new MouseClickedRequirement();
     public static final IsInternetConnectionAvailableRequirement IS_INTERNET_CONNECTION_AVAILABLE = new IsInternetConnectionAvailableRequirement();
+    public static final IsMcefLoadedRequirement IS_MCEF_LOADED = new IsMcefLoadedRequirement();
 
     public static void registerAll() {
 
@@ -178,6 +179,7 @@ public class LoadingRequirements {
         LoadingRequirementRegistry.register(IS_VARIABLE_VALUE);
         LoadingRequirementRegistry.register(ONLY_ONCE_PER_SESSION);
         LoadingRequirementRegistry.register(MOUSE_CLICKED);
+        LoadingRequirementRegistry.register(IS_MCEF_LOADED);
 
     }
 

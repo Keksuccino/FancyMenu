@@ -76,7 +76,7 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
 
     public MCEFVideoElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
-        if (MCEFUtil.isMCEFLoaded()) this.videoManager = MCEFVideoManager.getInstance();
+        if (MCEFUtil.isMCEFLoaded() && MCEFUtil.MCEF_initialized) this.videoManager = MCEFVideoManager.getInstance();
     }
 
     @Override
@@ -84,7 +84,7 @@ public class MCEFVideoElement extends AbstractElement implements IVideoElement {
 
         if (this.shouldRender()) {
 
-            if (!MCEFUtil.isMCEFLoaded()) {
+            if (!MCEFUtil.isMCEFLoaded() || !MCEFUtil.MCEF_initialized) {
                 graphics.fill(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteX() + this.getAbsoluteWidth(), this.getAbsoluteY() + this.getAbsoluteHeight(), MISSING_MCEF_COLOR.getColorInt());
                 int xCenter = this.getAbsoluteX() + (this.getAbsoluteWidth() / 2);
                 int yCenter = this.getAbsoluteY() + (this.getAbsoluteHeight() / 2);

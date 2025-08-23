@@ -59,6 +59,8 @@ public class ImageMenuBackgroundBuilder extends MenuBackgroundBuilder<ImageMenuB
         b.parallaxIntensityString = Objects.requireNonNullElse(serializedMenuBackground.getValue("parallax_intensity"), "0.02");
         b.invertParallax = SerializationUtils.deserializeBoolean(b.invertParallax, serializedMenuBackground.getValue("invert_parallax"));
 
+        b.restartAnimatedOnMenuLoad = SerializationUtils.deserializeBoolean(false, serializedMenuBackground.getValue("restart_animated_on_menu_load"));
+
         return b;
 
     }
@@ -83,6 +85,8 @@ public class ImageMenuBackgroundBuilder extends MenuBackgroundBuilder<ImageMenuB
         serialized.putProperty("parallax", "" + background.parallaxEnabled);
         serialized.putProperty("parallax_intensity", background.parallaxIntensityString);
         serialized.putProperty("invert_parallax", "" + background.invertParallax);
+
+        serialized.putProperty("restart_animated_on_menu_load", "" + background.restartAnimatedOnMenuLoad);
 
         return serialized;
 

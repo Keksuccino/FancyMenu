@@ -60,6 +60,8 @@ dependencies {
     implementation(jarJar("com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7")) {
         jarJar.ranged(it, "[1.7,)")
     }
+    implementation "it.crystalnest:fancy-entity-renderer-neoforge:$minecraft_version-$fer_version"
+//    implementation "com.cinemamod:mcef:2.1.6-1.21.1"
     implementation "curse.maven:mcef-636236:6091756"
     //compileOnly "curse.maven:mcef-636236:6091756" // because there's no MCEF for 1.21.6+ yet
     compileOnly project(":common")

@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.SerializationUtils;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.GuiGraphics;
@@ -32,6 +33,7 @@ public class ImageMenuBackground extends MenuBackground {
     public float lastParallaxIntensity = -10000.0F;
     /** When TRUE, the parallax effect will move in the SAME direction as the mouse, otherwise it moves in the opposite direction **/
     public boolean invertParallax = false;
+    public boolean restartAnimatedOnMenuLoad = false;
 
     protected double slidePos = 0.0D;
     protected boolean slideMoveBack = false;
@@ -40,6 +42,31 @@ public class ImageMenuBackground extends MenuBackground {
 
     public ImageMenuBackground(MenuBackgroundBuilder<ImageMenuBackground> builder) {
         super(builder);
+    }
+
+    @Override
+    public void onOpenScreen() {
+
+        super.onOpenScreen();
+
+        // Restart animated textures on menu load if enabled
+        if (this.restartAnimatedOnMenuLoad) {
+            if (this.textureSupplier != null) {
+                ITexture tex = this.textureSupplier.get();
+                if (tex instanceof PlayableResource r) {
+                    r.stop();
+                    r.play();
+                }
+            }
+            if (this.fallbackTextureSupplier != null) {
+                ITexture tex = this.fallbackTextureSupplier.get();
+                if (tex instanceof PlayableResource r) {
+                    r.stop();
+                    r.play();
+                }
+            }
+        }
+
     }
 
     @Override
