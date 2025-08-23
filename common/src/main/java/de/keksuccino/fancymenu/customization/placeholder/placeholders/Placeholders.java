@@ -180,6 +180,8 @@ public class Placeholders {
     public static final PlayerHasTagPlaceholder PLAYER_HAS_TAG = new PlayerHasTagPlaceholder();
     public static final PlayerTagsListPlaceholder PLAYER_TAGS_LIST = new PlayerTagsListPlaceholder();
     public static final FileTextPlaceholder FILE_TEXT = new FileTextPlaceholder();
+    public static final WorldSaveNamesPlaceholder LEVEL_SAVE_NAMES = new WorldSaveNamesPlaceholder();
+    public static final WorldSaveDataPlaceholder LEVEL_SAVE_DATA = new WorldSaveDataPlaceholder();
 
     public static void registerAll() {
 
@@ -257,6 +259,8 @@ public class Placeholders {
         PlaceholderRegistry.register(WORLD_PLAYERS_LIST);
         PlaceholderRegistry.register(PLAYER_HAS_TAG);
         PlaceholderRegistry.register(PLAYER_TAGS_LIST);
+        PlaceholderRegistry.register(LEVEL_SAVE_NAMES);
+        PlaceholderRegistry.register(LEVEL_SAVE_DATA);
 
         //Server
         PlaceholderRegistry.register(SERVER_MOTD);

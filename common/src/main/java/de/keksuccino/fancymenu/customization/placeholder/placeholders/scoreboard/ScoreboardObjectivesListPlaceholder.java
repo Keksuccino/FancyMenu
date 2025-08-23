@@ -31,6 +31,7 @@ public class ScoreboardObjectivesListPlaceholder extends Placeholder {
     public String getReplacementFor(DeserializedPlaceholderString dps) {
 
         ClientPacketListener connection = Minecraft.getInstance().getConnection();
+
         ClientLevel level = (connection != null) ? connection.getLevel() : null;
         Scoreboard scoreboard = (level != null) ? level.getScoreboard(): null;
         String separator = dps.values.get("separator");

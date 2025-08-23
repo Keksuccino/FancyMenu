@@ -1,8 +1,6 @@
 package de.keksuccino.fancymenu.customization.layer;
 
-import java.io.File;
 import java.util.*;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import com.google.common.collect.Lists;
@@ -34,13 +32,11 @@ import de.keksuccino.fancymenu.customization.loadingrequirement.internal.Loading
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.ScreenTitleUtils;
-import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CustomizableScreen;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
@@ -94,12 +90,13 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	public void resetLayer() {
 		this.delayAppearanceFirstTime.clear();
 		for (RandomLayoutContainer c : this.randomLayoutGroups.values()) {
-			c.lastLayoutPath = null;
+			c.reset(true);
 		}
 	}
 
 	@EventListener
 	public void onModReload(ModReloadEvent e) {
+		RandomLayoutContainer.CACHED_PICKS.clear();
 		this.resetLayer();
 	}
 
@@ -205,7 +202,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		this.cachedLayoutWideLoadingRequirements.clear();
 
 		for (RandomLayoutContainer c : this.randomLayoutGroups.values()) {
-			c.onlyFirstTime = false;
 			c.clearLayouts();
 		}
 
@@ -224,7 +220,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 				}
 				RandomLayoutContainer randomContainer = this.randomLayoutGroups.get(group);
 				if (randomContainer != null) {
-					randomContainer.setOnlyFirstTime(layout.randomOnlyFirstTime);
 					randomContainer.addLayout(layout);
 				}
 			} else {
@@ -360,7 +355,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	@EventListener
 	public void onScreenTickPre(ScreenTickEvent.Post e) {
 
-		if (PopupHandler.isPopupActive()) return;
 		if (!this.shouldCustomize(e.getScreen())) return;
 
 		this.layoutBase.menuBackgrounds.forEach(MenuBackground::tick);
@@ -374,7 +368,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	@EventListener(priority = EventPriority.VERY_HIGH)
 	public void onRenderPre(RenderScreenEvent.Pre e) {
 
-		if (PopupHandler.isPopupActive()) return;
 		if (!this.shouldCustomize(e.getScreen())) return;
 
 		//Re-init screen if layout-wide loading requirements changed
@@ -400,7 +393,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	@EventListener
 	public void onRenderPost(RenderScreenEvent.Post e) {
 
-		if (PopupHandler.isPopupActive()) return;
 		if (!this.shouldCustomize(e.getScreen())) return;
 
 		//Render background elements in foreground if it wasn't possible to render to the menu background
@@ -586,8 +578,6 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		}
 
-		if (PopupHandler.isPopupActive()) return;
-
 		//Render background elements
 		for (AbstractElement elements : new ArrayList<>(this.normalElements.backgroundElements)) {
 			elements.renderInternal(graphics, mouseX, mouseY, partial);
@@ -630,11 +620,13 @@ public class ScreenCustomizationLayer implements ElementFactory {
 	}
 
 	public static class RandomLayoutContainer {
+
+		public static final Map<String, String> CACHED_PICKS = new HashMap<>();
 		
 		public final String id;
 		protected List<Layout> layouts = new ArrayList<>();
-		protected boolean onlyFirstTime = false;
-		protected String lastLayoutPath = null;
+		@Nullable
+		protected String cachedGroupIdentifier = null;
 		
 		public ScreenCustomizationLayer parent;
 		
@@ -658,41 +650,90 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		public void clearLayouts() {
 			this.layouts.clear();
 		}
-		
-		public void setOnlyFirstTime(boolean b) {
-			this.onlyFirstTime = b;
-		}
-		
+
 		public boolean isOnlyFirstTime() {
-			return this.onlyFirstTime;
+			for (Layout l : this.layouts) {
+				if (l.randomOnlyFirstTime) return true;
+			}
+			return false;
 		}
-		
-		public void resetLastLayout() {
-			this.lastLayoutPath = null;
+
+		public boolean isUniversalGroup() {
+			if (this.layouts.isEmpty()) return false;
+			for (Layout l : this.layouts) {
+				if (!l.isUniversalLayout()) return false;
+			}
+			return true;
+		}
+
+		public String getGroupIdentifier() {
+			if (this.cachedGroupIdentifier != null) return this.cachedGroupIdentifier;
+			if (this.layouts.isEmpty()) {
+				this.cachedGroupIdentifier = ScreenCustomization.generateUniqueIdentifier();
+			} else {
+				List<String> layoutIds = new ArrayList<>();
+				for (Layout l : this.layouts) {
+					layoutIds.add(l.runtimeLayoutIdentifier);
+				}
+				layoutIds.sort(Comparator.naturalOrder());
+				StringBuilder id = new StringBuilder();
+				for (String s : layoutIds) {
+					id.append(s);
+				}
+				this.cachedGroupIdentifier = id.toString();
+			}
+			return this.cachedGroupIdentifier;
 		}
 		
 		@Nullable
 		public Layout getRandomLayout() {
+
 			if (!this.layouts.isEmpty()) {
-				if ((this.onlyFirstTime || !ScreenCustomization.isNewMenu()) && (this.lastLayoutPath != null)) {
-					File f = new File(GameDirectoryUtils.getAbsoluteGameDirectoryPath(this.lastLayoutPath));
-					if (f.exists()) {
+
+				String cachedPickedLayoutIdentifier = CACHED_PICKS.get(this.getGroupIdentifier());
+
+				// Reset cache when it's a new screen
+				if (!this.isOnlyFirstTime() && ScreenCustomization.isNewMenu()) {
+					cachedPickedLayoutIdentifier = null;
+				}
+
+				// Return cached layout if there is one and it's still valid
+				if (cachedPickedLayoutIdentifier != null) {
+					if (LayoutHandler.isLayoutLoaded(cachedPickedLayoutIdentifier)) {
 						for (Layout layout : this.layouts) {
-							if ((layout.layoutFile != null) && layout.layoutFile.getAbsolutePath().replace("\\", "/").equals(f.getAbsolutePath())) {
-								return layout;
-							}
+							if (layout.runtimeLayoutIdentifier.equals(cachedPickedLayoutIdentifier)) return layout;
 						}
+					} else {
+						this.reset(true);
 					}
 				}
+
+				// Resetting the group could cause it to not have any layouts anymore, so check again just to be sure
+				if (this.layouts.isEmpty()) return null;
+
+				// Pick a random layout from the group, cache it and then return it
 				int i = MathUtils.getRandomNumberInRange(0, this.layouts.size()-1);
 				Layout layout = this.layouts.get(i);
-				if ((layout.layoutFile != null)) {
-					this.lastLayoutPath = layout.layoutFile.getAbsolutePath();
-					return layout;
-				}
+				CACHED_PICKS.put(this.getGroupIdentifier(), layout.runtimeLayoutIdentifier);
+				return layout;
+
 			}
+
 			return null;
+
 		}
+
+		public void garbageCollectInvalidLayouts() {
+			this.layouts.removeIf(layout -> !LayoutHandler.isLayoutLoaded(layout.runtimeLayoutIdentifier));
+		}
+
+		public void reset(boolean keepValidLayouts) {
+			CACHED_PICKS.remove(this.getGroupIdentifier());
+			this.garbageCollectInvalidLayouts();
+			this.cachedGroupIdentifier = null;
+			if (!keepValidLayouts) this.layouts.clear();
+		}
+
 	}
 
 }

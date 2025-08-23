@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FancyMenu Browser Actions Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:active {
+            background-color: #3d8b40;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+        }
+        .example-code {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-family: monospace;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+        .variable-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e3f2fd;
+            border-radius: 4px;
+            border: 1px solid #90caf9;
+        }
+        input[type="text"] {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+            width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>FancyMenu Browser Actions Example</h1>
+        <p>Click the buttons below to execute FancyMenu actions from the browser:</p>
+        
+        <div class="button-grid">
+            <button onclick="executeQuitGame()">Quit Game</button>
+            <button onclick="executeTitleScreen()">Open Title Screen</button>
+            <button onclick="executeOpenLink()">Open Minecraft.net</button>
+            <button onclick="executeSendMessage()">Send Chat Message</button>
+            <button onclick="executeDisconnect()">Disconnect from Server</button>
+            <button onclick="executeBackToLastScreen()">Back to Last Screen</button>
+        </div>
+        
+        <div class="variable-section">
+            <h3>Set Variable Example</h3>
+            <input type="text" id="varName" placeholder="Variable name" value="example_variable">
+            <input type="text" id="varValue" placeholder="Variable value" value="example_value">
+            <button onclick="executeSetVariable()">Set Variable</button>
+            <h3>Join Server Example</h3>
+            <input type="text" id="serverIP" placeholder="Server IP" value="play.hypixel.net">
+            <button onclick="executeJoinServer()">Join Server</button>
+            <h3>Open GUI Example</h3>
+            <input type="text" id="guiScreen" placeholder="Screen identifier" value="options_screen">
+            <button onclick="executeOpenGui()">Open GUI</button>
+        </div>
+        
+        <div class="status" id="status">Status: Ready</div>
+        
+        <h3>Example Code:</h3>
+        <div class="example-code">
+// Action without value
+fancymenu.execute('quitgame');
+
+// Action with value
+fancymenu.execute('opengui', 'title_screen');
+
+// Set variable with two values (name:value)
+fancymenu.execute('set_variable', 'example_variable:example_value');
+
+// With callbacks (action without value)
+fancymenu.executeWithCallback('quitgame',
+    function(result) { console.log('Success:', result); },
+    function(error) { console.error('Error:', error); }
+);
+
+// With callbacks (action with value)
+fancymenu.executeWithCallback('opengui', 'title_screen',
+    function(result) { console.log('GUI opened'); },
+    function(error) { console.error('Failed:', error); }
+);
+
+// Using the global alias
+FancyMenu.execute('quitgame');
+FancyMenu.execute('opengui', 'title_screen');
+        </div>
+    </div>
+    
+    <script>
+        // Helper function to update status
+        function updateStatus(message, isError = false) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = 'Status: ' + message;
+            statusEl.style.color = isError ? '#d32f2f' : '#2e7d32';
+        }
+        
+        // Execute quit game action (no value)
+        function executeQuitGame() {
+            updateStatus('Executing: quitgame');
+            
+            if (typeof fancymenu === 'undefined') {
+                updateStatus('Error: FancyMenu API not available', true);
+                return;
+            }
+            
+            fancymenu.executeWithCallback('quitgame',
+                function(result) {
+                    updateStatus('Success: Quit game action executed');
+                },
+                function(error) {
+                    updateStatus('Failed: ' + error, true);
+                }
+            );
+        }
+        
+        // Execute open title screen action
+        function executeTitleScreen() {
+            updateStatus('Executing: opengui:title_screen');
+            
+            if (typeof fancymenu === 'undefined') {
+                updateStatus('Error: FancyMenu API not available', true);
+                return;
+            }
+            
+            fancymenu.executeWithCallback('opengui', 'title_screen',
+                function(result) {
+                    updateStatus('Success: Title screen opened');
+                },
+                function(error) {
+                    updateStatus('Failed: ' + error, true);
+                }
+            );
+        }
+        
+        // Execute open link action
+        function executeOpenLink() {
+            updateStatus('Executing: openlink:https://minecraft.net');
+            
+            if (typeof fancymenu === 'undefined') {
+                updateStatus('Error: FancyMenu API not available', true);
+                return;
+            }
+            
+            fancymenu.executeWithCallback('openlink', 'https://minecraft.net',
+                function(result) {
+                    updateStatus('Success: Link opened');
+                },
+                function(error) {
+                    updateStatus('Failed: ' + error, true);
+                }
+            );
+        }
+        
+        // Execute send message action
+        function executeSendMessage() {
+            const message = prompt('Enter a message to send to chat:');
+            if (!message) return;
+            
+            updateStatus('Executing: sendmessage:' + message);
+            
+            if (typeof fancymenu === 'undefined') {
+                updateStatus('Error: FancyMenu API not available', true);
+                return;
+            }
+            
+            fancymenu.executeWithCallback('sendmessage', message,
+                function(result) {
+                    updateStatus('Success: Message sent');
+                },
+                function(error) {
+                    updateStatus('Failed: ' + error, true);
+                }
+            );
+        }
+        
+        // Execute disconnect from server action
+        function executeDisconnect() {
+            updateStatus('Executing: disconnect_server_or_world', 'title_screen');
+            
+            if (typeof fancymenu === 'undefined') {
+                updateStatus('Error: FancyMenu API not available', true);
+                return;
+            }
+            
+            fancymenu.executeWithCallback('disconnect_server_or_world', 'title_screen',
+                function(result) {
+                    updateStatus('Success: Disconnected from server/world');
+                },
+                function(error) {
+                    updateStatus('Failed: ' + error, true);
+                }
+            );
+        }
+        
+        // Execute back to last screen action
+        function executeBackToLastScreen() {
+            updateStatus('Executing: back_to_last_screen');
+            
+            if (typeof fancymenu === 'undefined') {
+                updateStatus('Error: FancyMenu API not available', true);
+                return;
+            }
+            
+            fancymenu.executeWithCallback('back_to_last_screen',
+                function(result) {
+                    updateStatus('Success: Went back to last screen');
+                },
+                function(error) {
+                    updateStatus('Failed: ' + error, true);
+                }
+            );
+        }
+        
+        // Execute set variable action
+        function executeSetVariable() {
+            const varName = document.getElementById('varName').value;
+            const varValue = document.getElementById('varValue').value;
+            
+            if (!varName || !varValue) {
+                updateStatus('Error: Variable name and value are required', true);
+                return;
+            }
+            
+            const variableData = varName + ':' + varValue;
+            updateStatus('Executing: set_variable:' + variableData);
+            
+            if (typeof fancymenu === 'undefined') {
+                updateStatus('Error: FancyMenu API not available', true);
+                return;
+            }
+            
+            fancymenu.executeWithCallback('set_variable', variableData,
+                function(result) {
+                    updateStatus('Success: Variable set (' + varName + ' = ' + varValue + ')');
+                },
+                function(error) {
+                    updateStatus('Failed: ' + error, true);
+                }
+            );
+        }
+        
+        // Execute join server action
+        function executeJoinServer() {
+            const serverIP = document.getElementById('serverIP').value;
+            
+            if (!serverIP) {
+                updateStatus('Error: Server IP is required', true);
+                return;
+            }
+            
+            updateStatus('Executing: joinserver:' + serverIP);
+            
+            if (typeof fancymenu === 'undefined') {
+                updateStatus('Error: FancyMenu API not available', true);
+                return;
+            }
+            
+            fancymenu.executeWithCallback('joinserver', serverIP,
+                function(result) {
+                    updateStatus('Success: Joining server ' + serverIP);
+                },
+                function(error) {
+                    updateStatus('Failed: ' + error, true);
+                }
+            );
+        }
+        
+        // Execute open GUI action
+        function executeOpenGui() {
+            const guiScreen = document.getElementById('guiScreen').value;
+            
+            if (!guiScreen) {
+                updateStatus('Error: Screen identifier is required', true);
+                return;
+            }
+            
+            updateStatus('Executing: opengui:' + guiScreen);
+            
+            if (typeof fancymenu === 'undefined') {
+                updateStatus('Error: FancyMenu API not available', true);
+                return;
+            }
+            
+            fancymenu.executeWithCallback('opengui', guiScreen,
+                function(result) {
+                    updateStatus('Success: Opening ' + guiScreen);
+                },
+                function(error) {
+                    updateStatus('Failed: ' + error, true);
+                }
+            );
+        }
+        
+        // Check if FancyMenu API is loaded
+        window.addEventListener('load', function() {
+            // Wait for the fancymenu-ready event
+            window.addEventListener('fancymenu-ready', function() {
+                updateStatus('FancyMenu API loaded successfully!');
+            });
+            
+            // Fallback check after a delay
+            setTimeout(function() {
+                if (typeof fancymenu !== 'undefined') {
+                    updateStatus('FancyMenu API loaded successfully!');
+                } else {
+                    updateStatus('Warning: FancyMenu API not detected', true);
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

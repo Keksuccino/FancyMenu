@@ -13,6 +13,10 @@ public class ActionRegistry {
     private static final Map<String, Action> ACTIONS = new LinkedHashMap<>();
 
     public static void register(@NotNull Action action) {
+        if (action.getIdentifier().contains(":")) {
+            LOGGER.error("[FANCYMENU] Tried to register action with illegal character ':' in identifier: " + action.getIdentifier());
+            throw new RuntimeException("Illegal character ':' used in FancyMenu action identifier: " + action.getIdentifier());
+        }
         if (ACTIONS.containsKey(Objects.requireNonNull(action.getIdentifier()))) {
             LOGGER.warn("[FANCYMENU] An action with the identifier '" + action.getIdentifier() + "' is already registered! Overriding action!");
         }
