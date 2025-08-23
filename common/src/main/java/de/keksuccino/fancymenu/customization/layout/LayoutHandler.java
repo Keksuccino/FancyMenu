@@ -90,6 +90,13 @@ public class LayoutHandler {
 		return Layout.deserialize(serialized, layoutFile);
 	}
 
+	public static boolean isLayoutLoaded(@NotNull String runtimeLayoutIdentifier) {
+		for (Layout layout : LAYOUTS) {
+			if (layout.runtimeLayoutIdentifier.equals(runtimeLayoutIdentifier)) return true;
+		}
+		return false;
+	}
+
 	@NotNull
 	public static List<Layout> getEnabledLayouts() {
 		List<Layout> enabled = new ArrayList<>();

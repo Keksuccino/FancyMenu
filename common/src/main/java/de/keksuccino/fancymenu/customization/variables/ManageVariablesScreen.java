@@ -220,7 +220,7 @@ public class ManageVariablesScreen extends ModernScreen {
         public Variable variable;
 
         public VariableScrollEntry(ScrollArea parent, @NotNull Variable variable, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, Components.literal(variable.name).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())).append(Components.literal(" (" + variable.value + ")").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()))), UIBase.getUIColorTheme().listing_dot_color_1.getColor(), onClick);
+            super(parent, Components.literal(variable.name).setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())).append(Components.literal(" (" + variable.getValue() + ")").setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()))), UIBase.getUIColorTheme().listing_dot_color_1.getColor(), onClick);
             this.variable = variable;
         }
 

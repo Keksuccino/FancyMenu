@@ -5,6 +5,7 @@
 package de.keksuccino.fancymenu.customization.placeholder;
 
 import com.google.common.collect.Lists;
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.variables.Variable;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
@@ -31,7 +32,6 @@ public class PlaceholderParser {
     private static final HashSet<String> TOO_LONG_TO_PARSE = new HashSet<>();
     private static final HashMap<String, Boolean> CONTAINS_PLACEHOLDERS = new HashMap<>();
     private static final HashMap<String, Pair<String, Long>> PLACEHOLDER_CACHE = new HashMap<>();
-    private static final Long PLACEHOLDER_CACHE_DURATION_MS = 150L;
 
     private static final int MAX_TEXT_LENGTH = 17000;
     private static final String PLACEHOLDER_PREFIX = "{\"placeholder\":\"";
@@ -59,6 +59,14 @@ public class PlaceholderParser {
     private static final String COLON_WRAPPED_IN_APOSTROPHES = "\":\"";
     private static final String PERCENT_NEWLINE_CODE = "%n%";
     private static final String TOO_LONG_TO_PARSE_LOCALIZATION = "fancymenu.placeholders.error.text_too_long";
+
+    public static boolean isCachingPlaceholders() {
+        return FancyMenu.getOptions().placeholderCachingDurationMs.getValue() > 0;
+    }
+
+    public static long getPlaceholderCachingDurationMs() {
+        return FancyMenu.getOptions().placeholderCachingDurationMs.getValue();
+    }
 
     /**
      * Simple check if the given {@link String} contains placeholders.<br>
@@ -146,8 +154,10 @@ public class PlaceholderParser {
             return I18n.get(TOO_LONG_TO_PARSE_LOCALIZATION);
         }
 
-        Pair<String, Long> cached = PLACEHOLDER_CACHE.get(in);
-        if ((cached != null) && ((cached.getValue() + PLACEHOLDER_CACHE_DURATION_MS) > System.currentTimeMillis())) return cached.getKey();
+        if (isCachingPlaceholders()) {
+            Pair<String, Long> cached = PLACEHOLDER_CACHE.get(in);
+            if ((cached != null) && ((cached.getValue() + getPlaceholderCachingDurationMs()) > System.currentTimeMillis())) return cached.getKey();
+        }
 
         String original = in;
 
@@ -174,7 +184,9 @@ public class PlaceholderParser {
 
         in = replaceVariableReferences(in);
 
-        PLACEHOLDER_CACHE.put(original, Pair.of(in, System.currentTimeMillis()));
+        if (isCachingPlaceholders()) {
+            PLACEHOLDER_CACHE.put(original, Pair.of(in, System.currentTimeMillis()));
+        }
 
         return in;
 

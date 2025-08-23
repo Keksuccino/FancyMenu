@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.resources.ResourceLocation;
@@ -27,9 +28,26 @@ public class ImageElement extends AbstractElement {
     public boolean nineSlice = false;
     public int nineSliceBorderX = 5;
     public int nineSliceBorderY = 5;
+    public boolean restartAnimatedOnMenuLoad = false;
 
     public ImageElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
+    }
+
+    @Override
+    public void onOpenScreen() {
+
+        super.onOpenScreen();
+
+        // Restart animated textures on menu load if enabled
+        if (this.restartAnimatedOnMenuLoad && (this.textureSupplier != null)) {
+            ITexture texture = this.textureSupplier.get();
+            if (texture instanceof PlayableResource r) {
+                r.stop();
+                r.play();
+            }
+        }
+
     }
 
     @Override

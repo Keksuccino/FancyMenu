@@ -1,8 +1,20 @@
 package de.keksuccino.fancymenu.util;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.world.level.storage.LevelStorageException;
+import net.minecraft.world.level.storage.LevelStorageSource;
+import net.minecraft.world.level.storage.LevelSummary;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 public class WorldUtils {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public static boolean isSingleplayer() {
         if (Minecraft.getInstance().level == null) return false;
@@ -12,6 +24,24 @@ public class WorldUtils {
     public static boolean isMultiplayer() {
         if (Minecraft.getInstance().level == null) return false;
         return !isSingleplayer();
+    }
+
+    @NotNull
+    public static List<LevelSummary> getLevels() {
+        Minecraft minecraft = Minecraft.getInstance();
+        try {
+            return Objects.requireNonNullElse(minecraft.getLevelSource().getLevelList(), List.of());
+        } catch (LevelStorageException ex) {
+            LOGGER.error("[FANCYMENU] Couldn't load level list!", ex);
+        }
+        return List.of();
+    }
+
+    @NotNull
+    public static List<LevelData> getLevelsAsData() {
+        List<LevelData> data = new ArrayList<>();
+        getLevels().forEach(summary -> data.add(LevelData.fromLevelSummary(summary)));
+        return data;
     }
 
 }

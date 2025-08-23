@@ -394,11 +394,6 @@ public class CustomizationOverlayUI {
                         })
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.settings.game_intro.set_custom_skip_text.tooltip")));
 
-        customizationSettingsMenu.addValueCycleEntry("preload_animations", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.preload_animations", FancyMenu.getOptions().preLoadAnimations.getValue())
-                .addCycleListener(cycle -> {
-                    FancyMenu.getOptions().preLoadAnimations.setValue(cycle.getAsBoolean());
-                }));
-
         customizationSettingsMenu.addSeparatorEntry("separator_after_preload_animations");
 
         customizationSettingsMenu.addValueCycleEntry("singleplayer_world_icons", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.singleplayer_screen.world_icons", FancyMenu.getOptions().showSingleplayerScreenWorldIcons.getValue())
@@ -565,6 +560,28 @@ public class CustomizationOverlayUI {
                         })
                 .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.overlay.menu_bar.customization.settings.custom_window_title.tooltip")))
                 .setIcon(ContextMenu.IconFactory.getIcon("text"));
+
+        customizationSettingsMenu.addSeparatorEntry("separator_after_window_title");
+
+        NonStackableOverlayUI.addLongInputContextMenuEntryTo(customizationSettingsMenu, "placeholder_caching_duration",
+                        Components.translatable("fancymenu.settings.caching.placeholders.set"),
+                        () -> FancyMenu.getOptions().placeholderCachingDurationMs.getValue(),
+                        duration -> FancyMenu.getOptions().placeholderCachingDurationMs.setValue(duration),
+                        true, FancyMenu.getOptions().placeholderCachingDurationMs.getDefaultValue(), null, null, (screen1, s) -> {
+                            Minecraft.getInstance().setScreen(screen1);
+                            forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("screen_settings", "placeholder_caching_duration")));
+                        })
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.settings.caching.placeholders.set.desc")));
+
+        NonStackableOverlayUI.addLongInputContextMenuEntryTo(customizationSettingsMenu, "requirement_caching_duration",
+                        Components.translatable("fancymenu.settings.caching.requirements.set"),
+                        () -> FancyMenu.getOptions().requirementCachingDurationMs.getValue(),
+                        duration -> FancyMenu.getOptions().requirementCachingDurationMs.setValue(duration),
+                        true, FancyMenu.getOptions().requirementCachingDurationMs.getDefaultValue(), null, null, (screen1, s) -> {
+                            Minecraft.getInstance().setScreen(screen1);
+                            forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("screen_settings", "requirement_caching_duration")));
+                        })
+                .setTooltipSupplier((menu, entry) -> Tooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.settings.caching.requirements.set.desc")));
 
         customizationMenu.addSeparatorEntry("separator_after_settings");
 

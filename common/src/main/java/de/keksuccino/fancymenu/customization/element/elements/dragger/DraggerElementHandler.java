@@ -4,79 +4,75 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.util.file.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 public class DraggerElementHandler {
 
-    public static final File DRAGGER_METAS_FILE = new File(FancyMenu.MOD_DIR, "/dragger_metas.json");
+    public static final File DRAGGER_METAS_FILE = new File(FancyMenu.INSTANCE_DATA_DIR, "/dragger_metas.json");
+    private static final File OLD_DRAGGER_METAS_FILE = new File(FancyMenu.MOD_DIR, "/dragger_metas.json");
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final Map<String, Map<String, Integer>> METAS = new HashMap<>();
+    private static final Map<String, Map<String, Integer>> DRAGGER_METAS_MAP = new HashMap<>();
 
-    private static boolean initialized = false;
+    private static boolean loaded = false;
+    
 
-    protected static void readFile() {
-
+    private static void loadFromFile() {
+        if (loaded) return;
         try {
-
-            METAS.clear();
-
-            if (!DRAGGER_METAS_FILE.isFile()) {
-                DRAGGER_METAS_FILE.createNewFile();
+            File dir = DRAGGER_METAS_FILE;
+            if (!dir.exists()) dir = OLD_DRAGGER_METAS_FILE;
+            if (dir.exists()) {
+                try (FileReader reader = new FileReader(dir)) {
+                    Type mapType = new TypeToken<Map<String, Map<String, Integer>>>(){}.getType();
+                    Map<String, Map<String, Integer>> loadedMap = GSON.fromJson(reader, mapType);
+                    if (loadedMap != null) {
+                        DRAGGER_METAS_MAP.clear();
+                        DRAGGER_METAS_MAP.putAll(loadedMap);
+                    }
+                }
+                if (dir == OLD_DRAGGER_METAS_FILE) {
+                    saveToFile(); // save to new file
+                }
             }
-
-            List<String> json = FileUtils.readTextLinesFrom(DRAGGER_METAS_FILE);
-            StringBuilder jsonString = new StringBuilder();
-            for (String s : json) {
-                jsonString.append(s);
-            }
-
-            if (jsonString.toString().isBlank()) return;
-
-            TypeToken<Map<String, Map<String, Integer>>> token = new TypeToken<Map<String, Map<String, Integer>>>() {};
-            Map<String, Map<String, Integer>> metasFromJson = GSON.fromJson(jsonString.toString(), token.getType());
-            METAS.putAll(metasFromJson);
-
-        } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to read from Dragger metas file!", ex);
+            loaded = true;
+        } catch (IOException e) {
+            LOGGER.error("[FANCYMENU] Failed to load Dragger offsets data from file!", e);
+            loaded = true; // Set to true even on error to prevent repeated attempts
         }
-
     }
 
-    protected static void writeFile() {
-
+    private static void saveToFile() {
         try {
-
-            if (!DRAGGER_METAS_FILE.isFile()) {
-                DRAGGER_METAS_FILE.createNewFile();
+            // Ensure parent directory exists
+            File parentDir = DRAGGER_METAS_FILE.getParentFile();
+            if (parentDir != null && !parentDir.exists()) {
+                parentDir.mkdirs();
             }
-
-            String json = GSON.toJson(METAS);
-            if (json == null) json = "";
-
-            FileUtils.writeTextToFile(DRAGGER_METAS_FILE, false, json);
-
-        } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to write to Dragger metas file!", ex);
+            try (FileWriter writer = new FileWriter(DRAGGER_METAS_FILE)) {
+                GSON.toJson(DRAGGER_METAS_MAP, writer);
+            }
+        } catch (IOException e) {
+            LOGGER.error("[FANCYMENU] Failed to save Dragger offsets data to file!", e);
         }
-
     }
 
     @Nullable
     public static DraggerMeta getMeta(@NotNull String elementIdentifier) {
-        if (!initialized) readFile();
-        initialized = true;
-        Map<String, Integer> meta = METAS.get(elementIdentifier);
+        loadFromFile();
+        Map<String, Integer> meta = DRAGGER_METAS_MAP.get(elementIdentifier);
         if (meta != null) {
             return new DraggerMeta(toInt(meta.get("offset_x")), toInt(meta.get("offset_y")));
         }
@@ -84,15 +80,14 @@ public class DraggerElementHandler {
     }
 
     public static void putMeta(@NotNull String elementIdentifier, @NotNull DraggerMeta meta) {
-        if (!initialized) readFile();
-        initialized = true;
+        loadFromFile();
         Objects.requireNonNull(meta);
         Objects.requireNonNull(elementIdentifier);
         Map<String, Integer> metaMap = new HashMap<>();
         metaMap.put("offset_x", meta.offsetX);
         metaMap.put("offset_y", meta.offsetY);
-        METAS.put(elementIdentifier, metaMap);
-        writeFile();
+        DRAGGER_METAS_MAP.put(elementIdentifier, metaMap);
+        saveToFile();
     }
 
     public static void putMeta(@NotNull String elementIdentifier, int offsetX, int offsetY) {

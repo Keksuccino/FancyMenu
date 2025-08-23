@@ -81,13 +81,22 @@ public class ImageEditorElement extends AbstractEditorElement {
 
         this.rightClickMenu.addSeparatorEntry("image_separator_1");
 
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "restart_animated_on_menu_load",
+                        ImageEditorElement.class,
+                        consumes -> consumes.getElement().restartAnimatedOnMenuLoad,
+                        (imageEditorElement, aBoolean) -> imageEditorElement.getElement().restartAnimatedOnMenuLoad = aBoolean,
+                        "fancymenu.elements.image.restart_animated_on_menu_load")
+                .setStackable(true);
+
+        this.rightClickMenu.addSeparatorEntry("separator_after_restart_animated");
+
         this.rightClickMenu.addClickableEntry("restore_aspect_ratio", Components.translatable("fancymenu.elements.image.restore_aspect_ratio"), (menu, entry) -> {
-            List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof ImageEditorElement));
-            this.editor.history.saveSnapshot();
-            for (AbstractEditorElement e : selectedElements) {
-                ((ImageElement)e.element).restoreAspectRatio();
-            }
-        }).setStackable(true)
+                    List<AbstractEditorElement> selectedElements = ListUtils.filterList(this.editor.getSelectedElements(), consumes -> (consumes instanceof ImageEditorElement));
+                    this.editor.history.saveSnapshot();
+                    for (AbstractEditorElement e : selectedElements) {
+                        ((ImageElement)e.element).restoreAspectRatio();
+                    }
+                }).setStackable(true)
                 .setIcon(ContextMenu.IconFactory.getIcon("aspect_ratio"));
 
     }
