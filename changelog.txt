@@ -1,4 +1,49 @@
 
+CHANGELOG | FANCYMENU v3.7.0
+
+- Dropped support for MC 1.21.7
+- This is probably the last build that will support the Forge mod loader in MC 1.21.1+, future builds will drop support for it (NeoForge is still supported - this is just for (Lex)Forge)
+- Added back "Player Entity" element in MC 1.21.4+ (#1191)
+  - Now needs "FER" (Fancy Entity Renderer) for rendering the element (this is a new optional dependency - without this mod installed, the Player Entity element will not work)
+  - This new element is sadly not compatible with old ones, so you need to remake Player Entity elements in MC 1.21.4+ (sorry for that!)
+  - Now supports rotating the entity's body on the Z axis
+  - Now supports normal element resizing like other elements (no need to set a scale anymore)
+  - Now has a setting to set Vanilla's existing poses (like standing, crouching, swimming, sleeping, etc.)
+  - Now has a setting to enable "body movement", which basically plays idle animations like arms moving around, etc. when enabled (or other pose-related movement like the swimming animation)
+  - It's now possible to set armor and tools for the player to wear/hold (#1150)
+  - The new Player Entity element will get backported to older MC versions in the future when "FER" (Fancy Entity Renderer) gets released for these older versions
+- Added "Is MCEF Loaded" requirement to check if the MCEF mod is loaded, which is needed for the Browser element and all video-related features
+- Added "World Save Names" placeholder that returns a list of the names of all local world saves
+- Added "World Save Data" placeholder that returns data for a target world name as single-line JSON (like difficulty, icon path, etc.)
+- Added "Send HTTP Request" action that can send text data to a web target (like a REST API for example)
+  - Target URL, body and header keys/values have full placeholder support
+  - It is possible to write the response to a variable for later use
+- It's now possible to restart animated textures used in "Image" menu backgrounds when a screen/menu gets opened (#1237)
+- It's now possible to restart animated textures used in "Image" elements when a screen/menu gets opened (#1237)
+- It is now possible to execute FancyMenu's actions from within the "Browser" element, which means you can now basically make web-based UIs (#1223)
+- "Random Layout Groups" that contain only universal layouts now remember their picked layout across all screens the layout group gets applied to when the group is set to "Only First Time" (#722)
+- Removed old unused "Preload Animations" option from FancyMenu's settings, since it was only for the old animation system that does not exist anymore
+- Reverted the changes I did to the caching logic of placeholders and requirements, because they created more problems than they solved (#1215)
+  - I instead added settings to set individual, custom caching durations for requirements and placeholders (or disable caching by setting the duration to 0) (#1194, #1193)
+- FancyMenu should now cause way less "MCEF was never initialized" errors in the log
+- The file where data about normalized scroll screens is stored now gets saved in /config/fancymenu/ (it was previously saved in the MC instance root, which was a bug)
+- The file where position offsets of Dragger elements is stored now gets saved in /fancymenu_data/ to not accidentally copy it to modpacks anymore
+- The keyframe editor of the "Element Animator" element now shows the layout editor's grid and supports grid snapping (#1231)
+  - You can disable grid or grid snapping in the layout editor settings if you don't like it
+- For devs: It is no longer possible to register actions that have the character ":" in its identifier (this will result in a crash now)
+- Fixed complex custom logic using placeholders and requirments lags/flickers in some cases due to the caching of placeholders and requirements (#1213)
+- Fixed negative widget coordinates produce errors in widget ID calculation (#1226, #1206)
+- Fixed log error spam related to packets (#1217, #1163)
+- Fixed "Last Server/World Name" placeholder ignores "full_world_path=false" when its return type is set to "both" (#1214)
+- Fixed Forge builds crash on launch in some MC versions (#1229)
+- Fixed mouse in Browser element stays pressed when releasing mouse outside the browser window
+- Fixed keyboard input not working in Browser element (#1207)
+ 
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.6.4
 
 - Dropped support for MC 1.21.6
@@ -3666,6 +3711,7 @@ CHANGELOG | FANCYMNENU v1.5
 - Fixed a bug that prevented customized menu buttons from loading when the previous menu was the language settings menu
 - Fixed a rare bug that could lead to a crash when trying to save or load layouts while having non-layout files saved in the layout directory (.minecraft/config/fancymenu/customization)
 - Fixed a MC 1.12 bug that could lead to non-functional 'openlink' button actions even though the given URL was correct
+
 
 
 
