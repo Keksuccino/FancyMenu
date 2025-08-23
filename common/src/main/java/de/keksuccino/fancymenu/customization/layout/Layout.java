@@ -54,6 +54,8 @@ public class Layout extends LayoutBase {
     private static final Logger LOGGER = LogManager.getLogger();
     public static final String UNIVERSAL_LAYOUT_IDENTIFIER = "%fancymenu:universal_layout%";
 
+    @NotNull
+    public final String runtimeLayoutIdentifier = ScreenCustomization.generateUniqueIdentifier();
     @Nullable
     public String screenIdentifier;
     public File layoutFile;

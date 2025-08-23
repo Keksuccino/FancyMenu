@@ -25,7 +25,11 @@ public class LastWorldOrServerPlaceholder extends Placeholder {
         boolean fullPath = SerializationUtils.deserializeBoolean(true, dps.values.get("full_world_path"));
         if (type != null) {
             if (type.equals("both")) {
-                return LastWorldHandler.getLastWorld();
+                String lastWorld = LastWorldHandler.getLastWorld();
+                if (!fullPath) {
+                    lastWorld = Files.getNameWithoutExtension(lastWorld);
+                }
+                return lastWorld;
             }
             if (type.equals("server")) {
                 if (LastWorldHandler.isLastWorldServer()) {

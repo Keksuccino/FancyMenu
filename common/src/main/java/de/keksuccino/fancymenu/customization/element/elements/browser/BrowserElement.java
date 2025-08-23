@@ -48,7 +48,7 @@ public class BrowserElement extends AbstractElement {
 
     @Override
     public void afterConstruction() {
-        if (MCEFUtil.isMCEFLoaded()) {
+        if (MCEFUtil.isMCEFLoaded() && MCEFUtil.MCEF_initialized) {
             this.browser = BrowserHandler.get(this.getInstanceIdentifier());
             if (this.browser == null) this.browser = WrappedMCEFBrowser.build(PlaceholderParser.replacePlaceholders(this.url), true, false, null);
             BrowserHandler.notifyHandler(this.getInstanceIdentifier(), this.browser);
