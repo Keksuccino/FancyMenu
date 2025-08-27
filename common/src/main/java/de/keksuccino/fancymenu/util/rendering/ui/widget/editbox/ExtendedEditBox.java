@@ -356,6 +356,8 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
 
     @Override
     public boolean charTyped(char character, int modifiers) {
+        //TODO remove debug
+        LOGGER.info("##################### CHAR TYPED !!!");
         if ((this.characterFilter != null) && !this.characterFilter.isAllowedChar(character)) {
             return false;
         }
