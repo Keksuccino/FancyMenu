@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.mixin.mixins.forge.client;
 
-import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
@@ -22,25 +21,6 @@ public class MixinForgeMouseHandler {
     @Shadow private double ypos;
 
     @Unique private int cachedMouseButton_FancyMenu = -1;
-
-    /**
-     * @reason This restores Minecraft's old UI component click logic to not only click the hovered component, but all of them. The old logic is only used for FancyMenu's components.
-     */
-    @WrapOperation(method = "onPress", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/client/event/ForgeEventFactoryClient;onScreenMouseClicked(Lnet/minecraft/client/gui/screens/Screen;DDI)Z"))
-    private boolean wrap_Screen_mouseClicked_in_onPress_FancyMenu(Screen screen, double mouseX, double mouseY, int button, Operation<Boolean> original) {
-        for (GuiEventListener listener : screen.children()) {
-            if (listener instanceof FancyMenuUiComponent) {
-                if (listener.mouseClicked(mouseX, mouseY, button)) {
-                    screen.setFocused(listener);
-                    if (button == 0) {
-                        screen.setDragging(true);
-                    }
-                    return true;
-                }
-            }
-        }
-        return original.call(screen, mouseX, mouseY, button);
-    }
 
     /**
      * @reason This restores Minecraft's old UI component scroll logic to not only scroll the hovered component, but all of them. The old logic is only used for FancyMenu's components.
@@ -75,6 +55,10 @@ public class MixinForgeMouseHandler {
             for (GuiEventListener listener : instance.children()) {
                 if (listener instanceof FancyMenuUiComponent) {
                     if (listener.mouseClicked(d, e, this.cachedMouseButton_FancyMenu)) {
+                        instance.setFocused(listener);
+                        if (this.cachedMouseButton_FancyMenu == 0) {
+                            instance.setDragging(true);
+                        }
                         info.cancel();
                         return;
                     }
@@ -96,6 +80,9 @@ public class MixinForgeMouseHandler {
             for (GuiEventListener listener : instance.children()) {
                 if (listener instanceof FancyMenuUiComponent) {
                     if (listener.mouseReleased(d, e, this.cachedMouseButton_FancyMenu)) {
+                        if ((this.cachedMouseButton_FancyMenu == 0) && instance.isDragging()) {
+                            instance.setDragging(false);
+                        }
                         info.cancel();
                         return;
                     }
