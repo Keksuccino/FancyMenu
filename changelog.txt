@@ -1,4 +1,13 @@
 
+CHANGELOG | FANCYMENU v3.7.1
+
+- Fixed some text input fields not working correctly in MC 1.21.4+ (#1254)
+ 
+%changelog:end%
+
+
+
+
 CHANGELOG | FANCYMENU v3.7.0
 
 - Dropped support for MC 1.21.7
@@ -3711,6 +3720,7 @@ CHANGELOG | FANCYMNENU v1.5
 - Fixed a bug that prevented customized menu buttons from loading when the previous menu was the language settings menu
 - Fixed a rare bug that could lead to a crash when trying to save or load layouts while having non-layout files saved in the layout directory (.minecraft/config/fancymenu/customization)
 - Fixed a MC 1.12 bug that could lead to non-functional 'openlink' button actions even though the given URL was correct
+
 
 
 
