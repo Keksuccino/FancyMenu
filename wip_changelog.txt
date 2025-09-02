@@ -1,7 +1,6 @@
 
-CHANGELOG | FANCYMENU v3.7.1 [ W I P !! Not public yet !! ]
+CHANGELOG | FANCYMENU v3.X.X [ W I P !! Not public yet !! ]
 
-- Fixed some text input fields not working correctly in MC 1.21.4+ (#1254)
 - 
  
 %changelog:end%
