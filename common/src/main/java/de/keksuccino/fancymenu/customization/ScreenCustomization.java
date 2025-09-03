@@ -10,6 +10,8 @@ import de.keksuccino.fancymenu.customization.element.ElementMemories;
 import de.keksuccino.fancymenu.customization.element.elements.animationcontroller.AnimationControllerHandler;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.widgets.LayoutEditorWidgets;
+import de.keksuccino.fancymenu.customization.listener.ListenerHandler;
+import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.customization.screen.dummyscreen.DummyScreens;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screen.identifier.UniversalScreenIdentifierRegistry;
@@ -78,6 +80,9 @@ public class ScreenCustomization {
 		EventHandler.INSTANCE.registerListenersOf(eventsInstance);
 
 		addDefaultScreenBlacklistRules();
+
+		Listeners.registerAll();
+		ListenerHandler.init();
 
 		ElementMemories.init();
 
