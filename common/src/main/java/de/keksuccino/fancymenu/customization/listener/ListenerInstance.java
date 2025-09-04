@@ -23,10 +23,17 @@ public class ListenerInstance {
     @NotNull
     public final AbstractListener parent;
     @NotNull
-    public AbstractExecutableBlock actionScript = new GenericExecutableBlock();
+    public GenericExecutableBlock actionScript = new GenericExecutableBlock();
 
     public ListenerInstance(@NotNull AbstractListener parent) {
         this.parent = parent;
+    }
+
+    /**
+     * This method is safe for multi-calling, so even if the instance is already registered, nothing will break.
+     */
+    public void registerSelfToParent() {
+        this.parent.registerInstance(this);
     }
 
     public PropertyContainer serialize() {
@@ -72,9 +79,15 @@ public class ListenerInstance {
             return null;
         }
 
-        AbstractExecutableBlock deserializedScript = ExecutableBlockDeserializer.deserializeWithIdentifier(serialized, actionScriptIdentifier);
-        if (deserializedScript == null) {
+        AbstractExecutableBlock executableBlock = ExecutableBlockDeserializer.deserializeWithIdentifier(serialized, actionScriptIdentifier);
+        if (executableBlock == null) {
             LOGGER.error("[FANCYMENU] Failed to deserialize listener instance! Action script failed to get deserialized and was NULL for instance with identifier: " + instance.instanceIdentifier, new NullPointerException("Action script was NULL"));
+            return null;
+        } else if (executableBlock instanceof GenericExecutableBlock g) {
+            instance.actionScript = g;
+            LOGGER.info("########################## Block deserialized !!!!!!!!!!!!!!!!!!!!! " + g.getIdentifier() + " | " + g.getExecutables());
+        } else {
+            LOGGER.error("[FANCYMENU] Failed to deserialize listener instance! Action script is not a GenericExecutableBlock for instance with identifier: " + instance.instanceIdentifier, new ClassCastException("Block is not a GenericExecutableBlock"));
             return null;
         }
 

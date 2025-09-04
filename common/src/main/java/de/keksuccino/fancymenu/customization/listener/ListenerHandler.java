@@ -28,10 +28,10 @@ public class ListenerHandler {
     }
 
     @NotNull
-    public static String addInstance(@NotNull ListenerInstance instance, boolean registerToParent) {
+    public static String addInstance(@NotNull ListenerInstance instance) {
         assertInitialized();
         INSTANCES.put(instance.instanceIdentifier, instance);
-        if (registerToParent) instance.parent.registerInstance(instance);
+        instance.registerSelfToParent();
         writeToFile();
         return instance.instanceIdentifier;
     }
@@ -79,7 +79,10 @@ public class ListenerHandler {
 
             instances.getContainers().forEach(propertyContainer -> {
                 ListenerInstance instance = ListenerInstance.deserialize(propertyContainer);
-                if (instance != null) INSTANCES.put(instance.instanceIdentifier, instance);
+                if (instance != null) {
+                    INSTANCES.put(instance.instanceIdentifier, instance);
+                    instance.registerSelfToParent();
+                }
             });
 
         } catch (Exception ex) {

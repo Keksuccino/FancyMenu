@@ -6,10 +6,14 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import net.minecraft.network.chat.Component;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class OnCharTypedListener extends AbstractListener {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     protected Character lastTypedChar = null;
 
@@ -23,7 +27,9 @@ public class OnCharTypedListener extends AbstractListener {
     }
 
     @EventListener
-    private void onCharTyped(ScreenCharTypedEvent e) {
+    public void onCharTyped(ScreenCharTypedEvent e) {
+
+        LOGGER.info("################################# CHAR TYPED !!!!!!!!!!!!!!!!!!! : " + e.getCharacter());
 
         // Update cached typed char before notifying instances, so they can use the up-to-date char
         this.lastTypedChar = e.getCharacter();

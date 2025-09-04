@@ -8,6 +8,8 @@ import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -16,6 +18,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(KeyboardHandler.class)
 public class MixinFabricKeyboardHandler {
+
+    @Unique private static final Logger LOGGER_FANCYMENU = LogManager.getLogger();
 
     @Unique int cached_key_FancyMenu;
     @Unique int cached_scanCode_FancyMenu;
@@ -71,9 +75,14 @@ public class MixinFabricKeyboardHandler {
      */
     @WrapWithCondition(method = "charTyped", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;wrapScreenError(Ljava/lang/Runnable;Ljava/lang/String;Ljava/lang/String;)V"))
     private boolean wrap_screen_charTyped_in_charTyped_FancyMenu(Runnable runnable, String message, String className) {
+
+        LOGGER_FANCYMENU.info("#################### charTyped 1");
+
         Minecraft minecraft = Minecraft.getInstance();
         Screen screen = minecraft.screen;
         if (screen != null) {
+
+            LOGGER_FANCYMENU.info("#################### charTyped 2");
 
             // Fire CharTypedEvent
             EventHandler.INSTANCE.postEvent(new ScreenCharTypedEvent(screen, (char) this.cached_char_codePoint_FancyMenu));

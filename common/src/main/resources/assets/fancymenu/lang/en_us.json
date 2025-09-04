@@ -1799,6 +1799,15 @@
   "fancymenu.placeholders.world.level_save_data.desc": "Returns the complete level data of a specific world save as single-line JSON.\n\nValues:\n§elevel_name§r = The exact name of the world save to get data for.",
   "fancymenu.background.image.restart_animated_on_menu_load": "Restart Animated Textures When Opening Screen: %s",
   "fancymenu.elements.image.restart_animated_on_menu_load": "Restart Animated Textures When Opening Screen: %s",
+  "fancymenu.listeners.manage": "Manage Listeners",
+  "fancymenu.listeners.manage.desc": "Listeners are a very powerful feature that allows you\nto execute an action script when specific things happen,\nlike when a user types on their keyboard, performs a mouse click\nor even when things happen in worlds, like when the player dies.\n\nListeners aren't bound to screens, to they constantly\nlisten for events, even if there isn't a screen open at all,\nlike when playing in a singleplayer world or on a server.",
+  "fancymenu.listeners.manage.add": "Add Listener",
+  "fancymenu.listeners.manage.edit": "Edit Actions",
+  "fancymenu.listeners.manage.remove": "Remove Listener",
+  "fancymenu.listeners.choose_type": "Choose Listener Type",
+  "fancymenu.listeners.choose_type.search": "Search listener...",
+  "fancymenu.listeners.choose_type.available": "Available Listeners",
+  "fancymenu.listeners.choose_type.description": "Listener Description",
   "fancymenu.listeners.on_char_typed": "On Keyboard Character Typed in Screen",
   "fancymenu.listeners.on_char_typed.desc": "This listener triggers whenever a character is typed in a screen.\n\nIt provides the following variables for its actions and requirements:\n\n- $$char (The typed character)"
 }

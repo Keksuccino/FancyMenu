@@ -1,0 +1,208 @@
+package de.keksuccino.fancymenu.customization.listener.gui;
+
+import de.keksuccino.fancymenu.customization.listener.AbstractListener;
+import de.keksuccino.fancymenu.customization.listener.ListenerRegistry;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextListScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import java.util.List;
+import java.util.function.Consumer;
+
+public class ChooseListenerTypeScreen extends Screen {
+
+    @NotNull
+    protected final Consumer<AbstractListener> callback;
+    @Nullable
+    protected AbstractListener selectedListener;
+    
+    protected ScrollArea listenersScrollArea = new ScrollArea(0, 0, 0, 0);
+    protected ScrollArea descriptionScrollArea = new ScrollArea(0, 0, 0, 0);
+    protected ExtendedEditBox searchBar;
+
+    public ChooseListenerTypeScreen(@NotNull Consumer<AbstractListener> callback) {
+        super(Component.translatable("fancymenu.listeners.choose_type"));
+        this.callback = callback;
+    }
+
+    @Override
+    protected void init() {
+        
+        // Initialize search bar
+        String oldSearchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
+        this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, 20 + 1, 50 + 15 + 1, (this.width / 2) - 40 - 2, 20 - 2, Component.empty()) {
+            @Override
+            public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+                super.renderWidget(graphics, mouseX, mouseY, partial);
+                if (this.getValue().isBlank() && !this.isFocused()) {
+                    graphics.drawString(this.font, Component.translatable("fancymenu.listeners.choose_type.search"), 
+                            this.getX() + 4, this.getY() + (this.getHeight() / 2) - (this.font.lineHeight / 2), 
+                            UIBase.getUIColorTheme().edit_box_text_color_uneditable.getColorInt(), false);
+                }
+            }
+        };
+        this.searchBar.setValue(oldSearchValue);
+        this.searchBar.setResponder(s -> this.updateListenersList());
+        this.addRenderableWidget(this.searchBar);
+        UIBase.applyDefaultWidgetSkinTo(this.searchBar);
+        
+        // Set positions for scroll areas
+        this.listenersScrollArea.setWidth((this.width / 2) - 40, true);
+        this.listenersScrollArea.setHeight(this.height - 85 - 25, true);
+        this.listenersScrollArea.setX(20, true);
+        this.listenersScrollArea.setY(50 + 15 + 25, true);
+        
+        this.descriptionScrollArea.setWidth((this.width / 2) - 40, true);
+        this.descriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
+        this.descriptionScrollArea.setX(this.width - 20 - this.descriptionScrollArea.getWidthWithBorder(), true);
+        this.descriptionScrollArea.setY(50 + 15, true);
+        
+        // Done button
+        ExtendedButton doneButton = new ExtendedButton(
+                this.width - 20 - 150, 
+                this.height - 20 - 20, 
+                150, 20, 
+                Component.translatable("fancymenu.guicomponents.done"), 
+                button -> {
+                    this.callback.accept(this.selectedListener);
+                }
+        ).setIsActiveSupplier(consumes -> this.selectedListener != null);
+        this.addRenderableWidget(doneButton);
+        UIBase.applyDefaultWidgetSkinTo(doneButton);
+        
+        // Cancel button
+        ExtendedButton cancelButton = new ExtendedButton(
+                this.width - 20 - 150,
+                this.height - 20 - 20 - 5 - 20,
+                150, 20,
+                Component.translatable("fancymenu.guicomponents.cancel"),
+                button -> {
+                    this.callback.accept(null);
+                }
+        );
+        this.addRenderableWidget(cancelButton);
+        UIBase.applyDefaultWidgetSkinTo(cancelButton);
+        
+        this.updateListenersList();
+    }
+
+    @Override
+    public void onClose() {
+        this.callback.accept(null);
+    }
+
+    @Override
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        
+        graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
+        
+        Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
+        graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        
+        graphics.drawString(this.font, Component.translatable("fancymenu.listeners.choose_type.available"), 
+                20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        
+        Component descLabel = Component.translatable("fancymenu.listeners.choose_type.description");
+        int descLabelWidth = this.font.width(descLabel);
+        graphics.drawString(this.font, descLabel, this.width - 20 - descLabelWidth, 50, 
+                UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
+        
+        this.listenersScrollArea.render(graphics, mouseX, mouseY, partial);
+        this.descriptionScrollArea.render(graphics, mouseX, mouseY, partial);
+        
+        super.render(graphics, mouseX, mouseY, partial);
+    }
+
+    @Override
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    }
+
+    protected void updateListenersList() {
+        String searchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
+        if (searchValue.isBlank()) searchValue = null;
+        
+        this.listenersScrollArea.clearEntries();
+        
+        for (AbstractListener listener : ListenerRegistry.getListeners()) {
+            if (!this.listenerFitsSearchValue(listener, searchValue)) continue;
+            
+            ListenerScrollEntry entry = new ListenerScrollEntry(
+                    this.listenersScrollArea,
+                    listener.getDisplayName(),
+                    UIBase.getUIColorTheme().listing_dot_color_1.getColor(),
+                    e -> {
+                        this.selectedListener = listener;
+                        this.setDescription(listener);
+                    }
+            );
+            entry.listener = listener;
+            this.listenersScrollArea.addEntry(entry);
+        }
+        
+        // Select previously selected listener if still in list
+        if (this.selectedListener != null) {
+            for (ScrollAreaEntry e : this.listenersScrollArea.getEntries()) {
+                if ((e instanceof ListenerScrollEntry entry) && (entry.listener == this.selectedListener)) {
+                    e.setSelected(true);
+                    break;
+                }
+            }
+        }
+    }
+
+    protected void setDescription(@Nullable AbstractListener listener) {
+        this.descriptionScrollArea.clearEntries();
+        if ((listener != null) && (listener.getDescription() != null)) {
+            for (Component c : listener.getDescription()) {
+                TextScrollAreaEntry e = new TextScrollAreaEntry(this.descriptionScrollArea, c, entry -> {});
+                e.setSelectable(false);
+                e.setBackgroundColorHover(e.getBackgroundColorIdle());
+                e.setPlayClickSound(false);
+                this.descriptionScrollArea.addEntry(e);
+            }
+        }
+    }
+
+    protected boolean listenerFitsSearchValue(@NotNull AbstractListener listener, @Nullable String searchValue) {
+        if ((searchValue == null) || searchValue.isBlank()) return true;
+        searchValue = searchValue.toLowerCase();
+        
+        // Check display name
+        if (listener.getDisplayName().getString().toLowerCase().contains(searchValue)) return true;
+        
+        // Check description
+        return this.listenerDescriptionContains(listener, searchValue);
+    }
+
+    protected boolean listenerDescriptionContains(@NotNull AbstractListener listener, @NotNull String searchValue) {
+        List<Component> desc = listener.getDescription();
+        if (desc != null) {
+            for (Component c : desc) {
+                if (c.getString().toLowerCase().contains(searchValue)) return true;
+            }
+        }
+        return false;
+    }
+
+    public static class ListenerScrollEntry extends TextListScrollAreaEntry {
+        
+        @Nullable
+        public AbstractListener listener;
+        
+        public ListenerScrollEntry(ScrollArea parent, @NotNull Component text, @NotNull java.awt.Color listDotColor, 
+                                 @NotNull Consumer<TextListScrollAreaEntry> onClick) {
+            super(parent, text, listDotColor, onClick);
+        }
+    }
+
+}
