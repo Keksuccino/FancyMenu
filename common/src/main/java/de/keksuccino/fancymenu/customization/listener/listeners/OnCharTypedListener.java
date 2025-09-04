@@ -37,7 +37,7 @@ public class OnCharTypedListener extends AbstractListener {
 
         // $$char
         registry.add(new CustomVariable("char", () -> {
-            if (this.lastTypedChar == null) return "NONE";
+            if (this.lastTypedChar == null) return "ERROR";
             return this.lastTypedChar.toString();
         }));
 
