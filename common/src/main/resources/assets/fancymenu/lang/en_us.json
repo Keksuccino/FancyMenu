@@ -1798,5 +1798,7 @@
   "fancymenu.placeholders.world.level_save_data": "World Save Data",
   "fancymenu.placeholders.world.level_save_data.desc": "Returns the complete level data of a specific world save as single-line JSON.\n\nValues:\n§elevel_name§r = The exact name of the world save to get data for.",
   "fancymenu.background.image.restart_animated_on_menu_load": "Restart Animated Textures When Opening Screen: %s",
-  "fancymenu.elements.image.restart_animated_on_menu_load": "Restart Animated Textures When Opening Screen: %s"
+  "fancymenu.elements.image.restart_animated_on_menu_load": "Restart Animated Textures When Opening Screen: %s",
+  "fancymenu.listeners.on_char_typed": "On Keyboard Character Typed in Screen",
+  "fancymenu.listeners.on_char_typed.desc": "This listener triggers whenever a character is typed in a screen.\n\nIt provides the following variables for its actions and requirements:\n\n- $$char (The typed character)"
 }

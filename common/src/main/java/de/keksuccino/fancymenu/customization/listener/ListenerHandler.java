@@ -5,10 +5,10 @@ import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class ListenerHandler {
 
@@ -25,6 +25,34 @@ public class ListenerHandler {
         }
         initialized = true;
         canRegisterListeners = false;
+    }
+
+    @NotNull
+    public static String addInstance(@NotNull ListenerInstance instance, boolean registerToParent) {
+        assertInitialized();
+        INSTANCES.put(instance.instanceIdentifier, instance);
+        if (registerToParent) instance.parent.registerInstance(instance);
+        writeToFile();
+        return instance.instanceIdentifier;
+    }
+
+    public static void removeInstance(@NotNull String identifier) {
+        assertInitialized();
+        ListenerInstance instance = INSTANCES.get(identifier);
+        if (instance != null) instance.parent.unregisterInstance(instance);
+        INSTANCES.remove(identifier);
+    }
+
+    @Nullable
+    public static ListenerInstance getInstance(@NotNull String identifier) {
+        assertInitialized();
+        return INSTANCES.get(identifier);
+    }
+
+    @NotNull
+    public static List<ListenerInstance> getInstances() {
+        assertInitialized();
+        return new ArrayList<>(INSTANCES.values());
     }
 
     private static void writeToFile() {

@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.listener;
 
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -62,6 +63,12 @@ public abstract class AbstractListener {
         variables.forEach(customVariable -> instance.actionScript.addValuePlaceholder(customVariable.name, customVariable.valueSupplier));
     }
 
-    protected record CustomVariable(@NotNull String name, @NotNull Supplier<String> valueSupplier) {}
+    @NotNull
+    public abstract Component getDisplayName();
+
+    @NotNull
+    public abstract List<Component> getDescription();
+
+    public record CustomVariable(@NotNull String name, @NotNull Supplier<String> valueSupplier) {}
 
 }
