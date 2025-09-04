@@ -1,7 +1,7 @@
 
-CHANGELOG | FANCYMENU v3.X.X [ W I P !! Not public yet !! ]
+CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 
-- 
+- Fixed "World Save Data" placeholder being in the wrong category
  
 %changelog:end%
 
