@@ -52,15 +52,17 @@ public abstract class AbstractListener {
     }
 
     protected void notifyAllInstances() {
-        this.instances.forEach((s, listenerInstance) -> listenerInstance.actionScript.execute());
+        this.instances.forEach((s, instance) -> instance.getActionScript().execute());
     }
 
-    protected abstract void registerCustomVariables(List<CustomVariable> registry);
+    protected abstract void buildCustomVariablesAndAddToList(List<CustomVariable> list);
 
     protected void registerCustomVariablesToInstance(@NotNull ListenerInstance instance) {
         List<CustomVariable> variables = new ArrayList<>();
-        this.registerCustomVariables(variables);
-        variables.forEach(customVariable -> instance.actionScript.addValuePlaceholder(customVariable.name, customVariable.valueSupplier));
+        this.buildCustomVariablesAndAddToList(variables);
+        for (CustomVariable v : variables) {
+            instance.getActionScript().addValuePlaceholder(v.name(), v.valueSupplier());
+        }
     }
 
     @NotNull

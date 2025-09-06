@@ -23,10 +23,20 @@ public class ListenerInstance {
     @NotNull
     public final AbstractListener parent;
     @NotNull
-    public GenericExecutableBlock actionScript = new GenericExecutableBlock();
+    private GenericExecutableBlock actionScript;
 
     public ListenerInstance(@NotNull AbstractListener parent) {
         this.parent = parent;
+        this.setActionScript(new GenericExecutableBlock());
+    }
+
+    public @NotNull GenericExecutableBlock getActionScript() {
+        return actionScript;
+    }
+
+    public void setActionScript(@NotNull GenericExecutableBlock actionScript) {
+        this.actionScript = actionScript;
+        this.parent.registerCustomVariablesToInstance(this);
     }
 
     /**
@@ -84,7 +94,7 @@ public class ListenerInstance {
             LOGGER.error("[FANCYMENU] Failed to deserialize listener instance! Action script failed to get deserialized and was NULL for instance with identifier: " + instance.instanceIdentifier, new NullPointerException("Action script was NULL"));
             return null;
         } else if (executableBlock instanceof GenericExecutableBlock g) {
-            instance.actionScript = g;
+            instance.setActionScript(g);
         } else {
             LOGGER.error("[FANCYMENU] Failed to deserialize listener instance! Action script is not a GenericExecutableBlock for instance with identifier: " + instance.instanceIdentifier, new ClassCastException("Block is not a GenericExecutableBlock"));
             return null;

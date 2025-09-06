@@ -1809,5 +1809,7 @@
   "fancymenu.listeners.choose_type.available": "Available Listeners",
   "fancymenu.listeners.choose_type.description": "Listener Description",
   "fancymenu.listeners.on_char_typed": "On Keyboard Character Typed in Screen",
-  "fancymenu.listeners.on_char_typed.desc": "This listener triggers whenever a character is typed in a screen.\n\nIt provides the following variables for its actions and requirements:\n\n- $$char (The typed character)"
+  "fancymenu.listeners.on_char_typed.desc": "This listener triggers whenever a character is typed in a screen.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$char §r= The typed character",
+  "fancymenu.listeners.on_variable_updated": "On Variable Updated [FM Variable]",
+  "fancymenu.listeners.on_variable_updated.desc": "This listener triggers whenever a FancyMenu variable gets updated/set.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$var_name §r= The variable name\n- §z$$old_value §r= The old variable value\n- §z$$new_value §r= The new variable value"
 }

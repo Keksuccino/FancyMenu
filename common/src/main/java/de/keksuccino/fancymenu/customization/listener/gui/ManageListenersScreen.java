@@ -56,9 +56,9 @@ public class ManageListenersScreen extends CellScreen {
                 if (listener != null) {
                     // Create new instance and open action editor
                     ListenerInstance newInstance = listener.createFreshInstance();
-                    ManageActionsScreen actionsScreen = new ManageActionsScreen(newInstance.actionScript, updatedScript -> {
+                    ManageActionsScreen actionsScreen = new ManageActionsScreen(newInstance.getActionScript(), updatedScript -> {
                         if (updatedScript != null) {
-                            newInstance.actionScript = updatedScript;
+                            newInstance.setActionScript(updatedScript);
                             this.tempInstances.add(newInstance);
                             this.rebuild();
                         }
@@ -77,9 +77,9 @@ public class ManageListenersScreen extends CellScreen {
         // Edit listener button
         this.addRightSideButton(20, Component.translatable("fancymenu.listeners.manage.edit"), button -> {
             if (this.selectedInstance != null) {
-                ManageActionsScreen actionsScreen = new ManageActionsScreen(this.selectedInstance.actionScript, updatedScript -> {
+                ManageActionsScreen actionsScreen = new ManageActionsScreen(this.selectedInstance.getActionScript(), updatedScript -> {
                     if (updatedScript != null) {
-                        this.selectedInstance.actionScript = updatedScript;
+                        this.selectedInstance.setActionScript(updatedScript);
                     }
                     Minecraft.getInstance().setScreen(this);
                 });

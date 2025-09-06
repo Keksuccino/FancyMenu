@@ -76,13 +76,9 @@ public class MixinFabricKeyboardHandler {
     @WrapWithCondition(method = "charTyped", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;wrapScreenError(Ljava/lang/Runnable;Ljava/lang/String;Ljava/lang/String;)V"))
     private boolean wrap_screen_charTyped_in_charTyped_FancyMenu(Runnable runnable, String message, String className) {
 
-        LOGGER_FANCYMENU.info("#################### charTyped 1");
-
         Minecraft minecraft = Minecraft.getInstance();
         Screen screen = minecraft.screen;
         if (screen != null) {
-
-            LOGGER_FANCYMENU.info("#################### charTyped 2");
 
             // Fire CharTypedEvent
             EventHandler.INSTANCE.postEvent(new ScreenCharTypedEvent(screen, (char) this.cached_char_codePoint_FancyMenu));

@@ -5,16 +5,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ListenerRegistry {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final CharacterFilter IDENTIFIER_NAME_VALIDATOR = CharacterFilter.buildResourceNameFilter();
-    private static final Map<String, AbstractListener> LISTENERS = new HashMap<>();
+    private static final Map<String, AbstractListener> LISTENERS = new LinkedHashMap<>();
 
     public static void registerListener(@NotNull AbstractListener listener) {
         if (!ListenerHandler.canRegisterListeners) {
@@ -24,7 +21,7 @@ public class ListenerRegistry {
             throw new RuntimeException("[FANCYMENU] Failed to register listener! Listener identifiers can only have basic characters [a-z], [0-9], [-_]! Illegal identifier: " + listener.getIdentifier());
         }
         if (getListener(listener.getIdentifier()) != null) {
-            LOGGER.error("[FANCYMENU] Failed to register listener! Another listener with the same identifier is already registered: " + listener.getIdentifier(), new IllegalStateException("Duplicate listener identifier!"));
+            LOGGER.error("[FANCYMENU] Failed to register listener! Another listener with the same identifier is already registered: " + listener.getIdentifier(), new IllegalStateException("Duplicate listener identifier"));
             return;
         }
         LISTENERS.put(listener.getIdentifier(), listener);

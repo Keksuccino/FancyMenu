@@ -29,8 +29,6 @@ public class OnCharTypedListener extends AbstractListener {
     @EventListener
     public void onCharTyped(ScreenCharTypedEvent e) {
 
-        LOGGER.info("################################# CHAR TYPED !!!!!!!!!!!!!!!!!!! : " + e.getCharacter());
-
         // Update cached typed char before notifying instances, so they can use the up-to-date char
         this.lastTypedChar = e.getCharacter();
 
@@ -39,10 +37,10 @@ public class OnCharTypedListener extends AbstractListener {
     }
 
     @Override
-    protected void registerCustomVariables(List<CustomVariable> registry) {
+    protected void buildCustomVariablesAndAddToList(List<CustomVariable> list) {
 
         // $$char
-        registry.add(new CustomVariable("char", () -> {
+        list.add(new CustomVariable("char", () -> {
             if (this.lastTypedChar == null) return "ERROR";
             return this.lastTypedChar.toString();
         }));
