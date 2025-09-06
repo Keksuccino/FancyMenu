@@ -30,6 +30,8 @@ public class ManageListenersScreen extends CellScreen {
         this.callback = callback;
         // Create a copy of all listener instances to work with
         this.tempInstances.addAll(ListenerHandler.getInstances());
+        this.setSearchBarEnabled(true);
+        this.setDescriptionAreaEnabled(true);
     }
 
     @Override
