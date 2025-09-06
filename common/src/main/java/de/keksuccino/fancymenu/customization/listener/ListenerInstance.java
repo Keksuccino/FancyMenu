@@ -85,7 +85,6 @@ public class ListenerInstance {
             return null;
         } else if (executableBlock instanceof GenericExecutableBlock g) {
             instance.actionScript = g;
-            LOGGER.info("########################## Block deserialized !!!!!!!!!!!!!!!!!!!!! " + g.getIdentifier() + " | " + g.getExecutables());
         } else {
             LOGGER.error("[FANCYMENU] Failed to deserialize listener instance! Action script is not a GenericExecutableBlock for instance with identifier: " + instance.instanceIdentifier, new ClassCastException("Block is not a GenericExecutableBlock"));
             return null;

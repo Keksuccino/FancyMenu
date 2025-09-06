@@ -81,9 +81,6 @@ public class ScreenCustomization {
 
 		addDefaultScreenBlacklistRules();
 
-		Listeners.registerAll();
-		ListenerHandler.init();
-
 		ElementMemories.init();
 
 		ScreenCustomizationLayerHandler.init();
@@ -119,6 +116,9 @@ public class ScreenCustomization {
 		LastWorldHandler.init();
 
 		LayoutEditorWidgets.registerAll();
+
+		Listeners.registerAll();
+		ListenerHandler.init();
 
 		initialized = true;
 

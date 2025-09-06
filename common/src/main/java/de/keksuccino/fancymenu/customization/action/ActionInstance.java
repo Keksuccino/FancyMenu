@@ -134,6 +134,8 @@ public class ActionInstance implements Executable, ValuePlaceholderHolder {
                             ActionInstance i = new ActionInstance(action, action.hasValue() ? m.getValue() : null);
                             i.identifier = identifier;
                             instances.add(i);
+                        } else {
+                            LOGGER.error("[FANCYMENU] Action type not found! Registry returned NULL for type: " + actionType, new NullPointerException("Action type not registered"));
                         }
                     }
                 }
