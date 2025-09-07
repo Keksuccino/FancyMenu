@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextScrollAreaEntry;
@@ -28,8 +29,8 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.*;
+import net.minecraft.network.chat.contents.PlainTextContents;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -54,17 +55,17 @@ public abstract class CellScreen extends Screen {
     protected ExtendedButton cancelButton;
     protected int lastWidth = 0;
     protected int lastHeight = 0;
-    
+
     // Store all cells to support filtering
     protected final List<RenderCell> allCells = new ArrayList<>();
-    
+
     // Search bar feature
     protected boolean searchBarEnabled = false;
     @Nullable
     protected ExtendedEditBox searchBar;
     @NotNull
     protected Component searchBarPlaceholder = Component.translatable("fancymenu.ui.generic.search");
-    
+
     // Description area feature
     protected boolean descriptionAreaEnabled = false;
     @Nullable
@@ -94,7 +95,7 @@ public abstract class CellScreen extends Screen {
     public void rebuild() {
         this.resize(Minecraft.getInstance(), this.width, this.height);
     }
-    
+
     /**
      * Enable or disable the search bar feature.
      * Should be called before {@link #init()} for proper initialization.
@@ -102,7 +103,7 @@ public abstract class CellScreen extends Screen {
     protected void setSearchBarEnabled(boolean enabled) {
         this.searchBarEnabled = enabled;
     }
-    
+
     /**
      * Set the placeholder text for the search bar.
      * Only used when search bar is enabled.
@@ -122,7 +123,7 @@ public abstract class CellScreen extends Screen {
     public void setDescriptionAreaLabel(@NotNull Component descriptionAreaLabel) {
         this.descriptionAreaLabel = descriptionAreaLabel;
     }
-    
+
     /**
      * Get the current description to display in the description area.
      * By default, returns the description of the selected cell.
@@ -138,44 +139,54 @@ public abstract class CellScreen extends Screen {
         }
         return null;
     }
-    
+
     /**
      * Updates the description area with the current description.
      * Called automatically when the selected cell changes.
      */
     protected void updateDescriptionArea() {
         if (this.descriptionScrollArea == null) return;
-        
         this.descriptionScrollArea.clearEntries();
         List<Component> description = this.getCurrentDescription();
         if (description != null) {
             for (Component c : description) {
-                TextScrollAreaEntry e = new TextScrollAreaEntry(this.descriptionScrollArea, c, (entry) -> {});
-                e.setSelectable(false);
-                e.setBackgroundColorHover(e.getBackgroundColorIdle());
-                e.setPlayClickSound(false);
-                this.descriptionScrollArea.addEntry(e);
+                int maxWidth = (this.descriptionScrollArea.getInnerWidth() - 15);
+                if (this.font.width(c) > maxWidth) {
+                    this.font.getSplitter().splitLines(c, maxWidth, Style.EMPTY).forEach(formatted -> {
+                        this.addDescriptionLine(TextFormattingUtils.formattedTextToComponent(formatted));
+                    });
+                } else {
+                    this.addDescriptionLine(c);
+                }
             }
         }
     }
-    
+
+    protected void addDescriptionLine(@NotNull Component c) {
+        TextScrollAreaEntry e = new TextScrollAreaEntry(this.descriptionScrollArea, c, (entry) -> {});
+        e.setSelectable(false);
+        e.setBackgroundColorHover(e.getBackgroundColorIdle());
+        e.setPlayClickSound(false);
+        this.descriptionScrollArea.addEntry(e);
+    }
+
     /**
      * Updates the cell list based on the search filter.
      * Only cells that match the search query are visible.
      */
     protected void updateCellsVisibility() {
         if (!this.searchBarEnabled || this.searchBar == null || this.scrollArea == null) return;
-        
+
         String searchValue = this.searchBar.getValue();
         if (searchValue.isBlank()) searchValue = null;
-        
+
         // Remember current scroll position
         float scrollX = this.scrollArea.horizontalScrollBar.getScroll();
         float scrollY = this.scrollArea.verticalScrollBar.getScroll();
-        
+
         // Clear scroll area entries
         this.scrollArea.clearEntries();
-        
+
         // Re-add only cells that match the search
         for (RenderCell cell : this.allCells) {
             if (this.cellMatchesSearch(cell, searchValue)) {
@@ -186,27 +197,27 @@ public abstract class CellScreen extends Screen {
                 entry.setHeight(cell.getHeight());
             }
         }
-        
+
         // Restore scroll position
         this.scrollArea.horizontalScrollBar.setScroll(scrollX);
         this.scrollArea.verticalScrollBar.setScroll(scrollY);
     }
-    
+
     /**
      * Check if a cell matches the search query.
      * Searches both the cell's search string and its description (if any).
      */
     protected boolean cellMatchesSearch(@NotNull RenderCell cell, @Nullable String searchValue) {
         if (searchValue == null || searchValue.isBlank()) return true;
-        
+
         String searchLower = searchValue.toLowerCase();
-        
+
         // Check the cell's search string
         String cellSearchString = cell.getSearchString();
         if (cellSearchString != null && cellSearchString.toLowerCase().contains(searchLower)) {
             return true;
         }
-        
+
         // Check the cell's description
         Supplier<List<Component>> descSupplier = cell.getDescriptionSupplier();
         if (descSupplier != null) {
@@ -219,7 +230,7 @@ public abstract class CellScreen extends Screen {
                 }
             }
         }
-        
+
         return false;
     }
 
@@ -229,23 +240,24 @@ public abstract class CellScreen extends Screen {
         this.rightSideWidgets.clear();
         this.allCells.clear();
         this.selectedCell = null;
-        
+
         // Calculate scroll area dimensions based on enabled features
         int scrollAreaX = 20;
         int scrollAreaY = 50 + 15;
         int scrollAreaWidth = this.width - 40 - this.getRightSideWidgetWidth() - 20;
         int scrollAreaHeight = this.height - 85;
-        
+
         // Adjust for description area if enabled
         if (this.descriptionAreaEnabled) {
             scrollAreaWidth = (this.width / 2) - 40;
-            
+
             // Initialize description area
             this.descriptionScrollArea = new ScrollArea(0, 0, 0, 0);
             this.descriptionScrollArea.setWidth((this.width / 2) - 40, true);
             this.descriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
             this.descriptionScrollArea.setX(this.width - 20 - this.descriptionScrollArea.getWidthWithBorder(), true);
             this.descriptionScrollArea.setY(50 + 15, true);
+            this.descriptionScrollArea.horizontalScrollBar.active = false;
         }
 
         // Adjust for search bar if enabled
@@ -354,7 +366,7 @@ public abstract class CellScreen extends Screen {
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.updateSelectedCell();
-        
+
         // Update description area if enabled and selection changed
         if (this.descriptionAreaEnabled) {
             this.updateDescriptionArea();
@@ -364,7 +376,7 @@ public abstract class CellScreen extends Screen {
 
         Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
         graphics.drawString(this.font, titleComp, 20, 20, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
-        
+
         // Render description label if description area is enabled
         if (this.descriptionAreaEnabled && this.descriptionScrollArea != null) {
             int descLabelWidth = this.font.width(this.descriptionAreaLabel);
@@ -481,13 +493,13 @@ public abstract class CellScreen extends Screen {
     protected <T extends RenderCell> T addCell(@NotNull T cell) {
         // Always add to the complete list of cells
         this.allCells.add(cell);
-        
+
         // Only add to scroll area if it matches the search filter (or if search is disabled)
         if (!this.searchBarEnabled || this.searchBar == null || this.cellMatchesSearch(cell, this.searchBar.getValue())) {
             CellScrollEntry entry = new CellScrollEntry(this.scrollArea, cell);
             this.scrollArea.addEntry(entry);
         }
-        
+
         return this.addWidget(cell);
     }
 
@@ -865,7 +877,7 @@ public abstract class CellScreen extends Screen {
             this.setX((int)(scrollEntry.getX() + 20));
             this.setY((int)scrollEntry.getY());
         }
-        
+
         /**
          * Returns a string used for searching this cell.
          * Return null to exclude this cell from search filtering.
@@ -893,7 +905,7 @@ public abstract class CellScreen extends Screen {
         public Supplier<List<Component>> getDescriptionSupplier() {
             return this.descriptionSupplier;
         }
-        
+
         /**
          * Set the description supplier for this cell.
          * The supplier should return a list of text components to display in the description area.

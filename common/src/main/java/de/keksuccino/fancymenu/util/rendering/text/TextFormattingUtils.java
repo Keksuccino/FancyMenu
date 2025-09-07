@@ -2,10 +2,13 @@ package de.keksuccino.fancymenu.util.rendering.text;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
+import java.util.Optional;
 
 public class TextFormattingUtils {
 
@@ -96,6 +99,16 @@ public class TextFormattingUtils {
             appendComponent(sb, sibling, style);
         }
 
+    }
+
+    @NotNull
+    public static MutableComponent formattedTextToComponent(@NotNull FormattedText text) {
+        MutableComponent component = Component.empty();
+        text.visit((style, string) -> {
+            component.append(Component.literal(string).withStyle(style));
+            return Optional.empty(); // Continue visiting
+        }, Style.EMPTY);
+        return component;
     }
 
 }
