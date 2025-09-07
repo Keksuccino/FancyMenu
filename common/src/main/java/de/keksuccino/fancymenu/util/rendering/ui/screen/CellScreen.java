@@ -30,6 +30,8 @@ import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.*;
@@ -39,6 +41,8 @@ import java.util.function.Supplier;
 
 @SuppressWarnings("all")
 public abstract class CellScreen extends Screen {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea scrollArea;
     @Nullable
@@ -213,13 +217,14 @@ public abstract class CellScreen extends Screen {
                 public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
                     super.renderWidget(graphics, mouseX, mouseY, partial);
                     if (this.getValue().isBlank() && !this.isFocused() && CellScreen.this.searchBarPlaceholder != null) {
-                        graphics.drawString(this.font, CellScreen.this.searchBarPlaceholder, this.getX() + 4, this.getY() + (this.getHeight() / 2) - (this.font.lineHeight / 2), UIBase.getUIColorTheme().edit_box_text_color_uneditable.getColorInt(), false);
+                        graphics.drawString(CellScreen.this.font, CellScreen.this.searchBarPlaceholder, this.getX() + 4, this.getY() + (this.getHeight() / 2) - (CellScreen.this.font.lineHeight / 2), UIBase.getUIColorTheme().edit_box_text_color_uneditable.getColorInt(), false);
                     }
                 }
             };
             this.searchBar.setValue(oldSearchValue);
             this.searchBar.setResponder(s -> CellScreen.this.updateCellsVisibility());
             UIBase.applyDefaultWidgetSkinTo(this.searchBar);
+            this.addRenderableWidget(this.searchBar);
         }
 
         float oldScrollX = 0.0F;
@@ -267,12 +272,6 @@ public abstract class CellScreen extends Screen {
                 topRightSideWidget = w;
             }
             widgetY -= w.getHeight() + this.getRightSideDefaultSpaceBetweenWidgets();
-        }
-
-        if (this.searchBarEnabled) {
-            this.addRenderableWidget(this.searchBar);
-            this.setInitialFocus(this.searchBar);
-            this.setFocused(this.searchBar);
         }
 
         Window window = Minecraft.getInstance().getWindow();
