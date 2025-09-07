@@ -141,8 +141,12 @@ public class ManageListenersScreen extends CellScreen {
         protected final ListenerInstance instance;
         
         public ListenerInstanceCell(@NotNull ListenerInstance instance) {
+
             super(buildLabel(instance));
             this.instance = instance;
+
+            this.setDescriptionSupplier(this.instance.parent::getDescription);
+
         }
         
         @NotNull

@@ -194,14 +194,33 @@ public abstract class CellScreen extends Screen {
     
     /**
      * Check if a cell matches the search query.
+     * Searches both the cell's search string and its description (if any).
      */
     protected boolean cellMatchesSearch(@NotNull RenderCell cell, @Nullable String searchValue) {
         if (searchValue == null || searchValue.isBlank()) return true;
         
-        String cellSearchString = cell.getSearchString();
-        if (cellSearchString == null) return true;
+        String searchLower = searchValue.toLowerCase();
         
-        return cellSearchString.toLowerCase().contains(searchValue.toLowerCase());
+        // Check the cell's search string
+        String cellSearchString = cell.getSearchString();
+        if (cellSearchString != null && cellSearchString.toLowerCase().contains(searchLower)) {
+            return true;
+        }
+        
+        // Check the cell's description
+        Supplier<List<Component>> descSupplier = cell.getDescriptionSupplier();
+        if (descSupplier != null) {
+            List<Component> description = descSupplier.get();
+            if (description != null) {
+                for (Component c : description) {
+                    if (c.getString().toLowerCase().contains(searchLower)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        
+        return false;
     }
 
     @Override
