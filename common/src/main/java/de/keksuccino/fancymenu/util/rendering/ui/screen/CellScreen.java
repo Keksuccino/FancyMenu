@@ -55,6 +55,9 @@ public abstract class CellScreen extends Screen {
     protected int lastWidth = 0;
     protected int lastHeight = 0;
     
+    // Store all cells to support filtering
+    protected final List<RenderCell> allCells = new ArrayList<>();
+    
     // Search bar feature
     protected boolean searchBarEnabled = false;
     @Nullable
@@ -159,14 +162,34 @@ public abstract class CellScreen extends Screen {
     /**
      * Updates the cell list based on the search filter.
      * Only cells that match the search query are visible.
-     * This requires rebuilding the screen to apply the filter.
      */
     protected void updateCellsVisibility() {
-        if (!this.searchBarEnabled || this.searchBar == null) return;
+        if (!this.searchBarEnabled || this.searchBar == null || this.scrollArea == null) return;
         
-        // Rebuild the screen to apply the search filter
-        // The filter will be applied in the overridden addCell method
-        this.rebuild();
+        String searchValue = this.searchBar.getValue();
+        if (searchValue.isBlank()) searchValue = null;
+        
+        // Remember current scroll position
+        float scrollX = this.scrollArea.horizontalScrollBar.getScroll();
+        float scrollY = this.scrollArea.verticalScrollBar.getScroll();
+        
+        // Clear scroll area entries
+        this.scrollArea.clearEntries();
+        
+        // Re-add only cells that match the search
+        for (RenderCell cell : this.allCells) {
+            if (this.cellMatchesSearch(cell, searchValue)) {
+                CellScrollEntry entry = new CellScrollEntry(this.scrollArea, cell);
+                this.scrollArea.addEntry(entry);
+                // Update cell size
+                cell.updateSize(entry);
+                entry.setHeight(cell.getHeight());
+            }
+        }
+        
+        // Restore scroll position
+        this.scrollArea.horizontalScrollBar.setScroll(scrollX);
+        this.scrollArea.verticalScrollBar.setScroll(scrollY);
     }
     
     /**
@@ -185,6 +208,7 @@ public abstract class CellScreen extends Screen {
     protected void init() {
 
         this.rightSideWidgets.clear();
+        this.allCells.clear();
         this.selectedCell = null;
         
         // Calculate scroll area dimensions based on enabled features
@@ -436,12 +460,16 @@ public abstract class CellScreen extends Screen {
 
     @NotNull
     protected <T extends RenderCell> T addCell(@NotNull T cell) {
-        // Only add cell to scroll area if it matches the search filter
+        // Always add to the complete list of cells
+        this.allCells.add(cell);
+        
+        // Only add to scroll area if it matches the search filter (or if search is disabled)
         if (!this.searchBarEnabled || this.searchBar == null || this.cellMatchesSearch(cell, this.searchBar.getValue())) {
-            this.scrollArea.addEntry(new CellScrollEntry(this.scrollArea, cell));
-            this.addWidget(cell);
+            CellScrollEntry entry = new CellScrollEntry(this.scrollArea, cell);
+            this.scrollArea.addEntry(entry);
         }
-        return cell;
+        
+        return this.addWidget(cell);
     }
 
     protected void updateSelectedCell() {
