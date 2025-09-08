@@ -13,8 +13,11 @@ import de.keksuccino.fancymenu.customization.listener.ListenerInstance;
 import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementGroup;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
+import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -49,12 +52,34 @@ public class ManageListenersScreen extends CellScreen {
     @Override
     protected void initCells() {
         
+        // Track which instance was being edited
+        String editingInstanceId = null;
+        String editingValue = null;
+        for (RenderCell cell : this.allCells) {
+            if (cell instanceof ListenerInstanceCell instanceCell) {
+                if (instanceCell.editMode && instanceCell.editBox != null) {
+                    editingInstanceId = instanceCell.instance.instanceIdentifier;
+                    editingValue = instanceCell.editBox.getValue();
+                    break;
+                }
+            }
+        }
+        
         this.addSpacerCell(10);
         
         // Add all listener instances to the list
         for (ListenerInstance instance : this.tempInstances) {
             ListenerInstanceCell cell = new ListenerInstanceCell(instance);
             this.addCell(cell).setSelectable(true);
+            
+            // Restore edit mode if this was the cell being edited
+            if (editingInstanceId != null && editingInstanceId.equals(instance.instanceIdentifier)) {
+                cell.enterEditMode();
+                if (cell.editBox != null && editingValue != null) {
+                    cell.editBox.setValue(editingValue);
+                    cell.editBox.setCursorPosition(editingValue.length());
+                }
+            }
         }
         
         this.addStartEndSpacerCell();
@@ -136,6 +161,26 @@ public class ManageListenersScreen extends CellScreen {
 
         return newDesc;
 
+    }
+
+    @Override
+    public boolean allowEnterForDone() {
+        for (RenderCell renderCell : this.allCells) {
+            if (renderCell instanceof ListenerInstanceCell c) {
+                if (c.editMode) return false;
+            }
+        }
+        return super.allowEnterForDone();
+    }
+
+    @Override
+    public boolean shouldCloseOnEsc() {
+        for (RenderCell renderCell : this.allCells) {
+            if (renderCell instanceof ListenerInstanceCell c) {
+                if (c.editMode) return false;
+            }
+        }
+        return super.shouldCloseOnEsc();
     }
 
     @Override
@@ -332,27 +377,174 @@ public class ManageListenersScreen extends CellScreen {
         return requirements.isEmpty() ? "none" : requirements;
     }
 
-    public class ListenerInstanceCell extends LabelCell {
+    public class ListenerInstanceCell extends RenderCell {
         
         @NotNull
         protected final ListenerInstance instance;
+        @NotNull
+        protected Component labelComponent;
+        @Nullable
+        protected ExtendedEditBox editBox;
+        protected boolean editMode = false;
+        protected long lastClickTime = 0;
+        protected static final long DOUBLE_CLICK_TIME = 500; // milliseconds
         
         public ListenerInstanceCell(@NotNull ListenerInstance instance) {
-
-            super(buildLabel(instance));
             this.instance = instance;
-
+            this.updateLabelComponent();
             this.setDescriptionSupplier(this.instance.parent::getDescription);
-
+            this.setSearchStringSupplier(() -> {
+                if (this.instance.getDisplayName() != null) {
+                    return this.instance.getDisplayName();
+                }
+                return this.instance.parent.getDisplayName().getString() + " " + this.instance.instanceIdentifier;
+            });
         }
         
-        @NotNull
-        private static Component buildLabel(@NotNull ListenerInstance instance) {
-            MutableComponent displayName = instance.parent.getDisplayName().copy()
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
-            MutableComponent identifier = Component.literal(" [" + instance.instanceIdentifier + "]")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
-            return displayName.append(identifier);
+        protected void updateLabelComponent() {
+            if (this.instance.getDisplayName() != null && !this.instance.getDisplayName().isBlank()) {
+                // Show display name if it exists
+                this.labelComponent = Component.literal(this.instance.getDisplayName())
+                        .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
+            } else {
+                // Show default label (listener type + identifier)
+                MutableComponent typeName = this.instance.parent.getDisplayName().copy()
+                        .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
+                MutableComponent identifier = Component.literal(" [" + this.instance.instanceIdentifier + "]")
+                        .setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
+                this.labelComponent = typeName.append(identifier);
+            }
+        }
+        
+        @Override
+        public void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            if (this.editMode && this.editBox != null) {
+                // Render edit box
+                this.editBox.setX(this.getX());
+                this.editBox.setY(this.getY());
+                this.editBox.setWidth(Math.min(this.getWidth(), 200));
+                this.editBox.setHeight(Minecraft.getInstance().font.lineHeight + 2);
+                this.editBox.render(graphics, mouseX, mouseY, partial);
+                
+                // Check if user clicked outside or pressed enter
+                if (de.keksuccino.konkrete.input.MouseInput.isLeftMouseDown() && !this.editBox.isHovered()) {
+                    this.exitEditMode(true);
+                }
+            } else {
+                // Render label
+                RenderingUtils.resetShaderColor(graphics);
+                UIBase.drawElementLabel(graphics, Minecraft.getInstance().font, this.labelComponent, this.getX(), this.getY());
+                RenderingUtils.resetShaderColor(graphics);
+            }
+        }
+        
+        @Override
+        protected void updateSize(@NotNull CellScrollEntry scrollEntry) {
+            if (this.editMode && this.editBox != null) {
+                this.setWidth(Math.min((int)(ManageListenersScreen.this.scrollArea.getInnerWidth() - 40), 200));
+            } else {
+                this.setWidth(Minecraft.getInstance().font.width(this.labelComponent));
+            }
+            this.setHeight(Minecraft.getInstance().font.lineHeight + 2);
+        }
+        
+        @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if (button == 0 && this.isHovered() && !this.editMode) { // Left click
+                long currentTime = System.currentTimeMillis();
+                if (currentTime - this.lastClickTime < DOUBLE_CLICK_TIME) {
+                    // Double click detected - enter edit mode
+                    this.enterEditMode();
+                    this.lastClickTime = 0; // Reset to prevent triple clicks
+                } else {
+                    this.lastClickTime = currentTime;
+                }
+            }
+            return super.mouseClicked(mouseX, mouseY, button);
+        }
+        
+        @Override
+        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+            if (this.editMode && this.editBox != null) {
+                if (keyCode == InputConstants.KEY_ENTER || keyCode == InputConstants.KEY_NUMPADENTER) { // Enter or Numpad Enter
+                    this.exitEditMode(true);
+                    return true;
+                } else if (keyCode == InputConstants.KEY_ESCAPE) { // Escape
+                    this.exitEditMode(false);
+                    return true;
+                }
+                return this.editBox.keyPressed(keyCode, scanCode, modifiers);
+            }
+            return super.keyPressed(keyCode, scanCode, modifiers);
+        }
+        
+        @Override
+        public boolean charTyped(char codePoint, int modifiers) {
+            if (this.editMode && this.editBox != null) {
+                return this.editBox.charTyped(codePoint, modifiers);
+            }
+            return super.charTyped(codePoint, modifiers);
+        }
+        
+        protected void enterEditMode() {
+            if (this.editMode) return; // Already in edit mode
+            
+            this.editMode = true;
+            
+            // Create edit box
+            this.editBox = new ExtendedEditBox(
+                    Minecraft.getInstance().font, 
+                    this.getX(), 
+                    this.getY(), 
+                    Math.min(200, (int)(ManageListenersScreen.this.scrollArea.getInnerWidth() - 40)), 
+                    18, 
+                    Component.empty()
+            );
+            UIBase.applyDefaultWidgetSkinTo(this.editBox);
+            this.editBox.setMaxLength(100000);
+            
+            // Set current display name or empty if null
+            String currentName = this.instance.getDisplayName();
+            if (currentName != null) {
+                this.editBox.setValue(currentName);
+            } else {
+                this.editBox.setValue("");
+            }
+            
+            this.editBox.setFocused(true);
+            this.editBox.setCursorPosition(this.editBox.getValue().length());
+            this.editBox.setHighlightPos(0);
+            
+            // Add to children for input handling
+            this.children.clear();
+            this.children.add(this.editBox);
+        }
+        
+        protected void exitEditMode(boolean save) {
+            if (!this.editMode || this.editBox == null) return;
+            
+            if (save) {
+                String newName = this.editBox.getValue();
+                if (newName.isBlank()) {
+                    this.instance.setDisplayName(null);
+                } else {
+                    this.instance.setDisplayName(newName);
+                }
+                this.updateLabelComponent();
+                // Update the description area if this is the selected cell
+                if (ManageListenersScreen.this.selectedInstance == this.instance) {
+                    ManageListenersScreen.this.updateDescriptionArea();
+                }
+            }
+            
+            this.editMode = false;
+            this.editBox = null;
+            this.children.clear();
+        }
+        
+        @Override
+        public void tick() {
+            // ExtendedEditBox doesn't have a tick method
         }
         
     }

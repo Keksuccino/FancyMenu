@@ -291,6 +291,7 @@ public abstract class CellScreen extends Screen {
             this.searchBar.setValue(oldSearchValue);
             this.searchBar.setResponder(s -> CellScreen.this.updateCellsVisibility());
             UIBase.applyDefaultWidgetSkinTo(this.searchBar);
+            this.searchBar.setMaxLength(100000);
             this.addRenderableWidget(this.searchBar);
         }
 
@@ -422,6 +423,10 @@ public abstract class CellScreen extends Screen {
         return true;
     }
 
+    public boolean allowEnterForDone() {
+        return true;
+    }
+
     protected void addRightSideDefaultSpacer() {
         this.addRightSideSpacer(5);
     }
@@ -537,8 +542,10 @@ public abstract class CellScreen extends Screen {
     @Override
     public boolean keyPressed(int keycode, int scancode, int modifiers) {
         if (keycode == InputConstants.KEY_ENTER) {
-            if (this.allowDone()) this.onDone();
-            return true;
+            if (this.allowDone() && this.allowEnterForDone()) {
+                this.onDone();
+                return true;
+            }
         }
         return super.keyPressed(keycode, scancode, modifiers);
     }
