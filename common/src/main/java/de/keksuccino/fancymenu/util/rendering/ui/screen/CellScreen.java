@@ -176,6 +176,7 @@ public abstract class CellScreen extends Screen {
             e.setSelectable(false);
             e.setBackgroundColorHover(e.getBackgroundColorNormal());
             e.setPlayClickSound(false);
+            e.setTextBaseColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt());
             this.descriptionScrollArea.addEntry(e);
         });
     }

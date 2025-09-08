@@ -24,6 +24,8 @@ public class ListenerInstance {
     public final AbstractListener parent;
     @NotNull
     private GenericExecutableBlock actionScript;
+    @Nullable
+    protected String displayName = null;
 
     public ListenerInstance(@NotNull AbstractListener parent) {
         this.parent = parent;
@@ -37,6 +39,14 @@ public class ListenerInstance {
     public void setActionScript(@NotNull GenericExecutableBlock actionScript) {
         this.actionScript = actionScript;
         this.parent.registerCustomVariablesToInstance(this);
+    }
+
+    public @Nullable String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(@Nullable String displayName) {
+        this.displayName = displayName;
     }
 
     /**
@@ -53,6 +63,7 @@ public class ListenerInstance {
         serialized.putProperty("listener_instance_identifier", this.instanceIdentifier);
         serialized.putProperty("listener_provider_identifier", this.parent.getIdentifier());
         serialized.putProperty("listener_instance_action_script_identifier", this.actionScript.getIdentifier());
+        if (this.displayName != null) serialized.putProperty("listener_instance_display_name", this.displayName);
 
         this.actionScript.serializeToExistingPropertyContainer(serialized);
 
@@ -82,6 +93,8 @@ public class ListenerInstance {
         ListenerInstance instance = provider.createFreshInstance();
 
         instance.instanceIdentifier = Objects.requireNonNullElse(serialized.getValue("listener_instance_identifier"), ScreenCustomization.generateUniqueIdentifier());
+
+        instance.displayName = serialized.getValue("listener_instance_display_name");
 
         String actionScriptIdentifier = serialized.getValue("listener_instance_action_script_identifier");
         if (actionScriptIdentifier == null) {

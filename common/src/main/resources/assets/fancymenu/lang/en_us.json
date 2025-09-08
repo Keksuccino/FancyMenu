@@ -1814,6 +1814,6 @@
   "fancymenu.listeners.on_variable_updated.desc": "This listener triggers whenever a FancyMenu variable gets updated/set.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$var_name §r= The variable name\n- §z$$old_value §r= The old variable value\n- §z$$new_value §r= The new variable value",
   "fancymenu.ui.generic.description": "Description",
   "fancymenu.ui.generic.search": "Search...",
-  "fancymenu.listeners.manage.description.listener_desc": "Listener Type:",
-  "fancymenu.listeners.manage.description.actions": "Script Actions:"
+  "fancymenu.listeners.manage.description.listener_desc": "Listener Type",
+  "fancymenu.listeners.manage.description.actions": "Action Script"
 }
