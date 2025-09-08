@@ -2,6 +2,7 @@
 CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 
 - Fixed "World Save Data" placeholder being in the wrong category
+- Fixed text in some of FancyMenu's screen's looks bad in light mode (text was hard to read because it didn't change to a dark color for contrast)
  
 %changelog:end%
 
