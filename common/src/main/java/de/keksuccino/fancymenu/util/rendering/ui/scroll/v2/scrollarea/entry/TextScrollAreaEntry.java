@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry;
 
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -15,7 +16,7 @@ public class TextScrollAreaEntry extends ScrollAreaEntry {
     protected int textWidth;
     public Font font = Minecraft.getInstance().font;
     protected Consumer<TextScrollAreaEntry> onClickCallback;
-    protected int textBaseColor = -1;
+    protected int textBaseColor = UIBase.getUIColorTheme().generic_text_base_color.getColorInt();
 
     public TextScrollAreaEntry(ScrollArea parent, @NotNull Component text, @NotNull Consumer<TextScrollAreaEntry> onClick) {
         super(parent, 0, 14);

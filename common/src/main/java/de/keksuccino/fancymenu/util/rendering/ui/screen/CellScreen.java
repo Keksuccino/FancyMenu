@@ -517,7 +517,7 @@ public abstract class CellScreen extends Screen {
 
     protected void updateSelectedCell() {
         RenderCell last = this.selectedCell;
-        for (de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry e : this.scrollArea.getEntries()) {
+        for (ScrollAreaEntry e : this.scrollArea.getEntries()) {
             if (e instanceof CellScrollEntry c) {
                 if (c.cell.selectable && c.cell.selected) {
                     this.selectedCell = c.cell;

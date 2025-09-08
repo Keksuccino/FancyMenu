@@ -2,20 +2,25 @@ package de.keksuccino.fancymenu.customization.listener.gui;
 
 import de.keksuccino.fancymenu.customization.listener.AbstractListener;
 import de.keksuccino.fancymenu.customization.listener.ListenerRegistry;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextListScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -61,11 +66,14 @@ public class ChooseListenerTypeScreen extends Screen {
         this.listenersScrollArea.setHeight(this.height - 85 - 25, true);
         this.listenersScrollArea.setX(20, true);
         this.listenersScrollArea.setY(50 + 15 + 25, true);
+        this.addRenderableWidget(this.listenersScrollArea);
         
         this.descriptionScrollArea.setWidth((this.width / 2) - 40, true);
         this.descriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
         this.descriptionScrollArea.setX(this.width - 20 - this.descriptionScrollArea.getWidthWithBorder(), true);
         this.descriptionScrollArea.setY(50 + 15, true);
+        this.descriptionScrollArea.horizontalScrollBar.active = false;
+        this.addRenderableWidget(this.descriptionScrollArea);
         
         // Done button
         ExtendedButton doneButton = new ExtendedButton(
@@ -117,9 +125,6 @@ public class ChooseListenerTypeScreen extends Screen {
         graphics.drawString(this.font, descLabel, this.width - 20 - descLabelWidth, 50, 
                 UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
         
-        this.listenersScrollArea.render(graphics, mouseX, mouseY, partial);
-        this.descriptionScrollArea.render(graphics, mouseX, mouseY, partial);
-        
         super.render(graphics, mouseX, mouseY, partial);
     }
 
@@ -138,8 +143,8 @@ public class ChooseListenerTypeScreen extends Screen {
             
             ListenerScrollEntry entry = new ListenerScrollEntry(
                     this.listenersScrollArea,
-                    listener.getDisplayName(),
-                    UIBase.getUIColorTheme().listing_dot_color_1.getColor(),
+                    ((MutableComponent)listener.getDisplayName()).withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()),
+                    UIBase.getUIColorTheme().listing_dot_color_1,
                     e -> {
                         this.selectedListener = listener;
                         this.setDescription(listener);
@@ -164,13 +169,29 @@ public class ChooseListenerTypeScreen extends Screen {
         this.descriptionScrollArea.clearEntries();
         if ((listener != null) && (listener.getDescription() != null)) {
             for (Component c : listener.getDescription()) {
-                TextScrollAreaEntry e = new TextScrollAreaEntry(this.descriptionScrollArea, c, entry -> {});
-                e.setSelectable(false);
-                e.setBackgroundColorHover(e.getBackgroundColorIdle());
-                e.setPlayClickSound(false);
-                this.descriptionScrollArea.addEntry(e);
+                this.addDescriptionLine(c);
             }
         }
+    }
+
+    protected void addDescriptionLine(@NotNull Component line) {
+        List<Component> lines = new ArrayList<>();
+        int maxWidth = (int)(this.descriptionScrollArea.getInnerWidth() - 15F);
+        if (this.font.width(line) > maxWidth) {
+            this.font.getSplitter().splitLines(line, maxWidth, Style.EMPTY).forEach(formatted -> {
+                lines.add(TextFormattingUtils.formattedTextToComponent(formatted));
+            });
+        } else {
+            lines.add(line);
+        }
+        lines.forEach(component -> {
+            TextScrollAreaEntry e = new TextScrollAreaEntry(this.descriptionScrollArea, component, (entry) -> {});
+            e.setSelectable(false);
+            e.setBackgroundColorHover(e.getBackgroundColorNormal());
+            e.setPlayClickSound(false);
+            e.setTextBaseColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt());
+            this.descriptionScrollArea.addEntry(e);
+        });
     }
 
     protected boolean listenerFitsSearchValue(@NotNull AbstractListener listener, @Nullable String searchValue) {
@@ -199,10 +220,10 @@ public class ChooseListenerTypeScreen extends Screen {
         @Nullable
         public AbstractListener listener;
         
-        public ListenerScrollEntry(ScrollArea parent, @NotNull Component text, @NotNull java.awt.Color listDotColor, 
-                                 @NotNull Consumer<TextListScrollAreaEntry> onClick) {
+        public ListenerScrollEntry(ScrollArea parent, @NotNull Component text, @NotNull DrawableColor listDotColor, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
             super(parent, text, listDotColor, onClick);
         }
+
     }
 
 }

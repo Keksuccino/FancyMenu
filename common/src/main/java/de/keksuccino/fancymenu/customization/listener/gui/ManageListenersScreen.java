@@ -18,6 +18,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
+import de.keksuccino.konkrete.input.MouseInput;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -140,13 +141,15 @@ public class ManageListenersScreen extends CellScreen {
     @Override
     protected @Nullable List<Component> getCurrentDescription() {
 
+        this.updateSelectedInstance();
+
         List<Component> desc = super.getCurrentDescription();
         if (desc == null) return null;
         if (this.selectedInstance == null) return null;
 
         List<Component> newDesc = new ArrayList<>();
 
-        newDesc.add(Component.translatable("fancymenu.listeners.manage.description.listener_desc").withStyle(ChatFormatting.BOLD));
+        newDesc.add(Component.translatable("fancymenu.listeners.manage.description.listener_desc").withStyle(ChatFormatting.BOLD).append(Component.literal(" (").withStyle(ChatFormatting.RESET)).append(this.selectedInstance.parent.getDisplayName()).append(")"));
         newDesc.add(Component.empty());
         newDesc.addAll(desc);
 
@@ -210,6 +213,7 @@ public class ManageListenersScreen extends CellScreen {
     }
 
     protected void updateSelectedInstance() {
+        this.updateSelectedCell();
         RenderCell selected = this.getSelectedCell();
         if (selected instanceof ListenerInstanceCell cell) {
             this.selectedInstance = cell.instance;
@@ -423,17 +427,17 @@ public class ManageListenersScreen extends CellScreen {
                 this.editBox.setX(this.getX());
                 this.editBox.setY(this.getY());
                 this.editBox.setWidth(Math.min(this.getWidth(), 200));
-                this.editBox.setHeight(Minecraft.getInstance().font.lineHeight + 2);
+                this.editBox.setHeight(Minecraft.getInstance().font.lineHeight + 1);
                 this.editBox.render(graphics, mouseX, mouseY, partial);
                 
                 // Check if user clicked outside or pressed enter
-                if (de.keksuccino.konkrete.input.MouseInput.isLeftMouseDown() && !this.editBox.isHovered()) {
+                if (MouseInput.isLeftMouseDown() && !this.editBox.isHovered()) {
                     this.exitEditMode(true);
                 }
             } else {
                 // Render label
                 RenderingUtils.resetShaderColor(graphics);
-                UIBase.drawElementLabel(graphics, Minecraft.getInstance().font, this.labelComponent, this.getX(), this.getY());
+                UIBase.drawElementLabel(graphics, Minecraft.getInstance().font, this.labelComponent, this.getX(), this.getY() + 1);
                 RenderingUtils.resetShaderColor(graphics);
             }
         }
@@ -445,7 +449,7 @@ public class ManageListenersScreen extends CellScreen {
             } else {
                 this.setWidth(Minecraft.getInstance().font.width(this.labelComponent));
             }
-            this.setHeight(Minecraft.getInstance().font.lineHeight + 2);
+            this.setHeight(Minecraft.getInstance().font.lineHeight + 1);
         }
         
         @Override
@@ -540,11 +544,6 @@ public class ManageListenersScreen extends CellScreen {
             this.editMode = false;
             this.editBox = null;
             this.children.clear();
-        }
-        
-        @Override
-        public void tick() {
-            // ExtendedEditBox doesn't have a tick method
         }
         
     }
