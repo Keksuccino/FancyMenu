@@ -10,10 +10,10 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.CycleButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
@@ -30,7 +30,6 @@ import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.gui.navigation.ScreenDirection;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.*;
-import net.minecraft.network.chat.contents.PlainTextContents;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -45,7 +44,7 @@ public abstract class CellScreen extends Screen {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea scrollArea;
+    public ScrollArea scrollArea;
     @Nullable
     protected RenderCell selectedCell;
     protected final List<AbstractWidget> rightSideWidgets = new ArrayList<>();
@@ -145,29 +144,40 @@ public abstract class CellScreen extends Screen {
      * Called automatically when the selected cell changes.
      */
     protected void updateDescriptionArea() {
+
         if (this.descriptionScrollArea == null) return;
         this.descriptionScrollArea.clearEntries();
+
+        this.descriptionScrollArea.addEntry(new SpacerScrollAreaEntry(this.descriptionScrollArea, 5));
+
         List<Component> description = this.getCurrentDescription();
         if (description != null) {
-            for (Component c : description) {
-                int maxWidth = (this.descriptionScrollArea.getInnerWidth() - 15);
-                if (this.font.width(c) > maxWidth) {
-                    this.font.getSplitter().splitLines(c, maxWidth, Style.EMPTY).forEach(formatted -> {
-                        this.addDescriptionLine(TextFormattingUtils.formattedTextToComponent(formatted));
-                    });
-                } else {
-                    this.addDescriptionLine(c);
-                }
+            for (Component line : description) {
+                this.addDescriptionLine(line);
             }
         }
+
+        this.descriptionScrollArea.addEntry(new SpacerScrollAreaEntry(this.descriptionScrollArea, 5));
+
     }
 
-    protected void addDescriptionLine(@NotNull Component c) {
-        TextScrollAreaEntry e = new TextScrollAreaEntry(this.descriptionScrollArea, c, (entry) -> {});
-        e.setSelectable(false);
-        e.setBackgroundColorHover(e.getBackgroundColorIdle());
-        e.setPlayClickSound(false);
-        this.descriptionScrollArea.addEntry(e);
+    protected void addDescriptionLine(@NotNull Component line) {
+        List<Component> lines = new ArrayList<>();
+        int maxWidth = (int)(this.descriptionScrollArea.getInnerWidth() - 15F);
+        if (this.font.width(line) > maxWidth) {
+            this.font.getSplitter().splitLines(line, maxWidth, Style.EMPTY).forEach(formatted -> {
+                lines.add(TextFormattingUtils.formattedTextToComponent(formatted));
+            });
+        } else {
+            lines.add(line);
+        }
+        lines.forEach(component -> {
+            TextScrollAreaEntry e = new TextScrollAreaEntry(this.descriptionScrollArea, component, (entry) -> {});
+            e.setSelectable(false);
+            e.setBackgroundColorHover(e.getBackgroundColorNormal());
+            e.setPlayClickSound(false);
+            this.descriptionScrollArea.addEntry(e);
+        });
     }
 
     /**
@@ -258,6 +268,7 @@ public abstract class CellScreen extends Screen {
             this.descriptionScrollArea.setX(this.width - 20 - this.descriptionScrollArea.getWidthWithBorder(), true);
             this.descriptionScrollArea.setY(50 + 15, true);
             this.descriptionScrollArea.horizontalScrollBar.active = false;
+            this.addRenderableWidget(this.descriptionScrollArea);
         }
 
         // Adjust for search bar if enabled
@@ -366,11 +377,6 @@ public abstract class CellScreen extends Screen {
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.updateSelectedCell();
-
-        // Update description area if enabled and selection changed
-        if (this.descriptionAreaEnabled) {
-            this.updateDescriptionArea();
-        }
 
         graphics.fill(0, 0, this.width, this.height, UIBase.getUIColorTheme().screen_background_color.getColorInt());
 
@@ -504,15 +510,22 @@ public abstract class CellScreen extends Screen {
     }
 
     protected void updateSelectedCell() {
+        RenderCell last = this.selectedCell;
         for (de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry e : this.scrollArea.getEntries()) {
             if (e instanceof CellScrollEntry c) {
                 if (c.cell.selectable && c.cell.selected) {
                     this.selectedCell = c.cell;
+                    if (last != this.selectedCell) {
+                        this.updateDescriptionArea();
+                    }
                     return;
                 }
             }
         }
         this.selectedCell = null;
+        if (last != this.selectedCell) {
+            this.updateDescriptionArea();
+        }
     }
 
     @Nullable
@@ -522,14 +535,19 @@ public abstract class CellScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keycode, int scancode, int modifiers) {
-
         if (keycode == InputConstants.KEY_ENTER) {
             if (this.allowDone()) this.onDone();
             return true;
         }
-
         return super.keyPressed(keycode, scancode, modifiers);
+    }
 
+    @Override
+    public boolean mouseClicked(double $$0, double $$1, int $$2) {
+        if (this.searchBarEnabled && (this.searchBar != null) && !this.searchBar.isHovered()) {
+            this.searchBar.setFocused(false);
+        }
+        return super.mouseClicked($$0, $$1, $$2);
     }
 
     @Override
@@ -837,8 +855,8 @@ public abstract class CellScreen extends Screen {
         protected int y;
         protected int width;
         protected int height;
-        protected boolean selectable = false;
-        protected boolean selected = false;
+        private boolean selectable = false;
+        private boolean selected = false;
         protected boolean hovered = false;
         protected Supplier<DrawableColor> hoverColorSupplier = () -> UIBase.getUIColorTheme().list_entry_color_selected_hovered;
         @Nullable
@@ -962,6 +980,11 @@ public abstract class CellScreen extends Screen {
 
         public RenderCell setSelected(boolean selected) {
             this.selected = selected;
+            if (!this.selectable) this.selected = false;
+            // Update description area if enabled and selection changed
+            if (CellScreen.this.descriptionAreaEnabled) {
+                CellScreen.this.updateDescriptionArea();
+            }
             return this;
         }
 
@@ -975,7 +998,7 @@ public abstract class CellScreen extends Screen {
 
         public RenderCell setSelectable(boolean selectable) {
             this.selectable = selectable;
-            if (!this.selectable) this.selected = false;
+            if (!this.selectable) this.setSelected(false);
             return this;
         }
 
@@ -1017,9 +1040,9 @@ public abstract class CellScreen extends Screen {
                 return false;
             }
             if (this.hovered && this.selectable) {
-                this.selected = true;
+                this.setSelected(true);
             } else {
-                this.selected = false;
+                this.setSelected(false);
             }
             return super.mouseClicked($$0, $$1, $$2);
         }
@@ -1063,6 +1086,28 @@ public abstract class CellScreen extends Screen {
 
         @Override
         protected void updateWidgetNarration(NarrationElementOutput var1) {
+        }
+
+    }
+
+    public static class SpacerScrollAreaEntry extends TextScrollAreaEntry {
+
+        private int spacerHeight;
+
+        public SpacerScrollAreaEntry(ScrollArea parent, int height) {
+            super(parent, Component.empty(), button -> {});
+            this.spacerHeight = height;
+            this.height = height;
+        }
+
+        @Override
+        public float getHeight() {
+            return this.spacerHeight;
+        }
+
+        @Override
+        public void setHeight(float height) {
+            this.spacerHeight = (int) height;
         }
 
     }

@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.listener.ListenerInstance;
 import de.keksuccino.fancymenu.customization.layout.editor.actions.ManageActionsScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -98,6 +99,33 @@ public class ManageListenersScreen extends CellScreen {
             }
         }).setIsActiveSupplier(consumes -> this.selectedInstance != null);
         
+    }
+
+    @Override
+    protected @Nullable List<Component> getCurrentDescription() {
+
+        List<Component> desc = super.getCurrentDescription();
+        if (desc == null) return null;
+        if (this.selectedInstance == null) return null;
+
+        List<Component> newDesc = new ArrayList<>();
+
+        newDesc.add(Component.translatable("fancymenu.listeners.manage.description.listener_desc").withStyle(ChatFormatting.BOLD));
+        newDesc.add(Component.empty());
+        newDesc.addAll(desc);
+
+        newDesc.add(Component.empty());
+        newDesc.add(Component.empty());
+
+        newDesc.add(Component.translatable("fancymenu.listeners.manage.description.actions").withStyle(ChatFormatting.BOLD));
+        newDesc.add(Component.empty());
+
+        this.selectedInstance.getActionScript().getExecutables().forEach(executable -> {
+
+        });
+
+        return newDesc;
+
     }
 
     @Override
