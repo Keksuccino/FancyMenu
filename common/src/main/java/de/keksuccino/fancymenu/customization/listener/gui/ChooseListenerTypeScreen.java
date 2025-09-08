@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.listener.ListenerRegistry;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
@@ -19,7 +20,6 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -102,6 +102,8 @@ public class ChooseListenerTypeScreen extends Screen {
         UIBase.applyDefaultWidgetSkinTo(cancelButton);
         
         this.updateListenersList();
+        this.setDescription(this.selectedListener);
+
     }
 
     @Override
@@ -151,6 +153,11 @@ public class ChooseListenerTypeScreen extends Screen {
                     }
             );
             entry.listener = listener;
+            entry.setDoubleClickAction(() -> {
+                if (this.selectedListener == listener) {
+                    this.callback.accept(this.selectedListener);
+                }
+            });
             this.listenersScrollArea.addEntry(entry);
         }
         
@@ -166,12 +173,19 @@ public class ChooseListenerTypeScreen extends Screen {
     }
 
     protected void setDescription(@Nullable AbstractListener listener) {
+
         this.descriptionScrollArea.clearEntries();
+
+        this.descriptionScrollArea.addEntry(new CellScreen.SpacerScrollAreaEntry(this.descriptionScrollArea, 5));
+
         if ((listener != null) && (listener.getDescription() != null)) {
             for (Component c : listener.getDescription()) {
                 this.addDescriptionLine(c);
             }
         }
+
+        this.descriptionScrollArea.addEntry(new CellScreen.SpacerScrollAreaEntry(this.descriptionScrollArea, 5));
+
     }
 
     protected void addDescriptionLine(@NotNull Component line) {
@@ -215,13 +229,39 @@ public class ChooseListenerTypeScreen extends Screen {
         return false;
     }
 
-    public static class ListenerScrollEntry extends TextListScrollAreaEntry {
+    public class ListenerScrollEntry extends TextListScrollAreaEntry {
         
         @Nullable
         public AbstractListener listener;
+        protected long lastClickTime = 0;
+        protected static final long DOUBLE_CLICK_TIME = 500; // milliseconds
+        @Nullable
+        protected Runnable doubleClickAction;
         
         public ListenerScrollEntry(ScrollArea parent, @NotNull Component text, @NotNull DrawableColor listDotColor, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
             super(parent, text, listDotColor, onClick);
+        }
+        
+        public void setDoubleClickAction(@Nullable Runnable action) {
+            this.doubleClickAction = action;
+        }
+
+        @Override
+        public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
+            long currentTime = System.currentTimeMillis();
+            
+            // Check if this is a double-click
+            if ((currentTime - this.lastClickTime < DOUBLE_CLICK_TIME) && (this.doubleClickAction != null)) {
+                // Double-click detected - execute the double-click action
+                this.doubleClickAction.run();
+                this.lastClickTime = 0; // Reset to prevent triple clicks
+                return;
+            }
+            
+            this.lastClickTime = currentTime;
+            
+            // Normal single click behavior
+            super.onClick(entry, mouseX, mouseY, button);
         }
 
     }

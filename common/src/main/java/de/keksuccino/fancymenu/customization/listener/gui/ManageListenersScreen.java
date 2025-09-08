@@ -149,7 +149,8 @@ public class ManageListenersScreen extends CellScreen {
 
         List<Component> newDesc = new ArrayList<>();
 
-        newDesc.add(Component.translatable("fancymenu.listeners.manage.description.listener_desc").withStyle(ChatFormatting.BOLD).append(Component.literal(" (").withStyle(ChatFormatting.RESET)).append(this.selectedInstance.parent.getDisplayName()).append(")"));
+        newDesc.add(Component.translatable("fancymenu.listeners.manage.description.listener_desc").withStyle(ChatFormatting.BOLD));
+        newDesc.add(Component.literal("(").append(this.selectedInstance.parent.getDisplayName()).append(")"));
         newDesc.add(Component.empty());
         newDesc.addAll(desc);
 

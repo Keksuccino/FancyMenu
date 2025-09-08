@@ -359,6 +359,10 @@ public abstract class CellScreen extends Screen {
             this.resize(Minecraft.getInstance(), window.getGuiScaledWidth(), window.getGuiScaledHeight());
         }
 
+        if (this.descriptionAreaEnabled) {
+            this.updateDescriptionArea();
+        }
+
     }
 
     @Override
