@@ -1,15 +1,18 @@
 package de.keksuccino.fancymenu.customization.layout.editor.loadingrequirements;
 
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextListScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirement;
 import de.keksuccino.fancymenu.customization.loadingrequirement.LoadingRequirementRegistry;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementContainer;
 import de.keksuccino.fancymenu.customization.loadingrequirement.internal.LoadingRequirementInstance;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.Tooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -21,7 +24,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.awt.*;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
@@ -35,7 +37,7 @@ public class BuildRequirementScreen extends Screen {
     protected Consumer<LoadingRequirementInstance> callback;
 
     protected ScrollArea requirementsListScrollArea = new ScrollArea(0, 0, 0, 0);
-    protected ScrollArea requirementDescriptionScrollArea = new ScrollArea(0, 0, 0, 0);
+    protected ScrollArea descriptionScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ExtendedEditBox searchBar;
 
     public BuildRequirementScreen(@Nullable Screen parentScreen, @NotNull LoadingRequirementContainer parent, @Nullable LoadingRequirementInstance instanceToEdit, @NotNull Consumer<LoadingRequirementInstance> callback) {
@@ -74,11 +76,14 @@ public class BuildRequirementScreen extends Screen {
         this.requirementsListScrollArea.setHeight(this.height - 85 - 25, true);
         this.requirementsListScrollArea.setX(20, true);
         this.requirementsListScrollArea.setY(50 + 15 + 25, true);
+        this.addRenderableWidget(this.requirementsListScrollArea);
 
-        this.requirementDescriptionScrollArea.setWidth((this.width / 2) - 40, true);
-        this.requirementDescriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
-        this.requirementDescriptionScrollArea.setX(this.width - 20 - this.requirementDescriptionScrollArea.getWidthWithBorder(), true);
-        this.requirementDescriptionScrollArea.setY(50 + 15, true);
+        this.descriptionScrollArea.setWidth((this.width / 2) - 40, true);
+        this.descriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
+        this.descriptionScrollArea.setX(this.width - 20 - this.descriptionScrollArea.getWidthWithBorder(), true);
+        this.descriptionScrollArea.setY(50 + 15, true);
+        this.descriptionScrollArea.horizontalScrollBar.active = false;
+        this.addRenderableWidget(this.descriptionScrollArea);
 
         // Calculate button positions
         int doneButtonX = this.width - 20 - 150; // 150 is button width
@@ -154,7 +159,6 @@ public class BuildRequirementScreen extends Screen {
         UIBase.applyDefaultWidgetSkinTo(requirementModeButton);
 
         this.updateRequirementsList();
-
         this.setDescription(this.instance.requirement);
 
     }
@@ -179,13 +183,9 @@ public class BuildRequirementScreen extends Screen {
 
         graphics.drawString(this.font, Component.translatable("fancymenu.editor.loading_requirement.screens.build_screen.available_requirements"), 20, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        this.requirementsListScrollArea.render(graphics, mouseX, mouseY, partial);
-
         Component descLabel = Component.translatable("fancymenu.editor.loading_requirement.screens.build_screen.requirement_description");
         int descLabelWidth = this.font.width(descLabel);
         graphics.drawString(this.font, descLabel, this.width - 20 - descLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
-
-        this.requirementDescriptionScrollArea.render(graphics, mouseX, mouseY, partial);
 
         super.render(graphics, mouseX, mouseY, partial);
 
@@ -196,16 +196,39 @@ public class BuildRequirementScreen extends Screen {
     }
 
     protected void setDescription(@Nullable LoadingRequirement requirement) {
-        this.requirementDescriptionScrollArea.clearEntries();
+
+        this.descriptionScrollArea.clearEntries();
+
+        this.descriptionScrollArea.addEntry(new CellScreen.SpacerScrollAreaEntry(this.descriptionScrollArea, 5));
+
         if ((requirement != null) && (requirement.getDescription() != null)) {
             for (String s : requirement.getDescription()) {
-                TextScrollAreaEntry e = new TextScrollAreaEntry(this.requirementDescriptionScrollArea, Component.literal(s).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt())), (entry) -> {});
-                e.setSelectable(false);
-                e.setBackgroundColorHover(e.getBackgroundColorIdle());
-                e.setPlayClickSound(false);
-                this.requirementDescriptionScrollArea.addEntry(e);
+                this.addDescriptionLine(Component.literal(s));
             }
         }
+
+        this.descriptionScrollArea.addEntry(new CellScreen.SpacerScrollAreaEntry(this.descriptionScrollArea, 5));
+
+    }
+
+    protected void addDescriptionLine(@NotNull Component line) {
+        List<Component> lines = new ArrayList<>();
+        int maxWidth = (int)(this.descriptionScrollArea.getInnerWidth() - 15F);
+        if (this.font.width(line) > maxWidth) {
+            this.font.getSplitter().splitLines(line, maxWidth, Style.EMPTY).forEach(formatted -> {
+                lines.add(TextFormattingUtils.formattedTextToComponent(formatted));
+            });
+        } else {
+            lines.add(line);
+        }
+        lines.forEach(component -> {
+            TextScrollAreaEntry e = new TextScrollAreaEntry(this.descriptionScrollArea, component, (entry) -> {});
+            e.setSelectable(false);
+            e.setBackgroundColorHover(e.getBackgroundColorNormal());
+            e.setPlayClickSound(false);
+            e.setTextBaseColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt());
+            this.descriptionScrollArea.addEntry(e);
+        });
     }
 
     protected boolean requirementFitsSearchValue(@NotNull LoadingRequirement requirement, @Nullable String s) {
@@ -234,8 +257,8 @@ public class BuildRequirementScreen extends Screen {
             for (LoadingRequirement r : LoadingRequirementRegistry.getRequirements()) {
                 if ((LayoutEditorScreen.getCurrentInstance() != null) && !r.shouldShowUpInEditorRequirementMenu(LayoutEditorScreen.getCurrentInstance())) continue;
                 if (!this.requirementFitsSearchValue(r, searchValue)) continue;
-                Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
-                RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUIColorTheme().listing_dot_color_1.getColor(), (entry) -> {
+                Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
+                RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUIColorTheme().listing_dot_color_1, (entry) -> {
                     this.instance.requirement = r;
                     this.setDescription(this.instance.requirement);
                 });
@@ -251,8 +274,8 @@ public class BuildRequirementScreen extends Screen {
 
             //Add category entries
             for (Map.Entry<String, List<LoadingRequirement>> m : categories.entrySet()) {
-                Component label = Component.literal(m.getKey()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
-                TextListScrollAreaEntry e = new TextListScrollAreaEntry(this.requirementsListScrollArea, label, UIBase.getUIColorTheme().listing_dot_color_2.getColor(), (entry) -> {
+                Component label = Component.literal(m.getKey()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
+                TextListScrollAreaEntry e = new TextListScrollAreaEntry(this.requirementsListScrollArea, label, UIBase.getUIColorTheme().listing_dot_color_2, (entry) -> {
                     BuildRequirementScreen.this.setContentOfRequirementsList(m.getKey());
                     BuildRequirementScreen.this.instance.requirement = null;
                     this.setDescription(null);
@@ -264,8 +287,8 @@ public class BuildRequirementScreen extends Screen {
             //Add requirement entries without category
             for (LoadingRequirement r : LoadingRequirementRegistry.getRequirementsWithoutCategory()) {
                 if ((LayoutEditorScreen.getCurrentInstance() != null) && !r.shouldShowUpInEditorRequirementMenu(LayoutEditorScreen.getCurrentInstance())) continue;
-                Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
-                RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUIColorTheme().listing_dot_color_1.getColor(), (entry) -> {
+                Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
+                RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUIColorTheme().listing_dot_color_1, (entry) -> {
                     this.instance.requirement = r;
                     this.setDescription(this.instance.requirement);
                 });
@@ -277,7 +300,7 @@ public class BuildRequirementScreen extends Screen {
 
             //Add "Back" button
             Component backLabel = Component.translatable("fancymenu.editor.loading_requirement.screens.lists.back").withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().warning_text_color.getColorInt()));
-            TextListScrollAreaEntry backEntry = new TextListScrollAreaEntry(this.requirementsListScrollArea, backLabel, UIBase.getUIColorTheme().listing_dot_color_2.getColor(), (entry) -> {
+            TextListScrollAreaEntry backEntry = new TextListScrollAreaEntry(this.requirementsListScrollArea, backLabel, UIBase.getUIColorTheme().listing_dot_color_2, (entry) -> {
                 BuildRequirementScreen.this.setContentOfRequirementsList(null);
                 BuildRequirementScreen.this.instance.requirement = null;
                 this.setDescription(null);
@@ -290,8 +313,8 @@ public class BuildRequirementScreen extends Screen {
             if (l != null) {
                 for (LoadingRequirement r : l) {
                     if ((LayoutEditorScreen.getCurrentInstance() != null) && !r.shouldShowUpInEditorRequirementMenu(LayoutEditorScreen.getCurrentInstance())) continue;
-                    Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
-                    RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUIColorTheme().listing_dot_color_1.getColor(), (entry) -> {
+                    Component label = Component.literal(r.getDisplayName()).withStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
+                    RequirementScrollEntry e = new RequirementScrollEntry(this.requirementsListScrollArea, label, UIBase.getUIColorTheme().listing_dot_color_1, (entry) -> {
                         this.instance.requirement = r;
                         this.setDescription(this.instance.requirement);
                     });
@@ -327,12 +350,12 @@ public class BuildRequirementScreen extends Screen {
         protected long lastClickTime = 0;
         protected static final long DOUBLE_CLICK_TIME = 500; // milliseconds
 
-        public RequirementScrollEntry(ScrollArea parent, @NotNull Component text, @NotNull Color listDotColor, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
+        public RequirementScrollEntry(ScrollArea parent, @NotNull Component text, @NotNull DrawableColor listDotColor, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
             super(parent, text, listDotColor, onClick);
         }
-        
+
         @Override
-        public void onClick(ScrollAreaEntry entry) {
+        public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
             long currentTime = System.currentTimeMillis();
             
             // Check if this is a double-click
@@ -354,7 +377,7 @@ public class BuildRequirementScreen extends Screen {
             this.lastClickTime = currentTime;
             
             // Normal single click behavior
-            super.onClick(entry);
+            super.onClick(entry, mouseX, mouseY, button);
         }
 
     }
