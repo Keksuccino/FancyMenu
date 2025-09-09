@@ -6,9 +6,8 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
   - Clicking "Edit" now goes straight to the Edit Action Value screen instead of opening the action type selection first
   - The "Edit Value" and "Done" buttons in the action type selection have been merged into one button that shows either "Next Step" or "Done" depending on if the selected action type needs a value or not
   - Double-clicking on an action type in the action selection list now works as a shortcut to clicking "Next Step"/"Done"
-- It's npw possible to double-click requirements in the requirement selection list of the Build/Edit Requirement Screen
-  - When the requirement needs a value and none is set yet, double-clicking will open the edit value inferface
-  - When the requirement does not need a value or already has one set, double-clicking will act as a shortcut to pressing "Done"
+- It's npw possible to double-click requirements in the requirement selection list of the Add/Edit Requirement Screen
+  - When the requirement has a value, double-clicking opend the Edit Value screen, if not, it works as a shortcut to pressing "Done"
 - Fixed "World Save Data" placeholder being in the wrong category
 - Fixed text in some of FancyMenu's screen's looks bad in light mode (text was hard to read because it didn't change to a dark color for contrast)
  
