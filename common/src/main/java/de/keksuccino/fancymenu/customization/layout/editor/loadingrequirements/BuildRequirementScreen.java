@@ -338,14 +338,13 @@ public class BuildRequirementScreen extends Screen {
             // Check if this is a double-click
             if (currentTime - this.lastClickTime < DOUBLE_CLICK_TIME) {
                 // Double-click detected
-                if (this.requirement != null && BuildRequirementScreen.this.instance.requirement == this.requirement) {
+                if ((this.requirement != null) && (BuildRequirementScreen.this.instance.requirement == this.requirement)) {
                     // Check if requirement has value or doesn't need value -> act as "Done"
-                    if (!this.requirement.hasValue() || BuildRequirementScreen.this.instance.value != null) {
+                    if (this.requirement.hasValue()) {
+                        BuildRequirementScreen.this.instance.requirement.editValue(BuildRequirementScreen.this, BuildRequirementScreen.this.instance);
+                    } else {
                         Minecraft.getInstance().setScreen(BuildRequirementScreen.this.parentScreen);
                         BuildRequirementScreen.this.callback.accept(BuildRequirementScreen.this.instance);
-                    } else {
-                        // Requirement needs value but none is set -> open edit value interface
-                        BuildRequirementScreen.this.instance.requirement.editValue(BuildRequirementScreen.this, BuildRequirementScreen.this.instance);
                     }
                     this.lastClickTime = 0; // Reset to prevent triple clicks
                     return;

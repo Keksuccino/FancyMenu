@@ -4,12 +4,14 @@ import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionRegistry;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.LogicExecutorScreen;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.ScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextListScrollAreaEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextListScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.Minecraft;
@@ -20,6 +22,9 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -31,7 +36,7 @@ public class BuildActionScreen extends Screen {
     protected String originalActionValue = null;
 
     protected ScrollArea actionsListScrollArea = new ScrollArea(0, 0, 0, 0);
-    protected ScrollArea actionDescriptionScrollArea = new ScrollArea(0, 0, 0, 0);
+    protected ScrollArea descriptionScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ExtendedEditBox searchBar;
 
     public boolean isEdit;
@@ -74,11 +79,14 @@ public class BuildActionScreen extends Screen {
         this.actionsListScrollArea.setHeight(this.height - 85 - 25, true);
         this.actionsListScrollArea.setX(20, true);
         this.actionsListScrollArea.setY(50 + 15 + 25, true);
+        this.addRenderableWidget(this.actionsListScrollArea);
 
-        this.actionDescriptionScrollArea.setWidth((this.width / 2) - 40, true);
-        this.actionDescriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
-        this.actionDescriptionScrollArea.setX(this.width - 20 - this.actionDescriptionScrollArea.getWidthWithBorder(), true);
-        this.actionDescriptionScrollArea.setY(50 + 15, true);
+        this.descriptionScrollArea.setWidth((this.width / 2) - 40, true);
+        this.descriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
+        this.descriptionScrollArea.setX(this.width - 20 - this.descriptionScrollArea.getWidthWithBorder(), true);
+        this.descriptionScrollArea.setY(50 + 15, true);
+        this.descriptionScrollArea.horizontalScrollBar.active = false;
+        this.addRenderableWidget(this.descriptionScrollArea);
 
         // Calculate button positions
         int cancelButtonX = this.width - 20 - 150;
@@ -166,9 +174,6 @@ public class BuildActionScreen extends Screen {
         int descLabelWidth = this.font.width(descLabel);
         graphics.drawString(this.font, descLabel, this.width - 20 - descLabelWidth, 50, UIBase.getUIColorTheme().generic_text_base_color.getColorInt(), false);
 
-        this.actionsListScrollArea.render(graphics, mouseX, mouseY, partial);
-        this.actionDescriptionScrollArea.render(graphics, mouseX, mouseY, partial);
-
         super.render(graphics, mouseX, mouseY, partial);
 
     }
@@ -178,16 +183,39 @@ public class BuildActionScreen extends Screen {
     }
 
     protected void setDescription(@Nullable Action action) {
-        this.actionDescriptionScrollArea.clearEntries();
+
+        this.descriptionScrollArea.clearEntries();
+
+        this.descriptionScrollArea.addEntry(new CellScreen.SpacerScrollAreaEntry(this.descriptionScrollArea, 5));
+
         if ((action != null) && (action.getActionDescription() != null)) {
             for (Component c : action.getActionDescription()) {
-                TextScrollAreaEntry e = new TextScrollAreaEntry(this.actionDescriptionScrollArea, c, (entry) -> {});
-                e.setSelectable(false);
-                e.setBackgroundColorHover(e.getBackgroundColorIdle());
-                e.setPlayClickSound(false);
-                this.actionDescriptionScrollArea.addEntry(e);
+                this.addDescriptionLine(c);
             }
         }
+
+        this.descriptionScrollArea.addEntry(new CellScreen.SpacerScrollAreaEntry(this.descriptionScrollArea, 5));
+
+    }
+
+    protected void addDescriptionLine(@NotNull Component line) {
+        List<Component> lines = new ArrayList<>();
+        int maxWidth = (int)(this.descriptionScrollArea.getInnerWidth() - 15F);
+        if (this.font.width(line) > maxWidth) {
+            this.font.getSplitter().splitLines(line, maxWidth, Style.EMPTY).forEach(formatted -> {
+                lines.add(TextFormattingUtils.formattedTextToComponent(formatted));
+            });
+        } else {
+            lines.add(line);
+        }
+        lines.forEach(component -> {
+            TextScrollAreaEntry e = new TextScrollAreaEntry(this.descriptionScrollArea, component, (entry) -> {});
+            e.setSelectable(false);
+            e.setBackgroundColorHover(e.getBackgroundColorNormal());
+            e.setPlayClickSound(false);
+            e.setTextBaseColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt());
+            this.descriptionScrollArea.addEntry(e);
+        });
     }
 
     protected boolean actionFitsSearchValue(@NotNull Action action, @Nullable String s) {
@@ -251,13 +279,13 @@ public class BuildActionScreen extends Screen {
         protected static final long DOUBLE_CLICK_TIME = 500; // milliseconds
 
         public ActionScrollEntry(ScrollArea parent, @NotNull Action action, @NotNull Consumer<TextListScrollAreaEntry> onClick) {
-            super(parent, buildLabel(action), UIBase.getUIColorTheme().listing_dot_color_1.getColor(), onClick);
+            super(parent, buildLabel(action), UIBase.getUIColorTheme().listing_dot_color_1, onClick);
             this.action = action;
         }
 
         @NotNull
         private static Component buildLabel(@NotNull Action action) {
-            MutableComponent c = action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().description_area_text_color.getColorInt()));
+            MutableComponent c = action.getActionDisplayName().copy().setStyle(Style.EMPTY.withColor(UIBase.getUIColorTheme().element_label_color_normal.getColorInt()));
             if (action.isDeprecated()) {
                 c = c.withStyle(Style.EMPTY.withStrikethrough(true));
                 c = c.append(Component.literal(" ").setStyle(Style.EMPTY.withStrikethrough(false)));
@@ -265,9 +293,9 @@ public class BuildActionScreen extends Screen {
             }
             return c;
         }
-        
+
         @Override
-        public void onClick(ScrollAreaEntry entry) {
+        public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
             long currentTime = System.currentTimeMillis();
             
             // Check if this is a double-click
@@ -283,7 +311,7 @@ public class BuildActionScreen extends Screen {
             this.lastClickTime = currentTime;
             
             // Normal single click behavior
-            super.onClick(entry);
+            super.onClick(entry, mouseX, mouseY, button);
         }
 
     }
