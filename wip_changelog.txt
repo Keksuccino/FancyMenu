@@ -8,6 +8,7 @@ CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
   - Double-clicking on an action type in the action selection list now works as a shortcut to clicking "Next Step"/"Done"
 - It's now possible to double-click requirements in the requirement selection list of the Add/Edit Requirement Screen
   - When the requirement has a value, double-clicking opend the Edit Value screen, if not, it works as a shortcut to pressing "Done"
+- The description boxes of the selection screens for actions and requirements now have line wrapping for their description boxes so you don't need to scroll horizonally anymore
 - Fixed "World Save Data" placeholder being in the wrong category
 - Fixed text in some of FancyMenu's screen's looks bad in light mode (text was hard to read because it didn't change to a dark color for contrast)
  
