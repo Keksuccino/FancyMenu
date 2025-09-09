@@ -1819,5 +1819,8 @@
   "fancymenu.ui.generic.next": "Next",
   "fancymenu.ui.generic.continue": "Continue",
   "fancymenu.ui.generic.next_step": "Next Step",
-  "fancymenu.actions.manage.no_value_to_edit": "§xThe selected action has no value to edit."
+  "fancymenu.actions.manage.no_value_to_edit": "§xThe selected action has no value to edit.",
+  "fancymenu.actions.print_to_log": "Print to Game Log",
+  "fancymenu.actions.print_to_log.desc": "This action will print text to the game's log/console for debugging.",
+  "fancymenu.actions.print_to_log.value": "Text"
 }

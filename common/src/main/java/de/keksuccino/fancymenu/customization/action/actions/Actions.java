@@ -56,6 +56,7 @@ public class Actions {
     public static final SetVideoMenuBackgroundVolumeAction SET_VIDEO_MENU_BACKGROUND_VOLUME = new SetVideoMenuBackgroundVolumeAction();
     public static final ToggleVideoMenuBackgroundPauseStateAction TOGGLE_VIDEO_MENU_BACKGROUND_PAUSE_STATE = new ToggleVideoMenuBackgroundPauseStateAction();
     public static final SendHttpRequestAction SEND_HTTP_REQUEST = new SendHttpRequestAction();
+    public static final PrintToLogAction PRINT_TO_LOG = new PrintToLogAction();
 
     public static void registerAll() {
 
@@ -89,6 +90,7 @@ public class Actions {
         ActionRegistry.register(SET_VIDEO_MENU_BACKGROUND_VOLUME);
         ActionRegistry.register(TOGGLE_VIDEO_MENU_BACKGROUND_PAUSE_STATE);
         ActionRegistry.register(SEND_HTTP_REQUEST);
+        ActionRegistry.register(PRINT_TO_LOG);
 
     }
 
