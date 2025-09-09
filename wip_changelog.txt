@@ -1,6 +1,7 @@
 
 CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 
+- Added "Print to Game Log" action to print text to the game's log for debugging (#1267)
 - Improved the "flow" of the action script building process
   - Clicking "Edit" now only works when an action is selected that has a value
   - Clicking "Edit" now goes straight to the Edit Action Value screen instead of opening the action type selection first
