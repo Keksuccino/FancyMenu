@@ -1,9 +1,11 @@
 
 CHANGELOG | FANCYMENU v3.8.0 [ W I P !! Not public yet !! ]
 
-- It's npw possible to double-click actions in the action selection list of the Add/Edit Action Screen
-  - When the action needs a value and none is set yet, double-clicking will open the edit value inferface
-  - When the action does not need a value or already has one set, double-clicking will act as a shortcut to pressing "Done"
+- Improved the "flow" of the action script building process
+  - Clicking "Edit" now only works when an action is selected that has a value
+  - Clicking "Edit" now goes straight to the Edit Action Value screen instead of opening the action type selection first
+  - The "Edit Value" and "Done" buttons in the action type selection have been merged into one button that shows either "Next Step" or "Done" depending on if the selected action type needs a value or not
+  - Double-clicking on an action type in the action selection list now works as a shortcut to clicking "Next Step"/"Done"
 - It's npw possible to double-click requirements in the requirement selection list of the Build/Edit Requirement Screen
   - When the requirement needs a value and none is set yet, double-clicking will open the edit value inferface
   - When the requirement does not need a value or already has one set, double-clicking will act as a shortcut to pressing "Done"
