@@ -30,12 +30,12 @@ public class PrintToLogAction extends Action {
 
     @Override
     public @NotNull Component getActionDisplayName() {
-        return Component.translatable("fancymenu.actions.print_to_log.value");
+        return Component.translatable("fancymenu.actions.print_to_log");
     }
 
     @Override
     public @NotNull Component[] getActionDescription() {
-        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.print_to_log.value.desc");
+        return LocalizationUtils.splitLocalizedLines("fancymenu.actions.print_to_log.desc");
     }
 
     @Override
